@@ -1,60 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:50840 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753342AbdHWHEd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:04:33 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 09/10] PCI: rockchip: remove irq domain if failing to probe
-Date: Wed, 23 Aug 2017 15:03:31 +0800
-Message-Id: <1503471811-74167-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Biju Das <biju.das@bp.renesas.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>
+Subject: [PATCH ] PCI: rcar: Add r8a7743/5 support
+Date: Thu, 24 Aug 2017 10:35:44 +0100
+Message-Id: <1503567344-5610-1-git-send-email-biju.das@bp.renesas.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Chris Paterson <chris.paterson2@renesas.com>,
+ linux-pci@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Biju Das <biju.das@bp.renesas.com>,
+ linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
+Add internal PCI bridge support for r8a7743/5 SoC. Renesas RZ/G1[ME]
+(R8A7743/5) internal PCI bridge is identical to the R-Car Gen2 family.
 
-Fix the missing to call irq_domain_remove if failing
-to finish the probe.
-
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Biju Das <biju.das@bp.renesas.com>
 ---
+This patch is tested against Linux next tag next-20170824 and
+renesas-dev branch renesas-devel-20170822-v4.13-rc6. 
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+ Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
- drivers/pci/host/pcie-rockchip.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 6dbd3fd..e752d3e 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1572,7 +1572,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
- 					       &res, &io_base);
- 	if (err)
--		goto err_deinit_port;
-+		goto err_remove_irq_domain;
+diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+index 07a7509..3d03863 100644
+--- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
++++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+@@ -6,11 +6,14 @@ AHB. There is one bridge instance per USB port connected to the internal
+ OHCI and EHCI controllers.
  
- 	err = devm_request_pci_bus_resources(dev, &res);
- 	if (err)
-@@ -1644,6 +1644,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ Required properties:
+-- compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
++- compatible: "renesas,pci-r8a7743" for the R8A7743 SoC;
++	      "renesas,pci-r8a7745" for the R8A7745 SoC;
++	      "renesas,pci-r8a7790" for the R8A7790 SoC;
+ 	      "renesas,pci-r8a7791" for the R8A7791 SoC;
+ 	      "renesas,pci-r8a7793" for the R8A7793 SoC;
+ 	      "renesas,pci-r8a7794" for the R8A7794 SoC;
+-	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 compatible device
++	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 or
++				      RZ/G1 compatible device.
  
- err_free_res:
- 	pci_free_resource_list(&res);
-+err_remove_irq_domain:
-+	irq_domain_remove(rockchip->irq_domain);
- err_deinit_port:
- 	rockchip_pcie_deinit_phys(rockchip);
- err_vpcie:
+ 
+ 	      When compatible with the generic version, nodes must list the
 -- 
 1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
