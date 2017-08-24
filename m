@@ -1,63 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:63856 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752231AbdHJQPA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 12:15:00 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "Zheng, Lv" <lv.zheng@intel.com>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Moore, Robert" <robert.moore@intel.com>
-Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-Date: Thu, 10 Aug 2017 18:06:41 +0200
-Message-ID: <5185778.X36DhrMnGV@aspire.rjw.lan>
-In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886CF066E6@SHSMSX101.ccr.corp.intel.com>
-References: <12346760.yAFCnkEgf6@aspire.rjw.lan> <46980112.WLPtxWZQ3y@aspire.rjw.lan> <1AE640813FDE7649BE1B193DEA596E886CF066E6@SHSMSX101.ccr.corp.intel.com>
+Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	<helgaas@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Oza Pawandeep <oza.oza@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v8 0/3] PCI: iproc: SOC specific fixes
+Date: Thu, 24 Aug 2017 10:34:23 +0530
+Message-Id: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, August 10, 2017 3:48:58 AM CEST Zheng, Lv wrote:
-> Hi, Rafael
-> 
-> > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > 
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > In some cases GPEs are already active when they are enabled by
-> > acpi_ev_initialize_gpe_block() and whatever happens next may depend
-> > on the result of handling the events signaled by them, so the
-> > events should not be discarded (which is what happens currently) and
-> > they should be handled as soon as reasonably possible.
-> > 
-> > For this reason, modify acpi_ev_initialize_gpe_block() to
-> > dispatch GPEs with the status flag set in-band right after
-> > enabling them.
-> 
-> In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
-> right after enabling an GPE. So there are 2 conditions related:
-> 1. GPE is enabled for the first time.
-> 2. GPE is initialized.
-> 
-> And we need to make sure that before acpi_update_all_gpes() is invoked,
-> all GPE EN bits are actually disabled.
+PCI: iproc: Retry request when CRS returned from EP Above patch adds
+support for CRS in PCI RC driver, otherwise if not handled at lower
+level, the user space PMD (poll mode drivers) can timeout.
 
-But we don't do it today, do we?
+PCI: iproc: add device shutdown for PCI RC This fixes the issue where
+certian PCI endpoints are not getting detected on Stingray SOC after
+reboot.
 
-And still calling _dispatch() should not be incorrect even if the GPE
-has been enabled already at this point.  Worst case it just will
-queue up the execution of _Lxx/_Exx which may or may not do anything
-useful.
+Changes Since v7:
+Factor out the ep config access code.
 
-And BTW this is all done under acpi_gbl_gpe_lock so acpi_ev_gpe_detect()
-will block on it if run concurrently and we've checked the status, so
-we know that the GPE *should* be dispatched, so I sort of fail to see
-the problem.
+Changes Since v6:
+Rebased patches on top of Lorenzo's patches.
+Bjorn's comments addressed.
+now the confg retry returns 0xffffffff as data.
+Added reference to PCIe spec and iproc Controller spec in Changelog.
 
-Thanks,
-Rafael
+Changes Since v5:
+Ray's comments addressed.
+
+Changes Since v4:
+Bjorn's comments addressed.
+
+Changes Since v3:
+[re-send]
+
+Changes Since v2:
+Fix compilation errors for pcie-iproc-platform.ko which was caught
+by kbuild.
+
+Oza Pawandeep (3):
+  PCI: iproc: factor-out ep configuration access
+  PCI: iproc: Retry request when CRS returned from EP
+  PCI: iproc: add device shutdown for PCI RC
+
+ drivers/pci/host/pcie-iproc-platform.c |   8 ++
+ drivers/pci/host/pcie-iproc.c          | 143 ++++++++++++++++++++++++++-------
+ drivers/pci/host/pcie-iproc.h          |   1 +
+ 3 files changed, 124 insertions(+), 28 deletions(-)
+
+-- 
+1.9.1
