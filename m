@@ -1,77 +1,135 @@
-Return-Path: <SRS0=wS0H=7E=apm.com=fkan@kernel.org>
-Return-Path: <SRS0=wS0H=7E=apm.com=fkan@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45524 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752759AbdHXQV4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Aug 2017 12:21:56 -0400
+Date: Thu, 24 Aug 2017 11:21:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Varadarajan Narayanan <varada@codeaurora.org>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v9 0/3] Add support for IPQ8074 PCIe phy and controller
+Message-ID: <20170824162153.GD31858@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503041393-19593-1-git-send-email-varada@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20170801171548.2417e093@w520.home>
-References: <1501628893-28492-1-git-send-email-fkan@apm.com> <20170801171548.2417e093@w520.home>
-From: Feng Kan <fkan@apm.com>
-Date: Wed, 2 Aug 2017 11:57:29 -0700
-Message-ID: <CAL85gmBDrZr5oqwUU8Gt9j7i3zMGhQrGezg_n81pi7TazSsmkg@mail.gmail.com>
-Subject: Re: [PATCH V4] pci: quirk: Apply APM ACS quirk to XGene devices
-To: Alex Williamson <alex.williamson@redhat.com>, helgaas@kernel.org
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503041393-19593-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+ Adding Bjorn
-Sorry for top post, we are looking to pull this into the latest REL7.4
-release. Would like
-the maintainer to take a look. Thanks
+On Fri, Aug 18, 2017 at 12:59:50PM +0530, Varadarajan Narayanan wrote:
+> v9:
+>   Incorporate Stanimir's feedback for
+> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 
+>   Add Stanimir's Ack for
+> 	PCI: dwc: qcom: Use block IP version for operations
+> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 
+>   Add Rob's Ack for
+> 	dt-bindings: pci: qcom: Add support for IPQ8074
+> 
+> v8:
+>   Incorporate Stanimir's feedback for
+> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 
+> v7:
+>   Skip PHY patches as they are already included by Kishon
+> 
+>   Incorporate Stanimir's feedback for the below patches
+> 	PCI: dwc: qcom: Use block IP version for operations
+> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 
+> v6:
+>   Added 'Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>' and fixed
+>   white space issues as mentioned by Vivek.
+> 	phy: qcom-qmp: Fix phy pipe clock name
+> 	dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+> 
+> v5:
+>   dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+>         Renamed phy_phy clock as common clock
+> 
+>   phy: qcom-qmp: Fix phy pipe clock name
+>         Moved the DT get into the registering function
+> 
+>   phy: qcom-qmp: Add support for IPQ8074
+>         Place the IPQ8074 related structs similar to existing SoC.
+>         Renamed phy_phy clock as common clock
+> v4:
+>   phy: qcom-qmp: Fix phy pipe clock name
+> 	Based on Vivek's comments, return failure only for
+> 	PCI/USB type of phys.
+> 	Removed Ack.
+> 
+>   phy: qcom-qmp: Handle unavailable registers
+> 	Removed this patch.
+> 	Incorrectly used a block of code that is not applicable
+> 	to IPQ8074, hence had to avoid an "unavailable" register.
+> 	Since that is addressed using 'has_phy_com_ctrl' this
+> 	patch is not needed.
+> 
+>   phy: qcom-qmp: Add support for IPQ8074
+> 	Set 'has_phy_com_ctrl' to false
+> 	Remove ipq8074_pciephy_regs_layout
+> 
+> v3:
+>   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 	Incoporate Stan's feedback:-
+> 	 - Add SoC Wrapper and Synopsys Core IP versions
+> 
+> v2:
+>   dt-bindings: phy: qmp: Add output-clock-names
+> 	Added Rob H's Ack
+> 
+>   dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+> 	Removed example
+> 	Added IPQ8074 specific details
+> 
+>   phy: qcom-qmp: Fix phy pipe clock name
+> 	Added Vivek's Ack
+> 
+>   phy: qcom-qmp: Handle unavailable registers
+> 	No changes
+> 
+>   phy: qcom-qmp: Add support for IPQ8074
+> 	No changes
+> 
+>   PCI: dwc: qcom: Use block IP version for operations
+> 	Added new patch to use block IP version instead of v1, v2...
+> 
+>   dt-bindings: pci: qcom: Add support for IPQ8074
+> 	Removed example
+> 	Added IPQ8074 specific details
+> 
+>   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 	Incorporated Bjorn's feedback:-
+> 	 - Removed reset names, helper function to assert/deassert, helper
+> 	   function to R/M/W register.
+> 	 - Renamed sys_noc clock as iface clock
+> 	 - Added deinit if phy power on fails
+> 
+> v1:
+> Add definitions required to enable QMP phy support for IPQ8074.
+> 
+> Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+> Gen 1/2, one lane, two PCIe root complex with support for MSI and
+> legacy interrupts, and it conforms to PCI Express Base 2.1
+> specification.
+> 
+> Varadarajan Narayanan (3):
+>   PCI: dwc: qcom: Use block IP version for operations
+>   dt-bindings: pci: qcom: Add support for IPQ8074
+>   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
+>  drivers/pci/dwc/pcie-qcom.c                        | 346 +++++++++++++++++----
+>  2 files changed, 302 insertions(+), 67 deletions(-)
 
-On Tue, Aug 1, 2017 at 4:15 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Tue,  1 Aug 2017 16:08:13 -0700
-> Feng Kan <fkan@apm.com> wrote:
->
->> The APM X-Gene PCIe root port does not support ACS at this point.
->> However, the hw provides isolation and source validation through
->> the SMMU. The stream ID generated by the PCIe ports contain both
->> the BDF as well as the port ID in its 3 most significant bits.
->> Turn on ACS but disable all the peer to peer features.
->>
->> Signed-off-by: Feng Kan <fkan@apm.com>
->> ---
->>       V4 Change: Remove TB & TD flags from ACS mask
->>         V3 Change: Add comment regarding unique port id in stream ID
->>         V2 Change: Move XGene ACS quirk to unique XGene function
->>
->>  drivers/pci/quirks.c | 14 ++++++++++++++
->>  1 file changed, 14 insertions(+)
->
->
-> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
->
->
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 085fb78..22343b3 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -4120,6 +4120,18 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
->>       return acs_flags ? 0 : 1;
->>  }
->>
->> +static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
->> +{
->> +     /*
->> +      * XGene root matching this quirk do not allow peer-to-peer
->> +      * transactions with others, allowing masking out these bits as if they
->> +      * were unimplemented in the ACS capability.
->> +      */
->> +     acs_flags &= ~(PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
->> +
->> +     return acs_flags ? 0 : 1;
->> +}
->> +
->>  /*
->>   * Many Intel PCH root ports do provide ACS-like features to disable peer
->>   * transactions and validate bus numbers in requests, but do not provide an
->> @@ -4368,6 +4380,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
->>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
->>       /* Cavium ThunderX */
->>       { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
->> +     /* APM XGene */
->> +     { PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
->>       { 0 }
->>  };
->>
->
+Applied to pci/host-qcom for v4.14, thanks!
+
+I made minor tweaks to match existing code style in pcie-qcom.c.
