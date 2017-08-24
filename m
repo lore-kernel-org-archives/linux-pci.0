@@ -1,88 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:32808 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751552AbdHNJEw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 05:04:52 -0400
-Subject: Re: Support SVM without PASID
-To: "Tian, Kevin" <kevin.tian@intel.com>,
-        "Raj, Ashok" <ashok.raj@intel.com>
-Cc: valmiki <valmikibow@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "Lan, Tianyu" <tianyu.lan@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
- <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D190D57191@SHSMSX101.ccr.corp.intel.com>
- <b973c557-1b4a-18d2-a05e-28680a49daf9@arm.com>
- <20170811162506.GB41059@otc-nc-03>
- <AADFC41AFE54684AB9EE6CBC0274A5D190D716A4@SHSMSX101.ccr.corp.intel.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <2a8c13cb-ecca-1138-71c9-f923eaf08641@arm.com>
-Date: Mon, 14 Aug 2017 10:07:12 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
+To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>
+References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
+ <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
+ <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
+ <86efs3wesi.fsf@arm.com>
+ <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Message-ID: <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
+Date: Thu, 24 Aug 2017 19:51:16 +0200
 MIME-Version: 1.0
-In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D190D716A4@SHSMSX101.ccr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>, Mason <slash.tmp@free.fr>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/08/17 09:00, Tian, Kevin wrote:
->> From: Raj, Ashok
->> Sent: Saturday, August 12, 2017 12:25 AM
->>
->> On Fri, Aug 04, 2017 at 10:42:41AM +0100, Jean-Philippe Brucker wrote:
->>> Hi Kevin,
+On 24/08/2017 19:04, Bjorn Helgaas wrote:
+> On Tue, Aug 22, 2017 at 09:03:41PM +0100, Marc Zyngier wrote:
+>> Marc Gonzalez wrote:
+>>> On 22/08/2017 18:29, Marc Zyngier wrote:
+>>>> On 22/08/17 15:56, Marc Gonzalez wrote:
+>>>>
+>>>>>  #define SMP8759_MUX		0x48
+>>>>>  #define SMP8759_TEST_OUT	0x74
+>>>>> +#define SMP8759_STATUS		0x80
+>>>>> +#define SMP8759_ENABLE		0xa0
+>>>>> +#define SMP8759_DOORBELL	0xa002e07c
+>>>>
+>>>> Why is this hardcoded and not coming from the device-tree, just like any
+>>>> other address property?
 >>>
+>>> Since this bus address is software-configurable, I didn't think
+>>> it belonged in the DT. Also, I didn't see anything similar in
+>>> other binding docs, especially
 >>>
->>> Consider the situation where a userspace driver (no virtualization) is
->>> built in a client-server fashion: the server controls a device and spawns
->>> new processes (clients), each sharing a context with the device using its
->>> own PASID. If the server wants to hide parts of the client address space
+>>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
 >>
->> Just to be sure, you are't expecting the PASID's to be duplicated or
->> recreated after a new process is spawned. I would expect each process to
->> get its own PASID by doing a bind. Threads of the same process would be
->> sharing the same PASID since they all share the same first level
->> mappings.
->>
->>
->>> from the device (e.g. .text), then it could control stage-2 via MAP/UNMAP
->>> to restrict the address space.
->>
->> I'm confused.. maybe this is different from Intel IOMMU. the first level
->> requiring a second level is only true when virtualization is in play.
->>
->> First level is gVA->gPA, and second level is gPA->hPA (sort of the cloned
->> EPT map that is setup via VFIO to set up second level)
->>
->> When you are in native user application, there is no nesting between first
->> and second level. The first level is directly VA->hPA. There is no need
->> for a nested walk in this case?
->>
+>> If that's software configurable, how on Earth did you pick the address?
+>> How do you ensure that it doesn't conflict with DMA? How is it
+>> configured into the RC?
 > 
-> Strictly speaking nesting is just a hardware capability while 
-> virtualization is an use case using that capability. As long as 
-> some software entity (not hypervisor) can setup two level 
-> page tables, it should just work regardless of how the 
-> intermediate address is called.
+> But we *do* need to resolve this.  This does seem like an address that
+> shouldn't be hard-coded into the driver.  Since this driver is
+> programming the address into an MSI message, but not into the receiver
+> of that message, there's a coordination issue between this driver and
+> whatever other software does that receiver configuration.
 
-Yes, nested translation is just a tool, it doesn't have to be dedicated to
-virtualization.
+OK. I'll move the doorbell address to the DT for v11.
 
-> I think Jean is trying to come up a non-virtualization usage
-> using nesting. Of course current example that he illustrated 
-> is not very meaningful (as I replied in another mail). :-)
+What property should be used for this address?
 
-I also can't come up with a convincing API for setting up the second stage
-from userspace. Hopefully we can ignore this case for the moment :)
+sigma,doorbell ?
 
-Thanks,
-Jean
+Or maybe I can put it in reg, since I have a 1:1 mapping
+between bus and cpu addresses?
+
+git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
+returns nothing.
+
+Regards.
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
