@@ -1,90 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Daniel Axtens <dja@axtens.net>, linux-pci@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 3/3] powerpc: replace vga_fixup() with generic code
-In-Reply-To: <87wp6fq8y5.fsf@linkitivity.dja.id.au>
-References: <20170804102033.27731-1-dja@axtens.net>
- <20170804102033.27731-4-dja@axtens.net>
- <87efsnq217.fsf@concordia.ellerman.id.au>
- <87wp6fq8y5.fsf@linkitivity.dja.id.au>
-Date: Tue, 08 Aug 2017 20:12:55 +1000
-Message-ID: <8760dynza0.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f52.google.com ([74.125.83.52]:37842 "EHLO
+        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754032AbdHXR0P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2017 13:26:15 -0400
+Received: by mail-pg0-f52.google.com with SMTP id 83so535854pgb.4
+        for <linux-pci@vger.kernel.org>; Thu, 24 Aug 2017 10:26:15 -0700 (PDT)
+Date: Thu, 24 Aug 2017 10:26:09 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        freude@de.ibm.com, schwidefsky@de.ibm.com,
+        heiko.carstens@de.ibm.com, jth@kernel.org, jejb@linux.vnet.ibm.com,
+        martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com,
+        johan@kernel.org, elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 11/15] remoteproc: make device_type const
+Message-ID: <20170824172609.GF20643@builder>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+ <1503130946-2854-12-git-send-email-bhumirks@gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: gabriele.paoloni@huawei.com, airlied@linux.ie, catalin.marinas@arm.com,
- will.deacon@arm.com, z.liuxinliang@hisilicon.com, bhelgaas@google.com,
- alex.williamson@redhat.com, zourongrong@gmail.com,
- Brian King <brking@linux.vnet.ibm.com>, daniel.vetter@intel.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503130946-2854-12-git-send-email-bhumirks@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Daniel Axtens <dja@axtens.net> writes:
+On Sat 19 Aug 01:22 PDT 2017, Bhumika Goyal wrote:
 
-> Michael Ellerman <mpe@ellerman.id.au> writes:
->
->> Daniel Axtens <dja@axtens.net> writes:
->>
->>> Currently, we do a PCI fixup to mark a default card so that Xorg
->>> autoconfiguration works.
->>>
->>> There is a new generic method to do this sort of vga fixup, and
->>> it occurs by default.
->>>
->>> Drop our old method.
->>>
->>> This method is different:
->>>  - it will only mark a card as default if a driver is bound
->>>  - the marking will happen at late_initcall time, or even later
->>>    if a card is enabled later on (via an ENABLE hook). Currently
->>>    things are enabled in a FINAL hook.
->>>
->>> This *does* change behaviour under some circumstances.
->>>
->>> For example, pseries_le_defconfig doesn't have DRM drivers for
->>> many of the qemu GPU models, including the 'standard' vga.
->>
->> Should we enable them/it?
->
-> Hard to say.
->
-> The 'standard' vga module (bochs_drm) was blacklisted by Ubuntu -
-> apparently at IBM's request [0] - some years back. Even if you
-> un-blacklist it, I had trouble with getting it and the openfirmware
-> framebuffer driver to play nicely together. It may not be worth the
-> trouble for bochs_drm.
->
-> There's a better case for including some of the more modern drivers -
-> maybe QXL and virtio - but I wasn't able to test them: my particular
-> build of qemu/TCG refused to start with them and I didn't feel like
-> rebuilding/debugging qemu.
+> Make this const as it is only stored in the type field of a device
+> structure, which is const.
+> Done using Coccinelle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 
-Yeah OK. Sounds like a bit of mess :)
+Applied, thanks.
 
-I'll leave it unless someone who knows Qemu/Gfx etc. tells me otherwise.
+Regards,
+Bjorn
 
-> It would also be legitmate to say that you're focussing on headless use
-> with pseries_*defconfig and not include them: you need to bring in the
-> DRM core if you want these drivers.
-
-True. There's a bit of a tension there between making them useful
-configs for developers and also turning on as much code as possible so
-it gets tested.
-
-Arguably we should have DRM enabled because the distros will.
-
-cheers
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/remoteproc/remoteproc_core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/remoteproc/remoteproc_core.c b/drivers/remoteproc/remoteproc_core.c
+> index 364ef28..48b2c5d 100644
+> --- a/drivers/remoteproc/remoteproc_core.c
+> +++ b/drivers/remoteproc/remoteproc_core.c
+> @@ -1360,7 +1360,7 @@ static void rproc_type_release(struct device *dev)
+>  	kfree(rproc);
+>  }
+>  
+> -static struct device_type rproc_type = {
+> +static const struct device_type rproc_type = {
+>  	.name		= "remoteproc",
+>  	.release	= rproc_type_release,
+>  };
+> -- 
+> 1.9.1
+> 
