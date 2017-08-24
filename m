@@ -1,155 +1,129 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Jon Mason <jdmason@kudzu.us>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-References: <20170803181954.4154-1-logang@deltatee.com>
- <58ab6a33-4de5-8fd8-65c2-079f6f6301c4@deltatee.com>
-Message-ID: <50ba7618-b5c3-1779-ad79-0f32254ebbaf@deltatee.com>
-Date: Wed, 30 Aug 2017 13:18:28 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 24 Aug 2017 11:51:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v4 2/4] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20170824165136.GK31858@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
+ <20170822031934.8675-3-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <58ab6a33-4de5-8fd8-65c2-079f6f6301c4@deltatee.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v4 00/15] Switchtec NTB Support
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170822031934.8675-3-jeffy.chen@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, briannorris@chromium.org,
+ linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Jon,
+On Tue, Aug 22, 2017 at 11:19:32AM +0800, Jeffy Chen wrote:
+> Add support for PCIE_WAKE pin in rockchip pcie driver.
 
-Any update on this? The merge window is likely very soon and it would be 
-good to know where we stand. As far as I know I've addressed all the 
-feedback I've been given. Let me know if there's anything I can do to 
-further this process.
+Changelog should include a hint about what DT property this PCIE_WAKE
+support depends on.
 
-Thanks,
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
+> 
+> Changes in v4: None
+> Changes in v3:
+> Fix error handling
+> 
+> Changes in v2:
+> Use dev_pm_set_dedicated_wake_irq
+>         -- Suggested by Brian Norris <briannorris@chromium.com>
+> 
+>  drivers/pci/host/pcie-rockchip.c | 21 +++++++++++++++++++--
+>  1 file changed, 19 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 5d85ec2e2fb0..a0f7267984da 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -37,6 +37,7 @@
+>  #include <linux/pci_ids.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/pm_wakeirq.h>
+>  #include <linux/reset.h>
+>  #include <linux/regmap.h>
+>  
+> @@ -1111,6 +1112,15 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>  		return err;
+>  	}
+>  
+> +	/* Must init wakeup before setting dedicated wake irq. */
+> +	device_init_wakeup(dev, true);
+> +	irq = platform_get_irq_byname(pdev, "wake");
+> +	if (irq >= 0) {
+> +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
+> +		if (err)
+> +			dev_err(dev, "failed to setup PCIe wake IRQ\n");
 
-Logan
+Error message could include the IRQ #.
 
-On 22/08/17 10:59 AM, Logan Gunthorpe wrote:
-> Hi,
+> +	}
+> +
+>  	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
+>  	if (IS_ERR(rockchip->vpcie12v)) {
+>  		if (PTR_ERR(rockchip->vpcie12v) == -EPROBE_DEFER)
+> @@ -1493,12 +1503,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  
+>  	err = rockchip_pcie_parse_dt(rockchip);
+>  	if (err)
+> -		return err;
+> +		/* It's safe to disable wake even not enabled */
+> +		goto err_disable_wake;
+>  
+>  	err = clk_prepare_enable(rockchip->aclk_pcie);
+>  	if (err) {
+>  		dev_err(dev, "unable to enable aclk_pcie clock\n");
+> -		return err;
+> +		goto err_disable_wake;
+>  	}
+>  
+>  	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
+> @@ -1633,6 +1644,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+>  err_disable_aclk_pcie:
+>  	clk_disable_unprepare(rockchip->aclk_pcie);
+> +err_disable_wake:
+> +	dev_pm_clear_wake_irq(dev);
+> +	device_init_wakeup(dev, false);
+>  	return err;
+>  }
+>  
+> @@ -1662,6 +1676,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+>  	if (!IS_ERR(rockchip->vpcie12v))
+>  		regulator_disable(rockchip->vpcie12v);
+>  
+> +	dev_pm_clear_wake_irq(dev);
+> +	device_init_wakeup(dev, false);
+> +
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.11.0
 > 
-> Just wanted to give this a poke as I haven't received any feedback in a 
-> couple weeks on v4. What are people's thoughts on this? Is it suitable 
-> to make it into the next merge window?
-> 
-> Thanks,
-> 
-> Logan
 > 
 > 
-> On 03/08/17 12:19 PM, Logan Gunthorpe wrote:
->> Changes since v3:
->>
->> - Rebased onto the Jon's ntb branch that contains one of the patches
->>    that was in v3
->> - Various spelling and commit log mistakes noticed by Bjorn
->> - Renamed switchtec_ntb to ntb_hw_switchtec per Dave's suggestion
->> - Fixed a number of code nits pointed out by Jon
->>
->> -- 
->>
->> Changes since v2:
->>
->> - Reordered the ntb_test link patch per Allen
->> - Removed an extra call to switchtec_ntb_init_mw
->> - Fixed a typo in the switchtec.txt documentation.
->>
->> -- 
->>
->> Changes since v1:
->>
->> - Rebased onto latest ntb-next branch (with v4.13-rc1)
->> - Reworked ntb_mw_count() function so that it can be called all the
->>    time (per discussion with Allen)
->> - Various spelling and formatting cleanups from Bjorn
->> - Added request_module() call such that the NTB module is automatically
->>    loaded when appropriate hardware exists.
->>
->> -- 
->>
->> Changes since the rfc:
->>
->> - Rebased on ntb-next
->> - Switched ntb_part_op to use sleep instead of delay
->> - Dropped a number of useless dbg __func__ prints
->> - Went back to the dynamic instead of the static class
->> - Swapped the notifier block for a simple callback
->> - Modified the new ntb api so that a couple functions with pidx
->>    now must be called after link up. Per our discussion on the list.
->>
->> -- 
->>
->> This patchset implements Non-Transparent Bridge (NTB) support for the
->> Microsemi Switchtec series of switches. We're looking for some
->> review from the community at this point but hope to get it upstreamed
->> for v4.14.
->>
->> Switchtec NTB support is configured over the same function and bar
->> as the management endpoint. Thus, the new driver hooks into the
->> management driver which we had merged in v4.12. We use the class
->> interface API to register an NTB device for every switchtec device
->> which supports NTB (not all do).
->>
->> The Switchtec hardware supports doorbells, memory windows and messages.
->> Seeing there is no native scratchpad support, 128 spads are emulated
->> through the use of a pre-setup memory window. The switch has 64
->> doorbells which are shared between the two partitions and a
->> configurable set of memory windows. While the hardware supports more
->> than 2 partitions, this driver only supports the first two seeing
->> the current NTB API only supports two hosts.
->>
->> The driver has been tested with ntb_netdev and fully passes the
->> ntb_test script.
->>
->> This patchset is based off of ntb-next and can be found in this
->> git repo:
->>
->> https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb_v4
->>
->> Logan Gunthorpe (15):
->>    NTB: switchtec: Move structure definitions into a common header
->>    NTB: switchtec: Export class symbol for use in upper layer driver
->>    NTB: switchtec: Add NTB hardware register definitions
->>    NTB: switchtec: Add link event notifier callback
->>    NTB: Ensure ntb_mw_get_align() is only called when the link is up
->>    NTB: Add check and comment for link up to mw_count() and
->>      mw_get_align()
->>    NTB: switchtec_ntb: Introduce initial NTB driver
->>    NTB: switchtec_ntb: Initialize hardware for memory windows
->>    NTB: switchtec_ntb: Initialize hardware for doorbells and messages
->>    NTB: switchtec_ntb: Add skeleton NTB driver
->>    NTB: switchtec_ntb: Add link management
->>    NTB: switchtec_ntb: Implement doorbell registers
->>    NTB: switchtec_ntb: Implement scratchpad registers
->>    NTB: switchtec_ntb: Add memory window support
->>    NTB: switchtec_ntb: Update switchtec documentation with notes for NTB
->>
->>   Documentation/switchtec.txt            |   12 +
->>   MAINTAINERS                            |    2 +
->>   drivers/ntb/hw/Kconfig                 |    1 +
->>   drivers/ntb/hw/Makefile                |    1 +
->>   drivers/ntb/hw/mscc/Kconfig            |    9 +
->>   drivers/ntb/hw/mscc/Makefile           |    1 +
->>   drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 1216 
->> ++++++++++++++++++++++++++++++++
->>   drivers/ntb/ntb_transport.c            |   20 +-
->>   drivers/ntb/test/ntb_perf.c            |   18 +-
->>   drivers/ntb/test/ntb_tool.c            |    6 +-
->>   drivers/pci/switch/switchtec.c         |  316 ++-------
->>   include/linux/ntb.h                    |   11 +-
->>   include/linux/switchtec.h              |  373 ++++++++++
->>   13 files changed, 1703 insertions(+), 283 deletions(-)
->>   create mode 100644 drivers/ntb/hw/mscc/Kconfig
->>   create mode 100644 drivers/ntb/hw/mscc/Makefile
->>   create mode 100644 drivers/ntb/hw/mscc/ntb_hw_switchtec.c
->>   create mode 100644 include/linux/switchtec.h
->>
->> -- 
->> 2.11.0
->>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
