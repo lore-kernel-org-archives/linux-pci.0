@@ -1,108 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:27043 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbdHFAEu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 20:04:50 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v6 2/6] PCI: Introduce pci_irqd_intx_xlate()
-Date: Sat, 5 Aug 2017 17:03:47 -0700
-Message-ID: <20170806000351.17952-3-paul.burton@imgtec.com>
-In-Reply-To: <20170806000351.17952-1-paul.burton@imgtec.com>
-References: <20170806000351.17952-1-paul.burton@imgtec.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	<helgaas@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Oza Pawandeep <oza.oza@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v8 3/3] PCI: iproc: add device shutdown for PCI RC
+Date: Thu, 24 Aug 2017 10:34:26 +0530
+Message-Id: <1503551066-23212-4-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Legacy PCI INTx interrupts are represented in both the PCI_INTERRUPT_PIN
-register & in device trees using the range 1-4. This has led to various
-drivers using this range internally with an IRQ domain of size 5 whose
-first entry is wasted, and to other drivers getting this wrong resulting
-in broken interrupts.
+PERST must be asserted around ~500ms before the reboot is applied.
 
-In order to save the wasted IRQ domain entry this patch introduces a new
-pci_irqd_intx_xlate() helper function, which drivers can assign as the
-xlate callback for their INTx IRQ domain. Further patches will make use
-of this in drivers to allow them to use an IRQ domain of size 4 for
-legacy INTx interrupts.
+During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
+LCPLL clock and PERST both goes off simultaneously.
+This will cause certain Endpoints Intel NVMe not get detected, upon
+next boot sequence.
 
-Note that although it seems tempting to instead perform this translation
-in of_irq_parse_pci() in order to catch all drivers in one shot, this
-would present complications with handling interrupt-map properties in
-device trees, since those are handled outside of of_irq_parse_pci() &
-expect the 1-4 range for INTx interrupts. It would also require that all
-drivers are modified at once, where this approach allows them to be
-tackled one by one.
+This is specifically happening with Intel P3700 400GB series.
+Endpoint is expecting the clock for some amount of time after PERST is
+asserted, which is not happening in Stingray (iproc based SOC).
+This causes NVMe to behave in undefined way.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+On the contrary, Intel x86 boards will have ref clock running, so we
+do not see this behavior there.
 
----
-Bjorn, if this works for you then I can prepare another series to fix up
-other drivers to use this if you like.
+Besides, PCI spec does not stipulate about such timings.
+In-fact it does not tell us, whether PCIe device should consider
+refclk to be available or not to be.
 
-Changes in v6:
-- New patch.
+It is completely up to vendor to design their EP the way they want
+with respect to ref clock availability.
 
- include/linux/pci.h | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+500ms is just based on the observation and taken as safe margin.
+This patch adds platform shutdown where it should be
+called in device_shutdown while reboot command is issued.
+So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+followed by RC shutdown, which issues safe PERST assertion.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4869e66dd659..40c4f5f48d5b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -33,6 +33,7 @@
- #include <linux/resource_ext.h>
- #include <uapi/linux/pci.h>
- 
-+#include <linux/pci-common.h>
- #include <linux/pci_ids.h>
- 
- /*
-@@ -1394,6 +1395,38 @@ pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 					      NULL);
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 2253119..a5073a9 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -134,6 +134,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	return iproc_pcie_remove(pcie);
  }
  
-+/**
-+ * pci_irqd_intx_xlate() - Translate PCI INTx value to an IRQ domain hwirq
-+ * @d: the INTx IRQ domain
-+ * @node: the DT node for the device whose interrupt we're translating
-+ * @intspec: the interrupt specifier data from the DT
-+ * @intsize: the number of entries in @intspec
-+ * @out_hwirq: pointer at which to write the hwirq number
-+ * @out_type: pointer at which to write the interrupt type
-+ *
-+ * Translate a PCI INTx interrupt number from device tree in the range 1-4, as
-+ * stored in the standard PCI_INTERRUPT_PIN register, to a value in the range
-+ * 0-3 suitable for use in a 4 entry IRQ domain. That is, subtract one from the
-+ * INTx value to obtain the hwirq number.
-+ *
-+ * Returns 0 on success, or -EINVAL if the interrupt specifier is out of range.
-+ */
-+static inline int pci_irqd_intx_xlate(struct irq_domain *d,
-+				      struct device_node *node,
-+				      const u32 *intspec,
-+				      unsigned int intsize,
-+				      unsigned long *out_hwirq,
-+				      unsigned int *out_type)
++static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
 +{
-+	const u32 intx = intspec[0];
++	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
 +
-+	if (intx < PCI_INTERRUPT_INTA || intx > PCI_INTERRUPT_INTD)
-+		return -EINVAL;
-+
-+	*out_hwirq = intx - PCI_INTERRUPT_INTA;
-+	return 0;
++	iproc_pcie_shutdown(pcie);
 +}
 +
- #ifdef CONFIG_PCIEPORTBUS
- extern bool pcie_ports_disabled;
- extern bool pcie_ports_auto;
+ static struct platform_driver iproc_pcie_pltfm_driver = {
+ 	.driver = {
+ 		.name = "iproc-pcie",
+@@ -141,6 +148,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	},
+ 	.probe = iproc_pcie_pltfm_probe,
+ 	.remove = iproc_pcie_pltfm_remove,
++	.shutdown = iproc_pcie_pltfm_shutdown,
+ };
+ module_platform_driver(iproc_pcie_pltfm_driver);
+ 
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 37f4adf..cbdabe8 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -659,7 +659,7 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+ 	.write = iproc_pcie_config_write32,
+ };
+ 
+-static void iproc_pcie_reset(struct iproc_pcie *pcie)
++static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+ {
+ 	u32 val;
+ 
+@@ -671,19 +671,26 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+ 	if (pcie->ep_is_internal)
+ 		return;
+ 
+-	/*
+-	 * Select perst_b signal as reset source. Put the device into reset,
+-	 * and then bring it out of reset
+-	 */
+-	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+-	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+-		~RC_PCIE_RST_OUTPUT;
+-	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-	udelay(250);
+-
+-	val |= RC_PCIE_RST_OUTPUT;
+-	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-	msleep(100);
++	if (assert) {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
++			~RC_PCIE_RST_OUTPUT;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		udelay(250);
++	} else {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val |= RC_PCIE_RST_OUTPUT;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		msleep(100);
++	}
++}
++
++int iproc_pcie_shutdown(struct iproc_pcie *pcie)
++{
++	iproc_pcie_perst_ctrl(pcie, true);
++	msleep(500);
++
++	return 0;
+ }
+ 
+ static int iproc_pcie_check_link(struct iproc_pcie *pcie)
+@@ -1365,7 +1372,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_exit_phy;
+ 	}
+ 
+-	iproc_pcie_reset(pcie);
++	iproc_pcie_perst_ctrl(pcie, true);
++	iproc_pcie_perst_ctrl(pcie, false);
+ 
+ 	if (pcie->need_ob_cfg) {
+ 		ret = iproc_pcie_map_ranges(pcie, res);
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 0bbe2ea..a6b55ce 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -110,6 +110,7 @@ struct iproc_pcie {
+ 
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+ int iproc_pcie_remove(struct iproc_pcie *pcie);
++int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+ 
+ #ifdef CONFIG_PCIE_IPROC_MSI
+ int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
 -- 
-2.13.4
+1.9.1
