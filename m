@@ -1,179 +1,228 @@
-Return-Path: <SRS0=dKUp=74=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=dKUp=74=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Marc Gonzalez <Marc_Gonzalez@sigmadesigns.com>
-References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
- <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
- <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
- <86efs3wesi.fsf@arm.com>
- <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
- <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
- <CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
- <e381170c-e462-01cd-12db-30773005602b@free.fr> <871so09j6g.fsf@arm.com>
- <acdef092-3fb9-4338-5199-a458ac2439c7@free.fr>
- <4954977e-46fd-8d54-ec76-db2134d3073a@arm.com>
- <de6d3ad7-80ee-3b47-d084-54cada956232@free.fr>
- <349671d2-077f-4702-2dac-d82276ddd675@arm.com>
- <50ba5ba7-6f5d-5a38-9fa3-7ba798165609@free.fr> <86378ewk6n.fsf@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <087c0577-80f7-7e1c-66d4-daf6d6d47f18@free.fr>
-Date: Sat, 26 Aug 2017 20:12:23 +0200
+Return-Path: <SRS0=6IDk=72=mediatek.com=honghui.zhang@kernel.org>
+Return-Path: <SRS0=6IDk=72=mediatek.com=honghui.zhang@kernel.org>
+Message-ID: <1503544447.19072.7.camel@mhfsdcap03>
+Subject: Re: [pci:pci/host-mediatek 11/11]
+ drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared
+From: mtk11102 <honghui.zhang@mediatek.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: kbuild test robot <fengguang.wu@intel.com>, <kbuild-all@01.org>,
+	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 24 Aug 2017 11:14:07 +0800
+In-Reply-To: <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
+References: <201708232205.SymULNVt%fengguang.wu@intel.com>
+	 <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <86378ewk6n.fsf@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On 26/08/2017 15:08, Marc Zyngier wrote:
-
-> On Aug 25 2017 at 18:44, Mason wrote:
->
->> On 25/08/2017 17:45, Robin Murphy wrote:
->>
->>> On 25/08/17 16:35, Mason wrote:
->>>
->>>> On 25/08/2017 17:25, Robin Murphy wrote:
->>>>
->>>>> On 25/08/17 16:01, Mason wrote:
->>>>>
->>>>>> Robin wrote a prophetic post back in March:
->>>>>> http://lists.infradead.org/pipermail/linux-arm-kernel/2017-March/492965.html
->>>>>>
->>>>>>> The appropriate DT property would be "dma-ranges", i.e.
->>>>>>>
->>>>>>> pci@... {
->>>>>>> 	...
->>>>>>> 	dma-ranges = <(PCI bus address) (CPU phys address) (size)>;
->>>>>>> }
->>>>>>
->>>>>> The dma-ranges property seems to be exactly what I'm looking for:
->>>>>>
->>>>>> Restrict DMA to the first X MB of RAM (use a bounce buffer
->>>>>> for other physical addresses).
->>>>>>
->>>>>> I added the following property to my PCIe node
->>>>>>
->>>>>>   dma-ranges = <0x0 0x80000000 0x80000000 0x20000000>;
->>>>>>
->>>>>> with the intent to create a 1:1 mapping for [0x80000000, 0xa0000000[
->>>>>>
->>>>>> But it does not work. Arg!
->>>>>>
->>>>>> My PCIe controller driver seems to be correctly calling of_dma_get_range:
->>>>>>
->>>>>> [ 0.520469] [<c03d85e8>] (of_dma_get_range) from [<c03d5ad8>] (of_dma_configure+0x48/0x234)
->>>>>> [ 0.520483] [<c03d5ad8>] (of_dma_configure) from [<c02fa154>] (pci_device_add+0xac/0x350)
->>>>>> [ 0.520493] [<c02fa154>] (pci_device_add) from [<c02fa488>] (pci_scan_single_device+0x90/0xb0)
->>>>>> [ 0.520501] [<c02fa488>] (pci_scan_single_device) from [<c02fa500>] (pci_scan_slot+0x58/0x100)
->>>>>> [ 0.520510] [<c02fa500>] (pci_scan_slot) from [<c02fb418>] (pci_scan_child_bus+0x20/0xf8)
->>>>>> [ 0.520519] [<c02fb418>] (pci_scan_child_bus) from [<c02fb6e8>] (pci_scan_root_bus_msi+0xcc/0xd8)
->>>>>> [ 0.520527] [<c02fb6e8>] (pci_scan_root_bus_msi) from> [<c02fb70c>] (pci_scan_root_bus+0x18/0x20)
->>>>>> [ 0.520537] [<c02fb70c>] (pci_scan_root_bus) from [<c0310544>] (pci_host_common_probe+0xc8/0x314)
->>>>>> [ 0.520546] [<c0310544>] (pci_host_common_probe) from [<c0310ce8>] (tango_pcie_probe+0x148/0x350)
->>>>>> [ 0.520557] [<c0310ce8>] (tango_pcie_probe) from [<c034d398>] (platform_drv_probe+0x34/0x6c)
->>>>>>
->>>>>> of_dma_get_range() is called on the pcie node (which is expected)
->>>>>> but after parsing n_addr_cells and n_size_cells in the while loop,
->>>>>> the code jumps to the parent node ("soc")... while my property is
->>>>>> attached to the pcie node...
->>>>>
->>>>> This is not your driver calling of_dma_get_range(), this is the PCI core
->>>>> doing so in the act of DMA master configuration for a discovered
->>>>> *endpoint*. The fact that the "pass the host controller's OF node
->>>>> because we don't have one for the endpoint" bodge only works properly
->>>>> for dma-coherent and not dma-ranges is a known, but irrelevant, problem.
->>>>>
->>>>> If your host controller driver needs to discover its windows from DT to
->>>>> configure *itself*, it needs to parse dma-ranges itself; see pcie-iproc,
->>>>> pcie-racar, pcie-xgene, etc. for examples.
->>>>
->>>> Yes, I'm aware that I need to do my own parsing of dma-ranges.
->>>> I can use that information to configure BAR0.base and the
->>>> region registers.
->>>>
->>>> But Linux needs to record my settings at some point, right?
->>>> Otherwise, how does the DMA framework know that devices can
->>>> only reach cpu addresses [0x80000000, 0xa0000000[ and when
->>>> to use bounce buffers?
->>>>
->>>> What's preventing the XHCI driver from allocating memory
->>>> outside of my "safe" range, and having the DMA framework
->>>> blindly map that?
->>>
->>> At the moment, nothing. Systems that have physical memory that is not
->>> visible in PCI mem space are having a bad time and will not go to space
->>> today.
->>>
->>> But that bears no relation to your MSI controller getting its doorbell
->>> address set appropriately.
->>
->> OK, so this is what I propose for v11 in order to not
->> hard code the MSI doorbell address (e.g. 0xa002e07c)
->>
->> I add the following property to the pcie node:
->>
->> 	dma-ranges = <0x0 0x80000000 0x80000000 0x20000000>;
->>
->> I.e. pci_addr = 0x80000000, cpu_addr = 0x80000000, len=0x20000000
->>
->> Then in the PCIe driver, I parse dma-ranges.
->>
->> Consequently
->>
->> 	MSI_doorbell_addr = cpu_addr + len + res.start + 0x7c
->>
->> Bjorn, Marc, Robin, is that an acceptable solution?
+On Wed, 2017-08-23 at 17:52 -0500, Bjorn Helgaas wrote:
+> On Wed, Aug 23, 2017 at 10:53:07PM +0800, kbuild test robot wrote:
+> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-mediatek
+> > head:   8e8ed61600e99258ff59bf36b85b671eed25a462
+> > commit: 8e8ed61600e99258ff59bf36b85b671eed25a462 [11/11] PCI: mediatek: Add MSI support for MT2712 and MT7622
+> > config: arm-allmodconfig (attached as .config)
+> > compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
+> > reproduce:
+> >         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >         chmod +x ~/bin/make.cross
+> >         git checkout 8e8ed61600e99258ff59bf36b85b671eed25a462
+> >         # save the attached .config to linux build tree
+> >         make.cross ARCH=arm 
 > 
-> It seems to work, but I still have my doubts about this BAR0.base and
-> the associated regions. Are these regions so hardcoded in HW that the RC
-> cannot DMA outside of this 1GB region? Or can it be reconfigured by some
-> SW agent to cover more RAM, should someone decide that 1GB is on the
-> "too little" side?
+> The "node" and "dev" undeclared errors are my fault, and I fixed them.  But
+> I don't think I introduced the casting warnings.  These warnings are on a
+> 32-bit build.
 > 
-> If the former is true, the HW is remarkably busted and/or inflexible.
+> I pushed the update to fix the node/dev errors.  Please take a look at the
+> remaining casting warnings.
+> 
+> > All error/warnings (new ones prefixed by >>):
+> > 
+> >    In file included from include/linux/clk.h:16:0,
+> >                     from drivers/pci/host/pcie-mediatek.c:18:
+> >    drivers/pci/host/pcie-mediatek.c: In function 'mtk_pcie_msi_setup_irq':
+> > >> drivers/pci/host/pcie-mediatek.c:488:33: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+> >      msg.address_lo = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+> >                                     ^
+> >    include/linux/kernel.h:178:33: note: in definition of macro 'lower_32_bits'
+> >     #define lower_32_bits(n) ((u32)(n))
+> >                                     ^
+> >    drivers/pci/host/pcie-mediatek.c: In function 'mtk_pcie_enable_msi':
+> > >> drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared (first use in this function)
+> >      port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
+> >                                               ^~~~
+> >    drivers/pci/host/pcie-mediatek.c:541:43: note: each undeclared identifier is reported only once for each function it appears in
+> > >> drivers/pci/host/pcie-mediatek.c:545:11: error: 'dev' undeclared (first use in this function)
+> >       dev_err(dev, "failed to create MSI IRQ domain\n");
+> >               ^~~
+> >    In file included from include/linux/clk.h:16:0,
+> >                     from drivers/pci/host/pcie-mediatek.c:18:
+> >    drivers/pci/host/pcie-mediatek.c:549:22: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+> >      val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+> >                          ^
+> >    include/linux/kernel.h:178:33: note: in definition of macro 'lower_32_bits'
+> >     #define lower_32_bits(n) ((u32)(n))
+> >                                     ^
+> > 
 
-This HW block has already been deemed insane because
-of the muxing of mem and config space... So you're
-late to the party :-)
+hi, Bjorn,
+I fixed the build warning at arm by the following diff:
+diff --git a/drivers/pci/host/pcie-mediatek.c
+b/drivers/pci/host/pcie-mediatek.c
+index 707e669..b8d6ed8 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -459,6 +459,7 @@ static int mtk_pcie_msi_setup_irq(struct
+msi_controller *chip,
+        struct msi_msg msg;
+        int hwirq;
+        u32 irq;
++       phys_addr_t msg_addr;
 
-I wouldn't call the regions "hard-coded" since they are
-software-configurable to point anywhere in the CPU bus.
-(Although I'm not sure if that's any use, since the DMA
-framework seems to expect a 1:1 mapping.)
+        port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
+        if (!port)
+@@ -475,9 +476,10 @@ static int mtk_pcie_msi_setup_irq(struct
+msi_controller *chip,
 
-But the other side (PCI bus) is quite inflexible:
-accesses to addresses outside the window defined by BAR0
-are silently ignored, no working around that :-(
+        irq_set_msi_desc(irq, desc);
 
-> If the latter is true, then the dma-ranges property feels very fragile, as
-> it must be kept in sync with the amount of memory that the system has.
++       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+        /* MT2712/MT7622 only support 32 bit MSI address */
+        msg.address_hi = 0;
+-       msg.address_lo = lower_32_bits((u64)(port->base +
+PCIE_MSI_VECTOR));
++       msg.address_lo = lower_32_bits(msg_addr);
+        msg.data = hwirq;
 
-I'm confused.
+        pci_write_msi_msg(irq, &msg);
+@@ -531,8 +533,10 @@ static const struct irq_domain_ops msi_domain_ops =
+{
+ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+ {
+        u32 val;
++       phys_addr_t msg_addr;
 
-As I pointed out, the dma-ranges in the pcie node is
-ignored by the DMA framework. And Robin confirmed that
-"Systems that have physical memory that is not visible
-in PCI mem space are having a bad time and will not go
-to space today."
+-       val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
++       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
++       val = lower_32_bits(msg_addr);
+        writel(val, port->base + PCIE_IMSI_ADDR);
 
-So there are several setups where something is bound
-to break:
+        val = readl(port->base + PCIE_INT_MASK);
 
-1) Linux manages more than 1 GB (contiguous)
-=> because one region needs to point to the doorbell
-area, so 128 MB are wasted.
 
-2) Linux manages non-contiguous memory
-=> e.g. 128MB@0x80000000 + 128MB@0xc0000000
+I pull the your host-mediatek branch and seems the build error is still
+there.
+Should I send a new patch base on your pci/host-mediatek to fix the
+build warnings, or should I wait for your push for build error and then
+send the patch?
 
-That's why I've asked about bounce buffers.
+thanks.
 
-The system I test on boots with mem=512MB
-
-Regards.
+> > vim +/node +541 drivers/pci/host/pcie-mediatek.c
+> > 
+> >    459	
+> >    460	static int mtk_pcie_msi_setup_irq(struct msi_controller *chip,
+> >    461					  struct pci_dev *pdev, struct msi_desc *desc)
+> >    462	{
+> >    463		struct mtk_pcie_port *port;
+> >    464		struct msi_msg msg;
+> >    465		unsigned int irq;
+> >    466		int hwirq;
+> >    467	
+> >    468		port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
+> >    469		if (!port)
+> >    470			return -EINVAL;
+> >    471	
+> >    472		hwirq = mtk_pcie_msi_alloc(port);
+> >    473		if (hwirq < 0)
+> >    474			return hwirq;
+> >    475	
+> >    476		irq = irq_create_mapping(port->msi_domain, hwirq);
+> >    477		if (!irq) {
+> >    478			mtk_pcie_msi_free(port, hwirq);
+> >    479			return -EINVAL;
+> >    480		}
+> >    481	
+> >    482		chip->dev = &pdev->dev;
+> >    483	
+> >    484		irq_set_msi_desc(irq, desc);
+> >    485	
+> >    486		/* MT2712/MT7622 only support 32-bit MSI addresses */
+> >    487		msg.address_hi = 0;
+> >  > 488		msg.address_lo = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+> >    489		msg.data = hwirq;
+> >    490	
+> >    491		pci_write_msi_msg(irq, &msg);
+> >    492	
+> >    493		return 0;
+> >    494	}
+> >    495	
+> >    496	static void mtk_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+> >    497	{
+> >    498		struct pci_dev *pdev = to_pci_dev(chip->dev);
+> >    499		struct irq_data *d = irq_get_irq_data(irq);
+> >    500		irq_hw_number_t hwirq = irqd_to_hwirq(d);
+> >    501		struct mtk_pcie_port *port;
+> >    502	
+> >    503		port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
+> >    504		if (!port)
+> >    505			return;
+> >    506	
+> >    507		irq_dispose_mapping(irq);
+> >    508		mtk_pcie_msi_free(port, hwirq);
+> >    509	}
+> >    510	
+> >    511	static struct msi_controller mtk_pcie_msi_chip = {
+> >    512		.setup_irq = mtk_pcie_msi_setup_irq,
+> >    513		.teardown_irq = mtk_msi_teardown_irq,
+> >    514	};
+> >    515	
+> >    516	static struct irq_chip mtk_msi_irq_chip = {
+> >    517		.name = "MTK PCIe MSI",
+> >    518		.irq_enable = pci_msi_unmask_irq,
+> >    519		.irq_disable = pci_msi_mask_irq,
+> >    520		.irq_mask = pci_msi_mask_irq,
+> >    521		.irq_unmask = pci_msi_unmask_irq,
+> >    522	};
+> >    523	
+> >    524	static int mtk_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> >    525				    irq_hw_number_t hwirq)
+> >    526	{
+> >    527		irq_set_chip_and_handler(irq, &mtk_msi_irq_chip, handle_simple_irq);
+> >    528		irq_set_chip_data(irq, domain->host_data);
+> >    529	
+> >    530		return 0;
+> >    531	}
+> >    532	
+> >    533	static const struct irq_domain_ops msi_domain_ops = {
+> >    534		.map = mtk_pcie_msi_map,
+> >    535	};
+> >    536	
+> >    537	static int mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+> >    538	{
+> >    539		u32 val;
+> >    540	
+> >  > 541		port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
+> >    542							 &msi_domain_ops,
+> >    543							 &mtk_pcie_msi_chip);
+> >    544		if (!port->msi_domain) {
+> >  > 545			dev_err(dev, "failed to create MSI IRQ domain\n");
+> >    546			return -ENOMEM;
+> >    547		}
+> >    548	
+> >    549		val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+> >    550		writel(val, port->base + PCIE_IMSI_ADDR);
+> >    551	
+> >    552		val = readl(port->base + PCIE_INT_MASK);
+> >    553		val &= ~MSI_MASK;
+> >    554		writel(val, port->base + PCIE_INT_MASK);
+> >    555	
+> >    556		return 0;
+> >    557	}
+> >    558	
+> > 
+> > ---
+> > 0-DAY kernel test infrastructure                Open Source Technology Center
+> > https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> 
+> 
