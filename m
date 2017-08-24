@@ -1,101 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:6436 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751492AbdHKGmM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Aug 2017 02:42:12 -0400
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        Bob Liu <liubo95@huawei.com>, valmiki <valmikibow@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-CC: "Lan, Tianyu" <tianyu.lan@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "Pan, Jacob jun" <jacob.jun.pan@intel.com>
-Subject: RE: Support SVM without PASID
-Date: Fri, 11 Aug 2017 06:41:39 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D190D6EDB7@SHSMSX101.ccr.corp.intel.com>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
- <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
- <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
- <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
- <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
- <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
- <ed289d79-880a-a542-dcb1-0de8c55a8ca0@huawei.com>
- <1ef75c2d-f980-5cef-f760-be3b133c82ca@arm.com>
-In-Reply-To: <1ef75c2d-f980-5cef-f760-be3b133c82ca@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=GXRf=72=sntech.de=heiko@kernel.org>
+Return-Path: <SRS0=GXRf=72=sntech.de=heiko@kernel.org>
+From: Heiko Stuebner <heiko@sntech.de>
+To: Bjorn Helgaas <helgaas@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Fabio Estevam <festevam@gmail.com>, bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: rockchip: Use gpiod_set_value_cansleep() to allow reset via expanders
+Date: Thu, 24 Aug 2017 18:37:02 +0200
+Message-ID: <1690109.dqujpfY2W8@phil>
+In-Reply-To: <20170824163323.GG31858@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503187634-3823-1-git-send-email-festevam@gmail.com> <20170824163323.GG31858@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Jean-Philippe Brucker [mailto:jean-philippe.brucker@arm.com]
-> Sent: Monday, August 7, 2017 8:52 PM
+Am Donnerstag, 24. August 2017, 11:33:23 CEST schrieb Bjorn Helgaas:
+> On Sat, Aug 19, 2017 at 09:07:14PM -0300, Fabio Estevam wrote:
+> > The reset GPIO can be connected to a I2C or SPI IO expander, which may
+> > sleep, so it is safer to use the gpiod_set_value_cansleep() variant
+> > instead.
+> > 
+> > Signed-off-by: Fabio Estevam <festevam@gmail.com>
 > 
-> Hi Bob,
-> 
-> On 07/08/17 13:18, Bob Liu wrote:
-> > On 2017/8/7 18:31, Jean-Philippe Brucker wrote:
-> >> On 05/08/17 06:14, valmiki wrote:
-> >> [...]
-> >>> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
-> >>> documentation we fill vaddr and iova in struct
-> vfio_iommu_type1_dma_map
-> >>> and pass them to VFIO. But if we use dynamic allocation in application
-> >>> (say malloc), do we need to use dma API to get iova and then call
-> >>> VFIO_IOMMU_MAP ioctl ?
-> >>> If application needs multiple such dynamic allocations, then it need to
-> >>> allocate large chunk and program it via VFIO_IOMMU_MAP ioctl and
-> then
-> >>> manage rest allocations requirements from this buffer ?
-> >>
-> >> Yes, without SVM, the application allocates large buffers, allocates IOVAs
-> >> itself, and maps them with VFIO_IOMMU_MAP. Userspace doesn't rely on
-> the
-> >> DMA API at all, it manages IOVAs as it wants. Sizes passed to
-> >> VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page
-> granularity
-> >> (that is at least 4kB), and both iova and vaddr have to be aligned on that
-> >> granularity as well. So malloc isn't really suitable in this case, you'll
-> >> need mmap. The application can then implement a small allocator to
-> manage
-> >> the DMA pool created with VFIO_IOMMU_MAP.
-> >>
-> >> With SVM the application binds its address space to the device, and then
-> >> uses malloc for all DMA buffers, no need for VFIO_IOMMU_MAP.
-> >>
-> >
-> > Hi Jean,
-> >
-> > I think there is another way to support SVM without PASID.
-> >
-> > Suppose there is a device in the same SOC-chip, the device access memory
-> through SMMU(using internal bus instead of PCIe)
-> > Once page fault, the device send an event with (vaddr, substreamID) to
-> SMMU, then SMMU triggers an event interrupt.
-> >
-> > In the event interrupt handler, we can implement the same logic as PRI
-> interrupt in your patch.
-> > What do you think about that?
-> What you're describing is the SMMU stall model for platform devices. From
-> the driver perspective it's the same as PRI and PASID (SubstreamID=PASID).
-> 
-> When a stall-capable device accesses unmapped memory, the SMMU parks
-> the
-> transaction and sends an event marked "stall" on the event queue, with a
-> stall tag (STAG, roughly equivalent to PRG Index). The OS handles the
-> fault and sends a CMD_RESUME command with the status and the STAG.
-> Then
-> the SMMU completes the access or terminates it.
+> Waiting for Shawn's ack...
 
-Can such platform device send multiple SubstreamIDs, or one ID per
-device? 
+we might want to include him then, as I'm not sure if he patrols the
+linux-pci list :-) . [I've added him]
 
-Thanks
-Kevin
+
+> 
+> > ---
+> >  drivers/pci/host/pcie-rockchip.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> > index 2eccd53..124b280 100644
+> > --- a/drivers/pci/host/pcie-rockchip.c
+> > +++ b/drivers/pci/host/pcie-rockchip.c
+> > @@ -537,7 +537,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+> >  	int err, i;
+> >  	u32 status;
+> >  
+> > -	gpiod_set_value(rockchip->ep_gpio, 0);
+> > +	gpiod_set_value_cansleep(rockchip->ep_gpio, 0);
+> >  
+> >  	err = reset_control_assert(rockchip->aclk_rst);
+> >  	if (err) {
+> > @@ -682,7 +682,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+> >  	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+> >  			    PCIE_CLIENT_CONFIG);
+> >  
+> > -	gpiod_set_value(rockchip->ep_gpio, 1);
+> > +	gpiod_set_value_cansleep(rockchip->ep_gpio, 1);
+> >  
+> >  	/* 500ms timeout value should be enough for Gen1/2 training */
+> >  	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_BASIC_STATUS1,
+> 
+> 
