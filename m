@@ -1,121 +1,115 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
- <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linuxarm@huawei.com>
-Subject: [PATCH v9 4/4] net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING
- flag
-Date: Sat, 5 Aug 2017 15:15:13 +0800
-Message-ID: <1501917313-9812-5-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48376 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753411AbdHXWNE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Aug 2017 18:13:04 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAKv+Gu-D0tgygJ84iGEoEU9OcjUwrtvS2Z2wrOHAZ9kO_kE_rA@mail.gmail.com>
+References: <20170824184321.19432-1-ard.biesheuvel@linaro.org>
+ <20170824184321.19432-4-ard.biesheuvel@linaro.org> <CAL_JsqJTGeLv-c0wXCvMZggU4yzo__s-pD7qEZ7Q3w8=uUuu4Q@mail.gmail.com>
+ <CAKv+Gu-D0tgygJ84iGEoEU9OcjUwrtvS2Z2wrOHAZ9kO_kE_rA@mail.gmail.com>
+From: Rob Herring <robh@kernel.org>
+Date: Thu, 24 Aug 2017 17:12:42 -0500
+Message-ID: <CAL_JsqJkDmT3_Umhi+y9e6qML+Ei=ee7G7EohpoMJacBeecirQ@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] dt-bindings: designware: add binding for
+ Designware PCIe in ECAM mode
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Marcin Wojtas <mw@semihalf.com>,
+        Leif Lindholm <leif.lindholm@linaro.org>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+On Thu, Aug 24, 2017 at 3:12 PM, Ard Biesheuvel
+<ard.biesheuvel@linaro.org> wrote:
+> On 24 August 2017 at 21:02, Rob Herring <robh@kernel.org> wrote:
+>> Cc the DT list for bindings please.
+>>
+>> On Thu, Aug 24, 2017 at 1:43 PM, Ard Biesheuvel
+>> <ard.biesheuvel@linaro.org> wrote:
+>>> Describe the binding for firmware-configured instances of the Synopsys
+>>> Designware PCIe controller in RC mode.
+>>>
+>>> Cc: Rob Herring <robh@kernel.org>
+>>> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>>> ---
+>>>  Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 56 ++++++++++++++++++++
+>>>  1 file changed, 56 insertions(+)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+>>> new file mode 100644
+>>> index 000000000000..b8127b19c220
+>>> --- /dev/null
+>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+>>> @@ -0,0 +1,56 @@
+>>> +* Synopsys Designware PCIe root complex in ECAM mode
+>>> +
+>>> +In some cases, firmware may already have configured the Synopsys Designware
+>>> +PCIe controller in RC mode with static ATU window mappings that cover all
+>>> +config, MMIO and I/O spaces in a [mostly] ECAM compatible fashion.
+>>> +In this case, there is no need for the OS to perform any low level setup
+>>> +of clocks or device registers, nor is there any reason for the driver to
+>>> +reconfigure ATU windows for config and/or IO space accesses at runtime.
+>>> +
+>>> +Such hardware configurations should be described as "pci-host-ecam-generic"
+>>> +if they are truly ECAM compatible. Configurations that require no low-level
+>>> +setup by the OS nor any ATU window reconfiguration at runtime, but do
+>>> +require special handling for type 0 config TLPs may instead be described as
+>>> +"snps,dw-pcie-ecam".
+>>
+>> Humm, what happens when we have the next exception that's SoC specific
+>> or another vendor?
+>
+> This is not SoC specific, but IP specific. We are working with two
+> different SoCs from completely different vendors that both synthesized
+> this IP with a 64 KB ATU window size, not expecting this to break ECAM
+> compatibility.
 
-cxgb4vf Ethernet driver now queries PCIe configuration space to
-determine if it can send TLPs to it with the Relaxed Ordering
-Attribute set, just like the pf did.
+This case is not SoC specific, but quirks/bugs show up in both places.
+Plus "dw-pcie" is fairly meaningless because the IP is both
+configurable and has multiple releases.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Reviewed-by: Casey Leedom <leedom@chelsio.com>
----
- drivers/net/ethernet/chelsio/cxgb4vf/adapter.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c | 18 ++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4vf/sge.c          |  3 +++
- 3 files changed, 22 insertions(+)
+>> Seems like perhaps "firmware initialized" should
+>> have been a separate property flag for bootloaders to add rather than
+>> a compatible string.
+>>
+>
+> Yes, but then you still have 10 different drivers that all retain the
+> low-level bits that are all different between SoCs. That is exactly
+> what I want to get rid of, and usually we can do that with existing
+> bindings, because we simply expose it as pci-host-ecam-generic. Only
+> in this particular case, that doesn't fly due to the quirk.
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h b/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-index 109bc63..08c6ddb 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-@@ -408,6 +408,7 @@ enum { /* adapter flags */
- 	USING_MSI          = (1UL << 1),
- 	USING_MSIX         = (1UL << 2),
- 	QUEUES_BOUND       = (1UL << 3),
-+	ROOT_NO_RELAXED_ORDERING = (1UL << 4),
- };
- 
- /*
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-index ac7a150..59e7639 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-@@ -2888,6 +2888,24 @@ static int cxgb4vf_pci_probe(struct pci_dev *pdev,
- 	 */
- 	adapter->name = pci_name(pdev);
- 	adapter->msg_enable = DFLT_MSG_ENABLE;
-+
-+	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-+	 * Ingress Packet Data to Free List Buffers in order to allow for
-+	 * chipset performance optimizations between the Root Complex and
-+	 * Memory Controllers.  (Messages to the associated Ingress Queue
-+	 * notifying new Packet Placement in the Free Lists Buffers will be
-+	 * send without the Relaxed Ordering Attribute thus guaranteeing that
-+	 * all preceding PCIe Transaction Layer Packets will be processed
-+	 * first.)  But some Root Complexes have various issues with Upstream
-+	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-+	 * The PCIe devices which under the Root Complexes will be cleared the
-+	 * Relaxed Ordering bit in the configuration space, So we check our
-+	 * PCIe configuration space to see if it's flagged with advice against
-+	 * using Relaxed Ordering.
-+	 */
-+	if (!pcie_relaxed_ordering_supported(pdev))
-+		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-+
- 	err = adap_init0(adapter);
- 	if (err)
- 		goto err_unmap_bar;
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-index e37dde2..05498e7 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-@@ -2205,6 +2205,7 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
- 	struct port_info *pi = netdev_priv(dev);
- 	struct fw_iq_cmd cmd, rpl;
- 	int ret, iqandst, flsz = 0;
-+	int relaxed = !(adapter->flags & ROOT_NO_RELAXED_ORDERING);
- 
- 	/*
- 	 * If we're using MSI interrupts and we're not initializing the
-@@ -2300,6 +2301,8 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
- 			cpu_to_be32(
- 				FW_IQ_CMD_FL0HOSTFCMODE_V(SGE_HOSTFCMODE_NONE) |
- 				FW_IQ_CMD_FL0PACKEN_F |
-+				FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
-+				FW_IQ_CMD_FL0DATARO_V(relaxed) |
- 				FW_IQ_CMD_FL0PADEN_F);
- 
- 		/* In T6, for egress queue type FL there is internal overhead
--- 
-1.8.3.1
+You can expose it as "vendor,soc-pcie", "pci-host-ecam-generic" and
+then the kernel can decide. Then you can use: the default ecam driver,
+the ecam driver but match on "vendor,soc-pcie" for quirks, or a vendor
+specific driver. The only thing that wouldn't work would be having
+both quirks in the ecam driver and a vendor driver which IMO we just
+shouldn't support anyway.
 
+Now if you have 10 SoCs all needing this same quirk, then maybe adding
+"snps,dw-pcie-ecam" addtionally to the above makes sense. But that
+only saves you match strings.
 
+>> I'd rather see this done in a way that does not require DT updates if
+>> quirks have to be handled/added later.
+>>
+>
+> Do you see a way that still allows us to keep the abstraction? I don't
+> want a flag, I simply don't want to expose any low-level specifics
+> about the device to the OS, beyond what it needs to use it in its
+> configured state.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+That's not how DT works. Detailed information is exposed to the OS and
+the OS decides if it can handle things generically or not because that
+decision can change over time. Whenever we don't make things specific
+enough, we've gotten burned.
+
+Rob
