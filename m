@@ -1,104 +1,121 @@
-Return-Path: <SRS0=m010=7Q=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=m010=7Q=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v10 5/5] net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Mon, 14 Aug 2017 23:44:59 +0800
-Message-ID: <1502725499-11276-6-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
-References: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 2/3] pci: designware: add separate driver for the MSI part
+ of the RC
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org
+References: <20170821192907.8695-1-ard.biesheuvel@linaro.org>
+ <20170821192907.8695-3-ard.biesheuvel@linaro.org>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <e1f5e20d-929f-db8d-1c60-181698e678f0@arm.com>
+Date: Thu, 24 Aug 2017 17:48:34 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170821192907.8695-3-ard.biesheuvel@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+ Graeme Gregory <graeme.gregory@linaro.org>,
+ Marc Zyngier <marc.zyngier@arm.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Leif Lindholm <leif.lindholm@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+Hi Ard,
 
-cxgb4vf Ethernet driver now queries PCIe configuration space to
-determine if it can send TLPs to it with the Relaxed Ordering
-Attribute set, just like the pf did.
+On 21/08/17 20:29, Ard Biesheuvel wrote:
+[...]
+> +static int dw_pcie_msi_probe(struct platform_device *pdev)
+> +{
+> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Reviewed-by: Casey Leedom <leedom@chelsio.com>
----
- drivers/net/ethernet/chelsio/cxgb4vf/adapter.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c | 18 ++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4vf/sge.c          |  3 +++
- 3 files changed, 22 insertions(+)
+Mini-nit: since fairly recently (f94277af03ea) dev->fwnode should
+already be set appropriately by of_platform_device_create(), so you
+should be able to make this entirely firmware-agnostic if you like.
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h b/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-index 109bc63..08c6ddb 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-@@ -408,6 +408,7 @@ enum { /* adapter flags */
- 	USING_MSI          = (1UL << 1),
- 	USING_MSIX         = (1UL << 2),
- 	QUEUES_BOUND       = (1UL << 3),
-+	ROOT_NO_RELAXED_ORDERING = (1UL << 4),
- };
- 
- /*
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-index ac7a150..2b85b87 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-@@ -2888,6 +2888,24 @@ static int cxgb4vf_pci_probe(struct pci_dev *pdev,
- 	 */
- 	adapter->name = pci_name(pdev);
- 	adapter->msg_enable = DFLT_MSG_ENABLE;
-+
-+	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-+	 * Ingress Packet Data to Free List Buffers in order to allow for
-+	 * chipset performance optimizations between the Root Complex and
-+	 * Memory Controllers.  (Messages to the associated Ingress Queue
-+	 * notifying new Packet Placement in the Free Lists Buffers will be
-+	 * send without the Relaxed Ordering Attribute thus guaranteeing that
-+	 * all preceding PCIe Transaction Layer Packets will be processed
-+	 * first.)  But some Root Complexes have various issues with Upstream
-+	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-+	 * The PCIe devices which under the Root Complexes will be cleared the
-+	 * Relaxed Ordering bit in the configuration space, So we check our
-+	 * PCIe configuration space to see if it's flagged with advice against
-+	 * using Relaxed Ordering.
-+	 */
-+	if (!pcie_relaxed_ordering_enabled(pdev))
-+		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-+
- 	err = adap_init0(adapter);
- 	if (err)
- 		goto err_unmap_bar;
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-index e37dde2..05498e7 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-@@ -2205,6 +2205,7 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
- 	struct port_info *pi = netdev_priv(dev);
- 	struct fw_iq_cmd cmd, rpl;
- 	int ret, iqandst, flsz = 0;
-+	int relaxed = !(adapter->flags & ROOT_NO_RELAXED_ORDERING);
- 
- 	/*
- 	 * If we're using MSI interrupts and we're not initializing the
-@@ -2300,6 +2301,8 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
- 			cpu_to_be32(
- 				FW_IQ_CMD_FL0HOSTFCMODE_V(SGE_HOSTFCMODE_NONE) |
- 				FW_IQ_CMD_FL0PACKEN_F |
-+				FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
-+				FW_IQ_CMD_FL0DATARO_V(relaxed) |
- 				FW_IQ_CMD_FL0PADEN_F);
- 
- 		/* In T6, for egress queue type FL there is internal overhead
--- 
-1.8.3.1
+Robin.
+
+> +	struct device *dev = &pdev->dev;
+> +	struct dw_pcie_msi *dw_msi;
+> +	struct resource *res;
+> +
+> +	dw_msi = devm_kzalloc(dev, sizeof(*dw_msi), GFP_KERNEL);
+> +	if (!dw_msi)
+> +		return -ENOMEM;
+> +
+> +	/* get the control register and map it */
+> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	dw_msi->regbase = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(dw_msi->regbase))
+> +		return PTR_ERR(dw_msi->regbase);
+> +
+> +	/* get the wired interrupt that gets raised when we receive an MSI */
+> +	dw_msi->irq = platform_get_irq(pdev, 0);
+> +	if (dw_msi->irq <= 0) {
+> +		pr_err("Failed to map IRQ\n");
+> +		return -ENXIO;
+> +	}
+> +
+> +	dw_msi->irqd = irq_domain_create_linear(fwnode, MAX_MSI_IRQS,
+> +						&irq_dom_ops, dw_msi);
+> +	if (!dw_msi->irqd) {
+> +		dev_err(dev, "Failed to create IRQ domain\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	dw_msi->msid = pci_msi_create_irq_domain(fwnode, &dw_pcie_msi_dom_info,
+> +						 dw_msi->irqd);
+> +	if (!dw_msi->msid) {
+> +		dev_err(dev, "Failed to create MSI domain\n");
+> +		irq_domain_remove(dw_msi->irqd);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	irq_set_chained_handler_and_data(dw_msi->irq, dw_pcie_msi_isr, dw_msi);
+> +	platform_set_drvdata(pdev, dw_msi);
+> +
+> +	/* program the msi_data */
+> +	writel_relaxed(lower_32_bits(virt_to_phys(&dw_msi->doorbell)),
+> +		       dw_msi->regbase + PCIE_MSI_ADDR_LO);
+> +	writel_relaxed(upper_32_bits(virt_to_phys(&dw_msi->doorbell)),
+> +		       dw_msi->regbase + PCIE_MSI_ADDR_HI);
+> +
+> +	return 0;
+> +}
+> +
+> +static int dw_pcie_msi_remove(struct platform_device *pdev)
+> +{
+> +	struct dw_pcie_msi *dw_msi = platform_get_drvdata(pdev);
+> +
+> +	irq_set_chained_handler_and_data(dw_msi->irq, NULL, NULL);
+> +	irq_domain_remove(dw_msi->msid);
+> +	irq_domain_remove(dw_msi->irqd);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id dw_pcie_dw_msi_of_match[] = {
+> +	{ .compatible = "snps,dw-pcie-msi" },
+> +	{ },
+> +};
+> +
+> +static struct platform_driver pci_dw_msi_driver = {
+> +	.driver.name			= "pcie-designware-msi",
+> +	.driver.of_match_table		= dw_pcie_dw_msi_of_match,
+> +	.probe				= dw_pcie_msi_probe,
+> +	.remove				= dw_pcie_msi_remove,
+> +};
+> +builtin_platform_driver(pci_dw_msi_driver);
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
