@@ -1,116 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57234 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751429AbdHDOab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Aug 2017 10:30:31 -0400
-Date: Fri, 4 Aug 2017 09:30:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, x86@kernel.org,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1] x86/platform/intel-mid: Make IRQ allocation a bit
- more flexible
-Message-ID: <20170804143025.GE16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170724173402.12939-1-andriy.shevchenko@linux.intel.com>
- <20170803220804.GK20308@bhelgaas-glaptop.roam.corp.google.com>
- <1501848579.29303.375.camel@linux.intel.com>
- <20170804132418.GB16580@bhelgaas-glaptop.roam.corp.google.com>
- <1501854195.29303.377.camel@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1501854195.29303.377.camel@linux.intel.com>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:35721 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753021AbdHXSnv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2017 14:43:51 -0400
+Received: by mail-wm0-f50.google.com with SMTP id b189so2146954wmd.0
+        for <linux-pci@vger.kernel.org>; Thu, 24 Aug 2017 11:43:51 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-pci@vger.kernel.org
+Cc: mw@semihalf.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Leif Lindholm <leif.lindholm@linaro.org>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Rob Herring <robh@kernel.org>
+Subject: [PATCH v2 3/3] dt-bindings: designware: add binding for Designware PCIe in ECAM mode
+Date: Thu, 24 Aug 2017 19:43:21 +0100
+Message-Id: <20170824184321.19432-4-ard.biesheuvel@linaro.org>
+In-Reply-To: <20170824184321.19432-1-ard.biesheuvel@linaro.org>
+References: <20170824184321.19432-1-ard.biesheuvel@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 04:43:15PM +0300, Andy Shevchenko wrote:
-> On Fri, 2017-08-04 at 08:24 -0500, Bjorn Helgaas wrote:
-> > On Fri, Aug 04, 2017 at 03:09:39PM +0300, Andy Shevchenko wrote:
-> > > On Thu, 2017-08-03 at 17:08 -0500, Bjorn Helgaas wrote:
-> > > > On Mon, Jul 24, 2017 at 08:34:02PM +0300, Andy Shevchenko wrote:
-> > > > > In the future we would use dynamic allocation for IRQ which
-> > > > > brings
-> > > > > non-1:1 mapping for IOAPIC domain. Thus, we need to respect
-> > > > > return
-> > > > > value
-> > > > > of mp_map_gsi_to_irq() and assign it back to the device
-> > > > > structure.
-> > > > > 
-> > > > > Besides that we need to read GSI from interrupt pin register to
-> > > > > avoid
-> > > > > cases when some drivers will try to initialize PCI device twice
-> > > > > in a
-> > > > > row
-> > > > > which will call pcibios_enable_irq() twice as well.
-> > > > 
-> > > > This seems sort of suspect.  It doesn't seem robust to rely on the
-> > > > value of PCI_INTERRUPT_LINE being zero before
-> > > > pcibios_enable_irq().
-> > > 
-> > > So, you are telling that it's possible to get pcibios_enable_irq()
-> > > called with PCI_INTERRUPT_LINE == 0?
-> > 
-> > I don't know about that.  I'm just saying that it sounds like you're
-> > relying on some condition that is hard to verify.  PCI_INTERRUPT_LINE
-> > is read/write and it's hard to know what, if anything, BIOS did with
-> > it.
-> 
-> _On this platform_ BIOS provides a static mapping for IRQ lines (there
-> is no separate PIR, just IOAPIC). So, that register is initialized by
-> firmware. We are not suppose to touch it _on this platform_.
-> 
-> > > > Can't we make pcibios_enable_irq() idempotent?  I guess I don't
-> > > > understand the real problem here.
-> > > 
-> > > Currently there is no problem here.
-> > > 
-> > > Firmware assigns IRQ line and wrote this to the configuration space.
-> > > Intel MID uses 1:1 mapping (IRQ domain is STRICT), so, it just
-> > > allocates
-> > > a vector inside kernel with the very same number.
-> > > 
-> > > But...
-> > > 
-> > > If we switch to dynamic allocation (it's a default for ACPI case),
-> > > _on
-> > > this platform_ we will get wrong allocation in the IOAPIC since
-> > > mapping
-> > > is not 1:1 anymore.
-> > > 
-> > > That's what I'm trying to avoid (dev->irq after this patch points
-> > > correctly to dynamically allocated number).
-> > > 
-> > > For old SFI enabled platforms it will not make any change.
-> > > 
-> > > Note, there is no legacy PIC on this platform (as same case as for
-> > > ACPI
-> > > HW reduced platforms), just IOAPIC.
-> > > 
-> > > > Is this really two separate patches that could be separated?
-> > > 
-> > > I didn't get this, what separation you see might be applied here?
-> > 
-> > The "Besides that" in your changelog suggested that "here is another
-> > change lumped into this patch."  I was wondering if the "read GSI from
-> > PCI_INTERRUPT_LINE" part could be separated out.  That makes me wonder
-> > whether this is really safe, since GSIs are 32 bits, but
-> > PCI_INTERRUPT_LINE is only 8 bits.  I don't know enough to know why
-> > this is safe in this case.
-> 
-> "Besides that" part means "we have a second circumstance we have to
-> follow to avoid breaking working platforms".
-> 
-> The old code, if you look into patch, uses dev->irq as a predefined
-> constant, which is not in case of dynamic allocation, so, if we respect
-> return value from mp_map_gsi_to_irq() we may not use dev->irq as
-> _source_ of IRQ mapping anymore.
-> 
-> I didn't check if we can do things in reversed order than I have done,
-> i.e. apply part 2 as separate change and then respect the return value.
-> It looks like it may be done in this way.
-> 
-> However, the patch is applied and I don't see any strong reason
-> to revert it and bring again as a set of two patches.
+Describe the binding for firmware-configured instances of the Synopsys
+Designware PCIe controller in RC mode.
 
-I agree, thanks for your explanations.
+Cc: Rob Herring <robh@kernel.org>
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
+ Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 56 ++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+new file mode 100644
+index 000000000000..b8127b19c220
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+@@ -0,0 +1,56 @@
++* Synopsys Designware PCIe root complex in ECAM mode
++
++In some cases, firmware may already have configured the Synopsys Designware
++PCIe controller in RC mode with static ATU window mappings that cover all
++config, MMIO and I/O spaces in a [mostly] ECAM compatible fashion.
++In this case, there is no need for the OS to perform any low level setup
++of clocks or device registers, nor is there any reason for the driver to
++reconfigure ATU windows for config and/or IO space accesses at runtime.
++
++Such hardware configurations should be described as "pci-host-ecam-generic"
++if they are truly ECAM compatible. Configurations that require no low-level
++setup by the OS nor any ATU window reconfiguration at runtime, but do
++require special handling for type 0 config TLPs may instead be described as
++"snps,dw-pcie-ecam".
++
++Required properties:
++- compatible: should contain "snps,dw-pcie-ecam".
++
++Please refer to the binding document of "pci-host-ecam-generic" in the
++file host-generic-pci.txt for a description of the remaining required
++and optional properties.
++
++
++* MSI support for Synopsys Designware PCIe root complex in ECAM mode
++
++Platforms that elect to perform all configuration of the RC in firmware
++and use the "pci-host-ecam-generic" or "snps,dw-pcie-ecam" binding to
++describe it to the OS may include a separate description of the embedded
++MSI controller in case no MSI support is available in the core interrupt
++controller.
++
++Required properties:
++- compatible:      should contain "snps,dw-pcie-msi".
++- reg:             a single region describing the device registers.
++- interrupts:      interrupt specifier for the interrupt that is asserted when
++                   an MSI is received by the RC.
++- msi-controller:  empty property identifying this device as an MSI controller.
++
++Example for an implementation that routes all legacy INTx interrupts via SPI
++#188 and all MSI interrupts via SPI #190:
++
++  pcie@20000000 {
++    compatible = "snps,dw-pcie-ecam";
++    device_type = "pci";
++    msi-parent = <&msi0>;
++    interrupt-map-mask = <0x0 0x0 0x0 0x0>;
++    interrupt-map = <0x0 0x0 0x0 0x0 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>;
++    ...
++  };
++
++  msi0: msi@10000000 {
++    compatible = "snps,dw-pcie-msi";
++    reg = <0x0 0x10000000 0x0 0x10000>;
++    interrupts = <GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>;
++    msi-controller;
++  };
+-- 
+2.11.0
