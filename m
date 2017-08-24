@@ -1,53 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:41043 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751858AbdH1OXN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Aug 2017 10:23:13 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Tim Harvey <tharvey@gateworks.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Shawn Guo <shawnguo@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        patchwork-lst@pengutronix.de, kernel@pengutronix.de
-Subject: [PATCH 3/3] ARM: dts: imx6qdl: remove MSI irq line
-Date: Mon, 28 Aug 2017 16:23:07 +0200
-Message-Id: <20170828142307.30061-4-l.stach@pengutronix.de>
-In-Reply-To: <20170828142307.30061-1-l.stach@pengutronix.de>
-References: <20170828142307.30061-1-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 24 Aug 2017 11:42:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH 2/3] pci: designware: add separate driver for the MSI
+ part of the RC
+Message-ID: <20170824164211.GH31858@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170821192907.8695-1-ard.biesheuvel@linaro.org>
+ <20170821192907.8695-3-ard.biesheuvel@linaro.org>
+MIME-Version: 1.0
+In-Reply-To: <20170821192907.8695-3-ard.biesheuvel@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+ Graeme Gregory <graeme.gregory@linaro.org>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ Leif Lindholm <leif.lindholm@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The DWC PCIe host controller doesn't support MSI and legacy IRQs at
-the same time. If the MSI controller is in use (which is always the case,
-as PCIe port serives are using MSI IRQs when available), legacy endpoint
-devices are unable to raise an IRQ.
+On Mon, Aug 21, 2017 at 08:29:06PM +0100, Ard Biesheuvel wrote:
+> Most drivers that currently exist for the Synopsys Designware PCIe
+> controller in RC mode hardcode the relation with the embedded MSI
+> controller. This makes it more difficult than necessary to use a
+> generic driver to drive the RC, which is especially unfortunate
+> in cases where the firmware already configures the RC to the extent
+> that it can be driven by the generic ECAM driver. It also makes it
+> impossible to use an existing driver but use another IP block for
+> MSI support, i.e., a GICv2m or GICv3-ITS.
+> 
+> So add a separate driver for the MSI part, which can be referenced
+> from the DT node describing the RC via its msi-parent property.
+> 
+> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 
-Remove the MSI irq line to inhibit the MSI controller from being used,
-which is a much better default, as most enpoint devices are able to fall
-back to legacy PCIe IRQs, if MSI are not available.
+> +static int dw_pcie_msi_probe(struct platform_device *pdev)
+> +{
+> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
+> +	struct device *dev = &pdev->dev;
+> +	struct dw_pcie_msi *dw_msi;
+> +	struct resource *res;
+> +
+> +	dw_msi = devm_kzalloc(dev, sizeof(*dw_msi), GFP_KERNEL);
+> +	if (!dw_msi)
+> +		return -ENOMEM;
+> +
+> +	/* get the control register and map it */
+> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	dw_msi->regbase = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(dw_msi->regbase))
+> +		return PTR_ERR(dw_msi->regbase);
+> +
+> +	/* get the wired interrupt that gets raised when we receive an MSI */
+> +	dw_msi->irq = platform_get_irq(pdev, 0);
+> +	if (dw_msi->irq <= 0) {
+> +		pr_err("Failed to map IRQ\n");
 
-Systems which are validated to work in MSI only mode can opt-in to use
-the MSI controller by adding back the MSI irq line in the board DT.
+dev_err()
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- arch/arm/boot/dts/imx6qdl.dtsi | 2 --
- 1 file changed, 2 deletions(-)
+I'm not sure "failed to *map* IRQ" is the most informative text.
+Other callers often use some variant of "failed to get IRQ" or "no IRQ
+resource found".
 
-diff --git a/arch/arm/boot/dts/imx6qdl.dtsi b/arch/arm/boot/dts/imx6qdl.dtsi
-index a9723b94bafa..0f47a9d4024e 100644
---- a/arch/arm/boot/dts/imx6qdl.dtsi
-+++ b/arch/arm/boot/dts/imx6qdl.dtsi
-@@ -209,8 +209,6 @@
- 			ranges = <0x81000000 0 0          0x01f80000 0 0x00010000 /* downstream I/O */
- 				  0x82000000 0 0x01000000 0x01000000 0 0x00f00000>; /* non-prefetchable memory */
- 			num-lanes = <1>;
--			interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
--			interrupt-names = "msi";
- 			#interrupt-cells = <1>;
- 			interrupt-map-mask = <0 0 0 0x7>;
- 			interrupt-map = <0 0 0 1 &gpc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
--- 
-2.11.0
+> +		return -ENXIO;
+> +	}
+> +
+> +	dw_msi->irqd = irq_domain_create_linear(fwnode, MAX_MSI_IRQS,
+> +						&irq_dom_ops, dw_msi);
+> +	if (!dw_msi->irqd) {
+> +		dev_err(dev, "Failed to create IRQ domain\n");
+> +		return -ENOMEM;
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
