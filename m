@@ -1,100 +1,98 @@
-Return-Path: <SRS0=RIT1=7L=mediatek.com=honghui.zhang@kernel.org>
-Return-Path: <SRS0=RIT1=7L=mediatek.com=honghui.zhang@kernel.org>
-Message-ID: <1502261392.17420.5.camel@mtksdaap41>
-Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
- support
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, <paul.burton@imgtec.com>
-CC: <youlin.pei@mediatek.com>, <devicetree@vger.kernel.org>,
-	<hongkun.cao@mediatek.com>, <ryder.lee@mediatek.com>,
-	<linux-pci@vger.kernel.org>, <sean.wang@mediatek.com>,
-	<xinping.qian@mediatek.com>, <linux-kernel@vger.kernel.org>,
-	<robh+dt@kernel.org>, <yt.shen@mediatek.com>, <matthias.bgg@gmail.com>,
-	<robh@kerenl.org>, <linux-mediatek@lists.infradead.org>,
-	<yong.wu@mediatek.com>, <bhelgaas@google.com>, <yingjoe.chen@mediatek.com>,
-	<eddie.huang@mediatek.com>, <linux-arm-kernel@lists.infradead.org>
-Date: Wed, 9 Aug 2017 14:49:52 +0800
-In-Reply-To: <20170808201912.GJ16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
-	 <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
-	 <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
-	 <1501835976.24341.21.camel@mtksdaap41>
-	 <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170808201912.GJ16580@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 24 Aug 2017 11:53:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie
+ wake irq
+Message-ID: <20170824165353.GL31858@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
+ <20170822031934.8675-4-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
+In-Reply-To: <20170822031934.8675-4-jeffy.chen@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, briannorris@chromium.org,
+ linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, Rob Herring <robh+dt@kernel.org>,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-08-08 at 15:19 -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 04, 2017 at 08:18:09AM -0500, Bjorn Helgaas wrote:
-> > On Fri, Aug 04, 2017 at 04:39:36PM +0800, Honghui Zhang wrote:
-> > > On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
+On Tue, Aug 22, 2017 at 11:19:33AM +0800, Jeffy Chen wrote:
+> Add an optional interrupt for PCIE_WAKE pin.
+
+Rob?
+
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
 > 
-> > > > > +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
-> > > > > +						 &intx_domain_ops, port);
-> > > > 
-> > > > I think there's an issue here with a 4-element IRQ domain and the
-> > > > hwirq numbers 1-4 from the of_irq_parse_and_map_pci() path, so INTD
-> > > > may not work correctly.
-> > > > 
-> > > > See
-> > > > http://lkml.kernel.org/r/20170801212931.GA26498@bhelgaas-glaptop.roam.corp.google.com
-> > > > and related discussion.
-> > > 
-> > > Sorry, I did not get this,
-> > > I do some test with an intel E350T4 PCIe NICs, it's a x1 lane
-> > > multi-function device.
-> > > What I got from the log is below:
-> > > ->of_irq_parse_and_map_pci
-> > > 	->of_irq_parse_pci
-> > > 		->irq_create_of_mapping
-> > > 			->irq_create_fwspec_mapping
-> > > 				->irq_domain_translate
-> > > 				which will go through
-> > > 				d->ops->translate #the hwirq really start from 0
-> > > 
-> > > And I tested every NIC port of the Intel E350T4 with tftp transfer data,
-> > > seems all are OK with this code.
-> > 
-> > OK.  I don't know what d->ops->translate is involved here, but if it
-> > works, I guess this is OK for now.  We're trying to clean this up and
-> > make it consistent across all the drivers.  Many of them allocate a
-> > 5-element IRQ domain, some make a 4-element domain, and on some of
-> > them INTD doesn't work.  It's a mess.
+> Changes in v4: None
+> Changes in v3: None
+> Changes in v2: None
 > 
-> Paul Burton is cleaning this up.  Can you point out the d->ops->translate
-> function that's involved here?
+>  .../devicetree/bindings/pci/rockchip-pcie.txt        | 20 ++++++++++++--------
+>  1 file changed, 12 insertions(+), 8 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> index 5678be82530d..9f6504129e80 100644
+> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -20,10 +20,13 @@ Required properties:
+>  - msi-map: Maps a Requester ID to an MSI controller and associated
+>  	msi-specifier data. See ./pci-msi.txt
+>  - interrupts: Three interrupt entries must be specified.
+> -- interrupt-names: Must include the following names
+> -	- "sys"
+> -	- "legacy"
+> -	- "client"
+> +- interrupt-names: Include the following names
+> +	Required:
+> +		- "sys"
+> +		- "legacy"
+> +		- "client"
+> +	Optional:
+> +		- "wake"
 
-Hi, Bjorn,
+Why is there no other PCI binding that includes "wake" as an
+interrupt-name?  This feels like something that should be fairly
+common across host controllers.  I don't want a Rockport-specific
+DT description if it could be made more general.
 
-Sorry for my last reply, I was tracking the wrong logs. The real trick
-is here:
+>  - resets: Must contain seven entries for each entry in reset-names.
+>  	   See ../reset/reset.txt for details.
+>  - reset-names: Must include the following names
+> @@ -87,10 +90,11 @@ pcie0: pcie@f8000000 {
+>  	clock-names = "aclk", "aclk-perf",
+>  		      "hclk", "pm";
+>  	bus-range = <0x0 0x1>;
+> -	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
+> -		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
+> -		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
+> -	interrupt-names = "sys", "legacy", "client";
+> +	interrupts-extended = <&gic GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
+> +			      <&gic GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
+> +			      <&gic GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>,
+> +			      <&gpio0 8 IRQ_TYPE_LEVEL_LOW>;
+> +	interrupt-names = "sys", "legacy", "client", "wake";
+>  	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
+>  	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
+>  	assigned-clock-rates = <100000000>;
+> -- 
+> 2.11.0
+> 
+> 
 
-->of_irq_parse_and_map_pci
-  ->of_irq_parse_pci	#out_irq->args[0] start from 1(1 == INTA)
-     ->of_irq_parse_raw
-
-After of_irq_parse_raw finished it's work, the out_irq->args[0] will be
-remapped as "interrupt-map" property defines[1], which in my case, it's
-start from 0, and then fwspec->param[0] is start from 0 (0 == INTA).
-
-My "interrupt-map" property is defined as below:
-interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-		<0 0 0 2 &pcie_intc0 1>,
-		<0 0 0 3 &pcie_intc0 2>,
-		<0 0 0 4 &pcie_intc0 3>;
-
-I do some test with the changes of property defined as below:
-interrupt-map = <0 0 0 1 &pcie_intc0 1>,
-		<0 0 0 2 &pcie_intc0 2>,
-		<0 0 0 3 &pcie_intc0 3>,
-		<0 0 0 4 &pcie_intc0 4>;
-Then I got the same running complain as Paul have got[2]
-
-So I guess it's the "interrupt-map" property defined in dtsi node play
-the key role in this.
-
-[1]http://elixir.free-electrons.com/linux/v4.13-rc4/source/drivers/of/irq.c#L265
-[2]https://patchwork.kernel.org/patch/9794355
-
-thanks.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
