@@ -1,129 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:22813 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbdHFAF0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 20:05:26 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v6 4/6] PCI: xilinx: Unify INTx & MSI interrupt decode
-Date: Sat, 5 Aug 2017 17:03:49 -0700
-Message-ID: <20170806000351.17952-5-paul.burton@imgtec.com>
-In-Reply-To: <20170806000351.17952-1-paul.burton@imgtec.com>
-References: <20170806000351.17952-1-paul.burton@imgtec.com>
+Return-Path: <SRS0=K1PJ=72=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=K1PJ=72=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
+References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
+ <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com> <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
+ <86efs3wesi.fsf@arm.com> <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
+ <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 24 Aug 2017 19:35:20 +0100
+Message-ID: <CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
+Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>, Mason <slash.tmp@free.fr>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-The INTx & MSI interrupt decode paths duplicated a fair bit of common
-functionality. They also strictly handled interrupts in order of INTx
-then MSI, so if both types of interrupt were to be asserted
-simultaneously and the MSI interrupt were first in the FIFO then the
-INTx code would read it & ignore it before the MSI code then had to read
-it again, wasting the original FIFO read.
+On 24 August 2017 at 18:51, Marc Gonzalez
+<marc_gonzalez@sigmadesigns.com> wrote:
+> On 24/08/2017 19:04, Bjorn Helgaas wrote:
+>> On Tue, Aug 22, 2017 at 09:03:41PM +0100, Marc Zyngier wrote:
+>>> Marc Gonzalez wrote:
+>>>> On 22/08/2017 18:29, Marc Zyngier wrote:
+>>>>> On 22/08/17 15:56, Marc Gonzalez wrote:
+>>>>>
+>>>>>>  #define SMP8759_MUX              0x48
+>>>>>>  #define SMP8759_TEST_OUT 0x74
+>>>>>> +#define SMP8759_STATUS           0x80
+>>>>>> +#define SMP8759_ENABLE           0xa0
+>>>>>> +#define SMP8759_DOORBELL 0xa002e07c
+>>>>>
+>>>>> Why is this hardcoded and not coming from the device-tree, just like any
+>>>>> other address property?
+>>>>
+>>>> Since this bus address is software-configurable, I didn't think
+>>>> it belonged in the DT. Also, I didn't see anything similar in
+>>>> other binding docs, especially
+>>>>
+>>>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
+>>>
+>>> If that's software configurable, how on Earth did you pick the address?
+>>> How do you ensure that it doesn't conflict with DMA? How is it
+>>> configured into the RC?
+>>
+>> But we *do* need to resolve this.  This does seem like an address that
+>> shouldn't be hard-coded into the driver.  Since this driver is
+>> programming the address into an MSI message, but not into the receiver
+>> of that message, there's a coordination issue between this driver and
+>> whatever other software does that receiver configuration.
+>
+> OK. I'll move the doorbell address to the DT for v11.
+>
+> What property should be used for this address?
+>
+> sigma,doorbell ?
+>
+> Or maybe I can put it in reg, since I have a 1:1 mapping
+> between bus and cpu addresses?
+>
+> git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
+> returns nothing.
+>
 
-Unify the INTx & MSI decode in order to reduce that duplication & allow
-a single FIFO read to be performed for each interrupt regardless of its
-type.
+You haven't answered the question yet: you stated that the doorbell
+address is software configurable, yet your code does not seem to
+configure it. It only returns the doorbell address so that it gets
+communicated to the downstream devices.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-Cc: linux-pci@vger.kernel.org
----
-
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/host/pcie-xilinx.c | 48 +++++++++++++-----------------------------
- 1 file changed, 15 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 83929e6881b2..bffd1505ea2d 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -385,7 +385,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- {
- 	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
- 	struct device *dev = port->dev;
--	u32 val, mask, status, msi_data;
-+	u32 val, mask, status;
- 
- 	/* Read interrupt decode and mask registers */
- 	val = pcie_read(port, XILINX_PCIE_REG_IDR);
-@@ -425,8 +425,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 		xilinx_pcie_clear_err_interrupts(port);
- 	}
- 
--	if (status & XILINX_PCIE_INTR_INTX) {
--		/* INTx interrupt received */
-+	if (status & (XILINX_PCIE_INTR_INTX | XILINX_PCIE_INTR_MSI)) {
- 		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
- 
- 		/* Check whether interrupt valid */
-@@ -435,41 +434,24 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 			goto error;
- 		}
- 
--		if (!(val & XILINX_PCIE_RPIFR1_MSI_INTR)) {
--			/* Clear interrupt FIFO register 1 */
--			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
--				   XILINX_PCIE_REG_RPIFR1);
--
--			/* Handle INTx Interrupt */
-+		/* Decode the IRQ number */
-+		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
-+			val = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
-+				XILINX_PCIE_RPIFR2_MSG_DATA;
-+		} else {
- 			val = (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
- 				XILINX_PCIE_RPIFR1_INTR_SHIFT;
--			generic_handle_irq(irq_find_mapping(port->leg_domain,
--							    val));
-+			val = irq_find_mapping(port->leg_domain, val);
- 		}
--	}
- 
--	if (status & XILINX_PCIE_INTR_MSI) {
--		/* MSI Interrupt */
--		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
-+		/* Clear interrupt FIFO register 1 */
-+		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
-+			   XILINX_PCIE_REG_RPIFR1);
- 
--		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
--			dev_warn(dev, "RP Intr FIFO1 read error\n");
--			goto error;
--		}
--
--		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
--			msi_data = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
--				   XILINX_PCIE_RPIFR2_MSG_DATA;
--
--			/* Clear interrupt FIFO register 1 */
--			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
--				   XILINX_PCIE_REG_RPIFR1);
--
--			if (IS_ENABLED(CONFIG_PCI_MSI)) {
--				/* Handle MSI Interrupt */
--				generic_handle_irq(msi_data);
--			}
--		}
-+		/* Handle the interrupt */
-+		if (IS_ENABLED(CONFIG_PCI_MSI) ||
-+		    !(val & XILINX_PCIE_RPIFR1_MSI_INTR))
-+			generic_handle_irq(val);
- 	}
- 
- 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
--- 
-2.13.4
+So how does the RC know which address is special, so it can trigger on
+inbound writes hitting that address and assert the SPI ?
