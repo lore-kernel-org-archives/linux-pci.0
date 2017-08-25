@@ -1,69 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0052.outbound.protection.outlook.com ([104.47.33.52]:43584
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753301AbdHWG1I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Aug 2017 02:27:08 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv4 8/9] PCI: designware: enable write permission before updating DBI RO registers
-Date: Wed, 23 Aug 2017 14:08:55 +0800
-Message-ID: <20170823060856.9387-9-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
-References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+Received: from mail.kernel.org ([198.145.29.99]:51098 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932218AbdHYNjJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Aug 2017 09:39:09 -0400
+Date: Fri, 25 Aug 2017 08:39:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Cc: mtk11102 <honghui.zhang@mediatek.com>,
+        kbuild test robot <fengguang.wu@intel.com>,
+        kbuild-all@01.org, linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [pci:pci/host-mediatek 11/11]
+ drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared
+Message-ID: <20170825133905.GA1304@bhelgaas-glaptop.roam.corp.google.com>
+References: <201708232205.SymULNVt%fengguang.wu@intel.com>
+ <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
+ <1503544447.19072.7.camel@mhfsdcap03>
+ <20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com>
+ <f3b302a9-d478-96b5-98d0-49d4d4433358@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f3b302a9-d478-96b5-98d0-49d4d4433358@free.fr>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Fri, Aug 25, 2017 at 12:01:21PM +0200, Mason wrote:
+> On 24/08/2017 15:44, Bjorn Helgaas wrote:
+> 
+> > On Thu, Aug 24, 2017 at 11:14:07AM +0800, mtk11102 wrote:
+> >
+> >> @@ -531,8 +533,10 @@ static const struct irq_domain_ops msi_domain_ops =
+> >> {
+> >>  static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+> >>  {
+> >>         u32 val;
+> >> +       phys_addr_t msg_addr;
+> >>
+> >> -       val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+> >> +       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+> >> +       val = lower_32_bits(msg_addr);
+> >>         writel(val, port->base + PCIE_IMSI_ADDR);
+> >>
+> >>         val = readl(port->base + PCIE_INT_MASK);
+> > 
+> > I don't think this is quite right: virt_to_phys() converts a CPU
+> > virtual address to a CPU physical address, but the msg_addr is a PCI
+> > bus address.  In many cases, PCI bus addresses are identical to CPU
+> > physical addresses, but not always.
+> 
+> Is the virt_to_bus() function not appropriate?
 
-The existing fix doesn't actually work because the Class register and
-interrupt PIN register are read-only, so it must enable the write
-permission before writing the correct value to these registers.
+virt_to_bus() is deprecated because there's no way for the caller to
+specify which bus.  I don't have a better suggestion than
+virt_to_phys(), so I shouldn't have said anything :)
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-By: Joao Pinto <jpinto@synopsys.com>
----
-V4:
- - no change
-
- drivers/pci/dwc/pcie-designware-host.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 157621175147..582f5cc3cd96 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -597,10 +597,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x00000000);
- 
- 	/* setup interrupt pins */
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	val = dw_pcie_readl_dbi(pci, PCI_INTERRUPT_LINE);
- 	val &= 0xffff00ff;
- 	val |= 0x00000100;
- 	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	/* setup bus numbers */
- 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
-@@ -637,8 +639,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
-+	/* Enable write permission for the DBI read-only register */
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	/* program correct class for RC */
- 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-+	/* Better disable write permission right after the update */
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
--- 
-2.14.1
+Bjorn
