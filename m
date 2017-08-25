@@ -1,233 +1,247 @@
-Return-Path: <SRS0=XMcr=77=sigmadesigns.com=marc_gonzalez@kernel.org>
-Return-Path: <SRS0=XMcr=77=sigmadesigns.com=marc_gonzalez@kernel.org>
-Subject: [PATCH 2/3] PCI: Use of_pci_dma_range_parser_init API
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Return-Path: <SRS0=edbo=73=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=edbo=73=rock-chips.com=shawn.lin@kernel.org>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ Brian Norris <briannorris@chromium.org>,
+ Jeffy Chen <jeffy.chen@rock-chips.com>, Tejun Heo <tj@kernel.org>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+ Michael Turquette <mturquette@baylibre.com>,
+ Stephen Boyd <sboyd@codeaurora.org>, linux-clk@vger.kernel.org
+Subject: Re: [PATCH v5 04/10] PCI: rockchip: fix system hang up if activating
+ CONFIG_DEBUG_SHIRQ
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci <linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, Robin Murphy <robin.murphy@arm.com>,
-	Liviu Dudau <liviu.dudau@arm.com>, Thibaud Cornic
-	<thibaud_cornic@sigmadesigns.com>, Mason <slash.tmp@free.fr>, Linus Walleij
-	<linus.walleij@linaro.org>, Ray Jui <ray.jui@broadcom.com>, Simon Horman
-	<horms@verge.net.au>
-References: <f10055cc-4430-ff30-f892-3d3d6f24354c@sigmadesigns.com>
-Message-ID: <05956f46-6882-7f7b-1c4c-5851b4e8b8e6@sigmadesigns.com>
-Date: Tue, 29 Aug 2017 16:27:20 +0200
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+ <1503471758-73904-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170824202111.GS31858@bhelgaas-glaptop.roam.corp.google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <860f5928-6e63-ed7f-852d-7a5a90ce1652@rock-chips.com>
+Date: Fri, 25 Aug 2017 09:38:56 +0800
 MIME-Version: 1.0
-In-Reply-To: <f10055cc-4430-ff30-f892-3d3d6f24354c@sigmadesigns.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170824202111.GS31858@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the factorized implementation.
+Hi Bjorn,
 
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
----
- drivers/pci/host/pci-ftpci100.c  | 20 +-------------------
- drivers/pci/host/pci-rcar-gen2.c | 20 +-------------------
- drivers/pci/host/pci-xgene.c     | 20 +-------------------
- drivers/pci/host/pcie-iproc.c    | 20 +-------------------
- drivers/pci/host/pcie-rcar.c     | 20 +-------------------
- 5 files changed, 5 insertions(+), 95 deletions(-)
+OnÔÚ 2017/8/25 4:21, Bjorn Helgaas wrote:
+> [+cc Tejun, Dmitry, Michael, Stephen, linux-clk for devm/clk questions]
+> 
+> On Wed, Aug 23, 2017 at 03:02:38PM +0800, Shawn Lin wrote:
+>> With CONFIG_DEBUG_SHIRQ enabled, the irq tear down routine
+>> would still access the irq handler registed as a shard irq.
+>> Per the comment within the function of __free_irq, it says
+>> "It's a shared IRQ -- the driver ought to be prepared for
+>> an IRQ event to happen even now it's being freed". However
+>> when failing to probe the driver, it may disable the clock
+>> for accessing the register and the following check for shared
+>> irq state would call the irq handler which accesses the register
+>> w/o the clk enabled. That will hang the system forever.
+>>
+>> With adding some dump_stack we could see how that happened.
+>>
+>> calling  rockchip_pcie_driver_init+0x0/0x28 @ 1
+>> rockchip-pcie f8000000.pcie: no vpcie3v3 regulator found
+>> rockchip-pcie f8000000.pcie: no vpcie1v8 regulator found
+>> rockchip-pcie f8000000.pcie: no vpcie0v9 regulator found
+>> rockchip-pcie f8000000.pcie: PCIe link training gen1 timeout!
+>> CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.13.0-rc3-next-20170807-ARCH+ #189
+>> Hardware name: Firefly-RK3399 Board (DT)
+>> Call trace:
+>> [<ffff000008089bf0>] dump_backtrace+0x0/0x250
+>> [<ffff000008089eb0>] show_stack+0x20/0x28
+>> [<ffff000008c3313c>] dump_stack+0x90/0xb0
+>> [<ffff000008632ad4>] rockchip_pcie_read.isra.11+0x54/0x58
+>> [<ffff0000086334fc>] rockchip_pcie_client_irq_handler+0x30/0x1a0
+>> [<ffff00000813ce98>] __free_irq+0x1c8/0x2dc
+>> [<ffff00000813d044>] free_irq+0x44/0x74
+>> [<ffff0000081415fc>] devm_irq_release+0x24/0x2c
+>> [<ffff00000877429c>] release_nodes+0x1d8/0x30c
+>> [<ffff000008774838>] devres_release_all+0x3c/0x5c
+>> [<ffff00000876f19c>] driver_probe_device+0x244/0x494
+>> [<ffff00000876f50c>] __driver_attach+0x120/0x124
+>> [<ffff00000876cb80>] bus_for_each_dev+0x6c/0xac
+>> [<ffff00000876e984>] driver_attach+0x2c/0x34
+>> [<ffff00000876e3a4>] bus_add_driver+0x244/0x2b0
+>> [<ffff000008770264>] driver_register+0x70/0x110
+>> [<ffff0000087718b4>] platform_driver_register+0x60/0x6c
+>> [<ffff0000091eb108>] rockchip_pcie_driver_init+0x20/0x28
+>> [<ffff000008083a2c>] do_one_initcall+0xc8/0x130
+>> [<ffff0000091a0ea8>] kernel_init_freeable+0x1a0/0x238
+>> [<ffff000008c461cc>] kernel_init+0x18/0x108
+>> [<ffff0000080836c0>] ret_from_fork+0x10/0x50
+>>
+>> In order to fix this, we remove all the clock-disabling from
+>> the error handle path and driver's remove function. And replying
+>> on the devm_add_action_or_reset to fire the clock-disabling at
+>> the appropriate time. Also split out rockchip_pcie_setup_irq
+>> and move requesting irq after enabling clks to avoid this kind
+> 
+> Thanks for splitting out the refactoring stuff.  That really makes
+> this patch much simpler.
+> 
+> IIUC, this really has nothing to do with CONFIG_DEBUG_SHIRQ.  It may
+> be true that you've only *seen* the problem with CONFIG_DEBUG_SHIRQ
+> enabled, but all that config option does is take a situation that
+> could happen at any time (another device sharing the IRQ generating an
+> interrupt), and force it to happen.  So it's just a way to expose an
+> existing driver problem.
 
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci10=
-0.c
-index 5162dffc102b..12d78bba1bd3 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -370,24 +370,6 @@ static int faraday_pci_setup_cascaded_irq(struct farad=
-ay_pci *p)
- =09return 0;
- }
-=20
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--=09=09=09=09     struct device_node *node)
--{
--=09const int na =3D 3, ns =3D 2;
--=09int rlen;
--
--=09parser->node =3D node;
--=09parser->pna =3D of_n_addr_cells(node);
--=09parser->np =3D parser->pna + na + ns;
--
--=09parser->range =3D of_get_property(node, "dma-ranges", &rlen);
--=09if (!parser->range)
--=09=09return -ENOENT;
--=09parser->end =3D parser->range + rlen / sizeof(__be32);
--
--=09return 0;
--}
--
- static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
- =09=09=09=09=09    struct device_node *np)
- {
-@@ -402,7 +384,7 @@ static int faraday_pci_parse_map_dma_ranges(struct fara=
-day_pci *p,
- =09int i =3D 0;
- =09u32 val;
-=20
--=09if (pci_dma_range_parser_init(&parser, np)) {
-+=09if (of_pci_dma_range_parser_init(&parser, np)) {
- =09=09dev_err(dev, "missing dma-ranges property\n");
- =09=09return -EINVAL;
- =09}
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-g=
-en2.c
-index 6f879685fedd..e46de69f0380 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -293,24 +293,6 @@ static struct pci_ops rcar_pci_ops =3D {
- =09.write=09=3D pci_generic_config_write,
- };
-=20
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--=09=09=09=09     struct device_node *node)
--{
--=09const int na =3D 3, ns =3D 2;
--=09int rlen;
--
--=09parser->node =3D node;
--=09parser->pna =3D of_n_addr_cells(node);
--=09parser->np =3D parser->pna + na + ns;
--
--=09parser->range =3D of_get_property(node, "dma-ranges", &rlen);
--=09if (!parser->range)
--=09=09return -ENOENT;
--
--=09parser->end =3D parser->range + rlen / sizeof(__be32);
--=09return 0;
--}
--
- static int rcar_pci_parse_map_dma_ranges(struct rcar_pci_priv *pci,
- =09=09=09=09=09 struct device_node *np)
- {
-@@ -320,7 +302,7 @@ static int rcar_pci_parse_map_dma_ranges(struct rcar_pc=
-i_priv *pci,
- =09int index =3D 0;
-=20
- =09/* Failure to parse is ok as we fall back to defaults */
--=09if (pci_dma_range_parser_init(&parser, np))
-+=09if (of_pci_dma_range_parser_init(&parser, np))
- =09=09return 0;
-=20
- =09/* Get the dma-ranges from DT */
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index bd897479a215..f660513946d3 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -542,24 +542,6 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_=
-port *port,
- =09xgene_pcie_setup_pims(port, pim_reg, pci_addr, ~(size - 1));
- }
-=20
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--=09=09=09=09     struct device_node *node)
--{
--=09const int na =3D 3, ns =3D 2;
--=09int rlen;
--
--=09parser->node =3D node;
--=09parser->pna =3D of_n_addr_cells(node);
--=09parser->np =3D parser->pna + na + ns;
--
--=09parser->range =3D of_get_property(node, "dma-ranges", &rlen);
--=09if (!parser->range)
--=09=09return -ENOENT;
--=09parser->end =3D parser->range + rlen / sizeof(__be32);
--
--=09return 0;
--}
--
- static int xgene_pcie_parse_map_dma_ranges(struct xgene_pcie_port *port)
- {
- =09struct device_node *np =3D port->node;
-@@ -568,7 +550,7 @@ static int xgene_pcie_parse_map_dma_ranges(struct xgene=
-_pcie_port *port)
- =09struct device *dev =3D port->dev;
- =09u8 ib_reg_mask =3D 0;
-=20
--=09if (pci_dma_range_parser_init(&parser, np)) {
-+=09if (of_pci_dma_range_parser_init(&parser, np)) {
- =09=09dev_err(dev, "missing dma-ranges property\n");
- =09=09return -EINVAL;
- =09}
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index c57486348856..aa4f6d519053 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -1000,24 +1000,6 @@ static int iproc_pcie_setup_ib(struct iproc_pcie *pc=
-ie,
- =09return ret;
- }
-=20
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--=09=09=09=09     struct device_node *node)
--{
--=09const int na =3D 3, ns =3D 2;
--=09int rlen;
--
--=09parser->node =3D node;
--=09parser->pna =3D of_n_addr_cells(node);
--=09parser->np =3D parser->pna + na + ns;
--
--=09parser->range =3D of_get_property(node, "dma-ranges", &rlen);
--=09if (!parser->range)
--=09=09return -ENOENT;
--
--=09parser->end =3D parser->range + rlen / sizeof(__be32);
--=09return 0;
--}
--
- static int iproc_pcie_map_dma_ranges(struct iproc_pcie *pcie)
- {
- =09struct of_pci_range range;
-@@ -1025,7 +1007,7 @@ static int iproc_pcie_map_dma_ranges(struct iproc_pci=
-e *pcie)
- =09int ret;
-=20
- =09/* Get the dma-ranges from DT */
--=09ret =3D pci_dma_range_parser_init(&parser, pcie->dev->of_node);
-+=09ret =3D of_pci_dma_range_parser_init(&parser, pcie->dev->of_node);
- =09if (ret)
- =09=09return ret;
-=20
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 246d485b24c6..7975b10e21e8 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1029,24 +1029,6 @@ static int rcar_pcie_inbound_ranges(struct rcar_pcie=
- *pcie,
- =09return 0;
- }
-=20
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--=09=09=09=09     struct device_node *node)
--{
--=09const int na =3D 3, ns =3D 2;
--=09int rlen;
--
--=09parser->node =3D node;
--=09parser->pna =3D of_n_addr_cells(node);
--=09parser->np =3D parser->pna + na + ns;
--
--=09parser->range =3D of_get_property(node, "dma-ranges", &rlen);
--=09if (!parser->range)
--=09=09return -ENOENT;
--
--=09parser->end =3D parser->range + rlen / sizeof(__be32);
--=09return 0;
--}
--
- static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
- =09=09=09=09=09  struct device_node *np)
- {
-@@ -1055,7 +1037,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar=
-_pcie *pcie,
- =09int index =3D 0;
- =09int err;
-=20
--=09if (pci_dma_range_parser_init(&parser, np))
-+=09if (of_pci_dma_range_parser_init(&parser, np))
- =09=09return -EINVAL;
-=20
- =09/* Get the dma-ranges from DT */
---=20
-2.11.0
+Right.
+
+> 
+> The real problem is apparently that rockchip_pcie_subsys_irq_handler()
+> relies on some clock being enabled, but we're leaving it registered at
+> a time when the clock has already been disabled.
+> 
+> You fixed that by using devm_add_action_or_reset() to tell devm to
+> disable the clocks *after* releasing the IRQ.
+> 
+> That sort of makes sense, but devm_add_action_or_reset() is a little
+> obscure, and this feels like a hole in the devm framework.  Seems like
+> it would be nice if there were some sort of devm wrapper for
+> clk_prepare_enable() so this would happen automatically.
+
+Yes, I would appreciate it if we have devm wrapper for
+clk_prepare_enable so that we don't resort to devm_add_action_or_reset.
+
+> 
+> This pattern:
+> 
+>    clk = devm_clk_get(...);
+>    if (IS_ERR(clk)) {
+>      dev_warn("no clock for ...");
+>      return PTR_ERR(clk);
+>    }
+> 
+>    ret = clk_prepare_enable(clk);
+>    if (ret) {
+>      dev_warn("failed to enable ...");
+>      return err;
+>    }
+> 
+> is quite common ("git grep -A10 devm_clk_get | grep clk_prepare_enable
+>   | wc -l" finds over 400 occurrences).  Should there be something to
+> simplify this a little?
+> 
+> I also wonder about other PCI host drivers that use both
+> clk_prepare_enable() and devm_request_irq().  Maybe Rockchip is
+> "special" in that it seems the driver must turn on a clock before it
+> can even talk to the host controller, whereas maybe other drivers can
+
+IIRC, some of the other ARM SoCs have the same problem.
+
+> always talk to the host controller, but need to turn on clocks
+> downstream from the controller.  I didn't audit them, but I'm
+> concerned that some of them might have this same problem.
+
+So that is my concern as well. But I have to say we may face a worse
+situation as I see it by randomly search the DT,
+
+arch/arm64/boot/dts/renesas/r8a7795.dtsi  includes a power-domains
+for pcie-rcar and pcie-rcar registers shared irq either. So the power-
+domain would be powered off once failing to probe or calling ->remove()
+immediately even *before* doing devm cleanup. In another word, I don't
+have too much confident that renesas's CPU could visit PCIe IP w/o power
+domain in 'on' state?
+
+I posted a relevant patch for fixing this for driver core but havn't got
+any input from there (https://lkml.org/lkml/2017/8/15/146). That don't
+affect pcie-rockchip *now* as we don't have power-domain for that but
+it's highly relevant to the problem we are disscussing.
+
+Finally, as a life-saving straw if we don't reach an agreement for
+anyone of adding devm clk_prepare_enable wrraper and adjusting the
+sequence of powering off power-domain, we have to get rid of using
+devm_request_irq and use request_irq/free_irq instead for all
+the potential problematic drivers...
+
+
+> 
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>
+>> ---
+>>
+>> Changes in v5:
+>> - rebase on former reconstrtion patches suggested by Bjorn
+>>
+>> Changes in v4:
+>> - split out rockchip_pcie_enable_clocks and reuse
+>>    rockchip_pcie_enable_clocks and rockchip_pcie_disable_clocks
+>>    for elsewhere suggested by Jeffy
+>>
+>> Changes in v3:
+>> - check the return value of devm_add_action_or_reset and spilt out
+>>    rockchip_pcie_setup_irq in order to move requesting irq after
+>>    enabling clks.
+>>
+>> Changes in v2:
+>> - use devm_add_action_or_reset to fix this ordering suggested by
+>>    Heiko and Jeffy. Thanks!
+>>
+>>   drivers/pci/host/pcie-rockchip.c | 22 +++++++++++++---------
+>>   1 file changed, 13 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+>> index 971d22b..891b60a 100644
+>> --- a/drivers/pci/host/pcie-rockchip.c
+>> +++ b/drivers/pci/host/pcie-rockchip.c
+>> @@ -1099,10 +1099,6 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>>   		return PTR_ERR(rockchip->clk_pcie_pm);
+>>   	}
+>>   
+>> -	err = rockchip_pcie_setup_irq(rockchip);
+>> -	if (err)
+>> -		return err;
+>> -
+>>   	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
+>>   	if (IS_ERR(rockchip->vpcie12v)) {
+>>   		if (PTR_ERR(rockchip->vpcie12v) == -EPROBE_DEFER)
+>> @@ -1525,10 +1521,22 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>>   	if (err)
+>>   		return err;
+>>   
+>> +	err = devm_add_action_or_reset(dev,
+>> +				       rockchip_pcie_disable_clocks,
+>> +				       rockchip);
+>> +	if (err) {
+>> +		dev_err(dev, "unable to add action or reset\n");
+>> +		return err;
+>> +	}
+>> +
+>> +	err = rockchip_pcie_setup_irq(rockchip);
+>> +	if (err)
+>> +		return err;
+>> +
+>>   	err = rockchip_pcie_set_vpcie(rockchip);
+>>   	if (err) {
+>>   		dev_err(dev, "failed to set vpcie regulator\n");
+>> -		goto err_set_vpcie;
+>> +		return err;
+>>   	}
+>>   
+>>   	err = rockchip_pcie_init_port(rockchip);
+>> @@ -1625,8 +1633,6 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>>   		regulator_disable(rockchip->vpcie1v8);
+>>   	if (!IS_ERR(rockchip->vpcie0v9))
+>>   		regulator_disable(rockchip->vpcie0v9);
+>> -err_set_vpcie:
+>> -	rockchip_pcie_disable_clocks(rockchip);
+>>   	return err;
+>>   }
+>>   
+>> @@ -1648,8 +1654,6 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+>>   		phy_exit(rockchip->phys[i]);
+>>   	}
+>>   
+>> -	rockchip_pcie_disable_clocks(rockchip);
+>> -
+>>   	if (!IS_ERR(rockchip->vpcie12v))
+>>   		regulator_disable(rockchip->vpcie12v);
+>>   	if (!IS_ERR(rockchip->vpcie3v3))
+>> -- 
+>> 1.9.1
+>>
+>>
+> 
+> 
+> 
