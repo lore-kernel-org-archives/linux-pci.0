@@ -1,224 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:41613 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751977AbdHCSUI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 14:20:08 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  3 Aug 2017 12:19:46 -0600
-Message-Id: <20170803181954.4154-8-logang@deltatee.com>
-In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
-References: <20170803181954.4154-1-logang@deltatee.com>
-Subject: [PATCH v4 07/15] NTB: switchtec_ntb: Introduce initial NTB driver
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=od7V=73=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=od7V=73=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>,
+        Dongdong Liu
+	<liudongdong3@huawei.com>
+Subject: [PATCH] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port service drivers
+Date: Fri, 25 Aug 2017 17:50:42 +0800
+Message-ID: <1503654642-59977-1-git-send-email-liudongdong3@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Seeing the Switchtec NTB hardware shares the same endpoint as the
-management endpoint we utilize the class_interface API to register
-an NTB driver for every Switchtec device in the system that has the
-NTB class code.
+Current code is broken as calling pci_free_irq_vectors()
+invalidates the IRQ numbers returned before by pci_irq_vectors();
+so we need to move all the assignment of the Linux IRQ numbers at
+the bottom of the function.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
+After removing and adding back the PCI root port device,
+we see the PCIe port service drivers request irq failed.
+
+root@(none)$ lspci -tv
+-[0000:00]-+-00.0-[01]----00.0  Device 19e5:0123
+           \-08.0-[02-03]--+-00.0  Device 8086:10fb
+                           \-00.1  Device 8086:10fb
+
+root@(none)$ echo 1 > /sys/devices/pci0000\:00/0000\:00\:00.0/remove
+iommu: Removing device 0000:00:00.0 from group 2
+root@(none)$ echo 1 > /sys/devices/pci0000\:00/pci_bus/0000\:00/rescan
+pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it
+with 'pcie_aspm=force'
+pci 0000:00:00.0: BAR 14: assigned [mem 0xe0100000-0xe03fffff]
+pci 0000:00:00.0: BAR 15: assigned [mem 0x80000e00000-0x80000ffffff 64bit
+pref]
+pci 0000:00:00.0: BAR 13: assigned [io  0x1000-0x1fff]
+pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe013ffff 64bit]
+pci 0000:01:00.0: BAR 6: assigned [mem 0xe0140000-0xe015ffff pref]
+pci 0000:00:00.0: PCI bridge to [bus 01]
+pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+pci 0000:00:00.0:   bridge window [mem 0xe0100000-0xe03fffff]
+pci 0000:00:00.0:   bridge window [mem 0x80000e00000-0x80000ffffff 64bit
+pref]
+iommu: Adding device 0000:00:00.0 to group 2
+pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
+aer: probe of 0000:00:00.0:pcie002 failed with error -22
+pciehp 0000:00:00.0:pcie004: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd-
+PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+pciehp 0000:00:00.0:pcie004: Cannot get irq 20 for the hotplug controller
+pciehp 0000:00:00.0:pcie004: Notification initialization failed (-1)
+dpc 0000:00:00.0:pcie010: request IRQ22 failed: -22
+dpc: probe of 0000:00:00.0:pcie010 failed with error -22
+
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 ---
- MAINTAINERS                            |  1 +
- drivers/ntb/hw/Kconfig                 |  1 +
- drivers/ntb/hw/Makefile                |  1 +
- drivers/ntb/hw/mscc/Kconfig            |  9 ++++
- drivers/ntb/hw/mscc/Makefile           |  1 +
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 81 ++++++++++++++++++++++++++++++++++
- drivers/pci/switch/switchtec.c         |  3 ++
- include/linux/switchtec.h              |  4 ++
- 8 files changed, 101 insertions(+)
- create mode 100644 drivers/ntb/hw/mscc/Kconfig
- create mode 100644 drivers/ntb/hw/mscc/Makefile
- create mode 100644 drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+ drivers/pci/pcie/portdrv_core.c | 41 ++++++++++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 17 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 4ff2ad7c1c7b..6e491ce5e876 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10147,6 +10147,7 @@ F:	Documentation/ABI/testing/sysfs-class-switchtec
- F:	drivers/pci/switch/switchtec*
- F:	include/uapi/linux/switchtec_ioctl.h
- F:	include/linux/switchtec.h
-+F:	drivers/ntb/hw/mscc/
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 313a21d..4cac558 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -54,7 +54,10 @@ static void release_pcie_device(struct device *dev)
+  */
+ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ {
+-	int nr_entries, entry, nvec = 0;
++	int nr_entries, nvec = 0;
++	int entry_hp = 0;
++	int entry_aer = 0;
++	int entry_dpc = 0;
  
- PCI DRIVER FOR NVIDIA TEGRA
- M:	Thierry Reding <thierry.reding@gmail.com>
-diff --git a/drivers/ntb/hw/Kconfig b/drivers/ntb/hw/Kconfig
-index a89243c9fdd3..e51b581fd102 100644
---- a/drivers/ntb/hw/Kconfig
-+++ b/drivers/ntb/hw/Kconfig
-@@ -1,3 +1,4 @@
- source "drivers/ntb/hw/amd/Kconfig"
- source "drivers/ntb/hw/idt/Kconfig"
- source "drivers/ntb/hw/intel/Kconfig"
-+source "drivers/ntb/hw/mscc/Kconfig"
-diff --git a/drivers/ntb/hw/Makefile b/drivers/ntb/hw/Makefile
-index 87332c3905f0..923c442db750 100644
---- a/drivers/ntb/hw/Makefile
-+++ b/drivers/ntb/hw/Makefile
-@@ -1,3 +1,4 @@
- obj-$(CONFIG_NTB_AMD)	+= amd/
- obj-$(CONFIG_NTB_IDT)	+= idt/
- obj-$(CONFIG_NTB_INTEL)	+= intel/
-+obj-$(CONFIG_NTB_SWITCHTEC) += mscc/
-diff --git a/drivers/ntb/hw/mscc/Kconfig b/drivers/ntb/hw/mscc/Kconfig
-new file mode 100644
-index 000000000000..013ed6716438
---- /dev/null
-+++ b/drivers/ntb/hw/mscc/Kconfig
-@@ -0,0 +1,9 @@
-+config NTB_SWITCHTEC
-+	tristate "MicroSemi Switchtec Non-Transparent Bridge Support"
-+	select PCI_SW_SWITCHTEC
-+	help
-+	 Enables NTB support for Switchtec PCI switches. This also
-+	 selects the Switchtec management driver as they share the same
-+	 hardware interface.
-+
-+	 If unsure, say N.
-diff --git a/drivers/ntb/hw/mscc/Makefile b/drivers/ntb/hw/mscc/Makefile
-new file mode 100644
-index 000000000000..064686ead1ba
---- /dev/null
-+++ b/drivers/ntb/hw/mscc/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_NTB_SWITCHTEC) += ntb_hw_switchtec.o
-diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-new file mode 100644
-index 000000000000..253efba72275
---- /dev/null
-+++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-@@ -0,0 +1,81 @@
-+/*
-+ * Microsemi Switchtec(tm) PCIe Management Driver
-+ * Copyright (c) 2017, Microsemi Corporation
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ */
-+
-+#include <linux/switchtec.h>
-+#include <linux/module.h>
-+
-+MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
-+MODULE_VERSION("0.1");
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Microsemi Corporation");
-+
-+struct switchtec_ntb {
-+	struct switchtec_dev *stdev;
-+};
-+
-+static int switchtec_ntb_add(struct device *dev,
-+			     struct class_interface *class_intf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	struct switchtec_ntb *sndev;
-+
-+	stdev->sndev = NULL;
-+
-+	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
-+		return -ENODEV;
-+
-+	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
-+	if (!sndev)
-+		return -ENOMEM;
-+
-+	sndev->stdev = stdev;
-+
-+	stdev->sndev = sndev;
-+	dev_info(dev, "NTB device registered");
-+
-+	return 0;
-+}
-+
-+void switchtec_ntb_remove(struct device *dev,
-+			  struct class_interface *class_intf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	struct switchtec_ntb *sndev = stdev->sndev;
-+
-+	if (!sndev)
-+		return;
-+
-+	stdev->sndev = NULL;
-+	kfree(sndev);
-+	dev_info(dev, "ntb device unregistered");
-+}
-+
-+static struct class_interface switchtec_interface  = {
-+	.add_dev = switchtec_ntb_add,
-+	.remove_dev = switchtec_ntb_remove,
-+};
-+
-+static int __init switchtec_ntb_init(void)
-+{
-+	switchtec_interface.class = switchtec_class;
-+	return class_interface_register(&switchtec_interface);
-+}
-+module_init(switchtec_ntb_init);
-+
-+static void __exit switchtec_ntb_exit(void)
-+{
-+	class_interface_unregister(&switchtec_interface);
-+}
-+module_exit(switchtec_ntb_exit);
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 807569e62bee..58edc24ea381 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1275,6 +1275,9 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
- 	struct switchtec_dev *stdev;
- 	int rc;
+ 	/*
+ 	 * Allocate as many entries as the port wants, so that we can check
+@@ -86,14 +89,11 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		 * interrupt message."
+ 		 */
+ 		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+-		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+-		if (entry >= nr_entries)
++		entry_hp = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
++		if (entry_hp >= nr_entries)
+ 			goto out_free_irqs;
  
-+	if (pdev->class == MICROSEMI_NTB_CLASSCODE)
-+		request_module_nowait("ntb_hw_switchtec");
-+
- 	stdev = stdev_create(pdev);
- 	if (IS_ERR(stdev))
- 		return PTR_ERR(stdev);
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index d8159944f013..09d73d0d1aa8 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -320,6 +320,8 @@ struct pff_csr_regs {
- 	u32 reserved4[174];
- } __packed;
+-		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, entry);
+-		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pci_irq_vector(dev, entry);
+-
+-		nvec = max(nvec, entry + 1);
++		nvec = max(nvec, entry_hp + 1);
+ 	}
  
-+struct switchtec_ntb;
-+
- struct switchtec_dev {
- 	struct pci_dev *pdev;
- 	struct device dev;
-@@ -357,6 +359,8 @@ struct switchtec_dev {
- 	struct work_struct link_event_work;
- 	void (*link_notifier)(struct switchtec_dev *stdev);
- 	u8 link_event_count[SWITCHTEC_MAX_PFF_CSR];
-+
-+	struct switchtec_ntb *sndev;
- };
+ 	if (mask & PCIE_PORT_SERVICE_AER) {
+@@ -114,13 +114,11 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+-		entry = reg32 >> 27;
+-		if (entry >= nr_entries)
++		entry_aer = reg32 >> 27;
++		if (entry_aer >= nr_entries)
+ 			goto out_free_irqs;
  
- static inline struct switchtec_dev *to_stdev(struct device *dev)
+-		irqs[PCIE_PORT_SERVICE_AER_SHIFT] = pci_irq_vector(dev, entry);
+-
+-		nvec = max(nvec, entry + 1);
++		nvec = max(nvec, entry_aer + 1);
+ 	}
+ 
+ 	if (mask & PCIE_PORT_SERVICE_DPC) {
+@@ -141,13 +139,11 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
+ 		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
+-		entry = reg16 & 0x1f;
+-		if (entry >= nr_entries)
++		entry_dpc = reg16 & 0x1f;
++		if (entry_dpc >= nr_entries)
+ 			goto out_free_irqs;
+ 
+-		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
+-
+-		nvec = max(nvec, entry + 1);
++		nvec = max(nvec, entry_dpc + 1);
+ 	}
+ 
+ 	/*
+@@ -166,6 +162,17 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 			return nr_entries;
+ 	}
+ 
++	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
++		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, entry_hp);
++		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pci_irq_vector(dev, entry_hp);
++	}
++
++	if (mask & PCIE_PORT_SERVICE_AER)
++		irqs[PCIE_PORT_SERVICE_AER_SHIFT] = pci_irq_vector(dev, entry_aer);
++
++	if (mask & PCIE_PORT_SERVICE_DPC)
++		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry_dpc);
++
+ 	return 0;
+ 
+ out_free_irqs:
 -- 
-2.11.0
+1.9.1
