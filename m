@@ -1,90 +1,157 @@
-Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
-Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
-Date: Thu, 3 Aug 2017 01:31:53 -0700
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: Casey Leedom <leedom@chelsio.com>
-Cc: Ding Tianhong <dingtianhong@huawei.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>,
-	Michael Werner <werner@chelsio.com>,
-	Ganesh GR <ganeshgr@chelsio.com>,
-	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"amira@mellanox.com" <amira@mellanox.com>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>,
-	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxarm@huawei.com" <linuxarm@huawei.com>, ashok.raj@intel.com
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-Message-ID: <20170803083153.GB4883@otc-nc-03>
-References: <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
- <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
- <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
- <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home>
- <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
- <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
- <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
- <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
+Return-Path: <SRS0=NMYr=73=mediatek.com=honghui.zhang@kernel.org>
+Return-Path: <SRS0=NMYr=73=mediatek.com=honghui.zhang@kernel.org>
+Message-ID: <1503622427.19072.11.camel@mhfsdcap03>
+Subject: Re: [pci:pci/host-mediatek 11/11]
+ drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: kbuild test robot <fengguang.wu@intel.com>, <kbuild-all@01.org>,
+	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, ryder.lee
+	<ryder.lee@mediatek.com>, <youlin.pei@mediatek.com>,
+	<xinping.qian@mediatek.com>
+Date: Fri, 25 Aug 2017 08:53:47 +0800
+In-Reply-To: <20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com>
+References: <201708232205.SymULNVt%fengguang.wu@intel.com>
+	 <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
+	 <1503544447.19072.7.camel@mhfsdcap03>
+	 <20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Casey
+On Thu, 2017-08-24 at 08:44 -0500, Bjorn Helgaas wrote:
+> On Thu, Aug 24, 2017 at 11:14:07AM +0800, mtk11102 wrote:
+> > On Wed, 2017-08-23 at 17:52 -0500, Bjorn Helgaas wrote:
+> > > On Wed, Aug 23, 2017 at 10:53:07PM +0800, kbuild test robot wrote:
+> > > > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-mediatek
+> > > > head:   8e8ed61600e99258ff59bf36b85b671eed25a462
+> > > > commit: 8e8ed61600e99258ff59bf36b85b671eed25a462 [11/11] PCI: mediatek: Add MSI support for MT2712 and MT7622
+> > > > config: arm-allmodconfig (attached as .config)
+> > > > compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
+> > > > reproduce:
+> > > >         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> > > >         chmod +x ~/bin/make.cross
+> > > >         git checkout 8e8ed61600e99258ff59bf36b85b671eed25a462
+> > > >         # save the attached .config to linux build tree
+> > > >         make.cross ARCH=arm 
+> > > 
+> > > The "node" and "dev" undeclared errors are my fault, and I fixed them.  But
+> > > I don't think I introduced the casting warnings.  These warnings are on a
+> > > 32-bit build.
+> > > 
+> > > I pushed the update to fix the node/dev errors.  Please take a look at the
+> > > remaining casting warnings.
+> > > 
+> > > > All error/warnings (new ones prefixed by >>):
+> > > > 
+> > > >    In file included from include/linux/clk.h:16:0,
+> > > >                     from drivers/pci/host/pcie-mediatek.c:18:
+> > > >    drivers/pci/host/pcie-mediatek.c: In function 'mtk_pcie_msi_setup_irq':
+> > > > >> drivers/pci/host/pcie-mediatek.c:488:33: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+> > > >      msg.address_lo = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+> > > >                                     ^
+> > > >    include/linux/kernel.h:178:33: note: in definition of macro 'lower_32_bits'
+> > > >     #define lower_32_bits(n) ((u32)(n))
+> > > >                                     ^
+> > > >    drivers/pci/host/pcie-mediatek.c: In function 'mtk_pcie_enable_msi':
+> > > > >> drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared (first use in this function)
+> > > >      port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
+> > > >                                               ^~~~
+> > > >    drivers/pci/host/pcie-mediatek.c:541:43: note: each undeclared identifier is reported only once for each function it appears in
+> > > > >> drivers/pci/host/pcie-mediatek.c:545:11: error: 'dev' undeclared (first use in this function)
+> > > >       dev_err(dev, "failed to create MSI IRQ domain\n");
+> > > >               ^~~
+> > > >    In file included from include/linux/clk.h:16:0,
+> > > >                     from drivers/pci/host/pcie-mediatek.c:18:
+> > > >    drivers/pci/host/pcie-mediatek.c:549:22: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+> > > >      val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+> > > >                          ^
+> > > >    include/linux/kernel.h:178:33: note: in definition of macro 'lower_32_bits'
+> > > >     #define lower_32_bits(n) ((u32)(n))
+> > > >                                     ^
+> > > > 
+> > 
+> > hi, Bjorn,
+> > I fixed the build warning at arm by the following diff:
+> > diff --git a/drivers/pci/host/pcie-mediatek.c
+> > b/drivers/pci/host/pcie-mediatek.c
+> > index 707e669..b8d6ed8 100644
+> > --- a/drivers/pci/host/pcie-mediatek.c
+> > +++ b/drivers/pci/host/pcie-mediatek.c
+> > @@ -459,6 +459,7 @@ static int mtk_pcie_msi_setup_irq(struct
+> > msi_controller *chip,
+> >         struct msi_msg msg;
+> >         int hwirq;
+> >         u32 irq;
+> > +       phys_addr_t msg_addr;
+> > 
+> >         port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
+> >         if (!port)
+> > @@ -475,9 +476,10 @@ static int mtk_pcie_msi_setup_irq(struct
+> > msi_controller *chip,
+> > 
+> >         irq_set_msi_desc(irq, desc);
+> > 
+> > +       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+> >         /* MT2712/MT7622 only support 32 bit MSI address */
+> >         msg.address_hi = 0;
+> > -       msg.address_lo = lower_32_bits((u64)(port->base +
+> > PCIE_MSI_VECTOR));
+> > +       msg.address_lo = lower_32_bits(msg_addr);
+> >         msg.data = hwirq;
+> > 
+> >         pci_write_msi_msg(irq, &msg);
+> > @@ -531,8 +533,10 @@ static const struct irq_domain_ops msi_domain_ops =
+> > {
+> >  static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+> >  {
+> >         u32 val;
+> > +       phys_addr_t msg_addr;
+> > 
+> > -       val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+> > +       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+> > +       val = lower_32_bits(msg_addr);
+> >         writel(val, port->base + PCIE_IMSI_ADDR);
+> > 
+> >         val = readl(port->base + PCIE_INT_MASK);
+> 
+> I don't think this is quite right: virt_to_phys() converts a CPU
+> virtual address to a CPU physical address, but the msg_addr is a PCI
+> bus address.  In many cases, PCI bus addresses are identical to CPU
+> physical addresses, but not always.
+> 
+> But I see other drivers doing the same thing:
+> 
+>   dw_pcie_msi_init()
+>   dw_msi_setup_msg()
+>   advk_msi_irq_compose_msi_msg()
+>   advk_pcie_init_msi_irq_domain()
+>   rcar_pcie_enable_msi()
+>   xilinx_pcie_msi_setup_irq()
+>   xilinx_pcie_enable_msi()
+> 
+> and I don't know the right way to fix this.  MSI is basically a
+> special case of DMA.  For most DMA, we allocate a buffer and use
+> something like dma_map_single() to map it via an IOMMU (if present)
+> and return the corresponding bus address.  For MSIs, the target isn't
+> usually a memory buffer, and I don't know that dma_map_single() would
+> do the right thing.
+> 
+> But I guess we should use your fix for now since I don't have a better
+> idea.
+> 
+> > I pull the your host-mediatek branch and seems the build error is still
+> > there.
+> > Should I send a new patch base on your pci/host-mediatek to fix the
+> > build warnings, or should I wait for your push for build error and then
+> > send the patch?
+> 
+> Sorry, I must have forgotten to push it.  Should be there now:
+> 9f3ec1e47377 ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
+> 
+> Hopefully that has everything we need (I included your fix above).
+> 
 
-On Wed, Aug 02, 2017 at 05:53:52PM +0000, Casey Leedom wrote:
->   Okay, here you go.  As you can tell, it's almost a trivial copy of the
-> cxgb4 patch.
->  
->   By the way, I realized that we have yet another hole which is likely not
-> to be fixable.  If we're dealing with a problematic Root Complex, and we
-> instantiate Virtual Functions and attach them to a Virtual Machine along
-> with an NVMe device which can deal with Relaxed Ordering TLPs, the VF driver
-> in the VM will be able to tell that it shouldn't attempt to send RO TLPs to
-> the RC because it will see the state of its own PCIe Capability Device
-> Control[Relaxed Ordering Enable] (a copy of the setting in the VF's
-> corresponding PF), but it won't be able to change that and send non-RO TLPs
-> to the RC, and RO TLPs to the NVMe device.  Oh well.
+Thanks very much for your help.
 
-I don't understand this completely.. So your driver would know not to send RO
-TLP's to root complex. But you want to send RO to the NVMe device? This is the
-peer-2-peer case correct?
-
-The issue in the current patchset is that we device to turn off the device 
-capability for all devices in the hierarchy so one would expect that 
-the NVMe also would have RO turned off i suppose. 
-
-The other approach is to not turn off the device capabilty, but let the
-driver do the right thing. i.e for transactions towards system memory vs. 
-peer-2-peer? But since we wanted to take a big hammer approach because
-some platforms there can be data-corruption and we can't let trust guest
-drivers to do the right thing. This isn't something we can fix in this 
-current version.
-
-One possible approach is to provide a strict flag, where we use this heavy 
-hammer approach only on platforms that have a serious implication, and the 
-other is we let the driver do the right thing depending on the platform.
-
-Worst case if the driver doesn't do the right thing, you would see perf issues
-but nothing bad would happen. It would allow you to select when to turn on 
-RO and when to turn it off.
-
-Cheers,
-Ashok
+> Bjorn
