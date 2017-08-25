@@ -1,67 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54460 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751368AbdHSRKU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 19 Aug 2017 13:10:20 -0400
-Date: Sat, 19 Aug 2017 12:10:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: Re: [PATCH v6 0/2] PCI: iproc: SOC specific fixes
-Message-ID: <20170819171018.GR28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501861696-25767-1-git-send-email-oza.oza@broadcom.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:29437 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932374AbdHYVck (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Aug 2017 17:32:40 -0400
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 13/15] scsi: make device_type const
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+        <1503130946-2854-14-git-send-email-bhumirks@gmail.com>
+Date: Fri, 25 Aug 2017 17:30:22 -0400
+In-Reply-To: <1503130946-2854-14-git-send-email-bhumirks@gmail.com> (Bhumika
+        Goyal's message of "Sat, 19 Aug 2017 13:52:24 +0530")
+Message-ID: <yq11snz72tt.fsf@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1501861696-25767-1-git-send-email-oza.oza@broadcom.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 09:18:14PM +0530, Oza Pawandeep wrote:
-> PCI: iproc: Retry request when CRS returned from EP
-> Above patch adds support for CRS in PCI RC driver, otherwise if not
-> handled at lower level, the user space PMD (poll mode drivers) can
-> timeout.
-> 
-> PCI: iproc: add device shutdown for PCI RC
-> This fixes the issue where certian PCI endpoints are not getting
-> detected on Stingray SOC after reboot.
-> 
-> Changes Since v6:
 
-This current series is v6, so I guess you mean "since v5".
+Bhumika,
 
-> Bjorn's comments addressed.
-> Added reference to PCIe spec and iproc Controller spec in Changelog.
-> 
-> Changes Since v5:
-> Ray's comments addressed.
-> 
-> Changes Since v4:
-> Bjorn's comments addressed.
-> 
-> Changes Since v3:
-> [re-send]
-> 
-> Changes Since v2:
-> Fix compilation errors for pcie-iproc-platform.ko which was caught by
-> kbuild.
-> 
-> Oza Pawandeep (2):
->   PCI: iproc: Retry request when CRS returned from EP
->   PCI: iproc: add device shutdown for PCI RC
-> 
->  drivers/pci/host/pcie-iproc-platform.c |   8 ++
->  drivers/pci/host/pcie-iproc.c          | 139 +++++++++++++++++++++++++++++----
->  drivers/pci/host/pcie-iproc.h          |   1 +
->  3 files changed, 132 insertions(+), 16 deletions(-)
+> Make these const as they are only stored in the type field of a device
+> structure, which is const.
 
-What is this series based on?  It doesn't apply to my master branch,
-my next branch, or my pci/host-iproc branch.  It's always best to base
-patches on my master branch, unless they depend on something that's
-not there.
+Applied to 4.14/scsi-queue. Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
