@@ -1,94 +1,189 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:33297 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751278AbdHDKV3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Aug 2017 06:21:29 -0400
-Received: by mail-wr0-f195.google.com with SMTP id y43so2692623wrd.0
-        for <linux-pci@vger.kernel.org>; Fri, 04 Aug 2017 03:21:28 -0700 (PDT)
-From: Daniel Axtens <dja@axtens.net>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org
-Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
-        zourongrong@gmail.com, catalin.marinas@arm.com,
-        will.deacon@arm.com, gabriele.paoloni@huawei.com,
-        bhelgaas@google.com, airlied@linux.ie, daniel.vetter@intel.com,
-        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>,
-        Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/3] powerpc: simplify and fix VGA default device behaviour
-Date: Fri,  4 Aug 2017 20:20:31 +1000
-Message-Id: <20170804102033.27731-2-dja@axtens.net>
-In-Reply-To: <20170804102033.27731-1-dja@axtens.net>
-References: <20170804102033.27731-1-dja@axtens.net>
+Received: from mail.kernel.org ([198.145.29.99]:36698 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932374AbdHYVSk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Aug 2017 17:18:40 -0400
+Date: Fri, 25 Aug 2017 16:18:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v5 06/10] PCI: rockchip: fix missing phy manipulation for
+ legacy phy
+Message-ID: <20170825211832.GA8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+ <1503471777-73999-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503471777-73999-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some powerpc devices provide a PCI display that isn't picked up by
-the VGA arbiter, presumably because it doesn't support the PCI
-legacy VGA ranges.
+On Wed, Aug 23, 2017 at 03:02:57PM +0800, Shawn Lin wrote:
+> For instance, if a EP connect to lane3 and work under lagecy
+> phy mode, so struct phy phys[0..2] are all NULL. In this case,
+> rockchip->lanes_map & BIT(i) will tell the driver that lane0 is
+> already inactive, but what we want actually is to power off
+> the phys[0] for legacy phy mode. Fix this by add checking of
+> rockchip->legacy_phy for rockchip_pcie_deinit_phys.
 
-Commit c2e1d84523ad ("powerpc: Set default VGA device") introduced
-an arch quirk to mark these devices as default to fix X autoconfig.
+This changelog is not quite correct.  If "rockchip->legacy_phy", then
+rockchip->phys[0] is a valid PHY, but phys[1..3] are NULL (not 0..2).
 
-The commit message stated that the patch:
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+> Changes in v5: None
+> Changes in v4: None
+> Changes in v3: None
+> Changes in v2: None
+> 
+>  drivers/pci/host/pcie-rockchip.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 9cd51e0..933e3e9 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -759,7 +759,7 @@ static void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
+>  
+>  	for (i = 0; i < MAX_LANE_NUM; i++) {
+>  		/* inactive lane is already powered off */
+> -		if (rockchip->lanes_map & BIT(i))
+> +		if (rockchip->legacy_phy || rockchip->lanes_map & BIT(i))
+>  			phy_power_off(rockchip->phys[i]);
+>  		phy_exit(rockchip->phys[i]);
+>  	}
 
-    Ensures a default VGA is always set if a graphics adapter is present,
-    even if firmware did not initialize it. If more than one graphics
-    adapter is present, ensure the one initialized by firmware is set
-    as the default VGA device.
+I think this is harder to understand than necessary.  If we're using
+legacy_phy, the pointer is in phys[0].  If we always set
+rockchip->lanes_map, even in the legacy_phy case (where it would show
+that only phys[0] is valid), this patch won't even be necessary.
 
-The patch used the following test to decide whether or not to mark
-a device as default:
+I'd propose the following patches, which could be squashed into the
+existing series on pci/host-rockchip.  The first is purely cosmetic,
+as is some of the second.
 
-  pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-  if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-          vga_set_default_device(pdev);
+The important part is this:
 
-This doesn't seem like it works quite as intended. Because of the
-logical OR, the default device will be set in 2 cases:
+   static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
+   {
+  -       u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
+  -       u8 map = val & PCIE_CORE_LANE_MAP_MASK;
+  +       u32 val;
+  +       u8 map;
+  +
+  +       if (rockchip->legacy_phy)
+  +               return BIT(0);
 
- 1) if there is no default device
-OR
- 2) if this device has normal memory/IO decoding turned on
 
-This will work as intended if there is only one device, but if
-there are multiple devices, we may override the device the VGA
-arbiter picked.
 
-Instead, set a device as default if there is no default device AND
-this device decodes.
+commit d3d39c577edf63b9441d1a7614808e02721dd2b6
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri Aug 25 16:00:25 2017 -0500
 
-This will not change behaviour on single-headed systems.
+    Possibly squash into "PCI: rockchip: Add per-lane PHY support"
 
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Daniel Axtens <dja@axtens.net>
-
----
-
-Tested in TCG (the card provided by qemu doesn't automatically
-register with vgaarb, so the relevant code path has been tested)
-but I would appreciate any tests on real hardware.
-
-Informal benh ack: https://patchwork.kernel.org/patch/9850235/
----
- arch/powerpc/kernel/pci-common.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 341a7469cab8..c95fdda3a2dc 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1746,8 +1746,11 @@ static void fixup_vga(struct pci_dev *pdev)
- {
- 	u16 cmd;
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index f8b88004e20f..5ccbdbfa97d0 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -867,24 +867,25 @@ static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ 	char *name;
+ 	u32 i;
  
-+	if (vga_default_device())
-+		return;
+-	rockchip->phys[0] = devm_phy_get(dev, "pcie-phy");
+-	if (IS_ERR(rockchip->phys[0])) {
+-		if (PTR_ERR(rockchip->phys[0]) == -EPROBE_DEFER)
+-			return PTR_ERR(rockchip->phys[0]);
+-		dev_dbg(dev, "missing legacy phy; search for per-lane PHY\n");
+-	} else {
++	phy = devm_phy_get(dev, "pcie-phy");
++	if (!IS_ERR(phy)) {
+ 		rockchip->legacy_phy = true;
++		rockchip->phys[0] = phy;
+ 		dev_warn(dev, "legacy phy model is deprecated!\n");
+ 		return 0;
+ 	}
+ 
++	if (PTR_ERR(phy) == -EPROBE_DEFER)
++		return PTR_ERR(phy);
 +
- 	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
--	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-+	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
- 		vga_set_default_device(pdev);
++	dev_dbg(dev, "missing legacy phy; search for per-lane PHY\n");
++
+ 	for (i = 0; i < MAX_LANE_NUM; i++) {
+ 		name = kasprintf(GFP_KERNEL, "pcie-phy-%u", i);
+ 		if (!name)
+ 			return -ENOMEM;
  
- }
--- 
-2.11.0
+-		phy = devm_of_phy_get(rockchip->dev,
+-				      rockchip->dev->of_node, name);
++		phy = devm_of_phy_get(dev, dev->of_node, name);
+ 		kfree(name);
+ 
+ 		if (IS_ERR(phy)) {
+commit 6f8bcdfe4568809437e93e2d54e68b2cba3b4ac4
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri Aug 25 15:39:10 2017 -0500
+
+    Possibly squash into "PCI: rockchip: Idle inactive PHY(s)"
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 60069acd9f86..29ebfc971896 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -309,8 +309,14 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+ 
+ static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
+ {
+-	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
+-	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
++	u32 val;
++	u8 map;
++
++	if (rockchip->legacy_phy)
++		return BIT(0);
++
++	val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
++	map = val & PCIE_CORE_LANE_MAP_MASK;
+ 
+ 	/* The link may be using a reverse-indexed mapping. */
+ 	if (val & PCIE_CORE_LANE_MAP_REVERSE)
+@@ -715,13 +721,10 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
+ 	dev_dbg(dev, "current link width is x%d\n", status);
+ 
+-	if (!rockchip->legacy_phy) {
+-		/*  power off unused lane(s) */
+-		rockchip->lanes_map = rockchip_pcie_lane_map(rockchip);
+-		for (i = 0; i < MAX_LANE_NUM; i++) {
+-			if (rockchip->lanes_map & BIT(i))
+-				continue;
+-
++	/* Power off unused lane(s) */
++	rockchip->lanes_map = rockchip_pcie_lane_map(rockchip);
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		if (!(rockchip->lanes_map & BIT(i))) {
+ 			dev_dbg(dev, "idling lane %d\n", i);
+ 			phy_power_off(rockchip->phys[i]);
+ 		}
+@@ -1378,7 +1381,7 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+ 	}
+ 
+ 	for (i = 0; i < MAX_LANE_NUM; i++) {
+-		/* inactive lane is already powered off */
++		/* inactive lanes are already powered off */
+ 		if (rockchip->lanes_map & BIT(i))
+ 			phy_power_off(rockchip->phys[i]);
+ 		phy_exit(rockchip->phys[i]);
+@@ -1628,7 +1631,7 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+ 	irq_domain_remove(rockchip->irq_domain);
+ 
+ 	for (i = 0; i < MAX_LANE_NUM; i++) {
+-		/* inactive lane is already powered off */
++		/* inactive lanes are already powered off */
+ 		if (rockchip->lanes_map & BIT(i))
+ 			phy_power_off(rockchip->phys[i]);
+ 		phy_exit(rockchip->phys[i]);
