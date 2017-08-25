@@ -1,86 +1,71 @@
-Return-Path: <SRS0=L3Lk=AB=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=L3Lk=AB=free.fr=slash.tmp@kernel.org>
-Subject: Re: Possible regression between 4.9 and 4.13
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Lukas Wunner <lukas@wunner.de>,
- Mathias Nyman <mathias.nyman@linux.intel.com>,
- Felipe Balbi <felipe.balbi@linux.intel.com>,
- linux-pci <linux-pci@vger.kernel.org>, linux-usb
- <linux-usb@vger.kernel.org>, Linux ARM
- <linux-arm-kernel@lists.infradead.org>, Bjorn Helgaas <helgaas@kernel.org>,
- Alan Stern <stern@rowland.harvard.edu>
-References: <599D62EA.7050100@linux.intel.com>
- <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
- <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
- <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
- <59A3D6BF.7010400@linux.intel.com>
- <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
- <59A56C15.2000403@linux.intel.com> <20170829235310.GA20214@wunner.de>
- <20170830060237.GA2782@kroah.com>
- <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
- <20170830090633.GA1208@kroah.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <1e3bde27-5597-41ed-11d1-0450b17f2344@free.fr>
-Date: Thu, 31 Aug 2017 11:39:39 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr50087.outbound.protection.outlook.com ([40.107.5.87]:44399
+        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754503AbdHYDUu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Aug 2017 23:20:50 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
+        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+Subject: RE: [PATCHv4 7/9] PCI: layerscape: use accessors to enable/disable
+ DBI RO registers' write permission
+Date: Fri, 25 Aug 2017 03:20:47 +0000
+Message-ID: <AM5PR0402MB27710F07F62FF307A8EE5F4F849B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+ <20170823060856.9387-8-Zhiqiang.Hou@nxp.com>
+ <20170824171445.GQ31858@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170824171445.GQ31858@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-In-Reply-To: <20170830090633.GA1208@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/08/2017 11:06, Greg Kroah-Hartman wrote:
-
-> On Wed, Aug 30, 2017 at 10:55:37AM +0200, Mason wrote:
->
->> On 30/08/2017 08:02, Greg Kroah-Hartman wrote:
->>
->>> To get back to the original issue here, the hardware seems to have died,
->>> the driver stops talking to it, and all is good.  The "regression" here
->>> is that we now properly can determine that the hardware is crap.
->>
->> Before 4.12, when I unplugged my USB3 Flash drive, Linux would
->> detect a few "Uncorrected Non-Fatal errors" via AER, but it was
->> still possible to plug the drive back in.
->>
->> Since 4.12, once I unplug the drive, the whole USB3 card is marked
->> as dead (all 4 ports), and I can no longer plug anything in (not even
->> the USB2 drive that didn't have any issues, IIRC).
->>
->> It seems a bit premature to "mark as dead" something that remains
->> functional, doesn't it?
-> 
-> I agree, but if the device sends all ones, it's a good indication it is
-> really dead, right?  Or something is wrong with it.
-
-I wouldn't call it dead if I can plug the drive back in, and have
-it working... But I agree that something fishy is happening...
-
->> Disclaimer, there are many variables in this setup, and I've only
->> tested a small fraction of the problem space: only one system,
->> only one USB3 board, only one USB3 Flash drive.
-> 
-> Did you ever happen to narrow this down to a single git commit using
-> 'git bisect'?  I can't remember what happened in the beginning of this
-> thread...
-
-Mathias pointed out d9f11ba9f107aa335091ab8d7ba5eea714e46e8b
-
->>> So, how do you think we should proceed, delay a bit longer before saying
->>> the device is gone?  How long is "long enough"?  How many bus errors are
->>> we allowed to tolerate (hint, the PCI spec says none...)
->>>
->>> Maybe someone wants to get to the root problem here, why is the hardware
->>> suddenly reporting all 1s?
->>
->> I'm afraid I won't be able to make any progress on this front,
->> unless I can get my hands on a PCIe packet analyzer.
-> 
-> Odds of that happening are pretty rare, right?  I've never even seen one
-> of those...
-
-I had a "Summit T24 Analyzer" on my desk a few months ago, but I was getting
-strange results, and the knowledgeable people in my company were not available
-at the time.
-
-http://teledynelecroy.com/protocolanalyzer/protocoloverview.aspx?seriesid=445
-
-Regards.
+SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
+c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIyNcjVIDE6MTUNCj4gVG86IFoucS4gSG91
+IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
+IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBKb2FvLlBpbnRv
+QHN5bm9wc3lzLmNvbTsgTS5oLiBMaWFuDQo+IDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5n
+a2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZw0KPiA8cm95LnphbmdAbnhwLmNv
+bT47IHN2YXJiYW5vdkBtbS1zb2wuY29tOyBuaWtsYXMuY2Fzc2VsQGF4aXMuY29tOw0KPiBqZXNw
+ZXIubmlsc3NvbkBheGlzLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIdjQgNy85XSBQQ0k6IGxh
+eWVyc2NhcGU6IHVzZSBhY2Nlc3NvcnMgdG8gZW5hYmxlL2Rpc2FibGUNCj4gREJJIFJPIHJlZ2lz
+dGVycycgd3JpdGUgcGVybWlzc2lvbg0KPiANCj4gT24gV2VkLCBBdWcgMjMsIDIwMTcgYXQgMDI6
+MDg6NTRQTSArMDgwMCwgWmhpcWlhbmcgSG91IHdyb3RlOg0KPiA+IEZyb206IEhvdSBaaGlxaWFu
+ZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4NCj4gPiBVc2UgdGhlIGFjY2Vzc29ycyBpbnN0
+ZWFkIGFjY2Vzc2luZyB0aGUgREJJIHJlYWQtb25seSB3cml0ZSBlbmFibGUNCj4gPiByZWdpc3Rl
+ciBkaXJlY3RseS4NCj4gDQo+IFRoaXMgcGF0Y2ggYW5kIHRoZSBwcmV2aW91cyBvbmUgKHRoYXQg
+YWRkZWQgZHdfcGNpZV9kYmlfcm9fd3JfZW4oKSkgc2hvdWxkDQo+IGJlIHNxdWFzaGVkIHRvZ2V0
+aGVyLiAgVGhhdCB3YXkgaXQncyBvYnZpb3VzIHRoYXQgdGhlIG5ldyBjb2RlIGhlcmUgaXMNCj4g
+ZXF1aXZhbGVudCB0byB0aGUgb2xkIGNvZGUNCg0KVGhhbmtzIGZvciB5b3VyIHN1Z2dlc3Rpb24s
+IHdpbGwgbWVyZ2UgdGhlbSB0b2dldGhlci4NCg0KDQo+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpo
+aXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiBBY2tlZC1CeTogSm9hbyBQaW50byA8
+anBpbnRvQHN5bm9wc3lzLmNvbT4NCj4gPiAtLS0NCj4gPiBWNDoNCj4gPiAgLSBubyBjaGFuZ2UN
+Cj4gPg0KPiA+ICBkcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYyB8IDUgKystLS0NCj4g
+PiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gPg0K
+PiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+IGIv
+ZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiBpbmRleCA0NGE2MDNkYjIxN2Eu
+LjBjMTMzMGZjZTAxZCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVy
+c2NhcGUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4g
+QEAgLTMzLDcgKzMzLDYgQEANCj4gPg0KPiA+ICAvKiBQRVggSW50ZXJuYWwgQ29uZmlndXJhdGlv
+biBSZWdpc3RlcnMgKi8NCj4gPiAgI2RlZmluZSBQQ0lFX1NUUkZNUjEJCTB4NzFjIC8qIFN5bWJv
+bCBUaW1lciAmIEZpbHRlciBNYXNrDQo+IFJlZ2lzdGVyMSAqLw0KPiA+IC0jZGVmaW5lIFBDSUVf
+REJJX1JPX1dSX0VOCTB4OGJjIC8qIERCSSBSZWFkLU9ubHkgV3JpdGUgRW5hYmxlDQo+IFJlZ2lz
+dGVyICovDQo+ID4NCj4gPiAgI2RlZmluZSBQQ0lFX0lBVFVfTlVNCQk2DQo+ID4NCj4gPiBAQCAt
+MTQ1LDEwICsxNDQsMTAgQEAgc3RhdGljIGludCBsc19wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNp
+ZV9wb3J0ICpwcCkNCj4gPiAgCSAqLw0KPiA+ICAJbHNfcGNpZV9kaXNhYmxlX291dGJvdW5kX2F0
+dXMocGNpZSk7DQo+ID4NCj4gPiAtCWlvd3JpdGUzMigxLCBwY2ktPmRiaV9iYXNlICsgUENJRV9E
+QklfUk9fV1JfRU4pOw0KPiA+ICsJZHdfcGNpZV9kYmlfcm9fd3JfZW4ocGNpKTsNCj4gPiAgCWxz
+X3BjaWVfZml4X2NsYXNzKHBjaWUpOw0KPiA+ICAJbHNfcGNpZV9jbGVhcl9tdWx0aWZ1bmN0aW9u
+KHBjaWUpOw0KPiA+IC0JaW93cml0ZTMyKDAsIHBjaS0+ZGJpX2Jhc2UgKyBQQ0lFX0RCSV9ST19X
+Ul9FTik7DQo+ID4gKwlkd19wY2llX2RiaV9yb193cl9kaXMocGNpKTsNCj4gPg0KPiA+ICAJbHNf
+cGNpZV9kcm9wX21zZ190bHAocGNpZSk7DQo+ID4NCj4gPiAtLQ0KPiA+IDIuMTQuMQ0KPiA+DQoN
+ClRoYW5rcywNClpoaXFpYW5nDQo=
