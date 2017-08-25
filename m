@@ -1,88 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:48320 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751247AbdHGMu0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Aug 2017 08:50:26 -0400
-Subject: Re: Support SVM without PASID
-To: Bob Liu <liubo95@huawei.com>, valmiki <valmikibow@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: tianyu.lan@intel.com, kevin.tian@intel.com, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        jacob.jun.pan@intel.com
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
- <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
- <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
- <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
- <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
- <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
- <ed289d79-880a-a542-dcb1-0de8c55a8ca0@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <1ef75c2d-f980-5cef-f760-be3b133c82ca@arm.com>
-Date: Mon, 7 Aug 2017 13:52:26 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 25 Aug 2017 11:20:00 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie
+ wake irq
+Message-ID: <20170825181959.GA64040@google.com>
+References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
+ <20170822031934.8675-4-jeffy.chen@rock-chips.com>
+ <20170825181439.d3hlwrcbmcss3sx6@rob-hp-laptop>
 MIME-Version: 1.0
-In-Reply-To: <ed289d79-880a-a542-dcb1-0de8c55a8ca0@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170825181439.d3hlwrcbmcss3sx6@rob-hp-laptop>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, Jeffy Chen <jeffy.chen@rock-chips.com>,
+ linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bob,
-
-On 07/08/17 13:18, Bob Liu wrote:
-> On 2017/8/7 18:31, Jean-Philippe Brucker wrote:
->> On 05/08/17 06:14, valmiki wrote:
->> [...]
->>> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
->>> documentation we fill vaddr and iova in struct vfio_iommu_type1_dma_map
->>> and pass them to VFIO. But if we use dynamic allocation in application
->>> (say malloc), do we need to use dma API to get iova and then call
->>> VFIO_IOMMU_MAP ioctl ?
->>> If application needs multiple such dynamic allocations, then it need to
->>> allocate large chunk and program it via VFIO_IOMMU_MAP ioctl and then
->>> manage rest allocations requirements from this buffer ?
->>
->> Yes, without SVM, the application allocates large buffers, allocates IOVAs
->> itself, and maps them with VFIO_IOMMU_MAP. Userspace doesn't rely on the
->> DMA API at all, it manages IOVAs as it wants. Sizes passed to
->> VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page granularity
->> (that is at least 4kB), and both iova and vaddr have to be aligned on that
->> granularity as well. So malloc isn't really suitable in this case, you'll
->> need mmap. The application can then implement a small allocator to manage
->> the DMA pool created with VFIO_IOMMU_MAP.
->>
->> With SVM the application binds its address space to the device, and then
->> uses malloc for all DMA buffers, no need for VFIO_IOMMU_MAP.
->>
+On Fri, Aug 25, 2017 at 01:14:39PM -0500, Rob Herring wrote:
+> On Tue, Aug 22, 2017 at 11:19:33AM +0800, Jeffy Chen wrote:
+> > Add an optional interrupt for PCIE_WAKE pin.
+> > 
+> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> > ---
+> > 
+> > Changes in v4: None
+> > Changes in v3: None
+> > Changes in v2: None
+> > 
+> >  .../devicetree/bindings/pci/rockchip-pcie.txt        | 20 ++++++++++++--------
+> >  1 file changed, 12 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> > index 5678be82530d..9f6504129e80 100644
+> > --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> > @@ -20,10 +20,13 @@ Required properties:
+> >  - msi-map: Maps a Requester ID to an MSI controller and associated
+> >  	msi-specifier data. See ./pci-msi.txt
+> >  - interrupts: Three interrupt entries must be specified.
+> > -- interrupt-names: Must include the following names
+> > -	- "sys"
+> > -	- "legacy"
+> > -	- "client"
+> > +- interrupt-names: Include the following names
+> > +	Required:
+> > +		- "sys"
+> > +		- "legacy"
+> > +		- "client"
+> > +	Optional:
+> > +		- "wake"
 > 
-> Hi Jean,
-> 
-> I think there is another way to support SVM without PASID.
-> 
-> Suppose there is a device in the same SOC-chip, the device access memory through SMMU(using internal bus instead of PCIe)
-> Once page fault, the device send an event with (vaddr, substreamID) to SMMU, then SMMU triggers an event interrupt.
-> 
-> In the event interrupt handler, we can implement the same logic as PRI interrupt in your patch.
-> What do you think about that?
-What you're describing is the SMMU stall model for platform devices. From
-the driver perspective it's the same as PRI and PASID (SubstreamID=PASID).
+> Use the wakeup source binding:
+> Documentation/devicetree/bindings/power/wakeup-source.txt
 
-When a stall-capable device accesses unmapped memory, the SMMU parks the
-transaction and sends an event marked "stall" on the event queue, with a
-stall tag (STAG, roughly equivalent to PRG Index). The OS handles the
-fault and sends a CMD_RESUME command with the status and the STAG. Then
-the SMMU completes the access or terminates it.
+And I suppose this means we'd fall under this paragraph?
 
-In a prototype I have, the stall implementation reuses most of the
-PASID/PRI code. The main difficulty is defining SSID and stall capability
-in firmware, as there are no standard capability probing for platform
-devices. Stall-capable devices must be able to wait an indefinite amount
-of time that their DMA transactions returns, therefore the stall model
-cannot work with PCI, only some integrated devices.
+    "However if the devices have dedicated interrupt as the wakeup source
+    then they need to specify/identify the same using device specific
+    interrupt name. In such cases only that interrupt can be used as wakeup
+    interrupt."
 
-Thanks,
-Jean
+We don't expect *any* interrupt to qualify as PCI WAKE#; so we should
+still also document the interrupt name ("wake"?) in
+Documentation/devicetree/bindings/pci/pci.txt as Bjorn suggested, in
+addition to using the 'wakeup-source' property documented there.
+
+Brian
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
