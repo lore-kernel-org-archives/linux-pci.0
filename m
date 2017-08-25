@@ -1,71 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr50087.outbound.protection.outlook.com ([40.107.5.87]:44399
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754503AbdHYDUu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Aug 2017 23:20:50 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
-        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-Subject: RE: [PATCHv4 7/9] PCI: layerscape: use accessors to enable/disable
- DBI RO registers' write permission
-Date: Fri, 25 Aug 2017 03:20:47 +0000
-Message-ID: <AM5PR0402MB27710F07F62FF307A8EE5F4F849B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
- <20170823060856.9387-8-Zhiqiang.Hou@nxp.com>
- <20170824171445.GQ31858@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170824171445.GQ31858@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <SRS0=VCL4=73=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=VCL4=73=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Marc Gonzalez <Marc_Gonzalez@sigmadesigns.com>
+References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
+ <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
+ <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
+ <86efs3wesi.fsf@arm.com>
+ <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
+ <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
+ <CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
+ <e381170c-e462-01cd-12db-30773005602b@free.fr> <871so09j6g.fsf@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <90f38928-6f5c-c225-d150-d8daf7d4652c@free.fr>
+Date: Fri, 25 Aug 2017 10:56:25 +0200
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <871so09j6g.fsf@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
-c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIyNcjVIDE6MTUNCj4gVG86IFoucS4gSG91
-IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
-IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBKb2FvLlBpbnRv
-QHN5bm9wc3lzLmNvbTsgTS5oLiBMaWFuDQo+IDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5n
-a2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZw0KPiA8cm95LnphbmdAbnhwLmNv
-bT47IHN2YXJiYW5vdkBtbS1zb2wuY29tOyBuaWtsYXMuY2Fzc2VsQGF4aXMuY29tOw0KPiBqZXNw
-ZXIubmlsc3NvbkBheGlzLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIdjQgNy85XSBQQ0k6IGxh
-eWVyc2NhcGU6IHVzZSBhY2Nlc3NvcnMgdG8gZW5hYmxlL2Rpc2FibGUNCj4gREJJIFJPIHJlZ2lz
-dGVycycgd3JpdGUgcGVybWlzc2lvbg0KPiANCj4gT24gV2VkLCBBdWcgMjMsIDIwMTcgYXQgMDI6
-MDg6NTRQTSArMDgwMCwgWmhpcWlhbmcgSG91IHdyb3RlOg0KPiA+IEZyb206IEhvdSBaaGlxaWFu
-ZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4NCj4gPiBVc2UgdGhlIGFjY2Vzc29ycyBpbnN0
-ZWFkIGFjY2Vzc2luZyB0aGUgREJJIHJlYWQtb25seSB3cml0ZSBlbmFibGUNCj4gPiByZWdpc3Rl
-ciBkaXJlY3RseS4NCj4gDQo+IFRoaXMgcGF0Y2ggYW5kIHRoZSBwcmV2aW91cyBvbmUgKHRoYXQg
-YWRkZWQgZHdfcGNpZV9kYmlfcm9fd3JfZW4oKSkgc2hvdWxkDQo+IGJlIHNxdWFzaGVkIHRvZ2V0
-aGVyLiAgVGhhdCB3YXkgaXQncyBvYnZpb3VzIHRoYXQgdGhlIG5ldyBjb2RlIGhlcmUgaXMNCj4g
-ZXF1aXZhbGVudCB0byB0aGUgb2xkIGNvZGUNCg0KVGhhbmtzIGZvciB5b3VyIHN1Z2dlc3Rpb24s
-IHdpbGwgbWVyZ2UgdGhlbSB0b2dldGhlci4NCg0KDQo+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpo
-aXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiBBY2tlZC1CeTogSm9hbyBQaW50byA8
-anBpbnRvQHN5bm9wc3lzLmNvbT4NCj4gPiAtLS0NCj4gPiBWNDoNCj4gPiAgLSBubyBjaGFuZ2UN
-Cj4gPg0KPiA+ICBkcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYyB8IDUgKystLS0NCj4g
-PiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCj4gPg0K
-PiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+IGIv
-ZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiBpbmRleCA0NGE2MDNkYjIxN2Eu
-LjBjMTMzMGZjZTAxZCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVy
-c2NhcGUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4g
-QEAgLTMzLDcgKzMzLDYgQEANCj4gPg0KPiA+ICAvKiBQRVggSW50ZXJuYWwgQ29uZmlndXJhdGlv
-biBSZWdpc3RlcnMgKi8NCj4gPiAgI2RlZmluZSBQQ0lFX1NUUkZNUjEJCTB4NzFjIC8qIFN5bWJv
-bCBUaW1lciAmIEZpbHRlciBNYXNrDQo+IFJlZ2lzdGVyMSAqLw0KPiA+IC0jZGVmaW5lIFBDSUVf
-REJJX1JPX1dSX0VOCTB4OGJjIC8qIERCSSBSZWFkLU9ubHkgV3JpdGUgRW5hYmxlDQo+IFJlZ2lz
-dGVyICovDQo+ID4NCj4gPiAgI2RlZmluZSBQQ0lFX0lBVFVfTlVNCQk2DQo+ID4NCj4gPiBAQCAt
-MTQ1LDEwICsxNDQsMTAgQEAgc3RhdGljIGludCBsc19wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNp
-ZV9wb3J0ICpwcCkNCj4gPiAgCSAqLw0KPiA+ICAJbHNfcGNpZV9kaXNhYmxlX291dGJvdW5kX2F0
-dXMocGNpZSk7DQo+ID4NCj4gPiAtCWlvd3JpdGUzMigxLCBwY2ktPmRiaV9iYXNlICsgUENJRV9E
-QklfUk9fV1JfRU4pOw0KPiA+ICsJZHdfcGNpZV9kYmlfcm9fd3JfZW4ocGNpKTsNCj4gPiAgCWxz
-X3BjaWVfZml4X2NsYXNzKHBjaWUpOw0KPiA+ICAJbHNfcGNpZV9jbGVhcl9tdWx0aWZ1bmN0aW9u
-KHBjaWUpOw0KPiA+IC0JaW93cml0ZTMyKDAsIHBjaS0+ZGJpX2Jhc2UgKyBQQ0lFX0RCSV9ST19X
-Ul9FTik7DQo+ID4gKwlkd19wY2llX2RiaV9yb193cl9kaXMocGNpKTsNCj4gPg0KPiA+ICAJbHNf
-cGNpZV9kcm9wX21zZ190bHAocGNpZSk7DQo+ID4NCj4gPiAtLQ0KPiA+IDIuMTQuMQ0KPiA+DQoN
-ClRoYW5rcywNClpoaXFpYW5nDQo=
+On 25/08/2017 09:54, Marc Zyngier wrote:
+> On Thu, Aug 24 2017 at 10:53:16 pm BST, Mason <slash.tmp@free.fr> wrote:
+>> On 24/08/2017 20:35, Ard Biesheuvel wrote:
+>>> On 24 August 2017 at 18:51, Marc Gonzalez wrote:
+>>>> On 24/08/2017 19:04, Bjorn Helgaas wrote:
+>>>>> On Tue, Aug 22, 2017 Marc Zyngier wrote:
+>>>>>> Marc Gonzalez wrote:
+>>>>>>> On 22/08/2017 18:29, Marc Zyngier wrote:
+>>>>>>>> On 22/08/17 15:56, Marc Gonzalez wrote:
+>>>>>>>>
+>>>>>>>>>  #define SMP8759_MUX              0x48
+>>>>>>>>>  #define SMP8759_TEST_OUT 0x74
+>>>>>>>>> +#define SMP8759_STATUS           0x80
+>>>>>>>>> +#define SMP8759_ENABLE           0xa0
+>>>>>>>>> +#define SMP8759_DOORBELL 0xa002e07c
+>>>>>>>>
+>>>>>>>> Why is this hardcoded and not coming from the device-tree, just like any
+>>>>>>>> other address property?
+>>>>>>>
+>>>>>>> Since this bus address is software-configurable, I didn't think
+>>>>>>> it belonged in the DT. Also, I didn't see anything similar in
+>>>>>>> other binding docs, especially
+>>>>>>>
+>>>>>>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
+>>>>>>
+>>>>>> If that's software configurable, how on Earth did you pick the address?
+>>>>>> How do you ensure that it doesn't conflict with DMA? How is it
+>>>>>> configured into the RC?
+>>>>>
+>>>>> But we *do* need to resolve this.  This does seem like an address that
+>>>>> shouldn't be hard-coded into the driver.  Since this driver is
+>>>>> programming the address into an MSI message, but not into the receiver
+>>>>> of that message, there's a coordination issue between this driver and
+>>>>> whatever other software does that receiver configuration.
+>>>>
+>>>> OK. I'll move the doorbell address to the DT for v11.
+>>>>
+>>>> What property should be used for this address?
+>>>>
+>>>> sigma,doorbell ?
+>>>>
+>>>> Or maybe I can put it in reg, since I have a 1:1 mapping
+>>>> between bus and cpu addresses?
+>>>>
+>>>> git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
+>>>> returns nothing.
+>>>
+>>> You haven't answered the question yet: you stated that the doorbell
+>>> address is software configurable, yet your code does not seem to
+>>> configure it. It only returns the doorbell address so that it gets
+>>> communicated to the downstream devices.
+>>>
+>>> So how does the RC know which address is special, so it can trigger on
+>>> inbound writes hitting that address and assert the SPI ?
+>>
+>> The CPU address of the MSI doorbell address is 0x2e07c
+>> i.e. within the reg space of the PCIe controller block.
+> 
+> Which you describe in DT already, right? So why aren't you using an
+> offset in this region as your MSI doorbell (potentially applying an
+> offset, see below)?
+
+Yes, the controller is described in DT:
+
+	pcie@2e000 {
+		compatible = "sigma,smp8759-pcie";
+		reg = <0x50000000 0x400000>, <0x2e000 0x100>;
+
+IIUC, you're saying I don't need the doorbell address
+explicitly in the DT, because I can compute:
+
+0x2e000 (from the DT) + 0x7c (offset within the block)
+
+OK, that sounds right.
+
+Then there is the matter of the region offset,
+i.e. 0xa0000000 in my current code.
+
+It might also be worth keeping in mind that there is
+a second revision of the PCIe controller that handles
+the doorbell differently. In rev2, I just pick an
+arbitrary address within the window, program that
+bus address into the controller, and the controller
+knows to forward that single address to the right
+place. See "[RFC PATCH v0.2] PCI: Add support for
+tango PCIe host bridge" for an example of this.
+
+Typically, I pick the first address of the window,
+BAR0.base, since I assume no device will ever need
+to read/write the first word of RAM.
+
+
+>> As I discussed back in March, the RC implements an odd
+>> bus-to-system mapping.
+>>
+>> RC BAR0 defines a window in PCI address space (max 1GB).
+>> Accesses outside this window are silently ignored.
+>> The window is divided into 8 "regions" and there are 8
+>> registers defining the offset into CPU space.
+>>
+>> In pseudo code, assuming pci_address is within the
+>> window defined by BAR0:
+>>
+>> cpu_address map_bus_to_system(pci_address)
+>> {
+>>     temp = pci_address - BAR0.base
+>>     region = temp / region_size
+>>     offset = temp % region_size
+>>     cpu_address = region_reg[region] + offset
+>>     return cpu_address
+>> }
+>>
+>> The current setup is:
+>>
+>> DRAM at 0x80000000-0xa0000000
+>> BAR0.base = 0x80000000
+>> REGION[0] = 0x80000000
+>> REGION[1] = 0x88000000
+>> REGION[2] = 0x90000000
+>> REGION[3] = 0x98000000
+>> REGION[4] = 0x0
+>>
+>> (This map means 1:1 identity for DRAM addresses.)
+>>
+>> Thus when a device writes to 0xa002e07c (region 4)
+>> the write is forwarded to 0x2e07c.
+> 
+> But how do you find out about the 0xa0000000 offset? You must make sure
+> that the provided address is outside of RAM, should you end-up on a
+> system more than 1GB of RAM.
+
+You're right, I've swept this issue under the rug so far.
+
+The boards typically come with either
+- two 512MB DIMMs
+- two 1GB DIMMs
+(there may be other setups I'm not aware of, e.g. with
+a single memory module).
+
+In the DT for my dev board, I describe *all* of the RAM.
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x80000000 0x80000000>; /* 2 GB */
+	};
+
+But actually, Linux is only given to manage a fraction
+of this memory, as some of it is for other processors
+and DSPs, and a large part is for video decoder buffers.
+
+In the end, Linux manages, typically
+128MB, 256MB, 512MB, 2x128MB, or 2x256MB
+(there may be other setups I'm not aware of)
+And the actual config is passed to Linux through
+a mem= command-line directive.
+
+It is not clear to me, as I discussed with Ard, how the
+Linux driver is supposed to make this all work.
+
+Maybe I can have some platform code that walks the
+different RAM areas available to Linux, and sets up
+the appropriate physical-to-dma mappings?
+
+Regards.
