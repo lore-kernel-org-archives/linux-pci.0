@@ -1,76 +1,126 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Casey Leedom' <leedom@chelsio.com>, "Raj, Ashok" <ashok.raj@intel.com>
-Subject: RE: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-Date: Mon, 7 Aug 2017 09:04:19 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD004C785@AcuExch.aculab.com>
-References: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
- <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home>
- <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
- <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
- <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
- <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20170803083153.GB4883@otc-nc-03>
- <MWHPR12MB1600400EC7DEE92E4A3ADC5BC8B60@MWHPR12MB1600.namprd12.prod.outlook.com>,
- <20170804202141.GA39054@otc-nc-03>
- <MWHPR12MB160086C4B4FA8F3B2EC1D5F9C8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
-In-Reply-To: <MWHPR12MB160086C4B4FA8F3B2EC1D5F9C8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
+Return-Path: <SRS0=sEN8=73=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=sEN8=73=arm.com=marc.zyngier@kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Mason <slash.tmp@free.fr>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,  Bjorn Helgaas <helgaas@kernel.org>,  linux-pci <linux-pci@vger.kernel.org>,  Linux ARM <linux-arm-kernel@lists.infradead.org>,  Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,  Marc Gonzalez <Marc_Gonzalez@sigmadesigns.com>
+Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
+In-Reply-To: <e381170c-e462-01cd-12db-30773005602b@free.fr> (Mason's message
+	of "Thu, 24 Aug 2017 22:53:16 +0200")
+References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
+	<8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
+	<4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
+	<86efs3wesi.fsf@arm.com>
+	<20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
+	<e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
+	<CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
+	<e381170c-e462-01cd-12db-30773005602b@free.fr>
+Date: Fri, 25 Aug 2017 08:54:15 +0100
+Message-ID: <871so09j6g.fsf@arm.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linuxarm@huawei.com" <linuxarm@huawei.com>,
- Alexander Duyck <alexander.duyck@gmail.com>, Sinan Kaya <okaya@codeaurora.org>,
- "amira@mellanox.com" <amira@mellanox.com>,
- "helgaas@kernel.org" <helgaas@kernel.org>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- Ding Tianhong <dingtianhong@huawei.com>, Ganesh GR <ganeshgr@chelsio.com>,
- "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
- "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>, Michael
- Werner <werner@chelsio.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "davem@davemloft.net" <davem@davemloft.net>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom
-> Sent: 04 August 2017 21:49
-...
-> Whenever our Hardware Designers implement new functionality in our hardware,
-> they almost always put in A. several "knobs" which can control fundamental
-> parameters of the new Hardware Feature, and B.  a mechanism of completely
-> disabling it if necessary.  This stems from the incredibly long Design ->
-> Deployment cyle for Hardware (as opposed to the edit->compile->run cycle for s!
+On Thu, Aug 24 2017 at 10:53:16 pm BST, Mason <slash.tmp@free.fr> wrote:
+> On 24/08/2017 20:35, Ard Biesheuvel wrote:
+>> On 24 August 2017 at 18:51, Marc Gonzalez wrote:
+>>> On 24/08/2017 19:04, Bjorn Helgaas wrote:
+>>>> On Tue, Aug 22, 2017 Marc Zyngier wrote:
+>>>>> Marc Gonzalez wrote:
+>>>>>> On 22/08/2017 18:29, Marc Zyngier wrote:
+>>>>>>> On 22/08/17 15:56, Marc Gonzalez wrote:
+>>>>>>>
+>>>>>>>>  #define SMP8759_MUX              0x48
+>>>>>>>>  #define SMP8759_TEST_OUT 0x74
+>>>>>>>> +#define SMP8759_STATUS           0x80
+>>>>>>>> +#define SMP8759_ENABLE           0xa0
+>>>>>>>> +#define SMP8759_DOORBELL 0xa002e07c
+>>>>>>>
+>>>>>>> Why is this hardcoded and not coming from the device-tree, just like any
+>>>>>>> other address property?
+>>>>>>
+>>>>>> Since this bus address is software-configurable, I didn't think
+>>>>>> it belonged in the DT. Also, I didn't see anything similar in
+>>>>>> other binding docs, especially
+>>>>>>
+>>>>>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
+>>>>>
+>>>>> If that's software configurable, how on Earth did you pick the address?
+>>>>> How do you ensure that it doesn't conflict with DMA? How is it
+>>>>> configured into the RC?
+>>>>
+>>>> But we *do* need to resolve this.  This does seem like an address that
+>>>> shouldn't be hard-coded into the driver.  Since this driver is
+>>>> programming the address into an MSI message, but not into the receiver
+>>>> of that message, there's a coordination issue between this driver and
+>>>> whatever other software does that receiver configuration.
+>>>
+>>> OK. I'll move the doorbell address to the DT for v11.
+>>>
+>>> What property should be used for this address?
+>>>
+>>> sigma,doorbell ?
+>>>
+>>> Or maybe I can put it in reg, since I have a 1:1 mapping
+>>> between bus and cpu addresses?
+>>>
+>>> git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
+>>> returns nothing.
+>> 
+>> You haven't answered the question yet: you stated that the doorbell
+>> address is software configurable, yet your code does not seem to
+>> configure it. It only returns the doorbell address so that it gets
+>> communicated to the downstream devices.
+>> 
+>> So how does the RC know which address is special, so it can trigger on
+>> inbound writes hitting that address and assert the SPI ?
+>
+> The CPU address of the MSI doorbell address is 0x2e07c
+> i.e. within the reg space of the PCIe controller block.
 
-Indeed, I'd also expect there to be an undocumented flag to turn
-it on (broken) in earlier parts to allow testing.
+Which you describe in DT already, right? So why aren't you using an
+offset in this region as your MSI ddorbell (potentially applying an
+offset, see below)?
 
-	David
+>
+> As I discussed back in March, the RC implements an odd
+> bus-to-system mapping.
+>
+> RC BAR0 defines a window in PCI address space (max 1GB).
+> Accesses outside this window are silently ignored.
+> The window is divided into 8 "regions" and there are 8
+> registers defining the offset into CPU space.
+>
+> In pseudo code, assuming pci_address is within the
+> window defined by BAR0:
+>
+> cpu_address map_bus_to_system(pci_address)
+> {
+>     temp = pci_address - BAR0.base
+>     region = temp / region_size
+>     offset = temp % region_size
+>     cpu_address = region_reg[region] + offset
+>     return cpu_address
+> }
+>
+> The current setup is:
+>
+> DRAM at 0x80000000-0xa0000000
+> BAR0.base = 0x80000000
+> REGION[0] = 0x80000000
+> REGION[1] = 0x88000000
+> REGION[2] = 0x90000000
+> REGION[3] = 0x98000000
+> REGION[4] = 0x0
+>
+> (This map means 1:1 identity for DRAM addresses.)
+>
+> Thus when a device writes to 0xa002e07c (region 4)
+> the write is forwarded to 0x2e07c.
 
+But how do you find out about the 0xa0000000 offset? You must make sure
+that the provided address is outside of RAM, should you end-up on a
+system more than 1GB of RAM.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	M.
+-- 
+Jazz is not dead, it just smell funny.
