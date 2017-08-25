@@ -1,49 +1,102 @@
-Return-Path: <SRS0=vEs2=7R=linux.ee=mroos@kernel.org>
-Return-Path: <SRS0=vEs2=7R=linux.ee=mroos@kernel.org>
-Date: Tue, 15 Aug 2017 23:24:18 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-Sender: mroos@math.ut.ee
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-    qla2xxx-upstream@qlogic.com,
-    Linux Kernel list <linux-kernel@vger.kernel.org>,
-    Christoph Hellwig <hch@lst.de>
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-In-Reply-To: <20170815184403.GB4099@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LRH.2.20.1708152321150.11510@math.ut.ee>
-References: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee> <20170815184403.GB4099@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37346 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755512AbdHYVil (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Aug 2017 17:38:41 -0400
+Date: Fri, 25 Aug 2017 16:38:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v5 0/10] Some cleanup and bug fix for pcie-rockchip
+Message-ID: <20170825213838.GB8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Tue, Aug 15, 2017 at 05:54:27PM +0300, Meelis Roos wrote:
-> > I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
-> > t5120 server: can't allocate MSI-X affinity masks.
-> > 
-> > [   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
-> > [   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
-> > [   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
-> > [   30.816882] scsi host1: qla2xxx
-> > [   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
-> > [   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
-> > [   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
-> > [   31.367083] scsi host1: qla2xxx
-> > [   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
-> > 
-> > I do not know if the driver works since nothing is attached to the FC 
-> > HBA at the moment, but from the error messages it looks like the driver 
-> > fails to load.
-> > 
-> > I booted 4.12 and 4.11 - the red error is not there but the failure 
-> > seems to be the same error -22:
+On Wed, Aug 23, 2017 at 03:01:13PM +0800, Shawn Lin wrote:
+> 
+> Hi Bjorn,
+> 
+> Patch 1 -> 4 are for what you suggested in my V4
+> of bug fixing[1].
+> 
+> Patch 5 -> 7 are sloving what I said for my former
+> patch of PHY cleanup[2]. It seems you didn't see my
+> V2 of that[3], and my v2 also have some minor issues
+> that was fixed by Jeffy's patch[4]. So these patches in
+> flight for cleaning up the pcie-rockchip error handling
+> path which would conflict with each other. I merge the
+> similar PHY cleanup from patch[4].
+> 
+> Also I think we need to split it[4] up into smaller pieces.
+> So patch 8 -> 10 are for this purpose and avoid Jeffy to
+> rebase this work again.
+> 
+> Could you kindly drop patch[2] from your host-rockchip branch
+> and apply this patchset if it looks good to you? :)
+> 
+> [1]: https://patchwork.kernel.org/patch/9895141/
+> [2]: https://patchwork.kernel.org/patch/9890367/
+> [3]: https://patchwork.kernel.org/patch/9892461/
+> [4]: http://patchwork.ozlabs.org/patch/804239/
+> 
+> 
+> Changes in v5:
+> - rebase on former reconstrtion patches suggested by Bjorn
+> - fix all the missing error handling cases that need to cleanup
+>   PHY
+> 
+> Changes in v4:
+> - split out rockchip_pcie_enable_clocks and reuse
+>   rockchip_pcie_enable_clocks and rockchip_pcie_disable_clocks
+>   for elsewhere suggested by Jeffy
+> 
+> Changes in v3:
+> - check the return value of devm_add_action_or_reset and spilt out
+>   rockchip_pcie_setup_irq in order to move requesting irq after
+>   enabling clks.
+> 
+> Changes in v2:
+> - use devm_add_action_or_reset to fix this ordering suggested by
+>   Heiko and Jeffy. Thanks!
+> 
+> Jeffy Chen (3):
+>   PCI: rockchip: disable vpcie0v9 for resume_noirq error handling path
+>   PCI: rockchip: remove irq domain if failing to probe
+>   PCI: rockchip: umap io space if failing to probe
+> 
+> Shawn Lin (7):
+>   PCI: rockchip: spilt out rockchip_pcie_setup_irq
+>   PCI: rockchip: spilt out rockchip_pcie_enable_clocks
+>   PCI: rockchip: spilt out rockchip_pcie_disable_clocks
+>   PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
+>   PCI: rockchip: spilt out rockchip_pcie_deinit_phys
+>   PCI: rockchip: fix missing phy manipulation for legacy phy
+>   PCI: rockchip: Clean up PHY if driver probe or resume fails
+> 
+>  drivers/pci/host/pcie-rockchip.c | 297 ++++++++++++++++++++++-----------------
+>  1 file changed, 166 insertions(+), 131 deletions(-)
 
-4.10.0 works, 4.11.0 errors out with EINVAL and 4.13-rc4 errorr sout 
-with more verbose MSI messages. So something between 4.10 and 4.11 has 
-broken it.
+I applied these to pci/host-rockchip except for these:
 
-Also, 4.13-rc4 is broken on another sun4v here (T1000). So it seems to 
-be sun4v interrupt related.
+  PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
+  PCI: rockchip: fix missing phy manipulation for legacy phy
 
--- 
-Meelis Roos (mroos@linux.ee)
+I'm not really happy with the devm/clk_prepare_enable situation, so
+I'm waiting to see if a better solution emerges.
+
+I went ahead and applied the tweaks I proposed to the earlier "PCI:
+rockchip: Add per-lane PHY support" and "PCI: rockchip: Idle inactive
+PHY(s)" patches.  I *think* those make the "fix missing phy
+manipulation for legacy phy" patch unnecessary.
+
+But please take a look and make sure.  If I went the wrong direction,
+I'll gladly back it out.
+
+Bjorn
