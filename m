@@ -1,90 +1,142 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
- <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
- <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
- <ryder.lee@mediatek.com>
-Subject: [PATCH v4 4/7] PCI: mediatek: switch to use
- platform_get_resource_byname()
-Date: Thu, 10 Aug 2017 14:34:57 +0800
-Message-ID: <f7810da34df710a2b98f903e7a95247ee9387032.1502336769.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1502336769.git.honghui.zhang@mediatek.com>
-References: <cover.1502336769.git.honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:33314 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754249AbdHYBW6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Aug 2017 21:22:58 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAKv+Gu-ho_ipsuAViyaDY6=m+NO7Y-hpZ2TEz=7WgVJP-i+eAw@mail.gmail.com>
+References: <20170824184321.19432-1-ard.biesheuvel@linaro.org>
+ <20170824184321.19432-4-ard.biesheuvel@linaro.org> <CAL_JsqJTGeLv-c0wXCvMZggU4yzo__s-pD7qEZ7Q3w8=uUuu4Q@mail.gmail.com>
+ <CAKv+Gu-D0tgygJ84iGEoEU9OcjUwrtvS2Z2wrOHAZ9kO_kE_rA@mail.gmail.com>
+ <CAL_JsqJkDmT3_Umhi+y9e6qML+Ei=ee7G7EohpoMJacBeecirQ@mail.gmail.com> <CAKv+Gu-ho_ipsuAViyaDY6=m+NO7Y-hpZ2TEz=7WgVJP-i+eAw@mail.gmail.com>
+From: Rob Herring <robh@kernel.org>
+Date: Thu, 24 Aug 2017 20:22:36 -0500
+Message-ID: <CAL_JsqJz9THQ4jnZQJCNmk96-jvG2MKgcp9oiPT4=R36PW-=+A@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] dt-bindings: designware: add binding for
+ Designware PCIe in ECAM mode
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Marcin Wojtas <mw@semihalf.com>,
+        Leif Lindholm <leif.lindholm@linaro.org>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+On Thu, Aug 24, 2017 at 5:37 PM, Ard Biesheuvel
+<ard.biesheuvel@linaro.org> wrote:
+> On 24 August 2017 at 23:12, Rob Herring <robh@kernel.org> wrote:
+>> On Thu, Aug 24, 2017 at 3:12 PM, Ard Biesheuvel
+>> <ard.biesheuvel@linaro.org> wrote:
+>>> On 24 August 2017 at 21:02, Rob Herring <robh@kernel.org> wrote:
+>>>> Cc the DT list for bindings please.
+>>>>
+>>>> On Thu, Aug 24, 2017 at 1:43 PM, Ard Biesheuvel
+>>>> <ard.biesheuvel@linaro.org> wrote:
+>>>>> Describe the binding for firmware-configured instances of the Synopsys
+>>>>> Designware PCIe controller in RC mode.
+>>>>>
+>>>>> Cc: Rob Herring <robh@kernel.org>
+>>>>> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>>>>> ---
+>>>>>  Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 56 ++++++++++++++++++++
+>>>>>  1 file changed, 56 insertions(+)
+>>>>>
+>>>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+>>>>> new file mode 100644
+>>>>> index 000000000000..b8127b19c220
+>>>>> --- /dev/null
+>>>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+>>>>> @@ -0,0 +1,56 @@
+>>>>> +* Synopsys Designware PCIe root complex in ECAM mode
+>>>>> +
+>>>>> +In some cases, firmware may already have configured the Synopsys Designware
+>>>>> +PCIe controller in RC mode with static ATU window mappings that cover all
+>>>>> +config, MMIO and I/O spaces in a [mostly] ECAM compatible fashion.
+>>>>> +In this case, there is no need for the OS to perform any low level setup
+>>>>> +of clocks or device registers, nor is there any reason for the driver to
+>>>>> +reconfigure ATU windows for config and/or IO space accesses at runtime.
+>>>>> +
+>>>>> +Such hardware configurations should be described as "pci-host-ecam-generic"
+>>>>> +if they are truly ECAM compatible. Configurations that require no low-level
+>>>>> +setup by the OS nor any ATU window reconfiguration at runtime, but do
+>>>>> +require special handling for type 0 config TLPs may instead be described as
+>>>>> +"snps,dw-pcie-ecam".
+>>>>
+>>>> Humm, what happens when we have the next exception that's SoC specific
+>>>> or another vendor?
+>>>
+>>> This is not SoC specific, but IP specific. We are working with two
+>>> different SoCs from completely different vendors that both synthesized
+>>> this IP with a 64 KB ATU window size, not expecting this to break ECAM
+>>> compatibility.
+>>
+>> This case is not SoC specific, but quirks/bugs show up in both places.
+>> Plus "dw-pcie" is fairly meaningless because the IP is both
+>> configurable and has multiple releases.
+>>
+>>>> Seems like perhaps "firmware initialized" should
+>>>> have been a separate property flag for bootloaders to add rather than
+>>>> a compatible string.
+>>>>
+>>>
+>>> Yes, but then you still have 10 different drivers that all retain the
+>>> low-level bits that are all different between SoCs. That is exactly
+>>> what I want to get rid of, and usually we can do that with existing
+>>> bindings, because we simply expose it as pci-host-ecam-generic. Only
+>>> in this particular case, that doesn't fly due to the quirk.
+>>
+>> You can expose it as "vendor,soc-pcie", "pci-host-ecam-generic" and
+>> then the kernel can decide. Then you can use: the default ecam driver,
+>> the ecam driver but match on "vendor,soc-pcie" for quirks, or a vendor
+>> specific driver. The only thing that wouldn't work would be having
+>> both quirks in the ecam driver and a vendor driver which IMO we just
+>> shouldn't support anyway.
+>>
+>> Now if you have 10 SoCs all needing this same quirk, then maybe adding
+>> "snps,dw-pcie-ecam" addtionally to the above makes sense. But that
+>> only saves you match strings.
+>>
+>
+> Exposing this as "pci-host-ecam-generic" doesn't work, or we wouldn't
+> be having this discussion.
 
-This is a transitional patch. We currently use platfarm_get_resource() for
-retrieving the IOMEM resources, but there might be some chips don't have
-subsys/shared registers part, which depends on platform design, and these
-will be introduced in further patches.
+Exposing it *alone* won't work, but you could match on it for the
+driver and then in the probe function have an:
 
-Switch this function to use the platform_get_resource_byname() so that the
-binding can be agnostic of the resource order.
+if (of_device_is_compatible(np, "marvell,armada8k-pcie-ecam"))
+  // handle device quirk
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+I haven't looked at what exactly you need to handle though. I don't
+have the rest of the series.
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 01caa98..c649ab4 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -295,7 +295,8 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
- 		return err;
- 	}
- 
--	regs = platform_get_resource(pdev, IORESOURCE_MEM, slot + 1);
-+	snprintf(name, sizeof(name), "port%d", slot);
-+	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
- 	port->base = devm_ioremap_resource(dev, regs);
- 	if (IS_ERR(port->base)) {
- 		dev_err(dev, "failed to map port%d base\n", slot);
-@@ -336,12 +337,14 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
- 	struct resource *regs;
- 	int err;
- 
--	/* get shared registers */
--	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	pcie->base = devm_ioremap_resource(dev, regs);
--	if (IS_ERR(pcie->base)) {
--		dev_err(dev, "failed to map shared register\n");
--		return PTR_ERR(pcie->base);
-+	/* get shared registers, which are optional */
-+	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subsys");
-+	if (regs) {
-+		pcie->base = devm_ioremap_resource(dev, regs);
-+		if (IS_ERR(pcie->base)) {
-+			dev_err(dev, "failed to map shared register\n");
-+			return PTR_ERR(pcie->base);
-+		}
- 	}
- 
- 	pcie->free_ck = devm_clk_get(dev, "free_ck");
--- 
-2.6.4
+But since you already know the problem, you could just drop
+"pci-host-ecam-generic" in this case.
 
+>
+> So if I understand you correctly, you would rather have
+>
+> marvell,armada8k-pcie-ecam
+> socionext,synquacer-pcie-ecam
+>
+> and add more of those to the list if needed, and update the
+> binding+driver to use those and drop the generic identifier?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yes, but dropping the generic identifier depends if you know you have
+some problem up front. You do here, but that's not always the case.
+
+The other part is that "pci-host-ecam-generic" alone should not be
+considered valid other than for VM guests. But I can't really enforce
+that.
+
+> I take it
+> that applies to the description of the MSI frame as well?
+
+Probably so. Is there something special about it, too?
+
+Rob
