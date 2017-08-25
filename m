@@ -1,43 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 2 Aug 2017 15:00:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Palmer Dabbelt <palmer@dabbelt.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bhelgaas@google.com, hch@infradead.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        linux-snps-arc@lists.infradead.org, linux-cris-kernel@axis.com,
-        linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org
-Subject: Re: pci: Add generic pcibios_{fixup_bus,align_resource}
-Message-ID: <20170802200031.GD20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170624015044.16746-1-palmer@dabbelt.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0083.outbound.protection.outlook.com ([104.47.2.83]:28576
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754220AbdHYDQk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Aug 2017 23:16:40 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
+        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+Subject: RE: [PATCHv4 4/9] PCI: layerscape: refactor the host_init function
+Date: Fri, 25 Aug 2017 03:16:36 +0000
+Message-ID: <AM5PR0402MB27710E17C1F6C33BC6985C22849B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+ <20170823060856.9387-5-Zhiqiang.Hou@nxp.com>
+ <20170824171206.GP31858@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170824171206.GP31858@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170624015044.16746-1-palmer@dabbelt.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 06:50:41PM -0700, Palmer Dabbelt wrote:
-> While upstreaming the RISC-V port, it was pointed out that multiple
-> architectures have copied the mostly empty versions of at least one of these
-> functions.  This defines weakly bound versions of the common functions and
-> removes the now obselete functions from other ports.
-> 
-> This has been split out from the RISC-V submission so we can decouple all these
-> generic changes from our port review process.  There's some discussion on an
-> earlier version of the patch here
-> 
->   https://lkml.org/lkml/2017/6/6/998
-> 
-> but I'm afraid a lot of this is really out of my wheelhouse (and I'm pretty
-> slammed trying to get the RISC-V port in better shape), so I'm afraid I'm not
-> going to be able to perform the full cleanup suggested.
-
-Applied to pci/resource for v4.14, thanks!
-
-There's room for future improvement, e.g., using per-host callbacks,
-etc., but I think this is a clear improvement as-is.
-
-There's some folklore about the evils of weak symbols, but I don't
-know the details.  It would be useful to have them codified somewhere
-in Documentation/ or near the __weak definition.
+SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
+c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIyNcjVIDE6MTINCj4gVG86IFoucS4gSG91
+IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
+IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBKb2FvLlBpbnRv
+QHN5bm9wc3lzLmNvbTsgTS5oLiBMaWFuDQo+IDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5n
+a2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZw0KPiA8cm95LnphbmdAbnhwLmNv
+bT47IHN2YXJiYW5vdkBtbS1zb2wuY29tOyBuaWtsYXMuY2Fzc2VsQGF4aXMuY29tOw0KPiBqZXNw
+ZXIubmlsc3NvbkBheGlzLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIdjQgNC85XSBQQ0k6IGxh
+eWVyc2NhcGU6IHJlZmFjdG9yIHRoZSBob3N0X2luaXQgZnVuY3Rpb24NCj4gDQo+IE9uIFdlZCwg
+QXVnIDIzLCAyMDE3IGF0IDAyOjA4OjUxUE0gKzA4MDAsIFpoaXFpYW5nIEhvdSB3cm90ZToNCj4g
+PiBGcm9tOiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+DQo+ID4gTWFr
+ZSB0aGUgbHMxMDIxYSdzIGhvc3RfaW5pdCByZXVzZSBsYXllcnNjYXBlIHBsYXRmb3JtJ3MgY29t
+bW9uDQo+ID4gaG9zdF9pbml0IGZ1bmN0aW9uLg0KPiANCj4gVGhpcyBwYXRjaCBkb2VzIHR3byB0
+aGluZ3M6DQo+IA0KPiAgIDEpIE1vdmVzIGxzMTAyMV9wY2llX2hvc3RfaW5pdCgpIHRvIGEgZGlm
+ZmVyZW50IHBsYWNlIGluIHRoZSBmaWxlDQo+ICAgMikgQ2FsbHMgbHNfcGNpZV9ob3N0X2luaXQo
+KSBpbnN0ZWFkIG9mIHJlcGVhdGluZyB0aGF0IGNvZGUgaW4NCj4gICAgICBsczEwMjFfcGNpZV9o
+b3N0X2luaXQoKQ0KPiANCj4gVGhvc2Ugc2hvdWxkIGJlIHNlcGFyYXRlIHBhdGNoZXMgc28gdGhl
+eSdyZSBlYXNpZXIgdG8gcmV2aWV3Lg0KPiANCj4gT3IgaWYgeW91IGRvbid0IHJlYWxseSBuZWVk
+IHRvIG1vdmUgbHMxMDIxX3BjaWVfaG9zdF9pbml0KCkgdG8gYSBkaWZmZXJlbnQgcGxhY2UsDQo+
+IHRoYXQgd291bGQgYmUgZXZlbiBlYXNpZXIuDQoNCk1vdmVkIGxzMTAyMV9wY2llX2hvc3RfaW5p
+dCgpIHRvIHRoaXMgcGxhY2UgYmVoYW5kIHRoZSBmdW5jIGxzX3BjaWVfaG9zdF9pbml0IGlzIHRv
+IGNhbGwgbHNfcGNpZV9ob3N0X2luaXQgd2l0aG91dCBhZGRpbmcgYSBkZWNsYXJhdGlvbiBvZiBp
+dC4gSXMgaXQgbmVjZXNzYXJ5IHRvIHNlcGFyYXRlIGl0Pw0KDQoNCj4gPiBTaWduZWQtb2ZmLWJ5
+OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+IC0tLQ0KPiA+IFY0Og0K
+PiA+ICAtIG5vIGNoYW5nZQ0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2Fw
+ZS5jIHwgNjUNCj4gPiArKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+
+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyOSBpbnNlcnRpb25zKCspLCAzNiBkZWxldGlvbnMoLSkNCj4g
+Pg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+
+IGIvZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiBpbmRleCAzYWEzNDIxNDY0
+M2MuLjU3Yjg2YTBjZDJjOCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxh
+eWVyc2NhcGUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+
+ID4gQEAgLTEwOCw0MiArMTA4LDYgQEAgc3RhdGljIGludCBsczEwMjFfcGNpZV9saW5rX3VwKHN0
+cnVjdCBkd19wY2llICpwY2kpDQo+ID4gIAlyZXR1cm4gMTsNCj4gPiAgfQ0KPiA+DQo+ID4gLXN0
+YXRpYyBpbnQgbHMxMDIxX3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKSAtew0K
+PiA+IC0Jc3RydWN0IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7DQo+ID4g
+LQlzdHJ1Y3QgbHNfcGNpZSAqcGNpZSA9IHRvX2xzX3BjaWUocGNpKTsNCj4gPiAtCXN0cnVjdCBk
+ZXZpY2UgKmRldiA9IHBjaS0+ZGV2Ow0KPiA+IC0JdTMyIGluZGV4WzJdOw0KPiA+IC0JaW50IHJl
+dDsNCj4gPiAtDQo+ID4gLQlwY2llLT5zY2ZnID0gc3lzY29uX3JlZ21hcF9sb29rdXBfYnlfcGhh
+bmRsZShkZXYtPm9mX25vZGUsDQo+ID4gLQkJCQkJCSAgICAgImZzbCxwY2llLXNjZmciKTsNCj4g
+PiAtCWlmIChJU19FUlIocGNpZS0+c2NmZykpIHsNCj4gPiAtCQlyZXQgPSBQVFJfRVJSKHBjaWUt
+PnNjZmcpOw0KPiA+IC0JCWRldl9lcnIoZGV2LCAiTm8gc3lzY2ZnIHBoYW5kbGUgc3BlY2lmaWVk
+XG4iKTsNCj4gPiAtCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiAtCQlyZXR1cm4gcmV0Ow0KPiA+
+IC0JfQ0KPiA+IC0NCj4gPiAtCWlmIChvZl9wcm9wZXJ0eV9yZWFkX3UzMl9hcnJheShkZXYtPm9m
+X25vZGUsDQo+ID4gLQkJCQkgICAgICAgImZzbCxwY2llLXNjZmciLCBpbmRleCwgMikpIHsNCj4g
+PiAtCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiAtCQlyZXR1cm4gLUVJTlZBTDsNCj4gPiAtCX0N
+Cj4gPiAtCXBjaWUtPmluZGV4ID0gaW5kZXhbMV07DQo+ID4gLQ0KPiA+IC0JZHdfcGNpZV9zZXR1
+cF9yYyhwcCk7DQo+ID4gLQ0KPiA+IC0JaW93cml0ZTMyKDEsIHBjaS0+ZGJpX2Jhc2UgKyBQQ0lF
+X0RCSV9ST19XUl9FTik7DQo+ID4gLQlsc19wY2llX2ZpeF9jbGFzcyhwY2llKTsNCj4gPiAtCWxz
+X3BjaWVfY2xlYXJfbXVsdGlmdW5jdGlvbihwY2llKTsNCj4gPiAtCWlvd3JpdGUzMigwLCBwY2kt
+PmRiaV9iYXNlICsgUENJRV9EQklfUk9fV1JfRU4pOw0KPiA+IC0NCj4gPiAtCWxzX3BjaWVfZHJv
+cF9tc2dfdGxwKHBjaWUpOw0KPiA+IC0NCj4gPiAtCXJldHVybiAwOw0KPiA+IC19DQo+ID4gLQ0K
+PiA+ICBzdGF0aWMgaW50IGxzX3BjaWVfbGlua191cChzdHJ1Y3QgZHdfcGNpZSAqcGNpKSAgew0K
+PiA+ICAJc3RydWN0IGxzX3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBjaSk7IEBAIC0xNzYsNiAr
+MTQwLDM1IEBAIHN0YXRpYw0KPiA+IGludCBsc19wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9w
+b3J0ICpwcCkNCj4gPiAgCXJldHVybiAwOw0KPiA+ICB9DQo+ID4NCj4gPiArc3RhdGljIGludCBs
+czEwMjFfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApIHsNCj4gPiArCXN0cnVj
+dCBkd19wY2llICpwY2kgPSB0b19kd19wY2llX2Zyb21fcHAocHApOw0KPiA+ICsJc3RydWN0IGxz
+X3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBjaSk7DQo+ID4gKwlzdHJ1Y3QgZGV2aWNlICpkZXYg
+PSBwY2ktPmRldjsNCj4gPiArCXUzMiBpbmRleFsyXTsNCj4gPiArCWludCByZXQ7DQo+ID4gKw0K
+PiA+ICsJcGNpZS0+c2NmZyA9IHN5c2Nvbl9yZWdtYXBfbG9va3VwX2J5X3BoYW5kbGUoZGV2LT5v
+Zl9ub2RlLA0KPiA+ICsJCQkJCQkgICAgICJmc2wscGNpZS1zY2ZnIik7DQo+ID4gKwlpZiAoSVNf
+RVJSKHBjaWUtPnNjZmcpKSB7DQo+ID4gKwkJcmV0ID0gUFRSX0VSUihwY2llLT5zY2ZnKTsNCj4g
+PiArCQlkZXZfZXJyKGRldiwgIk5vIHN5c2NmZyBwaGFuZGxlIHNwZWNpZmllZFxuIik7DQo+ID4g
+KwkJcGNpZS0+c2NmZyA9IE5VTEw7DQo+ID4gKwkJcmV0dXJuIHJldDsNCj4gPiArCX0NCj4gPiAr
+DQo+ID4gKwlpZiAob2ZfcHJvcGVydHlfcmVhZF91MzJfYXJyYXkoZGV2LT5vZl9ub2RlLA0KPiA+
+ICsJCQkJICAgICAgICJmc2wscGNpZS1zY2ZnIiwgaW5kZXgsIDIpKSB7DQo+ID4gKwkJcGNpZS0+
+c2NmZyA9IE5VTEw7DQo+ID4gKwkJcmV0dXJuIC1FSU5WQUw7DQo+ID4gKwl9DQo+ID4gKwlwY2ll
+LT5pbmRleCA9IGluZGV4WzFdOw0KPiA+ICsNCj4gPiArCWxzX3BjaWVfaG9zdF9pbml0KHBwKTsN
+Cj4gPiArDQo+ID4gKwlyZXR1cm4gMDsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgc3RhdGljIGludCBs
+c19wY2llX21zaV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHAsDQo+ID4gIAkJCQkgc3Ry
+dWN0IG1zaV9jb250cm9sbGVyICpjaGlwKQ0KPiA+ICB7DQo+ID4gLS0NCj4gPiAyLjE0LjENCj4g
+Pg0KDQpUaGFua3MsDQpaaGlxaWFuZw0KDQo=
