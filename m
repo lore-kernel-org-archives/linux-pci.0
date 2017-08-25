@@ -1,122 +1,191 @@
-Return-Path: <SRS0=RgBE=7T=linux.ee=mroos@kernel.org>
-Return-Path: <SRS0=RgBE=7T=linux.ee=mroos@kernel.org>
-Date: Thu, 17 Aug 2017 17:47:56 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-Sender: mroos@math.ut.ee
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-    qla2xxx-upstream@qlogic.com,
-    Linux Kernel list <linux-kernel@vger.kernel.org>,
-    Christoph Hellwig <hch@lst.de>
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-In-Reply-To: <20170816190241.GD28977@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.LRH.2.20.1708171717550.29402@math.ut.ee>
-References: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee> <20170815184403.GB4099@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.20.1708152321150.11510@math.ut.ee> <alpine.LRH.2.20.1708162136220.16834@math.ut.ee>
- <20170816190241.GD28977@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=VCL4=73=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=VCL4=73=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
+To: Marc Zyngier <marc.zyngier@arm.com>, Robin Murphy <robin.murphy@arm.com>,
+ Mark Rutland <mark.rutland@arm.com>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Marc Gonzalez <Marc_Gonzalez@sigmadesigns.com>
+References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
+ <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
+ <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
+ <86efs3wesi.fsf@arm.com>
+ <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
+ <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
+ <CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
+ <e381170c-e462-01cd-12db-30773005602b@free.fr> <871so09j6g.fsf@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <acdef092-3fb9-4338-5199-a458ac2439c7@free.fr>
+Date: Fri, 25 Aug 2017 17:01:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <871so09j6g.fsf@arm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Wed, Aug 16, 2017 at 09:39:08PM +0300, Meelis Roos wrote:
-> > > > > I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
-> > > > > t5120 server: can't allocate MSI-X affinity masks.
-> > > > > 
-> > > > > [   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
-> > > > > [   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
-> > > > > [   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
-> > > > > [   30.816882] scsi host1: qla2xxx
-> > > > > [   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
-> > > > > [   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
-> > > > > [   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
-> > > > > [   31.367083] scsi host1: qla2xxx
-> > > > > [   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
-> > > > > 
+On 25/08/2017 09:54, Marc Zyngier wrote:
+> On Thu, Aug 24 2017 at 10:53:16 pm BST, Mason <slash.tmp@free.fr> wrote:
+>> On 24/08/2017 20:35, Ard Biesheuvel wrote:
+>>> On 24 August 2017 at 18:51, Marc Gonzalez wrote:
+>>>> On 24/08/2017 19:04, Bjorn Helgaas wrote:
+>>>>> On Tue, Aug 22, 2017 Marc Zyngier wrote:
+>>>>>> Marc Gonzalez wrote:
+>>>>>>> On 22/08/2017 18:29, Marc Zyngier wrote:
+>>>>>>>> On 22/08/17 15:56, Marc Gonzalez wrote:
+>>>>>>>>
+>>>>>>>>>  #define SMP8759_MUX              0x48
+>>>>>>>>>  #define SMP8759_TEST_OUT 0x74
+>>>>>>>>> +#define SMP8759_STATUS           0x80
+>>>>>>>>> +#define SMP8759_ENABLE           0xa0
+>>>>>>>>> +#define SMP8759_DOORBELL 0xa002e07c
+>>>>>>>>
+>>>>>>>> Why is this hardcoded and not coming from the device-tree, just like any
+>>>>>>>> other address property?
+>>>>>>>
+>>>>>>> Since this bus address is software-configurable, I didn't think
+>>>>>>> it belonged in the DT. Also, I didn't see anything similar in
+>>>>>>> other binding docs, especially
+>>>>>>>
+>>>>>>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
+>>>>>>
+>>>>>> If that's software configurable, how on Earth did you pick the address?
+>>>>>> How do you ensure that it doesn't conflict with DMA? How is it
+>>>>>> configured into the RC?
+>>>>>
+>>>>> But we *do* need to resolve this.  This does seem like an address that
+>>>>> shouldn't be hard-coded into the driver.  Since this driver is
+>>>>> programming the address into an MSI message, but not into the receiver
+>>>>> of that message, there's a coordination issue between this driver and
+>>>>> whatever other software does that receiver configuration.
+>>>>
+>>>> OK. I'll move the doorbell address to the DT for v11.
+>>>>
+>>>> What property should be used for this address?
+>>>>
+>>>> sigma,doorbell ?
+>>>>
+>>>> Or maybe I can put it in reg, since I have a 1:1 mapping
+>>>> between bus and cpu addresses?
+>>>>
+>>>> git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
+>>>> returns nothing.
+>>>
+>>> You haven't answered the question yet: you stated that the doorbell
+>>> address is software configurable, yet your code does not seem to
+>>> configure it. It only returns the doorbell address so that it gets
+>>> communicated to the downstream devices.
+>>>
+>>> So how does the RC know which address is special, so it can trigger on
+>>> inbound writes hitting that address and assert the SPI ?
+>>
+>> The CPU address of the MSI doorbell address is 0x2e07c
+>> i.e. within the reg space of the PCIe controller block.
+> 
+> Which you describe in DT already, right? So why aren't you using an
+> offset in this region as your MSI ddorbell (potentially applying an
+> offset, see below)?
+> 
+>
+>> As I discussed back in March, the RC implements an odd
+>> bus-to-system mapping.
+>>
+>> RC BAR0 defines a window in PCI address space (max 1GB).
+>> Accesses outside this window are silently ignored.
+>> The window is divided into 8 "regions" and there are 8
+>> registers defining the offset into CPU space.
+>>
+>> In pseudo code, assuming pci_address is within the
+>> window defined by BAR0:
+>>
+>> cpu_address map_bus_to_system(pci_address)
+>> {
+>>     temp = pci_address - BAR0.base
+>>     region = temp / region_size
+>>     offset = temp % region_size
+>>     cpu_address = region_reg[region] + offset
+>>     return cpu_address
+>> }
+>>
+>> The current setup is:
+>>
+>> DRAM at 0x80000000-0xa0000000
+>> BAR0.base = 0x80000000
+>> REGION[0] = 0x80000000
+>> REGION[1] = 0x88000000
+>> REGION[2] = 0x90000000
+>> REGION[3] = 0x98000000
+>> REGION[4] = 0x0
+>>
+>> (This map means 1:1 identity for DRAM addresses.)
+>>
+>> Thus when a device writes to 0xa002e07c (region 4)
+>> the write is forwarded to 0x2e07c.
+> 
+> But how do you find out about the 0xa0000000 offset? You must make sure
+> that the provided address is outside of RAM, should you end-up on a
+> system more than 1GB of RAM.
 
-> IIUC, that means v4.12 works and v4.13-rc4 does not, so this is a
-> regression we introduced this cycle.
+Robin wrote a prophetic post back in March:
+http://lists.infradead.org/pipermail/linux-arm-kernel/2017-March/492965.html
 
-Yes, I understand the same.
+> The appropriate DT property would be "dma-ranges", i.e.
+> 
+> pci@... {
+> 	...
+> 	dma-ranges = <(PCI bus address) (CPU phys address) (size)>;
+> }
 
-But under some circumstances/configs it has been probematic before too. 
-I could not reproduce the circumstances.
+The dma-ranges property seems to be exactly what I'm looking for:
 
-> If nobody steps up with a theory, bisecting might be the easiest path
-> forward.
+Restrict DMA to the first X MB of RAM (use a bounce buffer
+for other physical addresses).
 
-I finished bisecting but was not successful. The pattern was strange:
-good good skip good skip good skip .... bad bad bad bad bad bad.
+I added the following property to my PCIe node
 
-The first bad commit was - unrelated xen merge. Reverting this commit 
-does not fix the problem.
+  dma-ranges = <0x0 0x80000000 0x80000000 0x20000000>;
 
-Like at some moment it got broken by side effects (code size or 
-whatever). The skips were most because of repeated on on sparc cpuidle 
-code, and initially some in iommu related code. This might bend the 
-results so some commits were not tested.
+with the intent to create a 1:1 mapping for [0x80000000, 0xa0000000[
 
-git bisect start
-# good: [6f7da290413ba713f0cdd9ff1a2a9bb129ef4f6c] Linux 4.12
-git bisect good 6f7da290413ba713f0cdd9ff1a2a9bb129ef4f6c
-# bad: [aae4e7a8bc44722fe70d58920a36916b1043195e] Linux 4.13-rc4
-git bisect bad aae4e7a8bc44722fe70d58920a36916b1043195e
-# good: [920f2ecdf6c3b3526f60fbd38c68597953cad3ee] Merge tag 'sound-4.13-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound
-git bisect good 920f2ecdf6c3b3526f60fbd38c68597953cad3ee
-# skip: [af3c8d98508d37541d4bf57f13a984a7f73a328c] Merge tag 'drm-for-v4.13' of git://people.freedesktop.org/~airlied/linux
-git bisect skip af3c8d98508d37541d4bf57f13a984a7f73a328c
-# good: [d29cb3e45e923715f74d8a08d5c1ea996dce5a59] xfs: make _bmap_count_blocks consistent wrt delalloc extent behavior
-git bisect good d29cb3e45e923715f74d8a08d5c1ea996dce5a59
-# good: [fa6d095eb23a8b1aae78d221879032497f6e457f] drm/tegra: Add driver documentation
-git bisect good fa6d095eb23a8b1aae78d221879032497f6e457f
-# good: [37e51a7640c275999ea0c35410c42e6d896ff7fa] mm: clean up error handling in write_one_page
-git bisect good 37e51a7640c275999ea0c35410c42e6d896ff7fa
-# good: [4b9cdd96e7ea3dc2cd0edac67835f6f38c4f14c9] drm/omap: remove CLUT
-git bisect good 4b9cdd96e7ea3dc2cd0edac67835f6f38c4f14c9
-# good: [7f56c30bd0a232822aca38d288da475613bdff9b] vfio: Remove unnecessary uses of vfio_container.group_lock
-git bisect good 7f56c30bd0a232822aca38d288da475613bdff9b
-# good: [d7631e30434e7fcf025dd2a7cba879f203f7849b] switch compat_drm_getsareactx() to drm_ioctl_kernel()
-git bisect good d7631e30434e7fcf025dd2a7cba879f203f7849b
-# skip: [f991af3daabaecff34684fd51fac80319d1baad1] mqueue: fix a use-after-free in sys_mq_notify()
-git bisect skip f991af3daabaecff34684fd51fac80319d1baad1
-# good: [ecbb903c56745d59c301db26dd7d8b74b520eb84] NFS: Be more careful about mapping file permissions
-git bisect good ecbb903c56745d59c301db26dd7d8b74b520eb84
-# skip: [b49defe83659cefbb1763d541e779da32594ab10] kvm: avoid unused variable warning for UP builds
-git bisect skip b49defe83659cefbb1763d541e779da32594ab10
-# good: [b5ab16bf64347ebc9dbdc51a4f603511babda1e6] drm/amdgpu: properly byteswap gpu_info firmware
-git bisect good b5ab16bf64347ebc9dbdc51a4f603511babda1e6
-# good: [3941dae15ed90437396389e8bb7d2d5b3e63ba4a] drm_dp_aux_dev: switch to read_iter/write_iter
-git bisect good 3941dae15ed90437396389e8bb7d2d5b3e63ba4a
-# good: [f0d9c8924e2c33764dca0c3a4f693a345ecf6579] [media] media: imx: Add IC subdev drivers
-git bisect good f0d9c8924e2c33764dca0c3a4f693a345ecf6579
-# skip: [101dd590a7fa37954540cf3149a1c502c0acc524] powerpc/perf: Avoid spurious PMU interrupts after idle
-git bisect skip 101dd590a7fa37954540cf3149a1c502c0acc524
-# good: [eb0f0373e575822cf35949627b92533c7c41629c] drm/amdgpu: fix a typo in comment
-git bisect good eb0f0373e575822cf35949627b92533c7c41629c
-# skip: [3f0bd8dad0db73f5d71b355aec5ab33b374260ba] powerpc/perf: Add POWER9 alternate PM_RUN_CYC and PM_RUN_INST_CMPL events
-git bisect skip 3f0bd8dad0db73f5d71b355aec5ab33b374260ba
-# good: [96edd61dcf44362d3ef0bed1a5361e0ac7886a63] xen/balloon: don't online new memory initially
-git bisect good 96edd61dcf44362d3ef0bed1a5361e0ac7886a63
-# bad: [bc78d646e708dabd1744ca98744dea316f459497] Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net
-git bisect bad bc78d646e708dabd1744ca98744dea316f459497
-# bad: [0a2a1330d2621c7f963d9f55bb094811cc1c06b9] Merge branch 'for-4.13-part3' of git://git.kernel.org/pub/scm/linux/kernel/git/kdave/linux
-git bisect bad 0a2a1330d2621c7f963d9f55bb094811cc1c06b9
-# bad: [0ce2f385119344dc620ec635e355008a9d6f8401] Merge tag 'acpi-4.13-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm
-git bisect bad 0ce2f385119344dc620ec635e355008a9d6f8401
-# bad: [da08f35b0f82b0a7a79f518faf8d0c0b477f91bc] Merge tag 'for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost
-git bisect bad da08f35b0f82b0a7a79f518faf8d0c0b477f91bc
-# bad: [25f6a53799d667283d3bee29a6ac75ae3dae38dc] Merge tag 'jfs-4.13' of git://github.com/kleikamp/linux-shaggy
-git bisect bad 25f6a53799d667283d3bee29a6ac75ae3dae38dc
-# bad: [eeb7c41d9d7c0902accb1d481fe78d84d30c69cc] Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/s390/linux
-git bisect bad eeb7c41d9d7c0902accb1d481fe78d84d30c69cc
-# bad: [520eccdfe187591a51ea9ab4c1a024ae4d0f68d9] Linux 4.13-rc2
-git bisect bad 520eccdfe187591a51ea9ab4c1a024ae4d0f68d9
-# bad: [f47e07bc5f1a5c48ed60a8ee55352cb4b2bf4d51] Fix up MAINTAINERS file problems
-git bisect bad f47e07bc5f1a5c48ed60a8ee55352cb4b2bf4d51
-# bad: [a56e88ec05df50110f2bf578b6e17128f37111ed] Merge tag 'for-linus-4.13b-rc2-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/xen/tip
-git bisect bad a56e88ec05df50110f2bf578b6e17128f37111ed
-# first bad commit: [a56e88ec05df50110f2bf578b6e17128f37111ed] Merge tag 'for-linus-4.13b-rc2-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/xen/tip
+But it does not work. Arg!
 
+My PCIe controller driver seems to be correctly calling of_dma_get_range:
 
+[    0.520469] [<c03d85e8>] (of_dma_get_range) from [<c03d5ad8>] (of_dma_configure+0x48/0x234)
+[    0.520483] [<c03d5ad8>] (of_dma_configure) from [<c02fa154>] (pci_device_add+0xac/0x350)
+[    0.520493] [<c02fa154>] (pci_device_add) from [<c02fa488>] (pci_scan_single_device+0x90/0xb0)
+[    0.520501] [<c02fa488>] (pci_scan_single_device) from [<c02fa500>] (pci_scan_slot+0x58/0x100)
+[    0.520510] [<c02fa500>] (pci_scan_slot) from [<c02fb418>] (pci_scan_child_bus+0x20/0xf8)
+[    0.520519] [<c02fb418>] (pci_scan_child_bus) from [<c02fb6e8>] (pci_scan_root_bus_msi+0xcc/0xd8)
+[    0.520527] [<c02fb6e8>] (pci_scan_root_bus_msi) from [<c02fb70c>] (pci_scan_root_bus+0x18/0x20)
+[    0.520537] [<c02fb70c>] (pci_scan_root_bus) from [<c0310544>] (pci_host_common_probe+0xc8/0x314)
+[    0.520546] [<c0310544>] (pci_host_common_probe) from [<c0310ce8>] (tango_pcie_probe+0x148/0x350)
+[    0.520557] [<c0310ce8>] (tango_pcie_probe) from [<c034d398>] (platform_drv_probe+0x34/0x6c)
 
--- 
-Meelis Roos (mroos@linux.ee)
+of_dma_get_range() is called on the pcie node (which is expected)
+but after parsing n_addr_cells and n_size_cells in the while loop,
+the code jumps to the parent node ("soc")... while my property is
+attached to the pcie node...
+
+[    0.507754] of_dma_get_range: node=dfbf74cc np=dfbf74cc name=/soc/pcie@2e000 name2=/soc/pcie@2e000
+...
+[    0.509162] __of_find_property: node=soc find=#address-cells prop=compatible
+[    0.509168] __of_find_property: node=soc find=#address-cells prop=interrupt-parent
+[    0.509173] __of_find_property: node=soc find=#address-cells prop=#address-cells
+[    0.509178] __of_find_property: node=soc find=#size-cells prop=compatible
+[    0.509182] __of_find_property: node=soc find=#size-cells prop=interrupt-parent
+[    0.509186] __of_find_property: node=soc find=#size-cells prop=#address-cells
+[    0.509190] __of_find_property: node=soc find=#size-cells prop=#size-cells
+[    0.509195] __of_find_property: node=soc find=dma-ranges prop=compatible
+[    0.509199] __of_find_property: node=soc find=dma-ranges prop=interrupt-parent
+[    0.509203] __of_find_property: node=soc find=dma-ranges prop=#address-cells
+[    0.509207] __of_find_property: node=soc find=dma-ranges prop=#size-cells
+[    0.509211] __of_find_property: node=soc find=dma-ranges prop=ranges
+[    0.509215] __of_find_property: node=soc find=dma-ranges prop=name
+[    0.509219] dma-ranges=  (null)
+
+http://elixir.free-electrons.com/linux/latest/source/drivers/of/address.c#L838
+
+What am I missing?
+
+Regards.
