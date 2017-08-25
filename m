@@ -1,206 +1,106 @@
-Return-Path: <SRS0=rPrl=7X=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=rPrl=7X=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V10 2/3] PCI: handle CRS returned by device after FLR
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-kernel@vger.kernel.org
-References: <1502470596-4112-1-git-send-email-okaya@codeaurora.org>
- <1502470596-4112-2-git-send-email-okaya@codeaurora.org>
- <20170818210134.GO28977@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <4da26c10-3426-e752-4a59-25bb59cde8cd@codeaurora.org>
-Date: Mon, 21 Aug 2017 09:44:09 -0400
+Return-Path: <SRS0=zhA9=73=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=zhA9=73=arm.com=robin.murphy@kernel.org>
+Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
+To: Mason <slash.tmp@free.fr>, Marc Zyngier <marc.zyngier@arm.com>,
+ Mark Rutland <mark.rutland@arm.com>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Marc Gonzalez <Marc_Gonzalez@sigmadesigns.com>
+References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
+ <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
+ <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
+ <86efs3wesi.fsf@arm.com>
+ <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
+ <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
+ <CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
+ <e381170c-e462-01cd-12db-30773005602b@free.fr> <871so09j6g.fsf@arm.com>
+ <acdef092-3fb9-4338-5199-a458ac2439c7@free.fr>
+ <4954977e-46fd-8d54-ec76-db2134d3073a@arm.com>
+ <de6d3ad7-80ee-3b47-d084-54cada956232@free.fr>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <349671d2-077f-4702-2dac-d82276ddd675@arm.com>
+Date: Fri, 25 Aug 2017 16:45:42 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170818210134.GO28977@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <de6d3ad7-80ee-3b47-d084-54cada956232@free.fr>
 Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 8/18/2017 5:01 PM, Bjorn Helgaas wrote:
-> On Fri, Aug 11, 2017 at 12:56:35PM -0400, Sinan Kaya wrote:
->> Sporadic reset issues have been observed with Intel 750 NVMe drive while
->> assigning the physical function to the guest machine. The sequence of
->> events observed is as follows:
+On 25/08/17 16:35, Mason wrote:
+> On 25/08/2017 17:25, Robin Murphy wrote:
+> 
+>> On 25/08/17 16:01, Mason wrote:
 >>
->> - perform a Function Level Reset (FLR)
->> - sleep up to 1000ms total
->> - read ~0 from PCI_COMMAND
->> - warn that the device didn't return from FLR
->> - touch the device before it's ready
->> - drop register read and writes performing register settings restore
->> - incomplete reset operation and partial register restoration
->> - second time device probe fails in the guest machine as HW is left in
->> limbo.
-> 
-> Pardon me while I think out loud for a while.  It's taking me a while
-> to untangle my confusion about how CRS works.
-> 
-
-no problem,
-
-> Prior to this patch, you saw the "Failed to return from FLR" warning.
-> That means we did this:
-> 
->      0ms  assert FLR
->    100ms  read PCI_COMMAND, get ~0 (i == 0)
->    200ms  read PCI_COMMAND, get ~0 (i == 1)
->    ...
->   1000ms  read PCI_COMMAND, get ~0 (i == 9)
-> 
-> If we did not get completions for those config reads, the root port
-> would complete the read as a failed transaction and probably
-> synthesize ~0 data.  
-
-That's correct. This root port returns ~0 when destination is unreachable.
-
-> But if that were the case, this patch would make
-> no difference: it reads PCI_VENDOR_ID instead of PCI_COMMAND the first
-> time around, that would also be a failed transaction, and we wouldn't
-> interpret it as a CRS status, so the sequence would be exactly the
-> above except the first read would be of PCI_VENDOR_ID, not
-> PCI_COMMAND.
-> 
-> Since this patch *does* make a difference, CRS Software Visibility
-> must be supported and enabled, and we must have gotten completions
-> with CRS status for the PCI_COMMAND reads.  
-
-That's right, CRS visibility is supported and enabled. Root port returns
-0xFFFF0001 when vendor ID is read as per the spec.
-
-> Per the completion
-> handling rules in sec 2.3.2, the root complex should transparently
-> retry the read (since we're not reading PCI_VENDOR_ID, CRS Software
-> Visibility doesn't apply, so this is invisible to software).  But the
-> root complex *is* allowed to limit the number of retries and if the
-> limit is reached, complete the request as a failed transaction.
-
-This version of the root port doesn't support retry mechanism. This is a
-TO-DO for the hardware team. This root port returns ~0 for all accesses
-other than vendor id. This means we waited 1 seconds and the device
-was not accessible. Command register was not reachable at the end of
-1 seconds.
-
-> 
-> That must be what happened before this patch.  If that's the case, we
-> should see an error logged from the failed transaction.  We should be
-> able to verify this if we collected "lspci -vv" output for the system
-> before and after the FLR.
-> 
-
-See above.
-
-> If CRS SV is not present (or not enabled), the PCI_VENDOR_ID read will
-> still get a CRS completion, but the root port will retry it instead of
-> returning the 0x0001 ID.  When we hit the retry limit, the root port
-> will synthesize ~0 data to complete the read.
-
-This is what is missing from the HW. I'm trying to get this corrected
-to be complete.
-
-> 
-> That means we won't call pci_bus_wait_crs() at all, and we'll fall
-> back to the original PCI_COMMAND reads.  That path will only wait
-> 1000ms, just like the original code before this patch.  So I *think*
-> that if you disable CRS SV on this system (or if you put the device in
-> a system that doesn't support CRS SV), you'll probably see the same
-> "failed to return from FLR" warning.
-> 
-> You could easily test this by using setpci to turn off
-> PCI_EXP_RTCTL_CRSSVE in the root port leading to the NVMe device
-> before the FLR.
-> 
-> I think the implication is that we need to generalize
-> pci_bus_wait_crs() to be more of a "wait for device ready" interface
-> that can use CRS SV (if supported and enabled) or something like the
-> PCI_COMMAND loop (if no CRS SV).  It should use the same timeout
-> either way, since CRS SV is a property of the root port, not of the
-> device we're waiting for.
-
-I saw your comment about timeout. I was trying not to change the behavior
-for systems that do not support CRS visibility. we can certainly increase
-the timeout if you think it is better.
-
-I saw your V11, I'll review them in a minute.
-
-> 
-> It's "interesting" that the PCI core error handling code doesn't look
-> at the Master Abort bit at all, even though it's pretty fundamental to
-> conventional PCI error reporting.  I suspect Master Abort gets set
-> whenever a root port synthesizes ~0 data, but (with the exception of
-> some arch code) we never look at it and never clear it.
-> 
->> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
->> following a FLR request to indicate that it is not ready to accept new
->> requests. CRS is defined in PCIe r3.1, sec 2.3.1. Request Handling Rules
->> and CRS usage in FLR context is mentioned in PCIe r3.1, sec 6.6.2.
->> Function-Level Reset.
+>>> Robin wrote a prophetic post back in March:
+>>> http://lists.infradead.org/pipermail/linux-arm-kernel/2017-March/492965.html
+>>>
+>>>> The appropriate DT property would be "dma-ranges", i.e.
+>>>>
+>>>> pci@... {
+>>>> 	...
+>>>> 	dma-ranges = <(PCI bus address) (CPU phys address) (size)>;
+>>>> }
+>>>
+>>> The dma-ranges property seems to be exactly what I'm looking for:
+>>>
+>>> Restrict DMA to the first X MB of RAM (use a bounce buffer
+>>> for other physical addresses).
+>>>
+>>> I added the following property to my PCIe node
+>>>
+>>>   dma-ranges = <0x0 0x80000000 0x80000000 0x20000000>;
+>>>
+>>> with the intent to create a 1:1 mapping for [0x80000000, 0xa0000000[
+>>>
+>>> But it does not work. Arg!
+>>>
+>>> My PCIe controller driver seems to be correctly calling of_dma_get_range:
+>>>
+>>> [    0.520469] [<c03d85e8>] (of_dma_get_range) from [<c03d5ad8>] (of_dma_configure+0x48/0x234)
+>>> [    0.520483] [<c03d5ad8>] (of_dma_configure) from [<c02fa154>] (pci_device_add+0xac/0x350)
+>>> [    0.520493] [<c02fa154>] (pci_device_add) from [<c02fa488>] (pci_scan_single_device+0x90/0xb0)
+>>> [    0.520501] [<c02fa488>] (pci_scan_single_device) from [<c02fa500>] (pci_scan_slot+0x58/0x100)
+>>> [    0.520510] [<c02fa500>] (pci_scan_slot) from [<c02fb418>] (pci_scan_child_bus+0x20/0xf8)
+>>> [    0.520519] [<c02fb418>] (pci_scan_child_bus) from [<c02fb6e8>] (pci_scan_root_bus_msi+0xcc/0xd8)
+>>> [    0.520527] [<c02fb6e8>] (pci_scan_root_bus_msi) from [<c02fb70c>] (pci_scan_root_bus+0x18/0x20)
+>>> [    0.520537] [<c02fb70c>] (pci_scan_root_bus) from [<c0310544>] (pci_host_common_probe+0xc8/0x314)
+>>> [    0.520546] [<c0310544>] (pci_host_common_probe) from [<c0310ce8>] (tango_pcie_probe+0x148/0x350)
+>>> [    0.520557] [<c0310ce8>] (tango_pcie_probe) from [<c034d398>] (platform_drv_probe+0x34/0x6c)
+>>>
+>>> of_dma_get_range() is called on the pcie node (which is expected)
+>>> but after parsing n_addr_cells and n_size_cells in the while loop,
+>>> the code jumps to the parent node ("soc")... while my property is
+>>> attached to the pcie node...
 >>
->> A CRS indication will only be given if the address to be read is vendor ID
->> register. pci_bus_read_dev_vendor_id() knows how to deal with CRS returned
->> 0xFFFF0001 value and will continue polling until a value other than
->> 0xFFFF0001 is returned within a given timeout.
+>> This is not your driver calling of_dma_get_range(), this is the PCI core
+>> doing so in the act of DMA master configuration for a discovered
+>> *endpoint*. The fact that the "pass the host controller's OF node
+>> because we don't have one for the endpoint" bodge only works properly
+>> for dma-coherent and not dma-ranges is a known, but irrelevant, problem.
 >>
->> Try to discover device presence via CRS first. If device is not found, fall
->> through to old behavior.
->>
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>  drivers/pci/pci.c | 23 +++++++++++++++++++++--
->>  1 file changed, 21 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index af0cc34..c853551 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -3821,17 +3821,36 @@ static void pci_flr_wait(struct pci_dev *dev)
->>  {
->>  	int i = 0;
->>  	u32 id;
->> +	bool ret;
->> +
->> +	/*
->> +	 * Don't touch the HW before waiting 100ms. HW has to finish
->> +	 * within 100ms according to PCI Express Base Specification
->> +	 * Revision 3.1 Section 6.6.2: Function-Level Reset (FLR).
->> +	 */
->> +	msleep(100);
->> +
->> +	if (pci_bus_read_config_dword(dev->bus, dev->devfn, PCI_VENDOR_ID,
->> +				      &id))
->> +		return;
->> +
->> +	/* See if we can find a device via CRS first. */
->> +	if ((id & 0xffff) == 0x0001) {
->> +		ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
->> +		if (ret)
->> +			return;
->> +	}
->>  
->>  	do {
->>  		msleep(100);
->>  		pci_read_config_dword(dev, PCI_COMMAND, &id);
->> -	} while (i++ < 10 && id == ~0);
->> +	} while (i++ < 9 && id == ~0);
->>  
->>  	if (id == ~0)
->>  		dev_warn(&dev->dev, "Failed to return from FLR\n");
->>  	else if (i > 1)
->>  		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
->> -			 (i - 1) * 100);
->> +			 i * 100);
->>  }
->>  
->>  /**
->> -- 
->> 1.9.1
->>
+>> If your host controller driver needs to discover its windows from DT to
+>> configure *itself*, it needs to parse dma-ranges itself; see pcie-iproc,
+>> pcie-racar, pcie-xgene, etc. for examples.
 > 
+> Yes, I'm aware that I need to do my own parsing of dma-ranges.
+> I can use that information to configure BAR0.base and the
+> region registers.
+> 
+> But Linux needs to record my settings at some point, right?
+> Otherwise, how does the DMA framework know that devices can
+> only reach cpu addresses [0x80000000, 0xa0000000[ and when
+> to use bounce buffers?
+> 
+> What's preventing the XHCI driver from allocating memory
+> outside of my "safe" range, and having the DMA framework
+> blindly map that?
 
+At the moment, nothing. Systems that have physical memory that is not
+visible in PCI mem space are having a bad time and will not go to space
+today.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+But that bears no relation to your MSI controller getting its doorbell
+address set appropriately.
+
+Robin.
