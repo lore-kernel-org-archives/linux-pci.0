@@ -1,71 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr20074.outbound.protection.outlook.com ([40.107.2.74]:9993
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751974AbdHICut (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Aug 2017 22:50:49 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-CC: "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>
-Subject: RE: [PATCHv2 1/6] PCI: designware: add accessors for write permission
- of DBI read-only registers
-Date: Wed, 9 Aug 2017 02:50:45 +0000
-Message-ID: <AM5PR0402MB27712F7FCC7E7F7FE93CC45B848B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-2-git-send-email-Zhiqiang.Hou@nxp.com>
- <ea408ca6-ef74-b4e1-1434-52e5ef09a260@synopsys.com>
-In-Reply-To: <ea408ca6-ef74-b4e1-1434-52e5ef09a260@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35454 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932634AbdHYNg3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Aug 2017 09:36:29 -0400
+Received: by mail-wm0-f65.google.com with SMTP id r187so2609375wma.2
+        for <linux-pci@vger.kernel.org>; Fri, 25 Aug 2017 06:36:28 -0700 (PDT)
+Date: Fri, 25 Aug 2017 15:36:24 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 02/15] drm: make device_type const
+Message-ID: <20170825133623.3jbkpvq5k62rabf5@phenom.ffwll.local>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+ <1503130946-2854-3-git-send-email-bhumirks@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503130946-2854-3-git-send-email-bhumirks@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIGFjayENCg0KPiAtLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2FvIFBpbnRvIFttYWlsdG86Sm9hby5QaW50b0BzeW5v
-cHN5cy5jb21dDQo+IFNlbnQ6IDIwMTflubQ45pyIOOaXpSAyMDo0NQ0KPiBUbzogWi5xLiBIb3Ug
-PHpoaXFpYW5nLmhvdUBueHAuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gYmhl
-bGdhYXNAZ29vZ2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9Ac3lub3Bz
-eXMuY29tDQo+IENjOiBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdrYWkg
-SHUgPG1pbmdrYWkuaHVAbnhwLmNvbT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPg0K
-PiBTdWJqZWN0OiBSZTogW1BBVENIdjIgMS82XSBQQ0k6IGRlc2lnbndhcmU6IGFkZCBhY2Nlc3Nv
-cnMgZm9yIHdyaXRlDQo+IHBlcm1pc3Npb24gb2YgREJJIHJlYWQtb25seSByZWdpc3RlcnMNCj4g
-DQo+IMOAcyA5OjIzIEFNIGRlIDgvMy8yMDE3LCBaaGlxaWFuZyBIb3UgZXNjcmV2ZXU6DQo+ID4g
-RnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPg0KPiA+IFRoZSBy
-ZWFkLW9ubHkgREJJIHJlZ2lzdGVycyBjYW4gYmUgd3JpdHRlbiBvdmVyIHRoZSBEQkkgd2hlbiBz
-ZXQgdGhlDQo+ID4gIldyaXRlIHRvIFJPIFJlZ2lzdGVycyBVc2luZyBEQkkiIChEQklfUk9fV1Jf
-RU4pIGZpZWxkIG9mIHRoZQ0KPiA+IE1JU0NfQ09OVFJPTF8xX09GRiByZWdpc3Rlci4NCj4gPg0K
-PiA+IFNpZ25lZC1vZmYtYnk6IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+
-ID4gLS0tDQo+ID4gVjI6DQo+ID4gIC0gTm9uZQ0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9w
-Y2llLWRlc2lnbndhcmUuaCB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPiAgMSBm
-aWxlIGNoYW5nZWQsIDI1IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2
-ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ll
-LWRlc2lnbndhcmUuaA0KPiA+IGluZGV4IGI0ZDJhODkuLmJiZGYzNWIgMTAwNjQ0DQo+ID4gLS0t
-IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gKysrIGIvZHJpdmVycy9w
-Y2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gQEAgLTc2LDYgKzc2LDkgQEANCj4gPiAgI2Rl
-ZmluZSBQQ0lFX0FUVV9GVU5DKHgpCQkoKCh4KSAmIDB4NykgPDwgMTYpDQo+ID4gICNkZWZpbmUg
-UENJRV9BVFVfVVBQRVJfVEFSR0VUCQkweDkxQw0KPiA+DQo+ID4gKyNkZWZpbmUgUENJRV9NSVND
-X0NPTlRST0xfMV9PRkYJCTB4OEJDDQo+ID4gKyNkZWZpbmUgUENJRV9EQklfUk9fV1JfRU4JCSgw
-eDEgPDwgMCkNCj4gPiArDQo+ID4gIC8qDQo+ID4gICAqIGlBVFUgVW5yb2xsLXNwZWNpZmljIHJl
-Z2lzdGVyIGRlZmluaXRpb25zDQo+ID4gICAqIEZyb20gNC44MCBjb3JlIHZlcnNpb24gdGhlIGFk
-ZHJlc3MgdHJhbnNsYXRpb24gd2lsbCBiZSBtYWRlIGJ5DQo+ID4gdW5yb2xsIEBAIC0yNzksNiAr
-MjgyLDI4IEBAIHN0YXRpYyBpbmxpbmUgdTMyIGR3X3BjaWVfcmVhZGxfZGJpMihzdHJ1Y3QNCj4g
-ZHdfcGNpZSAqcGNpLCB1MzIgcmVnKQ0KPiA+ICAJcmV0dXJuIF9fZHdfcGNpZV9yZWFkX2RiaShw
-Y2ksIHBjaS0+ZGJpX2Jhc2UyLCByZWcsIDB4NCk7ICB9DQo+ID4NCj4gPiArc3RhdGljIGlubGlu
-ZSB2b2lkIGR3X3BjaWVfZGJpX3JvX3dyX2VuKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiAr
-CXUzMiByZWc7DQo+ID4gKwl1MzIgdmFsOw0KPiA+ICsNCj4gPiArCXJlZyA9IFBDSUVfTUlTQ19D
-T05UUk9MXzFfT0ZGOw0KPiA+ICsJdmFsID0gZHdfcGNpZV9yZWFkbF9kYmkocGNpLCByZWcpOw0K
-PiA+ICsJdmFsIHw9IFBDSUVfREJJX1JPX1dSX0VOOw0KPiA+ICsJZHdfcGNpZV93cml0ZWxfZGJp
-KHBjaSwgcmVnLCB2YWwpOw0KPiA+ICt9DQo+ID4gKw0KPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQg
-ZHdfcGNpZV9kYmlfcm9fd3JfZGlzKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiArCXUzMiBy
-ZWc7DQo+ID4gKwl1MzIgdmFsOw0KPiA+ICsNCj4gPiArCXJlZyA9IFBDSUVfTUlTQ19DT05UUk9M
-XzFfT0ZGOw0KPiA+ICsJdmFsID0gZHdfcGNpZV9yZWFkbF9kYmkocGNpLCByZWcpOw0KPiA+ICsJ
-dmFsICY9IH5QQ0lFX0RCSV9ST19XUl9FTjsNCj4gPiArCWR3X3BjaWVfd3JpdGVsX2RiaShwY2ks
-IHJlZywgdmFsKTsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgI2lmZGVmIENPTkZJR19QQ0lFX0RXX0hP
-U1QNCj4gPiAgaXJxcmV0dXJuX3QgZHdfaGFuZGxlX21zaV9pcnEoc3RydWN0IHBjaWVfcG9ydCAq
-cHApOyAgdm9pZA0KPiA+IGR3X3BjaWVfbXNpX2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApOw0K
-PiA+DQo+IA0KPiBBY2tlZC1CeTogSm9hbyBQaW50byA8anBpbnRvQHN5bm9wc3lzLmNvbT5bXSAN
-Cg0KLSBaaGlxaWFuZw0K
+On Sat, Aug 19, 2017 at 01:52:13PM +0530, Bhumika Goyal wrote:
+> Make these const as they are only stored in the type field of a device
+> structure, which is const.
+> Done using Coccinelle.
+
+I can't apply this, it's missing your s-o-b line. You can just replay with
+that.
+
+Thanks, Daniel
+
+> ---
+>  drivers/gpu/drm/drm_sysfs.c      | 2 +-
+>  drivers/gpu/drm/ttm/ttm_module.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/gpu/drm/drm_sysfs.c b/drivers/gpu/drm/drm_sysfs.c
+> index 1c5b5ce..84e4ebe 100644
+> --- a/drivers/gpu/drm/drm_sysfs.c
+> +++ b/drivers/gpu/drm/drm_sysfs.c
+> @@ -39,7 +39,7 @@
+>   * drm_connector_unregister().
+>   */
+>  
+> -static struct device_type drm_sysfs_device_minor = {
+> +static const struct device_type drm_sysfs_device_minor = {
+>  	.name = "drm_minor"
+>  };
+>  
+> diff --git a/drivers/gpu/drm/ttm/ttm_module.c b/drivers/gpu/drm/ttm/ttm_module.c
+> index 66fc639..e6604e0 100644
+> --- a/drivers/gpu/drm/ttm/ttm_module.c
+> +++ b/drivers/gpu/drm/ttm/ttm_module.c
+> @@ -37,7 +37,7 @@
+>  static DECLARE_WAIT_QUEUE_HEAD(exit_q);
+>  static atomic_t device_released;
+>  
+> -static struct device_type ttm_drm_class_type = {
+> +static const struct device_type ttm_drm_class_type = {
+>  	.name = "ttm",
+>  	/**
+>  	 * Add pm ops here.
+> -- 
+> 1.9.1
+> 
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
