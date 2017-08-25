@@ -1,102 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0083.outbound.protection.outlook.com ([104.47.2.83]:28576
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754220AbdHYDQk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Aug 2017 23:16:40 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from mail.kernel.org ([198.145.29.99]:39940 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751301AbdHYEWz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Aug 2017 00:22:55 -0400
+Date: Thu, 24 Aug 2017 23:22:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
         "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
         "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
         "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
         "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
         "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-Subject: RE: [PATCHv4 4/9] PCI: layerscape: refactor the host_init function
-Date: Fri, 25 Aug 2017 03:16:36 +0000
-Message-ID: <AM5PR0402MB27710E17C1F6C33BC6985C22849B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+Subject: Re: [PATCHv4 4/9] PCI: layerscape: refactor the host_init function
+Message-ID: <20170825042252.GA28480@bhelgaas-glaptop.roam.corp.google.com>
 References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
  <20170823060856.9387-5-Zhiqiang.Hou@nxp.com>
  <20170824171206.GP31858@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170824171206.GP31858@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+ <AM5PR0402MB27710E17C1F6C33BC6985C22849B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AM5PR0402MB27710E17C1F6C33BC6985C22849B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
-c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIyNcjVIDE6MTINCj4gVG86IFoucS4gSG91
-IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
-IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBKb2FvLlBpbnRv
-QHN5bm9wc3lzLmNvbTsgTS5oLiBMaWFuDQo+IDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5n
-a2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZw0KPiA8cm95LnphbmdAbnhwLmNv
-bT47IHN2YXJiYW5vdkBtbS1zb2wuY29tOyBuaWtsYXMuY2Fzc2VsQGF4aXMuY29tOw0KPiBqZXNw
-ZXIubmlsc3NvbkBheGlzLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIdjQgNC85XSBQQ0k6IGxh
-eWVyc2NhcGU6IHJlZmFjdG9yIHRoZSBob3N0X2luaXQgZnVuY3Rpb24NCj4gDQo+IE9uIFdlZCwg
-QXVnIDIzLCAyMDE3IGF0IDAyOjA4OjUxUE0gKzA4MDAsIFpoaXFpYW5nIEhvdSB3cm90ZToNCj4g
-PiBGcm9tOiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+DQo+ID4gTWFr
-ZSB0aGUgbHMxMDIxYSdzIGhvc3RfaW5pdCByZXVzZSBsYXllcnNjYXBlIHBsYXRmb3JtJ3MgY29t
-bW9uDQo+ID4gaG9zdF9pbml0IGZ1bmN0aW9uLg0KPiANCj4gVGhpcyBwYXRjaCBkb2VzIHR3byB0
-aGluZ3M6DQo+IA0KPiAgIDEpIE1vdmVzIGxzMTAyMV9wY2llX2hvc3RfaW5pdCgpIHRvIGEgZGlm
-ZmVyZW50IHBsYWNlIGluIHRoZSBmaWxlDQo+ICAgMikgQ2FsbHMgbHNfcGNpZV9ob3N0X2luaXQo
-KSBpbnN0ZWFkIG9mIHJlcGVhdGluZyB0aGF0IGNvZGUgaW4NCj4gICAgICBsczEwMjFfcGNpZV9o
-b3N0X2luaXQoKQ0KPiANCj4gVGhvc2Ugc2hvdWxkIGJlIHNlcGFyYXRlIHBhdGNoZXMgc28gdGhl
-eSdyZSBlYXNpZXIgdG8gcmV2aWV3Lg0KPiANCj4gT3IgaWYgeW91IGRvbid0IHJlYWxseSBuZWVk
-IHRvIG1vdmUgbHMxMDIxX3BjaWVfaG9zdF9pbml0KCkgdG8gYSBkaWZmZXJlbnQgcGxhY2UsDQo+
-IHRoYXQgd291bGQgYmUgZXZlbiBlYXNpZXIuDQoNCk1vdmVkIGxzMTAyMV9wY2llX2hvc3RfaW5p
-dCgpIHRvIHRoaXMgcGxhY2UgYmVoYW5kIHRoZSBmdW5jIGxzX3BjaWVfaG9zdF9pbml0IGlzIHRv
-IGNhbGwgbHNfcGNpZV9ob3N0X2luaXQgd2l0aG91dCBhZGRpbmcgYSBkZWNsYXJhdGlvbiBvZiBp
-dC4gSXMgaXQgbmVjZXNzYXJ5IHRvIHNlcGFyYXRlIGl0Pw0KDQoNCj4gPiBTaWduZWQtb2ZmLWJ5
-OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+IC0tLQ0KPiA+IFY0Og0K
-PiA+ICAtIG5vIGNoYW5nZQ0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2Fw
-ZS5jIHwgNjUNCj4gPiArKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+
-ID4gIDEgZmlsZSBjaGFuZ2VkLCAyOSBpbnNlcnRpb25zKCspLCAzNiBkZWxldGlvbnMoLSkNCj4g
-Pg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+
-IGIvZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiBpbmRleCAzYWEzNDIxNDY0
-M2MuLjU3Yjg2YTBjZDJjOCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxh
-eWVyc2NhcGUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+
-ID4gQEAgLTEwOCw0MiArMTA4LDYgQEAgc3RhdGljIGludCBsczEwMjFfcGNpZV9saW5rX3VwKHN0
-cnVjdCBkd19wY2llICpwY2kpDQo+ID4gIAlyZXR1cm4gMTsNCj4gPiAgfQ0KPiA+DQo+ID4gLXN0
-YXRpYyBpbnQgbHMxMDIxX3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKSAtew0K
-PiA+IC0Jc3RydWN0IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7DQo+ID4g
-LQlzdHJ1Y3QgbHNfcGNpZSAqcGNpZSA9IHRvX2xzX3BjaWUocGNpKTsNCj4gPiAtCXN0cnVjdCBk
-ZXZpY2UgKmRldiA9IHBjaS0+ZGV2Ow0KPiA+IC0JdTMyIGluZGV4WzJdOw0KPiA+IC0JaW50IHJl
-dDsNCj4gPiAtDQo+ID4gLQlwY2llLT5zY2ZnID0gc3lzY29uX3JlZ21hcF9sb29rdXBfYnlfcGhh
-bmRsZShkZXYtPm9mX25vZGUsDQo+ID4gLQkJCQkJCSAgICAgImZzbCxwY2llLXNjZmciKTsNCj4g
-PiAtCWlmIChJU19FUlIocGNpZS0+c2NmZykpIHsNCj4gPiAtCQlyZXQgPSBQVFJfRVJSKHBjaWUt
-PnNjZmcpOw0KPiA+IC0JCWRldl9lcnIoZGV2LCAiTm8gc3lzY2ZnIHBoYW5kbGUgc3BlY2lmaWVk
-XG4iKTsNCj4gPiAtCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiAtCQlyZXR1cm4gcmV0Ow0KPiA+
-IC0JfQ0KPiA+IC0NCj4gPiAtCWlmIChvZl9wcm9wZXJ0eV9yZWFkX3UzMl9hcnJheShkZXYtPm9m
-X25vZGUsDQo+ID4gLQkJCQkgICAgICAgImZzbCxwY2llLXNjZmciLCBpbmRleCwgMikpIHsNCj4g
-PiAtCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiAtCQlyZXR1cm4gLUVJTlZBTDsNCj4gPiAtCX0N
-Cj4gPiAtCXBjaWUtPmluZGV4ID0gaW5kZXhbMV07DQo+ID4gLQ0KPiA+IC0JZHdfcGNpZV9zZXR1
-cF9yYyhwcCk7DQo+ID4gLQ0KPiA+IC0JaW93cml0ZTMyKDEsIHBjaS0+ZGJpX2Jhc2UgKyBQQ0lF
-X0RCSV9ST19XUl9FTik7DQo+ID4gLQlsc19wY2llX2ZpeF9jbGFzcyhwY2llKTsNCj4gPiAtCWxz
-X3BjaWVfY2xlYXJfbXVsdGlmdW5jdGlvbihwY2llKTsNCj4gPiAtCWlvd3JpdGUzMigwLCBwY2kt
-PmRiaV9iYXNlICsgUENJRV9EQklfUk9fV1JfRU4pOw0KPiA+IC0NCj4gPiAtCWxzX3BjaWVfZHJv
-cF9tc2dfdGxwKHBjaWUpOw0KPiA+IC0NCj4gPiAtCXJldHVybiAwOw0KPiA+IC19DQo+ID4gLQ0K
-PiA+ICBzdGF0aWMgaW50IGxzX3BjaWVfbGlua191cChzdHJ1Y3QgZHdfcGNpZSAqcGNpKSAgew0K
-PiA+ICAJc3RydWN0IGxzX3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBjaSk7IEBAIC0xNzYsNiAr
-MTQwLDM1IEBAIHN0YXRpYw0KPiA+IGludCBsc19wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9w
-b3J0ICpwcCkNCj4gPiAgCXJldHVybiAwOw0KPiA+ICB9DQo+ID4NCj4gPiArc3RhdGljIGludCBs
-czEwMjFfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApIHsNCj4gPiArCXN0cnVj
-dCBkd19wY2llICpwY2kgPSB0b19kd19wY2llX2Zyb21fcHAocHApOw0KPiA+ICsJc3RydWN0IGxz
-X3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBjaSk7DQo+ID4gKwlzdHJ1Y3QgZGV2aWNlICpkZXYg
-PSBwY2ktPmRldjsNCj4gPiArCXUzMiBpbmRleFsyXTsNCj4gPiArCWludCByZXQ7DQo+ID4gKw0K
-PiA+ICsJcGNpZS0+c2NmZyA9IHN5c2Nvbl9yZWdtYXBfbG9va3VwX2J5X3BoYW5kbGUoZGV2LT5v
-Zl9ub2RlLA0KPiA+ICsJCQkJCQkgICAgICJmc2wscGNpZS1zY2ZnIik7DQo+ID4gKwlpZiAoSVNf
-RVJSKHBjaWUtPnNjZmcpKSB7DQo+ID4gKwkJcmV0ID0gUFRSX0VSUihwY2llLT5zY2ZnKTsNCj4g
-PiArCQlkZXZfZXJyKGRldiwgIk5vIHN5c2NmZyBwaGFuZGxlIHNwZWNpZmllZFxuIik7DQo+ID4g
-KwkJcGNpZS0+c2NmZyA9IE5VTEw7DQo+ID4gKwkJcmV0dXJuIHJldDsNCj4gPiArCX0NCj4gPiAr
-DQo+ID4gKwlpZiAob2ZfcHJvcGVydHlfcmVhZF91MzJfYXJyYXkoZGV2LT5vZl9ub2RlLA0KPiA+
-ICsJCQkJICAgICAgICJmc2wscGNpZS1zY2ZnIiwgaW5kZXgsIDIpKSB7DQo+ID4gKwkJcGNpZS0+
-c2NmZyA9IE5VTEw7DQo+ID4gKwkJcmV0dXJuIC1FSU5WQUw7DQo+ID4gKwl9DQo+ID4gKwlwY2ll
-LT5pbmRleCA9IGluZGV4WzFdOw0KPiA+ICsNCj4gPiArCWxzX3BjaWVfaG9zdF9pbml0KHBwKTsN
-Cj4gPiArDQo+ID4gKwlyZXR1cm4gMDsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgc3RhdGljIGludCBs
-c19wY2llX21zaV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHAsDQo+ID4gIAkJCQkgc3Ry
-dWN0IG1zaV9jb250cm9sbGVyICpjaGlwKQ0KPiA+ICB7DQo+ID4gLS0NCj4gPiAyLjE0LjENCj4g
-Pg0KDQpUaGFua3MsDQpaaGlxaWFuZw0KDQo=
+On Fri, Aug 25, 2017 at 03:16:36AM +0000, Z.q. Hou wrote:
+> Hi Bjorn,
+> 
+> Thanks a lot for your comments!
+> 
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: 2017年8月25日 1:12
+> > To: Z.q. Hou <zhiqiang.hou@nxp.com>
+> > Cc: linux-pci@vger.kernel.org; bhelgaas@google.com;
+> > jingoohan1@gmail.com; Joao.Pinto@synopsys.com; M.h. Lian
+> > <minghuan.lian@nxp.com>; Mingkai Hu <mingkai.hu@nxp.com>; Roy Zang
+> > <roy.zang@nxp.com>; svarbanov@mm-sol.com; niklas.cassel@axis.com;
+> > jesper.nilsson@axis.com
+> > Subject: Re: [PATCHv4 4/9] PCI: layerscape: refactor the host_init function
+> > 
+> > On Wed, Aug 23, 2017 at 02:08:51PM +0800, Zhiqiang Hou wrote:
+> > > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> > >
+> > > Make the ls1021a's host_init reuse layerscape platform's common
+> > > host_init function.
+> > 
+> > This patch does two things:
+> > 
+> >   1) Moves ls1021_pcie_host_init() to a different place in the file
+> >   2) Calls ls_pcie_host_init() instead of repeating that code in
+> >      ls1021_pcie_host_init()
+> > 
+> > Those should be separate patches so they're easier to review.
+> > 
+> > Or if you don't really need to move ls1021_pcie_host_init() to a different place,
+> > that would be even easier.
+> 
+> Moved ls1021_pcie_host_init() to this place behand the func ls_pcie_host_init is to call ls_pcie_host_init without adding a declaration of it. Is it necessary to separate it?
+
+Yes, please.  I want to see one patch that *only* moves the function
+(and mentions why you're moving it) and another that *only* calls
+ls_pcie_host_init() instead of repeating that code in
+ls1021_pcie_host_init().  That way, both patches are trivial to
+review.  The combined one is not trivial to review.
+
+> > > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> > > ---
+> > > V4:
+> > >  - no change
+> > >
+> > >  drivers/pci/dwc/pci-layerscape.c | 65
+> > > ++++++++++++++++++----------------------
+> > >  1 file changed, 29 insertions(+), 36 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/dwc/pci-layerscape.c
+> > > b/drivers/pci/dwc/pci-layerscape.c
+> > > index 3aa34214643c..57b86a0cd2c8 100644
+> > > --- a/drivers/pci/dwc/pci-layerscape.c
+> > > +++ b/drivers/pci/dwc/pci-layerscape.c
+> > > @@ -108,42 +108,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+> > >  	return 1;
+> > >  }
+> > >
+> > > -static int ls1021_pcie_host_init(struct pcie_port *pp) -{
+> > > -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > > -	struct ls_pcie *pcie = to_ls_pcie(pci);
+> > > -	struct device *dev = pci->dev;
+> > > -	u32 index[2];
+> > > -	int ret;
+> > > -
+> > > -	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
+> > > -						     "fsl,pcie-scfg");
+> > > -	if (IS_ERR(pcie->scfg)) {
+> > > -		ret = PTR_ERR(pcie->scfg);
+> > > -		dev_err(dev, "No syscfg phandle specified\n");
+> > > -		pcie->scfg = NULL;
+> > > -		return ret;
+> > > -	}
+> > > -
+> > > -	if (of_property_read_u32_array(dev->of_node,
+> > > -				       "fsl,pcie-scfg", index, 2)) {
+> > > -		pcie->scfg = NULL;
+> > > -		return -EINVAL;
+> > > -	}
+> > > -	pcie->index = index[1];
+> > > -
+> > > -	dw_pcie_setup_rc(pp);
+> > > -
+> > > -	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+> > > -	ls_pcie_fix_class(pcie);
+> > > -	ls_pcie_clear_multifunction(pcie);
+> > > -	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+> > > -
+> > > -	ls_pcie_drop_msg_tlp(pcie);
+> > > -
+> > > -	return 0;
+> > > -}
+> > > -
+> > >  static int ls_pcie_link_up(struct dw_pcie *pci)  {
+> > >  	struct ls_pcie *pcie = to_ls_pcie(pci); @@ -176,6 +140,35 @@ static
+> > > int ls_pcie_host_init(struct pcie_port *pp)
+> > >  	return 0;
+> > >  }
+> > >
+> > > +static int ls1021_pcie_host_init(struct pcie_port *pp) {
+> > > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > > +	struct ls_pcie *pcie = to_ls_pcie(pci);
+> > > +	struct device *dev = pci->dev;
+> > > +	u32 index[2];
+> > > +	int ret;
+> > > +
+> > > +	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
+> > > +						     "fsl,pcie-scfg");
+> > > +	if (IS_ERR(pcie->scfg)) {
+> > > +		ret = PTR_ERR(pcie->scfg);
+> > > +		dev_err(dev, "No syscfg phandle specified\n");
+> > > +		pcie->scfg = NULL;
+> > > +		return ret;
+> > > +	}
+> > > +
+> > > +	if (of_property_read_u32_array(dev->of_node,
+> > > +				       "fsl,pcie-scfg", index, 2)) {
+> > > +		pcie->scfg = NULL;
+> > > +		return -EINVAL;
+> > > +	}
+> > > +	pcie->index = index[1];
+> > > +
+> > > +	ls_pcie_host_init(pp);
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > >  static int ls_pcie_msi_host_init(struct pcie_port *pp,
+> > >  				 struct msi_controller *chip)
+> > >  {
+> > > --
+> > > 2.14.1
+> > >
+> 
+> Thanks,
+> Zhiqiang
+> 
