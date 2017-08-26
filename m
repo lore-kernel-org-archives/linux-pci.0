@@ -1,75 +1,72 @@
-Return-Path: <SRS0=lBIO=7Z=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=lBIO=7Z=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43592 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756757AbdHZAA5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Aug 2017 20:00:57 -0400
+Date: Fri, 25 Aug 2017 19:00:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: davem@davemloft.net, mroos@linux.ee, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/msi: don't warn on irq_create_affinity_masks NULL
+ return
+Message-ID: <20170826000055.GC8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170823115459.2058-1-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170822221928.GL6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170817113028.16853-1-dja@axtens.net> <20170817113028.16853-2-dja@axtens.net>
- <20170821105300.GB23287@e107981-lin.cambridge.arm.com> <20170822221928.GL6948@bhelgaas-glaptop.roam.corp.google.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Wed, 23 Aug 2017 14:48:42 +0100
-Message-ID: <CAKv+Gu-FCkV9Dv=yn_CNC9orj8Roiabb75jX34w3mMziWVZaeA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/1] Split VGA default device handler out of VGA arbiter
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	David Airlie <airlied@linux.ie>, Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>, dri-devel <dri-devel@lists.freedesktop.org>,
-	"Liuxinliang (Matthew Liu)" <z.liuxinliang@hisilicon.com>, Zou Rongrong <zourongrong@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>, Lukas Wunner <lukas@wunner.de>,
-	linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, daniel.vetter@intel.com,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Daniel Axtens <dja@axtens.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170823115459.2058-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22 August 2017 at 23:19, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Aug 21, 2017 at 11:53:01AM +0100, Lorenzo Pieralisi wrote:
->> On Thu, Aug 17, 2017 at 09:30:28PM +1000, Daniel Axtens wrote:
->> > A system without PCI legacy resources (e.g. ARM64) may find that no
->> > default/boot VGA device has been marked, because the VGA arbiter
->> > checks for legacy resource decoding before marking a card as default.
->>
->> I do not understand this paragraph, in particular:
->>
->> - "A system without PCI legacy resources (e.g. ARM64)". What does this
->>   mean ? I take this as "ARM64 does not support IO space"; if a PCI host
->>   bridge supports IO space, there is nothing from an architectural
->>   point of view that prevents an MMIO based IO space implementation to
->>   work on ARM64. It is PCI bridge specific, not arch specific.
->
-> This reference to ARM64 is the same thing I stumbled over.  Maybe it
-> could be written along the lines of:
->
->   The VGA arbiter selects a default VGA device that is enabled and
->   reachable via the legacy VGA resources (mem 0xa0000-0xbffff, io
->   0x3b0-0x3bb, io 0x3c0-0x3df, etc).
->
->   If there is no such device, e.g., because there's no enabled VGA
->   device, the host bridge doesn't support access to those legacy
->   resources, or a PCI-PCI bridge doesn't have VGA Enable set, a
->   platform may select an arbitrary device by calling
->   vga_set_default_device().
->
-> Then I think this patch changes the previous behavior by allowing the
-> arbiter to select a device that is enabled and has a driver but may
-> not be reachable via the legacy VGA resources.
->
-> I don't know what all the consequences of that would be, but it does
-> muddy the VGA arbiter waters a bit.  AIUI, the main reason for the
-> arbiter is to allow multiple legacy VGA devices by manipulating bridge
-> VGA Enable bits so only one receives the legacy resources at a time.
->
-> These devices that do not need the legacy resources don't need that
-> special treatment because they don't care about the bridge VGA Enable
-> bits and several can coexist in the system with no need for VGA
-> arbitration.
->
-> I guess the powerpc fixup_vga() already selects a device that doesn't
-> need the VGA resources, so we already have that situation.
->
+On Wed, Aug 23, 2017 at 01:54:59PM +0200, Christoph Hellwig wrote:
+> irq_create_affinity_masks can easily return NULL when there are not
+> enough "free" vectors available to spread, while the memory allocation
+> failure for the CPU masks not only is unlikely, but also relatively
+> harmless as the system will work just fine except for non-optimally
+> spread vectors.  Thus remove the warnings.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Perhaps it is unclear that the whole point of tinkering with the VGA
-arbiter is that X may refuse to use a GFX card if it is not tagged as
-the default VGA device by the arbiter. I have suggested before that
-fixing X may be more appropriate in this case, given that ownership of
-the legacy VGA resources may not correlate at all with being the
-primary display device on non-x86 architectures.
+I applied this with David's ack to for-linus for v4.13.  It's not
+strictly speaking a bug fix, but I think the warnings would cause
+needless alarm for v4.13 users.
+
+> ---
+>  drivers/pci/msi.c | 13 +++----------
+>  1 file changed, 3 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 253d92409bb3..2225afc1cbbb 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -538,12 +538,9 @@ msi_setup_entry(struct pci_dev *dev, int nvec, const struct irq_affinity *affd)
+>  	struct msi_desc *entry;
+>  	u16 control;
+>  
+> -	if (affd) {
+> +	if (affd)
+>  		masks = irq_create_affinity_masks(nvec, affd);
+> -		if (!masks)
+> -			dev_err(&dev->dev, "can't allocate MSI affinity masks for %d vectors\n",
+> -				nvec);
+> -	}
+> +
+>  
+>  	/* MSI Entry Initialization */
+>  	entry = alloc_msi_entry(&dev->dev, nvec, masks);
+> @@ -679,12 +676,8 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+>  	struct msi_desc *entry;
+>  	int ret, i;
+>  
+> -	if (affd) {
+> +	if (affd)
+>  		masks = irq_create_affinity_masks(nvec, affd);
+> -		if (!masks)
+> -			dev_err(&dev->dev, "can't allocate MSI-X affinity masks for %d vectors\n",
+> -				nvec);
+> -	}
+>  
+>  	for (i = 0, curmsk = masks; i < nvec; i++) {
+>  		entry = alloc_msi_entry(&dev->dev, 1, curmsk);
+> -- 
+> 2.11.0
+> 
