@@ -1,95 +1,66 @@
-Return-Path: <SRS0=qcKc=77=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=qcKc=77=rock-chips.com=shawn.lin@kernel.org>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
- Brian Norris <briannorris@chromium.org>,
- Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v5 0/10] Some cleanup and bug fix for pcie-rockchip
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
- <20170825213838.GB8154@bhelgaas-glaptop.roam.corp.google.com>
- <c6e1a387-ee7b-1694-31d6-1b2f553e3d0f@rock-chips.com>
- <20170828183339.GI8154@bhelgaas-glaptop.roam.corp.google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <6067d630-3434-c009-89be-c4688bc1e7c3@rock-chips.com>
-Date: Tue, 29 Aug 2017 08:47:28 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43652 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756757AbdHZAC0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Aug 2017 20:02:26 -0400
+Date: Fri, 25 Aug 2017 19:02:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/MSI: don't try to apply MSI(-X) affinity for single
+ vectors
+Message-ID: <20170826000208.GD8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170726201741.4842-1-hch@lst.de>
+ <20170802182458.GC20308@bhelgaas-glaptop.roam.corp.google.com>
+ <20170821183905.GB23205@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170828183339.GI8154@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170821183905.GB23205@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 2017/8/29 2:33, Bjorn Helgaas wrote:
-> On Mon, Aug 28, 2017 at 10:22:24AM +0800, Shawn Lin wrote:
->> Hi Bjorn,
->>
->> On 2017/8/26 5:38, Bjorn Helgaas wrote:
->>> On Wed, Aug 23, 2017 at 03:01:13PM +0800, Shawn Lin wrote:
->>>>
->>
->> ...
->>
->>>
->>> I applied these to pci/host-rockchip except for these:
->>>
->>>    PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
->>>    PCI: rockchip: fix missing phy manipulation for legacy phy
->>>
->>> I'm not really happy with the devm/clk_prepare_enable situation, so
->>> I'm waiting to see if a better solution emerges.
->>>
->>> I went ahead and applied the tweaks I proposed to the earlier "PCI:
->>> rockchip: Add per-lane PHY support" and "PCI: rockchip: Idle inactive
->>> PHY(s)" patches.  I *think* those make the "fix missing phy
->>> manipulation for legacy phy" patch unnecessary.
->>>
->>> But please take a look and make sure.  If I went the wrong direction,
->>> I'll gladly back it out.
->>
->> I tested both of legacy and per-lane PHY mode, and it works fine.
->>
->> But just a nit:
->>
->> with legacy PHY, we could avoid to print the following message
->> which is confusing as for legacy PHY mode, we couldn't idle
->> any inactive lanes.
->>
->> [    0.655192] rockchip-pcie f8000000.pcie: idling lane 1
->> [    0.655696] rockchip-pcie f8000000.pcie: idling lane 2
->> [    0.656194] rockchip-pcie f8000000.pcie: idling lane 3
->>
->> So I think we could return 0xf for legacy PHY mode like this:
->>
->> static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
->>          u8 map;
->>
->>          if (rockchip->legacy_phy)
->> -               return BIT(0);
->> +               return GENMASK(MAX_LANE_NUM - 1, 0);
+On Mon, Aug 21, 2017 at 08:39:05PM +0200, Christoph Hellwig wrote:
+> On Wed, Aug 02, 2017 at 01:24:58PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Jul 26, 2017 at 10:17:41PM +0200, Christoph Hellwig wrote:
+> > > We'll always get NULL back in that case, so skip the call and the
+> > > resulting warning.
+> > 
+> > 1. I'm not sure PCI_IRQ_AFFINITY was the right name.  IIUC, a
+> > MSI/MSI-X vector is always basically bound to CPU,
 > 
-> When we're using legacy PHY mode, this changes lanes_map from 0x1 to
-> 0xf.  That means we won't print the "idling lane 1" message.  It
-> *also* means we won't call phy_power_off() for lanes 1-3.  Is that the
-> correct behavior?  Does the legacy PHY mode actually use all 4 PHYs?
-
-Yes, it's the correct behaviour. The 4 PHYs is abstraction of 4 lanes
-for per-lane PHY mode, but for legacy PHY mode, PHY represents a single
-component managing 4 lanes together. So no matter how many lanes are
-used, we couldn't call phy_power_off for legacy PHY mode until we really
-want to power off the PHY. That is  why we need to recontruct the pcie
-and phy driver to migrate to per-lane PHY mode as we could treat each
-lane as a phy object and let phy driver do idling work in the
-phy_power_off callback instead of power-off work if ref count isn't
-decreased to zero.
-
-Also I think the key point here is that for legacy PHY mode, only
-phys[0] is vaild, so there is no difference if we call phy_power_off for
-phys[1..3] as you did, because PHY API will check the phy object and
-won't do anything if seeing invalid/NULL phy object. So changing 
-lanes_map from 0x1 to 0xf is only silent the "idling lane x" log.
-
-
+> This will depend on your architecture.
 > 
+> > so we always have
+> > affinity.  The only difference with PCI_IRQ_AFFINITY is that instead
+> > of binding them all to the same CPU, we spread them around.  Maybe
+> > PCI_IRQ_SPREAD would be more suggestive.  But whatever, it is what it
+> > is, and I'll expand the changelog something like this:
 > 
+> Yes, that might be a better name.  We don't have that many callers
+> yet, so we could probably still change it.
 > 
+> > 
+> >   Calling pci_alloc_irq_vectors() with PCI_IRQ_AFFINITY indicates
+> >   that we should spread the MSI vectors around the available CPUs.
+> >   But if we're only allocating one vector, there's nothing to spread
+> >   around.
+> 
+> Ok.
+> 
+> > 2. The patch makes sense in that if we're only allocating a single
+> > vector, there's nothing to spread around and there's no need to
+> > allocate a cpumask.  But I haven't figured out why we get a warning.
+> > I assume it's because we're getting NULL back when we call
+> > irq_create_affinity_masks() with nvecs==1, but that only happens if
+> > affv==0 or the zalloc fails, and I don't see why either would be the
+> > case.
+> 
+> It happens for the !CONFIG_SMP case.  It also happens for the case where
+> we pre_vectors or post_vectors reduces the affinity vector count to 1
+> inside irq_create_affinity_masks, so maybe this patch isn't the best and
+> the warning should either move into irq_create_affinity_masks or just
+> remove it entirely.
+
+Oh, thanks, I totally missed the !CONFIG_SMP case, sorry about that.
+
+I applied the follow-on patch, which I think obsoletes this one.
