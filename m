@@ -1,66 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jan Glauber <jglauber@cavium.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3 2/3] PCI: Avoid bus reset for Cavium cn8xxx root ports
-Date: Wed, 30 Aug 2017 16:24:53 +0200
-Message-Id: <20170830142454.10971-3-jglauber@cavium.com>
-In-Reply-To: <20170830142454.10971-1-jglauber@cavium.com>
-References: <20170830142454.10971-1-jglauber@cavium.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
- Jan Glauber <jglauber@cavium.com>, Robert Richter <robert.richter@cavium.com>,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- Jon Masters <jcm@redhat.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=wWnf=74=intel.com=fengguang.wu@kernel.org>
+Return-Path: <SRS0=wWnf=74=intel.com=fengguang.wu@kernel.org>
+Date: Sat, 26 Aug 2017 20:28:23 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ryder Lee <ryder.lee@mediatek.com>,
+	Honghui Zhang <honghui.zhang@mediatek.com>, kbuild-all@01.org,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	youlin.pei@mediatek.com, xinping.qian@mediatek.com,
+	Philip Li <philip.li@intel.com>
+Subject: Re: [pci:pci/host-mediatek 11/11]
+ drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared
+Message-ID: <20170826122823.v6eprqvee4dcgah4@wfg-t540p.sh.intel.com>
+References: <201708232205.SymULNVt%fengguang.wu@intel.com>
+ <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
+ <1503544447.19072.7.camel@mhfsdcap03>
+ <20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com>
+ <1503622427.19072.11.camel@mhfsdcap03>
+ <1503708987.2081.5.camel@mtkswgap22>
+ <20170826115508.GE8154@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <20170826115508.GE8154@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Sat, Aug 26, 2017 at 06:55:08AM -0500, Bjorn Helgaas wrote:
+>On Sat, Aug 26, 2017 at 08:56:27AM +0800, Ryder Lee wrote:
+>> Hi,
+>>
+>> On Fri, 2017-08-25 at 08:53 +0800, Honghui Zhang wrote:
+>> > On Thu, 2017-08-24 at 08:44 -0500, Bjorn Helgaas wrote:
+>> > > On Thu, Aug 24, 2017 at 11:14:07AM +0800, mtk11102 wrote:
+>> > > > On Wed, 2017-08-23 at 17:52 -0500, Bjorn Helgaas wrote:
+>> > > > > On Wed, Aug 23, 2017 at 10:53:07PM +0800, kbuild test robot wrote:
+>>
+>> ....
+>> > > > I pull the your host-mediatek branch and seems the build error is still
+>> > > > there.
+>> > > > Should I send a new patch base on your pci/host-mediatek to fix the
+>> > > > build warnings, or should I wait for your push for build error and then
+>> > > > send the patch?
+>> > >
+>> > > Sorry, I must have forgotten to push it.  Should be there now:
+>> > > 9f3ec1e47377 ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
+>> > >
+>> > > Hopefully that has everything we need (I included your fix above).
+>> > >
+>> >
+>> > Thanks very much for your help.
+>> >
+>> > > Bjorn
+>> >
+>> >
+>>
+>> I just noticed that 9f3ec1e47377 could not be built pass.
+>>
+>> In function 'mtk_pcie_enable_msi':
+>>  error: 'return' with a value, in function returning void [-Werror]
+>>   return 0;
+>>
+>> In function 'mtk_pcie_init_irq_domain': error: unused variable
+>> 'err' [-Werror=unused-variable]
+>>   int err;
+>
+>Fixed in 0eb463c096c4 ("PCI: mediatek: Add MSI support for MT2712 and
+>MT7622").
+>
+>I wonder why I didn't get a kbuild test report for this?
 
-Root ports of cn8xxx do not function after bus reset when used with
-some e1000e and LSI HBA devices. Add a quirk to prevent bus reset on
-these root ports.
+CC Philip. AFAIK 0day's master server went broken for several days..
 
-Signed-off-by: David Daney <david.daney@cavium.com>
-[jglauber@cavium.com: fixed typo and whitespaces]
-Signed-off-by: Jan Glauber <jglauber@cavium.com>
----
- drivers/pci/quirks.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6967c6b..85191b8 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3364,6 +3364,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
- 
-+/*
-+ * Root port on some Cavium CN8xxx chips do not successfully complete
-+ * a bus reset when used with certain types of child devices. Config
-+ * space access to the child may quit responding. Flag the root port
-+ * as not supporting bus reset.
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
-+
- static void quirk_no_pm_reset(struct pci_dev *dev)
- {
- 	/*
--- 
-2.9.0.rc0.21.g7777322
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Fengguang
