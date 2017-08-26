@@ -1,66 +1,46 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jan Glauber <jglauber@cavium.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH v2 2/3] PCI: Avoid bus reset for Cavium cn8xxx root ports
-Date: Thu, 17 Aug 2017 10:14:22 +0200
-Message-Id: <1502957663-5527-3-git-send-email-jglauber@cavium.com>
-In-Reply-To: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
-References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kvm@vger.kernel.org, david.daney@cavium.com, Jon Masters <jcm@redhat.com>,
- linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
- Jan Glauber <jglauber@cavium.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41272 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752480AbdHZMLF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 26 Aug 2017 08:11:05 -0400
+Date: Sat, 26 Aug 2017 07:11:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Meelis Roos <mroos@linux.ee>
+Subject: [GIT PULL] PCI fixes for v4.13
+Message-ID: <20170826121102.GA23614@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+PCI fix:
 
-Root ports of cn8xxx do not function after bus reset when used with
-some e1000e and LSI HBA devices. Add a quirk to prevent bus reset on
-these root ports.
-
-Signed-off-by: David Daney <david.daney@cavium.com>
-[jglauber@cavium.com: fixed typo and whitespaces]
-Signed-off-by: Jan Glauber <jglauber@cavium.com>
----
- drivers/pci/quirks.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6967c6b..85191b8 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3364,6 +3364,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
- 
-+/*
-+ * Root port on some Cavium CN8xxx chips do not successfully complete
-+ * a bus reset when used with certain types of child devices. Config
-+ * space access to the child may quit responding. Flag the root port
-+ * as not supporting bus reset.
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
-+
- static void quirk_no_pm_reset(struct pci_dev *dev)
- {
- 	/*
--- 
-2.9.0.rc0.21.g7777322
+  - remove needlessly alarming MSI affinity warning (this is not actually a
+    bug fix, but the warning prompts unnecessary bug reports)
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+The following changes since commit 8466489ef5ba48272ba4fa4ea9f8f403306de4c7:
+
+  xhci: Reset Renesas uPD72020x USB controller for 32-bit DMA issue (2017-08-02 12:05:07 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-v4.13-fixes-3
+
+for you to fetch changes up to 8e1101d251647802d0a4ae19eb3d0e1453eaeff4:
+
+  PCI/MSI: Don't warn when irq_create_affinity_masks() returns NULL (2017-08-25 18:58:42 -0500)
+
+----------------------------------------------------------------
+pci-v4.13-fixes-3
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      PCI/MSI: Don't warn when irq_create_affinity_masks() returns NULL
+
+ drivers/pci/msi.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
