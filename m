@@ -1,94 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:19592 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752111AbdHRO6u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 10:58:50 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Subject: [PATCH 08/18] PCI: endpoint: functions/pci-epf-test: Add support to poll early for host commands
-Date: Fri, 18 Aug 2017 20:28:00 +0530
-Message-ID: <20170818145810.17649-9-kishon@ti.com>
-In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
-References: <20170818145810.17649-1-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH V13 3/4] PCI: Handle CRS ('device not ready') returned by
+ device after FLR
+Date: Sun, 27 Aug 2017 13:40:50 -0400
+Message-Id: <1503855651-17409-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1503855651-17409-1-git-send-email-okaya@codeaurora.org>
+References: <1503855651-17409-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain platforms like TI's K2G doesn't support link-up notification. Add
-support to poll early (without waiting for the linkup notification)
-for commands from the host.
+Sporadic reset issues have been observed with Intel 750 NVMe drive while
+assigning the physical function to the guest machine.  The sequence of
+events observed is as follows:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+- perform a Function Level Reset (FLR)
+- sleep up to 1000ms total
+- read ~0 from PCI_COMMAND
+- warn that the device didn't return from FLR
+- touch the device before it's ready
+- device drops config writes when we restore register settings
+- incomplete register restore leaves device in inconsistent state
+- device probe fails because device is in inconsistent state
+
+After reset, an endpoint may respond to config requests with Configuration
+Request Retry Status (CRS) to indicate that it is not ready to accept new
+requests. See PCIe r3.1, sec 2.3.1 and 6.6.2.
+
+Increase the timeout value from 1 second to 60 seconds to cover the period
+where device responds with CRS and also report polling progress.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/endpoint/functions/pci-epf-test.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ drivers/pci/pci.c | 52 +++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 37 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index e378dae9e510..a0aea2500690 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -55,6 +55,7 @@ struct pci_epf_test {
- 	void			*reg[6];
- 	struct pci_epf		*epf;
- 	enum pci_barno		test_reg_bar;
-+	bool			linkup_notifier;
- 	struct delayed_work	cmd_handler;
- };
- 
-@@ -77,6 +78,7 @@ static struct pci_epf_header test_header = {
- 
- struct pci_epf_test_data {
- 	enum pci_barno	test_reg_bar;
-+	bool		linkup_notifier;
- };
- 
- static int bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
-@@ -424,6 +426,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- static int pci_epf_test_bind(struct pci_epf *epf)
- {
- 	int ret;
-+	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
- 	struct pci_epf_header *header = epf->header;
- 	struct pci_epc *epc = epf->epc;
- 	struct device *dev = &epf->dev;
-@@ -449,6 +452,9 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 	if (ret)
- 		return ret;
- 
-+	if (!epf_test->linkup_notifier)
-+		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
-+
- 	return 0;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..abab64b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3811,27 +3811,49 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
  }
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
  
-@@ -466,11 +472,14 @@ static int pci_epf_test_probe(struct pci_epf *epf)
- 	const struct pci_epf_device_id *match;
- 	struct pci_epf_test_data *data;
- 	enum pci_barno test_reg_bar = BAR_0;
-+	bool linkup_notifier = true;
+-/*
+- * We should only need to wait 100ms after FLR, but some devices take longer.
+- * Wait for up to 1000ms for config space to return something other than -1.
+- * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
+- * dword because VFs don't implement the 1st dword.
+- */
+ static void pci_flr_wait(struct pci_dev *dev)
+ {
+-	int i = 0;
++	int delay = 1, timeout = 60000;
+ 	u32 id;
  
- 	match = pci_epf_match_device(pci_epf_test_ids, epf);
- 	data = (struct pci_epf_test_data *)match->driver_data;
--	if (data)
-+	if (data) {
- 		test_reg_bar = data->test_reg_bar;
-+		linkup_notifier = data->linkup_notifier;
+-	do {
+-		msleep(100);
++	/*
++	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
++	 * 100ms, but may silently discard requests while the FLR is in
++	 * progress.  Wait 100ms before trying to access the device.
++	 */
++	msleep(100);
++
++	/*
++	 * After 100ms, the device should not silently discard config
++	 * requests, but it may still indicate that it needs more time by
++	 * responding to them with CRS completions.  The Root Port will
++	 * generally synthesize ~0 data to complete the read (except when
++	 * CRS SV is enabled and the read was for the Vendor ID; in that
++	 * case it synthesizes 0x0001 data).
++	 *
++	 * Wait for the device to return a non-CRS completion.  Read the
++	 * Command register instead of Vendor ID so we don't have to
++	 * contend with the CRS SV value.
++	 */
++	pci_read_config_dword(dev, PCI_COMMAND, &id);
++	while (id == ~0) {
++		if (delay > timeout) {
++			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
++				 delay - 1);
++			return;
++		}
++
++		if (delay > 1000)
++			dev_info(&dev->dev, "not ready %dms after FLR; waiting\n",
++				 delay - 1);
++
++		msleep(delay);
++		delay *= 2;
+ 		pci_read_config_dword(dev, PCI_COMMAND, &id);
+-	} while (i++ < 10 && id == ~0);
 +	}
  
- 	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
- 	if (!epf_test)
-@@ -479,6 +488,7 @@ static int pci_epf_test_probe(struct pci_epf *epf)
- 	epf->header = &test_header;
- 	epf_test->epf = epf;
- 	epf_test->test_reg_bar = test_reg_bar;
-+	epf_test->linkup_notifier = linkup_notifier;
+-	if (id == ~0)
+-		dev_warn(&dev->dev, "Failed to return from FLR\n");
+-	else if (i > 1)
+-		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
+-			 (i - 1) * 100);
++	if (delay > 1000)
++		dev_info(&dev->dev, "ready %dms after FLR\n", delay - 1);
+ }
  
- 	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
- 
+ /**
 -- 
-2.11.0
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
