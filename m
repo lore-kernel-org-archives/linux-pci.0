@@ -1,178 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:34214 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751912AbdHATKy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 15:10:54 -0400
-Received: by mail-qt0-f196.google.com with SMTP id i19so2536820qte.1
-        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 12:10:54 -0700 (PDT)
-Date: Tue, 1 Aug 2017 15:10:51 -0400
-From: Jon Mason <jdmason@kudzu.us>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: Re: [PATCH v3 14/16] switchtec_ntb: implement scratchpad registers
-Message-ID: <20170801191050.GJ4186@kudzu.us>
-References: <20170725205753.4735-1-logang@deltatee.com>
- <20170725205753.4735-15-logang@deltatee.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 28 Aug 2017 14:17:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <oza.oza@broadcom.com>
+Subject: Re: [PATCH v8 2/3] PCI: iproc: retry request when CRS returned from EP
+Message-ID: <20170828191708.GJ8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+ <1503551066-23212-3-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170725205753.4735-15-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1503551066-23212-3-git-send-email-oza.oza@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Scott Branden <sbranden@broadcom.com>, Oza Pawandeep <oza.pawandeep@gmail.com>,
+ Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Andy Gospodarek <gospo@broadcom.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 25, 2017 at 02:57:51PM -0600, Logan Gunthorpe wrote:
-> Seeing there is no dedicated hardware for this, we simply add
-> these as entries in the shared memory window. Thus, we could support
-> any number of them but 128 seems like enough, for now.
-
-It would probaly be better if I remarked about the SPADs in the actual
-patch about the SPADS :)
-
-The whole point of using the SPADs in the NTB driver was to workaround
-the problems establishing a connection between the two sides of the
-NTB and where everything lives.  So, using a MW to get around the
-SPADs is sort of backwards (and slightly funny).  I realize you are
-trying to use the existing transport with minimal changes to enable
-your hardware, and thus this makes logical sense to you.  However, if
-the SPADs are not really needed, then we should either remove them
-from the transport (or use them for something else).
-
-Per my comment in the other patch, I'm amenable to take this series
-as-is, assuming you are willing to address this design issue in the
-near future.  Thoughts?
-
-Thanks,
-Jon
-
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Reviewed-by: Stephen Bates <sbates@raithlin.com>
-> Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-> ---
->  drivers/ntb/hw/mscc/switchtec_ntb.c | 75 ++++++++++++++++++++++++++++++++++++-
->  1 file changed, 73 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-> index 3037ca730998..ca403ad2f7ac 100644
-> --- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-> +++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-> @@ -67,6 +67,7 @@ struct shared_mw {
->  	u32 link_sta;
->  	u32 partition_id;
->  	u64 mw_sizes[MAX_MWS];
-> +	u32 spad[128];
->  };
->  
->  #define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
-> @@ -455,22 +456,90 @@ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
->  
->  static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
->  {
-> -	return 0;
-> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-> +
-> +	return ARRAY_SIZE(sndev->self_shared->spad);
->  }
->  
->  static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
->  {
-> -	return 0;
-> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-> +
-> +	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
-> +		return 0;
-> +
-> +	if (!sndev->self_shared)
-> +		return 0;
-> +
-> +	return sndev->self_shared->spad[idx];
->  }
->  
->  static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
->  {
-> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-> +
-> +	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
-> +		return -EINVAL;
-> +
-> +	if (!sndev->self_shared)
-> +		return -EIO;
-> +
-> +	sndev->self_shared->spad[idx] = val;
-> +
->  	return 0;
->  }
->  
-> +static u32 switchtec_ntb_peer_spad_read(struct ntb_dev *ntb, int pidx,
-> +					int sidx)
-> +{
-> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-> +
-> +	if (pidx != NTB_DEF_PEER_IDX)
-> +		return -EINVAL;
-> +
-> +	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
-> +		return 0;
-> +
-> +	if (!sndev->peer_shared)
-> +		return 0;
-> +
-> +	return ioread32(&sndev->peer_shared->spad[sidx]);
-> +}
-> +
->  static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
->  					 int sidx, u32 val)
->  {
-> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-> +
-> +	if (pidx != NTB_DEF_PEER_IDX)
-> +		return -EINVAL;
-> +
-> +	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
-> +		return -EINVAL;
-> +
-> +	if (!sndev->peer_shared)
-> +		return -EIO;
-> +
-> +	iowrite32(val, &sndev->peer_shared->spad[sidx]);
-> +
-> +	return 0;
-> +}
-> +
-> +static int switchtec_ntb_peer_spad_addr(struct ntb_dev *ntb, int pidx,
-> +					int sidx, phys_addr_t *spad_addr)
-> +{
-> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-> +	unsigned long offset;
-> +
-> +	if (pidx != NTB_DEF_PEER_IDX)
-> +		return -EINVAL;
-> +
-> +	offset = (unsigned long)&sndev->peer_shared->spad[sidx] -
-> +		(unsigned long)sndev->stdev->mmio;
-> +
-> +	if (spad_addr)
-> +		*spad_addr = pci_resource_start(ntb->pdev, 0) + offset;
-> +
->  	return 0;
->  }
->  
-> @@ -496,7 +565,9 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
->  	.spad_count		= switchtec_ntb_spad_count,
->  	.spad_read		= switchtec_ntb_spad_read,
->  	.spad_write		= switchtec_ntb_spad_write,
-> +	.peer_spad_read		= switchtec_ntb_peer_spad_read,
->  	.peer_spad_write	= switchtec_ntb_peer_spad_write,
-> +	.peer_spad_addr		= switchtec_ntb_peer_spad_addr,
->  };
->  
->  static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
-> -- 
-> 2.11.0
-> 
+T24gVGh1LCBBdWcgMjQsIDIwMTcgYXQgMTA6MzQ6MjVBTSArMDUzMCwgT3phIFBhd2FuZGVlcCB3
+cm90ZToKPiBQQ0llIHNwZWMgcjMuMSwgc2VjIDIuMy4yCj4gSWYgQ1JTIHNvZnR3YXJlIHZpc2li
+aWxpdHkgaXMgbm90IGVuYWJsZWQsIHRoZSBSQyBtdXN0IHJlaXNzdWUgdGhlCj4gY29uZmlnIHJl
+cXVlc3QgYXMgYSBuZXcgcmVxdWVzdC4KPiAKPiAtIElmIENSUyBzb2Z0d2FyZSB2aXNpYmlsaXR5
+IGlzIGVuYWJsZWQsCj4gLSBmb3IgYSBjb25maWcgcmVhZCBvZiBWZW5kb3IgSUQsIHRoZSBSQyBt
+dXN0IHJldHVybiAweDAwMDEgZGF0YQo+IC0gZm9yIGFsbCBvdGhlciBjb25maWcgcmVhZHMvd3Jp
+dGVzLCB0aGUgUkMgbXVzdCByZWlzc3VlIHRoZQo+ICAgcmVxdWVzdAo+IAo+IGlwcm9jIFBDSWUg
+Q29udHJvbGxlciBzcGVjOgo+IDQuNy4zLjMuIFJldHJ5IFN0YXR1cyBPbiBDb25maWd1cmF0aW9u
+IEN5Y2xlCj4gRW5kcG9pbnRzIGFyZSBhbGxvd2VkIHRvIGdlbmVyYXRlIHJldHJ5IHN0YXR1cyBv
+biBjb25maWd1cmF0aW9uCj4gY3ljbGVzLiBJbiB0aGlzIGNhc2UsIHRoZSBSQyBuZWVkcyB0byBy
+ZS1pc3N1ZSB0aGUgcmVxdWVzdC4gVGhlIElQCj4gZG9lcyBub3QgaGFuZGxlIHRoaXMgYmVjYXVz
+ZSB0aGUgbnVtYmVyIG9mIGNvbmZpZ3VyYXRpb24gY3ljbGVzIG5lZWRlZAo+IHdpbGwgcHJvYmFi
+bHkgYmUgbGVzcyB0aGFuIHRoZSB0b3RhbCBudW1iZXIgb2Ygbm9uLXBvc3RlZCBvcGVyYXRpb25z
+Cj4gbmVlZGVkLgo+IAo+IFdoZW4gYSByZXRyeSBzdGF0dXMgaXMgcmVjZWl2ZWQgb24gdGhlIFVz
+ZXIgUlggaW50ZXJmYWNlIGZvciBhCj4gY29uZmlndXJhdGlvbiByZXF1ZXN0IHRoYXQgd2FzIHNl
+bnQgb24gdGhlIFVzZXIgVFggaW50ZXJmYWNlLAo+IGl0IHdpbGwgYmUgaW5kaWNhdGVkIHdpdGgg
+YSBjb21wbGV0aW9uIHdpdGggdGhlIENNUExfU1RBVFVTIGZpZWxkIHNldAo+IHRvIDI9Q1JTLCBh
+bmQgdGhlIHVzZXIgd2lsbCBoYXZlIHRvIGZpbmQgdGhlIGFkZHJlc3MgYW5kIGRhdGEgdmFsdWVz
+Cj4gYW5kIHNlbmQgYSBuZXcgdHJhbnNhY3Rpb24gb24gdGhlIFVzZXIgVFggaW50ZXJmYWNlLgo+
+IFdoZW4gdGhlIGludGVybmFsIGNvbmZpZ3VyYXRpb24gc3BhY2UgcmV0dXJucyBhIHJldHJ5IHN0
+YXR1cyBkdXJpbmcgYQo+IGNvbmZpZ3VyYXRpb24gY3ljbGUgKHVzZXJfY3NjZmcgPSAxKSBvbiB0
+aGUgQ29tbWFuZC9TdGF0dXMgaW50ZXJmYWNlLAo+IHRoZSBwY2llX2NzY3JzIHdpbGwgYXNzZXJ0
+IHdpdGggdGhlIHBjaWVfY3NhY2sgc2lnbmFsIHRvIGluZGljYXRlIHRoZQo+IENSUyBzdGF0dXMu
+Cj4gV2hlbiB0aGUgQ1JTIFNvZnR3YXJlIFZpc2liaWxpdHkgRW5hYmxlIHJlZ2lzdGVyIGluIHRo
+ZSBSb290IENvbnRyb2wKPiByZWdpc3RlciBpcyBlbmFibGVkLCB0aGUgSVAgd2lsbCByZXR1cm4g
+dGhlIGRhdGEgdmFsdWUgdG8gMHgwMDAxIGZvcgo+IHRoZSBWZW5kb3IgSUQgdmFsdWUgYW5kIDB4
+ZmZmZiAgKGFsbCAx4oCZcykgZm9yIHRoZSByZXN0IG9mIHRoZSBkYXRhIGluCj4gdGhlIHJlcXVl
+c3QgZm9yIHJlYWRzIG9mIG9mZnNldCAwIHRoYXQgcmV0dXJuIHdpdGggQ1JTIHN0YXR1cy4gIFRo
+aXMKPiBpcyB0cnVlIGZvciBib3RoIHRoZSBVc2VyIFJYIEludGVyZmFjZSBhbmQgZm9yIHRoZSBD
+b21tYW5kL1N0YXR1cwo+IGludGVyZmFjZS4gIFdoZW4gQ1JTIFNvZnR3YXJlIFZpc2liaWxpdHkg
+aXMgZW5hYmxlZCwgdGhlIENNUExfU1RBVFVTCj4gZmllbGQgb2YgdGhlIGNvbXBsZXRpb24gb24g
+dGhlIFVzZXIgUlggSW50ZXJmYWNlIHdpbGwgbm90IGJlIDI9Q1JTIGFuZAo+IHRoZSBwY2llX2Nz
+Y3JzIHNpZ25hbCB3aWxsIG5vdCBhc3NlcnQgb24gdGhlIENvbW1hbmQvU3RhdHVzIGludGVyZmFj
+ZS4KPiAKPiBQZXIgUENJZSByMy4xLCBzZWMgMi4zLjIsIGNvbmZpZyByZXF1ZXN0cyB0aGF0IHJl
+Y2VpdmUgY29tcGxldGlvbnMKPiB3aXRoIENvbmZpZ3VyYXRpb24gUmVxdWVzdCBSZXRyeSBTdGF0
+dXMgKENSUykgc2hvdWxkIGJlIHJlaXNzdWVkIGJ5Cj4gdGhlIGhhcmR3YXJlIGV4Y2VwdCByZWFk
+cyBvZiB0aGUgVmVuZG9yIElEIHdoZW4gQ1JTIFNvZnR3YXJlCj4gVmlzaWJpbGl0eSBpcyBlbmFi
+bGVkLgo+IAo+IFRoaXMgaGFyZHdhcmUgbmV2ZXIgcmVpc3N1ZXMgY29uZmlndXJhdGlvbiByZXF1
+ZXN0cyB3aGVuIGl0IHJlY2VpdmVzCj4gQ1JTIGNvbXBsZXRpb25zLgo+IE5vdGUgdGhhdCwgbmVp
+dGhlciBQQ0llIGhvc3QgYnJpZGdlIG5vciBQQ0llIGNvcmUgcmUtaXNzdWVzIHRoZQo+IHJlcXVl
+c3QgZm9yIGFueSBjb25maWd1cmF0aW9uIG9mZnNldC4KPiAKPiBGb3IgY29uZmlnIHJlYWRzLCB0
+aGlzIGhhcmR3YXJlIHJldHVybnMgQ0ZHX1JFVFJZX1NUQVRVUyBkYXRhIHdoZW4KPiBpdCByZWNl
+aXZlcyBhIENSUyBjb21wbGV0aW9uIGZvciBhIGNvbmZpZyByZWFkLCByZWdhcmRsZXNzIG9mIHRo
+ZQo+IGFkZHJlc3Mgb2YgdGhlIHJlYWQgb3IgdGhlIENSUyBTb2Z0d2FyZSBWaXNpYmlsaXR5IEVu
+YWJsZSBiaXQuCgpJIGNhbid0IHJlbWVtYmVyIGhvdyBTdGluZ3JheSBoYW5kbGVzIHRoZSBDUlMg
+U29mdHdhcmUgVmlzaWJpbGl0eSBFbmFibGUKYml0LiAgSXMgaXQgYSByZWFkLW9ubHkgemVybz8g
+IElzIGl0IHdyaXRhYmxlPyAgRG9lcyB0aGUgaGFyZHdhcmUgbG9vayBhdAppdCBhbGwgKEkgdGhp
+bmsgbm90KT8KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5m
+cmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xp
+bnV4LWFybS1rZXJuZWwK
