@@ -1,75 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51718 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751921AbdHCXQx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 19:16:53 -0400
-Date: Thu, 3 Aug 2017 18:16:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: bhelgaas@google.com, kys@microsoft.com, linux-pci@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: Re: [PATCH] pci-hyperv: do not sleep in compose_msi_msg
-Message-ID: <20170803231651.GU20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170731234829.2344-1-sthemmin@microsoft.com>
+Received: from mail-cys01nam02on0060.outbound.protection.outlook.com ([104.47.37.60]:22134
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751234AbdH1LK2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Aug 2017 07:10:28 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv5 7/9] PCI: designware: add accessors for write permission of DBI read-only registers
+Date: Mon, 28 Aug 2017 18:52:59 +0800
+Message-ID: <20170828105301.8511-8-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
+References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170731234829.2344-1-sthemmin@microsoft.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 31, 2017 at 04:48:29PM -0700, Stephen Hemminger wrote:
-> The setup of MSI with Hyper-V host was sleeping with locks held.
-> This error is reported when doing SR-IOV hotplug with kernel built with lockdep.
-> 
->     BUG: sleeping function called from invalid context at kernel/sched/completion.c:93
->     in_atomic(): 1, irqs_disabled(): 1, pid: 1405, name: ip
->     3 locks held by ip/1405:
->    #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff976b10bb>] rtnetlink_rcv+0x1b/0x40
->    #1:  (&desc->request_mutex){+.+...}, at: [<ffffffff970ddd33>] __setup_irq+0xb3/0x720
->    #2:  (&irq_desc_lock_class){-.-...}, at: [<ffffffff970ddd65>] __setup_irq+0xe5/0x720
->    irq event stamp: 3476
->    hardirqs last  enabled at (3475): [<ffffffff971b3005>] get_page_from_freelist+0x225/0xc90
->    hardirqs last disabled at (3476): [<ffffffff978024e7>] _raw_spin_lock_irqsave+0x27/0x90
->    softirqs last  enabled at (2446): [<ffffffffc05ef0b0>] ixgbevf_configure+0x380/0x7c0 [ixgbevf]
->    softirqs last disabled at (2444): [<ffffffffc05ef08d>] ixgbevf_configure+0x35d/0x7c0 [ixgbevf]
-> 
-> The workaround is to poll for host response instead of blocking on
-> completion.
-> 
-> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Applied to pci/host-hv for v4.14, thanks!
+The read-only DBI registers can be written over when set the "Write
+to RO Registers Using DBI" (DBI_RO_WR_EN) field of the register
+MISC_CONTROL_1_OFF. And change to use the accessors instead accessing
+the register MISC_CONTROL_1_OFF directly.
 
-> ---
->  drivers/pci/host/pci-hyperv.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 415dcc69a502..334c9a7b8991 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -50,6 +50,7 @@
->  #include <linux/kernel.h>
->  #include <linux/module.h>
->  #include <linux/pci.h>
-> +#include <linux/delay.h>
->  #include <linux/semaphore.h>
->  #include <linux/irqdomain.h>
->  #include <asm/irqdomain.h>
-> @@ -1159,7 +1160,12 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
->  		goto free_int_desc;
->  	}
->  
-> -	wait_for_completion(&comp.comp_pkt.host_event);
-> +	/*
-> +	 * Since this function is called with IRQ locks held, can't
-> +	 * do normal wait for completion; instead poll.
-> +	 */
-> +	while (!try_wait_for_completion(&comp.comp_pkt.host_event))
-> +		udelay(100);
->  
->  	if (comp.comp_pkt.completion_status < 0) {
->  		dev_err(&hbus->hdev->device,
-> -- 
-> 2.11.0
-> 
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Acked-by: Joao Pinto <jpinto@synopsys.com>
+Acked-by: Roy Zang <tie-fei.zang@freescale.com>
+---
+V5:
+ - Squashed patch v4 6/9 and 7/9 together
+
+ drivers/pci/dwc/pci-layerscape.c  |  5 ++---
+ drivers/pci/dwc/pcie-designware.h | 25 +++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 8b5083aedf16..65f5d543fe89 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -33,7 +33,6 @@
+ 
+ /* PEX Internal Configuration Registers */
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+-#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
+ 
+ #define PCIE_IATU_NUM		6
+ 
+@@ -145,10 +144,10 @@ static int ls_pcie_host_init(struct pcie_port *pp)
+ 	 */
+ 	ls_pcie_disable_outbound_atus(pcie);
+ 
+-	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	ls_pcie_fix_class(pcie);
+ 	ls_pcie_clear_multifunction(pcie);
+-	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
++	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	ls_pcie_drop_msg_tlp(pcie);
+ 
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 7366c8167404..0c5f874345f6 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -76,6 +76,9 @@
+ #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
+ 
++#define PCIE_MISC_CONTROL_1_OFF		0x8BC
++#define PCIE_DBI_RO_WR_EN		(0x1 << 0)
++
+ /*
+  * iATU Unroll-specific register definitions
+  * From 4.80 core version the address translation will be made by unroll
+@@ -279,6 +282,28 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
+ 	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
+ }
+ 
++static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
++{
++	u32 reg;
++	u32 val;
++
++	reg = PCIE_MISC_CONTROL_1_OFF;
++	val = dw_pcie_readl_dbi(pci, reg);
++	val |= PCIE_DBI_RO_WR_EN;
++	dw_pcie_writel_dbi(pci, reg, val);
++}
++
++static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
++{
++	u32 reg;
++	u32 val;
++
++	reg = PCIE_MISC_CONTROL_1_OFF;
++	val = dw_pcie_readl_dbi(pci, reg);
++	val &= ~PCIE_DBI_RO_WR_EN;
++	dw_pcie_writel_dbi(pci, reg, val);
++}
++
+ #ifdef CONFIG_PCIE_DW_HOST
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
+-- 
+2.14.1
