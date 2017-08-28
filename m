@@ -1,128 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55116 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752627AbdHNVi0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 17:38:26 -0400
-Date: Mon, 14 Aug 2017 16:38:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
-        minghuan.lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com
-Subject: Re: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
-Message-ID: <20170814213824.GJ32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:38759 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751203AbdH1SEq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Aug 2017 14:04:46 -0400
+Received: by mail-wm0-f48.google.com with SMTP id t201so8343861wmt.1
+        for <linux-pci@vger.kernel.org>; Mon, 28 Aug 2017 11:04:46 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, mw@semihalf.com,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Leif Lindholm <leif.lindholm@linaro.org>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Rob Herring <robh@kernel.org>
+Subject: [PATCH v3 0/2] pci: add support for firmware initialized designware RCs
+Date: Mon, 28 Aug 2017 19:04:35 +0100
+Message-Id: <20170828180437.2646-1-ard.biesheuvel@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 03, 2017 at 04:23:38PM +0800, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> Make the ls1021a's host_init reuse layerscape platform's common
-> host_init function.
-> 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> ---
-> V2:
->  - Removed the disable outbound windows code and the remove duplicate class code
->    fixup code from this patch.
-> 
->  drivers/pci/dwc/pci-layerscape.c | 54 ++++++++++++++++++++--------------------
->  1 file changed, 27 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-> index 09056a6..3533a8c 100644
-> --- a/drivers/pci/dwc/pci-layerscape.c
-> +++ b/drivers/pci/dwc/pci-layerscape.c
-> @@ -107,33 +107,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
->  	return 1;
->  }
->  
-> -static void ls1021_pcie_host_init(struct pcie_port *pp)
-> -{
-> -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> -	struct ls_pcie *pcie = to_ls_pcie(pci);
-> -	struct device *dev = pci->dev;
-> -	u32 index[2];
-> -
-> -	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-> -						     "fsl,pcie-scfg");
-> -	if (IS_ERR(pcie->scfg)) {
-> -		dev_err(dev, "No syscfg phandle specified\n");
-> -		pcie->scfg = NULL;
-> -		return;
-> -	}
-> -
-> -	if (of_property_read_u32_array(dev->of_node,
-> -				       "fsl,pcie-scfg", index, 2)) {
-> -		pcie->scfg = NULL;
-> -		return;
-> -	}
-> -	pcie->index = index[1];
-> -
-> -	dw_pcie_setup_rc(pp);
-> -
-> -	ls_pcie_drop_msg_tlp(pcie);
-> -}
-> -
->  static int ls_pcie_link_up(struct dw_pcie *pci)
->  {
->  	struct ls_pcie *pcie = to_ls_pcie(pci);
-> @@ -160,6 +133,33 @@ static void ls_pcie_host_init(struct pcie_port *pp)
->  	dw_pcie_dbi_ro_wr_dis(pci);
->  
->  	ls_pcie_drop_msg_tlp(pcie);
-> +
-> +	dw_pcie_setup_rc(pp);
-> +}
-> +
-> +static void ls1021_pcie_host_init(struct pcie_port *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct ls_pcie *pcie = to_ls_pcie(pci);
-> +	struct device *dev = pci->dev;
-> +	u32 index[2];
-> +
-> +	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-> +						     "fsl,pcie-scfg");
-> +	if (IS_ERR(pcie->scfg)) {
-> +		dev_err(dev, "No syscfg phandle specified\n");
-> +		pcie->scfg = NULL;
-> +		return;
-> +	}
-> +
-> +	if (of_property_read_u32_array(dev->of_node,
-> +				       "fsl,pcie-scfg", index, 2)) {
-> +		pcie->scfg = NULL;
-> +		return;
-> +	}
-> +	pcie->index = index[1];
-> +
-> +	ls_pcie_host_init(pp);
+UEFI based systems incorporating a Synopsys Designware PCIe controller
+in RC mode will typically configure it before entering the OS. If this
+configuration is fully static and ECAM compliant, there is no need to
+expose particulars of the device to the OS, and we can simply describe
+it as "pci-host-ecam-generic".
 
-The changelog suggests that this is a simple refactoring that doesn't
-fix anything.
+However, the Synopsys IP may be synthesized in a way where a quirk is
+needed for config space accesses to the first bus. It makes little sense
+to instantiate yet another pcie-designware driver that contains all the
+low level setup code, but it is also not justified to add quirks handling
+to the generic ECAM driver.
 
-But because ls1021_pcie_host_init() now calls ls_pcie_host_init(), it
-now calls:
+So instead, create a variant of the generic ECAM driver that filters config
+space accesses directed at device #1 and up on the first bus.
 
-  dw_pcie_dbi_ro_wr_en(pci);
-  ls_pcie_fix_class(pcie);
-  ls_pcie_clear_multifunction(pcie);
-  dw_pcie_dbi_ro_wr_dis(pci);
+v3: - use SoC specific compatible strings
+    - drop MSI patch [for now], since it turns out we may not need it
 
-when it did not call them before.
+v2: - use dev->fwnode directly
+    - replace an instance of pr_err with dev_err, and clarify the error message
+    - fix Kconfig/Makefile dependency errors reported by kbuild
 
-It's fine with me if you want to do that, but it should be mentioned
-in the changelog.
+Cc: Leif Lindholm <leif.lindholm@linaro.org>
+Cc: Graeme Gregory <graeme.gregory@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Rob Herring <robh@kernel.org>
 
->  }
->  
->  static int ls_pcie_msi_host_init(struct pcie_port *pp,
-> -- 
-> 2.1.0.27.g96db324
-> 
+Ard Biesheuvel (2):
+  pci: designware: add driver for DWC controller in ECAM shift mode
+  dt-bindings: designware: add binding for Designware PCIe in ECAM mode
+
+ Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 42 +++++++++++
+ drivers/pci/dwc/Kconfig                                        | 11 +++
+ drivers/pci/dwc/Makefile                                       |  1 +
+ drivers/pci/dwc/pcie-designware-ecam.c                         | 77 ++++++++++++++++++++
+ 4 files changed, 131 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+ create mode 100644 drivers/pci/dwc/pcie-designware-ecam.c
+
+-- 
+2.11.0
