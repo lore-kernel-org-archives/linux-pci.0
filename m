@@ -1,99 +1,121 @@
-Return-Path: <SRS0=CN2C=7D=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=CN2C=7D=arm.com=robin.murphy@kernel.org>
-From: Robin Murphy <robin.murphy@arm.com>
-To: helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	marc.zyngier@arm.com,
-	david.daney@cavium.com,
-	alex.williamson@redhat.com
-Subject: [PATCH v2] PCI/MSI: Improve MSI alias detection
-Date: Tue,  1 Aug 2017 18:59:08 +0100
-Message-Id: <63f5b8eef3c6d903bf97ca7fea0daa2e832be02f.1501610322.git.robin.murphy@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0066.outbound.protection.outlook.com ([104.47.38.66]:20431
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751234AbdH1LKS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Aug 2017 07:10:18 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv5 4/9] PCI: layerscape: move ls1021 specific host_init behind the common one
+Date: Mon, 28 Aug 2017 18:52:56 +0800
+Message-ID: <20170828105301.8511-5-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
+References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, we handle all DMA aliases equally when calculating MSI
-requester IDs for the generic infrastructure. This turns out to be the
-wrong thing to do in the face of pure DMA quirks like those of Marvell
-SATA cards, where in the usual case the last thing seen in the alias
-walk is the DMA phantom function: we end up configuring the MSI
-doorbell to expect that alias, then find we have no interrupts since
-the MSI writes still come from the 'real' RID, thus get filtered out
-and ignored.
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Improve the alias walk to only account for the topological aliases that
-matter, based on the logic from the Intel IRQ remapping code.
+To prepare for calling the common host_init in ls1021 spceific
+host_init, moves ls1021 specific host_init behind the common
+host_init function.
 
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Acked-by: Roy Zang <tie-fei.zang@freescale.com>
 ---
+V5:
+ - New patch, split from 4/9 patch v4
 
-v2: Properly document the rationale.
+ drivers/pci/dwc/pci-layerscape.c | 64 ++++++++++++++++++++--------------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
 
- drivers/pci/msi.c | 27 ++++++++++++++++++++++-----
- 1 file changed, 22 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 253d92409bb3..2f0dd02d78b7 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1458,13 +1458,30 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 3aa34214643c..160035efa4d9 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -108,6 +108,38 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ 	return 1;
  }
- EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
  
-+/*
-+ * Users of the generic MSI infrastructure expect a device to have a single ID,
-+ * so with DMA aliases we have to pick the least-worst compromise. Devices with
-+ * DMA phantom functions tend to still emit MSIs from the real function number,
-+ * so we ignore those and only consider topological aliases where either the
-+ * alias device or RID appears on a different bus number. We also make the
-+ * reasonable assumption that bridges are walked in an upstream direction (so
-+ * the last one seen wins), and the much braver assumption that the most likely
-+ * case is that of PCI->PCIe so we should always use the alias RID. This echoes
-+ * the logic from intel_irq_remapping's set_msi_sid(), which presumably works
-+ * well enough in practice; in the face of the horrible PCIe<->PCI-X conditions
-+ * for taking ownership all we can really do is close our eyes and hope...
-+ */
- static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	u32 *pa = data;
-+	u8 bus = PCI_BUS_NUM(*pa);
++static int ls_pcie_link_up(struct dw_pcie *pci)
++{
++	struct ls_pcie *pcie = to_ls_pcie(pci);
++	u32 state;
 +
-+	if (pdev->bus->number != bus || PCI_BUS_NUM(alias) != bus)
-+		*pa = alias;
- 
--	*pa = alias;
++	state = (ioread32(pcie->lut + pcie->drvdata->lut_dbg) >>
++		 pcie->drvdata->ltssm_shift) &
++		 LTSSM_STATE_MASK;
++
++	if (state < LTSSM_PCIE_L0)
++		return 0;
++
++	return 1;
++}
++
++static int ls_pcie_host_init(struct pcie_port *pp)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct ls_pcie *pcie = to_ls_pcie(pci);
++
++	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
++	ls_pcie_fix_class(pcie);
++	ls_pcie_clear_multifunction(pcie);
++	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
++
++	ls_pcie_drop_msg_tlp(pcie);
++
++	dw_pcie_setup_rc(pp);
++
++	return 0;
++}
++
+ static int ls1021_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -144,38 +176,6 @@ static int ls1021_pcie_host_init(struct pcie_port *pp)
  	return 0;
  }
-+
- /**
-  * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
-  * @domain:	The interrupt domain
-@@ -1478,7 +1495,7 @@ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
- u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+ 
+-static int ls_pcie_link_up(struct dw_pcie *pci)
+-{
+-	struct ls_pcie *pcie = to_ls_pcie(pci);
+-	u32 state;
+-
+-	state = (ioread32(pcie->lut + pcie->drvdata->lut_dbg) >>
+-		 pcie->drvdata->ltssm_shift) &
+-		 LTSSM_STATE_MASK;
+-
+-	if (state < LTSSM_PCIE_L0)
+-		return 0;
+-
+-	return 1;
+-}
+-
+-static int ls_pcie_host_init(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct ls_pcie *pcie = to_ls_pcie(pci);
+-
+-	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+-	ls_pcie_fix_class(pcie);
+-	ls_pcie_clear_multifunction(pcie);
+-	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+-
+-	ls_pcie_drop_msg_tlp(pcie);
+-
+-	dw_pcie_setup_rc(pp);
+-
+-	return 0;
+-}
+-
+ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+ 				 struct msi_controller *chip)
  {
- 	struct device_node *of_node;
--	u32 rid = 0;
-+	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
- 
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
- 
-@@ -1494,14 +1511,14 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
-  * @pdev:	The PCI device
-  *
-  * Use the firmware data to find a device-specific MSI domain
-- * (i.e. not one that is ste as a default).
-+ * (i.e. not one that is set as a default).
-  *
-- * Returns: The coresponding MSI domain or NULL if none has been found.
-+ * Returns: The corresponding MSI domain or NULL if none has been found.
-  */
- struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
- {
- 	struct irq_domain *dom;
--	u32 rid = 0;
-+	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
- 
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
- 	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
 -- 
-2.12.2.dirty
+2.14.1
