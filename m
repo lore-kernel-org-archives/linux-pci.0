@@ -1,411 +1,90 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-Subject: [PATCH v2 01/10] ARM: dts: dra72x: Create a common file with MMC/SD
- IOdelay data
-Date: Wed, 16 Aug 2017 19:14:59 +0530
-Message-ID: <20170816134508.8887-2-kishon@ti.com>
-In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
-References: <20170816134508.8887-1-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, kishon@ti.com, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:51771 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751859AbdH1OXN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Aug 2017 10:23:13 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Tim Harvey <tharvey@gateworks.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Shawn Guo <shawnguo@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH 2/3] PCI: imx6: allow MSI irq to be absent
+Date: Mon, 28 Aug 2017 16:23:06 +0200
+Message-Id: <20170828142307.30061-3-l.stach@pengutronix.de>
+In-Reply-To: <20170828142307.30061-1-l.stach@pengutronix.de>
+References: <20170828142307.30061-1-l.stach@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sekhar Nori <nsekhar@ti.com>
+The host can fall back to PCIe legacy IRQ only operation if the MSI irq is
+missing, thus allowing systems to work with peripherals that don't support
+MSI irqs.
 
-Add pinmux configuration for MMC module including IODELAY
-values suggested in the data manual for the various supported
-modes.
-
-IOdelay data for both silicon revision 1.0 and 2.0 is
-added here.
-
-The datamanual revisions used are:
- * AM571x Silicon Revision 2.0: SPRS957D, Revised January 2017
- * AM571x Silicon Revision 1.0: SPRS919M, Revised November 2017
- * DRA71x : SPRS960B, Revised February 2017
-
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- arch/arm/boot/dts/dra72x-mmc-iodelay.dtsi | 350 ++++++++++++++++++++++++++++++
- 1 file changed, 350 insertions(+)
- create mode 100644 arch/arm/boot/dts/dra72x-mmc-iodelay.dtsi
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 ++++----
+ drivers/pci/dwc/pci-imx6.c                         | 23 +++++++++++-----------
+ 2 files changed, 15 insertions(+), 16 deletions(-)
 
-diff --git a/arch/arm/boot/dts/dra72x-mmc-iodelay.dtsi b/arch/arm/boot/dts/dra72x-mmc-iodelay.dtsi
-new file mode 100644
-index 000000000000..088013c6dc6e
---- /dev/null
-+++ b/arch/arm/boot/dts/dra72x-mmc-iodelay.dtsi
-@@ -0,0 +1,350 @@
-+/*
-+ * MMC IOdelay values for TI's DRA72x, DRA71x and AM571x SoCs.
-+ *
-+ * Copyright (C) 2017 Texas Instruments Incorporated - http://www.ti.com/
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation version 2.
-+ *
-+ * This program is distributed "as is" WITHOUT ANY WARRANTY of any
-+ * kind, whether express or implied; without even the implied warranty
-+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+/*
-+ * Rules for modifying this file:
-+ * a) Update of this file should typically correspond to a datamanual revision.
-+ *    Datamanual revision that was used should be updated in comment below.
-+ *    If there is no update to datamanual, do not update the values. If you
-+ *    need to use values different from that recommended by the datamanual
-+ *    for your design, then you should consider adding values to the device-
-+ *    -tree file for your board directly.
-+ * b) We keep the mode names as close to the datamanual as possible. So
-+ *    if the manual calls a mode, DDR50, or DDR or DDR 1.8v or DDR 3.3v,
-+ *    we follow that in code too.
-+ * c) If the values change between multiple revisions of silicon, we add
-+ *    a revision tag to both the new and old entry. Use 'rev10' for PG 1.0,
-+ *    'rev20' for PG 2.0 and so on.
-+ * d) The node name and node label should be the exact same string. This is
-+ *    to curb naming creativity and achieve consistency.
-+ * e) If in future, DRA71x and DRA72x values differ, then add 'dra71_' and
-+ *    'dra72_' tag to entries. Both the new and old entries should gain a tag.
-+ *
-+ * Datamanual Revisions:
-+ *
-+ * AM571x Silicon Revision 2.0: SPRS957D, Revised January 2017
-+ * AM571x Silicon Revision 1.0: SPRS919M, Revised November 2017
-+ * DRA71x : SPRS960B, Revised February 2017
-+ */
-+
-+&dra7_pmx_core {
-+	mmc1_pins_default: mmc1_pins_default {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x3754, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_clk.clk */
-+			DRA7XX_CORE_IOPAD(0x3758, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_cmd.cmd */
-+			DRA7XX_CORE_IOPAD(0x375c, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_dat0.dat0 */
-+			DRA7XX_CORE_IOPAD(0x3760, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_dat1.dat1 */
-+			DRA7XX_CORE_IOPAD(0x3764, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_dat2.dat2 */
-+			DRA7XX_CORE_IOPAD(0x3768, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_dat3.dat3 */
-+		>;
-+	};
-+
-+	mmc1_pins_sdr12: mmc1_pins_sdr12 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x3754, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_clk.clk */
-+			DRA7XX_CORE_IOPAD(0x3758, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_cmd.cmd */
-+			DRA7XX_CORE_IOPAD(0x375c, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_dat0.dat0 */
-+			DRA7XX_CORE_IOPAD(0x3760, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_dat1.dat1 */
-+			DRA7XX_CORE_IOPAD(0x3764, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_dat2.dat2 */
-+			DRA7XX_CORE_IOPAD(0x3768, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_dat3.dat3 */
-+		>;
-+	};
-+
-+	mmc1_pins_hs: mmc1_pins_hs {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x3754, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_clk.clk */
-+			DRA7XX_CORE_IOPAD(0x3758, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_cmd.cmd */
-+			DRA7XX_CORE_IOPAD(0x375c, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_dat0.dat0 */
-+			DRA7XX_CORE_IOPAD(0x3760, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_dat1.dat1 */
-+			DRA7XX_CORE_IOPAD(0x3764, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_dat2.dat2 */
-+			DRA7XX_CORE_IOPAD(0x3768, PIN_INPUT_PULLUP | MUX_MODE0) /* mmc1_dat3.dat3 */
-+		>;
-+	};
-+
-+	mmc1_pins_sdr25: mmc1_pins_sdr25 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x3754, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_clk.clk */
-+			DRA7XX_CORE_IOPAD(0x3758, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_cmd.cmd */
-+			DRA7XX_CORE_IOPAD(0x375c, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_dat0.dat0 */
-+			DRA7XX_CORE_IOPAD(0x3760, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_dat1.dat1 */
-+			DRA7XX_CORE_IOPAD(0x3764, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_dat2.dat2 */
-+			DRA7XX_CORE_IOPAD(0x3768, PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc1_dat3.dat3 */
-+		>;
-+	};
-+
-+	mmc1_pins_sdr50: mmc1_pins_sdr50 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x3754, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE15 | MUX_MODE0)	/* mmc1_clk.clk */
-+			DRA7XX_CORE_IOPAD(0x3758, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE15 | MUX_MODE0)	/* mmc1_cmd.cmd */
-+			DRA7XX_CORE_IOPAD(0x375c, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE15 | MUX_MODE0)	/* mmc1_dat0.dat0 */
-+			DRA7XX_CORE_IOPAD(0x3760, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE15 | MUX_MODE0)	/* mmc1_dat1.dat1 */
-+			DRA7XX_CORE_IOPAD(0x3764, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE15 | MUX_MODE0)	/* mmc1_dat2.dat2 */
-+			DRA7XX_CORE_IOPAD(0x3768, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE15 | MUX_MODE0)	/* mmc1_dat3.dat3 */
-+		>;
-+	};
-+
-+	mmc1_pins_ddr50_rev10: mmc1_pins_ddr50_rev10 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x3754, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE14 | MUX_MODE0)	/* mmc1_clk.mmc1_clk */
-+			DRA7XX_CORE_IOPAD(0x3758, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE14 | MUX_MODE0)	/* mmc1_cmd.mmc1_cmd */
-+			DRA7XX_CORE_IOPAD(0x375C, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE14 | MUX_MODE0)	/* mmc1_dat0.mmc1_dat0 */
-+			DRA7XX_CORE_IOPAD(0x3760, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE14 | MUX_MODE0)	/* mmc1_dat1.mmc1_dat1 */
-+			DRA7XX_CORE_IOPAD(0x3764, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE14 | MUX_MODE0)	/* mmc1_dat2.mmc1_dat2 */
-+			DRA7XX_CORE_IOPAD(0x3768, PIN_INPUT_PULLUP | MUX_VIRTUAL_MODE14 | MUX_MODE0)	/* mmc1_dat3.mmc1_dat3 */
-+		>;
-+	};
-+
-+	mmc1_pins_ddr50_rev20: mmc1_pins_ddr50_rev20 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x3754, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_clk.clk */
-+			DRA7XX_CORE_IOPAD(0x3758, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_cmd.cmd */
-+			DRA7XX_CORE_IOPAD(0x375c, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_dat0.dat0 */
-+			DRA7XX_CORE_IOPAD(0x3760, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_dat1.dat1 */
-+			DRA7XX_CORE_IOPAD(0x3764, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_dat2.dat2 */
-+			DRA7XX_CORE_IOPAD(0x3768, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_dat3.dat3 */
-+		>;
-+	};
-+
-+	mmc1_pins_sdr104: mmc1_pins_sdr104 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x3754, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_clk.clk */
-+			DRA7XX_CORE_IOPAD(0x3758, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_cmd.cmd */
-+			DRA7XX_CORE_IOPAD(0x375c, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_dat0.dat0 */
-+			DRA7XX_CORE_IOPAD(0x3760, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_dat1.dat1 */
-+			DRA7XX_CORE_IOPAD(0x3764, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_dat2.dat2 */
-+			DRA7XX_CORE_IOPAD(0x3768, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE0)	/* mmc1_dat3.dat3 */
-+		>;
-+	};
-+
-+	mmc2_pins_default: mmc2_pins_default {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x349c, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a23.mmc2_clk */
-+			DRA7XX_CORE_IOPAD(0x34b0, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_cs1.mmc2_cmd */
-+			DRA7XX_CORE_IOPAD(0x34a0, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a24.mmc2_dat0 */
-+			DRA7XX_CORE_IOPAD(0x34a4, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a25.mmc2_dat1 */
-+			DRA7XX_CORE_IOPAD(0x34a8, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a26.mmc2_dat2 */
-+			DRA7XX_CORE_IOPAD(0x34ac, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a27.mmc2_dat3 */
-+			DRA7XX_CORE_IOPAD(0x348c, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a19.mmc2_dat4 */
-+			DRA7XX_CORE_IOPAD(0x3490, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a20.mmc2_dat5 */
-+			DRA7XX_CORE_IOPAD(0x3494, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a21.mmc2_dat6 */
-+			DRA7XX_CORE_IOPAD(0x3498, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a22.mmc2_dat7 */
-+		>;
-+	};
-+
-+	mmc2_pins_hs: mmc2_pins_hs {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x349c, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a23.mmc2_clk */
-+			DRA7XX_CORE_IOPAD(0x34b0, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_cs1.mmc2_cmd */
-+			DRA7XX_CORE_IOPAD(0x34a0, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a24.mmc2_dat0 */
-+			DRA7XX_CORE_IOPAD(0x34a4, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a25.mmc2_dat1 */
-+			DRA7XX_CORE_IOPAD(0x34a8, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a26.mmc2_dat2 */
-+			DRA7XX_CORE_IOPAD(0x34ac, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a27.mmc2_dat3 */
-+			DRA7XX_CORE_IOPAD(0x348c, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a19.mmc2_dat4 */
-+			DRA7XX_CORE_IOPAD(0x3490, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a20.mmc2_dat5 */
-+			DRA7XX_CORE_IOPAD(0x3494, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a21.mmc2_dat6 */
-+			DRA7XX_CORE_IOPAD(0x3498, PIN_INPUT_PULLUP | MUX_MODE1) /* gpmc_a22.mmc2_dat7 */
-+		>;
-+	};
-+
-+	mmc2_pins_ddr_rev10: mmc2_pins_ddr_rev10 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x348c, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a19.mmc2_dat4 */
-+			DRA7XX_CORE_IOPAD(0x3490, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a20.mmc2_dat5 */
-+			DRA7XX_CORE_IOPAD(0x3494, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a21.mmc2_dat6 */
-+			DRA7XX_CORE_IOPAD(0x3498, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a22.mmc2_dat7 */
-+			DRA7XX_CORE_IOPAD(0x349c, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a23.mmc2_clk */
-+			DRA7XX_CORE_IOPAD(0x34a0, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a24.mmc2_dat0 */
-+			DRA7XX_CORE_IOPAD(0x34a4, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a25.mmc2_dat1 */
-+			DRA7XX_CORE_IOPAD(0x34a8, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a26.mmc2_dat2 */
-+			DRA7XX_CORE_IOPAD(0x34ac, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_a27.mmc2_dat3 */
-+			DRA7XX_CORE_IOPAD(0x34b0, PIN_INPUT_PULLUP | MUX_MODE1)	/* gpmc_cs1.mmc2_cmd */
-+		>;
-+	};
-+
-+	mmc2_pins_ddr_rev20: mmc2_pins_ddr_rev20 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x349c, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a23.mmc2_clk */
-+			DRA7XX_CORE_IOPAD(0x34b0, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_cs1.mmc2_cmd */
-+			DRA7XX_CORE_IOPAD(0x34a0, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a24.mmc2_dat0 */
-+			DRA7XX_CORE_IOPAD(0x34a4, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a25.mmc2_dat1 */
-+			DRA7XX_CORE_IOPAD(0x34a8, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a26.mmc2_dat2 */
-+			DRA7XX_CORE_IOPAD(0x34ac, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a27.mmc2_dat3 */
-+			DRA7XX_CORE_IOPAD(0x348c, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a19.mmc2_dat4 */
-+			DRA7XX_CORE_IOPAD(0x3490, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a20.mmc2_dat5 */
-+			DRA7XX_CORE_IOPAD(0x3494, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a21.mmc2_dat6 */
-+			DRA7XX_CORE_IOPAD(0x3498, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a22.mmc2_dat7 */
-+		>;
-+	};
-+
-+	mmc2_pins_hs200: mmc2_pins_hs200 {
-+		pinctrl-single,pins = <
-+			DRA7XX_CORE_IOPAD(0x349c, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a23.mmc2_clk */
-+			DRA7XX_CORE_IOPAD(0x34b0, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_cs1.mmc2_cmd */
-+			DRA7XX_CORE_IOPAD(0x34a0, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a24.mmc2_dat0 */
-+			DRA7XX_CORE_IOPAD(0x34a4, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a25.mmc2_dat1 */
-+			DRA7XX_CORE_IOPAD(0x34a8, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a26.mmc2_dat2 */
-+			DRA7XX_CORE_IOPAD(0x34ac, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a27.mmc2_dat3 */
-+			DRA7XX_CORE_IOPAD(0x348c, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a19.mmc2_dat4 */
-+			DRA7XX_CORE_IOPAD(0x3490, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a20.mmc2_dat5 */
-+			DRA7XX_CORE_IOPAD(0x3494, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a21.mmc2_dat6 */
-+			DRA7XX_CORE_IOPAD(0x3498, PIN_INPUT_PULLUP | MODE_SELECT | MUX_MODE1) /* gpmc_a22.mmc2_dat7 */
-+		>;
-+	};
-+};
-+
-+&dra7_iodelay_core {
-+
-+	/* Corresponds to MMC1_MANUAL1 in datamanual */
-+	mmc1_iodelay_ddr50_conf: mmc1_iodelay_ddr50_conf {
-+		pinctrl-pin-array = <
-+			0x618 A_DELAY_PS(588) G_DELAY_PS(0)	/* CFG_MMC1_CLK_IN */
-+			0x624 A_DELAY_PS(1000) G_DELAY_PS(0)	/* CFG_MMC1_CMD_IN */
-+			0x630 A_DELAY_PS(1375) G_DELAY_PS(0)	/* CFG_MMC1_DAT0_IN */
-+			0x63C A_DELAY_PS(1000) G_DELAY_PS(0)	/* CFG_MMC1_DAT1_IN */
-+			0x648 A_DELAY_PS(1000) G_DELAY_PS(0)	/* CFG_MMC1_DAT2_IN */
-+			0x654 A_DELAY_PS(1000) G_DELAY_PS(0)	/* CFG_MMC1_DAT3_IN */
-+			0x620 A_DELAY_PS(1230) G_DELAY_PS(0)	/* CFG_MMC1_CLK_OUT */
-+			0x62C A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_CMD_OUT */
-+			0x638 A_DELAY_PS(56) G_DELAY_PS(0)	/* CFG_MMC1_DAT0_OUT */
-+			0x644 A_DELAY_PS(76) G_DELAY_PS(0)	/* CFG_MMC1_DAT1_OUT */
-+			0x650 A_DELAY_PS(91) G_DELAY_PS(0)	/* CFG_MMC1_DAT2_OUT */
-+			0x65C A_DELAY_PS(99) G_DELAY_PS(0)	/* CFG_MMC1_DAT3_OUT */
-+			0x628 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_CMD_OEN */
-+			0x634 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_DAT0_OEN */
-+			0x640 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_DAT1_OEN */
-+			0x64C A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_DAT2_OEN */
-+			0x658 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_DAT3_OEN */
-+		>;
-+	};
-+
-+	/* Corresponds to MMC1_MANUAL2 in datamanual */
-+	mmc1_iodelay_sdr104_rev10_conf: mmc1_iodelay_sdr104_rev10_conf {
-+		pinctrl-pin-array = <
-+			0x620 A_DELAY_PS(560) G_DELAY_PS(365)	/* CFG_MMC1_CLK_OUT */
-+			0x62c A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_CMD_OUT */
-+			0x638 A_DELAY_PS(29) G_DELAY_PS(0)	/* CFG_MMC1_DAT0_OUT */
-+			0x644 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_DAT1_OUT */
-+			0x650 A_DELAY_PS(47) G_DELAY_PS(0)	/* CFG_MMC1_DAT2_OUT */
-+			0x65c A_DELAY_PS(30) G_DELAY_PS(0)	/* CFG_MMC1_DAT3_OUT */
-+			0x628 A_DELAY_PS(125) G_DELAY_PS(0)	/* CFG_MMC1_CMD_OEN */
-+			0x634 A_DELAY_PS(43) G_DELAY_PS(0)	/* CFG_MMC1_DAT0_OEN */
-+			0x640 A_DELAY_PS(433) G_DELAY_PS(0)	/* CFG_MMC1_DAT1_OEN */
-+			0x64c A_DELAY_PS(287) G_DELAY_PS(0)	/* CFG_MMC1_DAT2_OEN */
-+			0x658 A_DELAY_PS(351) G_DELAY_PS(0)	/* CFG_MMC1_DAT3_OEN */
-+		>;
-+	};
-+
-+	/* Corresponds to MMC1_MANUAL2 in datamanual */
-+	mmc1_iodelay_sdr104_rev20_conf: mmc1_iodelay_sdr104_rev20_conf {
-+		pinctrl-pin-array = <
-+			0x620 A_DELAY_PS(520) G_DELAY_PS(320)	/* CFG_MMC1_CLK_OUT */
-+			0x62c A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_CMD_OUT */
-+			0x638 A_DELAY_PS(40) G_DELAY_PS(0)	/* CFG_MMC1_DAT0_OUT */
-+			0x644 A_DELAY_PS(83) G_DELAY_PS(0)	/* CFG_MMC1_DAT1_OUT */
-+			0x650 A_DELAY_PS(98) G_DELAY_PS(0)	/* CFG_MMC1_DAT2_OUT */
-+			0x65c A_DELAY_PS(106) G_DELAY_PS(0)	/* CFG_MMC1_DAT3_OUT */
-+			0x628 A_DELAY_PS(51) G_DELAY_PS(0)	/* CFG_MMC1_CMD_OEN */
-+			0x634 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_MMC1_DAT0_OEN */
-+			0x640 A_DELAY_PS(363) G_DELAY_PS(0)	/* CFG_MMC1_DAT1_OEN */
-+			0x64c A_DELAY_PS(199) G_DELAY_PS(0)	/* CFG_MMC1_DAT2_OEN */
-+			0x658 A_DELAY_PS(273) G_DELAY_PS(0)	/* CFG_MMC1_DAT3_OEN */
-+		>;
-+	};
-+
-+	/* Corresponds to MMC2_MANUAL1 in datamanual */
-+	mmc2_iodelay_ddr_conf: mmc2_iodelay_ddr_conf {
-+		pinctrl-pin-array = <
-+			0x18c A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A19_IN */
-+			0x1a4 A_DELAY_PS(119) G_DELAY_PS(0)	/* CFG_GPMC_A20_IN */
-+			0x1b0 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A21_IN */
-+			0x1bc A_DELAY_PS(18) G_DELAY_PS(0)	/* CFG_GPMC_A22_IN */
-+			0x1c8 A_DELAY_PS(894) G_DELAY_PS(0)	/* CFG_GPMC_A23_IN */
-+			0x1d4 A_DELAY_PS(30) G_DELAY_PS(0)	/* CFG_GPMC_A24_IN */
-+			0x1e0 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A25_IN */
-+			0x1ec A_DELAY_PS(23) G_DELAY_PS(0)	/* CFG_GPMC_A26_IN */
-+			0x1f8 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A27_IN */
-+			0x360 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_CS1_IN */
-+			0x194 A_DELAY_PS(152) G_DELAY_PS(0)	/* CFG_GPMC_A19_OUT */
-+			0x1ac A_DELAY_PS(206) G_DELAY_PS(0)	/* CFG_GPMC_A20_OUT */
-+			0x1b8 A_DELAY_PS(78) G_DELAY_PS(0)	/* CFG_GPMC_A21_OUT */
-+			0x1c4 A_DELAY_PS(2) G_DELAY_PS(0)	/* CFG_GPMC_A22_OUT */
-+			0x1d0 A_DELAY_PS(266) G_DELAY_PS(0)	/* CFG_GPMC_A23_OUT */
-+			0x1dc A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A24_OUT */
-+			0x1e8 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A25_OUT */
-+			0x1f4 A_DELAY_PS(43) G_DELAY_PS(0)	/* CFG_GPMC_A26_OUT */
-+			0x200 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A27_OUT */
-+			0x368 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_CS1_OUT */
-+			0x190 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A19_OEN */
-+			0x1a8 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A20_OEN */
-+			0x1b4 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A21_OEN */
-+			0x1c0 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A22_OEN */
-+			0x1d8 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A24_OEN */
-+			0x1e4 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A25_OEN */
-+			0x1f0 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A26_OEN */
-+			0x1fc A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A27_OEN */
-+			0x364 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_CS1_OEN */
-+		>;
-+	};
-+
-+	/* Corresponds to MMC2_MANUAL3 in datamanual */
-+	mmc2_iodelay_hs200_rev10_conf: mmc2_iodelay_hs200_rev10_conf {
-+		pinctrl-pin-array = <
-+			0x194 A_DELAY_PS(150) G_DELAY_PS(95)	/* CFG_GPMC_A19_OUT */
-+			0x1ac A_DELAY_PS(250) G_DELAY_PS(0)	/* CFG_GPMC_A20_OUT */
-+			0x1b8 A_DELAY_PS(125) G_DELAY_PS(0)	/* CFG_GPMC_A21_OUT */
-+			0x1c4 A_DELAY_PS(100) G_DELAY_PS(0)	/* CFG_GPMC_A22_OUT */
-+			0x1d0 A_DELAY_PS(870) G_DELAY_PS(415)	/* CFG_GPMC_A23_OUT */
-+			0x1dc A_DELAY_PS(30) G_DELAY_PS(0)	/* CFG_GPMC_A24_OUT */
-+			0x1e8 A_DELAY_PS(200) G_DELAY_PS(0)	/* CFG_GPMC_A25_OUT */
-+			0x1f4 A_DELAY_PS(200) G_DELAY_PS(0)	/* CFG_GPMC_A26_OUT */
-+			0x200 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A27_OUT */
-+			0x368 A_DELAY_PS(240) G_DELAY_PS(0)	/* CFG_GPMC_CS1_OUT */
-+			0x190 A_DELAY_PS(695) G_DELAY_PS(0)	/* CFG_GPMC_A19_OEN */
-+			0x1a8 A_DELAY_PS(924) G_DELAY_PS(0)	/* CFG_GPMC_A20_OEN */
-+			0x1b4 A_DELAY_PS(719) G_DELAY_PS(0)	/* CFG_GPMC_A21_OEN */
-+			0x1c0 A_DELAY_PS(824) G_DELAY_PS(0)	/* CFG_GPMC_A22_OEN */
-+			0x1d8 A_DELAY_PS(877) G_DELAY_PS(0)	/* CFG_GPMC_A24_OEN */
-+			0x1e4 A_DELAY_PS(446) G_DELAY_PS(0)	/* CFG_GPMC_A25_OEN */
-+			0x1f0 A_DELAY_PS(847) G_DELAY_PS(0)	/* CFG_GPMC_A26_OEN */
-+			0x1fc A_DELAY_PS(586) G_DELAY_PS(0)	/* CFG_GPMC_A27_OEN */
-+			0x364 A_DELAY_PS(1039) G_DELAY_PS(0)	/* CFG_GPMC_CS1_OEN */
-+		>;
-+	};
-+
-+	/* Corresponds to MMC2_MANUAL3 in datamanual */
-+	mmc2_iodelay_hs200_rev20_conf: mmc2_iodelay_hs200_rev20_conf {
-+		pinctrl-pin-array = <
-+			0x194 A_DELAY_PS(285) G_DELAY_PS(0)	/* CFG_GPMC_A19_OUT */
-+			0x1ac A_DELAY_PS(189) G_DELAY_PS(0)	/* CFG_GPMC_A20_OUT */
-+			0x1b8 A_DELAY_PS(0) G_DELAY_PS(120)	/* CFG_GPMC_A21_OUT */
-+			0x1c4 A_DELAY_PS(0) G_DELAY_PS(70)	/* CFG_GPMC_A22_OUT */
-+			0x1d0 A_DELAY_PS(730) G_DELAY_PS(360)	/* CFG_GPMC_A23_OUT */
-+			0x1dc A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A24_OUT */
-+			0x1e8 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A25_OUT */
-+			0x1f4 A_DELAY_PS(70) G_DELAY_PS(0)	/* CFG_GPMC_A26_OUT */
-+			0x200 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A27_OUT */
-+			0x368 A_DELAY_PS(0) G_DELAY_PS(120)	/* CFG_GPMC_CS1_OUT */
-+			0x190 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A19_OEN */
-+			0x1a8 A_DELAY_PS(231) G_DELAY_PS(0)	/* CFG_GPMC_A20_OEN */
-+			0x1b4 A_DELAY_PS(39) G_DELAY_PS(0)	/* CFG_GPMC_A21_OEN */
-+			0x1c0 A_DELAY_PS(91) G_DELAY_PS(0)	/* CFG_GPMC_A22_OEN */
-+			0x1d8 A_DELAY_PS(176) G_DELAY_PS(0)	/* CFG_GPMC_A24_OEN */
-+			0x1e4 A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A25_OEN */
-+			0x1f0 A_DELAY_PS(101) G_DELAY_PS(0)	/* CFG_GPMC_A26_OEN */
-+			0x1fc A_DELAY_PS(0) G_DELAY_PS(0)	/* CFG_GPMC_A27_OEN */
-+			0x364 A_DELAY_PS(360) G_DELAY_PS(0)	/* CFG_GPMC_CS1_OEN */
-+		>;
-+	};
-+};
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index cf92d3ba5a26..d85db21503f4 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -10,14 +10,14 @@ Required properties:
+ 	- "fsl,imx6qp-pcie"
+ 	- "fsl,imx7d-pcie"
+ - reg: base address and length of the PCIe controller
+-- interrupts: A list of interrupt outputs of the controller. Must contain an
+-  entry for each entry in the interrupt-names property.
+-- interrupt-names: Must include the following entries:
+-	- "msi": The interrupt that is asserted when an MSI is received
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
+ 
+ Optional properties:
++- interrupts: A list of interrupt outputs of the controller. Must contain an
++  entry for each entry in the interrupt-names property.
++- interrupt-names: Must include the following entries:
++        - "msi": The interrupt that is asserted when an MSI is received
+ - fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
+ - fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
+ - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index bf5c3616e344..d2507272b3ab 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -671,18 +671,17 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+-		if (pp->msi_irq <= 0) {
+-			dev_err(dev, "failed to get MSI irq\n");
+-			return -ENODEV;
+-		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       imx6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "mx6-pcie-msi", imx6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
++		if (pp->msi_irq > 0) {
++			ret = devm_request_irq(dev, pp->msi_irq,
++					       imx6_pcie_msi_handler,
++					       IRQF_SHARED | IRQF_NO_THREAD,
++					       "mx6-pcie-msi", imx6_pcie);
++			if (ret) {
++				dev_err(dev, "failed to request MSI irq\n");
++				return ret;
++			}
++		} else {
++			dev_info(dev, "missing MSI irq, MSI support unavailable\n");
+ 		}
+ 	}
+ 
 -- 
 2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
