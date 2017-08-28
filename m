@@ -1,87 +1,88 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 30 Aug 2017 08:24:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: honghui.zhang@mediatek.com
-Subject: Re: [PATCH] PCI: mediatek: take use of PCI_NUM_INTX
-Message-ID: <20170830132439.GA15438@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <SRS0=8g+Z=76=mediatek.com=honghui.zhang@kernel.org>
+Return-Path: <SRS0=8g+Z=76=mediatek.com=honghui.zhang@kernel.org>
+Message-ID: <1503891233.10964.2.camel@mhfsdcap03>
+Subject: RE: [pci:pci/host-mediatek 11/11]
+ drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: "Li, Philip" <philip.li@intel.com>
+CC: "Wu, Fengguang" <fengguang.wu@intel.com>, Bjorn Helgaas
+	<helgaas@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>, "kbuild-all@01.org"
+	<kbuild-all@01.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, "youlin.pei@mediatek.com"
+	<youlin.pei@mediatek.com>, "xinping.qian@mediatek.com"
+	<xinping.qian@mediatek.com>
+Date: Mon, 28 Aug 2017 11:33:53 +0800
+In-Reply-To: <831EE4E5E37DCC428EB295A351E662494C80B571@shsmsx102.ccr.corp.intel.com>
+References: <201708232205.SymULNVt%fengguang.wu@intel.com>
+	 <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
+	 <1503544447.19072.7.camel@mhfsdcap03>
+	 <20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com>
+	 <1503622427.19072.11.camel@mhfsdcap03> <1503708987.2081.5.camel@mtkswgap22>
+	 <20170826115508.GE8154@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170826122823.v6eprqvee4dcgah4@wfg-t540p.sh.intel.com>
+	 <831EE4E5E37DCC428EB295A351E662494C80B571@shsmsx102.ccr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, yong.wu@mediatek.com, linux-kernel@vger.kernel.org,
- yt.shen@mediatek.com, matthias.bgg@gmail.com,
- linux-mediatek@lists.infradead.org, xinping.qian@mediatek.com,
- bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 09:19:14AM +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
-> 
-> Switch from using a custom NUM_INTX macro to the generic PCI_NUM_INTX
-> definition for the number of INTx interrupts.
-> 
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+On Sat, 2017-08-26 at 14:20 +0000, Li, Philip wrote:
+> > On Sat, Aug 26, 2017 at 06:55:08AM -0500, Bjorn Helgaas wrote:
+> > >On Sat, Aug 26, 2017 at 08:56:27AM +0800, Ryder Lee wrote:
+> > >> Hi,
+> > >>
+> > >> On Fri, 2017-08-25 at 08:53 +0800, Honghui Zhang wrote:
+> > >> > On Thu, 2017-08-24 at 08:44 -0500, Bjorn Helgaas wrote:
+> > >> > > On Thu, Aug 24, 2017 at 11:14:07AM +0800, mtk11102 wrote:
+> > >> > > > On Wed, 2017-08-23 at 17:52 -0500, Bjorn Helgaas wrote:
+> > >> > > > > On Wed, Aug 23, 2017 at 10:53:07PM +0800, kbuild test robot wrote:
+> > >>
+> > >> ....
+> > >> > > > I pull the your host-mediatek branch and seems the build error is still
+> > >> > > > there.
+> > >> > > > Should I send a new patch base on your pci/host-mediatek to fix the
+> > >> > > > build warnings, or should I wait for your push for build error and then
+> > >> > > > send the patch?
+> > >> > >
+> > >> > > Sorry, I must have forgotten to push it.  Should be there now:
+> > >> > > 9f3ec1e47377 ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
+> > >> > >
+> > >> > > Hopefully that has everything we need (I included your fix above).
+> > >> > >
+> > >> >
+> > >> > Thanks very much for your help.
+> > >> >
+> > >> > > Bjorn
+> > >> >
+> > >> >
+> > >>
+> > >> I just noticed that 9f3ec1e47377 could not be built pass.
+> > >>
+> > >> In function 'mtk_pcie_enable_msi':
+> > >>  error: 'return' with a value, in function returning void [-Werror]
+> > >>   return 0;
+> > >>
+> > >> In function 'mtk_pcie_init_irq_domain': error: unused variable
+> > >> 'err' [-Werror=unused-variable]
+> > >>   int err;
+> > >
+> > >Fixed in 0eb463c096c4 ("PCI: mediatek: Add MSI support for MT2712 and
+> > >MT7622").
+> > >
 
-I rebased pci/host-mediatek on top of pci/irq-intx (which adds
-PCI_NUM_INTX) and applied this for v4.14, thanks!
+Hi, Bjorn,
+   Seems you forget to remove the following define in 0eb463c096c4 :
 
-> ---
->  drivers/pci/host/pcie-mediatek.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> index c567996..5c0ce9b 100644
-> --- a/drivers/pci/host/pcie-mediatek.c
-> +++ b/drivers/pci/host/pcie-mediatek.c
-> @@ -77,7 +77,6 @@
->  #define PCIE_INT_MASK		0x420
->  #define INTX_MASK		GENMASK(19, 16)
->  #define INTX_SHIFT		16
-> -#define INTX_NUM		4
->  #define PCIE_INT_STATUS		0x424
->  #define MSI_STATUS		BIT(23)
->  #define PCIE_IMSI_STATUS	0x42c
-> @@ -576,7 +575,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
->  		return -ENODEV;
->  	}
->  
-> -	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
-> +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
->  						 &intx_domain_ops, port);
->  	if (!port->irq_domain) {
->  		dev_err(dev, "failed to get INTx IRQ domain\n");
-> @@ -594,7 +593,7 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
->  	u32 bit = INTX_SHIFT;
->  
->  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
-> -		for_each_set_bit_from(bit, &status, INTX_NUM + INTX_SHIFT) {
-> +		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
->  			/* Clear the INTx */
->  			writel(1 << bit, port->base + PCIE_INT_STATUS);
->  			virq = irq_find_mapping(port->irq_domain,
-> -- 
-> 2.6.4
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> >> In function 'mtk_pcie_init_irq_domain': error: unused variable
+> > >> 'err' [-Werror=unused-variable]
+> > >>   int err;
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+> > >I wonder why I didn't get a kbuild test report for this?
+> > 
+> > CC Philip. AFAIK 0day's master server went broken for several days..
+> hi Bjorn, we got server broken this week, and kbuild service is not running smoothly.
+> It starts to recover gradually and should be back to normal early next week.
+> 
+> > 
+> > Thanks,
+> > Fengguang
