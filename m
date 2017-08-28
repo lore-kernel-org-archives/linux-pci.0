@@ -1,56 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46506 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751062AbdHBWfu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 18:35:50 -0400
-Date: Wed, 2 Aug 2017 17:35:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Aleksandr Bezzubikov <zuban32s@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, marcel@redhat.com
-Subject: Re: [PATCH] pci: shpchp: set the bridge busmaster if MSI are enabled
-Message-ID: <20170802223547.GP20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1500387145-4216-1-git-send-email-zuban32s@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500387145-4216-1-git-send-email-zuban32s@gmail.com>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:36777 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751302AbdH1OXM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Aug 2017 10:23:12 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Tim Harvey <tharvey@gateworks.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Shawn Guo <shawnguo@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH 1/3] PCI: designware: only register MSI controller when MSI irq line is valid
+Date: Mon, 28 Aug 2017 16:23:05 +0200
+Message-Id: <20170828142307.30061-2-l.stach@pengutronix.de>
+In-Reply-To: <20170828142307.30061-1-l.stach@pengutronix.de>
+References: <20170828142307.30061-1-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 18, 2017 at 05:12:25PM +0300, Aleksandr Bezzubikov wrote:
-> An MSI-based SHPC built in PCI bridges can configure hotplugged devices
-> only if they notify the bridge with MSI.
+The MSI part of the controller isn't essential, so the host controller can
+be registered without the MSI controller being present. This allows the
+host to work in PCIe legancy interrupt only mode, if the IRQ line for the
+MSI controller is missing.
 
-I think you're referring to the events listed in SHPC r1.0, sec 4.7.3,
-table 4-24, right?  Attention Button Press, Isolated Power Fault, Card
-Presence Change, MRS Sensor Change, etc?
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-So IIUC, this is really about the bridge itself generating MSIs about
-slot-related events, not the hot-added devices generating MSIs.
-
-I agree this patch makes sense, I'm just trying to clarify the
-changelog.
-
-> But they can't trigger interrupt without the bridge being busmaster,
-> that's why it should be enabled.
-> 
-> Signed-off-by: Aleksandr Bezzubikov <zuban32s@gmail.com>
-> ---
->  drivers/pci/hotplug/shpchp_hpc.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
-> index de0ea47..e5824c7 100644
-> --- a/drivers/pci/hotplug/shpchp_hpc.c
-> +++ b/drivers/pci/hotplug/shpchp_hpc.c
-> @@ -1062,6 +1062,8 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
->  		if (rc) {
->  			ctrl_info(ctrl, "Can't get msi for the hotplug controller\n");
->  			ctrl_info(ctrl, "Use INTx for the hotplug controller\n");
-> +		} else {
-> +			pci_set_master(pdev);
->  		}
->  
->  		rc = request_irq(ctrl->pci_dev->irq, shpc_isr, IRQF_SHARED,
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index d29c020da082..8494089f088d 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -381,7 +381,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (ret)
+ 		pci->num_viewport = 2;
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++	if (IS_ENABLED(CONFIG_PCI_MSI) && pp->msi_irq > 0) {
+ 		if (!pp->ops->msi_host_init) {
+ 			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+ 						MAX_MSI_IRQS, &msi_domain_ops,
+@@ -412,7 +412,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	bridge->ops = &dw_pcie_ops;
+ 	bridge->map_irq = of_irq_parse_and_map_pci;
+ 	bridge->swizzle_irq = pci_common_swizzle;
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++	if (IS_ENABLED(CONFIG_PCI_MSI) && pp->msi_irq > 0) {
+ 		bridge->msi = &dw_pcie_msi_chip;
+ 		dw_pcie_msi_chip.dev = dev;
+ 	}
+-- 
+2.11.0
