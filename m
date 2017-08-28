@@ -1,178 +1,82 @@
-Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
-Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
-Date: Thu, 3 Aug 2017 02:13:36 -0700
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: Ding Tianhong <dingtianhong@huawei.com>
-Cc: leedom@chelsio.com, bhelgaas@google.com, helgaas@kernel.org,
-	werner@chelsio.com, ganeshgr@chelsio.com, asit.k.mallick@intel.com,
-	patrick.j.cramer@intel.com, Suravee.Suthikulpanit@amd.com,
-	Bob.Shaw@amd.com, l.stach@pengutronix.de, amira@mellanox.com,
-	gabriele.paoloni@huawei.com, David.Laight@aculab.com,
-	jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com,
-	will.deacon@arm.com, mark.rutland@arm.com, robin.murphy@arm.com,
-	davem@davemloft.net, alexander.duyck@gmail.com,
-	linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxarm@huawei.com, ashok.raj@intel.com
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-Message-ID: <20170803091336.GD4883@otc-nc-03>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <20170828142307.30061-1-l.stach@pengutronix.de>
+References: <20170828142307.30061-1-l.stach@pengutronix.de>
+From: Tim Harvey <tharvey@gateworks.com>
+Date: Mon, 28 Aug 2017 09:59:34 -0700
+Message-ID: <CAJ+vNU1GZMpptQ2oCE-cOzX+G=cj248bVGXhC_vSqD_4d7D7+Q@mail.gmail.com>
+Subject: Re: [PATCH 0/3] DWC host without MSI controller
+To: Lucas Stach <l.stach@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ patchwork-lst@pengutronix.de, Sascha Hauer <kernel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Shawn Guo <shawnguo@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ding
+On Mon, Aug 28, 2017 at 7:23 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Hi all,
+>
+> this small series tries to fix/workaround a serious design flaw of the DWC PCIe
+> host controller: it is unable to work with both legacy and MSI IRQs enabled at
+> the same time. As soon as the first MSI is enabled in the DWC MSI controller,
+> the host stops forwarding legacy IRQs.
+>
+> If the MSI controller is present, MSIs will be used for the PCIe port services
+> IRQs, leaving endpoint devices which don't support MSIs unable to raise IRQs.
+> It is only safe to enable the MSI controller if it is validated that all PCIe
+> devices and drivers in the system support working MSIs. As most devices
+> support falling back to using legacy PCIe IRQs if MSI support is missing it is
+> much safer to disable the MSI by default and only enable it on validated
+> systems.
+>
+> Feedback welcome.
+>
+> Regards,
+> Lucas
+>
+> Lucas Stach (3):
+>   PCI: designware: only register MSI controller when MSI irq line is
+>     valid
+>   PCI: imx6: allow MSI irq to be absent
+>   ARM: dts: imx6qdl: remove MSI irq line
+>
+>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 ++++----
+>  arch/arm/boot/dts/imx6qdl.dtsi                     |  2 --
+>  drivers/pci/dwc/pci-imx6.c                         | 23 +++++++++++-----------
+>  drivers/pci/dwc/pcie-designware-host.c             |  4 ++--
+>  4 files changed, 17 insertions(+), 20 deletions(-)
+>
 
-patch looks good, except would reword the patch description for clarity
+Lucas,
 
-here is my crack at it, feel free to use.
+Thank you for following up on this!
 
-On Thu, Jul 13, 2017 at 10:21:31PM +0800, Ding Tianhong wrote:
-> The PCIe Device Control Register use the bit 4 to indicate that
-> whether the device is permitted to enable relaxed ordering or not.
-> But relaxed ordering is not safe for some platform which could only
-> use strong write ordering, so devices are allowed (but not required)
-> to enable relaxed ordering bit by default.
-> 
-> If a PCIe device didn't enable the relaxed ordering attribute default,
-> we should not do anything in the PCIe configuration, otherwise we
-> should check if any of the devices above us do not support relaxed
-> ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
-> the result if we get a return that indicate that the relaxed ordering
-> is not supported we should update our device to disable relaxed ordering
-> in configuration space. If the device above us doesn't exist or isn't
-> the PCIe device, we shouldn't do anything and skip updating relaxed ordering
-> because we are probably running in a guest machine.
+I tested it with and without the third patch that removes msi from the
+dt thus with both an ath9k 802.11 device which only supports legacy
+interrupts and a Marvell sky2 device which supports msi as well as
+legacy interrupts and it works as expected:
+ - without msi enabled in dts (default): both sky2 and ath9k work
+ - with msi enabled in dt: sky2 works ath9k does not
 
-When bit4 is set in the PCIe Device Control register, it indicates
-whether the device is permitted to use relaxed ordering.
-On some platforms using relaxed ordering can have performance issues or
-due to erratum can cause data-corruption. In such cases devices must avoid
-using relaxed ordering.
+Tested-by: Tim Harvey <tharvey@gateworks.com>
 
-This patch checks if there is any node in the hierarchy that indicates that
-using relaxed ordering is not safe. In such cases the patch turns off the
-relaxed ordering by clearing the eapability for this device.
+Regards,
 
-> 
-> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> ---
->  drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
->  drivers/pci/probe.c | 37 +++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  2 ++
->  3 files changed, 68 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d88edf5..7a6b32f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4854,6 +4854,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
->  EXPORT_SYMBOL(pcie_set_mps);
->  
->  /**
-> + * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
-> + * @dev: PCI device to query
-> + *
-> + * If possible clear relaxed ordering
-> + */
-> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-> +					  PCI_EXP_DEVCTL_RELAX_EN);
-> +}
-> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
-> +
-> +/**
-> + * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
-> + * @dev: PCI device to query
-> + *
-> + * Returns true if the device support relaxed ordering attribute.
-> + */
-> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
-> +{
-> +	u16 v;
-> +
-> +	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
-> +
-> +	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
-> +}
-> +EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
-> +
-> +/**
->   * pcie_get_minimum_link - determine minimum link settings of a PCI device
->   * @dev: PCI device to query
->   * @speed: storage for minimum speed
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c31310d..48df012 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1762,6 +1762,42 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
->  					 PCI_EXP_DEVCTL_EXT_TAG);
->  }
->  
-> +/**
-> + * pci_dev_should_disable_relaxed_ordering - check if the PCI device
-> + * should disable the relaxed ordering attribute.
-> + * @dev: PCI device
-> + *
-> + * Return true if any of the PCI devices above us do not support
-> + * relaxed ordering.
-> + */
-> +static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +	while (dev) {
-> +		if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING)
-> +			return true;
-> +
-> +		dev = dev->bus->self;
-> +	}
-> +
-> +	return false;
-> +}
-> +
-> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +	/* We should not alter the relaxed ordering bit for the VF */
-> +	if (dev->is_virtfn)
-> +		return;
-> +
-> +	/* If the releaxed ordering enable bit is not set, do nothing. */
-> +	if (!pcie_relaxed_ordering_supported(dev))
-> +		return;
-> +
-> +	if (pci_dev_should_disable_relaxed_ordering(dev)) {
-> +		pcie_clear_relaxed_ordering(dev);
-> +		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
-> +	}
-> +}
-> +
->  static void pci_configure_device(struct pci_dev *dev)
->  {
->  	struct hotplug_params hpp;
-> @@ -1769,6 +1805,7 @@ static void pci_configure_device(struct pci_dev *dev)
->  
->  	pci_configure_mps(dev);
->  	pci_configure_extended_tags(dev);
-> +	pci_configure_relaxed_ordering(dev);
->  
->  	memset(&hpp, 0, sizeof(hpp));
->  	ret = pci_get_hp_params(dev, &hpp);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 412ec1c..3aa23a2 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1127,6 +1127,8 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
->  void pci_pme_wakeup_bus(struct pci_bus *bus);
->  void pci_d3cold_enable(struct pci_dev *dev);
->  void pci_d3cold_disable(struct pci_dev *dev);
-> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
-> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
->  
->  /* PCI Virtual Channel */
->  int pci_save_vc_state(struct pci_dev *dev);
-> -- 
-> 1.8.3.1
-> 
-> 
+Tim
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
