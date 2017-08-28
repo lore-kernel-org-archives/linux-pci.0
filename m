@@ -1,63 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 15 Aug 2017 17:54:27 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-        qla2xxx-upstream@qlogic.com,
-        Linux Kernel list <linux-kernel@vger.kernel.org>
-Subject: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-Message-ID: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jan Luebbe <jlu@pengutronix.de>
+To: Gregory Clement <gregory.clement@free-electrons.com>,
+ Andrew Lunn <andrew@lunn.ch>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jason Cooper <jason@lakedaemon.net>
+Subject: [PATCH 1/2] bus: mbus: fix window size calculation for 4GB windows
+Date: Mon, 28 Aug 2017 17:25:16 +0200
+Message-Id: <20170828152517.24506-2-jlu@pengutronix.de>
+In-Reply-To: <20170828152517.24506-1-jlu@pengutronix.de>
+References: <20170828152517.24506-1-jlu@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kernel@pengutronix.de, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ Jan Luebbe <jlu@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
-t5120 server: can't allocate MSI-X affinity masks.
+At least the Armada XP SoC supports 4GB on a single DRAM window. Because
+the size register values contain the actual size - 1, the MSB is set in
+that case. For example, the SDRAM window's control register's value is
+0xffffffe1 for 4GB (bits 31 to 24 contain the size).
 
-[   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
-[   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
-[   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
-[   30.816882] scsi host1: qla2xxx
-[   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
-[   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
-[   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
-[   31.367083] scsi host1: qla2xxx
-[   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
+The MBUS driver reads back each window's size from registers and
+calculates the actual size as (control_reg | ~DDR_SIZE_MASK) + 1, which
+overflows for 32 bit values, resulting in other miscalculations further
+on (a bad RAM window for the CESA crypto engine calculated by
+mvebu_mbus_setup_cpu_target_nooverlap() in my case).
 
-I do not know if the driver works since nothing is attached to the FC 
-HBA at the moment, but from the error messages it looks like the driver 
-fails to load.
+This patch changes the type in 'struct mbus_dram_window' from u32 to
+u64, which allows us to keep using the same register calculation code in
+most MBUS-using drivers (which calculate ->size - 1 again).
 
-I booted 4.12 and 4.11 - the red error is not there but the failure 
-seems to be the same error -22:
+Signed-off-by: Jan Luebbe <jlu@pengutronix.de>
+---
+ drivers/bus/mvebu-mbus.c | 2 +-
+ include/linux/mbus.h     | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-[2478900.385223] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 9.00.00.00-k.
-[2478900.385610] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
-[2478900.930517] scsi host1: qla2xxx
-[2478900.990939] qla2xxx: probe of 0000:10:00.0 failed with error -22
-[2478900.991222] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
-[2478901.510715] scsi host1: qla2xxx
-[2478901.581106] qla2xxx: probe of 0000:10:00.1 failed with error -22
-
-Will try older kernels too if it is useful for bisection.
-
-On an older sparc64 (t1-200) with 4.13.0-rc4, qla2xxx loads fine (nothing is attached there either):
-
-[   30.590064] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
-[   30.699053] PCI: Enabling device: (0000:02:05.0), cmd 3
-[   30.699122] qla2xxx [0000:02:05.0]-001d: : Found an ISP2200 irq 12 iobase 0x000001ff0000a000.
-[   52.463403] scsi host2: qla2xxx
-[   52.545973] qla2xxx [0000:02:05.0]-4800:2: DPC handler sleeping.
-[   52.627163] qla2xxx [0000:02:05.0]-00fb:2: QLogic QLA22xx - .
-[   52.705428] qla2xxx [0000:02:05.0]-00fc:2: ISP2200: PCI (33 MHz) @ 0000:02:05.0 hdma- host#=2 fw=2.02.08 TP.
-[   53.503221] qla2xxx [0000:02:05.0]-480f:2: Loop resync scheduled.
-[   73.796964] qla2xxx [0000:02:05.0]-8038:2: Cable is unplugged...
-[   73.876036] qla2xxx [0000:02:05.0]-883a:2: fw_state=4 (ffff, ffff, ffff, ffff ffff) curr time=ffffa61d.
-[   73.999845] qla2xxx [0000:02:05.0]-286c:2: qla2x00_loop_resync *** FAILED ***.
-[   74.094861] qla2xxx [0000:02:05.0]-4810:2: Loop resync end.
-[   74.168188] qla2xxx [0000:02:05.0]-4800:2: DPC handler sleeping.
-
-
+diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
+index c7f396903184..70db4d5638a6 100644
+--- a/drivers/bus/mvebu-mbus.c
++++ b/drivers/bus/mvebu-mbus.c
+@@ -720,7 +720,7 @@ mvebu_mbus_default_setup_cpu_target(struct mvebu_mbus_state *mbus)
+ 			if (mbus->hw_io_coherency)
+ 				w->mbus_attr |= ATTR_HW_COHERENCY;
+ 			w->base = base & DDR_BASE_CS_LOW_MASK;
+-			w->size = (size | ~DDR_SIZE_MASK) + 1;
++			w->size = (u64)(size | ~DDR_SIZE_MASK) + 1;
+ 		}
+ 	}
+ 	mvebu_mbus_dram_info.num_cs = cs;
+diff --git a/include/linux/mbus.h b/include/linux/mbus.h
+index 0d3f14fd2621..4773145246ed 100644
+--- a/include/linux/mbus.h
++++ b/include/linux/mbus.h
+@@ -31,8 +31,8 @@ struct mbus_dram_target_info
+ 	struct mbus_dram_window {
+ 		u8	cs_index;
+ 		u8	mbus_attr;
+-		u32	base;
+-		u32	size;
++		u64	base;
++		u64	size;
+ 	} cs[4];
+ };
+ 
 -- 
-Meelis Roos (mroos@linux.ee)
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
