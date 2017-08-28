@@ -1,128 +1,92 @@
-Return-Path: <SRS0=m010=7Q=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=m010=7Q=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v10 0/5] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Mon, 14 Aug 2017 23:44:54 +0800
-Message-ID: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0077.outbound.protection.outlook.com ([104.47.33.77]:5138
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751170AbdH1NK1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Aug 2017 09:10:27 -0400
+From: Bharat Kumar Gogada <bharatku@xilinx.com>
+To: "Tian, Kevin" <kevin.tian@intel.com>,
+        valmiki <valmikibow@gmail.com>,
+        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+CC: "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Lan, Tianyu" <tianyu.lan@intel.com>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>
+Subject: RE: Support SVM without PASID
+Date: Mon, 28 Aug 2017 13:10:25 +0000
+Message-ID: <BLUPR0201MB15051529B1A13F03B4CE7342A59E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+ <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+ <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
+ <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+ <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+ <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
+ <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
+ <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
+ <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
+ <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
+ <e5be8314-dd3c-703a-3d46-cd180d404627@gmail.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D190D71673@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D190D71673@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices have problems with Transaction Layer Packets with the Relaxed
-Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
-PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
-devices with Relaxed Ordering issues, and a use of this new flag by the
-cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
-Ports.
+> Subject: RE: Support SVM without PASID
+>=20
+> > From: valmiki [mailto:valmikibow@gmail.com]
+> > Sent: Saturday, August 12, 2017 8:11 PM
+> >
+> > On 8/7/2017 4:01 PM, Jean-Philippe Brucker wrote:
+> > > On 05/08/17 06:14, valmiki wrote:
+> > > [...]
+> > >> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
+> > >> documentation we fill vaddr and iova in struct
+> > vfio_iommu_type1_dma_map
+> > >> and pass them to VFIO. But if we use dynamic allocation in
+> > >> application (say malloc), do we need to use dma API to get iova and
+> > >> then call VFIO_IOMMU_MAP ioctl ?
+> > >> If application needs multiple such dynamic allocations, then it
+> > >> need to allocate large chunk and program it via VFIO_IOMMU_MAP
+> > >> ioctl and
+> > then
+> > >> manage rest allocations requirements from this buffer ?
+> > >
+> > > Yes, without SVM, the application allocates large buffers, allocates
+> > > IOVAs itself, and maps them with VFIO_IOMMU_MAP. Userspace doesn't
+> > > rely
+> > on the
+> > > DMA API at all, it manages IOVAs as it wants. Sizes passed to
+> > > VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page
+> > granularity
+> > > (that is at least 4kB), and both iova and vaddr have to be aligned
+> > > on that granularity as well. So malloc isn't really suitable in this
+> > > case, you'll need mmap. The application can then implement a small
+> > > allocator to
+> > manage
+> > > the DMA pool created with VFIO_IOMMU_MAP.
+> >
+> > Thanks Jean, I have a confusion allocate IOVA's in userspace means,
+> > how can user application decide IOVA address, can user application
+> > pick any random IOVA address ?
+> >
+>=20
+> yes, any address. In this mode the whole IOVA address space is owned by
+> application, which just needs to use VFIO_IOMMU_MAP to setup
+> IOVA->PA mapping in IOMMU (As Jean pointed out, input paramters
+> are iova and vaddr. VFIO will figure out pa corresponding to vaddr).
+>=20
+Hi Kevin, I have a doubt in this case, what if someone assigns mmap returne=
+d virtual address as iova address, then=20
+EP will assume it is generating request on IOVA but in reality we are using=
+ application allocated virtual address, then
+it looks like we are working with application virtual address directly with=
+out PASID. Is this valid ?
 
-It's been years since I've submitted kernel.org patches, I appolgise for the
-almost certain submission errors.
-
-v2: Alexander point out that the v1 was only a part of the whole solution,
-    some platform which has some issues could use the new flag to indicate
-    that it is not safe to enable relaxed ordering attribute, then we need
-    to clear the relaxed ordering enable bits in the PCI configuration when
-    initializing the device. So add a new second patch to modify the PCI
-    initialization code to clear the relaxed ordering enable bit in the
-    event that the root complex doesn't want relaxed ordering enabled.
-
-    The third patch was base on the v1's second patch and only be changed
-    to query the relaxed ordering enable bit in the PCI configuration space
-    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
-    set.
-
-    This version didn't plan to drop the defines for Intel Drivers to use the
-    new checking way to enable relaxed ordering because it is not the hardest
-    part of the moment, we could fix it in next patchset when this patches
-    reach the goal.
-
-v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
-    If a PCIe device didn't enable the relaxed ordering attribute default,
-    we should not do anything in the PCIe configuration, otherwise we
-    should check if any of the devices above us do not support relaxed
-    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
-    the result if we get a return that indicate that the relaxed ordering
-    is not supported we should update our device to disable relaxed ordering
-    in configuration space. If the device above us doesn't exist or isn't
-    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
-    because we are probably running in a guest.
-
-v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
-    according John's suggestion, and modify the description, use the true/false
-    as the return value.
-
-    We shouldn't enable relaxed ordering attribute by the setting in the root
-    complex configuration space for PCIe device, so fix it for cxgb4.
-
-    Fix some format issues.
-
-v5: Removed the unnecessary code for some function which only return the bool
-    value, and add the check for VF device.
-
-    Make this patch set base on 4.12-rc5.
-
-v6: Fix the logic error in the need to enable the relaxed ordering attribute for cxgb4.
-
-v7: The cxgb4 drivers will enable the PCIe Capability Device Control[Relaxed
-    Ordering Enable] in PCI Probe() routine, this will break our current
-    solution for some platform which has problematic when enable the relaxed
-    ordering attribute. According to the latest recommendations, remove the
-    enable_pcie_relaxed_ordering(), although it could not cover the Peer-to-Peer
-    scene, but we agree to leave this problem until we really trigger it.
-
-    Make this patch set base on 4.12 release version.
-
-v8: Change the second patch title and description to make it more reasonable,
-    add the acked-by from Alex and Ashok.
-
-    Add a new patch to enable the Relaxed Ordering Attribute for cxgb4vf driver.
-
-    Make this patch set base on 4.13-rc2.
-
-v9: The document (https://software.intel.com/sites/default/files/managed/9e/
-    bc/64-ia-32-architectures-optimization-manual.pdf) indicate that the Xeon
-    processors based on Broadwell/Haswell microarchitecture has the problem
-    with Relaxed Ordering Attribute enabled, so add the whole list Device ID
-    from Intel to the patch.
-
-v10: Significant rework based on Bjorn's feedback, reorganize the first 2 patches,
-     now the Intel and AMD erratum soc has been divided to the different patches,
-     rename the pcie_relaxed_ordering_supported() to pcie_relaxed_ordering_enabled(),
-     and no need to check every intervening switch except the root ports, update
-     some commits.
-
-Casey Leedom (2):
-  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-  net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-
-Ding Tianhong (3):
-  PCI: Disable PCIe Relaxed Ordering if unsupported
-  PCI: Disable Relaxed Ordering for some Intel processors
-  PCI: Disable Relaxed Ordering Attributes for AMD A1100
-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    | 23 ++++--
- drivers/net/ethernet/chelsio/cxgb4/sge.c           |  5 +-
- drivers/net/ethernet/chelsio/cxgb4vf/adapter.h     |  1 +
- .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    | 18 +++++
- drivers/net/ethernet/chelsio/cxgb4vf/sge.c         |  3 +
- drivers/pci/probe.c                                | 43 +++++++++++
- drivers/pci/quirks.c                               | 89 ++++++++++++++++++++++
- include/linux/pci.h                                |  3 +
- 9 files changed, 178 insertions(+), 8 deletions(-)
-
--- 
-1.8.3.1
+Regards,
+Bharat
