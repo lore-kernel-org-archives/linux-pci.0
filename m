@@ -1,90 +1,43 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thierry Reding <thierry.reding@gmail.com>
-To: David Miller <davem@davemloft.net>, Bjorn Helgaas <bhelgaas@google.com>,
- Ding Tianhong <dingtianhong@huawei.com>,
- Michael Ellerman <mpe@ellerman.id.au>
-Subject: [PATCH] PCI: Allow PCI express root ports to find themselves
-Date: Thu, 17 Aug 2017 13:06:14 +0200
-Message-Id: <20170817110614.11454-1-thierry.reding@gmail.com>
-In-Reply-To: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
-References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
- catalin.marinas@arm.com, will.deacon@arm.com, linuxarm@huawei.com,
- alexander.duyck@gmail.com, ashok.raj@intel.com, eric.dumazet@gmail.com,
- jeffrey.t.kirsher@intel.com, linux-pci@vger.kernel.org, ganeshgr@chelsio.com,
- Bob.Shaw@amd.com, leedom@chelsio.com, patrick.j.cramer@intel.com,
- werner@chelsio.com, linux-arm-kernel@lists.infradead.org, amira@mellanox.com,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David.Laight@aculab.com,
- Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com, l.stach@pengutronix.de
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50034 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750866AbdH1RJs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Aug 2017 13:09:48 -0400
+From: Tyler Baicar <tbaicar@codeaurora.org>
+To: bhelgaas@google.com, jonathan.derrick@intel.com,
+        keith.busch@intel.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Tyler Baicar <tbaicar@codeaurora.org>
+Subject: [PATCH] PCI/AER: don't call recovery process for correctable errors
+Date: Mon, 28 Aug 2017 11:09:44 -0600
+Message-Id: <1503940184-29423-1-git-send-email-tbaicar@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+Correctable errors do not need any software intervention, so
+avoid calling into the software recovery process for correctable
+errors.
 
-If the pci_find_pcie_root_port() function is called on a root port
-itself, return the root port rather than NULL.
-
-This effectively reverts commit 0e405232871d6 ("PCI: fix oops when
-try to find Root Port for a PCI device") which added an extra check
-that would now be redundant.
-
-Fixes: a99b646afa8a ("PCI: Disable PCIe Relaxed Ordering if unsupported")
-Fixes: c56d4450eb68 ("PCI: Turn off Request Attributes to avoid Chelsio T5 Completion erratum")
-Signed-off-by: Thierry Reding <treding@nvidia.com>
+Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
 ---
-This applies on top of and was tested on next-20170817.
+ drivers/pci/pcie/aer/aerdrv_core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Michael, it'd be great if you could test this one again to clarify
-whether or not the fix that's already in Linus' tree is still needed, or
-whether it's indeed obsoleted by this patch.
-
- drivers/pci/pci.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b05c587e335a..dd56c1c05614 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -514,7 +514,7 @@ EXPORT_SYMBOL(pci_find_resource);
-  */
- struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
- {
--	struct pci_dev *bridge, *highest_pcie_bridge = NULL;
-+	struct pci_dev *bridge, *highest_pcie_bridge = dev;
- 
- 	bridge = pci_upstream_bridge(dev);
- 	while (bridge && pci_is_pcie(bridge)) {
-@@ -522,11 +522,10 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
- 		bridge = pci_upstream_bridge(bridge);
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index b1303b3..4765c11 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -626,7 +626,8 @@ static void aer_recover_work_func(struct work_struct *work)
+ 			continue;
+ 		}
+ 		cper_print_aer(pdev, entry.severity, entry.regs);
+-		do_recovery(pdev, entry.severity);
++		if (entry.severity != AER_CORRECTABLE)
++			do_recovery(pdev, entry.severity);
+ 		pci_dev_put(pdev);
  	}
- 
--	if (highest_pcie_bridge &&
--	    pci_pcie_type(highest_pcie_bridge) == PCI_EXP_TYPE_ROOT_PORT)
--		return highest_pcie_bridge;
-+	if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
-+		return NULL;
- 
--	return NULL;
-+	return highest_pcie_bridge;
  }
- EXPORT_SYMBOL(pci_find_pcie_root_port);
- 
 -- 
-2.13.3
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
