@@ -1,83 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0063.outbound.protection.outlook.com ([104.47.1.63]:29776
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0070.outbound.protection.outlook.com ([104.47.34.70]:31872
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752265AbdHICxr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Aug 2017 22:53:47 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-CC: "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>
-Subject: RE: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
-Date: Wed, 9 Aug 2017 02:53:44 +0000
-Message-ID: <AM5PR0402MB2771B580C7DF44688DCFC5CD848B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
- <a564fe46-f0f0-ac69-cf5f-f788bd13833c@synopsys.com>
-In-Reply-To: <a564fe46-f0f0-ac69-cf5f-f788bd13833c@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+        id S1751234AbdH1LK0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Aug 2017 07:10:26 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv5 6/9] PCI: layerscape: Disable the outbound windows configured by bootloader
+Date: Mon, 28 Aug 2017 18:52:58 +0800
+Message-ID: <20170828105301.8511-7-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
+References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIHJldmVpdyENCg0KPiAtLS0tLU9yaWdp
-bmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2FvIFBpbnRvIFttYWlsdG86Sm9hby5QaW50b0Bz
-eW5vcHN5cy5jb21dDQo+IFNlbnQ6IDIwMTflubQ45pyIOOaXpSAyMToxNA0KPiBUbzogWi5xLiBI
-b3UgPHpoaXFpYW5nLmhvdUBueHAuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4g
-YmhlbGdhYXNAZ29vZ2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9Ac3lu
-b3BzeXMuY29tDQo+IENjOiBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdr
-YWkgSHUgPG1pbmdrYWkuaHVAbnhwLmNvbT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29t
-Pg0KPiBTdWJqZWN0OiBSZTogW1BBVENIdjIgNC82XSBQQ0k6IGxheWVyc2NhcGU6IHJlZmFjdG9y
-IHRoZSBob3N0X2luaXQgZnVuY3Rpb24NCj4gDQo+IMOAcyA5OjIzIEFNIGRlIDgvMy8yMDE3LCBa
-aGlxaWFuZyBIb3UgZXNjcmV2ZXU6DQo+ID4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5I
-b3VAbnhwLmNvbT4NCj4gPg0KPiA+IE1ha2UgdGhlIGxzMTAyMWEncyBob3N0X2luaXQgcmV1c2Ug
-bGF5ZXJzY2FwZSBwbGF0Zm9ybSdzIGNvbW1vbg0KPiA+IGhvc3RfaW5pdCBmdW5jdGlvbi4NCj4g
-Pg0KPiA+IFNpZ25lZC1vZmYtYnk6IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+
-DQo+ID4gLS0tDQo+ID4gVjI6DQo+ID4gIC0gUmVtb3ZlZCB0aGUgZGlzYWJsZSBvdXRib3VuZCB3
-aW5kb3dzIGNvZGUgYW5kIHRoZSByZW1vdmUgZHVwbGljYXRlDQo+IGNsYXNzIGNvZGUNCj4gPiAg
-ICBmaXh1cCBjb2RlIGZyb20gdGhpcyBwYXRjaC4NCj4gPg0KPiA+ICBkcml2ZXJzL3BjaS9kd2Mv
-cGNpLWxheWVyc2NhcGUuYyB8IDU0DQo+ID4gKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0t
-LS0tLS0tLS0tLQ0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygrKSwgMjcgZGVs
-ZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaS1sYXll
-cnNjYXBlLmMNCj4gPiBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4gaW5k
-ZXggMDkwNTZhNi4uMzUzM2E4YyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNp
-LWxheWVyc2NhcGUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5j
-DQo+ID4gQEAgLTEwNywzMyArMTA3LDYgQEAgc3RhdGljIGludCBsczEwMjFfcGNpZV9saW5rX3Vw
-KHN0cnVjdCBkd19wY2llICpwY2kpDQo+ID4gIAlyZXR1cm4gMTsNCj4gPiAgfQ0KPiA+DQo+ID4g
-LXN0YXRpYyB2b2lkIGxzMTAyMV9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkg
-LXsNCj4gPiAtCXN0cnVjdCBkd19wY2llICpwY2kgPSB0b19kd19wY2llX2Zyb21fcHAocHApOw0K
-PiA+IC0Jc3RydWN0IGxzX3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBjaSk7DQo+ID4gLQlzdHJ1
-Y3QgZGV2aWNlICpkZXYgPSBwY2ktPmRldjsNCj4gPiAtCXUzMiBpbmRleFsyXTsNCj4gPiAtDQo+
-ID4gLQlwY2llLT5zY2ZnID0gc3lzY29uX3JlZ21hcF9sb29rdXBfYnlfcGhhbmRsZShkZXYtPm9m
-X25vZGUsDQo+ID4gLQkJCQkJCSAgICAgImZzbCxwY2llLXNjZmciKTsNCj4gPiAtCWlmIChJU19F
-UlIocGNpZS0+c2NmZykpIHsNCj4gPiAtCQlkZXZfZXJyKGRldiwgIk5vIHN5c2NmZyBwaGFuZGxl
-IHNwZWNpZmllZFxuIik7DQo+ID4gLQkJcGNpZS0+c2NmZyA9IE5VTEw7DQo+ID4gLQkJcmV0dXJu
-Ow0KPiA+IC0JfQ0KPiA+IC0NCj4gPiAtCWlmIChvZl9wcm9wZXJ0eV9yZWFkX3UzMl9hcnJheShk
-ZXYtPm9mX25vZGUsDQo+ID4gLQkJCQkgICAgICAgImZzbCxwY2llLXNjZmciLCBpbmRleCwgMikp
-IHsNCj4gPiAtCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiAtCQlyZXR1cm47DQo+ID4gLQl9DQo+
-ID4gLQlwY2llLT5pbmRleCA9IGluZGV4WzFdOw0KPiA+IC0NCj4gPiAtCWR3X3BjaWVfc2V0dXBf
-cmMocHApOw0KPiA+IC0NCj4gPiAtCWxzX3BjaWVfZHJvcF9tc2dfdGxwKHBjaWUpOw0KPiA+IC19
-DQo+ID4gLQ0KPiA+ICBzdGF0aWMgaW50IGxzX3BjaWVfbGlua191cChzdHJ1Y3QgZHdfcGNpZSAq
-cGNpKSAgew0KPiA+ICAJc3RydWN0IGxzX3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBjaSk7IEBA
-IC0xNjAsNiArMTMzLDMzIEBAIHN0YXRpYw0KPiA+IHZvaWQgbHNfcGNpZV9ob3N0X2luaXQoc3Ry
-dWN0IHBjaWVfcG9ydCAqcHApDQo+ID4gIAlkd19wY2llX2RiaV9yb193cl9kaXMocGNpKTsNCj4g
-Pg0KPiA+ICAJbHNfcGNpZV9kcm9wX21zZ190bHAocGNpZSk7DQo+ID4gKw0KPiA+ICsJZHdfcGNp
-ZV9zZXR1cF9yYyhwcCk7DQo+ID4gK30NCj4gPiArDQo+ID4gK3N0YXRpYyB2b2lkIGxzMTAyMV9w
-Y2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkgew0KPiA+ICsJc3RydWN0IGR3X3Bj
-aWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7DQo+ID4gKwlzdHJ1Y3QgbHNfcGNpZSAq
-cGNpZSA9IHRvX2xzX3BjaWUocGNpKTsNCj4gPiArCXN0cnVjdCBkZXZpY2UgKmRldiA9IHBjaS0+
-ZGV2Ow0KPiA+ICsJdTMyIGluZGV4WzJdOw0KPiA+ICsNCj4gPiArCXBjaWUtPnNjZmcgPSBzeXNj
-b25fcmVnbWFwX2xvb2t1cF9ieV9waGFuZGxlKGRldi0+b2Zfbm9kZSwNCj4gPiArCQkJCQkJICAg
-ICAiZnNsLHBjaWUtc2NmZyIpOw0KPiA+ICsJaWYgKElTX0VSUihwY2llLT5zY2ZnKSkgew0KPiA+
-ICsJCWRldl9lcnIoZGV2LCAiTm8gc3lzY2ZnIHBoYW5kbGUgc3BlY2lmaWVkXG4iKTsNCj4gPiAr
-CQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiArCQlyZXR1cm47DQo+ID4gKwl9DQo+ID4gKw0KPiA+
-ICsJaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTMyX2FycmF5KGRldi0+b2Zfbm9kZSwNCj4gPiArCQkJ
-CSAgICAgICAiZnNsLHBjaWUtc2NmZyIsIGluZGV4LCAyKSkgew0KPiA+ICsJCXBjaWUtPnNjZmcg
-PSBOVUxMOw0KPiA+ICsJCXJldHVybjsNCj4gPiArCX0NCj4gPiArCXBjaWUtPmluZGV4ID0gaW5k
-ZXhbMV07DQo+ID4gKw0KPiA+ICsJbHNfcGNpZV9ob3N0X2luaXQocHApOw0KPiA+ICB9DQo+ID4N
-Cj4gPiAgc3RhdGljIGludCBsc19wY2llX21zaV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAq
-cHAsDQo+ID4NCj4gDQo+IFJldmlld2VkLWJ5OiBKb2FvIFBpbnRvIDxqcGludG9Ac3lub3BzeXMu
-Y29tPg0KDQotIFpoaXFpYW5nDQo=
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+
+Disable all the outbound windows to avoid one transaction hitting
+multiple outbound windows, because the function dw_pcie_setup_rc
+will re-configure the outbound windows which maybe confict with
+the bootloader configured.
+
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Acked-by: Roy Zang <tie-fei.zang@freescale.com>
+---
+V5:
+ - No change
+
+ drivers/pci/dwc/pci-layerscape.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 27234dae4cba..8b5083aedf16 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -35,6 +35,8 @@
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+ #define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
+ 
++#define PCIE_IATU_NUM		6
++
+ struct ls_pcie_drvdata {
+ 	u32 lut_offset;
+ 	u32 ltssm_shift;
+@@ -91,6 +93,14 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
+ 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
+ }
+ 
++static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
++{
++	int i;
++
++	for (i = 0; i < PCIE_IATU_NUM; i++)
++		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
++}
++
+ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	u32 state;
+@@ -128,6 +138,13 @@ static int ls_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+ 
++	/*
++	 * Disable the outbound windows configured by bootloader to avoid
++	 * one transaction hitting multiple outbound windows and the function
++	 * dw_pcie_setup_rc will re-configure the outbound windows.
++	 */
++	ls_pcie_disable_outbound_atus(pcie);
++
+ 	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+ 	ls_pcie_fix_class(pcie);
+ 	ls_pcie_clear_multifunction(pcie);
+-- 
+2.14.1
