@@ -1,57 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34882 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752644AbdHVUhw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Aug 2017 16:37:52 -0400
-Date: Tue, 22 Aug 2017 15:37:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: dra7xx: fix error return code in
- dra7xx_pcie_probe()
-Message-ID: <20170822203750.GF6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170809161603.GA31297@embeddedgus>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170809161603.GA31297@embeddedgus>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:35013 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751473AbdH1A0O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Aug 2017 20:26:14 -0400
+Received: by mail-qt0-f195.google.com with SMTP id u11so4022236qtu.2
+        for <linux-pci@vger.kernel.org>; Sun, 27 Aug 2017 17:26:13 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: shawn.lin@rock-chips.com, heiko@sntech.de,
+        linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>
+Subject: [PATCH RESEND] PCI: rockchip: Use gpiod_set_value_cansleep() to allow reset via expanders
+Date: Sun, 27 Aug 2017 21:25:57 -0300
+Message-Id: <1503879957-30008-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 09, 2017 at 11:16:03AM -0500, Gustavo A. R. Silva wrote:
-> platform_get_irq() returns an error code, but the pci-dra7xx driver
-> ignores it and always returns -EINVAL. This is not correct and,
-> prevents -EPROBE_DEFER from being propagated properly.
-> 
-> Print and propagate the return value of platform_get_irq on failure.
-> 
-> This issue was detected with the help of Coccinelle.
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+The reset GPIO can be connected to a I2C or SPI IO expander, which may
+sleep, so it is safer to use the gpiod_set_value_cansleep() variant
+instead.
 
-Applied with Kishon's ack to pci/host-dra7xx for v4.14, thanks!
+Signed-off-by: Fabio Estevam <festevam@gmail.com>
+---
+Changes since v1:
+- Resending with Shawn Lin added on Cc.
 
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index f2fc5f4..f58e1b4 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -616,8 +616,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  
->  	irq = platform_get_irq(pdev, 0);
->  	if (irq < 0) {
-> -		dev_err(dev, "missing IRQ resource\n");
-> -		return -EINVAL;
-> +		dev_err(dev, "missing IRQ resource: %d\n", irq);
-> +		return irq;
->  	}
->  
->  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
-> -- 
-> 2.5.0
-> 
+ drivers/pci/host/pcie-rockchip.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 2eccd53..124b280 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -537,7 +537,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	int err, i;
+ 	u32 status;
+ 
+-	gpiod_set_value(rockchip->ep_gpio, 0);
++	gpiod_set_value_cansleep(rockchip->ep_gpio, 0);
+ 
+ 	err = reset_control_assert(rockchip->aclk_rst);
+ 	if (err) {
+@@ -682,7 +682,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+ 			    PCIE_CLIENT_CONFIG);
+ 
+-	gpiod_set_value(rockchip->ep_gpio, 1);
++	gpiod_set_value_cansleep(rockchip->ep_gpio, 1);
+ 
+ 	/* 500ms timeout value should be enough for Gen1/2 training */
+ 	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_BASIC_STATUS1,
+-- 
+2.7.4
