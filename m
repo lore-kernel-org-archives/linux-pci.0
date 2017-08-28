@@ -1,219 +1,150 @@
-Return-Path: <SRS0=myN1=77=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=myN1=77=broadcom.com=oza.oza@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20170828214753.GL8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
- <1503551066-23212-3-git-send-email-oza.oza@broadcom.com> <20170828214753.GL8154@bhelgaas-glaptop.roam.corp.google.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Tue, 29 Aug 2017 11:02:23 +0530
-Message-ID: <CAMSpPPcFFULWZ+QTfzMSGhzQx0JboT618Uq6EA0=qPGpAK+h1w@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 28 Aug 2017 16:47:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Pawandeep <oza.oza@broadcom.com>
 Subject: Re: [PATCH v8 2/3] PCI: iproc: retry request when CRS returned from EP
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	devicetree@vger.kernel.org, Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Message-ID: <20170828214753.GL8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+ <1503551066-23212-3-git-send-email-oza.oza@broadcom.com>
+MIME-Version: 1.0
+In-Reply-To: <1503551066-23212-3-git-send-email-oza.oza@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Scott Branden <sbranden@broadcom.com>, Oza Pawandeep <oza.pawandeep@gmail.com>,
+ Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Andy Gospodarek <gospo@broadcom.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 29, 2017 at 3:17 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Aug 24, 2017 at 10:34:25AM +0530, Oza Pawandeep wrote:
->> PCIe spec r3.1, sec 2.3.2
->> If CRS software visibility is not enabled, the RC must reissue the
->> config request as a new request.
->>
->> - If CRS software visibility is enabled,
->> - for a config read of Vendor ID, the RC must return 0x0001 data
->> - for all other config reads/writes, the RC must reissue the
->>   request
->>
->> iproc PCIe Controller spec:
->> 4.7.3.3. Retry Status On Configuration Cycle
->> Endpoints are allowed to generate retry status on configuration
->> cycles. In this case, the RC needs to re-issue the request. The IP
->> does not handle this because the number of configuration cycles needed
->> will probably be less than the total number of non-posted operations
->> needed.
->>
->> When a retry status is received on the User RX interface for a
->> configuration request that was sent on the User TX interface,
->> it will be indicated with a completion with the CMPL_STATUS field set
->> to 2=3DCRS, and the user will have to find the address and data values
->> and send a new transaction on the User TX interface.
->> When the internal configuration space returns a retry status during a
->> configuration cycle (user_cscfg =3D 1) on the Command/Status interface,
->> the pcie_cscrs will assert with the pcie_csack signal to indicate the
->> CRS status.
->> When the CRS Software Visibility Enable register in the Root Control
->> register is enabled, the IP will return the data value to 0x0001 for
->> the Vendor ID value and 0xffff  (all 1=E2=80=99s) for the rest of the da=
-ta in
->> the request for reads of offset 0 that return with CRS status.  This
->> is true for both the User RX Interface and for the Command/Status
->> interface.  When CRS Software Visibility is enabled, the CMPL_STATUS
->> field of the completion on the User RX Interface will not be 2=3DCRS and
->> the pcie_cscrs signal will not assert on the Command/Status interface.
->>
->> Per PCIe r3.1, sec 2.3.2, config requests that receive completions
->> with Configuration Request Retry Status (CRS) should be reissued by
->> the hardware except reads of the Vendor ID when CRS Software
->> Visibility is enabled.
->>
->> This hardware never reissues configuration requests when it receives
->> CRS completions.
->> Note that, neither PCIe host bridge nor PCIe core re-issues the
->> request for any configuration offset.
->>
->> For config reads, this hardware returns CFG_RETRY_STATUS data when
->> it receives a CRS completion for a config read, regardless of the
->> address of the read or the CRS Software Visibility Enable bit.
->>
->> This patch implements iproc_pcie_config_read which gets called for
->> Stingray, if it receives a CRS completion, it retries reading it again.
->> In case of timeout, it returns 0xffffffff.
->> For other iproc based SOC, it falls back to PCI generic APIs.
->>
->> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
->>
->> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc=
-.c
->> index 61d9be6..37f4adf 100644
->> --- a/drivers/pci/host/pcie-iproc.c
->> +++ b/drivers/pci/host/pcie-iproc.c
->> @@ -68,6 +68,9 @@
->>  #define APB_ERR_EN_SHIFT             0
->>  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
->>
->> +#define CFG_RETRY_STATUS             0xffff0001
->> +#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
->> +
->>  /* derive the enum index of the outbound/inbound mapping registers */
->>  #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
->>
->> @@ -473,6 +476,64 @@ static void __iomem *iproc_pcie_map_ep_cfg_reg(stru=
-ct iproc_pcie *pcie,
->>       return (pcie->base + offset);
->>  }
->>
->> +static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
->> +{
->> +     int timeout =3D CFG_RETRY_STATUS_TIMEOUT_US;
->> +     unsigned int data;
->> +
->> +     /*
->> +      * As per PCIe spec r3.1, sec 2.3.2, CRS Software
->> +      * Visibility only affects config read of the Vendor ID.
->> +      * For config write or any other config read the Root must
->> +      * automatically re-issue configuration request again as a
->> +      * new request.
->> +      *
->> +      * For config reads, this hardware returns CFG_RETRY_STATUS data w=
-hen
->> +      * it receives a CRS completion for a config read, regardless of t=
-he
->> +      * address of the read or the CRS Software Visibility Enable bit. =
-As a
->> +      * partial workaround for this, we retry in software any read that
->> +      * returns CFG_RETRY_STATUS.
->> +      */
->> +     data =3D readl(cfg_data_p);
->> +     while (data =3D=3D CFG_RETRY_STATUS && timeout--) {
->> +             udelay(1);
->> +             data =3D readl(cfg_data_p);
->> +     }
->> +
->> +     if (data =3D=3D CFG_RETRY_STATUS)
->> +             data =3D 0xffffffff;
->> +
->> +     return data;
->> +}
->> +
->> +static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int dev=
-fn,
->> +                                 int where, int size, u32 *val)
->> +{
->> +     struct iproc_pcie *pcie =3D iproc_data(bus);
->> +     unsigned int slot =3D PCI_SLOT(devfn);
->> +     unsigned int fn =3D PCI_FUNC(devfn);
->> +     unsigned int busno =3D bus->number;
->> +     void __iomem *cfg_data_p;
->> +     unsigned int data;
->> +
->> +     /* root complex access. */
->> +     if (busno =3D=3D 0)
->> +             return pci_generic_config_read32(bus, devfn, where, size, =
-val);
->
-> It sounds like Stingray advertises CRS SV support in its Root Capabilitie=
-s
-> register.  I think we should mask out PCI_EXP_RTCAP_CRSVIS so we don't
-> advertise it.  That will keep Linux from trying to enable it.  I know the
-> hardware doesn't look at PCI_EXP_RTCTL_CRSSVE, but there's no point in
-> confusing users reading the lspci output.
->
-> We did something similar with f09f8735fb9c ("PCI: xgene: Disable
-> Configuration Request Retry Status for v1 silicon").
->
-> I tried to do this in the patch I pushed to pci/host-iproc.
->
->> +
->> +     cfg_data_p =3D iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, wh=
-ere);
->> +
->> +     if (!cfg_data_p)
->> +             return PCIBIOS_DEVICE_NOT_FOUND;
->> +
->> +     data =3D iproc_pcie_cfg_retry(cfg_data_p);
->> +
->> +     *val =3D data;
->> +     if (size <=3D 2)
->> +             *val =3D (data >> (8 * (where & 3))) & ((1 << (size * 8)) =
-- 1);
->> +
->> +     return PCIBIOS_SUCCESSFUL;
->> +}
->> +
->>  /**
->>   * Note access to the configuration registers are protected at the high=
-er layer
->>   * by 'pci_lock' in drivers/pci/access.c
->> @@ -567,8 +628,13 @@ static int iproc_pcie_config_read32(struct pci_bus =
-*bus, unsigned int devfn,
->>                                   int where, int size, u32 *val)
->>  {
->>       int ret;
->> +     struct iproc_pcie *pcie =3D iproc_data(bus);
->>
->>       iproc_pcie_apb_err_disable(bus, true);
->> +     if (pcie->type =3D=3D IPROC_PCIE_PAXB_V2)
->> +             ret =3D iproc_pcie_config_read(bus, devfn, where, size, va=
-l);
->> +     else
->> +             ret =3D pci_generic_config_read32(bus, devfn, where, size,=
- val);
->>       ret =3D pci_generic_config_read32(bus, devfn, where, size, val);
->
-> This last pci_generic_config_read32() call looks like a duplicate.
-
-yes indeed.
-I have tested your CRS visibility bit changes; and it works fine.
-
-do you want me to post new patch-set by removing the duplicate call
-along with the changes you have made ?
-
-or since, you have already applied patches, with your changes, you
-will take care of removing this last duplicate call ?
-I think this is the last change for this patch-set, If I did not miss anyth=
-ing.
-
-please let me know.
-
->
->>       iproc_pcie_apb_err_disable(bus, false);
->>
->> --
->> 1.9.1
->>
+T24gVGh1LCBBdWcgMjQsIDIwMTcgYXQgMTA6MzQ6MjVBTSArMDUzMCwgT3phIFBhd2FuZGVlcCB3
+cm90ZToKPiBQQ0llIHNwZWMgcjMuMSwgc2VjIDIuMy4yCj4gSWYgQ1JTIHNvZnR3YXJlIHZpc2li
+aWxpdHkgaXMgbm90IGVuYWJsZWQsIHRoZSBSQyBtdXN0IHJlaXNzdWUgdGhlCj4gY29uZmlnIHJl
+cXVlc3QgYXMgYSBuZXcgcmVxdWVzdC4KPiAKPiAtIElmIENSUyBzb2Z0d2FyZSB2aXNpYmlsaXR5
+IGlzIGVuYWJsZWQsCj4gLSBmb3IgYSBjb25maWcgcmVhZCBvZiBWZW5kb3IgSUQsIHRoZSBSQyBt
+dXN0IHJldHVybiAweDAwMDEgZGF0YQo+IC0gZm9yIGFsbCBvdGhlciBjb25maWcgcmVhZHMvd3Jp
+dGVzLCB0aGUgUkMgbXVzdCByZWlzc3VlIHRoZQo+ICAgcmVxdWVzdAo+IAo+IGlwcm9jIFBDSWUg
+Q29udHJvbGxlciBzcGVjOgo+IDQuNy4zLjMuIFJldHJ5IFN0YXR1cyBPbiBDb25maWd1cmF0aW9u
+IEN5Y2xlCj4gRW5kcG9pbnRzIGFyZSBhbGxvd2VkIHRvIGdlbmVyYXRlIHJldHJ5IHN0YXR1cyBv
+biBjb25maWd1cmF0aW9uCj4gY3ljbGVzLiBJbiB0aGlzIGNhc2UsIHRoZSBSQyBuZWVkcyB0byBy
+ZS1pc3N1ZSB0aGUgcmVxdWVzdC4gVGhlIElQCj4gZG9lcyBub3QgaGFuZGxlIHRoaXMgYmVjYXVz
+ZSB0aGUgbnVtYmVyIG9mIGNvbmZpZ3VyYXRpb24gY3ljbGVzIG5lZWRlZAo+IHdpbGwgcHJvYmFi
+bHkgYmUgbGVzcyB0aGFuIHRoZSB0b3RhbCBudW1iZXIgb2Ygbm9uLXBvc3RlZCBvcGVyYXRpb25z
+Cj4gbmVlZGVkLgo+IAo+IFdoZW4gYSByZXRyeSBzdGF0dXMgaXMgcmVjZWl2ZWQgb24gdGhlIFVz
+ZXIgUlggaW50ZXJmYWNlIGZvciBhCj4gY29uZmlndXJhdGlvbiByZXF1ZXN0IHRoYXQgd2FzIHNl
+bnQgb24gdGhlIFVzZXIgVFggaW50ZXJmYWNlLAo+IGl0IHdpbGwgYmUgaW5kaWNhdGVkIHdpdGgg
+YSBjb21wbGV0aW9uIHdpdGggdGhlIENNUExfU1RBVFVTIGZpZWxkIHNldAo+IHRvIDI9Q1JTLCBh
+bmQgdGhlIHVzZXIgd2lsbCBoYXZlIHRvIGZpbmQgdGhlIGFkZHJlc3MgYW5kIGRhdGEgdmFsdWVz
+Cj4gYW5kIHNlbmQgYSBuZXcgdHJhbnNhY3Rpb24gb24gdGhlIFVzZXIgVFggaW50ZXJmYWNlLgo+
+IFdoZW4gdGhlIGludGVybmFsIGNvbmZpZ3VyYXRpb24gc3BhY2UgcmV0dXJucyBhIHJldHJ5IHN0
+YXR1cyBkdXJpbmcgYQo+IGNvbmZpZ3VyYXRpb24gY3ljbGUgKHVzZXJfY3NjZmcgPSAxKSBvbiB0
+aGUgQ29tbWFuZC9TdGF0dXMgaW50ZXJmYWNlLAo+IHRoZSBwY2llX2NzY3JzIHdpbGwgYXNzZXJ0
+IHdpdGggdGhlIHBjaWVfY3NhY2sgc2lnbmFsIHRvIGluZGljYXRlIHRoZQo+IENSUyBzdGF0dXMu
+Cj4gV2hlbiB0aGUgQ1JTIFNvZnR3YXJlIFZpc2liaWxpdHkgRW5hYmxlIHJlZ2lzdGVyIGluIHRo
+ZSBSb290IENvbnRyb2wKPiByZWdpc3RlciBpcyBlbmFibGVkLCB0aGUgSVAgd2lsbCByZXR1cm4g
+dGhlIGRhdGEgdmFsdWUgdG8gMHgwMDAxIGZvcgo+IHRoZSBWZW5kb3IgSUQgdmFsdWUgYW5kIDB4
+ZmZmZiAgKGFsbCAx4oCZcykgZm9yIHRoZSByZXN0IG9mIHRoZSBkYXRhIGluCj4gdGhlIHJlcXVl
+c3QgZm9yIHJlYWRzIG9mIG9mZnNldCAwIHRoYXQgcmV0dXJuIHdpdGggQ1JTIHN0YXR1cy4gIFRo
+aXMKPiBpcyB0cnVlIGZvciBib3RoIHRoZSBVc2VyIFJYIEludGVyZmFjZSBhbmQgZm9yIHRoZSBD
+b21tYW5kL1N0YXR1cwo+IGludGVyZmFjZS4gIFdoZW4gQ1JTIFNvZnR3YXJlIFZpc2liaWxpdHkg
+aXMgZW5hYmxlZCwgdGhlIENNUExfU1RBVFVTCj4gZmllbGQgb2YgdGhlIGNvbXBsZXRpb24gb24g
+dGhlIFVzZXIgUlggSW50ZXJmYWNlIHdpbGwgbm90IGJlIDI9Q1JTIGFuZAo+IHRoZSBwY2llX2Nz
+Y3JzIHNpZ25hbCB3aWxsIG5vdCBhc3NlcnQgb24gdGhlIENvbW1hbmQvU3RhdHVzIGludGVyZmFj
+ZS4KPiAKPiBQZXIgUENJZSByMy4xLCBzZWMgMi4zLjIsIGNvbmZpZyByZXF1ZXN0cyB0aGF0IHJl
+Y2VpdmUgY29tcGxldGlvbnMKPiB3aXRoIENvbmZpZ3VyYXRpb24gUmVxdWVzdCBSZXRyeSBTdGF0
+dXMgKENSUykgc2hvdWxkIGJlIHJlaXNzdWVkIGJ5Cj4gdGhlIGhhcmR3YXJlIGV4Y2VwdCByZWFk
+cyBvZiB0aGUgVmVuZG9yIElEIHdoZW4gQ1JTIFNvZnR3YXJlCj4gVmlzaWJpbGl0eSBpcyBlbmFi
+bGVkLgo+IAo+IFRoaXMgaGFyZHdhcmUgbmV2ZXIgcmVpc3N1ZXMgY29uZmlndXJhdGlvbiByZXF1
+ZXN0cyB3aGVuIGl0IHJlY2VpdmVzCj4gQ1JTIGNvbXBsZXRpb25zLgo+IE5vdGUgdGhhdCwgbmVp
+dGhlciBQQ0llIGhvc3QgYnJpZGdlIG5vciBQQ0llIGNvcmUgcmUtaXNzdWVzIHRoZQo+IHJlcXVl
+c3QgZm9yIGFueSBjb25maWd1cmF0aW9uIG9mZnNldC4KPiAKPiBGb3IgY29uZmlnIHJlYWRzLCB0
+aGlzIGhhcmR3YXJlIHJldHVybnMgQ0ZHX1JFVFJZX1NUQVRVUyBkYXRhIHdoZW4KPiBpdCByZWNl
+aXZlcyBhIENSUyBjb21wbGV0aW9uIGZvciBhIGNvbmZpZyByZWFkLCByZWdhcmRsZXNzIG9mIHRo
+ZQo+IGFkZHJlc3Mgb2YgdGhlIHJlYWQgb3IgdGhlIENSUyBTb2Z0d2FyZSBWaXNpYmlsaXR5IEVu
+YWJsZSBiaXQuCj4gCj4gVGhpcyBwYXRjaCBpbXBsZW1lbnRzIGlwcm9jX3BjaWVfY29uZmlnX3Jl
+YWQgd2hpY2ggZ2V0cyBjYWxsZWQgZm9yCj4gU3RpbmdyYXksIGlmIGl0IHJlY2VpdmVzIGEgQ1JT
+IGNvbXBsZXRpb24sIGl0IHJldHJpZXMgcmVhZGluZyBpdCBhZ2Fpbi4KPiBJbiBjYXNlIG9mIHRp
+bWVvdXQsIGl0IHJldHVybnMgMHhmZmZmZmZmZi4KPiBGb3Igb3RoZXIgaXByb2MgYmFzZWQgU09D
+LCBpdCBmYWxscyBiYWNrIHRvIFBDSSBnZW5lcmljIEFQSXMuCj4gCj4gU2lnbmVkLW9mZi1ieTog
+T3phIFBhd2FuZGVlcCA8b3phLm96YUBicm9hZGNvbS5jb20+Cj4gCj4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvcGNpL2hvc3QvcGNpZS1pcHJvYy5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWlwcm9j
+LmMKPiBpbmRleCA2MWQ5YmU2Li4zN2Y0YWRmIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvcGNpL2hv
+c3QvcGNpZS1pcHJvYy5jCj4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWlwcm9jLmMKPiBA
+QCAtNjgsNiArNjgsOSBAQAo+ICAjZGVmaW5lIEFQQl9FUlJfRU5fU0hJRlQgICAgICAgICAgICAg
+MAo+ICAjZGVmaW5lIEFQQl9FUlJfRU4gICAgICAgICAgICAgICAgICAgQklUKEFQQl9FUlJfRU5f
+U0hJRlQpCj4gIAo+ICsjZGVmaW5lIENGR19SRVRSWV9TVEFUVVMgICAgICAgICAgICAgMHhmZmZm
+MDAwMQo+ICsjZGVmaW5lIENGR19SRVRSWV9TVEFUVVNfVElNRU9VVF9VUyAgNTAwMDAwIC8qIDUw
+MCBtaWxsaS1zZWNvbmRzLiAqLwo+ICsKPiAgLyogZGVyaXZlIHRoZSBlbnVtIGluZGV4IG9mIHRo
+ZSBvdXRib3VuZC9pbmJvdW5kIG1hcHBpbmcgcmVnaXN0ZXJzICovCj4gICNkZWZpbmUgTUFQX1JF
+RyhiYXNlX3JlZywgaW5kZXgpICAgICAgKChiYXNlX3JlZykgKyAoaW5kZXgpICogMikKPiAgCj4g
+QEAgLTQ3Myw2ICs0NzYsNjQgQEAgc3RhdGljIHZvaWQgX19pb21lbSAqaXByb2NfcGNpZV9tYXBf
+ZXBfY2ZnX3JlZyhzdHJ1Y3QgaXByb2NfcGNpZSAqcGNpZSwKPiAgCXJldHVybiAocGNpZS0+YmFz
+ZSArIG9mZnNldCk7Cj4gIH0KPiAgCj4gK3N0YXRpYyB1bnNpZ25lZCBpbnQgaXByb2NfcGNpZV9j
+ZmdfcmV0cnkodm9pZCBfX2lvbWVtICpjZmdfZGF0YV9wKQo+ICt7Cj4gKwlpbnQgdGltZW91dCA9
+IENGR19SRVRSWV9TVEFUVVNfVElNRU9VVF9VUzsKPiArCXVuc2lnbmVkIGludCBkYXRhOwo+ICsK
+PiArCS8qCj4gKwkgKiBBcyBwZXIgUENJZSBzcGVjIHIzLjEsIHNlYyAyLjMuMiwgQ1JTIFNvZnR3
+YXJlCj4gKwkgKiBWaXNpYmlsaXR5IG9ubHkgYWZmZWN0cyBjb25maWcgcmVhZCBvZiB0aGUgVmVu
+ZG9yIElELgo+ICsJICogRm9yIGNvbmZpZyB3cml0ZSBvciBhbnkgb3RoZXIgY29uZmlnIHJlYWQg
+dGhlIFJvb3QgbXVzdAo+ICsJICogYXV0b21hdGljYWxseSByZS1pc3N1ZSBjb25maWd1cmF0aW9u
+IHJlcXVlc3QgYWdhaW4gYXMgYQo+ICsJICogbmV3IHJlcXVlc3QuCj4gKwkgKgo+ICsJICogRm9y
+IGNvbmZpZyByZWFkcywgdGhpcyBoYXJkd2FyZSByZXR1cm5zIENGR19SRVRSWV9TVEFUVVMgZGF0
+YSB3aGVuCj4gKwkgKiBpdCByZWNlaXZlcyBhIENSUyBjb21wbGV0aW9uIGZvciBhIGNvbmZpZyBy
+ZWFkLCByZWdhcmRsZXNzIG9mIHRoZQo+ICsJICogYWRkcmVzcyBvZiB0aGUgcmVhZCBvciB0aGUg
+Q1JTIFNvZnR3YXJlIFZpc2liaWxpdHkgRW5hYmxlIGJpdC4gQXMgYQo+ICsJICogcGFydGlhbCB3
+b3JrYXJvdW5kIGZvciB0aGlzLCB3ZSByZXRyeSBpbiBzb2Z0d2FyZSBhbnkgcmVhZCB0aGF0Cj4g
+KwkgKiByZXR1cm5zIENGR19SRVRSWV9TVEFUVVMuCj4gKwkgKi8KPiArCWRhdGEgPSByZWFkbChj
+ZmdfZGF0YV9wKTsKPiArCXdoaWxlIChkYXRhID09IENGR19SRVRSWV9TVEFUVVMgJiYgdGltZW91
+dC0tKSB7Cj4gKwkJdWRlbGF5KDEpOwo+ICsJCWRhdGEgPSByZWFkbChjZmdfZGF0YV9wKTsKPiAr
+CX0KPiArCj4gKwlpZiAoZGF0YSA9PSBDRkdfUkVUUllfU1RBVFVTKQo+ICsJCWRhdGEgPSAweGZm
+ZmZmZmZmOwo+ICsKPiArCXJldHVybiBkYXRhOwo+ICt9Cj4gKwo+ICtzdGF0aWMgaW50IGlwcm9j
+X3BjaWVfY29uZmlnX3JlYWQoc3RydWN0IHBjaV9idXMgKmJ1cywgdW5zaWduZWQgaW50IGRldmZu
+LAo+ICsJCQkJICAgIGludCB3aGVyZSwgaW50IHNpemUsIHUzMiAqdmFsKQo+ICt7Cj4gKwlzdHJ1
+Y3QgaXByb2NfcGNpZSAqcGNpZSA9IGlwcm9jX2RhdGEoYnVzKTsKPiArCXVuc2lnbmVkIGludCBz
+bG90ID0gUENJX1NMT1QoZGV2Zm4pOwo+ICsJdW5zaWduZWQgaW50IGZuID0gUENJX0ZVTkMoZGV2
+Zm4pOwo+ICsJdW5zaWduZWQgaW50IGJ1c25vID0gYnVzLT5udW1iZXI7Cj4gKwl2b2lkIF9faW9t
+ZW0gKmNmZ19kYXRhX3A7Cj4gKwl1bnNpZ25lZCBpbnQgZGF0YTsKPiArCj4gKwkvKiByb290IGNv
+bXBsZXggYWNjZXNzLiAqLwo+ICsJaWYgKGJ1c25vID09IDApCj4gKwkJcmV0dXJuIHBjaV9nZW5l
+cmljX2NvbmZpZ19yZWFkMzIoYnVzLCBkZXZmbiwgd2hlcmUsIHNpemUsIHZhbCk7CgpJdCBzb3Vu
+ZHMgbGlrZSBTdGluZ3JheSBhZHZlcnRpc2VzIENSUyBTViBzdXBwb3J0IGluIGl0cyBSb290IENh
+cGFiaWxpdGllcwpyZWdpc3Rlci4gIEkgdGhpbmsgd2Ugc2hvdWxkIG1hc2sgb3V0IFBDSV9FWFBf
+UlRDQVBfQ1JTVklTIHNvIHdlIGRvbid0CmFkdmVydGlzZSBpdC4gIFRoYXQgd2lsbCBrZWVwIExp
+bnV4IGZyb20gdHJ5aW5nIHRvIGVuYWJsZSBpdC4gIEkga25vdyB0aGUKaGFyZHdhcmUgZG9lc24n
+dCBsb29rIGF0IFBDSV9FWFBfUlRDVExfQ1JTU1ZFLCBidXQgdGhlcmUncyBubyBwb2ludCBpbgpj
+b25mdXNpbmcgdXNlcnMgcmVhZGluZyB0aGUgbHNwY2kgb3V0cHV0LgoKV2UgZGlkIHNvbWV0aGlu
+ZyBzaW1pbGFyIHdpdGggZjA5Zjg3MzVmYjljICgiUENJOiB4Z2VuZTogRGlzYWJsZQpDb25maWd1
+cmF0aW9uIFJlcXVlc3QgUmV0cnkgU3RhdHVzIGZvciB2MSBzaWxpY29uIikuCgpJIHRyaWVkIHRv
+IGRvIHRoaXMgaW4gdGhlIHBhdGNoIEkgcHVzaGVkIHRvIHBjaS9ob3N0LWlwcm9jLgoKPiArCj4g
+KwljZmdfZGF0YV9wID0gaXByb2NfcGNpZV9tYXBfZXBfY2ZnX3JlZyhwY2llLCBidXNubywgc2xv
+dCwgZm4sIHdoZXJlKTsKPiArCj4gKwlpZiAoIWNmZ19kYXRhX3ApCj4gKwkJcmV0dXJuIFBDSUJJ
+T1NfREVWSUNFX05PVF9GT1VORDsKPiArCj4gKwlkYXRhID0gaXByb2NfcGNpZV9jZmdfcmV0cnko
+Y2ZnX2RhdGFfcCk7Cj4gKwo+ICsJKnZhbCA9IGRhdGE7Cj4gKwlpZiAoc2l6ZSA8PSAyKQo+ICsJ
+CSp2YWwgPSAoZGF0YSA+PiAoOCAqICh3aGVyZSAmIDMpKSkgJiAoKDEgPDwgKHNpemUgKiA4KSkg
+LSAxKTsKPiArCj4gKwlyZXR1cm4gUENJQklPU19TVUNDRVNTRlVMOwo+ICt9Cj4gKwo+ICAvKioK
+PiAgICogTm90ZSBhY2Nlc3MgdG8gdGhlIGNvbmZpZ3VyYXRpb24gcmVnaXN0ZXJzIGFyZSBwcm90
+ZWN0ZWQgYXQgdGhlIGhpZ2hlciBsYXllcgo+ICAgKiBieSAncGNpX2xvY2snIGluIGRyaXZlcnMv
+cGNpL2FjY2Vzcy5jCj4gQEAgLTU2Nyw4ICs2MjgsMTMgQEAgc3RhdGljIGludCBpcHJvY19wY2ll
+X2NvbmZpZ19yZWFkMzIoc3RydWN0IHBjaV9idXMgKmJ1cywgdW5zaWduZWQgaW50IGRldmZuLAo+
+ICAJCQkJICAgIGludCB3aGVyZSwgaW50IHNpemUsIHUzMiAqdmFsKQo+ICB7Cj4gIAlpbnQgcmV0
+Owo+ICsJc3RydWN0IGlwcm9jX3BjaWUgKnBjaWUgPSBpcHJvY19kYXRhKGJ1cyk7Cj4gIAo+ICAJ
+aXByb2NfcGNpZV9hcGJfZXJyX2Rpc2FibGUoYnVzLCB0cnVlKTsKPiArCWlmIChwY2llLT50eXBl
+ID09IElQUk9DX1BDSUVfUEFYQl9WMikKPiArCQlyZXQgPSBpcHJvY19wY2llX2NvbmZpZ19yZWFk
+KGJ1cywgZGV2Zm4sIHdoZXJlLCBzaXplLCB2YWwpOwo+ICsJZWxzZQo+ICsJCXJldCA9IHBjaV9n
+ZW5lcmljX2NvbmZpZ19yZWFkMzIoYnVzLCBkZXZmbiwgd2hlcmUsIHNpemUsIHZhbCk7Cj4gIAly
+ZXQgPSBwY2lfZ2VuZXJpY19jb25maWdfcmVhZDMyKGJ1cywgZGV2Zm4sIHdoZXJlLCBzaXplLCB2
+YWwpOwoKVGhpcyBsYXN0IHBjaV9nZW5lcmljX2NvbmZpZ19yZWFkMzIoKSBjYWxsIGxvb2tzIGxp
+a2UgYSBkdXBsaWNhdGUuCgo+ICAJaXByb2NfcGNpZV9hcGJfZXJyX2Rpc2FibGUoYnVzLCBmYWxz
+ZSk7Cj4gIAo+IC0tIAo+IDEuOS4xCj4gCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0t
+a2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFp
+bG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
