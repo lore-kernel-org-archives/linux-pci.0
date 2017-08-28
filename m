@@ -1,116 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 15 Aug 2017 12:03:31 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37878 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751192AbdH1Sdk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Aug 2017 14:33:40 -0400
+Date: Mon, 28 Aug 2017 13:33:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ding Tianhong <dingtianhong@huawei.com>
-Subject: Re: [PATCH net RESEND] PCI: fix oops when try to find Root Port for
- a PCI device
-Message-ID: <20170815170331.GA4099@bhelgaas-glaptop.roam.corp.google.com>
-References: <1502810688-12420-1-git-send-email-dingtianhong@huawei.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v5 0/10] Some cleanup and bug fix for pcie-rockchip
+Message-ID: <20170828183339.GI8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170825213838.GB8154@bhelgaas-glaptop.roam.corp.google.com>
+ <c6e1a387-ee7b-1694-31d6-1b2f553e3d0f@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <1502810688-12420-1-git-send-email-dingtianhong@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
- catalin.marinas@arm.com, will.deacon@arm.com, linuxarm@huawei.com,
- alexander.duyck@gmail.com, ashok.raj@intel.com, eric.dumazet@gmail.com,
- jeffrey.t.kirsher@intel.com, linux-pci@vger.kernel.org, ganeshgr@chelsio.com,
- Bob.Shaw@amd.com, leedom@chelsio.com, patrick.j.cramer@intel.com,
- bhelgaas@google.com, werner@chelsio.com, linux-arm-kernel@lists.infradead.org,
- amira@mellanox.com, netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
- David.Laight@aculab.com, Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com,
- davem@davemloft.net, l.stach@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c6e1a387-ee7b-1694-31d6-1b2f553e3d0f@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 11:24:48PM +0800, Ding Tianhong wrote:
-> Eric report a oops when booting the system after applying
-> the commit a99b646afa8a ("PCI: Disable PCIe Relaxed..."):
-> ...
-
-> It looks like the pci_find_pcie_root_port() was trying to
-> find the Root Port for the PCI device which is the Root
-> Port already, it will return NULL and trigger the problem,
-> so check the highest_pcie_bridge to fix thie problem.
-
-The problem was actually with a Root Complex Integrated Endpoint that
-has no upstream PCIe device:
-
-  00:05.2 System peripheral: Intel Corporation Device 0e2a (rev 04)
-        Subsystem: Intel Corporation Device 0e2a
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Capabilities: [40] Express (v2) Root Complex Integrated Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
-                        ExtTag- RBE- FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal+ Unsupported+
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-
-> Fixes: a99b646afa8a ("PCI: Disable PCIe Relaxed Ordering if unsupported")
-
-This also
-
-Fixes: c56d4450eb68 ("PCI: Turn off Request Attributes to avoid Chelsio T5 Completion erratum")
-
-which added pci_find_pcie_root_port().  Prior to this Relaxed Ordering
-series, we only used pci_find_pcie_root_port() in a Chelsio quirk that
-only applied to non-integrated endpoints, so we didn't trip over the
-bug.
-
-> Reported-by: Eric Dumazet <eric.dumazet@gmail.com>
-> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
-> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> ---
->  drivers/pci/pci.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+On Mon, Aug 28, 2017 at 10:22:24AM +0800, Shawn Lin wrote:
+> Hi Bjorn,
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index af0cc34..7e2022f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -522,7 +522,8 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
->  		bridge = pci_upstream_bridge(bridge);
->  	}
->  
-> -	if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
-> +	if (highest_pcie_bridge &&
-> +	    pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
->  		return NULL;
->  
->  	return highest_pcie_bridge;
-> -- 
+> On 2017/8/26 5:38, Bjorn Helgaas wrote:
+> >On Wed, Aug 23, 2017 at 03:01:13PM +0800, Shawn Lin wrote:
+> >>
+> 
+> ...
+> 
+> >
+> >I applied these to pci/host-rockchip except for these:
+> >
+> >   PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
+> >   PCI: rockchip: fix missing phy manipulation for legacy phy
+> >
+> >I'm not really happy with the devm/clk_prepare_enable situation, so
+> >I'm waiting to see if a better solution emerges.
+> >
+> >I went ahead and applied the tweaks I proposed to the earlier "PCI:
+> >rockchip: Add per-lane PHY support" and "PCI: rockchip: Idle inactive
+> >PHY(s)" patches.  I *think* those make the "fix missing phy
+> >manipulation for legacy phy" patch unnecessary.
+> >
+> >But please take a look and make sure.  If I went the wrong direction,
+> >I'll gladly back it out.
+> 
+> I tested both of legacy and per-lane PHY mode, and it works fine.
+> 
+> But just a nit:
+> 
+> with legacy PHY, we could avoid to print the following message
+> which is confusing as for legacy PHY mode, we couldn't idle
+> any inactive lanes.
+> 
+> [    0.655192] rockchip-pcie f8000000.pcie: idling lane 1
+> [    0.655696] rockchip-pcie f8000000.pcie: idling lane 2
+> [    0.656194] rockchip-pcie f8000000.pcie: idling lane 3
+> 
+> So I think we could return 0xf for legacy PHY mode like this:
+> 
+> static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
+>         u8 map;
+> 
+>         if (rockchip->legacy_phy)
+> -               return BIT(0);
+> +               return GENMASK(MAX_LANE_NUM - 1, 0);
 
-I think structuring the fix as follows is a little more readable:
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc3456dc1..587cd7623ed8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -522,10 +522,11 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
- 		bridge = pci_upstream_bridge(bridge);
- 	}
- 
--	if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
--		return NULL;
-+	if (highest_pcie_bridge &&
-+	    pci_pcie_type(highest_pcie_bridge) == PCI_EXP_TYPE_ROOT_PORT)
-+		return highest_pcie_bridge;
- 
--	return highest_pcie_bridge;
-+	return NULL;
- }
- EXPORT_SYMBOL(pci_find_pcie_root_port);
- 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+When we're using legacy PHY mode, this changes lanes_map from 0x1 to
+0xf.  That means we won't print the "idling lane 1" message.  It
+*also* means we won't call phy_power_off() for lanes 1-3.  Is that the
+correct behavior?  Does the legacy PHY mode actually use all 4 PHYs?
