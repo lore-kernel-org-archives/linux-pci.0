@@ -1,126 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53358 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752740AbdHJSAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Aug 2017 14:00:42 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <CAMSpPPdxGdXoh0dux3Lyh5o210mxSK2WhMvyh_ygW8gQN28ymg@mail.gmail.com>
-References: <1502167455-10516-1-git-send-email-oza.oza@broadcom.com>
- <1502167455-10516-3-git-send-email-oza.oza@broadcom.com> <CAL_JsqL3dWA-0Sq-_8ufa-cwXZEbFQBJHCK-5wLp_xw5NrTHKw@mail.gmail.com>
- <CAMSpPPfjxbjaScqovegcRG6GBhkUutqgj3Ly1B+0_BnZN2Ewug@mail.gmail.com>
- <735e0534-ab77-7440-fbc6-5b40598da445@broadcom.com> <CAMSpPPejuTn210aSYjApbz_Jx_tO7V1Fd6nSt96axm-9MFruhA@mail.gmail.com>
- <CAMSpPPdxGdXoh0dux3Lyh5o210mxSK2WhMvyh_ygW8gQN28ymg@mail.gmail.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Thu, 10 Aug 2017 13:00:20 -0500
-Message-ID: <CAL_JsqKi-jBEV6d8SbBZik6RjzgvVn_A9x7VShLbXgd1k3_GPg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: Add optional brcm,pci-hotplug
-To: Oza Oza <oza.oza@broadcom.com>
-Cc: Ray Jui <ray.jui@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        "bcm-kernel-feedback-list@broadcom.com"
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Oza Pawandeep <oza.pawandeep@gmail.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170825181959.GA64040@google.com>
+References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
+ <20170822031934.8675-4-jeffy.chen@rock-chips.com>
+ <20170825181439.d3hlwrcbmcss3sx6@rob-hp-laptop>
+ <20170825181959.GA64040@google.com>
+From: Rob Herring <robh@kernel.org>
+Date: Mon, 28 Aug 2017 16:32:55 -0500
+Message-ID: <CAL_Jsq+MeiwOf=VDLZrxgPuLNEDvtGY=X-K1=6w9aaFVZgg1hA@mail.gmail.com>
+Subject: Re: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie
+ wake irq
+To: Brian Norris <briannorris@chromium.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Heiko Stuebner <heiko@sntech.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Jeffy Chen <jeffy.chen@rock-chips.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Doug Anderson <dianders@chromium.org>,
+ "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 9, 2017 at 12:52 AM, Oza Oza <oza.oza@broadcom.com> wrote:
-> On Wed, Aug 9, 2017 at 11:13 AM, Oza Oza <oza.oza@broadcom.com> wrote:
->> On Wed, Aug 9, 2017 at 10:57 AM, Ray Jui <ray.jui@broadcom.com> wrote:
->>>
->>>
->>> On 8/8/2017 10:22 PM, Oza Oza wrote:
->>>>
->>>> On Tue, Aug 8, 2017 at 7:50 PM, Rob Herring <robh+dt@kernel.org> wrote:
->>>>>
->>>>> Please send bindings to DT list.
->>>>
->>>> Sure, will do that.
->>>>
->>>>> On Mon, Aug 7, 2017 at 11:44 PM, Oza Pawandeep <oza.oza@broadcom.com>
->>>>> wrote:
->>>>>>
->>>>>> Add description for optional device tree property
->>>>>> 'brcm,pci-hotplug' for PCI hotplug feature.
->>>>>>
->>>>>> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
->>>>>> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
->>>>>>
->>>>>> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->>>>>> b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->>>>>> index b8e48b4..a3bad24 100644
->>>>>> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->>>>>> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->>>>>> @@ -72,6 +72,29 @@ Optional properties:
->>>>>>   - brcm,pcie-msi-inten: Needs to be present for some older iProc
->>>>>> platforms that
->>>>>>   require the interrupt enable registers to be set explicitly to enable
->>>>>> MSI
->>>>>>
->>>>>> +Optional properties:
->>>>>> +- brcm,pci-hotplug: PCI hotplug feature is supported.
->>>>>
->>>>> I think we should make this a common property. We already have
->>>>> "ibm,slot-pluggable", so I'd propose "slot-pluggable".
->>>>>
->>>>> There's also "hotpluggable" for memory nodes defined, so we could
->>>>> reuse that here.
->>>>>
->>>> ok I will rename this to
->>>> brcm,slot-pluggable
->>>
->>>
->>> How's brcm,slot-pluggable a common property? It's still brcm specific.
->>> Didn't Rob propose either "slot-pluggable" or "hotpluggable"?
->>>
->>> And note it goes to the generic PCI binding instead iProc PCIe specific
->>> binding.
->>>
+On Fri, Aug 25, 2017 at 1:20 PM, Brian Norris <briannorris@chromium.org> wrote:
+> On Fri, Aug 25, 2017 at 01:14:39PM -0500, Rob Herring wrote:
+>> On Tue, Aug 22, 2017 at 11:19:33AM +0800, Jeffy Chen wrote:
+>> > Add an optional interrupt for PCIE_WAKE pin.
+>> >
+>> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>> > ---
+>> >
+>> > Changes in v4: None
+>> > Changes in v3: None
+>> > Changes in v2: None
+>> >
+>> >  .../devicetree/bindings/pci/rockchip-pcie.txt        | 20 ++++++++++++--------
+>> >  1 file changed, 12 insertions(+), 8 deletions(-)
+>> >
+>> > diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> > index 5678be82530d..9f6504129e80 100644
+>> > --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> > +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> > @@ -20,10 +20,13 @@ Required properties:
+>> >  - msi-map: Maps a Requester ID to an MSI controller and associated
+>> >     msi-specifier data. See ./pci-msi.txt
+>> >  - interrupts: Three interrupt entries must be specified.
+>> > -- interrupt-names: Must include the following names
+>> > -   - "sys"
+>> > -   - "legacy"
+>> > -   - "client"
+>> > +- interrupt-names: Include the following names
+>> > +   Required:
+>> > +           - "sys"
+>> > +           - "legacy"
+>> > +           - "client"
+>> > +   Optional:
+>> > +           - "wake"
 >>
->> Initially I thought, Rob suggested either "slot-pluggable".
->> followed by, "hotpluggable" since memory node already has such property.
-
-I didn't say which because I'm fine with either one. Pick the color of
-the bikeshed.
-
->>
->> but not sure in which generic pci binding I should add ?
->> should it be part of
->> Documentation/devicetree/bindings/pci/host-generic-pci.txt
-
-That's for generic CAM/ECAM hosts.
-
-pci.txt would be the place.
-
->>
->> Can you please clarify Rob ?
->>
->> Regards,
->> Oza.
+>> Use the wakeup source binding:
+>> Documentation/devicetree/bindings/power/wakeup-source.txt
 >
-> To add, every SOC might have different way of implementing hotplug.
-> so I suppose both the binding documents have to be updated.
+> And I suppose this means we'd fall under this paragraph?
 >
-> Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> which can have common boolean property
-> named "hotpluggable"
+>     "However if the devices have dedicated interrupt as the wakeup source
+>     then they need to specify/identify the same using device specific
+>     interrupt name. In such cases only that interrupt can be used as wakeup
+>     interrupt."
 >
-> and SOC specific implementation can stay here
-> for e.g.
-> Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-> brcm,prsnt-gpios
+> We don't expect *any* interrupt to qualify as PCI WAKE#; so we should
+> still also document the interrupt name ("wake"?) in
+> Documentation/devicetree/bindings/pci/pci.txt as Bjorn suggested, in
+> addition to using the 'wakeup-source' property documented there.
 
-PRSNT# is a standard signal though, right? The h/w specific part would
-be whether it is connected to GPIOs or the host controller has some
-built-in controls. So yes, it should be documented if iproc-pcie uses
-"prsnt-gpios", but it can still be a common property.
+I believe the defined interrupt name is "wakeup" as example 1 shows.
 
 Rob
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
