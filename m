@@ -1,171 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
- <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linuxarm@huawei.com>
-Subject: [PATCH v8 2/4] PCI: Disable PCIe Relaxed Ordering if unsupported
-Date: Thu, 3 Aug 2017 21:44:47 +0800
-Message-ID: <1501767889-7772-3-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>
-References: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <SRS0=Bcxn=76=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=Bcxn=76=broadcom.com=oza.oza@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170828191708.GJ8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+ <1503551066-23212-3-git-send-email-oza.oza@broadcom.com> <20170828191708.GJ8154@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Tue, 29 Aug 2017 01:09:53 +0530
+Message-ID: <CAMSpPPf5LJqvjFdrsR0hXK7oq2n38zCUjEpdmV0m8h6R_oiEXg@mail.gmail.com>
+Subject: Re: [PATCH v8 2/3] PCI: iproc: retry request when CRS returned from EP
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
+	devicetree@vger.kernel.org, Linux ARM <linux-arm-kernel@lists.infradead.org>,
+	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-When bit4 is set in the PCIe Device Control register, it indicates
-whether the device is permitted to use relaxed ordering.
-On some platforms using relaxed ordering can have performance issues or
-due to erratum can cause data-corruption. In such cases devices must avoid
-using relaxed ordering.
+On Tue, Aug 29, 2017 at 12:47 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Aug 24, 2017 at 10:34:25AM +0530, Oza Pawandeep wrote:
+>> PCIe spec r3.1, sec 2.3.2
+>> If CRS software visibility is not enabled, the RC must reissue the
+>> config request as a new request.
+>>
+>> - If CRS software visibility is enabled,
+>> - for a config read of Vendor ID, the RC must return 0x0001 data
+>> - for all other config reads/writes, the RC must reissue the
+>>   request
+>>
+>> iproc PCIe Controller spec:
+>> 4.7.3.3. Retry Status On Configuration Cycle
+>> Endpoints are allowed to generate retry status on configuration
+>> cycles. In this case, the RC needs to re-issue the request. The IP
+>> does not handle this because the number of configuration cycles needed
+>> will probably be less than the total number of non-posted operations
+>> needed.
+>>
+>> When a retry status is received on the User RX interface for a
+>> configuration request that was sent on the User TX interface,
+>> it will be indicated with a completion with the CMPL_STATUS field set
+>> to 2=3DCRS, and the user will have to find the address and data values
+>> and send a new transaction on the User TX interface.
+>> When the internal configuration space returns a retry status during a
+>> configuration cycle (user_cscfg =3D 1) on the Command/Status interface,
+>> the pcie_cscrs will assert with the pcie_csack signal to indicate the
+>> CRS status.
+>> When the CRS Software Visibility Enable register in the Root Control
+>> register is enabled, the IP will return the data value to 0x0001 for
+>> the Vendor ID value and 0xffff  (all 1=E2=80=99s) for the rest of the da=
+ta in
+>> the request for reads of offset 0 that return with CRS status.  This
+>> is true for both the User RX Interface and for the Command/Status
+>> interface.  When CRS Software Visibility is enabled, the CMPL_STATUS
+>> field of the completion on the User RX Interface will not be 2=3DCRS and
+>> the pcie_cscrs signal will not assert on the Command/Status interface.
+>>
+>> Per PCIe r3.1, sec 2.3.2, config requests that receive completions
+>> with Configuration Request Retry Status (CRS) should be reissued by
+>> the hardware except reads of the Vendor ID when CRS Software
+>> Visibility is enabled.
+>>
+>> This hardware never reissues configuration requests when it receives
+>> CRS completions.
+>> Note that, neither PCIe host bridge nor PCIe core re-issues the
+>> request for any configuration offset.
+>>
+>> For config reads, this hardware returns CFG_RETRY_STATUS data when
+>> it receives a CRS completion for a config read, regardless of the
+>> address of the read or the CRS Software Visibility Enable bit.
+>
+> I can't remember how Stingray handles the CRS Software Visibility Enable
+> bit.  Is it a read-only zero?  Is it writable?  Does the hardware look at
+> it all (I think not)?
 
-This patch checks if there is any node in the hierarchy that indicates that
-using relaxed ordering is not safe. In such cases the patch turns off the
-relaxed ordering by clearing the eapability for this device. And if the
-device is probably running in a guest machine, we should do nothing.
+HW doesnt look it at all, it is "dont care" bit.
 
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
-Acked-by: Ashok Raj <ashok.raj@intel.com>
----
- drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
- drivers/pci/probe.c | 37 +++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  2 ++
- 3 files changed, 68 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc34..4f9d7c1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4854,6 +4854,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
- EXPORT_SYMBOL(pcie_set_mps);
- 
- /**
-+ * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
-+ * @dev: PCI device to query
-+ *
-+ * If possible clear relaxed ordering
-+ */
-+int pcie_clear_relaxed_ordering(struct pci_dev *dev)
-+{
-+	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-+					  PCI_EXP_DEVCTL_RELAX_EN);
-+}
-+EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
-+
-+/**
-+ * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
-+ * @dev: PCI device to query
-+ *
-+ * Returns true if the device support relaxed ordering attribute.
-+ */
-+bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
-+{
-+	u16 v;
-+
-+	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
-+
-+	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
-+}
-+EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
-+
-+/**
-  * pcie_get_minimum_link - determine minimum link settings of a PCI device
-  * @dev: PCI device to query
-  * @speed: storage for minimum speed
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c31310d..48df012 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1762,6 +1762,42 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
- 					 PCI_EXP_DEVCTL_EXT_TAG);
- }
- 
-+/**
-+ * pci_dev_should_disable_relaxed_ordering - check if the PCI device
-+ * should disable the relaxed ordering attribute.
-+ * @dev: PCI device
-+ *
-+ * Return true if any of the PCI devices above us do not support
-+ * relaxed ordering.
-+ */
-+static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
-+{
-+	while (dev) {
-+		if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING)
-+			return true;
-+
-+		dev = dev->bus->self;
-+	}
-+
-+	return false;
-+}
-+
-+static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-+{
-+	/* We should not alter the relaxed ordering bit for the VF */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	/* If the releaxed ordering enable bit is not set, do nothing. */
-+	if (!pcie_relaxed_ordering_supported(dev))
-+		return;
-+
-+	if (pci_dev_should_disable_relaxed_ordering(dev)) {
-+		pcie_clear_relaxed_ordering(dev);
-+		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
-+	}
-+}
-+
- static void pci_configure_device(struct pci_dev *dev)
- {
- 	struct hotplug_params hpp;
-@@ -1769,6 +1805,7 @@ static void pci_configure_device(struct pci_dev *dev)
- 
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev);
-+	pci_configure_relaxed_ordering(dev);
- 
- 	memset(&hpp, 0, sizeof(hpp));
- 	ret = pci_get_hp_params(dev, &hpp);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 412ec1c..3aa23a2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1127,6 +1127,8 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
- void pci_pme_wakeup_bus(struct pci_bus *bus);
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
-+int pcie_clear_relaxed_ordering(struct pci_dev *dev);
-+bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
- 
- /* PCI Virtual Channel */
- int pci_save_vc_state(struct pci_dev *dev);
--- 
-1.8.3.1
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Oza.
