@@ -1,13 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 31 Aug 2017 08:39:52 -0500
+Date: Mon, 28 Aug 2017 14:54:02 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Subject: Re: [PATCH v6 0/3] PCI hotplug feature
-Message-ID: <20170831133951.GA8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504155029-24729-1-git-send-email-oza.oza@broadcom.com>
+To: Oza Oza <oza.oza@broadcom.com>
+Subject: Re: [PATCH v8 2/3] PCI: iproc: retry request when CRS returned from EP
+Message-ID: <20170828195402.GK8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+ <1503551066-23212-3-git-send-email-oza.oza@broadcom.com>
+ <20170828191708.GJ8154@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMSpPPf5LJqvjFdrsR0hXK7oq2n38zCUjEpdmV0m8h6R_oiEXg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1504155029-24729-1-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <CAMSpPPf5LJqvjFdrsR0hXK7oq2n38zCUjEpdmV0m8h6R_oiEXg@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,56 +22,77 @@ Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
  Scott Branden <sbranden@broadcom.com>, Oza Pawandeep <oza.pawandeep@gmail.com>,
  Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
  linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Andy Gospodarek <gospo@broadcom.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
+ BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Andy Gospodarek <gospo@broadcom.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 10:20:26AM +0530, Oza Pawandeep wrote:
-> These patches bring in PCI hotplug support for iproc family chipsets.
-> 
-> It includes DT binding documentation and, the implementation in
-> iproc pcie RC driver.
-> 
-> Changes since v5:
-> [RESEND]
-
-Not sure what the point of resending this as v6 was, since v5 was
-posted 6 minutes earlier and you don't mention any changes in v6?
-
-> Changes since v4:
-> Rebased to pci-next
-> Added; Acked-by: Rob Herring <robh@kernel.org>
-> 
-> Changes since v3:
-> Resend. just to be in sync previous in-flight patches.
-> 
-> Changes since v2:
-> Addressed Rob Herring's comments.
-> Changed subject to "dt-bindings: PCI:..."
-> Made generic PCI hotplug properties 'slot-pluggable' and 'prsnt-gpios'
-> Rebased the patches on top of Lorenzo's patches.
-> 
-> Oza Pawandeep (3):
->   dt-bindings: PCI: Add PCI hotplug property
->   dt-bindings: PCI iproc: Implement optional property prsnt-gpios
->   PCI: iproc: Implement PCI hotplug support
-> 
->  .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  14 ++
->  Documentation/devicetree/bindings/pci/pci.txt      |  15 ++
->  drivers/pci/host/pcie-iproc-platform.c             |   3 +
->  drivers/pci/host/pcie-iproc.c                      | 166 ++++++++++++++++++---
->  drivers/pci/host/pcie-iproc.h                      |   7 +
->  5 files changed, 187 insertions(+), 18 deletions(-)
-> 
-> -- 
-> 1.9.1
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+T24gVHVlLCBBdWcgMjksIDIwMTcgYXQgMDE6MDk6NTNBTSArMDUzMCwgT3phIE96YSB3cm90ZToK
+PiBPbiBUdWUsIEF1ZyAyOSwgMjAxNyBhdCAxMjo0NyBBTSwgQmpvcm4gSGVsZ2FhcyA8aGVsZ2Fh
+c0BrZXJuZWwub3JnPiB3cm90ZToKPiA+IE9uIFRodSwgQXVnIDI0LCAyMDE3IGF0IDEwOjM0OjI1
+QU0gKzA1MzAsIE96YSBQYXdhbmRlZXAgd3JvdGU6Cj4gPj4gUENJZSBzcGVjIHIzLjEsIHNlYyAy
+LjMuMgo+ID4+IElmIENSUyBzb2Z0d2FyZSB2aXNpYmlsaXR5IGlzIG5vdCBlbmFibGVkLCB0aGUg
+UkMgbXVzdCByZWlzc3VlIHRoZQo+ID4+IGNvbmZpZyByZXF1ZXN0IGFzIGEgbmV3IHJlcXVlc3Qu
+Cj4gPj4KPiA+PiAtIElmIENSUyBzb2Z0d2FyZSB2aXNpYmlsaXR5IGlzIGVuYWJsZWQsCj4gPj4g
+LSBmb3IgYSBjb25maWcgcmVhZCBvZiBWZW5kb3IgSUQsIHRoZSBSQyBtdXN0IHJldHVybiAweDAw
+MDEgZGF0YQo+ID4+IC0gZm9yIGFsbCBvdGhlciBjb25maWcgcmVhZHMvd3JpdGVzLCB0aGUgUkMg
+bXVzdCByZWlzc3VlIHRoZQo+ID4+ICAgcmVxdWVzdAo+ID4+Cj4gPj4gaXByb2MgUENJZSBDb250
+cm9sbGVyIHNwZWM6Cj4gPj4gNC43LjMuMy4gUmV0cnkgU3RhdHVzIE9uIENvbmZpZ3VyYXRpb24g
+Q3ljbGUKPiA+PiBFbmRwb2ludHMgYXJlIGFsbG93ZWQgdG8gZ2VuZXJhdGUgcmV0cnkgc3RhdHVz
+IG9uIGNvbmZpZ3VyYXRpb24KPiA+PiBjeWNsZXMuIEluIHRoaXMgY2FzZSwgdGhlIFJDIG5lZWRz
+IHRvIHJlLWlzc3VlIHRoZSByZXF1ZXN0LiBUaGUgSVAKPiA+PiBkb2VzIG5vdCBoYW5kbGUgdGhp
+cyBiZWNhdXNlIHRoZSBudW1iZXIgb2YgY29uZmlndXJhdGlvbiBjeWNsZXMgbmVlZGVkCj4gPj4g
+d2lsbCBwcm9iYWJseSBiZSBsZXNzIHRoYW4gdGhlIHRvdGFsIG51bWJlciBvZiBub24tcG9zdGVk
+IG9wZXJhdGlvbnMKPiA+PiBuZWVkZWQuCj4gPj4KPiA+PiBXaGVuIGEgcmV0cnkgc3RhdHVzIGlz
+IHJlY2VpdmVkIG9uIHRoZSBVc2VyIFJYIGludGVyZmFjZSBmb3IgYQo+ID4+IGNvbmZpZ3VyYXRp
+b24gcmVxdWVzdCB0aGF0IHdhcyBzZW50IG9uIHRoZSBVc2VyIFRYIGludGVyZmFjZSwKPiA+PiBp
+dCB3aWxsIGJlIGluZGljYXRlZCB3aXRoIGEgY29tcGxldGlvbiB3aXRoIHRoZSBDTVBMX1NUQVRV
+UyBmaWVsZCBzZXQKPiA+PiB0byAyPUNSUywgYW5kIHRoZSB1c2VyIHdpbGwgaGF2ZSB0byBmaW5k
+IHRoZSBhZGRyZXNzIGFuZCBkYXRhIHZhbHVlcwo+ID4+IGFuZCBzZW5kIGEgbmV3IHRyYW5zYWN0
+aW9uIG9uIHRoZSBVc2VyIFRYIGludGVyZmFjZS4KPiA+PiBXaGVuIHRoZSBpbnRlcm5hbCBjb25m
+aWd1cmF0aW9uIHNwYWNlIHJldHVybnMgYSByZXRyeSBzdGF0dXMgZHVyaW5nIGEKPiA+PiBjb25m
+aWd1cmF0aW9uIGN5Y2xlICh1c2VyX2NzY2ZnID0gMSkgb24gdGhlIENvbW1hbmQvU3RhdHVzIGlu
+dGVyZmFjZSwKPiA+PiB0aGUgcGNpZV9jc2NycyB3aWxsIGFzc2VydCB3aXRoIHRoZSBwY2llX2Nz
+YWNrIHNpZ25hbCB0byBpbmRpY2F0ZSB0aGUKPiA+PiBDUlMgc3RhdHVzLgo+ID4+IFdoZW4gdGhl
+IENSUyBTb2Z0d2FyZSBWaXNpYmlsaXR5IEVuYWJsZSByZWdpc3RlciBpbiB0aGUgUm9vdCBDb250
+cm9sCj4gPj4gcmVnaXN0ZXIgaXMgZW5hYmxlZCwgdGhlIElQIHdpbGwgcmV0dXJuIHRoZSBkYXRh
+IHZhbHVlIHRvIDB4MDAwMSBmb3IKPiA+PiB0aGUgVmVuZG9yIElEIHZhbHVlIGFuZCAweGZmZmYg
+IChhbGwgMeKAmXMpIGZvciB0aGUgcmVzdCBvZiB0aGUgZGF0YSBpbgo+ID4+IHRoZSByZXF1ZXN0
+IGZvciByZWFkcyBvZiBvZmZzZXQgMCB0aGF0IHJldHVybiB3aXRoIENSUyBzdGF0dXMuICBUaGlz
+Cj4gPj4gaXMgdHJ1ZSBmb3IgYm90aCB0aGUgVXNlciBSWCBJbnRlcmZhY2UgYW5kIGZvciB0aGUg
+Q29tbWFuZC9TdGF0dXMKPiA+PiBpbnRlcmZhY2UuICBXaGVuIENSUyBTb2Z0d2FyZSBWaXNpYmls
+aXR5IGlzIGVuYWJsZWQsIHRoZSBDTVBMX1NUQVRVUwo+ID4+IGZpZWxkIG9mIHRoZSBjb21wbGV0
+aW9uIG9uIHRoZSBVc2VyIFJYIEludGVyZmFjZSB3aWxsIG5vdCBiZSAyPUNSUyBhbmQKPiA+PiB0
+aGUgcGNpZV9jc2NycyBzaWduYWwgd2lsbCBub3QgYXNzZXJ0IG9uIHRoZSBDb21tYW5kL1N0YXR1
+cyBpbnRlcmZhY2UuCj4gPj4KPiA+PiBQZXIgUENJZSByMy4xLCBzZWMgMi4zLjIsIGNvbmZpZyBy
+ZXF1ZXN0cyB0aGF0IHJlY2VpdmUgY29tcGxldGlvbnMKPiA+PiB3aXRoIENvbmZpZ3VyYXRpb24g
+UmVxdWVzdCBSZXRyeSBTdGF0dXMgKENSUykgc2hvdWxkIGJlIHJlaXNzdWVkIGJ5Cj4gPj4gdGhl
+IGhhcmR3YXJlIGV4Y2VwdCByZWFkcyBvZiB0aGUgVmVuZG9yIElEIHdoZW4gQ1JTIFNvZnR3YXJl
+Cj4gPj4gVmlzaWJpbGl0eSBpcyBlbmFibGVkLgo+ID4+Cj4gPj4gVGhpcyBoYXJkd2FyZSBuZXZl
+ciByZWlzc3VlcyBjb25maWd1cmF0aW9uIHJlcXVlc3RzIHdoZW4gaXQgcmVjZWl2ZXMKPiA+PiBD
+UlMgY29tcGxldGlvbnMuCj4gPj4gTm90ZSB0aGF0LCBuZWl0aGVyIFBDSWUgaG9zdCBicmlkZ2Ug
+bm9yIFBDSWUgY29yZSByZS1pc3N1ZXMgdGhlCj4gPj4gcmVxdWVzdCBmb3IgYW55IGNvbmZpZ3Vy
+YXRpb24gb2Zmc2V0Lgo+ID4+Cj4gPj4gRm9yIGNvbmZpZyByZWFkcywgdGhpcyBoYXJkd2FyZSBy
+ZXR1cm5zIENGR19SRVRSWV9TVEFUVVMgZGF0YSB3aGVuCj4gPj4gaXQgcmVjZWl2ZXMgYSBDUlMg
+Y29tcGxldGlvbiBmb3IgYSBjb25maWcgcmVhZCwgcmVnYXJkbGVzcyBvZiB0aGUKPiA+PiBhZGRy
+ZXNzIG9mIHRoZSByZWFkIG9yIHRoZSBDUlMgU29mdHdhcmUgVmlzaWJpbGl0eSBFbmFibGUgYml0
+Lgo+ID4KPiA+IEkgY2FuJ3QgcmVtZW1iZXIgaG93IFN0aW5ncmF5IGhhbmRsZXMgdGhlIENSUyBT
+b2Z0d2FyZSBWaXNpYmlsaXR5IEVuYWJsZQo+ID4gYml0LiAgSXMgaXQgYSByZWFkLW9ubHkgemVy
+bz8gIElzIGl0IHdyaXRhYmxlPyAgRG9lcyB0aGUgaGFyZHdhcmUgbG9vayBhdAo+ID4gaXQgYWxs
+IChJIHRoaW5rIG5vdCk/Cj4gCj4gSFcgZG9lc250IGxvb2sgaXQgYXQgYWxsLCBpdCBpcyAiZG9u
+dCBjYXJlIiBiaXQuCgpTaWdoLCBJIG1hZGUgdGhlIGNsYXNzaWMgbWlzdGFrZSBvZiBhc2tpbmcg
+bW9yZSB0aGFuIG9uZSBxdWVzdGlvbiwgYW5kCkkgZ3Vlc3MgSSdtIGFib3V0IHRvIGRvIGl0IGFn
+YWluIDopICBJdCdsbCBzYXZlIHRpbWUgaWYgeW91IGNhbiBhbnN3ZXIKYWxsIHRoZSBxdWVzdGlv
+bnMgYXQgb25jZS4KCkxpbnV4IGVuYWJsZXMgUENJX0VYUF9SVENUTF9DUlNTVkUgaWYgUENJX0VY
+UF9SVENBUCBzYXlzIGl0IGlzCnN1cHBvcnRlZCAoc2VlIHBjaV9lbmFibGVfY3JzKCkpLgoKICAt
+IFdoYXQgZG9lcyBQQ0lfRVhQX1JUQ0FQIHNheT8KCiAgLSBJcyBQQ0lfRVhQX1JUQ1RMX0NSU1NW
+RSB3cml0YWJsZT8KCldpdGggYWxsIHRoZSBDUlMtcmVsYXRlZCB3b3JrIGdvaW5nIG9uLCBJIHN1
+c3BlY3Qgd2UgbWF5IHNvbWVkYXkgd2FudCB0bwpyZWFkIFBDSV9FWFBfUlRDVExfQ1JTU1ZFIHRv
+IHNlZSBpZiBDUlMgU1YgaXMgZW5hYmxlZC4KCkJqb3JuCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdAps
+aW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVh
+ZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
