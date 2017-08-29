@@ -1,143 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:49213 "EHLO
-        relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750829AbdHCFHx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 01:07:53 -0400
-From: HARUNOBU KUROKAWA <harunobu.kurokawa.dn@renesas.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: "horms@verge.net.au" <horms@verge.net.au>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-renesas-soc@vger.kernel.org"
-        <linux-renesas-soc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: rcar-pcie: Fix memory leak when no PCIe card is
- inserted
-Date: Thu, 3 Aug 2017 05:07:47 +0000
-Message-ID: <PS1PR0601MB14659C69D22D403547B9F1B4C5B10@PS1PR0601MB1465.apcprd06.prod.outlook.com>
-References: <20170802071320.28674-1-harunobu.kurokawa.dn@renesas.com>
- <20170802090307.GA24167@red-moon>
-In-Reply-To: <20170802090307.GA24167@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=qcKc=77=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=qcKc=77=rock-chips.com=shawn.lin@kernel.org>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ Brian Norris <briannorris@chromium.org>,
+ Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v5 0/10] Some cleanup and bug fix for pcie-rockchip
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170825213838.GB8154@bhelgaas-glaptop.roam.corp.google.com>
+ <c6e1a387-ee7b-1694-31d6-1b2f553e3d0f@rock-chips.com>
+ <20170828183339.GI8154@bhelgaas-glaptop.roam.corp.google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <6067d630-3434-c009-89be-c4688bc1e7c3@rock-chips.com>
+Date: Tue, 29 Aug 2017 08:47:28 +0800
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170828183339.GI8154@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi=20
+Hi Bjorn,
 
-> -----Original Message-----
-> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
-> Sent: Wednesday, August 2, 2017 6:03 PM
-> To: HARUNOBU KUROKAWA <harunobu.kurokawa.dn@renesas.com>
-> Cc: horms@verge.net.au; bhelgaas@google.com; linux-pci@vger.kernel.org; l=
-inux-renesas-soc@vger.kernel.org;
-> linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH] PCI: rcar-pcie: Fix memory leak when no PCIe card is=
- inserted
->=20
-> On Wed, Aug 02, 2017 at 04:13:20PM +0900, Harunobu Kurokawa wrote:
-> > When no PCIe card is inserted, there is a memory leak as
-> > pci_free_resource_list is not called before returning.
-> >
-> > Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-> > ---
-> >  drivers/pci/host/pcie-rcar.c | 7 ++++---
-> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-rcar.c
-> > b/drivers/pci/host/pcie-rcar.c index ac80fbb..9b06de6 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -1190,14 +1190,15 @@ static int rcar_pcie_probe(struct
-> > platform_device *pdev)
-> >
-> >  	return 0;
-> >
-> > -err_free_bridge:
-> > -	pci_free_host_bridge(bridge);
-> > -
-> >  err_pm_put:
-> >  	pm_runtime_put(dev);
-> >
-> >  err_pm_disable:
-> >  	pm_runtime_disable(dev);
-> > +
-> > +err_free_bridge:
-> > +	pci_free_host_bridge(bridge);
-> > +	pci_free_resource_list(&pcie->resources);
-> >  	return err;
-> >  }
->=20
-> The error code path needs fixing but not like this (with a single patch l=
-umping all fixes - well, actually it does not - together).
->=20
-> Step one, patch below. Step two free the &pci->resources list (which IIUC=
- was not freed even before commit 90634e854079) in a separate
-> patch.
->=20
-> Am I missing something ?
->=20
-> Please apply, check and repost the patch if it is ok, thanks.
-Yes, I'll sprit the patch and repost them.
+On 2017/8/29 2:33, Bjorn Helgaas wrote:
+> On Mon, Aug 28, 2017 at 10:22:24AM +0800, Shawn Lin wrote:
+>> Hi Bjorn,
+>>
+>> On 2017/8/26 5:38, Bjorn Helgaas wrote:
+>>> On Wed, Aug 23, 2017 at 03:01:13PM +0800, Shawn Lin wrote:
+>>>>
+>>
+>> ...
+>>
+>>>
+>>> I applied these to pci/host-rockchip except for these:
+>>>
+>>>    PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
+>>>    PCI: rockchip: fix missing phy manipulation for legacy phy
+>>>
+>>> I'm not really happy with the devm/clk_prepare_enable situation, so
+>>> I'm waiting to see if a better solution emerges.
+>>>
+>>> I went ahead and applied the tweaks I proposed to the earlier "PCI:
+>>> rockchip: Add per-lane PHY support" and "PCI: rockchip: Idle inactive
+>>> PHY(s)" patches.  I *think* those make the "fix missing phy
+>>> manipulation for legacy phy" patch unnecessary.
+>>>
+>>> But please take a look and make sure.  If I went the wrong direction,
+>>> I'll gladly back it out.
+>>
+>> I tested both of legacy and per-lane PHY mode, and it works fine.
+>>
+>> But just a nit:
+>>
+>> with legacy PHY, we could avoid to print the following message
+>> which is confusing as for legacy PHY mode, we couldn't idle
+>> any inactive lanes.
+>>
+>> [    0.655192] rockchip-pcie f8000000.pcie: idling lane 1
+>> [    0.655696] rockchip-pcie f8000000.pcie: idling lane 2
+>> [    0.656194] rockchip-pcie f8000000.pcie: idling lane 3
+>>
+>> So I think we could return 0xf for legacy PHY mode like this:
+>>
+>> static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
+>>          u8 map;
+>>
+>>          if (rockchip->legacy_phy)
+>> -               return BIT(0);
+>> +               return GENMASK(MAX_LANE_NUM - 1, 0);
+> 
+> When we're using legacy PHY mode, this changes lanes_map from 0x1 to
+> 0xf.  That means we won't print the "idling lane 1" message.  It
+> *also* means we won't call phy_power_off() for lanes 1-3.  Is that the
+> correct behavior?  Does the legacy PHY mode actually use all 4 PHYs?
 
-Best regards,
-Kurokawa.
+Yes, it's the correct behaviour. The 4 PHYs is abstraction of 4 lanes
+for per-lane PHY mode, but for legacy PHY mode, PHY represents a single
+component managing 4 lanes together. So no matter how many lanes are
+used, we couldn't call phy_power_off for legacy PHY mode until we really
+want to power off the PHY. That is  why we need to recontruct the pcie
+and phy driver to migrate to per-lane PHY mode as we could treat each
+lane as a phy object and let phy driver do idling work in the
+phy_power_off callback instead of power-off work if ref count isn't
+decreased to zero.
+
+Also I think the key point here is that for legacy PHY mode, only
+phys[0] is vaild, so there is no difference if we call phy_power_off for
+phys[1..3] as you did, because PHY API will check the phy object and
+won't do anything if seeing invalid/NULL phy object. So changing 
+lanes_map from 0x1 to 0xf is only silent the "idling lane x" log.
 
 
->=20
-> -- >8 --
-> Subject: [PATCH] PCI: rcar: Fix error exit path
->=20
-> Commit 90634e854079 ("PCI: rcar: Convert PCI scan API to
-> pci_scan_root_bus_bridge()") converted PCI root bus scan API to the new p=
-ci_scan_root_bus_bridge() API; in the process some error
-> paths were not updated correctly which may cause memory leaks.
->=20
-> Fix the driver error exit path reinstating the previous correct error exi=
-t behaviour.
->=20
-> Fixes: 90634e854079 ("PCI: rcar: Convert PCI scan API to pci_scan_root_bu=
-s_bridge()")
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> ---
->  drivers/pci/host/pcie-rcar.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c =
-index 246d485..007523e 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -471,10 +471,8 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
->  		bridge->msi =3D &pcie->msi.chip;
->=20
->  	ret =3D pci_scan_root_bus_bridge(bridge);
-> -	if (ret < 0) {
-> -		kfree(bridge);
-> +	if (ret < 0)
->  		return ret;
-> -	}
->=20
->  	bus =3D bridge->bus;
->=20
-> @@ -1190,14 +1188,15 @@ static int rcar_pcie_probe(struct platform_device=
- *pdev)
->=20
->  	return 0;
->=20
-> -err_free_bridge:
-> -	pci_free_host_bridge(bridge);
-> -
->  err_pm_put:
->  	pm_runtime_put(dev);
->=20
->  err_pm_disable:
->  	pm_runtime_disable(dev);
-> +
-> +err_free_bridge:
-> +	pci_free_host_bridge(bridge);
-> +
->  	return err;
->  }
->=20
-> --
-> 2.10.0
+> 
+> 
+> 
