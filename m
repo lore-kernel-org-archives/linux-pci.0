@@ -1,55 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57706 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751240AbdH2VED (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Aug 2017 17:04:03 -0400
-Date: Tue, 29 Aug 2017 16:04:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Colin King <colin.king@canonical.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] misc: pci_endpoint_test: make boolean no_msi static
-Message-ID: <20170829210400.GR8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170823094752.26962-1-colin.king@canonical.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH] acpi: apei: call into AER handling regardless of severity
+To: Borislav Petkov <bp@suse.de>,
+        "Baicar, Tyler" <tbaicar@codeaurora.org>,
+        Tony Luck <tony.luck@intel.com>
+Cc: rjw@rjwysocki.net, lenb@kernel.org, will.deacon@arm.com,
+        james.morse@arm.com, prarit@redhat.com, punit.agrawal@arm.com,
+        shiju.jose@huawei.com, andriy.shevchenko@linux.intel.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <1503940314-29526-1-git-send-email-tbaicar@codeaurora.org>
+ <20170829082055.u3qpwtgyzxjxfvup@pd.tnic>
+ <9abb2e99-44be-3315-47d9-2689b6c76d79@codeaurora.org>
+ <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
+Date: Tue, 29 Aug 2017 18:34:49 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170823094752.26962-1-colin.king@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 23, 2017 at 10:47:52AM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The boolean no_msi is local to the source and does not need to be in
-> global scope, so make it static.
-> 
-> Cleans up sparse warning:
-> symbol 'no_msi' was not declared. Should it be static?
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
++linux-pci
 
-Folded into the original patch, thanks!
+On 8/29/2017 6:19 PM, Borislav Petkov wrote:
+> if (entry.severity == AER_NONFATAL)
+> 		do_recovery(pdev, entry.severity);
 
-> ---
->  drivers/misc/pci_endpoint_test.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> index 1f64d943794d..deb203026496 100644
-> --- a/drivers/misc/pci_endpoint_test.c
-> +++ b/drivers/misc/pci_endpoint_test.c
-> @@ -73,7 +73,7 @@ static DEFINE_IDA(pci_endpoint_test_ida);
->  #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
->  					    miscdev)
->  
-> -bool no_msi;
-> +static bool no_msi;
->  module_param(no_msi, bool, 0444);
->  MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
->  
-> -- 
-> 2.14.1
-> 
+Providing input from PCI perspective only:
+
+PCIe defines the the following error categories:
+
+1. Correctable error
+2. Uncorrectable non-fatal errors
+3. Uncorrectable fatal errors
+
+The do_recovery function needs to be called for both uncorrectable error
+categories. (#2 and #3 above)
+
+How these map to GHES error categories is out of know-how.
+
+Below are references to some of the PCIe error docs:
+
+https://www.kernel.org/doc/Documentation/PCI/pcieaer-howto.txt
+https://www.kernel.org/doc/Documentation/PCI/pci-error-recovery.txt
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
