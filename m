@@ -1,72 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:33668 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753548AbdHUUM2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2017 16:12:28 -0400
-Date: Mon, 21 Aug 2017 22:12:23 +0200
-From: Boris Brezillon <boris.brezillon@free-electrons.com>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
-        tomas.winkler@intel.com, dwmw2@infradead.org,
-        computersforpeace@gmail.com, marek.vasut@gmail.com, richard@nod.at,
-        cyrille.pitchen@wedev4u.fr, peda@axentia.se, kishon@ti.com,
-        bhelgaas@google.com, thierry.reding@gmail.com,
-        jonathanh@nvidia.com, dvhart@infradead.org, andy@infradead.org,
-        ohad@wizery.com, bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 06/15] mtd:  make device_type const
-Message-ID: <20170821221223.0a44fe32@bbrezillon>
-In-Reply-To: <1503130946-2854-7-git-send-email-bhumirks@gmail.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
-        <1503130946-2854-7-git-send-email-bhumirks@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:33706 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751294AbdH2VpM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Aug 2017 17:45:12 -0400
+Date: Tue, 29 Aug 2017 16:45:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
+        minghuan.lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com
+Subject: Re: [PATCHv5 0/9] PCI: dwc: refactor ls-pcie ->host_init() and fix
+ bug for dw_pcie_setup_rc
+Message-ID: <20170829214508.GS8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Le Sat, 19 Aug 2017 13:52:17 +0530,
-Bhumika Goyal <bhumirks@gmail.com> a écrit :
-
-> Make this const as it is only stored in the type field of a device
-> structure, which is const.
-> Done using Coccinelle.
+On Mon, Aug 28, 2017 at 06:52:52PM +0800, Zhiqiang Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > 
-
-Applied to l2-mtd/master.
-
-Thanks,
-
-Boris
-
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-> ---
->  drivers/mtd/mtdcore.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Split PATCHv4 4/9 into 2 patches, one is for moving the declare place
+> of ls1021 specific host_init function, another one is to make ls1021
+> host_init call the layerscape platform common host_init function.
 > 
-> diff --git a/drivers/mtd/mtdcore.c b/drivers/mtd/mtdcore.c
-> index f872a99..e7ea842 100644
-> --- a/drivers/mtd/mtdcore.c
-> +++ b/drivers/mtd/mtdcore.c
-> @@ -340,7 +340,7 @@ static ssize_t mtd_bbtblocks_show(struct device *dev,
->  };
->  ATTRIBUTE_GROUPS(mtd);
->  
-> -static struct device_type mtd_devtype = {
-> +static const struct device_type mtd_devtype = {
->  	.name		= "mtd",
->  	.groups		= mtd_groups,
->  	.release	= mtd_release,
+> Squashed PATCHv4 6/9 and 7/9 together.
+> 
+> Hou Zhiqiang (9):
+>   PCI: layerscape: Add dw_pcie_setup_rc to ls-pcie common host init
+>   PCI: layerscape: move STRFMR1 access out from the DBI write-enable
+>     bracket
+>   PCI: layerscape: add class code and multifunction fixups for ls1021a
+>   PCI: layerscape: move ls1021 specific host_init behind the common one
+>   PCI: layerscape: refactor the host_init function
+>   PCI: layerscape: Disable the outbound windows configured by bootloader
+>   PCI: designware: add accessors for write permission of DBI read-only
+>     registers
+>   PCI: designware: enable write permission before updating DBI RO
+>     registers
+>   PCI: dwc: remove the obsolete fixups
+> 
+>  drivers/pci/dwc/pci-layerscape.c       | 92 ++++++++++++++++++----------------
+>  drivers/pci/dwc/pcie-artpec6.c         |  6 ---
+>  drivers/pci/dwc/pcie-designware-host.c |  6 +++
+>  drivers/pci/dwc/pcie-designware.h      | 25 +++++++++
+>  4 files changed, 80 insertions(+), 49 deletions(-)
+
+Applied the entire series to pci/host-layerscape for v4.14, thanks!
