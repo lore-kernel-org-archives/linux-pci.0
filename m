@@ -1,63 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0052.outbound.protection.outlook.com ([104.47.41.52]:33760
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753057AbdHWG1C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Aug 2017 02:27:02 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv4 7/9] PCI: layerscape: use accessors to enable/disable DBI RO registers' write permission
-Date: Wed, 23 Aug 2017 14:08:54 +0800
-Message-ID: <20170823060856.9387-8-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
-References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+Return-Path: <SRS0=UHpN=77=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=UHpN=77=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH][pci-next] PCI: endpoint: fix incorrect end of table check
+ in while loop
+To: Bjorn Helgaas <helgaas@kernel.org>, Colin King <colin.king@canonical.com>
+References: <20170823160303.23366-1-colin.king@canonical.com>
+ <20170828182505.GH8154@bhelgaas-glaptop.roam.corp.google.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <979c168c-2334-d509-29b6-891799fc5f61@ti.com>
+Date: Tue, 29 Aug 2017 11:59:44 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170828182505.GH8154@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Use the accessors instead accessing the DBI read-only write enable
-register directly.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-By: Joao Pinto <jpinto@synopsys.com>
----
-V4:
- - no change
+On Monday 28 August 2017 11:55 PM, Bjorn Helgaas wrote:
+> On Wed, Aug 23, 2017 at 05:03:03PM +0100, Colin King wrote:
+>> From: Colin Ian King <colin.king@canonical.com>
+>>
+>> Currently, the while loop will iterate until a matching name is found
+>> or until the id pointer wraps around to NULL (the latter is incorrect).
+>>
+>> The end of a pci_epf_device_id table is terminated with zero'd entries
+>> for name and driver_data, so can change the while loop to iterate while
+>> the first character in the name is a non-zero character.
+>>
+>> Detected by CoverityScan, CID#1454557 ("Logically dead code")
+>>
+>> Fixes: 9e9d6eb48623 ("PCI: endpoint: Add an API to get matching "pci_epf_device_id")
+>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> 
+> Kishon, do you want to ack this, please?
 
- drivers/pci/dwc/pci-layerscape.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 44a603db217a..0c1330fce01d 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -33,7 +33,6 @@
- 
- /* PEX Internal Configuration Registers */
- #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
--#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
- 
- #define PCIE_IATU_NUM		6
- 
-@@ -145,10 +144,10 @@ static int ls_pcie_host_init(struct pcie_port *pp)
- 	 */
- 	ls_pcie_disable_outbound_atus(pcie);
- 
--	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	ls_pcie_fix_class(pcie);
- 	ls_pcie_clear_multifunction(pcie);
--	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	ls_pcie_drop_msg_tlp(pcie);
- 
--- 
-2.14.1
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> 
+>> ---
+>>  drivers/pci/endpoint/pci-epf-core.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+>> index ae6fac5995e3..70eccc04ee7f 100644
+>> --- a/drivers/pci/endpoint/pci-epf-core.c
+>> +++ b/drivers/pci/endpoint/pci-epf-core.c
+>> @@ -273,7 +273,7 @@ pci_epf_match_device(const struct pci_epf_device_id *id, struct pci_epf *epf)
+>>  	if (!id || !epf)
+>>  		return NULL;
+>>  
+>> -	while (id) {
+>> +	while (*id->name) {
+>>  		if (strcmp(epf->name, id->name) == 0)
+>>  			return id;
+>>  		id++;
+>> -- 
+>> 2.14.1
+>>
