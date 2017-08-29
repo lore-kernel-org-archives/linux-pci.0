@@ -1,134 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:11262 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751394AbdHEHSR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 03:18:17 -0400
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>,
-        <robin.murphy@arm.com>, <davem@davemloft.net>,
-        <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v9 3/4] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Sat, 5 Aug 2017 15:15:12 +0800
-Message-ID: <1501917313-9812-4-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <SRS0=myN1=77=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=myN1=77=broadcom.com=oza.oza@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170828215309.GM8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com> <20170828215309.GM8154@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Tue, 29 Aug 2017 10:55:27 +0530
+Message-ID: <CAMSpPPeUjDzK=zGBCgeJoD=vhZimRCzq=R6VPopHeRgmA54yCw@mail.gmail.com>
+Subject: Re: [PATCH v8 0/3] PCI: iproc: SOC specific fixes
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
+	devicetree@vger.kernel.org, Linux ARM <linux-arm-kernel@lists.infradead.org>,
+	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+On Tue, Aug 29, 2017 at 3:23 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Aug 24, 2017 at 10:34:23AM +0530, Oza Pawandeep wrote:
+>> PCI: iproc: Retry request when CRS returned from EP Above patch adds
+>> support for CRS in PCI RC driver, otherwise if not handled at lower
+>> level, the user space PMD (poll mode drivers) can timeout.
+>>
+>> PCI: iproc: add device shutdown for PCI RC This fixes the issue where
+>> certian PCI endpoints are not getting detected on Stingray SOC after
+>> reboot.
+>>
+>> Changes Since v7:
+>> Factor out the ep config access code.
+>>
+>> Changes Since v6:
+>> Rebased patches on top of Lorenzo's patches.
+>> Bjorn's comments addressed.
+>> now the confg retry returns 0xffffffff as data.
+>> Added reference to PCIe spec and iproc Controller spec in Changelog.
+>>
+>> Changes Since v5:
+>> Ray's comments addressed.
+>>
+>> Changes Since v4:
+>> Bjorn's comments addressed.
+>>
+>> Changes Since v3:
+>> [re-send]
+>>
+>> Changes Since v2:
+>> Fix compilation errors for pcie-iproc-platform.ko which was caught
+>> by kbuild.
+>>
+>> Oza Pawandeep (3):
+>>   PCI: iproc: factor-out ep configuration access
+>>   PCI: iproc: Retry request when CRS returned from EP
+>>   PCI: iproc: add device shutdown for PCI RC
+>>
+>>  drivers/pci/host/pcie-iproc-platform.c |   8 ++
+>>  drivers/pci/host/pcie-iproc.c          | 143 ++++++++++++++++++++++++++-------
+>>  drivers/pci/host/pcie-iproc.h          |   1 +
+>>  3 files changed, 124 insertions(+), 28 deletions(-)
+>
+> I applied these to pci/host-iproc for v4.14.  Man, this is ugly.
+>
+> I reworked the changelog to try to make it more readable.  I also tried to
+> disable the PCI_EXP_RTCAP_CRSVIS bit, which advertises CRS SV support.  And
+> I removed what looked like a duplicate pci_generic_config_read32() call.
+> And I added a warning about the fact that we corrupt reads of config
+> registers that happen to contain 0xffff0001.
+>
+> I'm pretty sure I broke something, so please take a look.
 
-cxgb4 Ethernet driver now queries PCIe configuration space to determine
-if it can send TLPs to it with the Relaxed Ordering Attribute set.
+Appreciate your time in adding PCI_EXP_RTCAP_CRSVIS and other changes.
+I just tested the patch, and it works fine.
+which tells us, that CRS visibility bit has no effect.
 
-Remove the enable_pcie_relaxed_ordering() to avoid enable PCIe Capability
-Device Control[Relaxed Ordering Enable] at probe routine, to make sure
-the driver will not send the Relaxed Ordering TLPs to the Root Complex which
-could not deal the Relaxed Ordering TLPs.
+so things look okay to me.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Reviewed-by: Casey Leedom <leedom@chelsio.com>
----
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 23 +++++++++++++++++------
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
- 3 files changed, 21 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index ef4be78..09ea62e 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -529,6 +529,7 @@ enum {                                 /* adapter flags */
- 	USING_SOFT_PARAMS  = (1 << 6),
- 	MASTER_PF          = (1 << 7),
- 	FW_OFLD_CONN       = (1 << 9),
-+	ROOT_NO_RELAXED_ORDERING = (1 << 10),
- };
- 
- enum {
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index e403fa1..391e484 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -4654,11 +4654,6 @@ static void print_port_info(const struct net_device *dev)
- 		    dev->name, adap->params.vpd.id, adap->name, buf);
- }
- 
--static void enable_pcie_relaxed_ordering(struct pci_dev *dev)
--{
--	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
--}
--
- /*
-  * Free the following resources:
-  * - memory used for tables
-@@ -4908,7 +4903,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
- 
- 	pci_enable_pcie_error_reporting(pdev);
--	enable_pcie_relaxed_ordering(pdev);
- 	pci_set_master(pdev);
- 	pci_save_state(pdev);
- 
-@@ -4947,6 +4941,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	adapter->msg_enable = DFLT_MSG_ENABLE;
- 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
- 
-+	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-+	 * Ingress Packet Data to Free List Buffers in order to allow for
-+	 * chipset performance optimizations between the Root Complex and
-+	 * Memory Controllers.  (Messages to the associated Ingress Queue
-+	 * notifying new Packet Placement in the Free Lists Buffers will be
-+	 * send without the Relaxed Ordering Attribute thus guaranteeing that
-+	 * all preceding PCIe Transaction Layer Packets will be processed
-+	 * first.)  But some Root Complexes have various issues with Upstream
-+	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-+	 * The PCIe devices which under the Root Complexes will be cleared the
-+	 * Relaxed Ordering bit in the configuration space, So we check our
-+	 * PCIe configuration space to see if it's flagged with advice against
-+	 * using Relaxed Ordering.
-+	 */
-+	if (!pcie_relaxed_ordering_supported(pdev))
-+		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-+
- 	spin_lock_init(&adapter->stats_lock);
- 	spin_lock_init(&adapter->tid_release_lock);
- 	spin_lock_init(&adapter->win0_lock);
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-index ede1220..4ef68f6 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-@@ -2719,6 +2719,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
- 	struct fw_iq_cmd c;
- 	struct sge *s = &adap->sge;
- 	struct port_info *pi = netdev_priv(dev);
-+	int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
- 
- 	/* Size needs to be multiple of 16, including status entry. */
- 	iq->size = roundup(iq->size, 16);
-@@ -2772,8 +2773,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
- 
- 		flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
- 		c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
--					     FW_IQ_CMD_FL0FETCHRO_F |
--					     FW_IQ_CMD_FL0DATARO_F |
-+					     FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
-+					     FW_IQ_CMD_FL0DATARO_V(relaxed) |
- 					     FW_IQ_CMD_FL0PADEN_F);
- 		if (cong >= 0)
- 			c.iqns_to_fl0congen |=
--- 
-1.8.3.1
+Regards,
+Oza.
+>
+> Incremental diff from your v8 to what's on pci/host-iproc:
+>
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index cbdabe8a073e..8bd5e544b1c1 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -69,7 +69,7 @@
+>  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+>
+>  #define CFG_RETRY_STATUS             0xffff0001
+> -#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
+> +#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milliseconds */
+>
+>  /* derive the enum index of the outbound/inbound mapping registers */
+>  #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+> @@ -482,17 +482,21 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+>         unsigned int data;
+>
+>         /*
+> -        * As per PCIe spec r3.1, sec 2.3.2, CRS Software
+> -        * Visibility only affects config read of the Vendor ID.
+> -        * For config write or any other config read the Root must
+> -        * automatically re-issue configuration request again as a
+> -        * new request.
+> +        * As per PCIe spec r3.1, sec 2.3.2, CRS Software Visibility only
+> +        * affects config reads of the Vendor ID.  For config writes or any
+> +        * other config reads, the Root may automatically reissue the
+> +        * configuration request again as a new request.
+>          *
+> -        * For config reads, this hardware returns CFG_RETRY_STATUS data when
+> -        * it receives a CRS completion for a config read, regardless of the
+> -        * address of the read or the CRS Software Visibility Enable bit. As a
+> +        * For config reads, this hardware returns CFG_RETRY_STATUS data
+> +        * when it receives a CRS completion, regardless of the address of
+> +        * the read or the CRS Software Visibility Enable bit.  As a
+>          * partial workaround for this, we retry in software any read that
+>          * returns CFG_RETRY_STATUS.
+> +        *
+> +        * Note that a non-Vendor ID config register may have a value of
+> +        * CFG_RETRY_STATUS.  If we read that, we can't distinguish it from
+> +        * a CRS completion, so we will incorrectly retry the read and
+> +        * eventually return the wrong data (0xffffffff).
+>          */
+>         data = readl(cfg_data_p);
+>         while (data == CFG_RETRY_STATUS && timeout--) {
+> @@ -515,10 +519,19 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+>         unsigned int busno = bus->number;
+>         void __iomem *cfg_data_p;
+>         unsigned int data;
+> +       int ret;
+>
+> -       /* root complex access. */
+> -       if (busno == 0)
+> -               return pci_generic_config_read32(bus, devfn, where, size, val);
+> +       /* root complex access */
+> +       if (busno == 0) {
+> +               ret = pci_generic_config_read32(bus, devfn, where, size, val);
+> +               if (ret != PCIBIOS_SUCCESSFUL)
+> +                       return ret;
+> +
+> +               /* Don't advertise CRS SV support */
+> +               if ((where & ~0x3) == PCI_EXP_CAP + PCI_EXP_RTCAP)
+> +                       *val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
+> +               return PCIBIOS_SUCCESSFUL;
+> +       }
+>
+>         cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
+>
+> @@ -635,7 +648,6 @@ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+>                 ret = iproc_pcie_config_read(bus, devfn, where, size, val);
+>         else
+>                 ret = pci_generic_config_read32(bus, devfn, where, size, val);
+> -       ret = pci_generic_config_read32(bus, devfn, where, size, val);
+>         iproc_pcie_apb_err_disable(bus, false);
+>
+>         return ret;
+> @@ -1309,6 +1321,8 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+>                 pcie->ib.nr_regions = ARRAY_SIZE(paxb_v2_ib_map);
+>                 pcie->ib_map = paxb_v2_ib_map;
+>                 pcie->need_msi_steer = true;
+> +               dev_warn(dev, "reads of config registers that contain %#x return incorrect data\n",
+> +                        CFG_RETRY_STATUS);
+>                 break;
+>         case IPROC_PCIE_PAXC:
+>                 regs = iproc_pcie_reg_paxc;
