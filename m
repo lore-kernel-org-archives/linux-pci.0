@@ -1,79 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36075 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751180AbdH2NzV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Aug 2017 09:55:21 -0400
-Date: Tue, 29 Aug 2017 15:55:17 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Himanshu Jha <himanshujha199640@gmail.com>
-Cc: bhelgaas@google.com, jonathanh@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Use PTR_ERR_OR_ZERO
-Message-ID: <20170829135517.GA30733@ulmo>
-References: <1504013940-16304-1-git-send-email-himanshujha199640@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:37418 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751227AbdH2SZN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Aug 2017 14:25:13 -0400
+Date: Tue, 29 Aug 2017 13:25:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v5 0/10] Some cleanup and bug fix for pcie-rockchip
+Message-ID: <20170829182510.GA2304@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170825213838.GB8154@bhelgaas-glaptop.roam.corp.google.com>
+ <c6e1a387-ee7b-1694-31d6-1b2f553e3d0f@rock-chips.com>
+ <20170828183339.GI8154@bhelgaas-glaptop.roam.corp.google.com>
+ <6067d630-3434-c009-89be-c4688bc1e7c3@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="RnlQjJ0d97Da+TV1"
-In-Reply-To: <1504013940-16304-1-git-send-email-himanshujha199640@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6067d630-3434-c009-89be-c4688bc1e7c3@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Aug 29, 2017 at 08:47:28AM +0800, Shawn Lin wrote:
+> Hi Bjorn,
+> 
+> On 2017/8/29 2:33, Bjorn Helgaas wrote:
+> >On Mon, Aug 28, 2017 at 10:22:24AM +0800, Shawn Lin wrote:
+> >>Hi Bjorn,
+> >>
+> >>On 2017/8/26 5:38, Bjorn Helgaas wrote:
+> >>>On Wed, Aug 23, 2017 at 03:01:13PM +0800, Shawn Lin wrote:
+> >>>>
+> >>
+> >>...
+> >>
+> >>>
+> >>>I applied these to pci/host-rockchip except for these:
+> >>>
+> >>>   PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
+> >>>   PCI: rockchip: fix missing phy manipulation for legacy phy
+> >>>
+> >>>I'm not really happy with the devm/clk_prepare_enable situation, so
+> >>>I'm waiting to see if a better solution emerges.
+> >>>
+> >>>I went ahead and applied the tweaks I proposed to the earlier "PCI:
+> >>>rockchip: Add per-lane PHY support" and "PCI: rockchip: Idle inactive
+> >>>PHY(s)" patches.  I *think* those make the "fix missing phy
+> >>>manipulation for legacy phy" patch unnecessary.
+> >>>
+> >>>But please take a look and make sure.  If I went the wrong direction,
+> >>>I'll gladly back it out.
+> >>
+> >>I tested both of legacy and per-lane PHY mode, and it works fine.
+> >>
+> >>But just a nit:
+> >>
+> >>with legacy PHY, we could avoid to print the following message
+> >>which is confusing as for legacy PHY mode, we couldn't idle
+> >>any inactive lanes.
+> >>
+> >>[    0.655192] rockchip-pcie f8000000.pcie: idling lane 1
+> >>[    0.655696] rockchip-pcie f8000000.pcie: idling lane 2
+> >>[    0.656194] rockchip-pcie f8000000.pcie: idling lane 3
+> >>
+> >>So I think we could return 0xf for legacy PHY mode like this:
+> >>
+> >>static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
+> >>         u8 map;
+> >>
+> >>         if (rockchip->legacy_phy)
+> >>-               return BIT(0);
+> >>+               return GENMASK(MAX_LANE_NUM - 1, 0);
+> >
+> >When we're using legacy PHY mode, this changes lanes_map from 0x1 to
+> >0xf.  That means we won't print the "idling lane 1" message.  It
+> >*also* means we won't call phy_power_off() for lanes 1-3.  Is that the
+> >correct behavior?  Does the legacy PHY mode actually use all 4 PHYs?
+> 
+> Yes, it's the correct behaviour. The 4 PHYs is abstraction of 4 lanes
+> for per-lane PHY mode, but for legacy PHY mode, PHY represents a single
+> component managing 4 lanes together. So no matter how many lanes are
+> used, we couldn't call phy_power_off for legacy PHY mode until we really
+> want to power off the PHY. That is  why we need to recontruct the pcie
+> and phy driver to migrate to per-lane PHY mode as we could treat each
+> lane as a phy object and let phy driver do idling work in the
+> phy_power_off callback instead of power-off work if ref count isn't
+> decreased to zero.
+> 
+> Also I think the key point here is that for legacy PHY mode, only
+> phys[0] is vaild, so there is no difference if we call phy_power_off for
+> phys[1..3] as you did, because PHY API will check the phy object and
+> won't do anything if seeing invalid/NULL phy object. So changing
+> lanes_map from 0x1 to 0xf is only silent the "idling lane x" log.
 
---RnlQjJ0d97Da+TV1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Aug 29, 2017 at 07:09:00PM +0530, Himanshu Jha wrote:
-> Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
->=20
-> Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> ---
->  drivers/pci/host/pci-tegra.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 9c40da5..90cda5b 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1156,10 +1156,7 @@ static int tegra_pcie_resets_get(struct tegra_pcie=
- *pcie)
->  		return PTR_ERR(pcie->afi_rst);
-> =20
->  	pcie->pcie_xrst =3D devm_reset_control_get_exclusive(dev, "pcie_x");
-> -	if (IS_ERR(pcie->pcie_xrst))
-> -		return PTR_ERR(pcie->pcie_xrst);
-> -
-> -	return 0;
-> +	return PTR_ERR_OR_ZERO(pcie->pcie_xrst);
->  }
-
-I'm not a big fan of this construct because it's a pain to undo this if
-ever we need to add code to this function. But since we do have scripts
-that will flag this, I guess this would pop up every now and again. The
-driver is unlikely to change in this part, too, so:
-
-Acked-by: Thierry Reding <treding@nvidia.com>
-
---RnlQjJ0d97Da+TV1
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlmlckIACgkQ3SOs138+
-s6FeqBAAg5EmjfG8iikm1fhxYRlpWNSIFKJFyiT8UVI4g1c8nHLDS7yMaOk3FdJx
-DfhG5u42ZkVYPdn/lbXe993Xn0k+oKYZ2/PmxTZqJhzYvJRo3SgQzMS88nX/vgV7
-OzCXU83vEnbXLibgzXtHJ7W7RNgcI/XsoANSXwAZy8KYTWKx8zTGPSH4ZWKTHwj5
-fxDCjJROPgNc+JoLPTXA5lvdnrrdX/qYNAQDxTTs7xj2De9EUT/YALL/F2EnAkDL
-0LTZWJjssUQN6rf6r4Dr1TJZADlbL5099NDsQUQ5e9DW2Cu8hdjwtmWdc/vaTtvq
-Z1ABc4mQ7XW8cqwXicOoSQX7HaC0JlGnEBzjKs4Kzu9oqMZPDkOh0mJl2nJ6aOVQ
-n99dATT0jy70fyOeIIUfIRhBe5bt/4uSg8cFHaUw7vANmUm1t9FXi6Qldsi9x/d9
-rURQrMYv+OS5byvxFLSZBSxMtuTmQqykx9VS84UYQLeKvpHQIOWRnr8kcBgX7lIu
-h8BgTiVqEzsl7Mz4/7S/4pkdQhAQEwdEqNUF5DZfW+zw6PA9mXV92rt2B+zXULYw
-z45E4kCOfmZDpI55nbBgrWmtw2Jqd6sBo/3uUVD8siafldxIH5il44x2mU53Bh0W
-MlXgwx2pIPkmpmSj79AwQ0UqWhZ7ggMNt38dNvakveJhiQ3U/p8=
-=I926
------END PGP SIGNATURE-----
-
---RnlQjJ0d97Da+TV1--
+OK, I folded in the GENMASK update above.
