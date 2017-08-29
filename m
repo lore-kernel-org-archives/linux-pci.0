@@ -1,151 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:44756 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753238AbdHWHDo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:03:44 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 04/10] PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
-Date: Wed, 23 Aug 2017 15:02:38 +0800
-Message-Id: <1503471758-73904-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mga09.intel.com ([134.134.136.24]:38587 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751211AbdH2BcQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Aug 2017 21:32:16 -0400
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Bharat Kumar Gogada <bharatku@xilinx.com>,
+        valmiki <valmikibow@gmail.com>,
+        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+CC: "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Lan, Tianyu" <tianyu.lan@intel.com>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>
+Subject: RE: Support SVM without PASID
+Date: Tue, 29 Aug 2017 01:32:11 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D190D956F6@SHSMSX101.ccr.corp.intel.com>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+ <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+ <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
+ <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+ <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+ <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
+ <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
+ <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
+ <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
+ <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
+ <e5be8314-dd3c-703a-3d46-cd180d404627@gmail.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D190D71673@SHSMSX101.ccr.corp.intel.com>
+ <BLUPR0201MB15051529B1A13F03B4CE7342A59E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
+In-Reply-To: <BLUPR0201MB15051529B1A13F03B4CE7342A59E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With CONFIG_DEBUG_SHIRQ enabled, the irq tear down routine
-would still access the irq handler registed as a shard irq.
-Per the comment within the function of __free_irq, it says
-"It's a shared IRQ -- the driver ought to be prepared for
-an IRQ event to happen even now it's being freed". However
-when failing to probe the driver, it may disable the clock
-for accessing the register and the following check for shared
-irq state would call the irq handler which accesses the register
-w/o the clk enabled. That will hang the system forever.
+> From: Bharat Kumar Gogada [mailto:bharatku@xilinx.com]
+> Sent: Monday, August 28, 2017 9:10 PM
+> 
+> > Subject: RE: Support SVM without PASID
+> >
+> > > From: valmiki [mailto:valmikibow@gmail.com]
+> > > Sent: Saturday, August 12, 2017 8:11 PM
+> > >
+> > > On 8/7/2017 4:01 PM, Jean-Philippe Brucker wrote:
+> > > > On 05/08/17 06:14, valmiki wrote:
+> > > > [...]
+> > > >> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
+> > > >> documentation we fill vaddr and iova in struct
+> > > vfio_iommu_type1_dma_map
+> > > >> and pass them to VFIO. But if we use dynamic allocation in
+> > > >> application (say malloc), do we need to use dma API to get iova and
+> > > >> then call VFIO_IOMMU_MAP ioctl ?
+> > > >> If application needs multiple such dynamic allocations, then it
+> > > >> need to allocate large chunk and program it via VFIO_IOMMU_MAP
+> > > >> ioctl and
+> > > then
+> > > >> manage rest allocations requirements from this buffer ?
+> > > >
+> > > > Yes, without SVM, the application allocates large buffers, allocates
+> > > > IOVAs itself, and maps them with VFIO_IOMMU_MAP. Userspace
+> doesn't
+> > > > rely
+> > > on the
+> > > > DMA API at all, it manages IOVAs as it wants. Sizes passed to
+> > > > VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page
+> > > granularity
+> > > > (that is at least 4kB), and both iova and vaddr have to be aligned
+> > > > on that granularity as well. So malloc isn't really suitable in this
+> > > > case, you'll need mmap. The application can then implement a small
+> > > > allocator to
+> > > manage
+> > > > the DMA pool created with VFIO_IOMMU_MAP.
+> > >
+> > > Thanks Jean, I have a confusion allocate IOVA's in userspace means,
+> > > how can user application decide IOVA address, can user application
+> > > pick any random IOVA address ?
+> > >
+> >
+> > yes, any address. In this mode the whole IOVA address space is owned by
+> > application, which just needs to use VFIO_IOMMU_MAP to setup
+> > IOVA->PA mapping in IOMMU (As Jean pointed out, input paramters
+> > are iova and vaddr. VFIO will figure out pa corresponding to vaddr).
+> >
+> Hi Kevin, I have a doubt in this case, what if someone assigns mmap
+> returned virtual address as iova address, then
+> EP will assume it is generating request on IOVA but in reality we are using
+> application allocated virtual address, then
+> it looks like we are working with application virtual address directly without
+> PASID. Is this valid ?
+> 
 
-With adding some dump_stack we could see how that happened.
+IOMMU doesn't care what an address in the DMA transaction from
+a device is. It cares only whether the DMA transaction has PASID
+tagged or not, and then pursue different structure to walk corresponding 
+I/O page table to get a translated address. Each I/O page table hosts
+a standalone virtual address space. An application can implement a
+new allocator to manage the address space (iova != vaddr), or simply
+reuse malloc-ed virtual address (iova == vaddr), which is not what
+hardware really cares about.
 
-calling  rockchip_pcie_driver_init+0x0/0x28 @ 1
-rockchip-pcie f8000000.pcie: no vpcie3v3 regulator found
-rockchip-pcie f8000000.pcie: no vpcie1v8 regulator found
-rockchip-pcie f8000000.pcie: no vpcie0v9 regulator found
-rockchip-pcie f8000000.pcie: PCIe link training gen1 timeout!
-CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.13.0-rc3-next-20170807-ARCH+ #189
-Hardware name: Firefly-RK3399 Board (DT)
-Call trace:
-[<ffff000008089bf0>] dump_backtrace+0x0/0x250
-[<ffff000008089eb0>] show_stack+0x20/0x28
-[<ffff000008c3313c>] dump_stack+0x90/0xb0
-[<ffff000008632ad4>] rockchip_pcie_read.isra.11+0x54/0x58
-[<ffff0000086334fc>] rockchip_pcie_client_irq_handler+0x30/0x1a0
-[<ffff00000813ce98>] __free_irq+0x1c8/0x2dc
-[<ffff00000813d044>] free_irq+0x44/0x74
-[<ffff0000081415fc>] devm_irq_release+0x24/0x2c
-[<ffff00000877429c>] release_nodes+0x1d8/0x30c
-[<ffff000008774838>] devres_release_all+0x3c/0x5c
-[<ffff00000876f19c>] driver_probe_device+0x244/0x494
-[<ffff00000876f50c>] __driver_attach+0x120/0x124
-[<ffff00000876cb80>] bus_for_each_dev+0x6c/0xac
-[<ffff00000876e984>] driver_attach+0x2c/0x34
-[<ffff00000876e3a4>] bus_add_driver+0x244/0x2b0
-[<ffff000008770264>] driver_register+0x70/0x110
-[<ffff0000087718b4>] platform_driver_register+0x60/0x6c
-[<ffff0000091eb108>] rockchip_pcie_driver_init+0x20/0x28
-[<ffff000008083a2c>] do_one_initcall+0xc8/0x130
-[<ffff0000091a0ea8>] kernel_init_freeable+0x1a0/0x238
-[<ffff000008c461cc>] kernel_init+0x18/0x108
-[<ffff0000080836c0>] ret_from_fork+0x10/0x50
-
-In order to fix this, we remove all the clock-disabling from
-the error handle path and driver's remove function. And replying
-on the devm_add_action_or_reset to fire the clock-disabling at
-the appropriate time. Also split out rockchip_pcie_setup_irq
-and move requesting irq after enabling clks to avoid this kind
-
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
----
-
-Changes in v5:
-- rebase on former reconstrtion patches suggested by Bjorn
-
-Changes in v4:
-- split out rockchip_pcie_enable_clocks and reuse
-  rockchip_pcie_enable_clocks and rockchip_pcie_disable_clocks
-  for elsewhere suggested by Jeffy
-
-Changes in v3:
-- check the return value of devm_add_action_or_reset and spilt out
-  rockchip_pcie_setup_irq in order to move requesting irq after
-  enabling clks.
-
-Changes in v2:
-- use devm_add_action_or_reset to fix this ordering suggested by
-  Heiko and Jeffy. Thanks!
-
- drivers/pci/host/pcie-rockchip.c | 22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 971d22b..891b60a 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1099,10 +1099,6 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 		return PTR_ERR(rockchip->clk_pcie_pm);
- 	}
- 
--	err = rockchip_pcie_setup_irq(rockchip);
--	if (err)
--		return err;
--
- 	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
- 	if (IS_ERR(rockchip->vpcie12v)) {
- 		if (PTR_ERR(rockchip->vpcie12v) == -EPROBE_DEFER)
-@@ -1525,10 +1521,22 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		return err;
- 
-+	err = devm_add_action_or_reset(dev,
-+				       rockchip_pcie_disable_clocks,
-+				       rockchip);
-+	if (err) {
-+		dev_err(dev, "unable to add action or reset\n");
-+		return err;
-+	}
-+
-+	err = rockchip_pcie_setup_irq(rockchip);
-+	if (err)
-+		return err;
-+
- 	err = rockchip_pcie_set_vpcie(rockchip);
- 	if (err) {
- 		dev_err(dev, "failed to set vpcie regulator\n");
--		goto err_set_vpcie;
-+		return err;
- 	}
- 
- 	err = rockchip_pcie_init_port(rockchip);
-@@ -1625,8 +1633,6 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		regulator_disable(rockchip->vpcie1v8);
- 	if (!IS_ERR(rockchip->vpcie0v9))
- 		regulator_disable(rockchip->vpcie0v9);
--err_set_vpcie:
--	rockchip_pcie_disable_clocks(rockchip);
- 	return err;
- }
- 
-@@ -1648,8 +1654,6 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 		phy_exit(rockchip->phys[i]);
- 	}
- 
--	rockchip_pcie_disable_clocks(rockchip);
--
- 	if (!IS_ERR(rockchip->vpcie12v))
- 		regulator_disable(rockchip->vpcie12v);
- 	if (!IS_ERR(rockchip->vpcie3v3))
--- 
-1.9.1
+Thanks
+Kevin
