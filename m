@@ -1,76 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51758 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750998AbdHaUDq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Aug 2017 16:03:46 -0400
-Date: Thu, 31 Aug 2017 15:03:44 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 30 Aug 2017 08:24:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: linuxarm@huawei.com, liudongdong3@huawei.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCIe AER: report uncorrectable errors only to the
- functions that logged the errors
-Message-ID: <20170831200344.GF18250@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503054141-80272-1-git-send-email-gabriele.paoloni@huawei.com>
+To: honghui.zhang@mediatek.com
+Subject: Re: [PATCH] PCI: mediatek: take use of PCI_NUM_INTX
+Message-ID: <20170830132439.GA15438@bhelgaas-glaptop.roam.corp.google.com>
+References: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503054141-80272-1-git-send-email-gabriele.paoloni@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, yong.wu@mediatek.com, linux-kernel@vger.kernel.org,
+ yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ linux-mediatek@lists.infradead.org, xinping.qian@mediatek.com,
+ bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 18, 2017 at 12:02:21PM +0100, Gabriele Paoloni wrote:
-> Currently if an uncorrectable error is reported by an EP the AER
-> driver walks over all the devices connected to the upstream port
-> bus and in turns call the report_error_detected() callback.
-> If any of the devices connected to the bus does not implement
-> dev->driver->err_handler->error_detected() do_recovery() will fail
-> leaving all the bus hierarchy devices unrecovered.
+On Wed, Aug 30, 2017 at 09:19:14AM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
 > 
-> However for non fatal errors the PCIe link should not be considered
-> compromised, therefore it makes sense to report the error only to
-> all the functions that logged an error.
-
-Can you include a pointer to the relevant part of the spec here?
-
-> This patch implements this new behaviour for non fatal errors.
+> Switch from using a custom NUM_INTX macro to the generic PCI_NUM_INTX
+> definition for the number of INTx interrupts.
 > 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+
+I rebased pci/host-mediatek on top of pci/irq-intx (which adds
+PCI_NUM_INTX) and applied this for v4.14, thanks!
+
 > ---
-> Changes from v1:
->    - now errors are reported only to the fucntions that logged the error
->      instead of all the functions in the same device.
->    - the patch subject has changed to match the new implementation
-> ---
->  drivers/pci/pcie/aer/aerdrv_core.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+>  drivers/pci/host/pcie-mediatek.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index b1303b3..057465ad 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -390,7 +390,14 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
->  		 * If the error is reported by an end point, we think this
->  		 * error is related to the upstream link of the end point.
->  		 */
-> -		pci_walk_bus(dev->bus, cb, &result_data);
-> +		if (state == pci_channel_io_normal)
-> +			/*
-> +			 * the error is non fatal so the bus is ok, just invoke
-> +			 * the callback for the function that logged the error.
-> +			 */
-> +			cb(dev, &result_data);
-> +		else
-> +			pci_walk_bus(dev->bus, cb, &result_data);
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> index c567996..5c0ce9b 100644
+> --- a/drivers/pci/host/pcie-mediatek.c
+> +++ b/drivers/pci/host/pcie-mediatek.c
+> @@ -77,7 +77,6 @@
+>  #define PCIE_INT_MASK		0x420
+>  #define INTX_MASK		GENMASK(19, 16)
+>  #define INTX_SHIFT		16
+> -#define INTX_NUM		4
+>  #define PCIE_INT_STATUS		0x424
+>  #define MSI_STATUS		BIT(23)
+>  #define PCIE_IMSI_STATUS	0x42c
+> @@ -576,7 +575,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+>  		return -ENODEV;
+>  	}
+>  
+> -	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
+> +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+>  						 &intx_domain_ops, port);
+>  	if (!port->irq_domain) {
+>  		dev_err(dev, "failed to get INTx IRQ domain\n");
+> @@ -594,7 +593,7 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+>  	u32 bit = INTX_SHIFT;
+>  
+>  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
+> -		for_each_set_bit_from(bit, &status, INTX_NUM + INTX_SHIFT) {
+> +		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+>  			/* Clear the INTx */
+>  			writel(1 << bit, port->base + PCIE_INT_STATUS);
+>  			virq = irq_find_mapping(port->irq_domain,
+> -- 
+> 2.6.4
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-I think the concept of this change makes sense, but I don't like the
-implicit connection of PCI_ERR_ROOT_UNCOR_RCV -> AER_NONFATAL ->
-pci_channel_io_normal.  That makes it harder than it should be to read
-the code.
-
-What would you think of changing the signature of do_recovery() and
-broadcast_error_message() so they take the struct aer_err_info pointer
-instead of just the severity and pci_channel_state?  Then we could
-check directly for AER_NONFATAL here.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
