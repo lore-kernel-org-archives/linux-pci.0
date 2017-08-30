@@ -1,85 +1,72 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 25 Aug 2017 08:57:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie
- wake irq
-Message-ID: <20170825135706.GB1304@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
- <20170822031934.8675-4-jeffy.chen@rock-chips.com>
- <20170824165353.GL31858@bhelgaas-glaptop.roam.corp.google.com>
- <20170825021132.GA104845@google.com>
+Return-Path: <SRS0=DL3b=AA=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=DL3b=AA=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170825021132.GA104845@google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, Jeffy Chen <jeffy.chen@rock-chips.com>,
- linux-kernel@vger.kernel.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org, Rob Herring <robh+dt@kernel.org>,
- bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
+References: <599D3410.9050504@intel.com> <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
+ <599D62EA.7050100@linux.intel.com> <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
+ <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr> <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
+ <59A3D6BF.7010400@linux.intel.com> <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
+ <59A56C15.2000403@linux.intel.com> <20170829235310.GA20214@wunner.de>
+ <20170830060237.GA2782@kroah.com> <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 30 Aug 2017 10:07:59 +0100
+Message-ID: <CAKv+Gu8QSWO8jYc1L6eJyMg58gtVsoa9zYuymSc-PdEm60HzxA@mail.gmail.com>
+Subject: Re: Possible regression between 4.9 and 4.13
+To: Mason <slash.tmp@free.fr>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Lukas Wunner <lukas@wunner.de>,
+	Mathias Nyman <mathias.nyman@linux.intel.com>, Felipe Balbi <felipe.balbi@linux.intel.com>,
+	linux-pci <linux-pci@vger.kernel.org>, linux-usb <linux-usb@vger.kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, Alan Stern <stern@rowland.harvard.edu>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 24, 2017 at 07:11:32PM -0700, Brian Norris wrote:
-> On Thu, Aug 24, 2017 at 11:53:54AM -0500, Bjorn Helgaas wrote:
-> > On Tue, Aug 22, 2017 at 11:19:33AM +0800, Jeffy Chen wrote:
-> > > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> 
-> > > diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> > > index 5678be82530d..9f6504129e80 100644
-> > > --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> > > +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> > > @@ -20,10 +20,13 @@ Required properties:
-> > >  - msi-map: Maps a Requester ID to an MSI controller and associated
-> > >  	msi-specifier data. See ./pci-msi.txt
-> > >  - interrupts: Three interrupt entries must be specified.
-> > > -- interrupt-names: Must include the following names
-> > > -	- "sys"
-> > > -	- "legacy"
-> > > -	- "client"
-> > > +- interrupt-names: Include the following names
-> > > +	Required:
-> > > +		- "sys"
-> > > +		- "legacy"
-> > > +		- "client"
-> > > +	Optional:
-> > > +		- "wake"
-> > 
-> > Why is there no other PCI binding that includes "wake" as an
-> > interrupt-name?  This feels like something that should be fairly
-> > common across host controllers.  I don't want a Rockport-specific
-> 
-> s/port/chip/ :)
+On 30 August 2017 at 09:55, Mason <slash.tmp@free.fr> wrote:
+> On 30/08/2017 08:02, Greg Kroah-Hartman wrote:
+>
+>> To get back to the original issue here, the hardware seems to have died,
+>> the driver stops talking to it, and all is good.  The "regression" here
+>> is that we now properly can determine that the hardware is crap.
+>
+> Before 4.12, when I unplugged my USB3 Flash drive, Linux would
+> detect a few "Uncorrected Non-Fatal errors" via AER, but it was
+> still possible to plug the drive back in.
+>
+> Since 4.12, once I unplug the drive, the whole USB3 card is marked
+> as dead (all 4 ports), and I can no longer plug anything in (not even
+> the USB2 drive that didn't have any issues, IIRC).
+>
+> It seems a bit premature to "mark as dead" something that remains
+> functional, doesn't it?
+>
+> Disclaimer, there are many variables in this setup, and I've only
+> tested a small fraction of the problem space: only one system,
+> only one USB3 board, only one USB3 Flash drive.
+>
 
-I visited Rockport this summer, guess I had it on the brain :)
+Please don't forget to mention that this is quirky hardware that
+depends on BROKEN because it multiplexes MMIO and config space
+accesses in the same memory window without any locking whatsoever
+(which would be difficult to do in the first place because we don't
+use accessors for MMIO in the kernel).
 
-> > DT description if it could be made more general.
-> 
-> I'm not sure we can really answer that question ("why do no other PCI
-> bindings have this?"). But one guess would be that every other
-> controller uses only beacon wake.
-> 
-> It would be OK with me if we made a blanket statement that a controller
-> with a "wake" interrupt means PCI WAKE# (per the specification). It's
-> possible this could even be stuck into some generic PCI/DT code
-> eventually. (I don't think we have a really good place for this today.)
+So how likely is it that you are attempting to read from the xhci BAR
+window while a config space access is in progress? Any way to
+instrument this in your driver?
 
-I'd just like every controller that uses WAKE# to use the same name in
-DT.  Maybe all that means for now is mentioning it in
-Documentation/devicetree/bindings/pci/pci.txt instead of (or in
-addition to) Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>> So, how do you think we should proceed, delay a bit longer before saying
+>> the device is gone?  How long is "long enough"?  How many bus errors are
+>> we allowed to tolerate (hint, the PCI spec says none...)
+>>
+>> Maybe someone wants to get to the root problem here, why is the hardware
+>> suddenly reporting all 1s?
+>
+> I'm afraid I won't be able to make any progress on this front,
+> unless I can get my hands on a PCIe packet analyzer.
+>
+> Regards.
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
