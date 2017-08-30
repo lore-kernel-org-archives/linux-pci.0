@@ -1,164 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43076 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:41120 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750966AbdHRP1n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Aug 2017 11:27:43 -0400
-Date: Fri, 18 Aug 2017 10:27:40 -0500
+        id S1750885AbdH3Vlm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Aug 2017 17:41:42 -0400
+Date: Wed, 30 Aug 2017 16:41:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>,
-        kvm@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        shan.gavin@gmail.com,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH kernel] PCI: Disable IOV before pcibios_sriov_disable()
-Message-ID: <20170818152740.GL28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170811081933.17474-1-aik@ozlabs.ru>
- <2163ef83-3633-a8cf-3416-0e37a6c500db@ozlabs.ru>
+To: Keith Busch <keith.busch@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Derrick, Jonathan" <jonathan.derrick@intel.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] vmd: Remove IRQ affinity
+Message-ID: <20170830214139.GY8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1504109704-17033-1-git-send-email-keith.busch@intel.com>
+ <20170830164020.GC18250@bhelgaas-glaptop.roam.corp.google.com>
+ <20170830202340.GA17331@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2163ef83-3633-a8cf-3416-0e37a6c500db@ozlabs.ru>
+In-Reply-To: <20170830202340.GA17331@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 18, 2017 at 08:05:42AM +1000, Alexey Kardashevskiy wrote:
-> On 11/08/17 18:19, Alexey Kardashevskiy wrote:
-> > From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On Wed, Aug 30, 2017 at 04:23:40PM -0400, Keith Busch wrote:
+> On Wed, Aug 30, 2017 at 09:40:20AM -0700, Bjorn Helgaas wrote:
+> > [+cc Christoph]
 > > 
-> > The PowerNV platform is the only user of pcibios_sriov_disable().
-> > The IOV BAR could be shifted by pci_iov_update_resource(). The
-> > warning message in the function is printed if the IOV capability
-> > is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
+> > On Wed, Aug 30, 2017 at 12:15:04PM -0400, Keith Busch wrote:
+> > > VMD hardware has to share its vectors among child devices in its PCI
+> > > domain so we should allocate as many as possible rather than just ones
+> > > that can be affinitized.
 > > 
-> > This is the backtrace of what is happening:
-> >    pci_disable_sriov
-> >    sriov_disable
-> >    pnv_pci_sriov_disable
-> >    pnv_pci_vf_resource_shift
-> >    pci_update_resource
-> >    pci_iov_update_resource
+> > I don't understand this changelog.  It suggests that
+> > pci_alloc_irq_vectors() will allocate more vectors than
+> > pci_alloc_irq_vectors_affinity() would.
 > > 
-> > This fixes the issue by disabling IOV capability before calling
-> > pcibios_sriov_disable(). With it, the disabling path matches
-> > the enabling path: pcibios_sriov_enable() is called before the
-> > IOV capability is enabled.
+> > But my understanding was that pci_alloc_irq_vectors_affinity() does have
+> > anything to do with the number of vectors allocated, but that it only
+> > provided more fine-grained control of affinity.
 > > 
-> > Cc: shan.gavin@gmail.com
-> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > Cc: Paul Mackerras <paulus@samba.org>
-> > Reported-by: Carol L Soto <clsoto@us.ibm.com>
-> > Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> > Tested-by: Carol L Soto <clsoto@us.ibm.com>
-> > Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> > ---
+> >   commit 402723ad5c62
+> >   Author: Christoph Hellwig <hch@lst.de>
+> >   Date:   Tue Nov 8 17:15:05 2016 -0800
 > > 
-> > This is repost. Since Gavin left the team, I am trying to push it out.
-> > The previos converstion is here: https://patchwork.ozlabs.org/patch/732653/
+> >     PCI/MSI: Provide pci_alloc_irq_vectors_affinity()
+> >     
+> >     This is a variant of pci_alloc_irq_vectors() that allows passing a struct
+> >     irq_affinity to provide fine-grained IRQ affinity control.
+> >     
+> >     For now this means being able to exclude vectors at the beginning or end of
+> >     the MSI vector space, but it could also be used for any other quirks needed
+> >     in the future (e.g. more vectors than CPUs, or excluding CPUs from the
+> >     spreading).
 > > 
-> > Two questions were raised then. I'll try to comment on this below.
+> > So IIUC, this patch does not change the number of vectors allocated.  It
+> > does remove PCI_IRQ_AFFINITY, which I suppose means all the vectors target
+> > the same CPU instead of being spread across CPUs.
 > 
-> Bjorn, ping? Thanks.
-
-Thanks for the reminder.  This is in patchwork, so it's on my to-do
-list.
-
-My last response in the thread above was:
-
-  I'm not going to merge this without a comment in
-  pnv_pci_vf_resource_shift() that addresses the two questions I
-  raised in my very first response.  I don't think the existing
-  comment about "After doing so, there would be a 'hole'" is
-  sufficient.  If it were sufficient, I wouldn't have raised the
-  questions in the first place.
-
-The problem here is that I'm looking for a comment *in the code*, and
-you and Gavin are giving responses and clarifications in email.
-
-What we need to do is transfer this email information into something
-useful when reading the code, i.e., a comment in the code.
-
-> >> 1) "res" is already in the resource tree, so we shouldn't be changing
-> >>   its start address, because that may make the tree inconsistent,
-> >>   e.g., the resource may no longer be completely contained in its
-> >>   parent, it may conflict with a sibling, etc.
-> > 
-> > We should not, yes. But...
-> > 
-> > At the boot time IOV BAR gets as much MMIO space as it can possibly use.
-> > (Embarassingly I cannot trace where this is coming from, 8GB is selected
-> > via pci_assign_unassigned_root_bus_resources() path somehow).
-> > For example, it is 256*32MB=8GB where 256 is maximum PEs number and 32MB
-> > is a PF/VF BAR size. Whatever shifting we do afterwards, the boudaries of
-> > that 8GB area do not change and we test it in pnv_pci_vf_resource_shift():
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/powerpc/platforms/powernv/pci-ioda.c#n987
-> > 
-> >> 2) If we update "res->start", shouldn't we update "res->end"
-> >>   correspondingly?
-> > 
-> > We have to update the PF's IOV BAR address as we allocate PEs dynamically
-> > and we do not know in advance where our VF numbers start in that
-> > 8GB window. So we change IOV BASR start. Changing the end may make it
-> > look more like there is a free area to use but in reality it won't be
-> > usable as well as the area we "release" by shifting the start address.
-> > 
-> > We could probably move that M64 MMIO window by the same delta in
-> > opposite direction so the IOV BAR start address would remain the same
-> > but its VF#0 would be mapped to let's say PF#5. I am just afraid there
-> > is an alignment requirement for these M64 window start address; and this
-> > would be even more tricky to manage.
-> > 
-> > We could also create reserved areas for the amount of space "release" by
-> > moving the start address, not sure how though.
-> > 
-> > So how do we proceed with this particular patch now? Thanks.
-> > ---
-> >  drivers/pci/iov.c | 7 ++++---
-> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> > index 120485d6f352..ac41c8be9200 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> >  	while (i--)
-> >  		pci_iov_remove_virtfn(dev, i, 0);
-> >  
-> > -	pcibios_sriov_disable(dev);
-> >  err_pcibios:
-> >  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
-> >  	pci_cfg_access_lock(dev);
-> > @@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
-> >  	ssleep(1);
-> >  	pci_cfg_access_unlock(dev);
-> >  
-> > +	pcibios_sriov_disable(dev);
-> > +
-> >  	if (iov->link != dev->devfn)
-> >  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
-> >  
-> > @@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
-> >  	for (i = 0; i < iov->num_VFs; i++)
-> >  		pci_iov_remove_virtfn(dev, i, 0);
-> >  
-> > -	pcibios_sriov_disable(dev);
-> > -
-> >  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
-> >  	pci_cfg_access_lock(dev);
-> >  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
-> >  	ssleep(1);
-> >  	pci_cfg_access_unlock(dev);
-> >  
-> > +	pcibios_sriov_disable(dev);
-> > +
-> >  	if (iov->link != dev->devfn)
-> >  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
-> >  
-> > 
+> VMD has to divvy interrupt vectors up among potentially many devices,
+> so we want to always get the maximum vectors possible.
 > 
-> 
-> -- 
-> Alexey
+> By default, PCI_IRQ_AFFINITY flag will have 'nvecs' capped by
+> irq_calc_affinity_vectors, which is the number of present CPUs and
+> potentially lower than the available vectors.
+
+Mmmm, OK.  I guess there's a hint in the changelog above, but it
+wasn't obvious from the pci_alloc_irq_vectors_affinity() comment that
+it caps to the number of CPUs.  
+
+> We could use the struct irq_affinity to define pre/post vectors to be
+> excluded from affinity consideration so that we can get more vectors
+> than CPUs, but it would be weird to have some of these general purpose
+> vectors affinity set by the kernel and others set by the user.
+
+I added some breadcrumbs to the changelog about this connection
+between affinity and limiting the number of IRQs.  Did I get this
+right?
+
+This is on pci/host-vmd for v4.14.
+
+
+commit be85af02e1b00d49cd678d8f2ea6f391bdbaca19
+Author: Keith Busch <keith.busch@intel.com>
+Date:   Wed Aug 30 12:15:04 2017 -0400
+
+    PCI: vmd: Remove IRQ affinity so we can allocate more IRQs
+    
+    VMD hardware has to share its vectors among child devices in its PCI
+    domain so we should allocate as many as possible rather than just ones
+    that can be affinitized.
+    
+    pci_alloc_irq_vectors_affinity() limits the number of affinitized IRQs to
+    the number of present CPUs (see irq_calc_affinity_vectors()).  But we'd
+    prefer to have more vectors, even if they aren't distributed across the
+    CPUs, so use pci_alloc_irq_vectors() instead.
+    
+    Reported-by: Brad Goodman <Bradley.Goodman@dell.com>
+    Signed-off-by: Keith Busch <keith.busch@intel.com>
+    [bhelgaas: add irq_calc_affinity_vectors() reference to changelog]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 4fe1756af010..509893bc3e63 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -671,14 +671,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	struct vmd_dev *vmd;
+ 	int i, err;
+ 
+-	/*
+-	 * The first vector is reserved for special use, so start affinity at
+-	 * the second vector
+-	 */
+-	struct irq_affinity affd = {
+-		.pre_vectors = 1,
+-	};
+-
+ 	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+ 		return -ENOMEM;
+ 
+@@ -704,8 +696,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	if (vmd->msix_count < 0)
+ 		return -ENODEV;
+ 
+-	vmd->msix_count = pci_alloc_irq_vectors_affinity(dev, 1, vmd->msix_count,
+-					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &affd);
++	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
++					PCI_IRQ_MSIX);
+ 	if (vmd->msix_count < 0)
+ 		return vmd->msix_count;
+ 
