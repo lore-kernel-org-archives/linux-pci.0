@@ -1,62 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34209 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752013AbdHSI12 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Aug 2017 04:27:28 -0400
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
-        tomas.winkler@intel.com, dwmw2@infradead.org,
-        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
-        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
-        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
-        bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 14/15] staging: greybus: make device_type const
-Date: Sat, 19 Aug 2017 13:52:25 +0530
-Message-Id: <1503130946-2854-15-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:26011 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751409AbdH3QJp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Aug 2017 12:09:45 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Derrick <jonathan.derrick@intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH] vmd: Remove IRQ affinity
+Date: Wed, 30 Aug 2017 12:15:04 -0400
+Message-Id: <1504109704-17033-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make this const as it is only stored in the type field of a device
-structure, which is const.
-Done using Coccinelle.
+VMD hardware has to share its vectors among child devices in its PCI
+domain so we should allocate as many as possible rather than just ones
+that can be affinitized.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Reported-by: Brad Goodman <Bradley.Goodman@dell.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/staging/greybus/gbphy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/vmd.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/greybus/gbphy.c b/drivers/staging/greybus/gbphy.c
-index 603de6f..80c1da8 100644
---- a/drivers/staging/greybus/gbphy.c
-+++ b/drivers/staging/greybus/gbphy.c
-@@ -66,7 +66,7 @@ static int gb_gbphy_idle(struct device *dev)
- 			   gb_gbphy_idle)
- };
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 4fe1756..509893b 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -671,14 +671,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	struct vmd_dev *vmd;
+ 	int i, err;
  
--static struct device_type greybus_gbphy_dev_type = {
-+static const struct device_type greybus_gbphy_dev_type = {
- 	.name	 =	"gbphy_device",
- 	.release =	gbphy_dev_release,
- 	.pm	=	&gb_gbphy_pm_ops,
+-	/*
+-	 * The first vector is reserved for special use, so start affinity at
+-	 * the second vector
+-	 */
+-	struct irq_affinity affd = {
+-		.pre_vectors = 1,
+-	};
+-
+ 	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+ 		return -ENOMEM;
+ 
+@@ -704,8 +696,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	if (vmd->msix_count < 0)
+ 		return -ENODEV;
+ 
+-	vmd->msix_count = pci_alloc_irq_vectors_affinity(dev, 1, vmd->msix_count,
+-					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &affd);
++	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
++					PCI_IRQ_MSIX);
+ 	if (vmd->msix_count < 0)
+ 		return vmd->msix_count;
+ 
 -- 
-1.9.1
+2.5.5
