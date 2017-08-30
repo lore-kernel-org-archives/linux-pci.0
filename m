@@ -1,63 +1,60 @@
-Return-Path: <SRS0=5FVt=AA=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=5FVt=AA=intel.com=keith.busch@kernel.org>
-Date: Wed, 30 Aug 2017 16:23:40 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Derrick, Jonathan" <jonathan.derrick@intel.com>,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] vmd: Remove IRQ affinity
-Message-ID: <20170830202340.GA17331@localhost.localdomain>
-References: <1504109704-17033-1-git-send-email-keith.busch@intel.com>
- <20170830164020.GC18250@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170830164020.GC18250@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34125 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751706AbdH3OZM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2017 10:25:12 -0400
+From: Jan Glauber <jglauber@cavium.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-kernel@vger.kernel.org, david.daney@cavium.com,
+        Jon Masters <jcm@redhat.com>,
+        Robert Richter <robert.richter@cavium.com>,
+        linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org,
+        Jan Glauber <jglauber@cavium.com>
+Subject: [PATCH v3 3/3] PCI: Avoid slot reset for Cavium cn8xxx root ports
+Date: Wed, 30 Aug 2017 16:24:54 +0200
+Message-Id: <20170830142454.10971-4-jglauber@cavium.com>
+In-Reply-To: <20170830142454.10971-1-jglauber@cavium.com>
+References: <20170830142454.10971-1-jglauber@cavium.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 09:40:20AM -0700, Bjorn Helgaas wrote:
-> [+cc Christoph]
-> 
-> On Wed, Aug 30, 2017 at 12:15:04PM -0400, Keith Busch wrote:
-> > VMD hardware has to share its vectors among child devices in its PCI
-> > domain so we should allocate as many as possible rather than just ones
-> > that can be affinitized.
-> 
-> I don't understand this changelog.  It suggests that
-> pci_alloc_irq_vectors() will allocate more vectors than
-> pci_alloc_irq_vectors_affinity() would.
-> 
-> But my understanding was that pci_alloc_irq_vectors_affinity() does have
-> anything to do with the number of vectors allocated, but that it only
-> provided more fine-grained control of affinity.
-> 
->   commit 402723ad5c62
->   Author: Christoph Hellwig <hch@lst.de>
->   Date:   Tue Nov 8 17:15:05 2016 -0800
-> 
->     PCI/MSI: Provide pci_alloc_irq_vectors_affinity()
->     
->     This is a variant of pci_alloc_irq_vectors() that allows passing a struct
->     irq_affinity to provide fine-grained IRQ affinity control.
->     
->     For now this means being able to exclude vectors at the beginning or end of
->     the MSI vector space, but it could also be used for any other quirks needed
->     in the future (e.g. more vectors than CPUs, or excluding CPUs from the
->     spreading).
-> 
-> So IIUC, this patch does not change the number of vectors allocated.  It
-> does remove PCI_IRQ_AFFINITY, which I suppose means all the vectors target
-> the same CPU instead of being spread across CPUs.
+Root ports of cn8xxx do not function after a slot reset when used with
+some e1000e and LSI HBA devices. Add a quirk to prevent slot reset on
+these root ports.
 
-VMD has to divvy interrupt vectors up among potentially many devices,
-so we want to always get the maximum vectors possible.
+Signed-off-by: Jan Glauber <jglauber@cavium.com>
+---
+ drivers/pci/quirks.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-By default, PCI_IRQ_AFFINITY flag will have 'nvecs' capped by
-irq_calc_affinity_vectors, which is the number of present CPUs and
-potentially lower than the available vectors.
-
-We could use the struct irq_affinity to define pre/post vectors to be
-excluded from affinity consideration so that we can get more vectors
-than CPUs, but it would be weird to have some of these general purpose
-vectors affinity set by the kernel and others set by the user.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 85191b8..6679971 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -845,6 +845,22 @@ static void quirk_cavium_sriov_rnm_link(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa018, quirk_cavium_sriov_rnm_link);
+ #endif
+ 
++/*
++ * Root port on some Cavium CN8xxx chips do not successfully complete
++ * a bus reset when used with certain types of child devices. Config
++ * space access to the child may quit responding. Flag all devices under
++ * the secondary bus as non-resettable.
++ */
++static void quirk_CN8xxx_secondary_bus(struct pci_dev *dev)
++{
++	struct pci_dev *pdev;
++
++	dev_warn(&dev->dev, "Cavium CN8xxx quirk detected; reset for devices on secondary bus disabled\n");
++	list_for_each_entry(pdev, &dev->subordinate->devices, bus_list)
++		pdev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_CN8xxx_secondary_bus);
++
+ /*
+  * Some settings of MMRBC can lead to data corruption so block changes.
+  * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide
+-- 
+2.9.0.rc0.21.g7777322
