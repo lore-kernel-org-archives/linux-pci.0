@@ -1,69 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:37822 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751477AbdHEGic (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 02:38:32 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 06/10] PCI: PCI_TEST simple data
-Date: Fri,  4 Aug 2017 23:37:57 -0700
-Message-Id: <20170805063801.15880-7-yinghai@kernel.org>
-In-Reply-To: <20170805063801.15880-1-yinghai@kernel.org>
-References: <20170805063801.15880-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Cx9C=AA=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=Cx9C=AA=free.fr=slash.tmp@kernel.org>
+Subject: Re: Possible regression between 4.9 and 4.13
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Lukas Wunner <lukas@wunner.de>, Mathias Nyman
+ <mathias.nyman@linux.intel.com>, Felipe Balbi
+ <felipe.balbi@linux.intel.com>, linux-pci <linux-pci@vger.kernel.org>,
+ linux-usb <linux-usb@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Alan Stern <stern@rowland.harvard.edu>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+References: <599D3410.9050504@intel.com>
+ <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
+ <599D62EA.7050100@linux.intel.com>
+ <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
+ <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
+ <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
+ <59A3D6BF.7010400@linux.intel.com>
+ <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
+ <59A56C15.2000403@linux.intel.com> <20170829235310.GA20214@wunner.de>
+ <20170830060237.GA2782@kroah.com>
+ <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
+ <CAKv+Gu8QSWO8jYc1L6eJyMg58gtVsoa9zYuymSc-PdEm60HzxA@mail.gmail.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <dd26cff3-83d9-851b-4b38-a947e6a41ddf@free.fr>
+Date: Wed, 30 Aug 2017 11:37:41 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAKv+Gu8QSWO8jYc1L6eJyMg58gtVsoa9zYuymSc-PdEm60HzxA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/pci_test_data.txt | 24 ++++++++++++++++++++++++
- drivers/pci/pci_test_mask.txt |  5 +++++
- 2 files changed, 29 insertions(+)
- create mode 100644 drivers/pci/pci_test_data.txt
- create mode 100644 drivers/pci/pci_test_mask.txt
+On 30/08/2017 11:07, Ard Biesheuvel wrote:
 
-diff --git a/drivers/pci/pci_test_data.txt b/drivers/pci/pci_test_data.txt
-new file mode 100644
-index 0000000..a3cfd5d
---- /dev/null
-+++ b/drivers/pci/pci_test_data.txt
-@@ -0,0 +1,24 @@
-+pci_bus 0000:00: root bus resource [bus 00-fe]
-+pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
-+pci_bus 0000:00: root bus resource [io  0x0d00-0xffff]
-+pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
-+pci_bus 0000:00: root bus resource [mem 0xbfa00000-0xfebfffff]
-+pci_bus 0000:00: root bus resource [mem 0xfed40000-0xfed4bfff]
-+
-+00:1a.0 0c03: 8086:1c2d (rev 04) (prog-if 20 [EHCI])
-+00: 86 80 2d 1c 06 00 90 02 04 20 03 0c 00 00 00 00
-+10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+20: 00 00 00 00 00 00 00 00 00 00 00 00 aa 17 cf 21
-+30: 00 00 00 00 50 00 00 00 00 00 00 00 0b 01 00 00
-+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+50: 01 58 c2 c9 00 00 00 00 0a 98 a0 20 00 00 00 00
-+60: 20 20 a7 07 00 00 00 00 01 00 00 00 00 00 08 c0
-+70: 00 00 df 3f 00 00 00 00 00 00 00 00 00 00 00 00
-+80: 00 00 80 00 11 88 0c 93 30 0d 00 24 00 00 00 00
-+90: 00 00 00 00 00 00 00 00 13 00 06 03 00 00 00 00
-+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d0: 00 00 00 00 00 aa ff 00 00 00 00 00 00 00 00 00
-+e0: 00 00 00 00 01 44 00 9c 06 40 0b 28 b8 a1 18 09
-+f0: 00 00 00 00 88 85 80 00 87 0f 06 08 08 17 5b 20
-diff --git a/drivers/pci/pci_test_mask.txt b/drivers/pci/pci_test_mask.txt
-new file mode 100644
-index 0000000..824afab
---- /dev/null
-+++ b/drivers/pci/pci_test_mask.txt
-@@ -0,0 +1,5 @@
-+mask: 8086:1c2d : 1:rw 0: readonly
-+00: 00 00 00 00 ff ff ff 02 04 20 03 0c 00 00 00 00
-+10: 00 fc ff ff 00 00 00 00 00 00 00 00 00 00 00 00
-+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
--- 
-2.9.4
+> Please don't forget to mention that this is quirky hardware that
+> depends on BROKEN because it multiplexes MMIO and config space
+> accesses in the same memory window without any locking whatsoever
+> (which would be difficult to do in the first place because we don't
+> use accessors for MMIO in the kernel).
+
+You're right, it was in the back of my mind, but I didn't state
+it explicitly for the benefit of linux-usb readers.
+
+> So how likely is it that you are attempting to read from the xhci BAR
+> window while a config space access is in progress? Any way to
+> instrument this in your driver?
+
+I logged config space accesses here:
+
+https://www.spinics.net/lists/arm-kernel/msg602832.html
+
+IIRC, the config space accesses are generated by the AER ISR.
+So disabling the AER driver should guarantee that no config space
+accesses are occurring when the drive is unplugged.
+
+Regards.
