@@ -1,52 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33706 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751294AbdH2VpM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Aug 2017 17:45:12 -0400
-Date: Tue, 29 Aug 2017 16:45:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
-        minghuan.lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com
-Subject: Re: [PATCHv5 0/9] PCI: dwc: refactor ls-pcie ->host_init() and fix
- bug for dw_pcie_setup_rc
-Message-ID: <20170829214508.GS8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
+Return-Path: <SRS0=Bk9x=AA=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=Bk9x=AA=linuxfoundation.org=gregkh@kernel.org>
+Date: Wed, 30 Aug 2017 11:06:33 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Mason <slash.tmp@free.fr>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	Mathias Nyman <mathias.nyman@linux.intel.com>,
+	Felipe Balbi <felipe.balbi@linux.intel.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-usb <linux-usb@vger.kernel.org>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Possible regression between 4.9 and 4.13
+Message-ID: <20170830090633.GA1208@kroah.com>
+References: <599D62EA.7050100@linux.intel.com>
+ <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
+ <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
+ <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
+ <59A3D6BF.7010400@linux.intel.com>
+ <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
+ <59A56C15.2000403@linux.intel.com>
+ <20170829235310.GA20214@wunner.de>
+ <20170830060237.GA2782@kroah.com>
+ <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 28, 2017 at 06:52:52PM +0800, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Wed, Aug 30, 2017 at 10:55:37AM +0200, Mason wrote:
+> On 30/08/2017 08:02, Greg Kroah-Hartman wrote:
 > 
-> Split PATCHv4 4/9 into 2 patches, one is for moving the declare place
-> of ls1021 specific host_init function, another one is to make ls1021
-> host_init call the layerscape platform common host_init function.
+> > To get back to the original issue here, the hardware seems to have died,
+> > the driver stops talking to it, and all is good.  The "regression" here
+> > is that we now properly can determine that the hardware is crap.
 > 
-> Squashed PATCHv4 6/9 and 7/9 together.
+> Before 4.12, when I unplugged my USB3 Flash drive, Linux would
+> detect a few "Uncorrected Non-Fatal errors" via AER, but it was
+> still possible to plug the drive back in.
 > 
-> Hou Zhiqiang (9):
->   PCI: layerscape: Add dw_pcie_setup_rc to ls-pcie common host init
->   PCI: layerscape: move STRFMR1 access out from the DBI write-enable
->     bracket
->   PCI: layerscape: add class code and multifunction fixups for ls1021a
->   PCI: layerscape: move ls1021 specific host_init behind the common one
->   PCI: layerscape: refactor the host_init function
->   PCI: layerscape: Disable the outbound windows configured by bootloader
->   PCI: designware: add accessors for write permission of DBI read-only
->     registers
->   PCI: designware: enable write permission before updating DBI RO
->     registers
->   PCI: dwc: remove the obsolete fixups
+> Since 4.12, once I unplug the drive, the whole USB3 card is marked
+> as dead (all 4 ports), and I can no longer plug anything in (not even
+> the USB2 drive that didn't have any issues, IIRC).
 > 
->  drivers/pci/dwc/pci-layerscape.c       | 92 ++++++++++++++++++----------------
->  drivers/pci/dwc/pcie-artpec6.c         |  6 ---
->  drivers/pci/dwc/pcie-designware-host.c |  6 +++
->  drivers/pci/dwc/pcie-designware.h      | 25 +++++++++
->  4 files changed, 80 insertions(+), 49 deletions(-)
+> It seems a bit premature to "mark as dead" something that remains
+> functional, doesn't it?
 
-Applied the entire series to pci/host-layerscape for v4.14, thanks!
+I agree, but if the device sends all ones, it's a good indication it is
+really dead, right?  Or something is wrong with it.
+
+> Disclaimer, there are many variables in this setup, and I've only
+> tested a small fraction of the problem space: only one system,
+> only one USB3 board, only one USB3 Flash drive.
+
+Did you ever happen to narrow this down to a single git commit using
+'git bisect'?  I can't remember what happened in the beginning of this
+thread...
+
+> > So, how do you think we should proceed, delay a bit longer before saying
+> > the device is gone?  How long is "long enough"?  How many bus errors are
+> > we allowed to tolerate (hint, the PCI spec says none...)
+> > 
+> > Maybe someone wants to get to the root problem here, why is the hardware
+> > suddenly reporting all 1s?
+> 
+> I'm afraid I won't be able to make any progress on this front,
+> unless I can get my hands on a PCIe packet analyzer.
+
+Odds of that happening are pretty rare, right?  I've never even seen one
+of those...
+
+thanks,
+
+greg k-h
