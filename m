@@ -1,13 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
-Subject: [PATCH V12 5/5] PCI: Warn periodically while waiting for device to
- become ready
-Date: Wed, 23 Aug 2017 00:56:11 -0400
-Message-Id: <1503464171-6471-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
-References: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+Message-ID: <1504057498.10964.13.camel@mhfsdcap03>
+Subject: Re: [PATCH] PCI: mediatek: take use of PCI_NUM_INTX
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>
+Date: Wed, 30 Aug 2017 09:44:58 +0800
+In-Reply-To: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
+MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,66 +15,68 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, yt.shen@mediatek.com,
+ linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
+ matthias.bgg@gmail.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
  linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a print statement in pci_bus_wait_crs() so that user observes the
-progress of device polling instead of silently waiting for timeout to be
-reached.
+On Wed, 2017-08-30 at 09:19 +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> 
+> Switch from using a custom NUM_INTX macro to the generic PCI_NUM_INTX
+> definition for the number of INTx interrupts.
+> 
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  drivers/pci/host/pcie-mediatek.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-[bhelgaas: check for timeout first so we don't print "waiting, giving up",
-always print time we've slept (not the actual timeout, print a "ready"
-message if we've printed a "waiting" message]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+Hi, Bjorn, Ryder,
+	this patch is based on Paul's v7 version of patch[1]("Move enum
+pci_interrupt_pin to linux/pci.h").
+[1]http://www.spinics.net/lists/linux-pci/msg63891.html
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 93b89dd..4b30df7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1841,11 +1841,16 @@ bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 l, int timeout)
- 	 */
- 	while ((l & 0xffff) == 0x0001) {
- 		if (delay > timeout) {
--			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
--			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
--			       PCI_FUNC(devfn));
-+			pr_warn("pci %04x:%02x:%02x.%d: not ready after %dms; giving up\n",
-+				pci_domain_nr(bus), bus->number,
-+				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
-+
- 			return false;
- 		}
-+		if (delay >= 1000)
-+			pr_info("pci %04x:%02x:%02x.%d: not ready after %dms; waiting\n",
-+				pci_domain_nr(bus), bus->number,
-+				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
- 
- 		msleep(delay);
- 		delay *= 2;
-@@ -1854,6 +1859,11 @@ bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 l, int timeout)
- 			return false;
- 	}
- 
-+	if (delay >= 1000)
-+		pr_info("pci %04x:%02x:%02x.%d: ready after %dms\n",
-+			pci_domain_nr(bus), bus->number,
-+			PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
-+
- 	return true;
- }
- 
--- 
-1.9.1
+Thanks.
+
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> index c567996..5c0ce9b 100644
+> --- a/drivers/pci/host/pcie-mediatek.c
+> +++ b/drivers/pci/host/pcie-mediatek.c
+> @@ -77,7 +77,6 @@
+>  #define PCIE_INT_MASK		0x420
+>  #define INTX_MASK		GENMASK(19, 16)
+>  #define INTX_SHIFT		16
+> -#define INTX_NUM		4
+>  #define PCIE_INT_STATUS		0x424
+>  #define MSI_STATUS		BIT(23)
+>  #define PCIE_IMSI_STATUS	0x42c
+> @@ -576,7 +575,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+>  		return -ENODEV;
+>  	}
+>  
+> -	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
+> +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+>  						 &intx_domain_ops, port);
+>  	if (!port->irq_domain) {
+>  		dev_err(dev, "failed to get INTx IRQ domain\n");
+> @@ -594,7 +593,7 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+>  	u32 bit = INTX_SHIFT;
+>  
+>  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
+> -		for_each_set_bit_from(bit, &status, INTX_NUM + INTX_SHIFT) {
+> +		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+>  			/* Clear the INTx */
+>  			writel(1 << bit, port->base + PCIE_INT_STATUS);
+>  			virq = irq_find_mapping(port->irq_domain,
+
 
 
 _______________________________________________
