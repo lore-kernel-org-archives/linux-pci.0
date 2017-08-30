@@ -1,36 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53862 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752318AbdHNVLQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 17:11:16 -0400
-Date: Mon, 14 Aug 2017 16:11:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] PCI: rcar-pcie: Fix memory leak
-Message-ID: <20170814211114.GH32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170804033255.27171-1-harunobu.kurokawa.dn@renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170804033255.27171-1-harunobu.kurokawa.dn@renesas.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=qNLg=AA=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=qNLg=AA=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: <iommu@lists.linux-foundation.org>,
+	<linux-pci@vger.kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH v3] iommu: Prevent VMD child devices from being remapping targets
+Date: Wed, 30 Aug 2017 15:05:59 -0600
+Message-Id: <1504127159-186529-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 12:32:53PM +0900, Harunobu Kurokawa wrote:
-> When no PCIe card is inserted, there is a memory leak as
-> pci_free_resource_list is not called before returning.
-> 
-> v2:
->  separate the patch to two files.
-> 
-> Harunobu Kurokawa (1):
->   PCI: rcar-pcie: Fix memory leak when no PCIe card is inserted
-> 
-> Lorenzo Pieralisi (1):
->   PCI: rcar: Fix error exit path
-> 
->  drivers/pci/host/pcie-rcar.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
+VMD child devices must use the VMD endpoint's ID as the requester.
+Because of this, there needs to be a way to link the parent VMD
+endpoint's iommu group and associated mappings to the VMD child devices
+such that attaching and detaching child devices modify the endpoint's
+mappings, while preventing early detaching on a singular device removal
+or unbinding.
 
-Waiting for Simon's ack...
+The reassignment of individual VMD child devices devices to VMs is
+outside the scope of VMD, but may be implemented in the future. For now
+it is best to prevent any such attempts.
+
+This patch prevents VMD child devices from returning an IOMMU, which
+prevents it from exposing an iommu_group sysfs directories and allowing
+subsequent binding by userspace-access drivers such as VFIO.
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+v2->3, wrapped in x86 ifdef to avoid ia64 compilation errors
+
+ drivers/iommu/intel-iommu.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 687f18f..2800a6e 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -901,6 +901,13 @@ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devf
+ 		struct pci_dev *pf_pdev;
+ 
+ 		pdev = to_pci_dev(dev);
++
++#ifdef CONFIG_X86
++		/* VMD child devices currently cannot be handled individually */
++		if (is_vmd(pdev->bus))
++			return NULL;
++#endif
++
+ 		/* VFs aren't listed in scope tables; we need to look up
+ 		 * the PF instead to find the IOMMU. */
+ 		pf_pdev = pci_physfn(pdev);
+-- 
+1.8.3.1
