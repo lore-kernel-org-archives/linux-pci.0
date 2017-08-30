@@ -1,105 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v11 1/4] PCI: Don't ignore valid response before CRS
- timeout
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:37842 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751683AbdH3OZK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2017 10:25:10 -0400
+From: Jan Glauber <jglauber@cavium.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20170818213203.15145.36487.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <f7127748-24cd-37bd-544a-8cba6bf5906d@codeaurora.org>
-Date: Mon, 21 Aug 2017 10:02:55 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170818213203.15145.36487.stgit@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Timur Tabi <timur@codeaurora.org>,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Cc: linux-pci@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-kernel@vger.kernel.org, david.daney@cavium.com,
+        Jon Masters <jcm@redhat.com>,
+        Robert Richter <robert.richter@cavium.com>,
+        linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org,
+        Jan Glauber <jglauber@cavium.com>
+Subject: [PATCH v3 1/3] PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
+Date: Wed, 30 Aug 2017 16:24:52 +0200
+Message-Id: <20170830142454.10971-2-jglauber@cavium.com>
+In-Reply-To: <20170830142454.10971-1-jglauber@cavium.com>
+References: <20170830142454.10971-1-jglauber@cavium.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/18/2017 5:32 PM, Bjorn Helgaas wrote:
-> While waiting for a device to become ready (i.e., to return a non-CRS
-> completion to a read of its Vendor ID), if we got a valid response to the
-> very last read before timing out, we printed a warning and gave up on the
-> device even though it was actually ready.
-> 
-> For a typical 60s timeout, we wait about 65s (it's not exact because of the
-> exponential backoff), but we treated devices that became ready between 33s
-> and 65s as though they failed.
-> 
-> Move the Device ID read later so we check whether the device is ready
-> immediately, before checking for a timeout.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/probe.c |    7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c31310db0404..08ea844ac4ba 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1849,15 +1849,16 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->  
->  		msleep(delay);
->  		delay *= 2;
-> -		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-> -			return false;
-> -		/* Card hasn't responded in 60 seconds?  Must be stuck. */
-> +
+From: David Daney <david.daney@cavium.com>
 
-There is still a problem here. We'll wait some time above and return without checking if
-we actually found the card or not.
+When checking to see if a PCI bus can safely be reset, we check to see
+if any of the children have their PCI_DEV_FLAGS_NO_BUS_RESET flag set.
+As these devices are known not to behave well after a bus reset.
 
->  		if (delay > crs_timeout) {
->  			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
->  			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
->  			       PCI_FUNC(devfn));
->  			return false;
->  		}
-> +
-> +		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-> +			return false;
->  	}
->  
->  	return true;
-> 
-> 
+Some PCIe root port bridges also do not behave well after a bus reset,
+sometimes causing the devices behind the bridge to become unusable.
 
-Here is another shot at it. Sorry, I don't have a diff syntax. I made up the function
-by copy paste.
+Add a check for the PCI_DEV_FLAGS_NO_BUS_RESET flag being set in the
+bridge device to allow these bridges to be flagged, and prevent their
+buses from being reset.
 
-	while ((*l & 0xffff) == 0x0001) {
-		if (!crs_timeout)
-			return false;
+A follow on patch will add a quirk for this type of bridge.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
+[jglauber@cavium.com: fixed typo]
+Signed-off-by: Jan Glauber <jglauber@cavium.com>
+---
+ drivers/pci/pci.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..d9abbc9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4290,6 +4290,10 @@ static bool pci_bus_resetable(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
  
-		/* Card hasn't responded in 60 seconds?  Must be stuck. */
-		if (delay > crs_timeout) {
-			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
-			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
-			       PCI_FUNC(devfn));
-			return false;
-		} 
-		msleep(delay);
-		delay *= 2;
-		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-			return false; 
-	}
-
++
++	if (bus->self && (bus->self->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET))
++		return false;
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
+ 		    (dev->subordinate && !pci_bus_resetable(dev->subordinate)))
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.9.0.rc0.21.g7777322
