@@ -1,131 +1,70 @@
-Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
-Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
-Date: Thu, 3 Aug 2017 01:55:04 -0700
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: Ding Tianhong <dingtianhong@huawei.com>
-Cc: leedom@chelsio.com, bhelgaas@google.com, helgaas@kernel.org,
-	werner@chelsio.com, ganeshgr@chelsio.com, asit.k.mallick@intel.com,
-	patrick.j.cramer@intel.com, Suravee.Suthikulpanit@amd.com,
-	Bob.Shaw@amd.com, l.stach@pengutronix.de, amira@mellanox.com,
-	gabriele.paoloni@huawei.com, David.Laight@aculab.com,
-	jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com,
-	will.deacon@arm.com, mark.rutland@arm.com, robin.murphy@arm.com,
-	davem@davemloft.net, alexander.duyck@gmail.com,
-	linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxarm@huawei.com, ashok.raj@intel.com
-Subject: Re: [PATCH v7 1/3] PCI: Add new PCIe Fabric End Node flag,
- PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-Message-ID: <20170803085504.GC4883@otc-nc-03>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-2-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50844 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751357AbdH3OkO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Aug 2017 10:40:14 -0400
+Date: Wed, 30 Aug 2017 08:40:12 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jan Glauber <jglauber@cavium.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, david.daney@cavium.com,
+        Jon Masters <jcm@redhat.com>,
+        Robert Richter <robert.richter@cavium.com>,
+        linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] PCI: Avoid slot reset for Cavium cn8xxx root
+ ports
+Message-ID: <20170830084012.19d91759@w520.home>
+In-Reply-To: <20170830142454.10971-4-jglauber@cavium.com>
+References: <20170830142454.10971-1-jglauber@cavium.com>
+        <20170830142454.10971-4-jglauber@cavium.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499955692-26556-2-git-send-email-dingtianhong@huawei.com>
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ding
+On Wed, 30 Aug 2017 16:24:54 +0200
+Jan Glauber <jglauber@cavium.com> wrote:
 
-Not sure if V7 is the last version.
-
-can you consider rewording this just to make it a little bit more
-readable? My suggestion below, feel free to use/modify
-
-Otherwise its all good and you can add my Ack.
-
-Acked-by: Ashok Raj <ashok.raj@intel.com>
-
-On Thu, Jul 13, 2017 at 10:21:30PM +0800, Ding Tianhong wrote:
-> From: Casey Leedom <leedom@chelsio.com>
-
-
+> Root ports of cn8xxx do not function after a slot reset when used with
+> some e1000e and LSI HBA devices. Add a quirk to prevent slot reset on
+> these root ports.
 > 
-> The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
-> Ordering Attribute should not be used on Transaction Layer Packets destined
-> for the PCIe End Node so flagged.  Initially flagged this way are Intel
-> E5-26xx Root Complex Ports which suffer from a Flow Control Credit
-> Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
-> don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
-
-The patch adds a new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING to indicate that
-Relaxed Ordering (RO) attribute should not be used for Transaction Layer
-Packets (TLP) targetted towards these affected root complexes. Current list
-of affected parts include Intel E5-26xx root complex which suffers from 
-flow control credits that result in performance issues. On these affected
-parts RO can still be used for peer-2-peer traffic. AMD A1100 ARM ("SEATTLE")
-Root complexes don't obey PCIe 3.0 ordering rules, hence could lead to
-data-corruption.
-> 
-> Signed-off-by: Casey Leedom <leedom@chelsio.com>
-> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+> Signed-off-by: Jan Glauber <jglauber@cavium.com>
 > ---
->  drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h  |  2 ++
->  2 files changed, 40 insertions(+)
+>  drivers/pci/quirks.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
 > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6967c6b..1e1cdbe 100644
+> index 85191b8..6679971 100644
 > --- a/drivers/pci/quirks.c
 > +++ b/drivers/pci/quirks.c
-> @@ -4016,6 +4016,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
->  			      quirk_tw686x_class);
+> @@ -845,6 +845,22 @@ static void quirk_cavium_sriov_rnm_link(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa018, quirk_cavium_sriov_rnm_link);
+>  #endif
 >  
->  /*
-> + * Some devices have problems with Transaction Layer Packets with the Relaxed
-> + * Ordering Attribute set.  Such devices should mark themselves and other
-> + * Device Drivers should check before sending TLPs with RO set.
+> +/*
+> + * Root port on some Cavium CN8xxx chips do not successfully complete
+> + * a bus reset when used with certain types of child devices. Config
+> + * space access to the child may quit responding. Flag all devices under
+> + * the secondary bus as non-resettable.
 > + */
-> +static void quirk_relaxedordering_disable(struct pci_dev *dev)
+> +static void quirk_CN8xxx_secondary_bus(struct pci_dev *dev)
 > +{
-> +	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
+> +	struct pci_dev *pdev;
+> +
+> +	dev_warn(&dev->dev, "Cavium CN8xxx quirk detected; reset for devices on secondary bus disabled\n");
+> +	list_for_each_entry(pdev, &dev->subordinate->devices, bus_list)
+> +		pdev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
 > +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_CN8xxx_secondary_bus);
 > +
-> +/*
-> + * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
-> + * cause performance problems with Upstream Transaction Layer Packets with
-> + * Relaxed Ordering set.
-> + */
-> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
-> +			      quirk_relaxedordering_disable);
-> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
-> +			      quirk_relaxedordering_disable);
-> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
-> +			      quirk_relaxedordering_disable);
-> +
-> +/*
-> + * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
-> + * where Upstream Transaction Layer Packets with the Relaxed Ordering
-> + * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
-> + * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
-> + * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
-> + * November 10, 2010).  As a result, on this platform we can't use Relaxed
-> + * Ordering for Upstream TLPs.
-> + */
-> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
-> +			      quirk_relaxedordering_disable);
-> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
-> +			      quirk_relaxedordering_disable);
-> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
-> +			      quirk_relaxedordering_disable);
-> +
-> +/*
->   * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
->   * values for the Attribute as were supplied in the header of the
->   * corresponding Request, except as explicitly allowed when IDO is used."
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 4869e66..412ec1c 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -188,6 +188,8 @@ enum pci_dev_flags {
->  	 * the direct_complete optimization.
->  	 */
->  	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
-> +	/* Don't use Relaxed Ordering for TLPs directed at this device */
-> +	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
->  };
->  
->  enum pci_irq_reroute_variant {
-> -- 
-> 1.8.3.1
-> 
-> 
+>  /*
+>   * Some settings of MMRBC can lead to data corruption so block changes.
+>   * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide
+
+
+This doesn't seem reliable, doesn't the user just need to remove and
+reprobe the slot and the device would re-appear without this flag set?
+Thanks,
+
+Alex
