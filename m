@@ -1,58 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([5.9.137.197]:39852 "EHLO mail.skyhub.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752775AbdHTLwH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 20 Aug 2017 07:52:07 -0400
-Date: Sun, 20 Aug 2017 13:29:55 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, mchehab@kernel.org, daniel.vetter@intel.com,
-        jani.nikula@linux.intel.com, seanpaul@chromium.org,
-        airlied@linux.ie, g.liakhovetski@gmx.de, tomas.winkler@intel.com,
-        dwmw2@infradead.org, computersforpeace@gmail.com,
-        boris.brezillon@free-electrons.com, marek.vasut@gmail.com,
-        richard@nod.at, cyrille.pitchen@wedev4u.fr, peda@axentia.se,
-        kishon@ti.com, bhelgaas@google.com, thierry.reding@gmail.com,
-        jonathanh@nvidia.com, dvhart@infradead.org, andy@infradead.org,
-        ohad@wizery.com, bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 01/15] EDAC: make device_type const
-Message-ID: <20170820112954.bi5oiebbm3i4gtru@pd.tnic>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
- <1503130946-2854-2-git-send-email-bhumirks@gmail.com>
+Return-Path: <SRS0=Cx9C=AA=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=Cx9C=AA=free.fr=slash.tmp@kernel.org>
+Subject: Re: Possible regression between 4.9 and 4.13
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Lukas Wunner <lukas@wunner.de>
+Cc: Mathias Nyman <mathias.nyman@linux.intel.com>,
+ Felipe Balbi <felipe.balbi@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>, linux-usb
+ <linux-usb@vger.kernel.org>, Linux ARM
+ <linux-arm-kernel@lists.infradead.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Alan Stern <stern@rowland.harvard.edu>
+References: <599D3410.9050504@intel.com>
+ <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
+ <599D62EA.7050100@linux.intel.com>
+ <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
+ <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
+ <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
+ <59A3D6BF.7010400@linux.intel.com>
+ <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
+ <59A56C15.2000403@linux.intel.com> <20170829235310.GA20214@wunner.de>
+ <20170830060237.GA2782@kroah.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
+Date: Wed, 30 Aug 2017 10:55:37 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1503130946-2854-2-git-send-email-bhumirks@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170830060237.GA2782@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 19, 2017 at 01:52:12PM +0530, Bhumika Goyal wrote:
-> Make these const as they are only stored in the type field of a device
-> structure, which is const.
-> Done using Coccinelle.
+On 30/08/2017 08:02, Greg Kroah-Hartman wrote:
+
+> To get back to the original issue here, the hardware seems to have died,
+> the driver stops talking to it, and all is good.  The "regression" here
+> is that we now properly can determine that the hardware is crap.
+
+Before 4.12, when I unplugged my USB3 Flash drive, Linux would
+detect a few "Uncorrected Non-Fatal errors" via AER, but it was
+still possible to plug the drive back in.
+
+Since 4.12, once I unplug the drive, the whole USB3 card is marked
+as dead (all 4 ports), and I can no longer plug anything in (not even
+the USB2 drive that didn't have any issues, IIRC).
+
+It seems a bit premature to "mark as dead" something that remains
+functional, doesn't it?
+
+Disclaimer, there are many variables in this setup, and I've only
+tested a small fraction of the problem space: only one system,
+only one USB3 board, only one USB3 Flash drive.
+
+> So, how do you think we should proceed, delay a bit longer before saying
+> the device is gone?  How long is "long enough"?  How many bus errors are
+> we allowed to tolerate (hint, the PCI spec says none...)
 > 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-> ---
->  drivers/edac/edac_mc_sysfs.c | 8 ++++----
->  drivers/edac/i7core_edac.c   | 4 ++--
->  2 files changed, 6 insertions(+), 6 deletions(-)
+> Maybe someone wants to get to the root problem here, why is the hardware
+> suddenly reporting all 1s?
 
-Applied, thanks.
+I'm afraid I won't be able to make any progress on this front,
+unless I can get my hands on a PCIe packet analyzer.
 
--- 
-Regards/Gruss,
-    Boris.
-
-Good mailing practices for 400: avoid top-posting and trim the reply.
+Regards.
