@@ -1,65 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] acpi: apei: call into AER handling regardless of severity
-To: Borislav Petkov <bp@suse.de>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Tony Luck <tony.luck@intel.com>,
-        rjw@rjwysocki.net, lenb@kernel.org, will.deacon@arm.com,
-        james.morse@arm.com, prarit@redhat.com, punit.agrawal@arm.com,
-        shiju.jose@huawei.com, andriy.shevchenko@linux.intel.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-References: <1503940314-29526-1-git-send-email-tbaicar@codeaurora.org>
- <20170829082055.u3qpwtgyzxjxfvup@pd.tnic>
- <9abb2e99-44be-3315-47d9-2689b6c76d79@codeaurora.org>
- <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
- <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
- <20170830101617.3m266q7xuew6ctxl@pd.tnic>
- <b630fa5e-c24b-06f4-47da-bed53161e0b7@codeaurora.org>
- <20170830151601.ro5qt5272e2msevp@pd.tnic>
- <af5dc902-faca-a7a1-6781-95ff82d5d8fd@codeaurora.org>
- <a074792e-ad43-d4f5-6f99-8fcf8349c7ad@codeaurora.org>
- <20170830171440.3ynavu5nuchiwxcb@pd.tnic>
-From: "Baicar, Tyler" <tbaicar@codeaurora.org>
-Message-ID: <4c8b05cc-c0c2-c78e-df0d-ce65ec789186@codeaurora.org>
-Date: Wed, 30 Aug 2017 12:09:05 -0600
+Return-Path: <SRS0=Bk9x=AA=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=Bk9x=AA=linuxfoundation.org=gregkh@kernel.org>
+Date: Wed, 30 Aug 2017 08:45:37 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Mathias Nyman <mathias.nyman@linux.intel.com>,
+	Mason <slash.tmp@free.fr>,
+	Felipe Balbi <felipe.balbi@linux.intel.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-usb <linux-usb@vger.kernel.org>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Possible regression between 4.9 and 4.13
+Message-ID: <20170830064537.GA8856@kroah.com>
+References: <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
+ <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
+ <59A3D6BF.7010400@linux.intel.com>
+ <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
+ <59A56C15.2000403@linux.intel.com>
+ <20170829133852.GA13355@wunner.de>
+ <20170829144725.GB22532@kroah.com>
+ <20170829153456.GA13712@wunner.de>
+ <20170829155138.GA32369@kroah.com>
+ <20170830063623.GA16076@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20170830171440.3ynavu5nuchiwxcb@pd.tnic>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170830063623.GA16076@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/30/2017 11:14 AM, Borislav Petkov wrote:
-> On Wed, Aug 30, 2017 at 09:42:08AM -0600, Baicar, Tyler wrote:
->> I think with my two patches we will have the desired functionality:
->>
->> GHES_SEV_CORRECTABLE -> AER_CORRECTABLE -> Print AER info, but do not call
->> do_recovery
->>
->> GHES_SEV_RECOVERABLE -> AER_NONFATAL -> Print AER info and do_recovery
->>
->> GHES_RECOVERABLE and CPER_SEC_RESET -> AER_FATAL -> Print AER info and
->> do_recover
-> Right, so I'd like to you create a separate function ghes_do_proc_aer()
-> or ghes_handle_aer() or so and carve out all the code inside #ifdef
-> CONFIG_ACPI_APEI_PCIEAER into it, add your two changes to the patch and
-> slap a big fat comment above the new function explaining *why* we're
-> doing what we're doing and how we're mapping all the severities to AER
-> severity in order to do recovery and/or only to print the error.
->
-> So that it is known and people can see in the future why we're doing
-> this and what the logic has been and what kind of policy we're chasing
-> and so on and so on...
->
-> Ok?
->
-> Thanks.
-Yes, I can do that.
+On Wed, Aug 30, 2017 at 08:36:23AM +0200, Lukas Wunner wrote:
+> On Tue, Aug 29, 2017 at 05:51:38PM +0200, Greg Kroah-Hartman wrote:
+> > On Tue, Aug 29, 2017 at 05:34:56PM +0200, Lukas Wunner wrote:
+> > > On Tue, Aug 29, 2017 at 04:47:25PM +0200, Greg Kroah-Hartman wrote:
+> > > > On Tue, Aug 29, 2017 at 03:38:52PM +0200, Lukas Wunner wrote:
+> > > Is 0xffffffff not a valid value to be stored in and read from mmio space?
+> > 
+> > For a specific register, doubtful
+> 
+> Well, "doubtful" means you don't know for sure.
+> 
+> It's fine to check for "all ones" as a heuristic if that's not a valid
+> value for the register read, however a hotplug notification is a
+> *definitive* indication the hardware is gone.
+> 
+> I you seem to prefer forgoing a *definitive* indication for a mere
+> heuristic, that doesn't make sense from my point of view.
 
-Thanks,
-Tyler
+I still don't know what you are arguing about here.  The _driver_ knows
+if a specific read allows all ones as a valid return value.  If it
+isn't, then the driver knows the device is now gone.  It's that simple,
+don't do that type of check if all ones is a valid read.
 
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+And that's not what is happening here anyway, so again, what is this
+discussion about?
 
+Unless there's something specific we can do here for the xhci driver, I
+think this thread is dead until someone determines what is going wrong
+with the hardware the original reporter posted about.
+
+greg k-h
