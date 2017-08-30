@@ -1,51 +1,65 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 Subject: Re: [PATCH] acpi: apei: call into AER handling regardless of severity
-To: Borislav Petkov <bp@suse.de>,
-        "Baicar, Tyler" <tbaicar@codeaurora.org>,
-        Tony Luck <tony.luck@intel.com>
-Cc: rjw@rjwysocki.net, lenb@kernel.org, will.deacon@arm.com,
+To: Borislav Petkov <bp@suse.de>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Tony Luck <tony.luck@intel.com>,
+        rjw@rjwysocki.net, lenb@kernel.org, will.deacon@arm.com,
         james.morse@arm.com, prarit@redhat.com, punit.agrawal@arm.com,
         shiju.jose@huawei.com, andriy.shevchenko@linux.intel.com,
         linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Huang Ying <ying.huang@intel.com>
 References: <1503940314-29526-1-git-send-email-tbaicar@codeaurora.org>
  <20170829082055.u3qpwtgyzxjxfvup@pd.tnic>
  <9abb2e99-44be-3315-47d9-2689b6c76d79@codeaurora.org>
  <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
-Date: Tue, 29 Aug 2017 18:34:49 -0400
+ <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
+ <20170830101617.3m266q7xuew6ctxl@pd.tnic>
+ <b630fa5e-c24b-06f4-47da-bed53161e0b7@codeaurora.org>
+ <20170830151601.ro5qt5272e2msevp@pd.tnic>
+ <af5dc902-faca-a7a1-6781-95ff82d5d8fd@codeaurora.org>
+ <a074792e-ad43-d4f5-6f99-8fcf8349c7ad@codeaurora.org>
+ <20170830171440.3ynavu5nuchiwxcb@pd.tnic>
+From: "Baicar, Tyler" <tbaicar@codeaurora.org>
+Message-ID: <4c8b05cc-c0c2-c78e-df0d-ce65ec789186@codeaurora.org>
+Date: Wed, 30 Aug 2017 12:09:05 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170830171440.3ynavu5nuchiwxcb@pd.tnic>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+linux-pci
+On 8/30/2017 11:14 AM, Borislav Petkov wrote:
+> On Wed, Aug 30, 2017 at 09:42:08AM -0600, Baicar, Tyler wrote:
+>> I think with my two patches we will have the desired functionality:
+>>
+>> GHES_SEV_CORRECTABLE -> AER_CORRECTABLE -> Print AER info, but do not call
+>> do_recovery
+>>
+>> GHES_SEV_RECOVERABLE -> AER_NONFATAL -> Print AER info and do_recovery
+>>
+>> GHES_RECOVERABLE and CPER_SEC_RESET -> AER_FATAL -> Print AER info and
+>> do_recover
+> Right, so I'd like to you create a separate function ghes_do_proc_aer()
+> or ghes_handle_aer() or so and carve out all the code inside #ifdef
+> CONFIG_ACPI_APEI_PCIEAER into it, add your two changes to the patch and
+> slap a big fat comment above the new function explaining *why* we're
+> doing what we're doing and how we're mapping all the severities to AER
+> severity in order to do recovery and/or only to print the error.
+>
+> So that it is known and people can see in the future why we're doing
+> this and what the logic has been and what kind of policy we're chasing
+> and so on and so on...
+>
+> Ok?
+>
+> Thanks.
+Yes, I can do that.
 
-On 8/29/2017 6:19 PM, Borislav Petkov wrote:
-> if (entry.severity == AER_NONFATAL)
-> 		do_recovery(pdev, entry.severity);
-
-Providing input from PCI perspective only:
-
-PCIe defines the the following error categories:
-
-1. Correctable error
-2. Uncorrectable non-fatal errors
-3. Uncorrectable fatal errors
-
-The do_recovery function needs to be called for both uncorrectable error
-categories. (#2 and #3 above)
-
-How these map to GHES error categories is out of know-how.
-
-Below are references to some of the PCIe error docs:
-
-https://www.kernel.org/doc/Documentation/PCI/pcieaer-howto.txt
-https://www.kernel.org/doc/Documentation/PCI/pci-error-recovery.txt
+Thanks,
+Tyler
 
 -- 
-Sinan Kaya
 Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
+
