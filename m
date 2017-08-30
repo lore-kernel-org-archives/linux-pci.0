@@ -1,80 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.141]:55001 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751962AbdHKCjP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 22:39:15 -0400
-Message-ID: <598D18CC.5080104@rock-chips.com>
-Date: Fri, 11 Aug 2017 10:39:08 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:57322 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751708AbdH3N7d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Aug 2017 09:59:33 -0400
+Date: Wed, 30 Aug 2017 08:59:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Himanshu Jha <himanshujha199640@gmail.com>, bhelgaas@google.com,
+        jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: Use PTR_ERR_OR_ZERO
+Message-ID: <20170830135931.GA18250@bhelgaas-glaptop.roam.corp.google.com>
+References: <1504013940-16304-1-git-send-email-himanshujha199640@gmail.com>
+ <20170829135517.GA30733@ulmo>
 MIME-Version: 1.0
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Douglas Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH v3] PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
-References: <1502416371-185632-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1502416371-185632-1-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170829135517.GA30733@ulmo>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+On Tue, Aug 29, 2017 at 03:55:17PM +0200, Thierry Reding wrote:
+> On Tue, Aug 29, 2017 at 07:09:00PM +0530, Himanshu Jha wrote:
+> > Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
+> > 
+> > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+> > ---
+> >  drivers/pci/host/pci-tegra.c | 5 +----
+> >  1 file changed, 1 insertion(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > index 9c40da5..90cda5b 100644
+> > --- a/drivers/pci/host/pci-tegra.c
+> > +++ b/drivers/pci/host/pci-tegra.c
+> > @@ -1156,10 +1156,7 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
+> >  		return PTR_ERR(pcie->afi_rst);
+> >  
+> >  	pcie->pcie_xrst = devm_reset_control_get_exclusive(dev, "pcie_x");
+> > -	if (IS_ERR(pcie->pcie_xrst))
+> > -		return PTR_ERR(pcie->pcie_xrst);
+> > -
+> > -	return 0;
+> > +	return PTR_ERR_OR_ZERO(pcie->pcie_xrst);
+> >  }
+> 
+> I'm not a big fan of this construct because it's a pain to undo this if
+> ever we need to add code to this function. But since we do have scripts
+> that will flag this, I guess this would pop up every now and again. The
+> driver is unlikely to change in this part, too, so:
 
-On 08/11/2017 09:52 AM, Shawn Lin wrote:
-> +static void rockchip_pcie_disable_clocks(void *data)
-> +{
-> +	struct rockchip_pcie *rockchip = data;
-> +
-> +	clk_disable_unprepare(rockchip->clk_pcie_pm);
-> +	clk_disable_unprepare(rockchip->hclk_pcie);
-> +	clk_disable_unprepare(rockchip->aclk_perf_pcie);
-> +	clk_disable_unprepare(rockchip->aclk_pcie);
-> +}
+Thanks for pointing this out.  Do you know what the benefit of
+PTR_ERR_OR_ZERO() is?  To me, it makes the following code harder
+to read because the error tests are no longer parallel:
 
-maybe we can reuse this function in suspend noirq
+  ...
+  res->ahb_reset = devm_reset_control_get(dev, "ahb");
+  if (IS_ERR(res->ahb_reset))
+    return PTR_ERR(res->ahb_reset);
 
+  res->por_reset = devm_reset_control_get(dev, "por");
+  if (IS_ERR(res->por_reset))
+    return PTR_ERR(res->por_reset);
 
-> +
->   static int rockchip_pcie_probe(struct platform_device *pdev)
->   {
->   	struct rockchip_pcie *rockchip;
-> @@ -1493,31 +1511,49 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->   	err = clk_prepare_enable(rockchip->aclk_pcie);
->   	if (err) {
->   		dev_err(dev, "unable to enable aclk_pcie clock\n");
-> -		goto err_aclk_pcie;
-> +		return err;
->   	}
->
->   	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
->   	if (err) {
->   		dev_err(dev, "unable to enable aclk_perf_pcie clock\n");
-> -		goto err_aclk_perf_pcie;
-> +		clk_disable_unprepare(rockchip->aclk_pcie);
-> +		return err;
->   	}
->
->   	err = clk_prepare_enable(rockchip->hclk_pcie);
->   	if (err) {
->   		dev_err(dev, "unable to enable hclk_pcie clock\n");
-> -		goto err_hclk_pcie;
-> +		clk_disable_unprepare(rockchip->aclk_pcie);
-> +		clk_disable_unprepare(rockchip->aclk_perf_pcie);
-> +		return err;
->   	}
->
->   	err = clk_prepare_enable(rockchip->clk_pcie_pm);
->   	if (err) {
-> -		dev_err(dev, "unable to enable hclk_pcie clock\n");
-> -		goto err_pcie_pm;
-> +		dev_err(dev, "unable to enable clk_pcie_pm clock\n");
-> +		clk_disable_unprepare(rockchip->aclk_pcie);
-> +		clk_disable_unprepare(rockchip->aclk_perf_pcie);
-> +		clk_disable_unprepare(rockchip->hclk_pcie);
-> +		return err;
->   	}
+  res->phy_reset = devm_reset_control_get(dev, "phy");
+  return PTR_ERR_OR_ZERO(res->phy_reset);
 
-maybe we can have a rockchip_pcie_enable_clocks for these, and also 
-reuse it in resume noirq
+So I'd be inclined to avoid it unless there's some significant benefit.
+
+Bjorn
