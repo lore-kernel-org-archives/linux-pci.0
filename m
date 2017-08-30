@@ -1,73 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:55744 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753905AbdHXQgt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Aug 2017 12:36:49 -0400
-Date: Thu, 24 Aug 2017 18:31:19 +0200 (CEST)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: Bhumika Goyal <bhumirks@gmail.com>
-cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, tomas.winkler@intel.com,
-        dwmw2@infradead.org, computersforpeace@gmail.com,
-        boris.brezillon@free-electrons.com, marek.vasut@gmail.com,
-        richard@nod.at, cyrille.pitchen@wedev4u.fr, peda@axentia.se,
-        kishon@ti.com, bhelgaas@google.com, thierry.reding@gmail.com,
-        jonathanh@nvidia.com, dvhart@infradead.org, andy@infradead.org,
-        ohad@wizery.com, bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 03/15] [media] i2c: make device_type const
-In-Reply-To: <1503130946-2854-4-git-send-email-bhumirks@gmail.com>
-Message-ID: <Pine.LNX.4.64.1708241830240.3709@axis700.grange>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
- <1503130946-2854-4-git-send-email-bhumirks@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 30 Aug 2017 14:43:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Biju Das <biju.das@bp.renesas.com>
+Subject: Re: [PATCH ] PCI: rcar: Add r8a7743/5 support
+Message-ID: <20170830194353.GW8154@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503567344-5610-1-git-send-email-biju.das@bp.renesas.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1503567344-5610-1-git-send-email-biju.das@bp.renesas.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Chris Paterson <chris.paterson2@renesas.com>,
+ Simon Horman <horms@verge.net.au>, linux-pci@vger.kernel.org,
+ Magnus Damm <magnus.damm@gmail.com>, Russell King <linux@armlinux.org.uk>,
+ linux-renesas-soc@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 19 Aug 2017, Bhumika Goyal wrote:
-
-> Make this const as it is only stored in the type field of a device
-> structure, which is const.
-> Done using Coccinelle.
+On Thu, Aug 24, 2017 at 10:35:44AM +0100, Biju Das wrote:
+> Add internal PCI bridge support for r8a7743/5 SoC. Renesas RZ/G1[ME]
+> (R8A7743/5) internal PCI bridge is identical to the R-Car Gen2 family.
 > 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
 
-Acked-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-
-Thanks
-Guennadi
+Applied with Simon's ack to pci/host-rcar, thanks!
 
 > ---
->  drivers/media/i2c/soc_camera/mt9t031.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> This patch is tested against Linux next tag next-20170824 and
+> renesas-dev branch renesas-devel-20170822-v4.13-rc6. 
 > 
-> diff --git a/drivers/media/i2c/soc_camera/mt9t031.c b/drivers/media/i2c/soc_camera/mt9t031.c
-> index 714fb35..4802d30 100644
-> --- a/drivers/media/i2c/soc_camera/mt9t031.c
-> +++ b/drivers/media/i2c/soc_camera/mt9t031.c
-> @@ -592,7 +592,7 @@ static int mt9t031_runtime_resume(struct device *dev)
->  	.runtime_resume		= mt9t031_runtime_resume,
->  };
+>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> index 07a7509..3d03863 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> @@ -6,11 +6,14 @@ AHB. There is one bridge instance per USB port connected to the internal
+>  OHCI and EHCI controllers.
 >  
-> -static struct device_type mt9t031_dev_type = {
-> +static const struct device_type mt9t031_dev_type = {
->  	.name	= "MT9T031",
->  	.pm	= &mt9t031_dev_pm_ops,
->  };
+>  Required properties:
+> -- compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
+> +- compatible: "renesas,pci-r8a7743" for the R8A7743 SoC;
+> +	      "renesas,pci-r8a7745" for the R8A7745 SoC;
+> +	      "renesas,pci-r8a7790" for the R8A7790 SoC;
+>  	      "renesas,pci-r8a7791" for the R8A7791 SoC;
+>  	      "renesas,pci-r8a7793" for the R8A7793 SoC;
+>  	      "renesas,pci-r8a7794" for the R8A7794 SoC;
+> -	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 compatible device
+> +	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 or
+> +				      RZ/G1 compatible device.
+>  
+>  
+>  	      When compatible with the generic version, nodes must list the
 > -- 
 > 1.9.1
 > 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
