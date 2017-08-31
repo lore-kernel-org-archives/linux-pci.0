@@ -1,76 +1,142 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: "Raj, Ashok" <ashok.raj@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v9 1/4] PCI: Add new PCIe Fabric End Node flag,
- PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-Date: Wed, 9 Aug 2017 16:46:07 +0000
-Message-ID: <MWHPR12MB1600E9D94E74E1DECC192097C88B0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
- <1501917313-9812-2-git-send-email-dingtianhong@huawei.com>
- <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>,
- <20170809155841.GA8675@otc-nc-03>
-In-Reply-To: <20170809155841.GA8675@otc-nc-03>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37388 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750813AbdHaREN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Aug 2017 13:04:13 -0400
+Date: Thu, 31 Aug 2017 12:04:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+        Yongji Xie <elohimes@gmail.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        shan.gavin@gmail.com,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: Re: [PATCH kernel] PCI: Disable IOV before pcibios_sriov_disable()
+Message-ID: <20170831170410.GE18250@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170811081933.17474-1-aik@ozlabs.ru>
+ <20170830190206.GU8154@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linuxarm@huawei.com" <linuxarm@huawei.com>,
- "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
- "amira@mellanox.com" <amira@mellanox.com>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
- "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
- Ding Tianhong <dingtianhong@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Michael Werner <werner@chelsio.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "David.Laight@aculab.com" <David.Laight@aculab.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "davem@davemloft.net" <davem@davemloft.net>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170830190206.GU8154@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-| From: Raj, Ashok <ashok.raj@intel.com>
-| Sent: Wednesday, August 9, 2017 8:58 AM
-| ...
-| As Casey pointed out in an earlier thread, we choose the heavy hammer
-| approach because there are some that can lead to data-corruption as opposed
-| to perf degradation.
+On Wed, Aug 30, 2017 at 02:02:06PM -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 11, 2017 at 06:19:33PM +1000, Alexey Kardashevskiy wrote:
+> > From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> > 
+> > The PowerNV platform is the only user of pcibios_sriov_disable().
+> > The IOV BAR could be shifted by pci_iov_update_resource(). The
+> > warning message in the function is printed if the IOV capability
+> > is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
+> > 
+> > This is the backtrace of what is happening:
+> >    pci_disable_sriov
+> >    sriov_disable
+> >    pnv_pci_sriov_disable
+> >    pnv_pci_vf_resource_shift
+> >    pci_update_resource
+> >    pci_iov_update_resource
+> > 
+> > This fixes the issue by disabling IOV capability before calling
+> > pcibios_sriov_disable(). With it, the disabling path matches
+> > the enabling path: pcibios_sriov_enable() is called before the
+> > IOV capability is enabled.
+> > 
+> > Cc: shan.gavin@gmail.com
+> > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > Cc: Paul Mackerras <paulus@samba.org>
+> > Reported-by: Carol L Soto <clsoto@us.ibm.com>
+> > Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> > Tested-by: Carol L Soto <clsoto@us.ibm.com>
+> > Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> > ---
+> > 
+> > This is repost. Since Gavin left the team, I am trying to push it out.
+> > The previos converstion is here: https://patchwork.ozlabs.org/patch/732653/
+> 
+> I gave up on the previous issue.  I think this patch makes sense as-is
+> at least as far as the fact that we can't update a struct resource
+> while the device is still consuming it.  I reworked the changelog to
+> emphasize that.
+> 
+> I assume the fact that pci_iov_update_resource() dropped the resource
+> update caused some user-visible issue later on, and I might mention
+> that, too, if I knew what it was.
+> 
+> Here's what I would consider putting on pci/virtualization (the diff
+> is unchanged from your post):
 
-Careful.  As far as I'm aware, there is no Data Corruption problem
-whatsoever with Intel Root Ports and processing of Transaction Layer Packets
-with and without the Relaxed Ordering Attribute set.
+I applied the patch below on pci/virtualization for v4.14.
 
-The only issue which we've discovered with relatively recent Intel Root Port
-implementations and the use of the Relaxed Ordering Attribute is a
-performance issue.  To the best of our ability to analyze the PCIe traces,
-it appeared that the Intel Root Complex delayed returning Link Flow Control
-Credits resulting in lowered performance (total bandwidth).  When we used
-Relaxed Ordering for Ingress Packet Data delivery on a 100Gb/s Ethernet
-link with 1500-byte MTU, we were pegged at ~75Gb/s.  Once we disabled
-Relaxed Ordering, we were able to deliver Ingress Packet Data to Host Memory
-at the full link rate.
-
-Casey
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> commit 08132e7759b3929bea0ccdf8afe81ebf05351389
+> Author: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Date:   Fri Aug 11 18:19:33 2017 +1000
+> 
+>     PCI: Disable VF decoding before updating resources in pcibios_sriov_disable()
+>     
+>     A struct resource represents the address space consumed by a device.  We
+>     should not modify that resource while the device is actively using the
+>     address space.  For VFs, pci_iov_update_resource() enforces this by
+>     printing a warning and doing nothing if the VFE (VF Enable) and MSE (VF
+>     Memory Space Enable) bits are set.
+>     
+>     Previously, both sriov_enable() and sriov_disable() called the
+>     pcibios_sriov_disable() arch hook, which may update the struct resource,
+>     while VFE and MSE were enabled.  This effectively dropped the resource
+>     update pcibios_sriov_disable() intended to do.
+>     
+>     Disable VF memory decoding before calling pcibios_sriov_disable().
+>     
+>     Reported-by: Carol L Soto <clsoto@us.ibm.com>
+>     Tested-by: Carol L Soto <clsoto@us.ibm.com>
+>     Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>     Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>     [bhelgaas: changelog]
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Cc: shan.gavin@gmail.com
+>     Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>     Cc: Paul Mackerras <paulus@samba.org>
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 120485d6f352..ac41c8be9200 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	while (i--)
+>  		pci_iov_remove_virtfn(dev, i, 0);
+>  
+> -	pcibios_sriov_disable(dev);
+>  err_pcibios:
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+> @@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	ssleep(1);
+>  	pci_cfg_access_unlock(dev);
+>  
+> +	pcibios_sriov_disable(dev);
+> +
+>  	if (iov->link != dev->devfn)
+>  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>  
+> @@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
+>  	for (i = 0; i < iov->num_VFs; i++)
+>  		pci_iov_remove_virtfn(dev, i, 0);
+>  
+> -	pcibios_sriov_disable(dev);
+> -
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+>  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>  	ssleep(1);
+>  	pci_cfg_access_unlock(dev);
+>  
+> +	pcibios_sriov_disable(dev);
+> +
+>  	if (iov->link != dev->devfn)
+>  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>  
