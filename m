@@ -1,39 +1,35 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 10 Aug 2017 10:06:18 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH] ARM: dts: DRA7: Add pcie1 dt node for EP mode
-Message-ID: <20170810170617.GN8569@atomide.com>
-References: <20170808054024.18507-1-kishon@ti.com>
+Return-Path: <SRS0=G5cy=AB=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=G5cy=AB=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170808054024.18507-1-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170824164633.GI31858@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170821192907.8695-1-ard.biesheuvel@linaro.org> <20170824164633.GI31858@bhelgaas-glaptop.roam.corp.google.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 31 Aug 2017 20:21:54 +0100
+Message-ID: <CAKv+Gu_=utJ0vrWqgKq4Nrfg0AHb00tkM-0KO2UgGFu1VHdmvw@mail.gmail.com>
+Subject: Re: [PATCH 0/3] pci: add support for firmware initialized designware RCs
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+	Graeme Gregory <graeme.gregory@linaro.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Jingoo Han <jingoohan1@gmail.com>, Leif Lindholm <leif.lindholm@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-* Kishon Vijay Abraham I <kishon@ti.com> [170807 22:41]:
-> Add pcie1 dt node in order for the controller to operate in
-> endpoint mode. However since none of the dra7 based boards have
-> slots configured to operate in endpoint mode, keep EP mode
-> disabled.
+On 24 August 2017 at 17:46, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Mon, Aug 21, 2017 at 08:29:04PM +0100, Ard Biesheuvel wrote:
+>> UEFI based systems incorporating a Synopsys Designware PCIe controller
+>> in RC mode will typically configure it before entering the OS. If this
+>> configuration is fully static and ECAM compliant, there is no need to
+>> expose particulars of the device to the OS, and we can simply describe
+>> it as "pci-host-ecam-generic".
+>
+> I *love* the idea of moving more of this to firmware.
 
-Applying into omap-for-v4.14/dt thanks.
+Enough to consider the v3 of this series for v4.14? Rob has acked the
+binding, and as far as I am aware. it is ultimately up to you whether
+and when you take them as a pair. Also, I don't mind being listed as
+maintainer and/or reviewer either if it helps.
 
-Tony
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Ard.
