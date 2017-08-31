@@ -1,67 +1,48 @@
-Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	<helgaas@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Oza Pawandeep <oza.oza@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>,
-	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v8 0/3] PCI: iproc: SOC specific fixes
-Date: Thu, 24 Aug 2017 10:34:23 +0530
-Message-Id: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0068.outbound.protection.outlook.com ([104.47.37.68]:6943
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751405AbdHaRwp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Aug 2017 13:52:45 -0400
+From: Fabio Estevam <fabio.estevam@nxp.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
+Subject: [PATCH 05/10] PCI: spear13xx: Fix platform_get_irq() error handling
+Date: Thu, 31 Aug 2017 14:52:05 -0300
+Message-ID: <1504201930-3617-5-git-send-email-fabio.estevam@nxp.com>
+In-Reply-To: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
+References: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI: iproc: Retry request when CRS returned from EP Above patch adds
-support for CRS in PCI RC driver, otherwise if not handled at lower
-level, the user space PMD (poll mode drivers) can timeout.
+platform_get_irq() returns a negative number on failure, so
+adjust the logic to detect such condition and propagate
+the real error value on failure.
 
-PCI: iproc: add device shutdown for PCI RC This fixes the issue where
-certian PCI endpoints are not getting detected on Stingray SOC after
-reboot.
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+---
+ drivers/pci/dwc/pcie-spear13xx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Changes Since v7:
-Factor out the ep config access code.
-
-Changes Since v6:
-Rebased patches on top of Lorenzo's patches.
-Bjorn's comments addressed.
-now the confg retry returns 0xffffffff as data.
-Added reference to PCIe spec and iproc Controller spec in Changelog.
-
-Changes Since v5:
-Ray's comments addressed.
-
-Changes Since v4:
-Bjorn's comments addressed.
-
-Changes Since v3:
-[re-send]
-
-Changes Since v2:
-Fix compilation errors for pcie-iproc-platform.ko which was caught
-by kbuild.
-
-Oza Pawandeep (3):
-  PCI: iproc: factor-out ep configuration access
-  PCI: iproc: Retry request when CRS returned from EP
-  PCI: iproc: add device shutdown for PCI RC
-
- drivers/pci/host/pcie-iproc-platform.c |   8 ++
- drivers/pci/host/pcie-iproc.c          | 143 ++++++++++++++++++++++++++-------
- drivers/pci/host/pcie-iproc.h          |   1 +
- 3 files changed, 124 insertions(+), 28 deletions(-)
-
+diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
+index 52000bc..709189d 100644
+--- a/drivers/pci/dwc/pcie-spear13xx.c
++++ b/drivers/pci/dwc/pcie-spear13xx.c
+@@ -201,9 +201,9 @@ static int spear13xx_add_pcie_port(struct spear13xx_pcie *spear13xx_pcie,
+ 	int ret;
+ 
+ 	pp->irq = platform_get_irq(pdev, 0);
+-	if (!pp->irq) {
++	if (pp->irq < 0) {
+ 		dev_err(dev, "failed to get irq\n");
+-		return -ENODEV;
++		return pp->irq;
+ 	}
+ 	ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
+ 			       IRQF_SHARED | IRQF_NO_THREAD,
 -- 
-1.9.1
+2.7.4
