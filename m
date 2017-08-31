@@ -1,137 +1,59 @@
-Return-Path: <SRS0=KcHG=7T=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=KcHG=7T=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] PCI: dra7xx: Use PCI_NUM_INTX
-To: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20170815213838.8231.59214.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20170815215225.GP32525@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, Paul Burton <paul.burton@imgtec.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <3bb78881-48bf-cd2f-0130-f6b54e4fc762@ti.com>
-Date: Thu, 17 Aug 2017 21:51:29 +0530
-MIME-Version: 1.0
-In-Reply-To: <20170815215225.GP32525@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Return-Path: <SRS0=0re9=AB=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=0re9=AB=broadcom.com=oza.oza@kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	<helgaas@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Oza Pawandeep <oza.oza@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v6 2/3] dt-bindings: PCI iproc: Implement optional property prsnt-gpios
+Date: Thu, 31 Aug 2017 10:20:28 +0530
+Message-Id: <1504155029-24729-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1504155029-24729-1-git-send-email-oza.oza@broadcom.com>
+References: <1504155029-24729-1-git-send-email-oza.oza@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Add description for optional device tree property
+'prsnt-gpios' for PCI hotplug feature.
 
-On Wednesday 16 August 2017 03:22 AM, Bjorn Helgaas wrote:
-> On Tue, Aug 15, 2017 at 04:38:38PM -0500, Bjorn Helgaas wrote:
->> Use the PCI_NUM_INTX macro to indicate the number of PCI INTx interrupts
->> rather than the magic number 4. This makes it clearer where the number
->> comes from & what it relates to.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  drivers/pci/dwc/pci-dra7xx.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->> index f2fc5f47064e..30131ecaadea 100644
->> --- a/drivers/pci/dwc/pci-dra7xx.c
->> +++ b/drivers/pci/dwc/pci-dra7xx.c
->> @@ -238,7 +238,7 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
->>  		return -ENODEV;
->>  	}
->>  
->> -	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
->> +	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
->>  						   &intx_domain_ops, pp);
->>  	if (!dra7xx->irq_domain) {
->>  		dev_err(dev, "Failed to get a INTx IRQ domain\n");
->>
-> 
-> Oops.  I think this patch is OK as far as it goes, but Kishon
-> confirmed [1] that INTD was broken in dra7xx, and AFAIK it's still
-> broken, so maybe we need to also use pci_irqd_intx_xlate() as in the
-> following?
-> 
-> [1] https://lkml.org/lkml/2016/9/14/241
-> 
-> 
-> 
-> commit 569f29aa4ff0ab4bd4d1782b3a806a7561fe9db5
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Tue Aug 15 16:28:27 2017 -0500
-> 
->     PCI: dra7xx: Translate INTx range to hwirqs 0-3
->     
->     The pci-dra7xx driver creates an IRQ domain of size 4 for legacy PCI INTx
->     interrupts, which at first glance seems reasonable since there are 4 possible
->     such interrupts. Unfortunately the driver then proceeds to use the range 1-4
->     as the hwirq numbers for INTA-INTD, causing warnings & broken interrupts when
->     attempting to use INTD/hwirq=4 due to it being beyond the range of the IRQ
->     domain:
->     
->       WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
->       error: hwirq 0x4 is too large for dummy
->       Modules linked in:
->       CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.8.0-rc6-01351-gd4fcf3d-dirty #15
->       Hardware name: Generic DRA72X (Flattened Device Tree)
->         (unwind_backtrace) from [<c010c264>] (show_stack+0x10/0x14)
->         (show_stack) from [<c048f3ec>] (dump_stack+0xac/0xe0)
->         (dump_stack) from [<c0138a74>] (__warn+0xd8/0x104)
->         (__warn) from [<c0138ad4>] (warn_slowpath_fmt+0x34/0x44)
->         (warn_slowpath_fmt) from [<c01a9944>] (irq_domain_associate+0x12c/0x1c4)
->         (irq_domain_associate) from [<c01aa158>] (irq_create_mapping+0x64/0xcc)
->         (irq_create_mapping) from [<c01aa848>] (irq_create_fwspec_mapping+0xac/0x2fc)
->         (irq_create_fwspec_mapping) from [<c01aaaec>] (irq_create_of_mapping+0x54/0x5c)
->         (irq_create_of_mapping) from [<c0668b04>] (of_irq_parse_and_map_pci+0x24/0x2c)
->         (of_irq_parse_and_map_pci) from [<c04ea578>] (pci_fixup_irqs+0x44/0xb8)
->         (pci_fixup_irqs) from [<c04eb8dc>] (dw_pcie_host_init+0x234/0x3e4)
->         (dw_pcie_host_init) from [<c0b38fa4>] (dra7xx_pcie_probe+0x418/0x5c4)
->         (dra7xx_pcie_probe) from [<c0557260>] (platform_drv_probe+0x4c/0xb0)
->     
->     Fix this by making use of the new pci_irqd_intx_xlate() helper to translate
->     the INTx 1-4 range into the 0-3 range suitable for the IRQ domain of size
->     4, and stop adding 1 to the hwirq number decoded from the interrupt FIFO
->     which is already in the range 0-3.
->     
->     Whilst we're here we switch to using PCI_NUM_INTX rather than the magic
->     number 4, making it clearer what the 4 means.
->     
->     Based-on-similar-patches-by: Paul Burton <paul.burton@imgtec.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index f2fc5f47064e..55f16fcf701d 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -223,6 +223,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->  
->  static const struct irq_domain_ops intx_domain_ops = {
->  	.map = dra7xx_pcie_intx_map,
-> +	.xlate = pci_irqd_intx_xlate,
->  };
->  
->  static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
-> @@ -238,7 +239,7 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
->  		return -ENODEV;
->  	}
->  
-> -	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
-> +	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
->  						   &intx_domain_ops, pp);
->  	if (!dra7xx->irq_domain) {
->  		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Acked-by: Rob Herring <robh@kernel.org>
 
-With this patch, I don't see [1] mentioned anymore.
-However I think there are other issues in pci-dra7xx which doesn't allow me to
-use INTD. When I tried to set 0x4 in interrupt_pin of pcie endpoint and raise
-legacy interrupt, I get the following dump in RC.
-[  102.348957] irq 0, desc: ee80d800, depth: 1, count: 0, unhandled: 0
-[  102.355536] ->handle_irq():  c01a6994,
-[  102.355553] handle_bad_irq+0x0/0x268
-[  102.363311] ->irq_data.chip(): c0d46f50,
-[  102.363325] no_irq_chip+0x0/0x88
-[  102.370903] ->action():   (null)
-[  102.374290]    IRQ_NOPROBE set
-[  102.377490]  IRQ_NOREQUEST set
-[  102.380692] unexpected IRQ trap at vector 00
-
-I'll look into this.
-
-Thanks
-Kishon
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+index b8e48b4..0c5f631 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -72,6 +72,20 @@ Optional properties:
+ - brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
+ require the interrupt enable registers to be set explicitly to enable MSI
+ 
++Optional properties:
++- slot-pluggable: PCI hotplug feature is supported.
++- prsnt-gpios: Array of gpios, needs to be present if Hotplug is supported.
++
++Refer to the following binding documents for more detailed description on
++the use of 'slot-pluggable' and 'prsnt-gpios'.
++  Documentation/devicetree/bindings/pci/pci.txt
++
++Example:
++prsnt-gpios: <&pca9505 32 1>, <&pca9505 33 1>;
++This is x4 connector: monitoring max 2 present lines.
++prsnt-gpios: <&pca9505 32 1>, <&pca9505 33 1>, <&pca9505 34 1>;
++This is x8 connector: monitoring max 3 present lines.
++
+ Example:
+ 	pcie0: pcie@18012000 {
+ 		compatible = "brcm,iproc-pcie";
+-- 
+1.9.1
