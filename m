@@ -1,46 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41272 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752480AbdHZMLF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 26 Aug 2017 08:11:05 -0400
-Date: Sat, 26 Aug 2017 07:11:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Meelis Roos <mroos@linux.ee>
-Subject: [GIT PULL] PCI fixes for v4.13
-Message-ID: <20170826121102.GA23614@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-dm3nam03on0085.outbound.protection.outlook.com ([104.47.41.85]:64224
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751040AbdHaRwp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Aug 2017 13:52:45 -0400
+From: Fabio Estevam <fabio.estevam@nxp.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>,
+        Niklas Cassel <niklas.cassel@axis.com>
+Subject: [PATCH 04/10] PCI: artpec6: Fix platform_get_irq() error handling
+Date: Thu, 31 Aug 2017 14:52:04 -0300
+Message-ID: <1504201930-3617-4-git-send-email-fabio.estevam@nxp.com>
+In-Reply-To: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
+References: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fix:
+platform_get_irq() returns a negative number on failure, so
+adjust the logic to detect such condition and propagate
+the real error value on failure.
 
-  - remove needlessly alarming MSI affinity warning (this is not actually a
-    bug fix, but the warning prompts unnecessary bug reports)
+Cc: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-The following changes since commit 8466489ef5ba48272ba4fa4ea9f8f403306de4c7:
-
-  xhci: Reset Renesas uPD72020x USB controller for 32-bit DMA issue (2017-08-02 12:05:07 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-v4.13-fixes-3
-
-for you to fetch changes up to 8e1101d251647802d0a4ae19eb3d0e1453eaeff4:
-
-  PCI/MSI: Don't warn when irq_create_affinity_masks() returns NULL (2017-08-25 18:58:42 -0500)
-
-----------------------------------------------------------------
-pci-v4.13-fixes-3
-
-----------------------------------------------------------------
-Christoph Hellwig (1):
-      PCI/MSI: Don't warn when irq_create_affinity_masks() returns NULL
-
- drivers/pci/msi.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 5d81f1d..83d6ee0 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -209,9 +209,9 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+-		if (pp->msi_irq <= 0) {
++		if (pp->msi_irq < 0) {
+ 			dev_err(dev, "failed to get MSI irq\n");
+-			return -ENODEV;
++			return pp->msi_irq;
+ 		}
+ 
+ 		ret = devm_request_irq(dev, pp->msi_irq,
+-- 
+2.7.4
