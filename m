@@ -1,37 +1,97 @@
-Return-Path: <SRS0=YMQt=7Y=davemloft.net=davem@kernel.org>
-Return-Path: <SRS0=YMQt=7Y=davemloft.net=davem@kernel.org>
-Date: Tue, 22 Aug 2017 09:52:09 -0700 (PDT)
-Message-Id: <20170822.095209.1371730017153863860.davem@davemloft.net>
-To: hch@lst.de
-Cc: mroos@linux.ee, helgaas@kernel.org, sparclinux@vger.kernel.org,
- linux-pci@vger.kernel.org, qla2xxx-upstream@qlogic.com,
- linux-kernel@vger.kernel.org
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170822163916.GA31671@lst.de>
-References: <20170822063505.GA6721@lst.de>
-	<20170822.093139.473720171751670244.davem@davemloft.net>
-	<20170822163916.GA31671@lst.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 31 Aug 2017 10:01:30 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jan Glauber <jan.glauber@caviumnetworks.com>
+Subject: Re: [PATCH v3 3/3] PCI: Avoid slot reset for Cavium cn8xxx root ports
+Message-ID: <20170831100130.5c8a922e@w520.home>
+In-Reply-To: <20170831094052.GA15906@hc>
+References: <20170830142454.10971-1-jglauber@cavium.com>
+ <20170830142454.10971-4-jglauber@cavium.com>
+ <20170830084012.19d91759@w520.home> <20170831094052.GA15906@hc>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
+ Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christoph Hellwig <hch@lst.de>
-Date: Tue, 22 Aug 2017 18:39:16 +0200
+On Thu, 31 Aug 2017 11:40:52 +0200
+Jan Glauber <jan.glauber@caviumnetworks.com> wrote:
 
-> On Tue, Aug 22, 2017 at 09:31:39AM -0700, David Miller wrote:
->> > I fear my commit message (but not the code) might be wrong.
->> > irq_create_affinity_masks can return NULL any time we don't have any
->> > affinity masks.  I've already had a discussion about this elsewhere
->> > with Bjorn, and I suspect we need to kill the warning or move it
->> > to irq_create_affinity_masks only for genuine failure cases.
->> 
->> This is a rather large machine with 64 or more cpus and several NUMA
->> nodes.  Why wouldn't there be any affinity masks available?
+> On Wed, Aug 30, 2017 at 08:40:12AM -0600, Alex Williamson wrote:
+> > On Wed, 30 Aug 2017 16:24:54 +0200
+> > Jan Glauber <jglauber@cavium.com> wrote:
+> >   
+> > > Root ports of cn8xxx do not function after a slot reset when used with
+> > > some e1000e and LSI HBA devices. Add a quirk to prevent slot reset on
+> > > these root ports.
+> > > 
+> > > Signed-off-by: Jan Glauber <jglauber@cavium.com>
+> > > ---
+> > >  drivers/pci/quirks.c | 16 ++++++++++++++++
+> > >  1 file changed, 16 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > index 85191b8..6679971 100644
+> > > --- a/drivers/pci/quirks.c
+> > > +++ b/drivers/pci/quirks.c
+> > > @@ -845,6 +845,22 @@ static void quirk_cavium_sriov_rnm_link(struct pci_dev *dev)
+> > >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa018, quirk_cavium_sriov_rnm_link);
+> > >  #endif
+> > >  
+> > > +/*
+> > > + * Root port on some Cavium CN8xxx chips do not successfully complete
+> > > + * a bus reset when used with certain types of child devices. Config
+> > > + * space access to the child may quit responding. Flag all devices under
+> > > + * the secondary bus as non-resettable.
+> > > + */
+> > > +static void quirk_CN8xxx_secondary_bus(struct pci_dev *dev)
+> > > +{
+> > > +	struct pci_dev *pdev;
+> > > +
+> > > +	dev_warn(&dev->dev, "Cavium CN8xxx quirk detected; reset for devices on secondary bus disabled\n");
+> > > +	list_for_each_entry(pdev, &dev->subordinate->devices, bus_list)
+> > > +		pdev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
+> > > +}
+> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_CN8xxx_secondary_bus);
+> > > +
+> > >  /*
+> > >   * Some settings of MMRBC can lead to data corruption so block changes.
+> > >   * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide  
+> > 
+> > 
+> > This doesn't seem reliable, doesn't the user just need to remove and
+> > reprobe the slot and the device would re-appear without this flag set?  
 > 
-> The drivers only asked for two MSI-X vectors, and marked bost of them
-> as pre-vectors that should not be spread.  So there is no actual
-> vector left that we want to actually spread.
+> No, I tried before to disable the slot with "echo 0 > /sys/bus/pci/slots/3/power"
+> but that does not work as it is not supported.
+> 
+> I'm not familiar with the quirk types, would another one be better
+> suited here (even if we don't have the problem you descibed)?
 
-Ok, now it makes more sense, and yes the warning should be removed.
+The scenario I'm mentioning is to "echo 1 > /sys/bus/pci/devices/<some
+device under the slot>/remove", then "echo <that device address> >
+/sys/bus/pci/rescan".  This would break the ordering implicit in using
+a fixup defined for the root port.  It seems like it'd make a lot more
+sense to add a test on the parent bridge more similar to how the bus
+reset works.  It's not the subordinate devices imposing the
+no-bus-reset flag, it's the bridge device and the objects and code
+should support and reflect that.  Thanks,
+
+Alex
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
