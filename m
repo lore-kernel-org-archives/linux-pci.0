@@ -1,38 +1,59 @@
-Return-Path: <SRS0=fMXc=7X=davemloft.net=davem@kernel.org>
-Return-Path: <SRS0=fMXc=7X=davemloft.net=davem@kernel.org>
-Date: Mon, 21 Aug 2017 13:35:49 -0700 (PDT)
-Message-Id: <20170821.133549.1817020810110297960.davem@davemloft.net>
-To: mroos@linux.ee
-Cc: hch@lst.de, helgaas@kernel.org, sparclinux@vger.kernel.org,
- linux-pci@vger.kernel.org, qla2xxx-upstream@qlogic.com,
- linux-kernel@vger.kernel.org
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <alpine.LRH.2.20.1708212209280.31611@math.ut.ee>
-References: <20170821.112747.1532639515902173100.davem@davemloft.net>
-	<20170821183458.GA23205@lst.de>
-	<alpine.LRH.2.20.1708212209280.31611@math.ut.ee>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0074.outbound.protection.outlook.com ([104.47.41.74]:40288
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751110AbdHaRwl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Aug 2017 13:52:41 -0400
+From: Fabio Estevam <fabio.estevam@nxp.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>,
+        Jingoo Han <jingoohan1@gmail.com>
+Subject: [PATCH 01/10] PCI: exynos: Fix platform_get_irq() error handling
+Date: Thu, 31 Aug 2017 14:52:01 -0300
+Message-ID: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: mroos@linux.ee
-Date: Mon, 21 Aug 2017 22:20:22 +0300 (EEST)
+platform_get_irq() returns a negative number on failure, so
+adjust the logic to detect such condition and propagate
+the real error value on failure.
 
->> I think with this patch from -rc6 the symptoms should be cured:
->> 
->> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c005390374957baacbc38eef96ea360559510aa7
->> 
->> if that theory is right.
-> 
-> The result with 4.13-rc6 is positive but mixed: the message about MSI-X 
-> affinty maks are still there but the rest of the detection works and the 
-> driver is loaded successfully:
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Reported-by: Bjorn Helgaas <helgaas@kernel.org>
+Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+---
+ drivers/pci/dwc/pci-exynos.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Is this an SMP system?
-
-I ask because the commit log message indicates that this failure is
-not expected to ever happen on SMP.
-
-We really need to root cause this.
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index f77f872..5596fde 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -607,9 +607,9 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 	int ret;
+ 
+ 	pp->irq = platform_get_irq(pdev, 1);
+-	if (!pp->irq) {
++	if (pp->irq < 0) {
+ 		dev_err(dev, "failed to get irq\n");
+-		return -ENODEV;
++		return pp->irq;
+ 	}
+ 	ret = devm_request_irq(dev, pp->irq, exynos_pcie_irq_handler,
+ 				IRQF_SHARED, "exynos-pcie", ep);
+@@ -620,9 +620,9 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		pp->msi_irq = platform_get_irq(pdev, 0);
+-		if (!pp->msi_irq) {
++		if (pp->msi_irq < 0) {
+ 			dev_err(dev, "failed to get msi irq\n");
+-			return -ENODEV;
++			return pp->msi_irq;
+ 		}
+ 
+ 		ret = devm_request_irq(dev, pp->msi_irq,
+-- 
+2.7.4
