@@ -1,121 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
- <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <eric.dumazet@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
- <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
-Subject: [PATCH net RESEND] PCI: fix oops when try to find Root Port for a PCI
- device
-Date: Tue, 15 Aug 2017 23:24:48 +0800
-Message-ID: <1502810688-12420-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <SRS0=zP7h=AB=linux.intel.com=mathias.nyman@kernel.org>
+Return-Path: <SRS0=zP7h=AB=linux.intel.com=mathias.nyman@kernel.org>
+Subject: Re: Possible regression between 4.9 and 4.13
+To: Mason <slash.tmp@free.fr>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <599D62EA.7050100@linux.intel.com>
+ <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
+ <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
+ <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
+ <59A3D6BF.7010400@linux.intel.com>
+ <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
+ <59A56C15.2000403@linux.intel.com> <20170829235310.GA20214@wunner.de>
+ <20170830060237.GA2782@kroah.com>
+ <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
+ <20170830090633.GA1208@kroah.com>
+ <1e3bde27-5597-41ed-11d1-0450b17f2344@free.fr>
+Cc: Lukas Wunner <lukas@wunner.de>,
+ Felipe Balbi <felipe.balbi@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>, linux-usb
+ <linux-usb@vger.kernel.org>, Linux ARM
+ <linux-arm-kernel@lists.infradead.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Alan Stern <stern@rowland.harvard.edu>
+From: Mathias Nyman <mathias.nyman@linux.intel.com>
+Message-ID: <59A7F5B1.7060501@linux.intel.com>
+Date: Thu, 31 Aug 2017 14:40:33 +0300
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1e3bde27-5597-41ed-11d1-0450b17f2344@free.fr>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Eric report a oops when booting the system after applying
-the commit a99b646afa8a ("PCI: Disable PCIe Relaxed..."):
+On 31.08.2017 12:39, Mason wrote:
+> On 30/08/2017 11:06, Greg Kroah-Hartman wrote:
+>
+>> On Wed, Aug 30, 2017 at 10:55:37AM +0200, Mason wrote:
+>>
+>>> On 30/08/2017 08:02, Greg Kroah-Hartman wrote:
+>>>
+>>>> To get back to the original issue here, the hardware seems to have died,
+>>>> the driver stops talking to it, and all is good.  The "regression" here
+>>>> is that we now properly can determine that the hardware is crap.
+>>>
+>>> Before 4.12, when I unplugged my USB3 Flash drive, Linux would
+>>> detect a few "Uncorrected Non-Fatal errors" via AER, but it was
+>>> still possible to plug the drive back in.
+>>>
+>>> Since 4.12, once I unplug the drive, the whole USB3 card is marked
+>>> as dead (all 4 ports), and I can no longer plug anything in (not even
+>>> the USB2 drive that didn't have any issues, IIRC).
+>>>
+>>> It seems a bit premature to "mark as dead" something that remains
+>>> functional, doesn't it?
+>>
+>> I agree, but if the device sends all ones, it's a good indication it is
+>> really dead, right?  Or something is wrong with it.
+>
+> I wouldn't call it dead if I can plug the drive back in, and have
+> it working... But I agree that something fishy is happening...
+>
+>>> Disclaimer, there are many variables in this setup, and I've only
+>>> tested a small fraction of the problem space: only one system,
+>>> only one USB3 board, only one USB3 Flash drive.
+>>
+>> Did you ever happen to narrow this down to a single git commit using
+>> 'git bisect'?  I can't remember what happened in the beginning of this
+>> thread...
+>
+> Mathias pointed out d9f11ba9f107aa335091ab8d7ba5eea714e46e8b
+>
 
-[    4.241029] BUG: unable to handle kernel NULL pointer dereference at 0000000000000050
-[    4.247001] IP: pci_find_pcie_root_port+0x62/0x80
-[    4.253011] PGD 0
-[    4.253011] P4D 0
-[    4.253011]
-[    4.258013] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
-[    4.262015] Modules linked in:
-[    4.265005] CPU: 31 PID: 1 Comm: swapper/0 Not tainted 4.13.0-dbx-DEV #316
-[    4.271002] Hardware name: Intel RML,PCH/Iota_QC_19, BIOS 2.40.0 06/22/2016
-[    4.279002] task: ffffa2ee38cfa040 task.stack: ffffa51ec0004000
-[    4.285001] RIP: 0010:pci_find_pcie_root_port+0x62/0x80
-[    4.290012] RSP: 0000:ffffa51ec0007ab8 EFLAGS: 00010246
-[    4.295003] RAX: 0000000000000000 RBX: ffffa2ee36bae000 RCX: 0000000000000006
-[    4.303002] RDX: 000000000000081c RSI: ffffa2ee38cfa8c8 RDI: ffffa2ee36bae000
-[    4.310013] RBP: ffffa51ec0007b58 R08: 0000000000000001 R09: 0000000000000000
-[    4.317001] R10: 0000000000000000 R11: 0000000000000000 R12: ffffa51ec0007ad0
-[    4.324005] R13: ffffa2ee36bae098 R14: 0000000000000002 R15: ffffa2ee37204818
-[    4.331002] FS:  0000000000000000(0000) GS:ffffa2ee3fcc0000(0000) knlGS:0000000000000000
-[    4.339002] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[    4.345001] CR2: 0000000000000050 CR3: 000000401000f000 CR4: 00000000001406e0
-[    4.351002] Call Trace:
-[    4.354012]  ? pci_configure_device+0x19f/0x570
-[    4.359002]  ? pci_conf1_read+0xb8/0xf0
-[    4.363002]  ? raw_pci_read+0x23/0x40
-[    4.366011]  ? pci_read+0x2c/0x30
-[    4.370014]  ? pci_read_config_word+0x67/0x70
-[    4.374012]  pci_device_add+0x28/0x230
-[    4.378012]  ? pci_vpd_f0_read+0x50/0x80
-[    4.382014]  pci_scan_single_device+0x96/0xc0
-[    4.386012]  pci_scan_slot+0x79/0xf0
-[    4.389001]  pci_scan_child_bus+0x31/0x180
-[    4.394014]  acpi_pci_root_create+0x1c6/0x240
-[    4.398013]  pci_acpi_scan_root+0x15f/0x1b0
-[    4.402012]  acpi_pci_root_add+0x2e6/0x400
-[    4.406012]  ? acpi_evaluate_integer+0x37/0x60
-[    4.411002]  acpi_bus_attach+0xdf/0x200
-[    4.415002]  acpi_bus_attach+0x6a/0x200
-[    4.418014]  acpi_bus_attach+0x6a/0x200
-[    4.422013]  acpi_bus_scan+0x38/0x70
-[    4.426011]  acpi_scan_init+0x10c/0x271
-[    4.429001]  acpi_init+0x2fa/0x348
-[    4.433004]  ? acpi_sleep_proc_init+0x2d/0x2d
-[    4.437001]  do_one_initcall+0x43/0x169
-[    4.441001]  kernel_init_freeable+0x1d0/0x258
-[    4.445003]  ? rest_init+0xe0/0xe0
-[    4.449001]  kernel_init+0xe/0x150
+That patch only changes how xhci reacts to reading 0xffffffff.
+we used to just returned -ENODEV, but after patch we assume
+hardware is broken or removed.
 
-====================== cut here =============================
-
-It looks like the pci_find_pcie_root_port() was trying to
-find the Root Port for the PCI device which is the Root
-Port already, it will return NULL and trigger the problem,
-so check the highest_pcie_bridge to fix thie problem.
-
-Fixes: a99b646afa8a ("PCI: Disable PCIe Relaxed Ordering if unsupported")
-Reported-by: Eric Dumazet <eric.dumazet@gmail.com>
-Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/pci/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc34..7e2022f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -522,7 +522,8 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
- 		bridge = pci_upstream_bridge(bridge);
- 	}
- 
--	if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
-+	if (highest_pcie_bridge &&
-+	    pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
- 		return NULL;
- 
- 	return highest_pcie_bridge;
--- 
-1.8.3.1
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-Mathias
