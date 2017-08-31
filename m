@@ -1,84 +1,187 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 3 Aug 2017 13:19:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: Re: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
-Message-ID: <20170803181915.GU20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
- <AM5PR0402MB2771BBF476E6A3DEFADE43F484B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:44146 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751355AbdHaUxs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Aug 2017 16:53:48 -0400
+To: Jon Mason <jdmason@kudzu.us>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+References: <20170803181954.4154-1-logang@deltatee.com>
+ <58ab6a33-4de5-8fd8-65c2-079f6f6301c4@deltatee.com>
+ <50ba7618-b5c3-1779-ad79-0f32254ebbaf@deltatee.com>
+ <20170831175356.GA28190@kudzu.us>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <26f3fc2f-839a-b6b9-3475-de3ac79f03f6@deltatee.com>
+Date: Thu, 31 Aug 2017 14:53:34 -0600
 MIME-Version: 1.0
-In-Reply-To: <AM5PR0402MB2771BBF476E6A3DEFADE43F484B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170831175356.GA28190@kudzu.us>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v4 00/15] Switchtec NTB Support
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVGh1LCBBdWcgMDMsIDIwMTcgYXQgMDM6MzU6NDZBTSArMDAwMCwgWi5xLiBIb3Ugd3JvdGU6
-Cj4gSGkgQmpvcm4sCj4gCj4gVGhhbmtzIGEgbG90IGZvciB5b3VyIGNvbW1lbnRzIQo+IAo+ID4g
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KPiA+IEZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0
-bzpoZWxnYWFzQGtlcm5lbC5vcmddCj4gPiBTZW50OiAyMDE35bm0OOaciDPml6UgNTozMAo+ID4g
-VG86IFoucS4gSG91IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4KPiA+IENjOiBsaW51eC1wY2lAdmdl
-ci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7Cj4gPiBi
-aGVsZ2Fhc0Bnb29nbGUuY29tOyByb2JoK2R0QGtlcm5lbC5vcmc7IE1pbmdodWFuIExpYW4KPiA+
-IDxtaW5naHVhbi5MaWFuQGZyZWVzY2FsZS5jb20+OyBNaW5na2FpIEh1IDxtaW5na2FpLmh1QGZy
-ZWVzY2FsZS5jb20+Owo+ID4gUm95IFphbmcgPHRpZS1mZWkuemFuZ0BmcmVlc2NhbGUuY29tPgo+
-ID4gU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBsYXllcnNjYXBlOiBBZGQgc3VwcG9ydCBmb3Ig
-bHMyMDg4YSBhbmQgbHMxMDg4YQo+ID4gCj4gPiBbK2NjIE1pbmdodWFuLCBNaW5na2FpLCBSb3ld
-Cj4gPiAKPiA+IE9uIFRodSwgSnVsIDA2LCAyMDE3IGF0IDA1OjM5OjQ0UE0gKzA4MDAsIFpoaXFp
-YW5nIEhvdSB3cm90ZToKPiA+ID4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhw
-LmNvbT4KPiA+ID4KPiA+ID4gVGhlIGxzMTA4OGEgYW5kIGxzMjA4OGEgaGFzIHRoZSBzYW1lIFBD
-SWUgY29udHJvbGxlciwgc28gdGhlIGxzMTA4OGEKPiA+ID4gd2lsbCByZXVzZSB0aGUgbHMyMDg4
-YSdzIHBjaWUgY29tcGF0aWJsZS4KPiA+ID4KPiA+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpoaXFp
-YW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4KPiA+ID4gLS0tCj4gPiA+ICBEb2N1bWVudGF0aW9u
-L2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dCB8IDEgKwo+ID4gPiAg
-ZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBlLmMgICAgICAgICAgICAgICAgICAgICAgICAg
-fCA5Cj4gPiArKysrKysrKysKPiA+ID4gIDIgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygr
-KQo+ID4gPgo+ID4gPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQKPiA+ID4gYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
-ZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dAo+ID4gPiBpbmRleCBlZTFjNzJkNS4u
-Y2I3MzVlMSAxMDA2NDQKPiA+ID4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQKPiA+ID4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZp
-Y2V0cmVlL2JpbmRpbmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQKPiA+ID4gQEAgLTE1LDYgKzE1
-LDcgQEAgUmVxdWlyZWQgcHJvcGVydGllczoKPiA+ID4gIC0gY29tcGF0aWJsZTogc2hvdWxkIGNv
-bnRhaW4gdGhlIHBsYXRmb3JtIGlkZW50aWZpZXIgc3VjaCBhczoKPiA+ID4gICAgICAgICAgImZz
-bCxsczEwMjFhLXBjaWUiLCAic25wcyxkdy1wY2llIgo+ID4gPiAgICAgICAgICAiZnNsLGxzMjA4
-MGEtcGNpZSIsICJmc2wsbHMyMDg1YS1wY2llIiwgInNucHMsZHctcGNpZSIKPiA+ID4gKyAgICAg
-ICAgImZzbCxsczIwODhhLXBjaWUiLCAiZnNsLGxzMTA4OGEtcGNpZSIKPiA+IAo+ID4gWW91IGFk
-ZCAiZnNsLGxzMTA4OGEtcGNpZSIgaGVyZSwgYnV0IG5vdCBpbiB0aGUgbHNfcGNpZV9vZl9tYXRj
-aFtdCj4gPiB0YWJsZSBpbiB0aGUgZHJpdmVyLCBzbyBJIGRvbid0IHRoaW5rIHRoaXMgd2lsbCBh
-Y3R1YWxseSBtYWtlIHRoZQo+ID4gZHJpdmVyIGNsYWltIGxzMTA4OGEgZGV2aWNlcywgd2lsbCBp
-dD8KPiAKPiBJIG1lYW4gdGhlIGxzMTA4OGEgcGNpZSBEVCBub2RlcyB3aWxsIHVzZSB0aGUgImZz
-bCxsczIwODhhLXBjaWUiCj4gdG9vLCBzbyBJIGRpZG4ndCBhZGQgYW4gZW50cnkgZm9yIGxzMTA4
-OGEgcGNpZSB0bwo+IGxzX3BjaWVfb2ZfbWF0Y2hbXS4gIElzIGl0IHJlYXNvbmFibGU/IE9yIGl0
-J3MgYmV0dGVyIHRvIGFkZAo+ICJmc2wsbHMxMDg4YS1wY2llIiB0byBsc19wY2llX29mX21hdGNo
-W10sIHRoZW4gbHMxMDg4YSBwY2llIERUIG5vZGVzCj4gdXNlIHRoZSBjb21wYXRpYmxlIHN0cmlu
-ZyAiZnNsLGxzMTA4OGEtcGNpZSI/CgpZb3VyIGJpbmRpbmcgc2F5cyAiZnNsLGxzMTA4OGEtcGNp
-ZSIgaXMgYSB2YWxpZCB2YWx1ZSBmb3IKImNvbXBhdGlibGUiLiAgQnV0IGlmIGEgRFQgYWN0dWFs
-bHkgKnVzZXMqIHRoYXQsIEkgZG9uJ3QgdGhpbmsgdGhlCmRyaXZlciB3aWxsIGNsYWltIGl0LgoK
-SWYgeW91IHdhbnQgdG8gZGVzY3JpYmUgbHMxMDg4YSBkZXZpY2VzIHdpdGggImZzbCxsczIwODhh
-LXBjaWUiLCBJCnRoaW5rIHlvdSBjb3VsZCBkbyB0aGF0LCBidXQgdGhlbiB3aHkgd291bGQgeW91
-IGV2ZW4gbWVudGlvbgoiZnNsLGxzMTA4OGEtcGNpZSIgaW4gdGhlIGJpbmRpbmc/CgpQZXJzb25h
-bGx5LCBpZiBsczEwODhhIGFuZCBsczIwODhhIGFyZSBkaWZmZXJlbnQgaW4gYW55IHdheSwgSSB3
-b3VsZAp0aGluayB5b3Ugc2hvdWxkIHVzZSBkaWZmZXJlbnQgaWRlbnRpZmllcnMgZm9yIHRoZW0g
-KGFuZCBhZGQgdGhlbSBib3RoCnRvIHRoZSBiaW5kaW5nIGFuZCB0byB0aGUgZHJpdmVyKS4gIFRo
-YXQgd2F5IGlmIGEgZnV0dXJlIGZlYXR1cmUKZGVwZW5kcyBvbiB0aGUgZGlmZmVyZW5jZSwgeW91
-J2xsIGhhdmUgYSB3YXkgdG8gdGVzdCBmb3IgaXQuCgpCdXQgSSdtIG5vdCBhIERUIGd1eS4gIE1h
-eWJlIFJvYiBoYXMgYSBiZXR0ZXIgcmVjb21tZW5kYXRpb24/CgpCam9ybgoKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWls
-aW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0
-cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+Great! Thanks Jon.
+
+I pulled ntb-next and ran my test suite on it. Looks good.
+
+Logan
+
+On 31/08/17 11:53 AM, Jon Mason wrote:
+> On Wed, Aug 30, 2017 at 01:18:28PM -0600, Logan Gunthorpe wrote:
+>> Hey Jon,
+>>
+>> Any update on this? The merge window is likely very soon and it would be
+>> good to know where we stand. As far as I know I've addressed all the
+>> feedback I've been given. Let me know if there's anything I can do to
+>> further this process.
+> 
+> My apologies for the delay.  I've pulled the series into my ntb-next
+> branch.
+> 
+> When you get a chance, please pulldown and verify that I didn't miss
+> anything (and a smoke test that it works as desired would be nice
+> too).
+> 
+> Thanks,
+> Jon
+> 
+>>
+>> Thanks,
+>>
+>> Logan
+>>
+>> On 22/08/17 10:59 AM, Logan Gunthorpe wrote:
+>>> Hi,
+>>>
+>>> Just wanted to give this a poke as I haven't received any feedback in a
+>>> couple weeks on v4. What are people's thoughts on this? Is it suitable
+>>> to make it into the next merge window?
+>>>
+>>> Thanks,
+>>>
+>>> Logan
+>>>
+>>>
+>>> On 03/08/17 12:19 PM, Logan Gunthorpe wrote:
+>>>> Changes since v3:
+>>>>
+>>>> - Rebased onto the Jon's ntb branch that contains one of the patches
+>>>>     that was in v3
+>>>> - Various spelling and commit log mistakes noticed by Bjorn
+>>>> - Renamed switchtec_ntb to ntb_hw_switchtec per Dave's suggestion
+>>>> - Fixed a number of code nits pointed out by Jon
+>>>>
+>>>> -- 
+>>>>
+>>>> Changes since v2:
+>>>>
+>>>> - Reordered the ntb_test link patch per Allen
+>>>> - Removed an extra call to switchtec_ntb_init_mw
+>>>> - Fixed a typo in the switchtec.txt documentation.
+>>>>
+>>>> -- 
+>>>>
+>>>> Changes since v1:
+>>>>
+>>>> - Rebased onto latest ntb-next branch (with v4.13-rc1)
+>>>> - Reworked ntb_mw_count() function so that it can be called all the
+>>>>     time (per discussion with Allen)
+>>>> - Various spelling and formatting cleanups from Bjorn
+>>>> - Added request_module() call such that the NTB module is automatically
+>>>>     loaded when appropriate hardware exists.
+>>>>
+>>>> -- 
+>>>>
+>>>> Changes since the rfc:
+>>>>
+>>>> - Rebased on ntb-next
+>>>> - Switched ntb_part_op to use sleep instead of delay
+>>>> - Dropped a number of useless dbg __func__ prints
+>>>> - Went back to the dynamic instead of the static class
+>>>> - Swapped the notifier block for a simple callback
+>>>> - Modified the new ntb api so that a couple functions with pidx
+>>>>     now must be called after link up. Per our discussion on the list.
+>>>>
+>>>> -- 
+>>>>
+>>>> This patchset implements Non-Transparent Bridge (NTB) support for the
+>>>> Microsemi Switchtec series of switches. We're looking for some
+>>>> review from the community at this point but hope to get it upstreamed
+>>>> for v4.14.
+>>>>
+>>>> Switchtec NTB support is configured over the same function and bar
+>>>> as the management endpoint. Thus, the new driver hooks into the
+>>>> management driver which we had merged in v4.12. We use the class
+>>>> interface API to register an NTB device for every switchtec device
+>>>> which supports NTB (not all do).
+>>>>
+>>>> The Switchtec hardware supports doorbells, memory windows and messages.
+>>>> Seeing there is no native scratchpad support, 128 spads are emulated
+>>>> through the use of a pre-setup memory window. The switch has 64
+>>>> doorbells which are shared between the two partitions and a
+>>>> configurable set of memory windows. While the hardware supports more
+>>>> than 2 partitions, this driver only supports the first two seeing
+>>>> the current NTB API only supports two hosts.
+>>>>
+>>>> The driver has been tested with ntb_netdev and fully passes the
+>>>> ntb_test script.
+>>>>
+>>>> This patchset is based off of ntb-next and can be found in this
+>>>> git repo:
+>>>>
+>>>> https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb_v4
+>>>>
+>>>> Logan Gunthorpe (15):
+>>>>     NTB: switchtec: Move structure definitions into a common header
+>>>>     NTB: switchtec: Export class symbol for use in upper layer driver
+>>>>     NTB: switchtec: Add NTB hardware register definitions
+>>>>     NTB: switchtec: Add link event notifier callback
+>>>>     NTB: Ensure ntb_mw_get_align() is only called when the link is up
+>>>>     NTB: Add check and comment for link up to mw_count() and
+>>>>       mw_get_align()
+>>>>     NTB: switchtec_ntb: Introduce initial NTB driver
+>>>>     NTB: switchtec_ntb: Initialize hardware for memory windows
+>>>>     NTB: switchtec_ntb: Initialize hardware for doorbells and messages
+>>>>     NTB: switchtec_ntb: Add skeleton NTB driver
+>>>>     NTB: switchtec_ntb: Add link management
+>>>>     NTB: switchtec_ntb: Implement doorbell registers
+>>>>     NTB: switchtec_ntb: Implement scratchpad registers
+>>>>     NTB: switchtec_ntb: Add memory window support
+>>>>     NTB: switchtec_ntb: Update switchtec documentation with notes for NTB
+>>>>
+>>>>    Documentation/switchtec.txt            |   12 +
+>>>>    MAINTAINERS                            |    2 +
+>>>>    drivers/ntb/hw/Kconfig                 |    1 +
+>>>>    drivers/ntb/hw/Makefile                |    1 +
+>>>>    drivers/ntb/hw/mscc/Kconfig            |    9 +
+>>>>    drivers/ntb/hw/mscc/Makefile           |    1 +
+>>>>    drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 1216
+>>>> ++++++++++++++++++++++++++++++++
+>>>>    drivers/ntb/ntb_transport.c            |   20 +-
+>>>>    drivers/ntb/test/ntb_perf.c            |   18 +-
+>>>>    drivers/ntb/test/ntb_tool.c            |    6 +-
+>>>>    drivers/pci/switch/switchtec.c         |  316 ++-------
+>>>>    include/linux/ntb.h                    |   11 +-
+>>>>    include/linux/switchtec.h              |  373 ++++++++++
+>>>>    13 files changed, 1703 insertions(+), 283 deletions(-)
+>>>>    create mode 100644 drivers/ntb/hw/mscc/Kconfig
+>>>>    create mode 100644 drivers/ntb/hw/mscc/Makefile
+>>>>    create mode 100644 drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+>>>>    create mode 100644 include/linux/switchtec.h
+>>>>
+>>>> -- 
+>>>> 2.11.0
+>>>>
+>>
+>> -- 
+>> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
+>> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
+>> To post to this group, send email to linux-ntb@googlegroups.com.
+>> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/50ba7618-b5c3-1779-ad79-0f32254ebbaf%40deltatee.com.
+>> For more options, visit https://groups.google.com/d/optout.
