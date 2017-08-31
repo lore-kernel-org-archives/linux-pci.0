@@ -1,78 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 21 Aug 2017 14:18:06 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51758 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750998AbdHaUDq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Aug 2017 16:03:46 -0400
+Date: Thu, 31 Aug 2017 15:03:44 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH v11 2/4] PCI: Factor out pci_bus_wait_crs()
-Message-ID: <20170821191806.GC28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: linuxarm@huawei.com, liudongdong3@huawei.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCIe AER: report uncorrectable errors only to the
+ functions that logged the errors
+Message-ID: <20170831200344.GF18250@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503054141-80272-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Timur Tabi <timur@codeaurora.org>,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503054141-80272-1-git-send-email-gabriele.paoloni@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 21, 2017 at 09:53:56AM -0400, Sinan Kaya wrote:
-> On 8/18/2017 5:32 PM, Bjorn Helgaas wrote:
-> > +	if ((*l & 0xffff) != 0x0001)
-> > +		return true;	/* not a CRS completion */
-> >  
+On Fri, Aug 18, 2017 at 12:02:21PM +0100, Gabriele Paoloni wrote:
+> Currently if an uncorrectable error is reported by an EP the AER
+> driver walks over all the devices connected to the upstream port
+> bus and in turns call the report_error_detected() callback.
+> If any of the devices connected to the bus does not implement
+> dev->driver->err_handler->error_detected() do_recovery() will fail
+> leaving all the bus hierarchy devices unrecovered.
 > 
-> This version certainly looks cleaner. However, it breaks pci_flr_wait().
-> 
-> If some root port doesn't support CRS and returns 0xFFFFFFFF, pci_bus_wait_crs()
-> function returns true. pci_flr_wait() prematurely bails out from here.
-> 
-> 
-> pci_flr_wait()
-> {
-> 
-> +	ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
-> +	if (ret)
-> +		return;
-> 
-> }
-> 
-> We can change the return code to false above but then we break pci_bus_read_dev_vendor_id()
-> function. 
-> 
-> That's why, I was interested in creating a pci_bus_crs_visibility_supported() helper
-> function that would check for the magic 0x0001 value and return true. Otherwise, false. 
-> 
-> pci_bus_read_dev_vendor_id() would do this
-> 
-> pci_bus_read_dev_vendor_id()
-> {
-> 	...
-> 	if (pci_bus_crs_visibility_supported())
-> 		return pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
-> 
-> 	return true
-> }
-> 
-> Similar pattern for pci_flr_wait().
+> However for non fatal errors the PCIe link should not be considered
+> compromised, therefore it makes sense to report the error only to
+> all the functions that logged an error.
 
-I think that makes sense.  We'd want to check for CRS SV being
-enabled, e.g., maybe read PCI_EXP_RTCTL_CRSSVE back in
-pci_enable_crs() and cache it somewhere.  Maybe a crs_sv_enabled bit
-in the root port's pci_dev, and check it with something like what
-pcie_root_rcb_set() does?
+Can you include a pointer to the relevant part of the spec here?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> This patch implements this new behaviour for non fatal errors.
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> ---
+> Changes from v1:
+>    - now errors are reported only to the fucntions that logged the error
+>      instead of all the functions in the same device.
+>    - the patch subject has changed to match the new implementation
+> ---
+>  drivers/pci/pcie/aer/aerdrv_core.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index b1303b3..057465ad 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -390,7 +390,14 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+>  		 * If the error is reported by an end point, we think this
+>  		 * error is related to the upstream link of the end point.
+>  		 */
+> -		pci_walk_bus(dev->bus, cb, &result_data);
+> +		if (state == pci_channel_io_normal)
+> +			/*
+> +			 * the error is non fatal so the bus is ok, just invoke
+> +			 * the callback for the function that logged the error.
+> +			 */
+> +			cb(dev, &result_data);
+> +		else
+> +			pci_walk_bus(dev->bus, cb, &result_data);
+
+I think the concept of this change makes sense, but I don't like the
+implicit connection of PCI_ERR_ROOT_UNCOR_RCV -> AER_NONFATAL ->
+pci_channel_io_normal.  That makes it harder than it should be to read
+the code.
+
+What would you think of changing the signature of do_recovery() and
+broadcast_error_message() so they take the struct aer_err_info pointer
+instead of just the severity and pci_channel_state?  Then we could
+check directly for AER_NONFATAL here.
+
+Bjorn
