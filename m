@@ -1,48 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41942 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751066AbdHBVjv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:39:51 -0400
-Date: Wed, 2 Aug 2017 16:39:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: qcom: Don't unroll init if init fails
-Message-ID: <20170802213948.GJ20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170716064153.3346-1-bjorn.andersson@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170716064153.3346-1-bjorn.andersson@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=0re9=AB=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=0re9=AB=broadcom.com=oza.oza@kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	<helgaas@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Oza Pawandeep <oza.oza@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v5 2/3] dt-bindings: PCI iproc: Implement optional property prsnt-gpios
+Date: Thu, 31 Aug 2017 10:14:29 +0530
+Message-Id: <1504154670-24608-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1504154670-24608-1-git-send-email-oza.oza@broadcom.com>
+References: <1504154670-24608-1-git-send-email-oza.oza@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 15, 2017 at 11:41:53PM -0700, Bjorn Andersson wrote:
-> When the init op fails it will restore the state of the resources, so we
-> should not disable them one more time when this happens.
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Add description for optional device tree property
+'prsnt-gpios' for PCI hotplug feature.
 
-Stanimir, any opinion on this and the following patch?
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Acked-by: Rob Herring <robh@kernel.org>
 
-> ---
->  drivers/pci/dwc/pcie-qcom.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index d15657dc3990..7b703741a3fd 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -901,7 +901,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
->  
->  	ret = pcie->ops->init(pcie);
->  	if (ret)
-> -		goto err_deinit;
-> +		return ret;
->  
->  	ret = phy_power_on(pcie->phy);
->  	if (ret)
-> -- 
-> 2.12.0
-> 
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+index b8e48b4..0c5f631 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -72,6 +72,20 @@ Optional properties:
+ - brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
+ require the interrupt enable registers to be set explicitly to enable MSI
+ 
++Optional properties:
++- slot-pluggable: PCI hotplug feature is supported.
++- prsnt-gpios: Array of gpios, needs to be present if Hotplug is supported.
++
++Refer to the following binding documents for more detailed description on
++the use of 'slot-pluggable' and 'prsnt-gpios'.
++  Documentation/devicetree/bindings/pci/pci.txt
++
++Example:
++prsnt-gpios: <&pca9505 32 1>, <&pca9505 33 1>;
++This is x4 connector: monitoring max 2 present lines.
++prsnt-gpios: <&pca9505 32 1>, <&pca9505 33 1>, <&pca9505 34 1>;
++This is x8 connector: monitoring max 3 present lines.
++
+ Example:
+ 	pcie0: pcie@18012000 {
+ 		compatible = "brcm,iproc-pcie";
+-- 
+1.9.1
