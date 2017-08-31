@@ -1,152 +1,60 @@
-Return-Path: <SRS0=0tDA=7L=chelsio.com=leedom@kernel.org>
-Return-Path: <SRS0=0tDA=7L=chelsio.com=leedom@kernel.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Ding Tianhong
-	<dingtianhong@huawei.com>
-CC: "ashok.raj@intel.com" <ashok.raj@intel.com>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, Michael Werner <werner@chelsio.com>, Ganesh GR
-	<ganeshgr@chelsio.com>, "asit.k.mallick@intel.com"
-	<asit.k.mallick@intel.com>, "patrick.j.cramer@intel.com"
-	<patrick.j.cramer@intel.com>, "Suravee.Suthikulpanit@amd.com"
-	<Suravee.Suthikulpanit@amd.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "amira@mellanox.com"
-	<amira@mellanox.com>, "gabriele.paoloni@huawei.com"
-	<gabriele.paoloni@huawei.com>, "David.Laight@aculab.com"
-	<David.Laight@aculab.com>, "jeffrey.t.kirsher@intel.com"
-	<jeffrey.t.kirsher@intel.com>, "catalin.marinas@arm.com"
-	<catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>, "robin.murphy@arm.com"
-	<robin.murphy@arm.com>, "davem@davemloft.net" <davem@davemloft.net>,
-	"alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linuxarm@huawei.com" <linuxarm@huawei.com>
-Subject: Re: [PATCH v9 1/4] PCI: Add new PCIe Fabric End Node flag,
- PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-Date: Wed, 9 Aug 2017 01:40:01 +0000
-Message-ID: <MWHPR12MB1600249E96C320D5472F77ADC88B0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
- <1501917313-9812-2-git-send-email-dingtianhong@huawei.com>,<20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Return-Path: <SRS0=0re9=AB=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=0re9=AB=broadcom.com=oza.oza@kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	<helgaas@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Oza Pawandeep <oza.oza@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v5 1/3] dt-bindings: PCI: Add PCI hotplug property
+Date: Thu, 31 Aug 2017 10:14:28 +0530
+Message-Id: <1504154670-24608-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1504154670-24608-1-git-send-email-oza.oza@broadcom.com>
+References: <1504154670-24608-1-git-send-email-oza.oza@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-| From: Bjorn Helgaas <helgaas@kernel.org>
-| Sent: Tuesday, August 8, 2017 4:22 PM
-|=20
-| This needs to include a link to the Intel spec
-| (https://software.intel.com/sites/default/files/managed/9e/bc/64-ia-32-ar=
-chitectures-optimization-manual.pdf,
-| sec 3.9.1).
+Host drivers have the requirement of implementing PCI hotplug
+based on the how their SOC supports it.
 
-  In the commit message or as a comment?  Regardless, I agree.  It's always
-nice to be able to go back and see what the official documentation says.
-However, that said, links on the internet are ... fragile as time goes by,
-so we might want to simply quote section 3.9.1 in the commit message since
-it's relatively short:
+Couple of properties have been added. the one to enable
+the hotplug feature itself, and the other caters to
+the PCI hotplug implementation with the use of gpios.
 
-    3.9.1 Optimizing PCIe Performance for Accesses Toward Coherent Memory
-          and Toward MMIO Regions (P2P)
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Acked-by: Rob Herring <robh@kernel.org>
 
-    In order to maximize performance for PCIe devices in the processors
-    listed in Table 3-6 below, the soft- ware should determine whether the
-    accesses are toward coherent memory (system memory) or toward MMIO
-    regions (P2P access to other devices). If the access is toward MMIO
-    region, then software can command HW to set the RO bit in the TLP
-    header, as this would allow hardware to achieve maximum throughput for
-    these types of accesses. For accesses toward coherent memory, software
-    can command HW to clear the RO bit in the TLP header (no RO), as this
-    would allow hardware to achieve maximum throughput for these types of
-    accesses.
-
-    Table 3-6. Intel Processor CPU RP Device IDs for Processors Optimizing
-               PCIe Performance
-
-    Processor                            CPU RP Device IDs
-
-    Intel Xeon processors based on       6F01H-6F0EH
-    Broadwell microarchitecture
-
-    Intel Xeon processors based on       2F01H-2F0EH
-    Haswell microarchitecture
-
-| It should also include a pointer to the AMD erratum, if available, or
-| at least some reference to how we know it doesn't obey the rules.
-
-  Getting an ACK from AMD seems like a forlorn cause at this point.  My
-contact was Bob Shaw <Bob.Shaw@amd.com> and he stopped responding to me
-messages almost a year ago saying that all of AMD's energies were being
-redirected towards upcoming x86 products (likely Ryzen as we now know).  As
-far as I can tell AMD has walked away from their A1100 (AKA "Seattle") ARM
-SoC.
-
-  On the specific issue, I can certainly write up somthing even more
-extensive than I wrote up for the comment in drivers/pci/quirks.c.  Please
-review the comment I wrote up and tell me if you'd like something even more
-detailed -- I'm usually acused of writing comments which are too long, so
-this would be a new one on me ... :-)
-
-| Ashok, thanks for chiming in.  Now that you have, I have a few more
-| questions for you:
-
-  I can answer a few of these:
-
-|  - Is the above doc the one you mentioned as being now public?
-
-  Yes.  Ashok worked with me to the extent he was allowed prior to the
-publishing of the public technocal note, but he couldn't say much.  (Believ=
-e
-it or not, it is possible to say less than the quoted section above.)  When
-the note was published, Patrick Cramer sent me the note about it and pointe=
-d
-me at section 3.9.1.
-
-|  - Is this considered a hardware erratum?
-
-  I certainly consider it a Hardware Bug.  And I'm really hoping that Ashok
-will be able to find a "Chicken Bit" which allows the broken feature to be
-turned off.  Remember, the Relaxed Ordering Attribute on a Transaction Laye=
-r
-Packet is simply a HINT.  It is perfectly reasonable for a compliant
-implementation to simply ignore the Relaxed Ordering Attribute on an
-incoming TLP Request.  The sole responsibility of a compliant implementatio=
-n
-is to return the exact same Relaxed Ordering and No Snoop Attributes in any
-TLP Response (The rules for ID-Based Ordering Attribute are more complex.)
-=20
-  Earlier Intel Root Complexes did exactly this: they ignored the Relaxed
-Ordering Attribute and there was no performance difference for
-using/not-using it.  It's pretty obvious that an attempt was made to
-implement optimizations surounding the use of Relaxed Ordering and they
-didn't work.
-
-|  - If so, is there a pointer to that as well?
-
-  Intel is historically tight-lipped about admiting any bugs/errata in thei=
-r
-products.  I'm guessing that the above quoted Section 3.9.1 is likely to be
-all we ever get. The language above regarding TLPs targetting Coherent
-Shared Memory are basically as much of an admission that they got it wrong
-as we're going to get.  But heck, maybe we'll get lucky ...  Especially wit=
-h
-regard to the hoped for "Chicken Bit" ...
-
-|  - If this is not considered an erratum, can you provide any guidance
-|    about how an OS should determine when it should use RO?
-
-  Software?  We don't need no stinking software!
-
-  Sorry, I couldn't resist.
-
-| Relying on a list of device IDs in an optimization manual is OK for an
-| erratum, but if it's *not* an erratum, it seems like a hole in the specs
-| because as far as I know there's no generic way for the OS to discover
-| whether to use RO.
-
-  Well, here's to hoping that Ashok and/or Patrick are able to offer more
-detailed information ...
-
-Casey
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index 50f9e2c..0bf25a1 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -24,3 +24,18 @@ driver implementation may support the following properties:
+    unsupported link speed, for instance, trying to do training for
+    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+    for gen2, and '1' for gen1. Any other values are invalid.
++
++- slot-pluggable:
++   PCI hotplug feature is supported.
++   PCI hotplug implementation is SOC/Board specific, and also it depends on
++   how add-in card is designed (e.g. how many present pins are implemented).
++   If the slot-pluggable property is present, the following propertey could
++   become effective.
++   - prsnt-gpios:
++      Array of gpios, could be present if hotplug is supported.
++      This property defines gpio based hotplug implementation.
++      Example:
++      If x8 card is connected, then it might be possible that all the
++      3 present pins could go low, or at least one pin goes low.
++      If x4 card is connected, then it might be possible that 2 present
++      pins go low, or at least one pin goes low.
+-- 
+1.9.1
