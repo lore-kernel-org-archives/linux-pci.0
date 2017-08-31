@@ -1,157 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:42790 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751068AbdHPJAa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2017 05:00:30 -0400
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH 1/3] PCI: rockchip: Add support for pcie wake irq
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-References: <20170816075224.31734-1-jeffy.chen@rock-chips.com>
- <20170816075224.31734-2-jeffy.chen@rock-chips.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <5440b476-f811-c478-c19a-9ee08005de6b@rock-chips.com>
-Date: Wed, 16 Aug 2017 17:00:10 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170816075224.31734-2-jeffy.chen@rock-chips.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=0re9=AB=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=0re9=AB=broadcom.com=oza.oza@kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	<helgaas@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Oza Pawandeep <oza.oza@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v6 0/3] PCI hotplug feature
+Date: Thu, 31 Aug 2017 10:20:26 +0530
+Message-Id: <1504155029-24729-1-git-send-email-oza.oza@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jeffy,
+These patches bring in PCI hotplug support for iproc family chipsets.
 
-On 2017/8/16 15:52, Jeffy Chen wrote:
-> Add support for PCIE_WAKE pin in rockchip pcie driver.
-> 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
-> 
->   drivers/pci/host/pcie-rockchip.c | 58 ++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 58 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 7bb9870f6d8c..f969a6d3cd85 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -38,6 +38,7 @@
->   #include <linux/platform_device.h>
->   #include <linux/reset.h>
->   #include <linux/regmap.h>
-> +#include <linux/suspend.h>
->   
->   /*
->    * The upper 16 bits of PCIE_CLIENT_CONFIG are a write mask for the lower 16
-> @@ -226,6 +227,8 @@ struct rockchip_pcie {
->   	struct	regulator *vpcie1v8; /* 1.8V power supply */
->   	struct	regulator *vpcie0v9; /* 0.9V power supply */
->   	struct	gpio_desc *ep_gpio;
-> +	int	wake_irq;
-> +	bool	wake_by_pcie;
->   	u32	lanes;
->   	u8	root_bus_nr;
->   	int	link_gen;
-> @@ -853,6 +856,20 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
->   	chained_irq_exit(chip, desc);
->   }
->   
-> +static irqreturn_t rockchip_pcie_wake_irq_handler(int irq, void *arg)
-> +{
-> +	struct rockchip_pcie *rockchip = arg;
-> +
-> +	rockchip->wake_by_pcie = true;
-> +
-> +	disable_irq_nosync(rockchip->wake_irq);
-> +	disable_irq_wake(rockchip->wake_irq);
-> +
-> +	pm_wakeup_event(rockchip->dev, 0);
-> +	pm_system_wakeup();
-> +
-> +	return IRQ_HANDLED;
-> +}
->   
->   /**
->    * rockchip_pcie_parse_dt - Parse Device Tree
-> @@ -868,6 +885,7 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
->   	struct resource *regs;
->   	int irq;
->   	int err;
-> +	bool wakeup = 0;
->   
->   	regs = platform_get_resource_byname(pdev,
->   					    IORESOURCE_MEM,
-> @@ -1018,6 +1036,21 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
->   		return err;
->   	}
->   
-> +	rockchip->wake_irq = platform_get_irq_byname(pdev, "wake");
-> +	if (rockchip->wake_irq >= 0) {
-> +		err = devm_request_irq(dev, rockchip->wake_irq,
-> +				       rockchip_pcie_wake_irq_handler,
-> +				       0, "pcie-wake", rockchip);
-> +		if (err) {
-> +			dev_err(dev, "failed to request PCIe wake IRQ\n");
-> +			return err;
+It includes DT binding documentation and, the implementation in
+iproc pcie RC driver.
 
-This is optional, so I'm not sure if we should prevent the driver to
-probe?
+Changes since v5:
+[RESEND]
 
-> +		}
-> +
-> +		disable_irq(rockchip->wake_irq);
-> +		wakeup = device_property_read_bool(dev, "wakeup-source");
+Changes since v4:
+Rebased to pci-next
+Added; Acked-by: Rob Herring <robh@kernel.org>
 
-The purpose we add this, is for ep to wakeup the system, so why not
-always treate it as a wakeup source.
+Changes since v3:
+Resend. just to be in sync previous in-flight patches.
 
-> +	}
-> +	device_init_wakeup(dev, wakeup);
-> +
->   	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
->   	if (IS_ERR(rockchip->vpcie3v3)) {
->   		if (PTR_ERR(rockchip->vpcie3v3) == -EPROBE_DEFER)
-> @@ -1270,6 +1303,30 @@ static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
->   	return 0;
->   }
->   
-> +static int __maybe_unused rockchip_pcie_suspend(struct device *dev)
-> +{
-> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-> +
-> +	rockchip->wake_by_pcie = false;
-> +
-> +	if (device_may_wakeup(dev)) {
-> +		enable_irq_wake(rockchip->wake_irq);
-> +		enable_irq(rockchip->wake_irq);
-> +	}
-> +	return 0;
-> +}
-> +
-> +static int __maybe_unused rockchip_pcie_resume(struct device *dev)
-> +{
-> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-> +
-> +	if (device_may_wakeup(dev) && !rockchip->wake_by_pcie) {
+Changes since v2:
+Addressed Rob Herring's comments.
+Changed subject to "dt-bindings: PCI:..."
+Made generic PCI hotplug properties 'slot-pluggable' and 'prsnt-gpios'
+Rebased the patches on top of Lorenzo's patches.
 
-I don't get this that why we need to check wake_by_pcie here?
+Oza Pawandeep (3):
+  dt-bindings: PCI: Add PCI hotplug property
+  dt-bindings: PCI iproc: Implement optional property prsnt-gpios
+  PCI: iproc: Implement PCI hotplug support
 
-> +		disable_irq(rockchip->wake_irq);
-> +		disable_irq_wake(rockchip->wake_irq);
-> +	}
-> +	return 0;
-> +}
-> +
->   static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
->   {
->   	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-> @@ -1548,6 +1605,7 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
->   }
->   
->   static const struct dev_pm_ops rockchip_pcie_pm_ops = {
-> +	SET_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend, rockchip_pcie_resume)
->   	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
->   				      rockchip_pcie_resume_noirq)
->   };
-> 
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  14 ++
+ Documentation/devicetree/bindings/pci/pci.txt      |  15 ++
+ drivers/pci/host/pcie-iproc-platform.c             |   3 +
+ drivers/pci/host/pcie-iproc.c                      | 166 ++++++++++++++++++---
+ drivers/pci/host/pcie-iproc.h                      |   7 +
+ 5 files changed, 187 insertions(+), 18 deletions(-)
+
+-- 
+1.9.1
