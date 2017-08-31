@@ -1,81 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:36872 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752064AbdHNIAZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 04:00:25 -0400
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: "Raj, Ashok" <ashok.raj@intel.com>,
-        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-CC: valmiki <valmikibow@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "Lan, Tianyu" <tianyu.lan@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "Raj, Ashok" <ashok.raj@intel.com>
-Subject: RE: Support SVM without PASID
-Date: Mon, 14 Aug 2017 08:00:19 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D190D716A4@SHSMSX101.ccr.corp.intel.com>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
- <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D190D57191@SHSMSX101.ccr.corp.intel.com>
- <b973c557-1b4a-18d2-a05e-28680a49daf9@arm.com>
- <20170811162506.GB41059@otc-nc-03>
-In-Reply-To: <20170811162506.GB41059@otc-nc-03>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=L3Lk=AB=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=L3Lk=AB=free.fr=slash.tmp@kernel.org>
+Subject: Re: Possible regression between 4.9 and 4.13
+From: Mason <slash.tmp@free.fr>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Lukas Wunner <lukas@wunner.de>,
+ Mathias Nyman <mathias.nyman@linux.intel.com>,
+ Felipe Balbi <felipe.balbi@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>, linux-usb
+ <linux-usb@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Alan Stern <stern@rowland.harvard.edu>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+References: <599D3410.9050504@intel.com>
+ <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
+ <599D62EA.7050100@linux.intel.com>
+ <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
+ <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
+ <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
+ <59A3D6BF.7010400@linux.intel.com>
+ <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
+ <59A56C15.2000403@linux.intel.com> <20170829235310.GA20214@wunner.de>
+ <20170830060237.GA2782@kroah.com>
+ <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
+ <CAKv+Gu8QSWO8jYc1L6eJyMg58gtVsoa9zYuymSc-PdEm60HzxA@mail.gmail.com>
+ <dd26cff3-83d9-851b-4b38-a947e6a41ddf@free.fr>
+Message-ID: <18588e5d-4f29-d259-329e-533a21ce10ad@free.fr>
+Date: Thu, 31 Aug 2017 11:17:28 +0200
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <dd26cff3-83d9-851b-4b38-a947e6a41ddf@free.fr>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Raj, Ashok
-> Sent: Saturday, August 12, 2017 12:25 AM
-> 
-> On Fri, Aug 04, 2017 at 10:42:41AM +0100, Jean-Philippe Brucker wrote:
-> > Hi Kevin,
-> >
-> >
-> > Consider the situation where a userspace driver (no virtualization) is
-> > built in a client-server fashion: the server controls a device and spawns
-> > new processes (clients), each sharing a context with the device using its
-> > own PASID. If the server wants to hide parts of the client address space
-> 
-> Just to be sure, you are't expecting the PASID's to be duplicated or
-> recreated after a new process is spawned. I would expect each process to
-> get its own PASID by doing a bind. Threads of the same process would be
-> sharing the same PASID since they all share the same first level
-> mappings.
-> 
-> 
-> > from the device (e.g. .text), then it could control stage-2 via MAP/UNMAP
-> > to restrict the address space.
-> 
-> I'm confused.. maybe this is different from Intel IOMMU. the first level
-> requiring a second level is only true when virtualization is in play.
-> 
-> First level is gVA->gPA, and second level is gPA->hPA (sort of the cloned
-> EPT map that is setup via VFIO to set up second level)
-> 
-> When you are in native user application, there is no nesting between first
-> and second level. The first level is directly VA->hPA. There is no need
-> for a nested walk in this case?
-> 
+On 30/08/2017 11:37, Mason wrote:
 
-Strictly speaking nesting is just a hardware capability while 
-virtualization is an use case using that capability. As long as 
-some software entity (not hypervisor) can setup two level 
-page tables, it should just work regardless of how the 
-intermediate address is called.
+> On 30/08/2017 11:07, Ard Biesheuvel wrote:
+> 
+>> Please don't forget to mention that this is quirky hardware that
+>> depends on BROKEN because it multiplexes MMIO and config space
+>> accesses in the same memory window without any locking whatsoever
+>> (which would be difficult to do in the first place because we don't
+>> use accessors for MMIO in the kernel).
+> 
+> You're right, it was in the back of my mind, but I didn't state
+> it explicitly for the benefit of linux-usb readers.
+> 
+>> So how likely is it that you are attempting to read from the xhci
+>> BAR window while a config space access is in progress? Any way to
+>> instrument this in your driver?
+> 
+> I logged config space accesses here:
+> 
+> https://www.spinics.net/lists/arm-kernel/msg602832.html
+> 
+> IIRC, the config space accesses are generated by the AER ISR.
+> So disabling the AER driver should guarantee that no config space
+> accesses are occurring when the drive is unplugged.
 
-I think Jean is trying to come up a non-virtualization usage
-using nesting. Of course current example that he illustrated 
-is not very meaningful (as I replied in another mail). :-)
+I checked, and I *did* remember correctly.
 
-Thanks
-Kevin
+Disabling the AER driver results in 0 config space access occurring
+when the USB3 drive is unplugged. This confirms that the controller's
+broken design (muxing config and mem space) is not responsible for
+the glitches occurring on unplug events.
+
+Furthermore, I confirm that once the controller has been deemed "dead",
+even USB2 drives are no longer detected, and all USB port on the PCIe
+board are disabled.
+
+Regards.
+
+
+For reads/writes in config space, I have:
+
+	if (do_debug) {
+		printk("\t READ: bus=%d devfn=%u where=%d size=%d val=0x%x\n",
+			bus->number, devfn, where, size, *val);
+		dump_stack();
+	}
+
+	if (do_debug) {
+		printk("\tWRITE: bus=%d devfn=%u where=%d size=%d val=0x%x\n",
+			bus->number, devfn, where, size, val);
+		dump_stack();
+	}
+
+During setup I do get, e.g.
+
+[    7.621417]   READ: bus=1 devfn=0 where=84 size=2 val=0x8
+[    7.626840] CPU: 0 PID: 1 Comm: swapper/0 Tainted: G         C      4.12.0-rc1 #2
+[    7.634358] Hardware name: Sigma Tango DT
+[    7.638387] [<c010e8b4>] (unwind_backtrace) from [<c010ac00>] (show_stack+0x10/0x14)
+[    7.646171] [<c010ac00>] (show_stack) from [<c0257a30>] (dump_stack+0x84/0x98)
+[    7.653429] [<c0257a30>] (dump_stack) from [<c029cb34>] (smp8759_config_read+0xa0/0xa4)
+[    7.661474] [<c029cb34>] (smp8759_config_read) from [<c0282908>] (pci_bus_read_config_word+0x6c/0x94)
+[    7.670742] [<c0282908>] (pci_bus_read_config_word) from [<c0282cfc>] (pci_read_config_word+0x24/0x38)
+[    7.680097] [<c0282cfc>] (pci_read_config_word) from [<c028c5c0>] (__pci_dev_reset+0x11c/0x2fc)
+[    7.688841] [<c028c5c0>] (__pci_dev_reset) from [<c028c9c4>] (pci_probe_reset_function+0xc/0x10)
+[    7.697673] [<c028c9c4>] (pci_probe_reset_function) from [<c028f720>] (pci_create_sysfs_dev_files+0x2a8/0x374)
+[    7.707728] [<c028f720>] (pci_create_sysfs_dev_files) from [<c0515cf8>] (pci_sysfs_init+0x34/0x54)
+[    7.716734] [<c0515cf8>] (pci_sysfs_init) from [<c010175c>] (do_one_initcall+0x44/0x168)
+[    7.724867] [<c010175c>] (do_one_initcall) from [<c0500dd8>] (kernel_init_freeable+0x15c/0x1e8)
+[    7.733611] [<c0500dd8>] (kernel_init_freeable) from [<c0332348>] (kernel_init+0x8/0x108)
+[    7.741831] [<c0332348>] (kernel_init) from [<c01076f8>] (ret_from_fork+0x14/0x3c)
+
+
+On plug/unplug events, there are no config space accesses:
+
+[   88.006750] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+[   88.040179] usb 2-2: New USB device found, idVendor=0951, idProduct=1666
+[   88.046930] usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[   88.054177] usb 2-2: Product: DataTraveler 3.0
+[   88.058684] usb 2-2: Manufacturer: Kingston
+[   88.062927] usb 2-2: SerialNumber: 002618887865F0C0F8646BFA
+[   88.071523] usb-storage 2-2:1.0: USB Mass Storage device detected
+[   88.081334] scsi host0: usb-storage 2-2:1.0
+[   89.096074] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+[   89.104828] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+[   89.112996] sd 0:0:0:0: [sda] Write Protect is off
+[   89.118060] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[   89.129463]  sda: sda1
+[   89.133104] sd 0:0:0:0: [sda] Attached SCSI removable disk
+
+[  103.375210] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
+[  103.382917] xhci_hcd 0000:01:00.0: HC died; cleaning up
+[  103.388281] usb 2-2: USB disconnect, device number 2
