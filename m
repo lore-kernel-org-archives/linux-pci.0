@@ -1,73 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37599 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752158AbdHBRCT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 13:02:19 -0400
-To: Jon Mason <jdmason@kudzu.us>, Allen Hubbe <Allen.Hubbe@dell.com>
-Cc: linux-ntb@googlegroups.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
- <20170725205753.4735-15-logang@deltatee.com> <20170801191050.GJ4186@kudzu.us>
- <dda576ad-d3ca-814b-f0cf-478cbb61adf2@deltatee.com>
- <000001d30b90$31697f70$943c7e50$@dell.com>
- <CAPoiz9wy3bFUWkE1udiY7ynkOT5VxvvtoawNw1qRTFnSapcOEQ@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <95cd95ef-cd83-bd31-ddcb-1fcc0f7fbe51@deltatee.com>
-Date: Wed, 2 Aug 2017 11:02:06 -0600
+Return-Path: <SRS0=LN2z=AB=free-electrons.com=gregory.clement@kernel.org>
+Return-Path: <SRS0=LN2z=AB=free-electrons.com=gregory.clement@kernel.org>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+To: Jan Luebbe <jlu@pengutronix.de>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Andrew Lunn <andrew@lunn.ch>,  Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,  Jason Cooper <jason@lakedaemon.net>,  linux-pci@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,  linux-kernel@vger.kernel.org,  kernel@pengutronix.de
+Subject: Re: [PATCH 0/2] fix 4GB DRAM window support on mvebu
+References: <20170828152517.24506-1-jlu@pengutronix.de>
+	<20170830200700.GX8154@bhelgaas-glaptop.roam.corp.google.com>
+Date: Thu, 31 Aug 2017 10:11:34 +0200
+In-Reply-To: <20170830200700.GX8154@bhelgaas-glaptop.roam.corp.google.com>
+	(Bjorn Helgaas's message of "Wed, 30 Aug 2017 15:07:00 -0500")
+Message-ID: <87y3q017ih.fsf@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPoiz9wy3bFUWkE1udiY7ynkOT5VxvvtoawNw1qRTFnSapcOEQ@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 14/16] switchtec_ntb: implement scratchpad registers
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Bjorn and Jan,
+=20
+ On mer., ao=C3=BBt 30 2017, Bjorn Helgaas <helgaas@kernel.org> wrote:
 
+> On Mon, Aug 28, 2017 at 05:25:15PM +0200, Jan Luebbe wrote:
+>> The current MBUS DRAM window calculation fails for 4GB windows because it
+>> overflows. This is fixed in the first patch by using u64 instead of u32 =
+to
+>> store the size. The second excplicitly checks that we don't try to confi=
+gure a
+>> too large memory window in the pci driver.
+>>=20
+>> As they don't depend on each other, they could also go in separatly.
+>>=20
+>> Jan Luebbe (2):
+>>   bus: mbus: fix window size calculation for 4GB windows
+>>   PCI: mvebu: Check DRAM window size
+>>=20
+>>  drivers/bus/mvebu-mbus.c     |  2 +-
+>>  drivers/pci/host/pci-mvebu.c | 27 ++++++++++++++++++++++-----
+>>  include/linux/mbus.h         |  4 ++--
+>>  3 files changed, 25 insertions(+), 8 deletions(-)
+>
+> Since these can be applied separately, I'll let somebody else take care of
+> the drivers/bus/mvebu-mbus.c part.
 
-On 02/08/17 10:32 AM, Jon Mason wrote:
-> After a long-ish conversation on IRC, the way we want to go forward
-> would be to provide 2 ways of communicating prior to the MW's being
-> setup:  SPADs and Message Registers.  The HW driver would make
-> available whichever ones are supported by the hardware.  The transport
-> can see which of those are available in the HW driver, select the
-> appropriate one, and use it to setup the NTB connection, MW, etc.
-> similar to how the SPADs are being used today.  This would allow for
-> any current clients to work unmodified, and would require minimal
-> changes to the existing transport layer.
+I think I am the one who should take it. I will apply it when v4.14-rc1
+will be released as it is too late for me for 4.14 now.
 
-I'm open to this, but I have a couple points:
+However I am not against the fact that it is applied through an other
+tree because we don't touch this file for the next release so there is
+no risk for a conflict, I can give my Acked-by if needed.
 
-1) I think there needs to be an ntb library or similar so the client
-just has to say "communicate this setup data to the peer X". We don't
-need every client replicating the decision to use spads or msgs or whatever.
+Thanks,
 
-2) In my experience, message registers are a bit of a pain to send
-chunks of data like is being done with spads in the existing clients.
-(Some time ago, I originally tried emulating spads with message
-registers and it did not work well.)  You can only send 32bits at a time
-and you have to have a signal indicating the other side is finished with
-it before sending another message. I think they are best used just for
-signaling infrequent events where if you loose a message it's not an issue.
+Gregory
 
-One thought I had was that maybe we need to just push this decision into
-the drivers. ie if there's an ntb api just for communicating setup data,
-the driver could then determine the most appropriate way to communicate
-it for the hardware (whether via spads, messages or a special memory
-window). However, the difficulty with this is that the driver would have
-to communicate if it's using spad resources it would otherwise advertise
-to the clients.
+>
+> I'll look for an ack from Thomas or Jason before applying the second patc=
+h,
+> which touches drivers/pci/host/pci-mvebu.c.
 
-Though, maybe we don't need spads in the ntb api. Maybe they are the
-wrong abstraction. All the existing clients only use them for setup
-data, so if we dropped the spad api in favor of a setup data api, the
-driver could then just make the decision on how best to communicate it.
-
-Anyway, just my thoughts.
-
-Logan
+--=20
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
