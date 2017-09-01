@@ -1,49 +1,43 @@
-Return-Path: <SRS0=sCe6=A3=free.fr=marc.w.gonzalez@kernel.org>
-Return-Path: <SRS0=sCe6=A3=free.fr=marc.w.gonzalez@kernel.org>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: [RESEND PATCH v11 0/3] Tango PCIe host bridge MSI support + required
- API
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Marc Zyngier
- <marc.zyngier@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- Rob Herring <robh@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
- Mason <slash.tmp@free.fr>
-Message-ID: <93a30f88-17e1-af14-0c50-54f829c1158b@free.fr>
-Date: Tue, 26 Sep 2017 12:21:13 +0200
+Return-Path: <SRS0=nrie=AC=linaro.org=linus.walleij@kernel.org>
+Return-Path: <SRS0=nrie=AC=linaro.org=linus.walleij@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170822190940.GD6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170809141455.22220-1-linus.walleij@linaro.org> <20170822190940.GD6948@bhelgaas-glaptop.roam.corp.google.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Fri, 1 Sep 2017 14:06:10 +0200
+Message-ID: <CACRpkdZ1z3wxAGOm2xnjjTo9y0nKVk4vKsMJ54xwcr_x2f9L6A@mail.gmail.com>
+Subject: Re: [PATCH 1/2 v2] PCI: v3: Update the device tree bindings
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+On Tue, Aug 22, 2017 at 9:09 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-Someone pointed out that the patches in this series had been mangled by
-the server. Thus I'm resending them.
+> On Wed, Aug 09, 2017 at 04:14:54PM +0200, Linus Walleij wrote:
+>> The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
+>> and predates the more formal format we have adopted for the bindings.
+>> Update them a bit so it is easier to read, and add the Integrator AP-
+>> specific compatible so we can detect that we are running on that specific
+>> platform.
+>>
+>> Acked-by: Rob Herring <robh@kernel.org>
+>> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+(...)
+>> -- reg: should contain the base address of the V3 adapter.
+>> +Required properties:
+>> +- compatible: should be one of:
+>> +  "v3,v360epc-pci"
+>> +  "arm,integrator-ap-pci", "v3,v360epc-pci"
+>> +- reg: should contain the base address of the V3 host bridge.
+>
+> Does this need some sort of comment about how the non-pref and pref mem
+> windows need to be 256Mb and adjacent?  I think the driver makes some
+> unverified assumptions about them.
 
-I have added the tags given by Rob and Linus W.
+Yeah that is how I understand that it works as well. I will document
+this in the binding.
 
-The MSI patch has remained mostly unchanged since v9 (posted three months ago)
-except for a cosmetic cleanup in v10 (no functional changes, Acked by Marc Z
-with one remark about the doorbell address) and addressing the doorbell remark
-in v11 (Discover msi_doorbell in probe by parsing dma-ranges).
-
-Is this code in good enough shape to reach upstream?
-
-
-Marc Gonzalez (3):
-  of/pci: Add dma-ranges parsing support
-  PCI: Use of_pci_dma_range_parser_init API
-  PCI: tango: Add MSI controller support
-
- drivers/of/address.c             |  19 +++-
- drivers/pci/host/pci-ftpci100.c  |  20 +---
- drivers/pci/host/pci-rcar-gen2.c |  20 +---
- drivers/pci/host/pci-xgene.c     |  20 +---
- drivers/pci/host/pcie-iproc.c    |  20 +---
- drivers/pci/host/pcie-rcar.c     |  20 +---
- drivers/pci/host/pcie-tango.c    | 205 ++++++++++++++++++++++++++++++++++++++-
- include/linux/of_address.h       |  10 +-
- 8 files changed, 232 insertions(+), 102 deletions(-)
-
--- 
-2.11.0
+Yours,
+Linus Walleij
