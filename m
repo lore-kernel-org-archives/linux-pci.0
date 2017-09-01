@@ -1,86 +1,150 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-acpi@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: [PATCH] ACPI/IORT: Fix PCI ACS enablement
-Date: Tue, 19 Sep 2017 18:05:39 +0100
-Message-Id: <20170919170539.6265-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
+Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org,
+	z.liuxinliang@hisilicon.com,
+	zourongrong@gmail.com,
+	catalin.marinas@arm.com,
+	will.deacon@arm.com,
+	gabriele.paoloni@huawei.com,
+	helgaas@kernel.org,
+	airlied@linux.ie,
+	daniel.vetter@intel.com,
+	alex.williamson@redhat.com,
+	dri-devel@lists.freedesktop.org,
+	lukas@wunner.de,
+	ard.biesheuvel@linaro.org,
+	lorenzo.pieralisi@arm.com,
+	Daniel Axtens <dja@axtens.net>
+Subject: [PATCH v3 3/3] drm: documentation for default display device
+Date: Fri,  1 Sep 2017 17:27:44 +1000
+Message-Id: <20170901072744.2409-4-dja@axtens.net>
+In-Reply-To: <20170901072744.2409-1-dja@axtens.net>
+References: <20170901072744.2409-1-dja@axtens.net>
 List-ID: <linux-pci.vger.kernel.org>
 
-commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
-workarounds") removed kernel code that was allowing to initialize
-and probe the SMMU devices early (ie earlier than PCI devices through
-linker script callback entries) in the boot process because it was not
-needed any longer in that the SMMU devices/drivers now support deferred
-probing.
+We have refactored and extended this - document it.
 
-Since the SMMUs probe routines are also in charge of requesting global
-PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
-up early-probing workarounds") also postponed PCI ACS enablement to
-SMMUs devices probe time, which may be too late given that PCI devices
-needs to detect if PCI ACS is enabled to init the respective capability
-through the following call path:
-
-pci_device_add()
- -> pci_init_capabilities()
-  -> pci_enable_acs()
-
-Add code in the ACPI IORT SMMU platform devices initialization path
-(that is called before ACPI PCI enumeration) to detect if an SMMU is
-present in HW and enable PCI ACS if it actually is, restoring the
-correct PCI ACS enablement sequencing.
-
-Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
-Signed-workarounds")
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Daniel Axtens <dja@axtens.net>
 ---
- drivers/acpi/arm64/iort.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ Documentation/gpu/default_display.rst | 93 +++++++++++++++++++++++++++++++++++
+ Documentation/gpu/index.rst           |  1 +
+ 2 files changed, 94 insertions(+)
+ create mode 100644 Documentation/gpu/default_display.rst
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 9565d57..71a7694 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -1184,6 +1184,7 @@ static void __init iort_init_platform_devices(void)
- 	struct acpi_table_iort *iort;
- 	struct fwnode_handle *fwnode;
- 	int i, ret;
-+	bool smmu_detected = false;
- 
- 	/*
- 	 * iort_table and iort both point to the start of IORT table, but
-@@ -1218,11 +1219,21 @@ static void __init iort_init_platform_devices(void)
- 				acpi_free_fwnode_static(fwnode);
- 				return;
- 			}
+diff --git a/Documentation/gpu/default_display.rst b/Documentation/gpu/default_display.rst
+new file mode 100644
+index 000000000000..3c190611564e
+--- /dev/null
++++ b/Documentation/gpu/default_display.rst
+@@ -0,0 +1,93 @@
++=======================
++Default Display Devices
++=======================
 +
-+			smmu_detected = true;
- 		}
- 
- 		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
- 					 iort_node->length);
- 	}
++Overview
++========
 +
-+	/*
-+	 * If IORT reports an SMMU component make sure PCI ACS is
-+	 * requested so that PCI devices can enable it in their
-+	 * capabilities.
-+	 */
-+	if (smmu_detected)
-+		pci_request_acs();
- }
- 
- void __init acpi_iort_init(void)
++.. kernel-doc:: drivers/gpu/vga/default_display.c
++		:doc: overview
++
++
++Why do we need this?
++====================
++
++The default device is used to set the ``boot_vga`` per-device sysfs
++file, which is used by user-space. Most notably, Xorg reads this file
++via libpciaccess in order to facilitate auto-configuration.
++
++
++History
++=======
++
++When the VGA arbiter was introduced, it would pick a default device on
++boot. As the arbiter exists to arbitrate access to legacy resources,
++it would only pick a card that could be accessed through legacy areas.
++(See the :doc:`vgaarbiter` documentation for more.)
++
++The arbiter was later extended on x86 and IA64 to consider the EFI
++framebuffer.
++
++This is all well and good if you have legacy resources or
++EFI. However, some systems do not have either of those. For example,
++on POWER8: [0]_
++
++ - There is no IO space at all
++
++ - We configure the 32-bit MMIO window to be around 3..4G (to avoid
++   overlapping with DMA space below it).
++
++So effectively, there is no path to the legacy areas.
++
++This means the VGA arbiter will not pick a default device on these
++platforms. So, on powerpc, a class hook was added to mark a default
++device (``arch/powerpc/kernel/pci-common.c``), independent of the
++arbiter.
++
++When this issue arose on an arm64 system, it was decided that a generic
++approach would be better than more special cases. Therefore, the
++default device selection was factored out, and it now operates using
++the priority list described in the Overview.
++
++API
++===
++
++Public
++------
++
++.. kernel-doc:: drivers/gpu/vga/default_display.c
++		:export:
++
++Private
++-------
++
++.. kernel-doc:: drivers/gpu/vga/default_display.c
++		:internal:
++
++Future Work
++===========
++
++There is no support for non-PCI VGA devices being marked as default.
++The following comment, extracted from an earlier version of
++:c:func:`pci_default_display()` might help:
++
++  If your VGA default device is not PCI, you'll have to override this
++  and return NULL here. In this case, I assume it will not conflict
++  with any PCI card. If this is not true, I'll have to define two
++  archs hooks for enabling/disabling the VGA default device if that
++  is possible. 
++
++  This may be a problem with real _ISA_ VGA cards, in addition to a
++  PCI one. I don't know at this point how to deal with that card. Can
++  theirs IOs be disabled at all ? If not, then I suppose it's a matter
++  of having the proper arch hook telling us about it, so we basically
++  never allow anybody to succeed a ``vga_get()``...
++
++Currently there is also no way to support non-VGA-class PCI devices as
++default display devices.
++
++
++References
++==========
++	   
++.. [0] https://www.spinics.net/lists/linux-pci/msg64142.html
+diff --git a/Documentation/gpu/index.rst b/Documentation/gpu/index.rst
+index 35d673bf9b56..8083d84f2334 100644
+--- a/Documentation/gpu/index.rst
++++ b/Documentation/gpu/index.rst
+@@ -16,6 +16,7 @@ Linux GPU Driver Developer's Guide
+    tegra
+    tinydrm
+    vc4
++   default_display
+    vga-switcheroo
+    vgaarbiter
+    bridge/dw-hdmi
 -- 
-2.10.0
-
+2.11.0
