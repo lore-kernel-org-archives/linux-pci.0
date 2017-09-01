@@ -1,82 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0059.outbound.protection.outlook.com ([104.47.37.59]:30048
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753057AbdHWG05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Aug 2017 02:26:57 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv4 6/9] PCI: designware: add accessors for write permission of DBI read-only registers
-Date: Wed, 23 Aug 2017 14:08:53 +0800
-Message-ID: <20170823060856.9387-7-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
-References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:53540 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751022AbdIAGoS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Sep 2017 02:44:18 -0400
+Subject: Re: [PATCH 02/10] PCI: dra7xx: Fix platform_get_irq() error handling
+To: Fabio Estevam <fabio.estevam@nxp.com>, <bhelgaas@google.com>
+References: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
+ <1504201930-3617-2-git-send-email-fabio.estevam@nxp.com>
+CC: <linux-pci@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <640d0339-0263-4026-e16f-e4fbc68f1e7e@ti.com>
+Date: Fri, 1 Sep 2017 12:13:34 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1504201930-3617-2-git-send-email-fabio.estevam@nxp.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-The read-only DBI registers can be written over the DBI when set
-the "Write to RO Registers Using DBI" (DBI_RO_WR_EN) field of the
-MISC_CONTROL_1_OFF register.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-By: Joao Pinto <jpinto@synopsys.com>
----
-V4:
- - no change
+On Thursday 31 August 2017 11:22 PM, Fabio Estevam wrote:
+> When platform_get_irq() fails we should propagate the real error
+> value instead of always returning -EINVAL.
+> 
+> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 
- drivers/pci/dwc/pcie-designware.h | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 7366c8167404..0c5f874345f6 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -76,6 +76,9 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
-+#define PCIE_MISC_CONTROL_1_OFF		0x8BC
-+#define PCIE_DBI_RO_WR_EN		(0x1 << 0)
-+
- /*
-  * iATU Unroll-specific register definitions
-  * From 4.80 core version the address translation will be made by unroll
-@@ -279,6 +282,28 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
- 	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
- }
- 
-+static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
-+{
-+	u32 reg;
-+	u32 val;
-+
-+	reg = PCIE_MISC_CONTROL_1_OFF;
-+	val = dw_pcie_readl_dbi(pci, reg);
-+	val |= PCIE_DBI_RO_WR_EN;
-+	dw_pcie_writel_dbi(pci, reg, val);
-+}
-+
-+static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
-+{
-+	u32 reg;
-+	u32 val;
-+
-+	reg = PCIE_MISC_CONTROL_1_OFF;
-+	val = dw_pcie_readl_dbi(pci, reg);
-+	val &= ~PCIE_DBI_RO_WR_EN;
-+	dw_pcie_writel_dbi(pci, reg, val);
-+}
-+
- #ifdef CONFIG_PCIE_DW_HOST
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
--- 
-2.14.1
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index e0dd98d..1e2aaed 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -450,7 +450,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>  	pp->irq = platform_get_irq(pdev, 1);
+>  	if (pp->irq < 0) {
+>  		dev_err(dev, "missing IRQ resource\n");
+> -		return -EINVAL;
+> +		return pp->irq;
+>  	}
+>  
+>  	ret = devm_request_irq(dev, pp->irq, dra7xx_pcie_msi_irq_handler,
+> 
