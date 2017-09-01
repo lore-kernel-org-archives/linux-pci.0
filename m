@@ -1,65 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <marc.zyngier@arm.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <bhelgaas@google.com>, <shawnguo@kernel.org>, <Mingkai.Hu@nxp.com>,
-        <Minghuan.Lian@nxp.com>, <roy.zang@nxp.com>
-CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCH 4/5] arm64: dts: ls1012a: Add PCIe controller DT node
-Date: Tue, 19 Sep 2017 17:26:57 +0800
-Message-ID: <20170919092658.22482-5-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
-References: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:37330 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751970AbdIAPCh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Sep 2017 11:02:37 -0400
+Date: Fri, 1 Sep 2017 17:02:40 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PCI Express gen 4.0 linux support
+Message-ID: <20170901150240.GA30459@kroah.com>
+References: <DM5PR1201MB2488D6B1322227EE0A06E8C8A0920@DM5PR1201MB2488.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <DM5PR1201MB2488D6B1322227EE0A06E8C8A0920@DM5PR1201MB2488.namprd12.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Fri, Sep 01, 2017 at 11:50:12AM +0000, Shah, Nehal-bakulchandra wrote:
+> Hi All,
+> 
+> 
+> I would like to know that is for PCI Express gen 4.0 supported in linux ? or any discussion/patches are underway for the same?
 
-Add PCIe controller node for ls1012a platform.
+What specifically does the kernel need to provide for 4.0 that it does
+not already handle?  Usually new versions of the PCIe spec are all at
+the BIOS and hardware level, not at the kernel level, right?
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+And have you tried the latest kernel release on this type of hardware
+and had problems?  If so, what were the results?
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-index a7698ac7264b..140570d45ff3 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-@@ -478,5 +478,29 @@
- 			msi-controller;
- 			interrupts = <0 126 IRQ_TYPE_LEVEL_HIGH>;
- 		};
-+
-+		pcie@3400000 {
-+			compatible = "fsl,ls1012a-pcie", "snps,dw-pcie";
-+			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
-+			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
-+			reg-names = "regs", "config";
-+			interrupts = <0 118 0x4>, /* controller interrupt */
-+				     <0 117 0x4>; /* PME interrupt */
-+			interrupt-names = "aer", "pme";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			num-lanes = <4>;
-+			bus-range = <0x0 0xff>;
-+			ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
-+				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-+			msi-parent = <&msi>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0000 0 0 1 &gic 0 110 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 111 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 112 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 113 IRQ_TYPE_LEVEL_HIGH>;
-+		};
- 	};
- };
--- 
-2.14.1
+thanks,
+
+greg k-h
