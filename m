@@ -1,187 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:44146 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:54396 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751355AbdHaUxs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Aug 2017 16:53:48 -0400
-To: Jon Mason <jdmason@kudzu.us>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-References: <20170803181954.4154-1-logang@deltatee.com>
- <58ab6a33-4de5-8fd8-65c2-079f6f6301c4@deltatee.com>
- <50ba7618-b5c3-1779-ad79-0f32254ebbaf@deltatee.com>
- <20170831175356.GA28190@kudzu.us>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <26f3fc2f-839a-b6b9-3475-de3ac79f03f6@deltatee.com>
-Date: Thu, 31 Aug 2017 14:53:34 -0600
+        id S1751237AbdIAEna (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Sep 2017 00:43:30 -0400
+Date: Thu, 31 Aug 2017 23:43:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: linuxarm@huawei.com, liudongdong3@huawei.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCIe AER: report uncorrectable errors only to the
+ functions that logged the errors
+Message-ID: <20170901044326.GG18250@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503054141-80272-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20170831200344.GF18250@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170831175356.GA28190@kudzu.us>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v4 00/15] Switchtec NTB Support
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170831200344.GF18250@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Great! Thanks Jon.
+On Thu, Aug 31, 2017 at 03:03:44PM -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 18, 2017 at 12:02:21PM +0100, Gabriele Paoloni wrote:
+> > Currently if an uncorrectable error is reported by an EP the AER
+> > driver walks over all the devices connected to the upstream port
+> > bus and in turns call the report_error_detected() callback.
+> > If any of the devices connected to the bus does not implement
+> > dev->driver->err_handler->error_detected() do_recovery() will fail
+> > leaving all the bus hierarchy devices unrecovered.
+> > 
+> > However for non fatal errors the PCIe link should not be considered
+> > compromised, therefore it makes sense to report the error only to
+> > all the functions that logged an error.
+> 
+> Can you include a pointer to the relevant part of the spec here?
 
-I pulled ntb-next and ran my test suite on it. Looks good.
+Also, I forgot to ask: can you outline the problem this fixes?  I'm
+curious about why this hasn't been an issue in the past.  My guess is
+there's something new about your configuration, and the config and the
+symptoms might help connect this fix to similar problems.
 
-Logan
-
-On 31/08/17 11:53 AM, Jon Mason wrote:
-> On Wed, Aug 30, 2017 at 01:18:28PM -0600, Logan Gunthorpe wrote:
->> Hey Jon,
->>
->> Any update on this? The merge window is likely very soon and it would be
->> good to know where we stand. As far as I know I've addressed all the
->> feedback I've been given. Let me know if there's anything I can do to
->> further this process.
+> > This patch implements this new behaviour for non fatal errors.
+> > 
+> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> > ---
+> > Changes from v1:
+> >    - now errors are reported only to the fucntions that logged the error
+> >      instead of all the functions in the same device.
+> >    - the patch subject has changed to match the new implementation
+> > ---
+> >  drivers/pci/pcie/aer/aerdrv_core.c | 9 ++++++++-
+> >  1 file changed, 8 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> > index b1303b3..057465ad 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > @@ -390,7 +390,14 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+> >  		 * If the error is reported by an end point, we think this
+> >  		 * error is related to the upstream link of the end point.
+> >  		 */
+> > -		pci_walk_bus(dev->bus, cb, &result_data);
+> > +		if (state == pci_channel_io_normal)
+> > +			/*
+> > +			 * the error is non fatal so the bus is ok, just invoke
+> > +			 * the callback for the function that logged the error.
+> > +			 */
+> > +			cb(dev, &result_data);
+> > +		else
+> > +			pci_walk_bus(dev->bus, cb, &result_data);
 > 
-> My apologies for the delay.  I've pulled the series into my ntb-next
-> branch.
+> I think the concept of this change makes sense, but I don't like the
+> implicit connection of PCI_ERR_ROOT_UNCOR_RCV -> AER_NONFATAL ->
+> pci_channel_io_normal.  That makes it harder than it should be to read
+> the code.
 > 
-> When you get a chance, please pulldown and verify that I didn't miss
-> anything (and a smoke test that it works as desired would be nice
-> too).
+> What would you think of changing the signature of do_recovery() and
+> broadcast_error_message() so they take the struct aer_err_info pointer
+> instead of just the severity and pci_channel_state?  Then we could
+> check directly for AER_NONFATAL here.
 > 
-> Thanks,
-> Jon
-> 
->>
->> Thanks,
->>
->> Logan
->>
->> On 22/08/17 10:59 AM, Logan Gunthorpe wrote:
->>> Hi,
->>>
->>> Just wanted to give this a poke as I haven't received any feedback in a
->>> couple weeks on v4. What are people's thoughts on this? Is it suitable
->>> to make it into the next merge window?
->>>
->>> Thanks,
->>>
->>> Logan
->>>
->>>
->>> On 03/08/17 12:19 PM, Logan Gunthorpe wrote:
->>>> Changes since v3:
->>>>
->>>> - Rebased onto the Jon's ntb branch that contains one of the patches
->>>>     that was in v3
->>>> - Various spelling and commit log mistakes noticed by Bjorn
->>>> - Renamed switchtec_ntb to ntb_hw_switchtec per Dave's suggestion
->>>> - Fixed a number of code nits pointed out by Jon
->>>>
->>>> -- 
->>>>
->>>> Changes since v2:
->>>>
->>>> - Reordered the ntb_test link patch per Allen
->>>> - Removed an extra call to switchtec_ntb_init_mw
->>>> - Fixed a typo in the switchtec.txt documentation.
->>>>
->>>> -- 
->>>>
->>>> Changes since v1:
->>>>
->>>> - Rebased onto latest ntb-next branch (with v4.13-rc1)
->>>> - Reworked ntb_mw_count() function so that it can be called all the
->>>>     time (per discussion with Allen)
->>>> - Various spelling and formatting cleanups from Bjorn
->>>> - Added request_module() call such that the NTB module is automatically
->>>>     loaded when appropriate hardware exists.
->>>>
->>>> -- 
->>>>
->>>> Changes since the rfc:
->>>>
->>>> - Rebased on ntb-next
->>>> - Switched ntb_part_op to use sleep instead of delay
->>>> - Dropped a number of useless dbg __func__ prints
->>>> - Went back to the dynamic instead of the static class
->>>> - Swapped the notifier block for a simple callback
->>>> - Modified the new ntb api so that a couple functions with pidx
->>>>     now must be called after link up. Per our discussion on the list.
->>>>
->>>> -- 
->>>>
->>>> This patchset implements Non-Transparent Bridge (NTB) support for the
->>>> Microsemi Switchtec series of switches. We're looking for some
->>>> review from the community at this point but hope to get it upstreamed
->>>> for v4.14.
->>>>
->>>> Switchtec NTB support is configured over the same function and bar
->>>> as the management endpoint. Thus, the new driver hooks into the
->>>> management driver which we had merged in v4.12. We use the class
->>>> interface API to register an NTB device for every switchtec device
->>>> which supports NTB (not all do).
->>>>
->>>> The Switchtec hardware supports doorbells, memory windows and messages.
->>>> Seeing there is no native scratchpad support, 128 spads are emulated
->>>> through the use of a pre-setup memory window. The switch has 64
->>>> doorbells which are shared between the two partitions and a
->>>> configurable set of memory windows. While the hardware supports more
->>>> than 2 partitions, this driver only supports the first two seeing
->>>> the current NTB API only supports two hosts.
->>>>
->>>> The driver has been tested with ntb_netdev and fully passes the
->>>> ntb_test script.
->>>>
->>>> This patchset is based off of ntb-next and can be found in this
->>>> git repo:
->>>>
->>>> https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb_v4
->>>>
->>>> Logan Gunthorpe (15):
->>>>     NTB: switchtec: Move structure definitions into a common header
->>>>     NTB: switchtec: Export class symbol for use in upper layer driver
->>>>     NTB: switchtec: Add NTB hardware register definitions
->>>>     NTB: switchtec: Add link event notifier callback
->>>>     NTB: Ensure ntb_mw_get_align() is only called when the link is up
->>>>     NTB: Add check and comment for link up to mw_count() and
->>>>       mw_get_align()
->>>>     NTB: switchtec_ntb: Introduce initial NTB driver
->>>>     NTB: switchtec_ntb: Initialize hardware for memory windows
->>>>     NTB: switchtec_ntb: Initialize hardware for doorbells and messages
->>>>     NTB: switchtec_ntb: Add skeleton NTB driver
->>>>     NTB: switchtec_ntb: Add link management
->>>>     NTB: switchtec_ntb: Implement doorbell registers
->>>>     NTB: switchtec_ntb: Implement scratchpad registers
->>>>     NTB: switchtec_ntb: Add memory window support
->>>>     NTB: switchtec_ntb: Update switchtec documentation with notes for NTB
->>>>
->>>>    Documentation/switchtec.txt            |   12 +
->>>>    MAINTAINERS                            |    2 +
->>>>    drivers/ntb/hw/Kconfig                 |    1 +
->>>>    drivers/ntb/hw/Makefile                |    1 +
->>>>    drivers/ntb/hw/mscc/Kconfig            |    9 +
->>>>    drivers/ntb/hw/mscc/Makefile           |    1 +
->>>>    drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 1216
->>>> ++++++++++++++++++++++++++++++++
->>>>    drivers/ntb/ntb_transport.c            |   20 +-
->>>>    drivers/ntb/test/ntb_perf.c            |   18 +-
->>>>    drivers/ntb/test/ntb_tool.c            |    6 +-
->>>>    drivers/pci/switch/switchtec.c         |  316 ++-------
->>>>    include/linux/ntb.h                    |   11 +-
->>>>    include/linux/switchtec.h              |  373 ++++++++++
->>>>    13 files changed, 1703 insertions(+), 283 deletions(-)
->>>>    create mode 100644 drivers/ntb/hw/mscc/Kconfig
->>>>    create mode 100644 drivers/ntb/hw/mscc/Makefile
->>>>    create mode 100644 drivers/ntb/hw/mscc/ntb_hw_switchtec.c
->>>>    create mode 100644 include/linux/switchtec.h
->>>>
->>>> -- 
->>>> 2.11.0
->>>>
->>
->> -- 
->> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
->> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
->> To post to this group, send email to linux-ntb@googlegroups.com.
->> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/50ba7618-b5c3-1779-ad79-0f32254ebbaf%40deltatee.com.
->> For more options, visit https://groups.google.com/d/optout.
+> Bjorn
