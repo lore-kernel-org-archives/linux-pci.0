@@ -1,78 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:60156 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751011AbdITFYv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Sep 2017 01:24:51 -0400
-From: Keerthy <j-keerthy@ti.com>
-To: <kishon@ti.com>, <bhelgaas@google.com>
-CC: <t-kristo@ti.com>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <j-keerthy@ti.com>
-Subject: [PATCH v4] pci: dwc: dra7xx: Add shutdown handler to cleanly turn off clocks
-Date: Wed, 20 Sep 2017 10:54:15 +0530
-Message-ID: <1505885055-30657-1-git-send-email-j-keerthy@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
+Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org,
+	z.liuxinliang@hisilicon.com,
+	zourongrong@gmail.com,
+	catalin.marinas@arm.com,
+	will.deacon@arm.com,
+	gabriele.paoloni@huawei.com,
+	helgaas@kernel.org,
+	airlied@linux.ie,
+	daniel.vetter@intel.com,
+	alex.williamson@redhat.com,
+	dri-devel@lists.freedesktop.org,
+	lukas@wunner.de,
+	ard.biesheuvel@linaro.org,
+	lorenzo.pieralisi@arm.com,
+	Daniel Axtens <dja@axtens.net>
+Subject: [PATCH v3 0/3] Split default display handling out from VGA arbiter
+Date: Fri,  1 Sep 2017 17:27:41 +1000
+Message-Id: <20170901072744.2409-1-dja@axtens.net>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add shutdown handler to cleanly turn off clocks. This will help
-in cases of kexec where in a new kernel can boot abruptly.
+This patch set:
 
-Signed-off-by: Keerthy <j-keerthy@ti.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
+ - splits the default display handling out from VGA arbiter, into its
+   own file and behind its own Kconfig option (and gives the functions
+   better names).
 
-Changes in v4:
+ - adds extra detection of default devices. To be nominated, the vga
+   arbiter and platform hooks must not have nominated a default. A
+   card will then only be nominated if it has a driver attached and
+   has IO or memory decoding enabled.
 
-  * Added the missing changes from v2!
+ - adds relevant documentation.
+
+The practical impact of this is improved X autoconfiguration on some
+arm64 systems.
 
 Changes in v3:
 
-  * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
-  * Added more details to commit log.
+ - Add documentation - thanks Daniel Vetter for pointing it out.
 
-Changes in v2:
+ - Clarify explanations. Thanks to everyone for continuing to bear
+   with my incomplete understanding of PCI and provide some clarity.
 
-  * used a local dev pointer instead of dereferencing dev at multiple places.
-  * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
+ - Split refactoring and adding functionality.
 
- drivers/pci/dwc/pci-dra7xx.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Changes in v2: https://www.spinics.net/lists/linux-pci/msg64007.html
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 34427a6..d084800 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -794,6 +794,22 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
- }
- #endif
- 
-+void dra7xx_pcie_shutdown(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int ret;
-+
-+	dra7xx_pcie_stop_link(dra7xx->pci);
-+
-+	ret = pm_runtime_put_sync(dev);
-+	if (ret < 0)
-+		dev_dbg(dev, "pm_runtime_put_sync failed\n");
-+
-+	pm_runtime_disable(dev);
-+	dra7xx_pcie_disable_phy(dra7xx);
-+}
-+
- static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
- 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
-@@ -807,5 +823,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
- 		.suppress_bind_attrs = true,
- 		.pm	= &dra7xx_pcie_pm_ops,
- 	},
-+	.shutdown = dra7xx_pcie_shutdown,
- };
- builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
+Drop all the powerpc patches. [explanation snipped]
+
+v1: https://www.spinics.net/lists/linux-pci/msg63581.html
+
+Regards,
+Daniel
+
+Daniel Axtens (3):
+  drm: split default display handler out of VGA arbiter
+  drm: add fallback default device detection
+  drm: documentation for default display device
+
+ Documentation/gpu/default_display.rst |  93 +++++++++++++++++++
+ Documentation/gpu/index.rst           |   1 +
+ arch/ia64/pci/fixup.c                 |   6 +-
+ arch/powerpc/kernel/pci-common.c      |   6 +-
+ arch/x86/pci/fixup.c                  |   6 +-
+ arch/x86/video/fbdev.c                |   4 +-
+ drivers/gpu/vga/Kconfig               |  12 +++
+ drivers/gpu/vga/Makefile              |   1 +
+ drivers/gpu/vga/default_display.c     | 163 ++++++++++++++++++++++++++++++++++
+ drivers/gpu/vga/vga_switcheroo.c      |   8 +-
+ drivers/gpu/vga/vgaarb.c              |  61 +++----------
+ drivers/pci/pci-sysfs.c               |   4 +-
+ include/linux/default_display.h       |  44 +++++++++
+ include/linux/vgaarb.h                |  15 ----
+ 14 files changed, 344 insertions(+), 80 deletions(-)
+ create mode 100644 Documentation/gpu/default_display.rst
+ create mode 100644 drivers/gpu/vga/default_display.c
+ create mode 100644 include/linux/default_display.h
+
 -- 
-1.9.1
+2.11.0
