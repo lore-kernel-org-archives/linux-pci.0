@@ -1,73 +1,182 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/7] PCI: aardvark: set PIO_ADDR_LS correctly in
- advk_pcie_rd_conf()
-Date: Thu, 28 Sep 2017 14:58:33 +0200
-Message-Id: <20170928125838.11887-3-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
- Jason Cooper <jason@lakedaemon.net>, Hanna Hawa <hannah@marvell.com>,
- stable@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>,
- Victor Gu <xigu@marvell.com>,
- =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Antoine Tenart <antoine.tenart@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
+Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org,
+	z.liuxinliang@hisilicon.com,
+	zourongrong@gmail.com,
+	catalin.marinas@arm.com,
+	will.deacon@arm.com,
+	gabriele.paoloni@huawei.com,
+	helgaas@kernel.org,
+	airlied@linux.ie,
+	daniel.vetter@intel.com,
+	alex.williamson@redhat.com,
+	dri-devel@lists.freedesktop.org,
+	lukas@wunner.de,
+	ard.biesheuvel@linaro.org,
+	lorenzo.pieralisi@arm.com,
+	Daniel Axtens <dja@axtens.net>
+Subject: [PATCH v3 2/3] drm: add fallback default device detection
+Date: Fri,  1 Sep 2017 17:27:43 +1000
+Message-Id: <20170901072744.2409-3-dja@axtens.net>
+In-Reply-To: <20170901072744.2409-1-dja@axtens.net>
+References: <20170901072744.2409-1-dja@axtens.net>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+The VGA arbiter selects a default VGA device that is enabled and
+reachable via the legacy VGA resources (mem 0xa0000-0xbffff, io
+0x3b0-0x3bb, io 0x3c0-0x3df, etc).
 
-When setting the PIO_ADDR_LS register during a configuration read, we
-were properly passing the device number, function number and register
-number, but not the bus number, causing issues when reading the
-configuration of PCIe devices.
+(As a special case for x86 and IA64, this can be overridden by
+EFI.)
 
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Wilson Ding <dingwei@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+If there is no such device, e.g., because there's no enabled VGA
+device, the host bridge doesn't support access to those legacy
+resources, or a PCI-PCI bridge doesn't have VGA Enable set, a
+platform may select an arbitrary device by calling
+pci_set_default_display(). powerpc does this, for example.
+
+If there is also no platform hook, there will be no default
+device nominated. This is not necessarily what we want.
+
+Add handling for devices that aren't handled by the vga arbiter or
+platform by adding a late initcall and a class enable hook. If there
+is no default from vgaarb or the platform then the first VGA card
+that is enabled, has a driver bound, and can decode memory or I/O
+will be marked as default.
+
+This means single-card setups on systems without access to legacy
+areas and without arch hooks will work. Multi-card setups on these
+systems will nominate an arbitrary device, rather than no devices.
+
+Signed-off-by: Daniel Axtens <dja@axtens.net>
+
 ---
- drivers/pci/host/pci-aardvark.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index da2881ba7737..af7a9c4a61a4 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -459,7 +459,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	advk_writel(pcie, reg, PIO_CTRL);
+v3:
+
+Split out from re-organisation for simplicity.
+Add better description and better documentaion.
+
+Thanks to (in no particular order), Daniel Vetter, Lorenzo Pieralisi,
+Ard Biesheuvel and Dave Airlie. Special thanks to Ben Herrenschmidt
+and Bjorn Helgass, whose prose I have borrowed.
+
+v1:
+
+Tested on:
+ - x86_64 laptop
+ - arm64 D05 board with hibmc card
+ - qemu powerpc with tcg and bochs std-vga
+
+I know this adds another config option and that's a bit sad, but
+we can't include it unconditionally as it depends on PCI.
+Suggestions welcome.
+---
+ drivers/gpu/vga/default_display.c | 77 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 77 insertions(+)
+
+diff --git a/drivers/gpu/vga/default_display.c b/drivers/gpu/vga/default_display.c
+index 99e4723360da..b8e4a5af38e8 100644
+--- a/drivers/gpu/vga/default_display.c
++++ b/drivers/gpu/vga/default_display.c
+@@ -42,6 +42,10 @@
+  *
+  *  2) Anything specified by an arch hook,
+  *     e.g. arch/powerpc/kernel/pci-common.c::fixup_vga()
++ *
++ *  3) If neither of those, then we still want to pick something. For
++ *     now, pick the first PCI VGA device with a driver bound and with
++ *     memory or I/O control on.
+  */
  
- 	/* Program the address registers */
--	reg = PCIE_BDF(devfn) | PCIE_CONF_REG(where);
-+	reg = PCIE_CONF_ADDR(bus->number, devfn, where);
- 	advk_writel(pcie, reg, PIO_ADDR_LS);
- 	advk_writel(pcie, 0, PIO_ADDR_MS);
+ #include <linux/module.h>
+@@ -53,6 +57,12 @@
  
+ static struct pci_dev *vga_default;
+ 
++/*
++ * only go active after the late initcall so as not to interfere with
++ * the arbiter
++ */
++static bool vga_default_active = false;
++
+ /**
+  * pci_default_display - return the default display device
+  *
+@@ -84,3 +94,70 @@ void pci_set_default_display(struct pci_dev *pdev)
+ 	pci_dev_put(vga_default);
+ 	vga_default = pci_dev_get(pdev);
+ }
++
++static bool vga_default_try_device(struct pci_dev *pdev)
++{
++	u16 cmd;
++
++	/* Only deal with VGA class devices */
++	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
++		return false;
++
++	/* Only deal with devices with drivers bound */
++	if (!pdev->driver)
++		return false;
++
++	/* Require I/O or memory control */
++	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++	if (!(cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
++		return false;
++
++	dev_info(&pdev->dev, "vga_default: setting as default device\n");
++	pci_set_default_display(pdev);
++	return true;
++}
++
++static int __init vga_default_init(void)
++{
++	struct pci_dev *pdev;
++
++	vga_default_active = true;
++
++	if (pci_default_display())
++		return 0;
++
++	pdev = NULL;
++	while ((pdev =
++		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
++			       PCI_ANY_ID, pdev)) != NULL) {
++		if (vga_default_try_device(pdev))
++			return 0;
++	}
++
++	return 0;
++}
++late_initcall(vga_default_init);
++
++/*
++ * A driver could be loaded much later than late_initcall, for example
++ * if it's in a module.
++ *
++ * We want to pick that up. However, we want to make sure this does
++ * not interfere with the arbiter - it should only activate if the
++ * arbiter has already had a chance to operate. To ensure this, we set
++ * vga_default_active in the late_initcall: as the vga arbiter is a
++ * subsys initcall, it is guaranteed to fire first.
++ */
++static void vga_default_enable_hook(struct pci_dev *pdev)
++{
++       if (!vga_default_active)
++	       return;
++
++       if (pci_default_display())
++               return;
++
++       vga_default_try_device(pdev);
++}
++DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
++			       PCI_CLASS_DISPLAY_VGA, 8,
++			       vga_default_enable_hook)
 -- 
-2.13.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
