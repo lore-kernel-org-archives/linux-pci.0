@@ -1,45 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 7 Sep 2017 09:49:04 +0200
-From: Jan Glauber <jan.glauber@caviumnetworks.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, david.daney@cavium.com,
-        Jon Masters <jcm@redhat.com>,
-        Robert Richter <robert.richter@cavium.com>,
-        linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] PCI: Avoid slot reset for Cavium cn8xxx root ports
-Message-ID: <20170907074904.GB13490@hc>
-References: <20170830142454.10971-1-jglauber@cavium.com>
- <20170830142454.10971-4-jglauber@cavium.com>
- <20170830084012.19d91759@w520.home>
- <20170831094052.GA15906@hc>
- <20170831100130.5c8a922e@w520.home>
- <20170907074011.GA13490@hc>
+Return-Path: <robh+dt@kernel.org>
+Return-Path: <robh+dt@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170907074011.GA13490@hc>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <0d4313c7-6595-a7fb-680a-e231dc9c0902@sigmadesigns.com>
+References: <f10055cc-4430-ff30-f892-3d3d6f24354c@sigmadesigns.com> <0d4313c7-6595-a7fb-680a-e231dc9c0902@sigmadesigns.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Fri, 1 Sep 2017 13:27:13 -0500
+Message-ID: <CAL_JsqJjNMKLk56CB2i57URYB_9wjuO4opod9xXztmr+MaJnvQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] of/pci: Add dma-ranges parsing support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Cc: Frank Rowand <frowand.list@gmail.com>, Mark Rutland <mark.rutland@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, DT <devicetree@vger.kernel.org>,
+	Jason Cooper <jason@lakedaemon.net>, Mason <slash.tmp@free.fr>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Andrew Murray <amurray@embedded-bits.co.uk>, Liviu Dudau <liviu.dudau@arm.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Linus Walleij <linus.walleij@linaro.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 07, 2017 at 09:40:11AM +0200, Jan Glauber wrote:
-> So what if we add an additional check like:
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index fdf65a6..389db4b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4389,6 +4389,9 @@ static bool pci_slot_resetable(struct pci_slot *slot)
->  {
->         struct pci_dev *dev;
->  
-> +       if (slot->bus->self & PCI_DEV_FLAGS_NO_BUS_RESET)
-> +               return false;
-> +
->         list_for_each_entry(dev, &slot->bus->devices, bus_list) {
->                 if (!dev->slot || dev->slot != slot)
->                         continue;
+On Tue, Aug 29, 2017 at 9:25 AM, Marc Gonzalez
+<marc_gonzalez@sigmadesigns.com> wrote:
+> Several host bridge drivers duplicate of_pci_range_parser_init()
+> in order to parse their dma-ranges property.
+>
+> Provide of_pci_dma_range_parser_init() for that use-case.
+>
+> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> ---
+>  drivers/of/address.c       | 19 ++++++++++++++++---
+>  include/linux/of_address.h | 10 +++++++++-
+>  2 files changed, 25 insertions(+), 4 deletions(-)
 
-Obviously I meant:
-if (slot->bus->self->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+Reviewed-by: Rob Herring <robh@kernel.org>
 
---Jan
+I'm assuming this will go thru the PCI tree.
+
+Rob
