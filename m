@@ -1,103 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-fw-6002.amazon.com ([52.95.49.90]:50723 "EHLO
-        smtp-fw-6002.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752664AbdIEXWM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Sep 2017 19:22:12 -0400
-From: =?UTF-8?q?Jan=20H=2E=20Sch=C3=B6nherr?= <jschoenh@amazon.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?UTF-8?q?Jan=20H=2E=20Sch=C3=B6nherr?= <jschoenh@amazon.de>,
-        linux-pci@vger.kernel.org, Russell Currey <ruscur@russell.cc>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH 2/2] PCI: Remove unused function __pci_reset_function()
-Date: Wed,  6 Sep 2017 01:21:23 +0200
-Message-Id: <1504653683-11543-2-git-send-email-jschoenh@amazon.de>
-In-Reply-To: <1504653683-11543-1-git-send-email-jschoenh@amazon.de>
-References: <1504653683-11543-1-git-send-email-jschoenh@amazon.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 0/2] PCI: dwc: convert remaining dbi read/writes to
+ dw_pcie_readX_dbi/dw_pcie_writeX_dbi
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>
+References: <20170714120735.11993-1-niklas.cassel@axis.com>
+ <20170815223946.GQ32525@bhelgaas-glaptop.roam.corp.google.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <90a9daea-d962-07a6-6c5d-be7a16810123@axis.com>
+Date: Mon, 4 Sep 2017 18:10:55 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170815223946.GQ32525@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The last caller of __pci_reset_function() has been removed. Remove
-the function as well.
+On 08/16/2017 12:39 AM, Bjorn Helgaas wrote:
+> [+cc Kishon, Pratyush]
+> 
+> On Fri, Jul 14, 2017 at 02:07:33PM +0200, Niklas Cassel wrote:
+>> Since the introduction of the dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros,
+>> most dw_pcie_read(pci->dbi_base, ..)/dw_pcie_write(pci->dbi_base, ..) calls
+>> have been converted to dw_pcie_readX_dbi/dw_pcie_writeX_dbi calls.
+>> Convert the remaining calls.
+>>
+>> Niklas Cassel (2):
+>>   PCI: dwc: dra7xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
+>>   PCI: dwc: spear13xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi
+>>     macros
+>>
+>>  drivers/pci/dwc/pci-dra7xx.c     | 14 ++++++--------
+>>  drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
+>>  2 files changed, 16 insertions(+), 20 deletions(-)
+> 
+> These patches are short, but obscure, e.g.,
+> 
+>   - dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_LNKCAP, 4, &val);
+>   + val = dw_pcie_readl_dbi(pci, exp_cap_off + PCI_EXP_LNKCAP);
+> 
+> The original call path was:
+> 
+>   dw_pcie_read(addr, ...)
+>     readl(addr) 
+> 
+> and we're replacing it with the much more complicated:
+> 
+>   dw_pcie_readl_dbi
+>     __dw_pcie_read_dbi
+>       if (pci->ops->read_dbi)
+> 	return pci->ops->read_dbi(pci, base, reg, size)
+>       dw_pcie_read(base + reg, size, &val)
+> 	readl
+> 
+> This is not functionally equivalent (the new path uses ops->read_dbi
+> if it's set), so the changelog should say something about why we need
+> this change.
+> 
+> Neither dra7xx nor spear13xx sets .read_dbi, so my guess is this
+> doesn't actually fix anything that's broken and this is just for
+> consistency.
 
-Signed-off-by: Jan H. Schönherr <jschoenh@amazon.de>
----
- drivers/pci/pci.c   | 35 +++--------------------------------
- include/linux/pci.h |  1 -
- 2 files changed, 3 insertions(+), 33 deletions(-)
+Hello Bjorn,
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fdf65a6..dabcf5a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4115,35 +4115,6 @@ static void pci_dev_restore(struct pci_dev *dev)
- }
- 
- /**
-- * __pci_reset_function - reset a PCI device function
-- * @dev: PCI device to reset
-- *
-- * Some devices allow an individual function to be reset without affecting
-- * other functions in the same device.  The PCI device must be responsive
-- * to PCI config space in order to use this function.
-- *
-- * The device function is presumed to be unused when this function is called.
-- * Resetting the device will make the contents of PCI configuration space
-- * random, so any caller of this must be prepared to reinitialise the
-- * device including MSI, bus mastering, BARs, decoding IO and memory spaces,
-- * etc.
-- *
-- * Returns 0 if the device function was successfully reset or negative if the
-- * device doesn't support resetting a single function.
-- */
--int __pci_reset_function(struct pci_dev *dev)
--{
--	int ret;
--
--	pci_dev_lock(dev);
--	ret = __pci_reset_function_locked(dev);
--	pci_dev_unlock(dev);
--
--	return ret;
--}
--EXPORT_SYMBOL_GPL(__pci_reset_function);
--
--/**
-  * __pci_reset_function_locked - reset a PCI device function while holding
-  * the @dev mutex lock.
-  * @dev: PCI device to reset
-@@ -4233,8 +4204,8 @@ int pci_probe_reset_function(struct pci_dev *dev)
-  *
-  * This function does not just reset the PCI portion of a device, but
-  * clears all the state associated with the device.  This function differs
-- * from __pci_reset_function in that it saves and restores device state
-- * over the reset.
-+ * from __pci_reset_function_locked() in that it saves and restores device state
-+ * over the reset and takes the PCI device lock.
-  *
-  * Returns 0 if the device function was successfully reset or negative if the
-  * device doesn't support resetting a single function.
-@@ -4269,7 +4240,7 @@ EXPORT_SYMBOL_GPL(pci_reset_function);
-  *
-  * This function does not just reset the PCI portion of a device, but
-  * clears all the state associated with the device.  This function differs
-- * from __pci_reset_function() in that it saves and restores device state
-+ * from __pci_reset_function_locked() in that it saves and restores device state
-  * over the reset.  It also differs from pci_reset_function() in that it
-  * requires the PCI device lock to be held.
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4acf321..b55e0cf 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1066,7 +1066,6 @@ int pcie_set_mps(struct pci_dev *dev, int mps);
- int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			  enum pcie_link_width *width);
- void pcie_flr(struct pci_dev *dev);
--int __pci_reset_function(struct pci_dev *dev);
- int __pci_reset_function_locked(struct pci_dev *dev);
- int pci_reset_function(struct pci_dev *dev);
- int pci_reset_function_locked(struct pci_dev *dev);
--- 
-2.10.0.1.g70cd14e
+It is just for consistency.
+
+Sorry for my misleading cover letter.
+It should have said: "For consistency, convert all
+dw_pcie_read(pci->dbi_base, ..)/dw_pcie_write(pci->dbi_base, ..)
+calls to use the dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros".
+
+It is true that dw_pcie_readX_dbi/dw_pcie_writeX_dbi will use
+ops->read_dbi if it is set. However, if ops->read_dbi is set,
+you will most likely want to use that function for reading the dbi.
+Anyway, neither spear13xx nor dra7xx has ops->read_dbi set,
+so these patches shouldn't change their current behavior.
+
+Do you want me to resend these patches or would you prefer
+to just drop them?
+
+Best regards,
+Niklas
+
+> 
+> That's fine, but I'm confused because I looked for some of the
+> previous conversions you mentioned but couldn't find any.  I'm lost in
+> a maze of twisty little passages.
+> 
+> Bjorn
+> 
