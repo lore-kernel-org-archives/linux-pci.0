@@ -1,78 +1,57 @@
-Return-Path: <SRS0=NYlB=A5=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=NYlB=A5=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <liudongdong3@huawei.com>
-Subject: [PATCH v3] PCIe AER: report uncorrectable errors only to the functions that logged the errors
-Date: Thu, 28 Sep 2017 15:33:05 +0100
-Message-ID: <1506609185-8800-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 4 Sep 2017 16:59:48 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Subject: Re: [Question] PCI ACS is broken for ARM SMMU v3?
+Message-ID: <20170904155948.GA20601@red-moon>
+References: <59A81B4C.3020402@hisilicon.com> <59AD4812.3020602@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <59AD4812.3020602@hisilicon.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Will Deacon <will.deacon@arm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently if an uncorrectable error is reported by an EP the AER
-driver walks over all the devices connected to the upstream port
-bus and in turns call the report_error_detected() callback.
-If any of the devices connected to the bus does not implement
-dev->driver->err_handler->error_detected() do_recovery() will fail
-leaving all the bus hierarchy devices unrecovered.
+On Mon, Sep 04, 2017 at 08:33:22PM +0800, Zhou Wang wrote:
+> +to: Lorenzo
+> 
+> On 2017/8/31 22:21, Zhou Wang wrote:
+> > Hi Will and Alex,
+> > 
+> > pci_request_acs is called in drivers/iommu/arm-smmu-v3.c to set pci_acs_enable.
+> > 
+> > PCI subsystem tries to enable ACS as below:
+> > 
+> > 	pci_device_add
+> > 		--> pci_init_capabilities
+> > 			--> pci_enable_acs
+> > 
+> > in ACPI PCI driver. However, ACPI PCI driver will be called before SMMU v3 driver,
+> > which will lead pci_enable_acs to return directly as pci_acs_enable is not set
+> > before SMMU v3 driver loading.
+> > 
+> > I think this is a bug, what do you think about this problem?
 
-According to section "6.2.2.2.2. Non-Fatal Errors" of the PCIe specs
-<< Non-fatal errors are uncorrectable errors which cause a particular
-transaction to be unreliable but the Link is otherwise fully functional.
-Isolating Non-fatal from Fatal errors provides Requester/Receiver logic
-in a device or system management software the opportunity to recover
-from the error without resetting the components on the Link and
-disturbing other transactions in progress. Devices not associated with
-the transaction in error are not impacted by the error.>>
-therefore for non fatal errors the PCIe link should not be considered
-compromised and it makes sense to report the error only to all the
-functions that logged an error.
+I think that it is a bug that affects OF/ACPI alike. One way of solving
+it is requesting ACS at IORT init following appropriate checks (ie
+mappings PCI->IOMMU - that would not solve the OF path though). I can
+put together a quick fix, the overall problem needs some thinking
+though.
 
-This patch implements this new behaviour for non fatal errors.
-Also this patch fixes a bug (filed as in the link below)
+Lorenzo
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=197055
-Fixes: 6c2b374d7485 ("PCI-Express AER implemetation: AER core and aerdriver")
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
-Changes from v2:
-   - no functional changes
-   - Added reference in the commit log to the bugzilla ticket
-   - Added reference in the commit log the commit that this patch fixes
-   - Added reference in the commit log to the PCIe specs for Non-fatal
-     error handling rules
- 
-Changes from v1:
-   - now errors are reported only to the fucntions that logged the error
-     instead of all the functions in the same device.
-   - the patch subject has changed to match the new implementation
----
- drivers/pci/pcie/aer/aerdrv_core.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 890efcc..7448052 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -390,7 +390,14 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 		 * If the error is reported by an end point, we think this
- 		 * error is related to the upstream link of the end point.
- 		 */
--		pci_walk_bus(dev->bus, cb, &result_data);
-+		if (state == pci_channel_io_normal)
-+			/*
-+			 * the error is non fatal so the bus is ok, just invoke
-+			 * the callback for the function that logged the error.
-+			 */
-+			cb(dev, &result_data);
-+		else
-+			pci_walk_bus(dev->bus, cb, &result_data);
- 	}
- 
- 	return result_data.result;
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
