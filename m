@@ -1,59 +1,111 @@
-Return-Path: <SRS0=TwG3=AC=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=TwG3=AC=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59632 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752345AbdIES1Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Sep 2017 14:27:24 -0400
+Subject: [PATCH 4/4] PCI: xgene: Clean up whitespace
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Scott Branden <sbranden@broadcom.com>
+Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+Date: Tue, 05 Sep 2017 13:27:21 -0500
+Message-ID: <20170905182721.27030.75771.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170901072744.2409-1-dja@axtens.net>
-References: <20170901072744.2409-1-dja@axtens.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 1 Sep 2017 10:21:28 +0100
-Message-ID: <CAKv+Gu84njSF5uOvNtknGdOd5auU7zw9scFeTq5v-=OhExgOqA@mail.gmail.com>
-Subject: Re: [PATCH v3 0/3] Split default display handling out from VGA arbiter
-To: Daniel Axtens <dja@axtens.net>
-Cc: linux-pci <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Liuxinliang (Matthew Liu)" <z.liuxinliang@hisilicon.com>, Zou Rongrong <zourongrong@gmail.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	David Airlie <airlied@linux.ie>, "Vetter, Daniel" <daniel.vetter@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>, dri-devel <dri-devel@lists.freedesktop.org>,
-	Lukas Wunner <lukas@wunner.de>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 1 September 2017 at 08:27, Daniel Axtens <dja@axtens.net> wrote:
-> This patch set:
->
->  - splits the default display handling out from VGA arbiter, into its
->    own file and behind its own Kconfig option (and gives the functions
->    better names).
->
->  - adds extra detection of default devices. To be nominated, the vga
->    arbiter and platform hooks must not have nominated a default. A
->    card will then only be nominated if it has a driver attached and
->    has IO or memory decoding enabled.
->
->  - adds relevant documentation.
->
-> The practical impact of this is improved X autoconfiguration on some
-> arm64 systems.
->
-> Changes in v3:
->
->  - Add documentation - thanks Daniel Vetter for pointing it out.
->
->  - Clarify explanations. Thanks to everyone for continuing to bear
->    with my incomplete understanding of PCI and provide some clarity.
->
->  - Split refactoring and adding functionality.
->
-> Changes in v2: https://www.spinics.net/lists/linux-pci/msg64007.html
->
-> Drop all the powerpc patches. [explanation snipped]
->
-> v1: https://www.spinics.net/lists/linux-pci/msg63581.html
->
+Use tabs (not spaces) for indentation.  No functional change intended.
 
-If we are all in agreement that fixing X is not an option, I think
-this is a reasonable approach
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-xgene.c |   37 ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
-Acked-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index af47ebd70e22..431dad35a5a9 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -160,7 +160,7 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+ }
+ 
+ static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+-			      int offset)
++					int offset)
+ {
+ 	if ((pci_is_root_bus(bus) && devfn != 0) ||
+ 	    xgene_pcie_hide_rc_bars(bus, offset))
+@@ -265,12 +265,12 @@ static int xgene_v1_pcie_ecam_init(struct pci_config_window *cfg)
+ }
+ 
+ struct pci_ecam_ops xgene_v1_pcie_ecam_ops = {
+-	.bus_shift      = 16,
+-	.init           = xgene_v1_pcie_ecam_init,
+-	.pci_ops        = {
+-		.map_bus        = xgene_pcie_map_bus,
+-		.read           = xgene_pcie_config_read32,
+-		.write          = pci_generic_config_write,
++	.bus_shift	= 16,
++	.init		= xgene_v1_pcie_ecam_init,
++	.pci_ops	= {
++		.map_bus	= xgene_pcie_map_bus,
++		.read		= xgene_pcie_config_read32,
++		.write		= pci_generic_config_write,
+ 	}
+ };
+ 
+@@ -280,12 +280,12 @@ static int xgene_v2_pcie_ecam_init(struct pci_config_window *cfg)
+ }
+ 
+ struct pci_ecam_ops xgene_v2_pcie_ecam_ops = {
+-	.bus_shift      = 16,
+-	.init           = xgene_v2_pcie_ecam_init,
+-	.pci_ops        = {
+-		.map_bus        = xgene_pcie_map_bus,
+-		.read           = xgene_pcie_config_read32,
+-		.write          = pci_generic_config_write,
++	.bus_shift	= 16,
++	.init		= xgene_v2_pcie_ecam_init,
++	.pci_ops	= {
++		.map_bus	= xgene_pcie_map_bus,
++		.read		= xgene_pcie_config_read32,
++		.writei		= pci_generic_config_write,
+ 	}
+ };
+ #endif
+@@ -318,7 +318,7 @@ static u64 xgene_pcie_set_ib_mask(struct xgene_pcie_port *port, u32 addr,
+ }
+ 
+ static void xgene_pcie_linkup(struct xgene_pcie_port *port,
+-				   u32 *lanes, u32 *speed)
++			      u32 *lanes, u32 *speed)
+ {
+ 	u32 val32;
+ 
+@@ -593,8 +593,7 @@ static void xgene_pcie_clear_config(struct xgene_pcie_port *port)
+ 		xgene_pcie_writel(port, i, 0);
+ }
+ 
+-static int xgene_pcie_setup(struct xgene_pcie_port *port,
+-			    struct list_head *res,
++static int xgene_pcie_setup(struct xgene_pcie_port *port, struct list_head *res,
+ 			    resource_size_t io_base)
+ {
+ 	struct device *dev = port->dev;
+@@ -706,9 +705,9 @@ static const struct of_device_id xgene_pcie_match_table[] = {
+ 
+ static struct platform_driver xgene_pcie_driver = {
+ 	.driver = {
+-		   .name = "xgene-pcie",
+-		   .of_match_table = of_match_ptr(xgene_pcie_match_table),
+-		   .suppress_bind_attrs = true,
++		.name = "xgene-pcie",
++		.of_match_table = of_match_ptr(xgene_pcie_match_table),
++		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = xgene_pcie_probe_bridge,
+ };
