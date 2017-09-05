@@ -1,81 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:1817 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751646AbdITGpH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Sep 2017 02:45:07 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        "Manikanta Maddireddy" <mmaddireddy@nvidia.com>
-Subject: [PATCH 0/4] Add Tegra186 PCIe support
-Date: Wed, 20 Sep 2017 12:12:40 +0530
-Message-ID: <1505889764-19397-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] PCI: iproc: fix Stingray CRS defect handling
+Date: Tue,  5 Sep 2017 09:19:45 +0200
+Message-Id: <20170905072004.3959082-2-arnd@arndb.de>
+In-Reply-To: <20170905072004.3959082-1-arnd@arndb.de>
+References: <20170905072004.3959082-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra186 has three PCIe controllers which can be operated
-in 401, 211 or 111 lane configurations. Tegra TX2 platform
-has x4 and M.2 Key E PCIe slots, these patches enables
-x4 slot. BPMP programs UPHY lane0 ownership to USB,
-so M.2 Key E PCIe will not work.
+The condition that was used to detect the PCI_EXP_RTCAP
+flag access is wrong, as pointed out by gcc-8:
 
-Testing: x4 slot is verified with PCIe based USB3.1 card.
-PCIe link up, usb flash drive mounting and file copy are
-verified. Pasting PCIe link up logs below.
+drivers/pci/host/pcie-iproc.c: In function 'iproc_pcie_config_read':
+drivers/pci/host/pcie-iproc.c:531:22: error: bitwise comparison always evaluates to false [-Werror=tautological-compare]
+   if ((where & ~0x3) == PCI_EXP_CAP + PCI_EXP_RTCAP)
 
-[    1.452512] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
-[    1.452723] tegra-pcie 10003000.pcie: Failed to get supply 'dvdd-pex': -517
-[    1.561824] ehci-pci: EHCI PCI platform driver
-[    1.591587] ohci-pci: OHCI PCI platform driver
-[    3.072464] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
-[    3.078989] tegra-pcie 10003000.pcie: probing port 0, using 4 lanes
-[    3.087272] tegra-pcie 10003000.pcie: Slot present pin change, signature: 00000018
-[    3.128818] tegra-pcie 10003000.pcie: PCI host bridge to bus 0000:00
-[    3.135174] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-[    3.141352] pci_bus 0000:00: root bus resource [mem 0x50100000-0x57ffffff]
-[    3.148221] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7fffffff pref]
-[    3.155542] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    3.161173] pci 0000:00:01.0: [10de:10e5] type 01 class 0x060400
-[    3.161188] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
-[    3.170838] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
-[    3.180532] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x52 may corrupt adjacent RW1C bits
-[    3.190305] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3cold
-[    3.190312] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4c may corrupt adjacent RW1C bits
-[    3.200158] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-[    3.208158] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-[    3.217918] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-[    3.227649] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-[    3.237382] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x6 may corrupt adjacent RW1C bits
-[    3.247135] pci 0000:01:00.0: [1b21:1242] type 00 class 0x0c0330
-[    3.247157] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
-[    3.256807] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
-[    3.266477] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 64bit]
-[    3.266544] pci 0000:01:00.0: enabling Extended Tags
-[    3.271622] pci 0000:01:00.0: PME# supported from D3hot D3cold
-[    3.271775] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-[    3.271798] pci 0000:00:01.0: BAR 14: assigned [mem 0x50100000-0x501fffff]
-[    3.278671] pci 0000:01:00.0: BAR 0: assigned [mem 0x50100000-0x50107fff 64bit]
-[    3.285993] pci 0000:00:01.0: PCI bridge to [bus 01]
-[    3.290959] pci 0000:00:01.0:   bridge window [mem 0x50100000-0x501fffff]
-[    3.297763] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host bridge
-[    3.304784] pcieport 0000:00:01.0: enabling device (0000 -> 0002)
-[    3.311014] pcieport 0000:00:01.0: Signaling PME with IRQ 57
-[    3.316768] pci 0000:01:00.0: enabling device (0000 -> 0002)
+This adds the same bit mask to the other end as well, so the
+condition is evaluated correctly for any access.
 
-Manikanta Maddireddy (4):
-  dt-bindings: pci: tegra: Document Tegra186 PCIe DT
-  PCI: tegra: Add Tegra186 PCIe support
-  arm64: tegra: Add PCIe node for Tegra186
-  arm64: tegra: Enable PCIe on Jetson TX2
+Fixes: ac8d3e852f75 ("PCI: iproc: Work around Stingray CRS defects")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/host/pcie-iproc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- .../bindings/pci/nvidia,tegra20-pcie.txt           | 134 ++++++++++++++++++++-
- arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi     |  24 ++++
- arch/arm64/boot/dts/nvidia/tegra186.dtsi           |  82 +++++++++++++
- drivers/pci/host/pci-tegra.c                       | 123 +++++++++++++++----
- 4 files changed, 338 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index d7f4c29aed96..f2df9c2266b9 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -528,7 +528,7 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+ 			return ret;
+ 
+ 		/* Don't advertise CRS SV support */
+-		if ((where & ~0x3) == PCI_EXP_CAP + PCI_EXP_RTCAP)
++		if ((where & ~0x3) == ((PCI_EXP_CAP + PCI_EXP_RTCAP) & ~0x03))
+ 			*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
+ 		return PCIBIOS_SUCCESSFUL;
+ 	}
 -- 
-2.1.4
+2.9.0
