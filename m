@@ -1,112 +1,53 @@
-Return-Path: <SRS0=c55n=A3=ffwll.ch=daniel.vetter@kernel.org>
-Return-Path: <SRS0=c55n=A3=ffwll.ch=daniel.vetter@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59604 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752174AbdIES1Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Sep 2017 14:27:16 -0400
+Subject: [PATCH 3/4] PCI: xgene: Define XGENE_PCI_EXP_CAP and use generic
+ PCI_EXP_RTCTL offset
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Scott Branden <sbranden@broadcom.com>
+Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+Date: Tue, 05 Sep 2017 13:27:14 -0500
+Message-ID: <20170905182714.27030.75573.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: daniel.vetter@ffwll.ch
-In-Reply-To: <87d16oeeti.fsf@linkitivity.dja.id.au>
-References: <20170901072744.2409-1-dja@axtens.net> <87d16oeeti.fsf@linkitivity.dja.id.au>
-From: Daniel Vetter <daniel@ffwll.ch>
-Date: Tue, 26 Sep 2017 06:50:47 +0200
-Message-ID: <CAKMK7uFq=WEYoeBBvBgSeFq9PCsqzbGiq6KiC10b1KabcayDQA@mail.gmail.com>
-Subject: Re: [PATCH v3 0/3] Split default display handling out from VGA arbiter
-To: Daniel Axtens <dja@axtens.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, lorenzo.pieralisi@arm.com,
-	gabriele.paoloni@huawei.com, ard.biesheuvel@linaro.org,
-	Will Deacon <will.deacon@arm.com>, dri-devel <dri-devel@lists.freedesktop.org>,
-	Xinliang Liu <z.liuxinliang@hisilicon.com>, Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>,
-	Rongrong Zou <zourongrong@gmail.com>, Daniel Vetter <daniel.vetter@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 18, 2017 at 7:49 AM, Daniel Axtens <dja@axtens.net> wrote:
-> Hi all,
->
-> The merge window is well over by now - is there anything else I can do
-> to get this series to a mergeable state? I'm not particularly across the
-> rules for drm-misc, so please let me know if there are things I need to
-> be doing.
+Apparently the PCIe capability is at address 0x40 in config space of X-Gene
+v1 Root Ports.  Add a definition of that and use the generic PCI_EXP_RTCTL
+offset into the capability.  No functional change intended.
 
-drm-misc is always open for feature merging, but the patch series
-lacks full r-b by someone with clue on this stuff (i.e. probably not
-me). Pls find someone who can do the in-depth review. Just an Ack
-feels a bit thin.
--Daniel
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-xgene.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->
-> Regards,
-> Daniel
->
-> Daniel Axtens <dja@axtens.net> writes:
->
->> This patch set:
->>
->>  - splits the default display handling out from VGA arbiter, into its
->>    own file and behind its own Kconfig option (and gives the functions
->>    better names).
->>
->>  - adds extra detection of default devices. To be nominated, the vga
->>    arbiter and platform hooks must not have nominated a default. A
->>    card will then only be nominated if it has a driver attached and
->>    has IO or memory decoding enabled.
->>
->>  - adds relevant documentation.
->>
->> The practical impact of this is improved X autoconfiguration on some
->> arm64 systems.
->>
->> Changes in v3:
->>
->>  - Add documentation - thanks Daniel Vetter for pointing it out.
->>
->>  - Clarify explanations. Thanks to everyone for continuing to bear
->>    with my incomplete understanding of PCI and provide some clarity.
->>
->>  - Split refactoring and adding functionality.
->>
->> Changes in v2: https://www.spinics.net/lists/linux-pci/msg64007.html
->>
->> Drop all the powerpc patches. [explanation snipped]
->>
->> v1: https://www.spinics.net/lists/linux-pci/msg63581.html
->>
->> Regards,
->> Daniel
->>
->> Daniel Axtens (3):
->>   drm: split default display handler out of VGA arbiter
->>   drm: add fallback default device detection
->>   drm: documentation for default display device
->>
->>  Documentation/gpu/default_display.rst |  93 +++++++++++++++++++
->>  Documentation/gpu/index.rst           |   1 +
->>  arch/ia64/pci/fixup.c                 |   6 +-
->>  arch/powerpc/kernel/pci-common.c      |   6 +-
->>  arch/x86/pci/fixup.c                  |   6 +-
->>  arch/x86/video/fbdev.c                |   4 +-
->>  drivers/gpu/vga/Kconfig               |  12 +++
->>  drivers/gpu/vga/Makefile              |   1 +
->>  drivers/gpu/vga/default_display.c     | 163 ++++++++++++++++++++++++++++++++++
->>  drivers/gpu/vga/vga_switcheroo.c      |   8 +-
->>  drivers/gpu/vga/vgaarb.c              |  61 +++----------
->>  drivers/pci/pci-sysfs.c               |   4 +-
->>  include/linux/default_display.h       |  44 +++++++++
->>  include/linux/vgaarb.h                |  15 ----
->>  14 files changed, 344 insertions(+), 80 deletions(-)
->>  create mode 100644 Documentation/gpu/default_display.rst
->>  create mode 100644 drivers/gpu/vga/default_display.c
->>  create mode 100644 include/linux/default_display.h
->>
->> --
->> 2.11.0
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
-
-
-
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index bd897479a215..af47ebd70e22 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -61,7 +61,7 @@
+ #define SZ_1T				(SZ_1G*1024ULL)
+ #define PIPE_PHY_RATE_RD(src)		((0xc000 & (u32)(src)) >> 0xe)
+ 
+-#define ROOT_CAP_AND_CTRL		0x5C
++#define XGENE_V1_PCI_EXP_CAP		0x40
+ 
+ /* PCIe IP version */
+ #define XGENE_PCIE_IP_VER_UNKN		0
+@@ -189,7 +189,7 @@ static int xgene_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 	 * Avoid this by not claiming to support CRS.
+ 	 */
+ 	if (pci_is_root_bus(bus) && (port->version == XGENE_PCIE_IP_VER_1) &&
+-	    ((where & ~0x3) == ROOT_CAP_AND_CTRL))
++	    ((where & ~0x3) == XGENE_V1_PCI_EXP_CAP + PCI_EXP_RTCTL))
+ 		*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
+ 
+ 	if (size <= 2)
