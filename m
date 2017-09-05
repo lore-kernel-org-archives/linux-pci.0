@@ -1,129 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37970 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:59552 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751361AbdITS6K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Sep 2017 14:58:10 -0400
-Date: Wed, 20 Sep 2017 13:58:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: John Keeping <john@metanate.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: Re: [PATCH] PCI: endpoint: use correct "end of test" interrupt
-Message-ID: <20170920185807.GI22312@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170906135524.12548-1-john@metanate.com>
- <20170919192546.GC22312@bhelgaas-glaptop.roam.corp.google.com>
- <4ee1e759-ab9b-fd84-3e1f-2ceff782a6fc@axis.com>
+        id S1752108AbdIES1C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Sep 2017 14:27:02 -0400
+Subject: [PATCH 1/4] PCI: iproc: Rename PCI_EXP_CAP to IPROC_PCI_EXP_CAP
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Scott Branden <sbranden@broadcom.com>
+Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+Date: Tue, 05 Sep 2017 13:27:00 -0500
+Message-ID: <20170905182700.27030.79516.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4ee1e759-ab9b-fd84-3e1f-2ceff782a6fc@axis.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 20, 2017 at 04:21:44PM +0200, Niklas Cassel wrote:
-> On 09/19/2017 09:25 PM, Bjorn Helgaas wrote:
-> > On Wed, Sep 06, 2017 at 02:55:24PM +0100, John Keeping wrote:
-> >> pci_epf_test_raise_irq() reads the interrupt to use for the response
-> >> from reg->command, but this has been cleared at the beginning of the
-> >> command handler so the value is always zero at this point.
-> >>
-> >> Instead, extract the interrupt index before handling the command and
-> >> then pass the requested interrupt into pci_epf_test_raise_irq().  This
-> >> allows us to remove the specific code to extract the interrupt for
-> >> COMMAND_RAISE_MSI_IRQ since it is now handled in common code.
-> >>
-> >> Signed-off-by: John Keeping <john@metanate.com>
-> > 
-> > Applied with Kishon's ack to pci/endpoint for v4.15, thanks!
-> 
-> Hello PCI hackers!
-> 
-> I actually think that this patch should be applied to v4.14,
-> since it actually fixes a regression introduced by commit
-> 3ecf3232c54c ("PCI: endpoint: Do not reset *command* inadvertently")
-> which is included in v4.14-rc1.
-> 
-> It would have been nice if this patch actually had a fixes-tag.
+PCI_EXP_CAP is an iProc-specific value, so rename it to IPROC_PCI_EXP_CAP
+to make it obvious that it's not related to the generic values like
+PCI_EXP_RTCTL, etc.  No functional change intended.
 
-Agreed.  I added it and moved the patch to for-linus for v4.14.
-Thanks a lot, Niklas!
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-iproc.c |   19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-> (I cannot do any read/write/copy tests if I include 3ecf3232c54c,
-> but if I include 3ecf3232c54c + this patch, all tests work again.)
-> 
-> Regards,
-> Niklas
-> 
-> > 
-> >> ---
-> >>  drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++-------
-> >>  1 file changed, 6 insertions(+), 7 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> >> index 4ddc6e8f9fe7..f9308c2f22e6 100644
-> >> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> >> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> >> @@ -251,9 +251,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
-> >>  	return ret;
-> >>  }
-> >>  
-> >> -static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
-> >> +static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
-> >>  {
-> >> -	u8 irq;
-> >>  	u8 msi_count;
-> >>  	struct pci_epf *epf = epf_test->epf;
-> >>  	struct pci_epc *epc = epf->epc;
-> >> @@ -262,7 +261,6 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
-> >>  
-> >>  	reg->status |= STATUS_IRQ_RAISED;
-> >>  	msi_count = pci_epc_get_msi(epc);
-> >> -	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-> >>  	if (irq > msi_count || msi_count <= 0)
-> >>  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-> >>  	else
-> >> @@ -289,6 +287,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
-> >>  	reg->command = 0;
-> >>  	reg->status = 0;
-> >>  
-> >> +	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-> >> +
-> >>  	if (command & COMMAND_RAISE_LEGACY_IRQ) {
-> >>  		reg->status = STATUS_IRQ_RAISED;
-> >>  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-> >> @@ -301,7 +301,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
-> >>  			reg->status |= STATUS_WRITE_FAIL;
-> >>  		else
-> >>  			reg->status |= STATUS_WRITE_SUCCESS;
-> >> -		pci_epf_test_raise_irq(epf_test);
-> >> +		pci_epf_test_raise_irq(epf_test, irq);
-> >>  		goto reset_handler;
-> >>  	}
-> >>  
-> >> @@ -311,7 +311,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
-> >>  			reg->status |= STATUS_READ_SUCCESS;
-> >>  		else
-> >>  			reg->status |= STATUS_READ_FAIL;
-> >> -		pci_epf_test_raise_irq(epf_test);
-> >> +		pci_epf_test_raise_irq(epf_test, irq);
-> >>  		goto reset_handler;
-> >>  	}
-> >>  
-> >> @@ -321,13 +321,12 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
-> >>  			reg->status |= STATUS_COPY_SUCCESS;
-> >>  		else
-> >>  			reg->status |= STATUS_COPY_FAIL;
-> >> -		pci_epf_test_raise_irq(epf_test);
-> >> +		pci_epf_test_raise_irq(epf_test, irq);
-> >>  		goto reset_handler;
-> >>  	}
-> >>  
-> >>  	if (command & COMMAND_RAISE_MSI_IRQ) {
-> >>  		msi_count = pci_epc_get_msi(epc);
-> >> -		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-> >>  		if (irq > msi_count || msi_count <= 0)
-> >>  			goto reset_handler;
-> >>  		reg->status = STATUS_IRQ_RAISED;
-> >> -- 
-> >> 2.14.1
-> >>
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index fe2e5aaaff55..4e83a9ffa5e2 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -93,7 +93,7 @@
+ #define IMAP_VALID_SHIFT             0
+ #define IMAP_VALID                   BIT(IMAP_VALID_SHIFT)
+ 
+-#define PCI_EXP_CAP			0xac
++#define IPROC_PCI_EXP_CAP		0xac
+ 
+ #define IPROC_PCIE_REG_INVALID 0xffff
+ 
+@@ -528,7 +528,7 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+ 			return ret;
+ 
+ 		/* Don't advertise CRS SV support */
+-		if ((where & ~0x3) == PCI_EXP_CAP + PCI_EXP_RTCTL)
++		if ((where & ~0x3) == IPROC_PCI_EXP_CAP + PCI_EXP_RTCTL)
+ 			*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
+ 		return PCIBIOS_SUCCESSFUL;
+ 	}
+@@ -710,7 +710,6 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	u32 hdr_type, link_ctrl, link_status, class, val;
+-	u16 pos = PCI_EXP_CAP;
+ 	bool link_is_active = false;
+ 
+ 	/*
+@@ -745,7 +744,7 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie)
+ 				     4, class);
+ 
+ 	/* check link status to see if link is active */
+-	iproc_pci_raw_config_read32(pcie, 0, pos + PCI_EXP_LNKSTA,
++	iproc_pci_raw_config_read32(pcie, 0, IPROC_PCI_EXP_CAP + PCI_EXP_LNKSTA,
+ 				    2, &link_status);
+ 	if (link_status & PCI_EXP_LNKSTA_NLW)
+ 		link_is_active = true;
+@@ -756,20 +755,20 @@ static int iproc_pcie_check_link(struct iproc_pcie *pcie)
+ #define PCI_TARGET_LINK_SPEED_GEN2    0x2
+ #define PCI_TARGET_LINK_SPEED_GEN1    0x1
+ 		iproc_pci_raw_config_read32(pcie, 0,
+-					  pos + PCI_EXP_LNKCTL2, 4,
+-					  &link_ctrl);
++					    IPROC_PCI_EXP_CAP + PCI_EXP_LNKCTL2,
++					    4, &link_ctrl);
+ 		if ((link_ctrl & PCI_TARGET_LINK_SPEED_MASK) ==
+ 		    PCI_TARGET_LINK_SPEED_GEN2) {
+ 			link_ctrl &= ~PCI_TARGET_LINK_SPEED_MASK;
+ 			link_ctrl |= PCI_TARGET_LINK_SPEED_GEN1;
+ 			iproc_pci_raw_config_write32(pcie, 0,
+-						pos + PCI_EXP_LNKCTL2,
+-						4, link_ctrl);
++					IPROC_PCI_EXP_CAP + PCI_EXP_LNKCTL2,
++					4, link_ctrl);
+ 			msleep(100);
+ 
+ 			iproc_pci_raw_config_read32(pcie, 0,
+-						pos + PCI_EXP_LNKSTA,
+-						2, &link_status);
++					IPROC_PCI_EXP_CAP + PCI_EXP_LNKSTA,
++					2, &link_status);
+ 			if (link_status & PCI_EXP_LNKSTA_NLW)
+ 				link_is_active = true;
+ 		}
