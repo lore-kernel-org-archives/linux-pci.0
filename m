@@ -1,86 +1,270 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:56586 "EHLO
-        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751419AbdINRW3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2017 13:22:29 -0400
-Received: by mail-io0-f174.google.com with SMTP id m103so2216727iod.13
-        for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2017 10:22:28 -0700 (PDT)
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        srinath.mannam@broadcom.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
- <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
- <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
-Date: Thu, 14 Sep 2017 11:22:21 -0600
+Return-Path: <SRS0=hrCt=AH=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=hrCt=AH=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Linuxarm <linuxarm@huawei.com>,
+        "liudongdong (C)"
+	<liudongdong3@huawei.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2] PCIe AER: report uncorrectable errors only to the
+ functions that logged the errors
+Date: Wed, 6 Sep 2017 10:56:42 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40BFC5BD@FRAEML521-MBX.china.huawei.com>
+References: <1503054141-80272-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20170831200344.GF18250@bhelgaas-glaptop.roam.corp.google.com>
+ <20170901044326.GG18250@bhelgaas-glaptop.roam.corp.google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40BEC81F@FRAEML521-MBX.china.huawei.com>
+ <20170902173309.GH18250@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170902173309.GH18250@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
-> [+cc linux-pci]
-> 
-> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
->> On 09/12/2017 02:04 PM, Johannes Berg wrote:
->>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
->>>
->>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
->>>> pci_is_enabled() check, since the rest of the patch shouldn't have
->>>> functional changes.
->>>
->>> and pci_enable_bridge() already checks if it's already enabled, but
->>> still enables mastering in that case if it isn't:
->>>
->>> static void pci_enable_bridge(struct pci_dev *dev)
->>> {
->>> [...]
->>>         if (pci_is_enabled(dev)) {
->>>                 if (!dev->is_busmaster)
->>>                         pci_set_master(dev);
->>>                 return;
->>>         }
->>>
->>> so I guess due to the new check we end up with mastering disabled, and
->>> thus the firmware can't load since that's a DMA thing?
->>
->> Bjorn/Srinath, any input here? This is a regression that prevents wifi
->> from working on a pretty standard laptop. It'd suck to have this be in
->> -rc1. Seems like the trivial fix would be:
->>
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index b0002daa50f3..ffbe11dbdd61 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->>                 return 0;               /* already enabled */
->>
->>         bridge = pci_upstream_bridge(dev);
->> -       if (bridge && !pci_is_enabled(bridge))
->> +       if (bridge)
->>                 pci_enable_bridge(bridge);
->>
->>         /* only skip sriov related */
->>
->>
-> 
-> Looks like a reasonable fix.  I assume it works for you?  I don't have
-> a way to test it, so if you can verify that it works and supply a
-> Signed-off-by, I can merge it.
+Hi Bjorn
 
-Booting it right now, I'll send out a proper version in a few minutes.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 02 September 2017 18:33
+> To: Gabriele Paoloni
+> Cc: Linuxarm; liudongdong (C); linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: Re: [PATCH v2] PCIe AER: report uncorrectable errors only to
+> the functions that logged the errors
+>=20
+> On Fri, Sep 01, 2017 at 11:39:35AM +0000, Gabriele Paoloni wrote:
+> > Hi Bjorn
+> >
+> > Many thanks for looking at this
+> >
+> > > -----Original Message-----
+> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > > Sent: 01 September 2017 05:43
+> > > To: Gabriele Paoloni
+> > > Cc: Linuxarm; liudongdong (C); linux-pci@vger.kernel.org; linux-
+> > > kernel@vger.kernel.org
+> > > Subject: Re: [PATCH v2] PCIe AER: report uncorrectable errors only
+> to
+> > > the functions that logged the errors
+> > >
+> > > On Thu, Aug 31, 2017 at 03:03:44PM -0500, Bjorn Helgaas wrote:
+> > > > On Fri, Aug 18, 2017 at 12:02:21PM +0100, Gabriele Paoloni wrote:
+> > > > > Currently if an uncorrectable error is reported by an EP the
+> AER
+> > > > > driver walks over all the devices connected to the upstream
+> port
+> > > > > bus and in turns call the report_error_detected() callback.
+> > > > > If any of the devices connected to the bus does not implement
+> > > > > dev->driver->err_handler->error_detected() do_recovery() will
+> fail
+> > > > > leaving all the bus hierarchy devices unrecovered.
+> > > > >
+> > > > > However for non fatal errors the PCIe link should not be
+> considered
+> > > > > compromised, therefore it makes sense to report the error only
+> to
+> > > > > all the functions that logged an error.
+> > > >
+> > > > Can you include a pointer to the relevant part of the spec here?
+> >
+> > Sure
+> > According to section "6.2.2.2.2. Non-Fatal Errors"
+> > << Non-fatal errors are uncorrectable errors which cause a particular
+> > transaction to be unreliable but the Link is otherwise fully
+> functional.
+> > Isolating Non-fatal from Fatal errors provides Requester/Receiver
+> logic
+> > in a device or system management software the opportunity to recover
+> > from the error without resetting the components on the Link and
+> > disturbing other transactions in progress. Devices not associated
+> with
+> > the transaction in error are not impacted by the error.>>
+> >
+> > I will add it to the commit msg:
+> >
+> > >
+> > > Also, I forgot to ask: can you outline the problem this fixes?  I'm
+> > > curious about why this hasn't been an issue in the past.  My guess
+> is
+> > > there's something new about your configuration, and the config and
+> the
+> > > symptoms might help connect this fix to similar problems.
+> >
+> > I already replied about this in the previous patch...
+> > << In Hi1620 we have some integrated controllers that appear as PCIe
+> EPs
+> > under the same bus. Some of these controllers (e.g. the SATA
+> > controller) are missing the err_handler callbacks.
+> >
+> > If one device reports a non-fatal uncorrectable error with the
+> current
+> > AER core code the callbacks for all the devices under the same bus
+> will
+> > be called and, if any of the devices is missing the callback all the
+> > devices in the subtree are left in error state without recovery...
+> > This patch is needed to sort out a situation like this one.>>
+> >
+> > Should I add this to the commit msg?
+>=20
+> Thanks for the reminder.  I thought I remembered some details but
+> hadn't dug them out again.  Yes, I was hoping for something we could
+> include in the commit message.  I'm still not sure what specifically
+> is *new* about this situation.  Maybe the particular mix of functions
+> in a multi-function device?  Maybe the fact that you're seeing more
+> AER errors than before (or maybe just doing more testing?)
 
--- 
-Jens Axboe
+Hi Bjorn as I said here we have some integrated controllers that appear
+as PCIe EPs under the same bus. Usually PCIe is p2p (no more that 1
+device per bus), but in our SoC we have different devices under the same
+bus (not MF devices):
+
+RC---bus0---|-SAS ctrl
+            |
+            |-SATA ctrl
+            |
+            |-XGE ctrl
+
+Since this is unusual this is maybe the reason why this has not been
+seen yet elsewhere...
+
+>=20
+> Since this is actually a bug fix, this might be a good opportunity to
+> open a bugzilla for it.  Then we have a place to attach the complete
+> "lspci -vv" output, dmesg, etc., that are of interest but too much for
+> the commit message.
+
+Sure we can do this and add the bugzilla link in the commit msg=20
+
+>=20
+> > > > > This patch implements this new behaviour for non fatal errors.
+> > > > >
+> > > > > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > > > > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> > > > > ---
+> > > > > Changes from v1:
+> > > > >    - now errors are reported only to the fucntions that logged
+> the
+> > > error
+> > > > >      instead of all the functions in the same device.
+> > > > >    - the patch subject has changed to match the new
+> implementation
+> > > > > ---
+> > > > >  drivers/pci/pcie/aer/aerdrv_core.c | 9 ++++++++-
+> > > > >  1 file changed, 8 insertions(+), 1 deletion(-)
+> > > > >
+> > > > > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c
+> > > b/drivers/pci/pcie/aer/aerdrv_core.c
+> > > > > index b1303b3..057465ad 100644
+> > > > > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > > > > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > > > > @@ -390,7 +390,14 @@ static pci_ers_result_t
+> > > broadcast_error_message(struct pci_dev *dev,
+> > > > >  		 * If the error is reported by an end point, we think
+> this
+> > > > >  		 * error is related to the upstream link of the end
+> point.
+> > > > >  		 */
+> > > > > -		pci_walk_bus(dev->bus, cb, &result_data);
+> > > > > +		if (state =3D=3D pci_channel_io_normal)
+> > > > > +			/*
+> > > > > +			 * the error is non fatal so the bus is ok,
+> just
+> > > invoke
+> > > > > +			 * the callback for the function that logged
+> the
+> > > error.
+> > > > > +			 */
+> > > > > +			cb(dev, &result_data);
+> > > > > +		else
+> > > > > +			pci_walk_bus(dev->bus, cb, &result_data);
+> > > >
+> > > > I think the concept of this change makes sense, but I don't like
+> the
+> > > > implicit connection of PCI_ERR_ROOT_UNCOR_RCV -> AER_NONFATAL ->
+> > > > pci_channel_io_normal.  That makes it harder than it should be to
+> > > read
+> > > > the code.
+> > > >
+> > > > What would you think of changing the signature of do_recovery()
+> and
+> > > > broadcast_error_message() so they take the struct aer_err_info
+> > > pointer
+> > > > instead of just the severity and pci_channel_state?  Then we
+> could
+> > > > check directly for AER_NONFATAL here.
+> >
+> > I think the main issue of this approach is
+> > aer_recover_work_func()->do_recovery()
+> > If we modify the signature of do_recovery() we also need to modify
+> > struct aer_recover_entry to embed aer_err_info sub struct (and anyway
+> > so far there is no hook to aer_err_info in ghes.c...so it seems to
+> > me like unfeasible...)
+> >
+> > I think we can either add a severity field to
+> broadcast_error_message()
+> > or move
+> >
+> > 	enum pci_channel_state state;
+> >
+> > 	if (severity =3D=3D AER_FATAL)
+> > 		state =3D pci_channel_io_frozen;
+> > 	else
+> > 		state =3D pci_channel_io_normal;
+> >
+> > inside broadcast_error_message()
+> >
+> > In both cases we make the code more readable but we add redundancy...
+> > Thoughts?
+>=20
+> Hmmm, it's not as simple to solve as I hoped.
+>=20
+> The "native" Linux AER driver reads registers directly from the AER
+> capability, produces logs, and does some recovery.
+>=20
+> From 100 miles away, APEI is basically a way for the platform (i.e.,
+> firmware or manageability software) to insert itself in the middle:
+> *it* reads the AER registers, does whatever it wants to do (e.g.,
+> OS-independent logging), and then passes a copy of the AER capability
+> (and the PCIe capability for good measure) on to the OS via APEI.
+>=20
+> The Linux APEI code then stuffs that AER info into the native Linux
+> AER path where we do our own recovery.
+>=20
+> So we basically have two entry points to the Linux AER code: (1) the
+> get_device_error_info() path that reads the AER registers directly,
+> and (2) the APEI path that gets the AER register info from the
+> firmware.
+>=20
+> In my mind, these paths ought to be far more unified than they are.
+> The transition from APEI to the native Linux AER code throws away
+> almost all the information we got from the platform:
+> aer_recover_work_func() in the APEI path gets a copy of the AER
+> capability, but all it passes to do_recovery() in the native AER code
+> is "severity" -- a single int.
+>=20
+> I think we should revamp the native AER code so it collects the AER
+> register info a little higher up, maybe in aer_isr_one_error() (it's
+> kind of stupid that aer_process_err_devices() currently reads the AER
+> registers *twice*).
+>=20
+> Then we could make the APEI code copy the information we care about
+> from the CPER into a struct aer_err_info, then stuff it into
+> aer_process_err_devices().  That would have the nice side-effect of
+> using exactly the same logging code for both paths (currently the APEI
+> path uses cper_print_aer(), while the native path uses
+> aer_print_error()).
+>=20
+> This is a lot of work.
+
+I agree (on what to do and, unfortunately, on a lot of work :) ).
+However given that this patch fixes a bug I would ask if we can first
+accept this patch first and then proceed with the rework...what do
+you think?
+
+Thanks
+Gab
+
+>=20
+> Bjorn
