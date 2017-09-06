@@ -1,49 +1,54 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 29 Sep 2017 14:08:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nicolai Stange <nstange@suse.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: [GIT PULL] PCI fixes for v4.14
-Message-ID: <20170929190853.GA31210@bhelgaas-glaptop.roam.corp.google.com>
+From: Keerthy <j-keerthy@ti.com>
+To: <kishon@ti.com>, <bhelgaas@google.com>
+CC: <t-kristo@ti.com>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <j-keerthy@ti.com>
+Subject: [PATCH] pci: dwc: dra7xx: Add shutdown handler to cleanly turn off clocks
+Date: Wed, 6 Sep 2017 16:09:11 +0530
+Message-ID: <1504694351-32358-1-git-send-email-j-keerthy@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
+Add shutdown handler to cleanly turn off clocks.
 
-  - fix CONFIG_PCI=n build error (introduced in v4.14-rc1) (Geert
-    Uytterhoeven)
+Signed-off-by: Keerthy <j-keerthy@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-  - fix a race in sysfs driver_override store/show (Nicolai Stange)
-
-
-The following changes since commit 749aaf3372b8b56b8743c3e27700d64c8bd06921:
-
-  PCI: endpoint: Use correct "end of test" interrupt (2017-09-20 13:56:06 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.14-fixes-3
-
-for you to fetch changes up to 9561475db680f7144d2223a409dd3d7e322aca03:
-
-  PCI: Fix race condition with driver_override (2017-09-25 18:34:54 -0500)
-
-----------------------------------------------------------------
-pci-v4.14-fixes-3
-
-----------------------------------------------------------------
-Geert Uytterhoeven (1):
-      PCI: Add dummy pci_acs_enabled() for CONFIG_PCI=n build
-
-Nicolai Stange (1):
-      PCI: Fix race condition with driver_override
-
- drivers/pci/pci-sysfs.c | 11 +++++++++--
- include/linux/pci.h     |  2 ++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index d4e98f3..66d1cfe 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -874,6 +874,19 @@ static int dra7xx_pcie_suspend_noirq(struct device *dev)
+ 	return 0;
+ }
+ 
++void dra7xx_pcie_shutdown(struct platform_device *pdev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(&pdev->dev);
++	int ret;
++
++	ret = pm_runtime_put_sync(&pdev->dev);
++	if (ret < 0)
++		dev_dbg(&pdev->dev, "pm_runtime_put_sync failed\n");
++
++	pm_runtime_disable(&pdev->dev);
++	dra7xx_pcie_disable_phy(dra7xx);
++}
++
+ static int dra7xx_pcie_resume_noirq(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+@@ -902,5 +915,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+ 		.suppress_bind_attrs = true,
+ 		.pm	= &dra7xx_pcie_pm_ops,
+ 	},
++	.shutdown = dra7xx_pcie_shutdown,
+ };
+ builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
+-- 
+1.9.1
