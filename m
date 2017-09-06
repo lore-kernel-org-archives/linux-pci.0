@@ -1,64 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56468 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1030457AbdIZOR1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Sep 2017 10:17:27 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 6/7] PCI: pciehp: Do not clear Presence Detect Changed during initialization
-Date: Tue, 26 Sep 2017 17:17:19 +0300
-Message-Id: <20170926141720.25067-7-mika.westerberg@linux.intel.com>
-In-Reply-To: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
-References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:40224 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932239AbdIFN4U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Sep 2017 09:56:20 -0400
+From: Keerthy <j-keerthy@ti.com>
+To: <kishon@ti.com>, <bhelgaas@google.com>
+CC: <t-kristo@ti.com>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <j-keerthy@ti.com>
+Subject: [PATCH v2] pci: dwc: dra7xx: Add shutdown handler to cleanly turn off clocks
+Date: Wed, 6 Sep 2017 19:26:06 +0530
+Message-ID: <1504706166-2854-1-git-send-email-j-keerthy@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible that the hotplug event has already happened before the
-driver is attached to a PCIe hotplug downstream port. If we just clear
-the status we never get the hotplug interrupt and thus the event will be
-missed.
+Add shutdown handler to cleanly turn off clocks.
 
-To make sure that does not happen, we leave Presence Detect Changed bit
-untouched during initialization. Then once the event is unmasked we get
-an interrupt and handle the hotplug event properly.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Keerthy <j-keerthy@ti.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 83c93f9da65a..bc1622aa7a05 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -862,11 +862,16 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
- 		ctrl->link_active_reporting = 1;
+Changes in v2:
+
+  * used a local dev pointer instead of dereferencing dev at multiple places.
+  * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
+
+ drivers/pci/dwc/pci-dra7xx.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 0f9adf2..0d8307a 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -779,6 +779,22 @@ static int dra7xx_pcie_suspend_noirq(struct device *dev)
+ 	return 0;
+ }
  
--	/* Clear all remaining event bits in Slot Status register */
-+	/*
-+	 * Clear all remaining event bits in Slot Status register except
-+	 * Presence Detect Changed. We want to make sure possible
-+	 * hotplug event is triggered when the interrupt is unmasked so
-+	 * that we don't lose that event.
-+	 */
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
- 		PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
--		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
--		PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
-+		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
-+		PCI_EXP_SLTSTA_DLLSC);
- 
- 	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c\n",
- 		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
++void dra7xx_pcie_shutdown(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	int ret;
++
++	dra7xx_pcie_stop_link(dra7xx->pci);
++
++	ret = pm_runtime_put_sync(dev);
++	if (ret < 0)
++		dev_dbg(dev, "pm_runtime_put_sync failed\n");
++
++	pm_runtime_disable(dev);
++	dra7xx_pcie_disable_phy(dra7xx);
++}
++
+ static int dra7xx_pcie_resume_noirq(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+@@ -807,5 +823,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+ 		.suppress_bind_attrs = true,
+ 		.pm	= &dra7xx_pcie_pm_ops,
+ 	},
++	.shutdown = dra7xx_pcie_shutdown,
+ };
+ builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
 -- 
-2.14.1
+1.9.1
