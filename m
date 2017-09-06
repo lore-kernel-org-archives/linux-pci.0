@@ -1,45 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 29 Sep 2017 11:23:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Govindarajulu Varadarajan <gvaradar@cisco.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, benve@cisco.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
-        mingo@redhat.com
-Subject: Re: [PATCH 4/4] lockdep: make MAX_LOCK_DEPTH configurable from
- Kconfig
-Message-ID: <20170929162332.GA15567@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170927214220.41216-1-gvaradar@cisco.com>
- <20170927214220.41216-5-gvaradar@cisco.com>
- <20170928092600.qvehxzikcjr65hvw@hirez.programming.kicks-ass.net>
- <alpine.LNX.2.20.1709281646360.24635@cae-iprp-alln-lb.cisco.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.20.1709281646360.24635@cae-iprp-alln-lb.cisco.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from dougal.metanate.com ([90.155.101.14]:58265 "EHLO metanate.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932280AbdIFOSA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Sep 2017 10:18:00 -0400
+From: John Keeping <john@metanate.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        John Keeping <john@metanate.com>
+Subject: [PATCH] PCI: endpoint: use correct "end of test" interrupt
+Date: Wed,  6 Sep 2017 14:55:24 +0100
+Message-Id: <20170906135524.12548-1-john@metanate.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 28, 2017 at 04:51:46PM -0700, Govindarajulu Varadarajan wrote:
-> On Thu, 28 Sep 2017, Peter Zijlstra wrote:
-> 
-> >On Wed, Sep 27, 2017 at 02:42:20PM -0700, Govindarajulu Varadarajan wrote:
-> >>Make MAX_LOCK_DEPTH configurable. It is set to 48 right now. Number of
-> >>VFs under a PCI pf bus can exceed 48 and this disables lockdep.
-> >>
-> >>lockdep currently allows max of 63 held_locks.
-> >
-> >But why a config knob? Why not just raise the number to 64
-> >unconditionally? And is that sufficient; you only state 48 is
-> >insufficient, you don't actually state the VF limit.
-> >
-> 
-> I did not want to change the default configuration for everyone.
-> 
-> I will change it 63 unconditionally in v2 and resubmit the series.
+pci_epf_test_raise_irq() reads the interrupt to use for the response
+from reg->command, but this has been cleared at the beginning of the
+command handler so the value is always zero at this point.
 
-I'm not happy about having to increase MAX_LOCK_DEPTH based on a
-number of VFs.  I haven't had time to look at the locking strategy
-you're proposing, but it just doesn't feel right to have to take 50+
-locks for one operation.
+Instead, extract the interrupt index before handling the command and
+then pass the requested interrupt into pci_epf_test_raise_irq().  This
+allows us to remove the specific code to extract the interrupt for
+COMMAND_RAISE_MSI_IRQ since it is now handled in common code.
 
-Bjorn
+Signed-off-by: John Keeping <john@metanate.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 4ddc6e8f9fe7..f9308c2f22e6 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -251,9 +251,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+ 	return ret;
+ }
+ 
+-static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
++static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
+ {
+-	u8 irq;
+ 	u8 msi_count;
+ 	struct pci_epf *epf = epf_test->epf;
+ 	struct pci_epc *epc = epf->epc;
+@@ -262,7 +261,6 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
+ 
+ 	reg->status |= STATUS_IRQ_RAISED;
+ 	msi_count = pci_epc_get_msi(epc);
+-	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+ 	if (irq > msi_count || msi_count <= 0)
+ 		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
+ 	else
+@@ -289,6 +287,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 	reg->command = 0;
+ 	reg->status = 0;
+ 
++	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
++
+ 	if (command & COMMAND_RAISE_LEGACY_IRQ) {
+ 		reg->status = STATUS_IRQ_RAISED;
+ 		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
+@@ -301,7 +301,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_WRITE_FAIL;
+ 		else
+ 			reg->status |= STATUS_WRITE_SUCCESS;
+-		pci_epf_test_raise_irq(epf_test);
++		pci_epf_test_raise_irq(epf_test, irq);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -311,7 +311,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_READ_SUCCESS;
+ 		else
+ 			reg->status |= STATUS_READ_FAIL;
+-		pci_epf_test_raise_irq(epf_test);
++		pci_epf_test_raise_irq(epf_test, irq);
+ 		goto reset_handler;
+ 	}
+ 
+@@ -321,13 +321,12 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 			reg->status |= STATUS_COPY_SUCCESS;
+ 		else
+ 			reg->status |= STATUS_COPY_FAIL;
+-		pci_epf_test_raise_irq(epf_test);
++		pci_epf_test_raise_irq(epf_test, irq);
+ 		goto reset_handler;
+ 	}
+ 
+ 	if (command & COMMAND_RAISE_MSI_IRQ) {
+ 		msi_count = pci_epc_get_msi(epc);
+-		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+ 		if (irq > msi_count || msi_count <= 0)
+ 			goto reset_handler;
+ 		reg->status = STATUS_IRQ_RAISED;
+-- 
+2.14.1
