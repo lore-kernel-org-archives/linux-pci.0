@@ -1,186 +1,139 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 29 Sep 2017 15:19:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH] PCI: Fix legacy IRQ assignment execution stage
-Message-ID: <20170929201946.GC31210@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506598627-8985-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20170928223719.GY15970@bhelgaas-glaptop.roam.corp.google.com>
- <20170929160226.GA17398@red-moon> <20170929171958.GA18114@red-moon>
-MIME-Version: 1.0
-In-Reply-To: <20170929171958.GA18114@red-moon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-ide@vger.kernel.org, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- linux-arm-kernel@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
- Matt Turner <mattst88@gmail.com>, "David S. Miller" <davem@davemloft.net>,
- Guenter Roeck <linux@roeck-us.net>, Richard Henderson <rth@twiddle.net>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:33026 "EHLO
+        mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755149AbdIGLok (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2017 07:44:40 -0400
+Received: by mail-lf0-f42.google.com with SMTP id c80so1853788lfh.0
+        for <linux-pci@vger.kernel.org>; Thu, 07 Sep 2017 04:44:39 -0700 (PDT)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>
+Cc: linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH 1/2 v3] PCI: v3: Update the device tree bindings
+Date: Thu,  7 Sep 2017 13:44:30 +0200
+Message-Id: <20170907114431.4748-1-linus.walleij@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 29, 2017 at 06:19:58PM +0100, Lorenzo Pieralisi wrote:
-> On Fri, Sep 29, 2017 at 05:02:26PM +0100, Lorenzo Pieralisi wrote:
-> > On Thu, Sep 28, 2017 at 05:37:19PM -0500, Bjorn Helgaas wrote:
-> > > On Thu, Sep 28, 2017 at 12:37:07PM +0100, Lorenzo Pieralisi wrote:
-> > > > Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
-> > > > possible to define IRQ mapping functions on a per PCI host bridge basis.
-> > > > 
-> > > > Actual IRQ allocation is carried out by the pci_assign_irq() function in
-> > > > pci_device_probe() - to make sure a device is assigned an IRQ only if it
-> > > > is probed (ie match a driver); it retrieves a struct pci_host_bridge*
-> > > > for a given PCI device and through {map/swizzle}_irq() hooks it carries
-> > > > out the PCI IRQ allocation.
-> > > > 
-> > > > As it turned out, some legacy drivers (eg IDE layer) require that a
-> > > > device allocates IRQ as soon as it is added so that its actual IRQ
-> > > > settings are available early in the boot process. With current code
-> > > > calling pci_assign_irq() in pci_device_probe() IDE IRQ probing fails
-> > > > for some drivers:
-> > > 
-> > > I think the patch is fine, but I don't understand the changelog.  I
-> > > want to know specifically what the dependency on dev->irq is.  "Early
-> > > in the boot process" is pretty vague.
-> > > 
-> > > I *thought* we were doing something like this:
-> > > 
-> > >   pci_device_probe(dev1)
-> > >     pci_assign_irq(dev1)
-> > >       ...
-> > >         ide_pci_init_two(dev1, dev2, ...)
-> > >           do_ide_setup_pci_device(dev1)
-> > >             pciirq = dev1->irq                # this one is fine
-> > >           do_ide_setup_pci_device(dev2)
-> > >             pciirq = dev2->irq                # not fine
-> > > 
-> > > where the problem is that we haven't called pci_assign_irq(dev2), so
-> > > dev2->irq hasn't been set.
-> > > 
-> > > But that doesn't match the data because we should be coming through
-> > > cmd64x_init_one(), which calls ide_pci_init_one(), so we shouldn't
-> > > have a dev2 in this path.
-> > 
-> > I *think* I understand what's going on here, the key is:
-> > 
-> > ide_scan_pcibus()
-> > 
-> > and CONFIG_IDEPCI_PCIBUS_ORDER
-> > 
-> > I still have to replicate it but I suspect that
-> > do_ide_setup_pci_device() for dev1 finds an unallocated IRQ (ie dev->irq
-> > == 0) because the probing did NOT happen via pci_device_probe(), ie
-> > pci_device_probe() was not called for the dev1, the cmd64x probe
-> > routine is called straight from ide_scan_pcidev().
-> > 
-> > I am struggling to understand the logic behind:
-> > 
-> > ide_pci_register_driver() and ide_scan_pcibus()
-> > 
-> > and the sequence wrt PCI bus probing but I think that's the problem
-> > and that's why moving pci_assign_irq() to pci_device_add() will
-> > sort this out, adding pci_assign_irq() in ide_scan_pcidev() will
-> > solve the problem too (patch below).
-> > 
-> > Needless to say, ide_scan_pcibus() relies on pre_init global variable
-> > to make sure ide_pci_register_driver() chooses the "right" way of
-> > registering a driver, see:
-> > 
-> > __ide_pci_register_driver()
-> > 
-> > Patch here to verify my assumption in case Guenter has a chance to
-> > run it if I do not beat him to it:
-> 
-> That's what's happening unfortunately.
-> 
-> We end up probing twice (both fails):
-> 
-> (1)
-> 
-> ->ide_scan_pcidev()
->   ->d->probe()
->      ->cmd64x_init_one()
->        ->ide_pci_init_one()
->          ->ide_pci_init_two()
->            [...]
->            -> ide_host_register() !! Fails in hwif_init(), no IRQ
-> 
-> (2) ->pci_device_probe()
->      ->cmd64x_init_one()
->        ->ide_pci_init_one()
->          ->ide_pci_init_two()
-> 	   [...]
-> 	   -> ide_pci_enable() !! Fails with -EBUSY,
-> 	   pci_request_selected_regions() can't reserve already reserved
-> 	   regions (ie step (1) did not unwind resource reservation)
-> 
-> That's my reading and patch patch below fixes it and given that
-> IDE created its own PCI bus probing layer may be a more appropriate
-> kludge than forcing us to move pci_assign_irq() to pci_device_add()
-> for all PCI devices, please let me know what's your preferred solution.
+The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
+and predates the more formal format we have adopted for the bindings.
 
-Oh, this is lovely :(  I wonder what other things this breaks.
+Update them a bit so it is easier to read, and add the Integrator AP-
+specific compatible so we can detect that we are running on that specific
+platform.
 
-This IDE probing path misses the IRQ assignment, the "initialize the
-driver on the device's node" stuff, the PM code, the IOV autoprobe
-checks, the ACPI IRQ init in pcibios_alloc_irq(), etc.  Ugh.
+Add a second register bank for the configuration memory area. The
+device tree specs does specify a memory range for configuration
+space but it is not applicable to custom accessors like this. Instead
+follow the pattern from the Versatile PCI adapter and simply add
+a second register bank for this memory.
 
-I think your solution below is the best one so far.  It's still hacky
-because the whole ide_scan_pcibus() is a hack, but at least this fixes
-it at the point where we need it, so it's obvious why it's there and
-it's clear that if we could ever get rid of ide_scan_pcibus(), we
-could get rid of this pci_assign_irq() call as well.
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ChangeLog v2->v3:
+- Add a second register bank for the config space.
+- Mention that nonpre and pre memory must be 256MB and adjacent
+- Make the prefetched and non-prefetched memory mapped 1:1 to
+  the PCI address space so that local bus 0x40000000 and
+  0x50000000 maps to the *same* local (CPU) bus addresses.
+- Add reference to dma-ranges and that this is required.
+- Add an example from the ARM Integrator/AP
+- Rob ACKed an earlier version, he might want to have a glance
+  at this before merging.
+ChangeLog v1->v2:
+- Added Rob's ACK.
 
-> With fix below (1) still tries to re-probe cmd64x through
-> pci_device_probe() but the device has already a driver attached
-> to it so second probe stops before calling the cmd64x probe routine.
-> 
-> I hope Guenter can give it a go too to confirm my findings.
-> 
-> Lorenzo
-> 
-> > -- >8 --
-> > diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
-> > index 86aa88a..86b570a 100644
-> > --- a/drivers/ide/ide-scan-pci.c
-> > +++ b/drivers/ide/ide-scan-pci.c
-> > @@ -56,6 +56,8 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
-> >  {
-> >  	struct list_head *l;
-> >  	struct pci_driver *d;
-> > +	int ret;
-> > +
-> >  
-> >  	list_for_each(l, &ide_pci_drivers) {
-> >  		d = list_entry(l, struct pci_driver, node);
-> > @@ -63,10 +65,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
-> >  			const struct pci_device_id *id =
-> >  				pci_match_id(d->id_table, dev);
-> >  
-> > -			if (id != NULL && d->probe(dev, id) >= 0) {
-> > -				dev->driver = d;
-> > -				pci_dev_get(dev);
-> > -				return 1;
-> > +			if (id != NULL) {
-> > +				pci_assign_irq(dev);
-> > +				ret = d->probe(dev, id);
-> > +				if (ret >= 0) {
-> > +					dev->driver = d;
-> > +					pci_dev_get(dev);
-> > +					return 1;
-> > +				}
-> >  			}
-> >  		}
-> >  	}
+Bjorn: please merge this when you feel confident with it.
+---
+ .../devicetree/bindings/pci/v3-v360epc-pci.txt     | 73 +++++++++++++++++++---
+ 1 file changed, 66 insertions(+), 7 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+index 30b364e504ba..7729295506f5 100644
+--- a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
++++ b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+@@ -2,14 +2,73 @@ V3 Semiconductor V360 EPC PCI bridge
+ 
+ This bridge is found in the ARM Integrator/AP (Application Platform)
+ 
+-Integrator-specific notes:
++Required properties:
++- compatible: should be one of:
++  "v3,v360epc-pci"
++  "arm,integrator-ap-pci", "v3,v360epc-pci"
++- reg: should contain two register areas:
++  first the base address of the V3 host bridge controller, 64KB
++  second the configuration area register space, 16MB
++- interrupts: should contain a reference to the V3 error interrupt
++  as routed on the system.
++- ranges: this follows the standard PCI bindings in the IEEE Std
++  1275-1994 (see pci.txt) with the following restriction:
++  - The non-prefetchable and prefetchable memory windows must
++    each be exactly 256MB (0x10000000) in size.
++  - The prefetchable memory window must be immediately adjacent
++    to the non-prefetcable memory window
++- dma-ranges: three ranges for the inbound memory region. The ranges must
++  be aligned to a 1MB boundary, and may be 1MB, 2MB, 4MB, 8MB, 16MB, 32MB,
++  64MB, 128MB, 256MB, 512MB, 1GB or 2GB in size. The memory should be marked
++  as pre-fetchable. Two ranges are supported by the hardware.
+ 
+-- syscon: should contain a link to the syscon device node (since
++Integrator-specific required properties:
++- syscon: should contain a link to the syscon device node, since
+   on the Integrator, some registers in the syscon are required to
+-  operate the V3).
++  operate the V3 host bridge.
+ 
+-V360 EPC specific notes:
++Example:
+ 
+-- reg: should contain the base address of the V3 adapter.
+-- interrupts: should contain a reference to the V3 error interrupt
+-  as routed on the system.
++pci: pciv3@62000000 {
++	compatible = "arm,integrator-ap-pci", "v3,v360epc-pci";
++	#interrupt-cells = <1>;
++	#size-cells = <2>;
++	#address-cells = <3>;
++	reg = <0x62000000 0x10000>, <0x61000000 0x01000000>;
++	interrupt-parent = <&pic>;
++	interrupts = <17>; /* Bus error IRQ */
++	clocks = <&pciclk>;
++	ranges = 0x01000000 0 0x00000000 /* I/O space @00000000 */
++		0x60000000 0 0x01000000 /* 16 MiB @ LB 60000000 */
++		0x02000000 0 0x40000000 /* non-prefectable memory @40000000 */
++		0x40000000 0 0x10000000 /* 256 MiB @ LB 40000000 1:1 */
++		0x42000000 0 0x50000000 /* prefetchable memory @50000000 */
++		0x50000000 0 0x10000000>; /* 256 MiB @ LB 50000000 1:1 */
++	dma-ranges = <0x02000000 0 0x20000000 /* EBI memory space */
++		0x20000000 0 0x20000000 /* 512 MB @ LB 20000000 1:1 */
++		0x02000000 0 0x80000000 /* Core module alias memory */
++		0x80000000 0 0x40000000>; /* 1GB @ LB 80000000 */
++	interrupt-map-mask = <0xf800 0 0 0x7>;
++	interrupt-map = <
++	/* IDSEL 9 */
++	0x4800 0 0 1 &pic 13 /* INT A on slot 9 is irq 13 */
++	0x4800 0 0 2 &pic 14 /* INT B on slot 9 is irq 14 */
++	0x4800 0 0 3 &pic 15 /* INT C on slot 9 is irq 15 */
++	0x4800 0 0 4 &pic 16 /* INT D on slot 9 is irq 16 */
++	/* IDSEL 10 */
++	0x5000 0 0 1 &pic 14 /* INT A on slot 10 is irq 14 */
++	0x5000 0 0 2 &pic 15 /* INT B on slot 10 is irq 15 */
++	0x5000 0 0 3 &pic 16 /* INT C on slot 10 is irq 16 */
++	0x5000 0 0 4 &pic 13 /* INT D on slot 10 is irq 13 */
++	/* IDSEL 11 */
++	0x5800 0 0 1 &pic 15 /* INT A on slot 11 is irq 15 */
++	0x5800 0 0 2 &pic 16 /* INT B on slot 11 is irq 16 */
++	0x5800 0 0 3 &pic 13 /* INT C on slot 11 is irq 13 */
++	0x5800 0 0 4 &pic 14 /* INT D on slot 11 is irq 14 */
++	/* IDSEL 12 */
++	0x6000 0 0 1 &pic 16 /* INT A on slot 12 is irq 16 */
++	0x6000 0 0 2 &pic 13 /* INT B on slot 12 is irq 13 */
++	0x6000 0 0 3 &pic 14 /* INT C on slot 12 is irq 14 */
++	0x6000 0 0 4 &pic 15 /* INT D on slot 12 is irq 15 */
++	>;
++};
+-- 
+2.13.5
