@@ -1,83 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0081.outbound.protection.outlook.com ([104.47.41.81]:45252
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751289AbdILLzd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Sep 2017 07:55:33 -0400
-From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: David.Daney@cavium.com, jcm@redhat.com, Robert.Richter@cavium.com,
-        Wilson.Snyder@cavium.com,
-        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Subject: [PATCH] PCI: quirks: update cavium ACS quirk implementation
-Date: Tue, 12 Sep 2017 04:55:16 -0700
-Message-Id: <1505217316-15702-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 7 Sep 2017 10:52:37 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jan Glauber <jan.glauber@caviumnetworks.com>
+Subject: Re: [PATCH v3 3/3] PCI: Avoid slot reset for Cavium cn8xxx root ports
+Message-ID: <20170907105237.3f025280@w520.home>
+In-Reply-To: <20170907074904.GB13490@hc>
+References: <20170830142454.10971-1-jglauber@cavium.com>
+ <20170830142454.10971-4-jglauber@cavium.com>
+ <20170830084012.19d91759@w520.home> <20170831094052.GA15906@hc>
+ <20170831100130.5c8a922e@w520.home> <20170907074011.GA13490@hc>
+ <20170907074904.GB13490@hc>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
+ Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit makes PIC ACS quirk applicable only to Cavium PCIE devices
-and Cavium PCIE Root Ports which has limited PCI capabilities in terms
-of no ACS support. Match function checks for ACS support and exact ACS
-bits set at the device capabilities.
-Also by this commit we get rid off device ID range values checkings.
+On Thu, 7 Sep 2017 09:49:04 +0200
+Jan Glauber <jan.glauber@caviumnetworks.com> wrote:
 
-Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
----
- drivers/pci/quirks.c | 30 +++++++++++++++++++++++++-----
- 1 file changed, 25 insertions(+), 5 deletions(-)
+> On Thu, Sep 07, 2017 at 09:40:11AM +0200, Jan Glauber wrote:
+> > So what if we add an additional check like:
+> > 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index fdf65a6..389db4b 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -4389,6 +4389,9 @@ static bool pci_slot_resetable(struct pci_slot *slot)
+> >  {
+> >         struct pci_dev *dev;
+> >  
+> > +       if (slot->bus->self & PCI_DEV_FLAGS_NO_BUS_RESET)
+> > +               return false;
+> > +
+> >         list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+> >                 if (!dev->slot || dev->slot != slot)
+> >                         continue;  
+> 
+> Obviously I meant:
+> if (slot->bus->self->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index a4d3361..11ca951 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4211,6 +4211,29 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
- #endif
- }
- 
-+#define CAVIUM_ACS_FLAGS (PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | \
-+			  PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT)
-+
-+static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
-+{
-+	int pos = 0;
-+	u32 caps = 0;
-+
-+	/* Filter out a few obvious non-matches first */
-+	if (!pci_is_pcie(dev) || pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
-+		return false;
-+
-+	/* Get the ACS caps offset */
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (pos) {
-+		pci_read_config_dword(dev, pos + PCI_ACS_CAP, &caps);
-+		/* If we have no such bits set, then we will need a quirk */
-+		return ((caps & CAVIUM_ACS_FLAGS) != CAVIUM_ACS_FLAGS);
-+	}
-+
-+	return true;
-+}
-+
- static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- {
- 	/*
-@@ -4218,13 +4241,10 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- 	 * with other functions, allowing masking out these bits as if they
- 	 * were unimplemented in the ACS capability.
- 	 */
--	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
--		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
--
--	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
-+	if (!pci_quirk_cavium_acs_match(dev))
- 		return -ENOTTY;
- 
--	return acs_flags ? 0 : 1;
-+	return acs_flags & ~(CAVIUM_ACS_FLAGS) ? 0 : 1;
- }
- 
- static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
--- 
-2.9.5
+Much better, perhaps even incorporate the bus->self check for good
+measure... is it possible to have a slot on a root bus?  Taking
+different approaches for bus vs slot reset should have been a giant red
+flag that something is wrong.  Thanks,
+
+Alex
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
