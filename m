@@ -1,153 +1,73 @@
-Return-Path: <SRS0=nrie=AC=linaro.org=linus.walleij@kernel.org>
-Return-Path: <SRS0=nrie=AC=linaro.org=linus.walleij@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 2/7] PCI: aardvark: set PIO_ADDR_LS correctly in
+ advk_pcie_rd_conf()
+Date: Fri,  8 Sep 2017 11:53:43 +0200
+Message-Id: <20170908095348.16578-3-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
+References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
+ Jason Cooper <jason@lakedaemon.net>, Hanna Hawa <hannah@marvell.com>,
+ stable@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>,
+ Victor Gu <xigu@marvell.com>,
+ =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Antoine Tenart <antoine.tenart@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170822190137.GB6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170809141455.22220-1-linus.walleij@linaro.org>
- <20170809141455.22220-2-linus.walleij@linaro.org> <20170822190137.GB6948@bhelgaas-glaptop.roam.corp.google.com>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Fri, 1 Sep 2017 17:49:28 +0200
-Message-ID: <CACRpkdbMqZpZT9te1oAw49t48XC3DRuXd4VRrUCCDDn9nD1maA@mail.gmail.com>
-Subject: Re: [PATCH 2/2 v2] PCI: v3-semi: Add a V3 Semiconductor PCI host driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-pci <linux-pci@vger.kernel.org>,
-	Russell King <linux@armlinux.org.uk>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 22, 2017 at 9:01 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+From: Victor Gu <xigu@marvell.com>
 
-> On Wed, Aug 09, 2017 at 04:14:55PM +0200, Linus Walleij wrote:
+When setting the PIO_ADDR_LS register during a configuration read, we
+were properly passing the device number, function number and register
+number, but not the bus number, causing issues when reading the
+configuration of PCIe devices.
 
->> OF: PCI: host bridge /pciv3@62000000 ranges:
->> OF: PCI:   No bus range found for /pciv3@62000000, using [bus 00-ff]
->> OF: PCI:   err 0x61000000..0x61ffffff -> 0x61000000
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Wilson Ding <dingwei@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yeah it is called "err"
-
->> OF: PCI:    IO 0x60000000..0x600fffff -> 0x00000000
->> OF: PCI:   MEM 0x40000000..0x4fffffff -> 0x00000000
->> OF: PCI:   MEM 0x50000000..0x5fffffff -> 0x10000000
->> pci-v3-semi 62000000.pciv3: BUS 0
->> pci-v3-semi 62000000.pciv3: CONFIG SPACE window
->>   start 61000000, size 01000000 (offset = 00000000, bus addr = 61000000)
-
-But as it says here it is config space.
-
->> pci-v3-semi 62000000.pciv3: I/O window
->>   start 00000000, bus addr 00000000, size 00100000
->> pci-v3-semi 62000000.pciv3: NON-PREFETCHABLE MEM window
->>   start 40000000, bus addr 00000000, size 10000000
->> pci-v3-semi 62000000.pciv3: PREFETCHABLE MEM window
->>   start 50000000, bus addr 10000000, size 10000000
->> pci-v3-semi 62000000.pciv3: FIFO_CFG: 0000  FIFO_PRIO: 0000
->> pci-v3-semi 62000000.pciv3: initialized PCI V3 Integrator/AP integration
->> pci-v3-semi 62000000.pciv3: PCI host bridge to bus 0000:00
->> pci_bus 0000:00: root bus resource [bus 00-ff]
->> pci_bus 0000:00: root bus resource [??? 0x61000000-0x61ffffff flags 0x0]
->
-> I think this is wrong.  Looks like this might be memory-mapped config
-> space (e.g., MMCONFIG or ECAM-like space), which is not a window and
-> shouldn't be added to the root bus resources.
-
-So it comes from ranges, and I take it that actually the device
-tree is wrong because it looks like this:
-
-reg = <0x62000000 0x10000>;
-ranges = <0x00000000 0 0x61000000 /* config space */
-        0x61000000 0 0x01000000 /* 16 MiB @ 61000000 */
-        0x01000000 0 0x0 /* I/O space */
-        0x60000000 0 0x00100000 /* 16 MiB @ 60000000 */
-        0x02000000 0 0x00000000 /* non-prefectable memory */
-        0x40000000 0 0x10000000 /* 256 MiB @ 40000000 */
-        0x42000000 0 0x10000000 /* prefetchable memory */
-        0x50000000 0 0x10000000>; /* 256 MiB @ 50000000 */
-
-So what you're saying is that the config space should not be in the
-ranges but in the reg = <> property (second register range) so that
-the reg and ranges looks like this:
-
-reg = <0x62000000 0x10000>, <0x61000000 0x01000000>;
-ranges = <0x00000000 0 0x61000000 /* config space */
-        0x60000000 0 0x00100000 /* 16 MiB @ 60000000 */
-        0x02000000 0 0x00000000 /* non-prefectable memory */
-        0x40000000 0 0x10000000 /* 256 MiB @ 40000000 */
-        0x42000000 0 0x10000000 /* prefetchable memory */
-        0x50000000 0 0x10000000>; /* 256 MiB @ 50000000 */
-
-So there is only a range for mapping the physical address
-0x61000000 to PCI address 0x00000000.
-
-I don't mind altering the device trees, we don't have it deployed
-in flash or anything. I think we simply got this thing wrong when
-I first converted it over.
-
-> The driver still needs it internally, of course, and maybe could print
-> something similar to what we do for ECAM:
->
->   dev_info(dev, "ECAM at %pR for %pR\n", &cfg->res, &cfg->busr)
->
-> (I don't know if this is actually identical to ECAM, so maybe there's
-> a better internally-used name for the region, but we could print the
-> memory and bus resources similarly.)
-
-Sure, we just need to figure out if it should be in reg
-or ranges first.
-
-> It seems a little excessive to print all the window information three
-> times, but that's definitely a second-order issue and not unique to
-> this driver.  It might be time to try to consolidate all the OF/DT
-> probing stuff -- there's a lot of duplicated code there.
->
-> Most of the other callers of of_pci_get_host_bridge_resources() don't
-> print the regions as they parse them, so that might be a start.
-
-OK I'll cut this, it's mostly debugging aid.
-
->> + * At the end of the PCI Configuration space accesses,
->> + * LB_BASE1/LB_MAP1 is reset to map PCI Memory.  Finally the window
->> + * mapped by LB_BASE0/LB_MAP0 is reduced in size from 512M to 256M to
->> + * reveal the now restored LB_BASE1/LB_MAP1 window.
->
-> Let me see if I understand this correctly.  Normally, BASE0 maps 256M
-> of non-prefetchable memory and BASE1 maps 256M of prefetchable memory.
->
-> When we do a config access, we temporarily expand BASE0 so it maps
-> 512M all as non-prefetchable.  So accesses to the usual BASE1 region
-> still work, but they're non-prefetchable instead of prefetchable like
-> they would normally be.  And we use BASE1 to map config space.
-
-Yes that is how it works. I think the trick was invented by Russell King or
-David A. Rusling during initial support of the platform.
-
-> This depends on the non-prefetchable and prefetchable windows being
-> adjacent and of the size we expect, right?  It looks like we get those
-> windows from DT, so we depend on them being correct there.
-
-Yup that's it. I will put a check in the parser to bail out and warn if
-they're not.
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 582d75f864e3..68ff10e17c74 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -460,7 +460,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+ 	advk_writel(pcie, reg, PIO_CTRL);
+ 
+ 	/* Program the address registers */
+-	reg = PCIE_BDF(devfn) | PCIE_CONF_REG(where);
++	reg = PCIE_CONF_ADDR(bus->number, devfn, where);
+ 	advk_writel(pcie, reg, PIO_ADDR_LS);
+ 	advk_writel(pcie, 0, PIO_ADDR_MS);
+ 
+-- 
+2.13.5
 
 
->> +     list_splice_init(&res, &host->windows);
->> +     ret = pci_scan_root_bus_bridge(host);
->> +     if (ret) {
->> +             dev_err(dev, "failed to register host: %d\n", ret);
->> +             return ret;
->> +     }
->> +     v3->bus = host->bus;
->> +
->> +     pci_bus_assign_resources(v3->bus);
->> +     pci_bus_add_devices(v3->bus);
->> +     pci_free_resource_list(&res);
->
-> I think pci_free_resource_list() should be called only if an error
-> occurs, shouldn't it?
-
-I'm not sure. I was under the impression that list_splice_init() makes
-a copy of it into host->windows and then we should discard it after
-use.
-
-I fixed the other comments.
-
-Yours,
-Linus Walleij
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
