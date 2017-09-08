@@ -1,111 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:45699 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750934AbdI0Gig (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2017 02:38:36 -0400
-Received: by mail-it0-f65.google.com with SMTP id x15so5875930itb.0
-        for <linux-pci@vger.kernel.org>; Tue, 26 Sep 2017 23:38:35 -0700 (PDT)
-Subject: Re: [PATCH kernel] powerpc/powernv: Reserve a hole which appears
- after enabling IOV
-To: linuxppc-dev@lists.ozlabs.org
-Cc: David Gibson <david@gibson.dropbear.id.au>,
-        kvm-ppc@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Russell Currey <ruscur@russell.cc>, linux-pci@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20170927060949.10284-1-aik@ozlabs.ru>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <7cdef2e9-65a1-5417-1d06-5733512b9efc@ozlabs.ru>
-Date: Wed, 27 Sep 2017 16:38:29 +1000
-MIME-Version: 1.0
-In-Reply-To: <20170927060949.10284-1-aik@ozlabs.ru>
-Content-Type: text/plain; charset=utf-8
+Received: from mail.free-electrons.com ([62.4.15.54]:41973 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753645AbdIHJyB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:54:01 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 5/7] PCI: aardvark: disable LOS state by default
+Date: Fri,  8 Sep 2017 11:53:46 +0200
+Message-Id: <20170908095348.16578-6-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
+References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/09/17 16:09, Alexey Kardashevskiy wrote:
-> In order to make generic IOV code work, the physical function IOV BAR
-> should start from offset of the first VF. Since M64 segments share
-> PE number space across PHB, and some PEs may be in use at the time
-> when IOV is enabled, the existing code shifts the IOV BAR to the index
-> of the first PE/VF. This creates a hole in IOMEM space which can be
-> potentially taken by some other device.
-> 
-> This reserves a temporary hole on a parent and releases it when IOV is
-> disabled; the temporary resources are stored in pci_dn to avoid
-> kmalloc/free.
+From: Victor Gu <xigu@marvell.com>
 
-Please ignore that, I'll post v2.
+Some PCIe devices do not support LOS, and will cause timeouts if the
+root complex forces the LOS state. This patch disables the LOS state
+by default.
 
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
 
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-> 
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> ---
-> 
-> I assume this goes to powerpc next branch but before this I'd like to
-> get Bjorn's opinion as he continously commented on this bit.
-> ---
->  arch/powerpc/include/asm/pci-bridge.h     |  1 +
->  arch/powerpc/platforms/powernv/pci-ioda.c | 21 ++++++++++++++++++---
->  2 files changed, 19 insertions(+), 3 deletions(-)
-> 
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 0b8aa1fe2d5f..62ed83db04ae 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -218,6 +218,7 @@ struct pci_dn {
->  #endif
->  	struct list_head child_list;
->  	struct list_head list;
-> +	struct resource holes[PCI_SRIOV_NUM_BARS];
->  };
->  
->  /* Get the pointer to a device_node's pci_dn */
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 57f9e55f4352..d01c1ac02ea4 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -1002,9 +1002,12 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
->  	}
->  
->  	/*
-> -	 * After doing so, there would be a "hole" in the /proc/iomem when
-> -	 * offset is a positive value. It looks like the device return some
-> -	 * mmio back to the system, which actually no one could use it.
-> +	 * Since M64 BAR shares segments among all possible 256 PEs,
-> +	 * we have to shift the beginning of PF IOV BAR to make it start from
-> +	 * the segment which belongs to the PE number assigned to the first VF.
-> +	 * This creates a "hole" in the /proc/iomem which could be used for
-> +	 * allocating other resources so we reserve this area below and
-> +	 * release when IOV is released.
->  	 */
->  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->  		res = &dev->resource[i + PCI_IOV_RESOURCES];
-> @@ -1019,6 +1022,18 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
->  			 i, &res2, res, (offset > 0) ? "En" : "Dis",
->  			 num_vfs, offset);
->  		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
-> +
-> +		if (offset > 0) {
-> +			pdn->holes[i].start = res2.start;
-> +			pdn->holes[i].end = res2.start + size * offset - 1;
-> +			pdn->holes[i].flags = IORESOURCE_BUS;
-> +			pdn->holes[i].name = "pnv_iov_reserved";
-> +			devm_request_resource(&dev->dev, res->parent,
-> +					&pdn->holes[i]);
-> +		} else {
-> +			devm_release_resource(&dev->dev, &pdn->holes[i]);
-> +			memset(&pdn->holes[i], 0, sizeof(pdn->holes[i]));
-> +		}
->  	}
->  	return 0;
->  }
-> 
-
-
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 4a563d8526ae..461517a87eca 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -369,8 +369,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 
+ 	advk_pcie_wait_for_link(pcie);
+ 
+-	reg = PCIE_CORE_LINK_L0S_ENTRY |
+-		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
++	reg = (1 << PCIE_CORE_LINK_WIDTH_SHIFT);
+ 	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
+ 
+ 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
 -- 
-Alexey
+2.13.5
