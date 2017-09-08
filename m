@@ -1,72 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 20 Sep 2017 12:09:12 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Subject: Re: [v4,0/3] Workaround for bus/slot reset on Cavium cn8xxx root ports
-Message-ID: <20170920120912.7544420d@t450s.home>
-In-Reply-To: <20170912094049.GA14111@localhost.localdomain>
-References: <20170908081033.3025-1-jglauber@cavium.com>
- <20170912094049.GA14111@localhost.localdomain>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:53408
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753202AbdIHMXa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Sep 2017 08:23:30 -0400
+From: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
+To: <vinod.koul@intel.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <michal.simek@xilinx.com>,
+        <soren.brinkmann@xilinx.com>, <dan.j.williams@intel.com>,
+        <bhelgaas@google.com>, <vjonnal@xilinx.com>,
+        <lorenzo.pieralisi@arm.com>, <bharat.kumar.gogada@xilinx.com>,
+        <dmaengine@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <rgummal@xilinx.com>
+Subject: [PATCH v2 1/5] PCI:xilinx-nwl: Enable Root DMA
+Date: Fri, 8 Sep 2017 17:53:03 +0530
+Message-ID: <1504873388-29195-2-git-send-email-vjonnal@xilinx.com>
+In-Reply-To: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
+References: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
- Jan Glauber <jglauber@cavium.com>, linux-kernel@vger.kernel.org,
- Robert Richter <robert.richter@cavium.com>, Jon Masters <jcm@redhat.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 12 Sep 2017 02:40:49 -0700
-Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+Enabling Root DMA interrupts
 
-> Hi all,
-> 
-> Are there any updates on this ?
-> Comments/objections/acks/nacks ?
-> 
-> WBBR,
-> Vadim
-> 
-> On Fri, Sep 08, 2017 at 10:10:30AM +0200, Jan Glauber wrote:
-> > Using vfio-pci on a combination of cn8xxx and some PCI devices results in
-> > a kernel panic. This is triggered by issuing a bus or a slot reset
-> > on the PCI device.
-> > 
-> > With this series both checks indicate that the reset is not possible
-> > preventing the kernel panic.
-> > 
-> > David Daney (2):
-> >   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
-> >   PCI: Avoid bus reset for Cavium cn8xxx root ports
-> > 
-> > Jan Glauber (1):
-> >   PCI: Avoid slot reset if bus reset is not possible
-> > 
-> >  drivers/pci/pci.c    | 8 ++++++++
-> >  drivers/pci/quirks.c | 8 ++++++++
-> >  2 files changed, 16 insertions(+)  
+Adding Root DMA translations to bridge for Register Access
 
+Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
+Signed-off-by: RaviKiran Gummaluri <rgummal@xilinx.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Looks ok to me, for series:
-
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-
-I am curious why we're happy targeting this quirk at a single device ID
-while at the same time trying to expand the ACS quirk to a notable
-fraction of the Cavium PCI device ID address space.  Thanks,
-
-Alex
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index eec641a..5766582 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -39,6 +39,11 @@
+ #define E_ECAM_CONTROL			0x00000228
+ #define E_ECAM_BASE_LO			0x00000230
+ #define E_ECAM_BASE_HI			0x00000234
++#define E_DREG_CTRL			0x00000288
++#define E_DREG_BASE_LO			0x00000290
++
++#define DREG_DMA_EN			BIT(0)
++#define DREG_DMA_BASE_LO		0xFD0F0000
+ 
+ /* Ingress - address translations */
+ #define I_MSII_CAPABILITIES		0x00000300
+@@ -57,6 +62,10 @@
+ #define MSGF_MSI_STATUS_HI		0x00000444
+ #define MSGF_MSI_MASK_LO		0x00000448
+ #define MSGF_MSI_MASK_HI		0x0000044C
++/* Root DMA Interrupt register */
++#define MSGF_DMA_MASK			0x00000464
++
++#define MSGF_INTR_EN			BIT(0)
+ 
+ /* Msg filter mask bits */
+ #define CFG_ENABLE_PM_MSG_FWD		BIT(1)
+@@ -766,6 +775,12 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
+ 			  MSGF_LEG_SR_MASKALL, MSGF_LEG_STATUS);
+ 
++	/* Enabling DREG translations */
++	nwl_bridge_writel(pcie, DREG_DMA_EN, E_DREG_CTRL);
++	nwl_bridge_writel(pcie, DREG_DMA_BASE_LO, E_DREG_BASE_LO);
++	/* Enabling Root DMA interrupts */
++	nwl_bridge_writel(pcie, MSGF_INTR_EN, MSGF_DMA_MASK);
++
+ 	/* Enable all legacy interrupts */
+ 	nwl_bridge_writel(pcie, MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
+ 
+-- 
+2.7.4
