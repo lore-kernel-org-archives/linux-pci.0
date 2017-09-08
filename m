@@ -1,79 +1,408 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:51823 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751548AbdIKUIV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2017 16:08:21 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Andrew Morton <akpm@linux-foundation.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-        Magnus Damm <damm@opensource.se>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Ben Dooks <ben.dooks@codethink.co.uk>,
-        linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] [RESEND] of: provide of_n_{addr,size}_cells wrappers for !CONFIG_OF
-Date: Mon, 11 Sep 2017 22:07:49 +0200
-Message-Id: <20170911200805.3363318-1-arnd@arndb.de>
+Received: from mail-bn3nam01on0040.outbound.protection.outlook.com ([104.47.33.40]:45873
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754792AbdIHMXb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Sep 2017 08:23:31 -0400
+From: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
+To: <vinod.koul@intel.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <michal.simek@xilinx.com>,
+        <soren.brinkmann@xilinx.com>, <dan.j.williams@intel.com>,
+        <bhelgaas@google.com>, <vjonnal@xilinx.com>,
+        <lorenzo.pieralisi@arm.com>, <bharat.kumar.gogada@xilinx.com>,
+        <dmaengine@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <rgummal@xilinx.com>
+Subject: [PATCH v2 3/5] dmaengine: zynqmp_ps_pcie: Adding PS PCIe DMA driver
+Date: Fri, 8 Sep 2017 17:53:05 +0530
+Message-ID: <1504873388-29195-4-git-send-email-vjonnal@xilinx.com>
+In-Reply-To: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
+References: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci-rcar driver is enabled for compile tests, and this has
-shown that the driver cannot build without CONFIG_OF,
-following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-interrupt mapping when possible":
+Adding support for ZynqmMP PS PCIe EP driver.
+Adding support for ZynqmMP PS PCIe Root DMA driver.
+Modifying Kconfig and Makefile to add the support.
 
-drivers/pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
-drivers/pci/host/pcie-rcar.c:1039:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
-  parser->pna = of_n_addr_cells(node);
-  ^
-As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-supposed to build fine, which we can achieve if we make the
-declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-and provide an empty inline function otherwise, as we do for
-a lot of other of interfaces.
-
-This lets us build the rcar_pci driver again without CONFIG_OF
-for build testing. All platforms using this driver select OF,
-so this doesn't change anything for the users.
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Magnus Damm <damm@opensource.se>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Reviewed-by: Frank Rowand <frank.rowand@sony.com>
-Fixes: c25da4778803 ("PCI: rcar: Add Renesas R-Car PCIe driver")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
+Signed-off-by: RaviKiran Gummaluri <rgummal@xilinx.com>
 ---
-I originally sent the patch in 2014 when things initially broke
-and then forgot about while it was applied in my randconfig patch
-stack. I sent it again in 2016 and then in July 2017 without reply.
+ drivers/dma/Kconfig               |  12 +++
+ drivers/dma/xilinx/Makefile       |   2 +
+ drivers/dma/xilinx/ps_pcie.h      |  44 +++++++++
+ drivers/dma/xilinx/ps_pcie_main.c | 200 ++++++++++++++++++++++++++++++++++++++
+ include/linux/dma/ps_pcie_dma.h   |  69 +++++++++++++
+ 5 files changed, 327 insertions(+)
+ create mode 100644 drivers/dma/xilinx/ps_pcie.h
+ create mode 100644 drivers/dma/xilinx/ps_pcie_main.c
+ create mode 100644 include/linux/dma/ps_pcie_dma.h
 
-It's still broken and I think this is the correct fix.
----
- include/linux/of.h | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/include/linux/of.h b/include/linux/of.h
-index cfc34117fc92..fb700d1e1fab 100644
---- a/include/linux/of.h
-+++ b/include/linux/of.h
-@@ -734,6 +734,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
- 	return NULL;
- }
+diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
+index fa8f9c0..e2fe4e5 100644
+--- a/drivers/dma/Kconfig
++++ b/drivers/dma/Kconfig
+@@ -586,6 +586,18 @@ config XILINX_ZYNQMP_DMA
+ 	help
+ 	  Enable support for Xilinx ZynqMP DMA controller.
  
-+static inline int of_n_addr_cells(struct device_node *np) { return 0; }
-+static inline int of_n_size_cells(struct device_node *np) { return 0; }
++config XILINX_PS_PCIE_DMA
++	tristate "Xilinx PS PCIe DMA support"
++	depends on (PCI && X86_64 || ARM64)
++	select DMA_ENGINE
++	help
++	  Enable support for the Xilinx PS PCIe DMA engine present
++	  in recent Xilinx ZynqMP chipsets.
 +
- static inline int of_property_read_u64(const struct device_node *np,
- 				       const char *propname, u64 *out_value)
- {
++	  Say Y here if you have such a chipset.
++
++	  If unsure, say N.
++
+ config ZX_DMA
+ 	tristate "ZTE ZX DMA support"
+ 	depends on ARCH_ZX || COMPILE_TEST
+diff --git a/drivers/dma/xilinx/Makefile b/drivers/dma/xilinx/Makefile
+index 9e91f8f..04f6f99 100644
+--- a/drivers/dma/xilinx/Makefile
++++ b/drivers/dma/xilinx/Makefile
+@@ -1,2 +1,4 @@
+ obj-$(CONFIG_XILINX_DMA) += xilinx_dma.o
+ obj-$(CONFIG_XILINX_ZYNQMP_DMA) += zynqmp_dma.o
++ps_pcie_dma-objs := ps_pcie_main.o ps_pcie_platform.o
++obj-$(CONFIG_XILINX_PS_PCIE_DMA) += ps_pcie_dma.o
+diff --git a/drivers/dma/xilinx/ps_pcie.h b/drivers/dma/xilinx/ps_pcie.h
+new file mode 100644
+index 0000000..351f051
+--- /dev/null
++++ b/drivers/dma/xilinx/ps_pcie.h
+@@ -0,0 +1,44 @@
++/*
++ * Xilinx PS PCIe DMA Engine platform header file
++ *
++ * Copyright (C) 2010-2017 Xilinx, Inc. All rights reserved.
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation
++ */
++
++#ifndef __XILINX_PS_PCIE_H
++#define __XILINX_PS_PCIE_H
++
++#include <linux/delay.h>
++#include <linux/dma-direction.h>
++#include <linux/dmaengine.h>
++#include <linux/dma-mapping.h>
++#include <linux/interrupt.h>
++#include <linux/ioport.h>
++#include <linux/irqreturn.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/mempool.h>
++#include <linux/of.h>
++#include <linux/pci.h>
++#include <linux/property.h>
++#include <linux/platform_device.h>
++#include <linux/timer.h>
++#include <linux/dma/ps_pcie_dma.h>
++
++/**
++ * dma_platform_driver_register - This will be invoked by module init
++ *
++ * Return: returns status of platform_driver_register
++ */
++int dma_platform_driver_register(void);
++/**
++ * dma_platform_driver_unregister - This will be invoked by module exit
++ *
++ * Return: returns void after unregustering platform driver
++ */
++void dma_platform_driver_unregister(void);
++
++#endif
+diff --git a/drivers/dma/xilinx/ps_pcie_main.c b/drivers/dma/xilinx/ps_pcie_main.c
+new file mode 100644
+index 0000000..4ccd8ef
+--- /dev/null
++++ b/drivers/dma/xilinx/ps_pcie_main.c
+@@ -0,0 +1,200 @@
++/*
++ * XILINX PS PCIe driver
++ *
++ * Copyright (C) 2017 Xilinx, Inc. All rights reserved.
++ *
++ * Description
++ * PS PCIe DMA is memory mapped DMA used to execute PS to PL transfers
++ * on ZynqMP UltraScale+ Devices.
++ * This PCIe driver creates a platform device with specific platform
++ * info enabling creation of DMA device corresponding to the channel
++ * information provided in the properties
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation
++ */
++
++#include "ps_pcie.h"
++#include "../dmaengine.h"
++
++#define DRV_MODULE_NAME		  "ps_pcie_dma"
++
++static int ps_pcie_dma_probe(struct pci_dev *pdev,
++			     const struct pci_device_id *ent);
++static void ps_pcie_dma_remove(struct pci_dev *pdev);
++
++static u32 channel_properties_pcie_axi[] = {
++	(u32)(PCIE_AXI_DIRECTION), (u32)(NUMBER_OF_BUFFER_DESCRIPTORS),
++	(u32)(DEFAULT_DMA_QUEUES), (u32)(CHANNEL_COAELSE_COUNT),
++	(u32)(CHANNEL_POLL_TIMER_FREQUENCY) };
++
++static u32 channel_properties_axi_pcie[] = {
++	(u32)(AXI_PCIE_DIRECTION), (u32)(NUMBER_OF_BUFFER_DESCRIPTORS),
++	(u32)(DEFAULT_DMA_QUEUES), (u32)(CHANNEL_COAELSE_COUNT),
++	(u32)(CHANNEL_POLL_TIMER_FREQUENCY) };
++
++static struct property_entry generic_pcie_ep_property[] = {
++	PROPERTY_ENTRY_U32("numchannels", (u32)MAX_NUMBER_OF_CHANNELS),
++	PROPERTY_ENTRY_U32_ARRAY("ps_pcie_channel0",
++				 channel_properties_pcie_axi),
++	PROPERTY_ENTRY_U32_ARRAY("ps_pcie_channel1",
++				 channel_properties_axi_pcie),
++	PROPERTY_ENTRY_U32_ARRAY("ps_pcie_channel2",
++				 channel_properties_pcie_axi),
++	PROPERTY_ENTRY_U32_ARRAY("ps_pcie_channel3",
++				 channel_properties_axi_pcie),
++	{ },
++};
++
++static const struct platform_device_info xlnx_std_platform_dev_info = {
++	.name           = XLNX_PLATFORM_DRIVER_NAME,
++	.properties     = generic_pcie_ep_property,
++};
++
++/**
++ * ps_pcie_dma_probe - Driver probe function
++ * @pdev: Pointer to the pci_dev structure
++ * @ent: pci device id
++ *
++ * Return: '0' on success and failure value on error
++ */
++static int ps_pcie_dma_probe(struct pci_dev *pdev,
++			     const struct pci_device_id *ent)
++{
++	int err;
++	struct platform_device *platform_dev;
++	struct platform_device_info platform_dev_info;
++
++	dev_info(&pdev->dev, "PS PCIe DMA Driver probe\n");
++
++	err = pcim_enable_device(pdev);
++	if (err) {
++		dev_err(&pdev->dev, "Cannot enable PCI device, aborting\n");
++		return err;
++	}
++
++	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
++	if (err) {
++		dev_info(&pdev->dev, "Cannot set 64 bit DMA mask\n");
++		err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (err) {
++			dev_err(&pdev->dev, "DMA mask set error\n");
++			return err;
++		}
++	}
++
++	err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
++	if (err) {
++		dev_info(&pdev->dev, "Cannot set 64 bit consistent DMA mask\n");
++		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (err) {
++			dev_err(&pdev->dev, "Cannot set consistent DMA mask\n");
++			return err;
++		}
++	}
++
++	pci_set_master(pdev);
++
++	/* For Root DMA platform device will be created through device tree */
++	if (pdev->vendor == PCI_VENDOR_ID_XILINX &&
++	    pdev->device == ZYNQMP_RC_DMA_DEVID)
++		return 0;
++
++	memcpy(&platform_dev_info, &xlnx_std_platform_dev_info,
++	       sizeof(xlnx_std_platform_dev_info));
++
++	/* Do device specific channel configuration changes to
++	 * platform_dev_info.properties if required
++	 * More information on channel properties can be found
++	 * at Documentation/devicetree/bindings/dma/xilinx/ps-pcie-dma.txt
++	 */
++
++	platform_dev_info.parent = &pdev->dev;
++	platform_dev_info.data = &pdev;
++	platform_dev_info.size_data = sizeof(struct pci_dev **);
++
++	platform_dev = platform_device_register_full(&platform_dev_info);
++	if (IS_ERR(platform_dev)) {
++		dev_err(&pdev->dev,
++			"Cannot create platform device, aborting\n");
++		return PTR_ERR(platform_dev);
++	}
++
++	pci_set_drvdata(pdev, platform_dev);
++
++	dev_info(&pdev->dev, "PS PCIe DMA driver successfully probed\n");
++
++	return 0;
++}
++
++static struct pci_device_id ps_pcie_dma_tbl[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_XILINX, ZYNQMP_DMA_DEVID) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_XILINX, ZYNQMP_RC_DMA_DEVID) },
++	{ }
++};
++
++static struct pci_driver ps_pcie_dma_driver = {
++	.name     = DRV_MODULE_NAME,
++	.id_table = ps_pcie_dma_tbl,
++	.probe    = ps_pcie_dma_probe,
++	.remove   = ps_pcie_dma_remove,
++};
++
++/**
++ * ps_pcie_init - Driver init function
++ *
++ * Return: 0 on success. Non zero on failure
++ */
++static int __init ps_pcie_init(void)
++{
++	int ret;
++
++	pr_info("%s init()\n", DRV_MODULE_NAME);
++
++	ret = pci_register_driver(&ps_pcie_dma_driver);
++	if (ret)
++		return ret;
++
++	ret = dma_platform_driver_register();
++	if (ret)
++		pci_unregister_driver(&ps_pcie_dma_driver);
++
++	return ret;
++}
++
++/**
++ * ps_pcie_dma_remove - Driver remove function
++ * @pdev: Pointer to the pci_dev structure
++ *
++ * Return: void
++ */
++static void ps_pcie_dma_remove(struct pci_dev *pdev)
++{
++	struct platform_device *platform_dev;
++
++	platform_dev = (struct platform_device *)pci_get_drvdata(pdev);
++
++	if (platform_dev)
++		platform_device_unregister(platform_dev);
++}
++
++/**
++ * ps_pcie_exit - Driver exit function
++ *
++ * Return: void
++ */
++static void __exit ps_pcie_exit(void)
++{
++	pr_info("%s exit()\n", DRV_MODULE_NAME);
++
++	dma_platform_driver_unregister();
++	pci_unregister_driver(&ps_pcie_dma_driver);
++}
++
++module_init(ps_pcie_init);
++module_exit(ps_pcie_exit);
++
++MODULE_AUTHOR("Xilinx Inc");
++MODULE_DESCRIPTION("Xilinx PS PCIe DMA Driver");
++MODULE_LICENSE("GPL v2");
+diff --git a/include/linux/dma/ps_pcie_dma.h b/include/linux/dma/ps_pcie_dma.h
+new file mode 100644
+index 0000000..d11323a
+--- /dev/null
++++ b/include/linux/dma/ps_pcie_dma.h
+@@ -0,0 +1,69 @@
++/*
++ * Xilinx PS PCIe DMA Engine support header file
++ *
++ * Copyright (C) 2017 Xilinx, Inc. All rights reserved.
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation
++ */
++
++#ifndef __DMA_XILINX_PS_PCIE_H
++#define __DMA_XILINX_PS_PCIE_H
++
++#include <linux/dma-mapping.h>
++#include <linux/dmaengine.h>
++
++#define XLNX_PLATFORM_DRIVER_NAME "xlnx-platform-dma-driver"
++
++#define ZYNQMP_DMA_DEVID	(0xD024)
++#define ZYNQMP_RC_DMA_DEVID	(0xD021)
++
++#define MAX_ALLOWED_CHANNELS_IN_HW	4
++
++#define MAX_NUMBER_OF_CHANNELS	MAX_ALLOWED_CHANNELS_IN_HW
++
++#define DEFAULT_DMA_QUEUES	4
++#define TWO_DMA_QUEUES		2
++
++#define NUMBER_OF_BUFFER_DESCRIPTORS	1999
++#define MAX_DESCRIPTORS			65536
++
++#define CHANNEL_COAELSE_COUNT		0
++
++#define CHANNEL_POLL_TIMER_FREQUENCY	1000 /* in milli seconds */
++
++#define PCIE_AXI_DIRECTION	DMA_TO_DEVICE
++#define AXI_PCIE_DIRECTION	DMA_FROM_DEVICE
++
++/**
++ * struct BAR_PARAMS - PCIe Bar Parameters
++ * @BAR_PHYS_ADDR: PCIe BAR Physical address
++ * @BAR_LENGTH: Length of PCIe BAR
++ * @BAR_VIRT_ADDR: Virtual Address to access PCIe BAR
++ */
++struct BAR_PARAMS {
++	dma_addr_t BAR_PHYS_ADDR; /**< Base physical address of BAR memory */
++	unsigned long BAR_LENGTH; /**< Length of BAR memory window */
++	void *BAR_VIRT_ADDR;      /**< Virtual Address of mapped BAR memory */
++};
++
++/**
++ * struct ps_pcie_dma_channel_match - Match structure for dma clients
++ * @pci_vendorid: PCIe Vendor id of PS PCIe DMA device
++ * @pci_deviceid: PCIe Device id of PS PCIe DMA device
++ * @board_number: Unique id to identify individual device in a system
++ * @channel_number: Unique channel number of the device
++ * @direction: DMA channel direction
++ * @bar_params: Pointer to BAR_PARAMS for accessing application specific data
++ */
++struct ps_pcie_dma_channel_match {
++	u16 pci_vendorid;
++	u16 pci_deviceid;
++	u16 board_number;
++	u16 channel_number;
++	enum dma_data_direction direction;
++	struct BAR_PARAMS *bar_params;
++};
++
++#endif
 -- 
-2.9.0
+2.7.4
