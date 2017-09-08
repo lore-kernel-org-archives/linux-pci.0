@@ -1,120 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0060.outbound.protection.outlook.com ([104.47.42.60]:22987
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751554AbdI0SDa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Sep 2017 14:03:30 -0400
-Date: Wed, 27 Sep 2017 11:03:23 -0700
-From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-To: bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Wilson.Snyder@cavium.com, jcm@redhat.com,
-        Vadim.Lomovtsev@cavium.com, alex.williamson@redhat.com
-Subject: Re: [PATCH v5] PCI: quirks: update Cavium ThunderX ACS quirk
- implementation
-Message-ID: <20170927180323.GB28672@localhost.localdomain>
-References: <1505724481-28413-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <20170926094343.3e0d8d90@w520.home>
- <20170926160026.GA26639@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170926160026.GA26639@localhost.localdomain>
+Received: from mail.free-electrons.com ([62.4.15.54]:41977 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752872AbdIHJyB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:54:01 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        Evan Wang <xswang@marvell.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 6/7] PCI: aardvark: fix PCIe max read request size setting
+Date: Fri,  8 Sep 2017 11:53:47 +0200
+Message-Id: <20170908095348.16578-7-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
+References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 26, 2017 at 09:00:26AM -0700, Vadim Lomovtsev wrote:
-> On Tue, Sep 26, 2017 at 09:43:43AM -0600, Alex Williamson wrote:
-> > On Mon, 25 Sep 2017 06:08:40 -0700
-> > Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
-> > 
-> > > This commit makes Cavium PCI ACS quirk applicable only to Cavium
-> > > ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
-> > > in terms of no ACS support advertisement. However, the RTL internally
-> > > implements similar protection as if ACS had completion/request redirection,
-> > > upstream forwarding and validation features enabled.
-> > > 
-> > > Current quirk implementation doesn't take into account PCIERCs which
-> > > also needs to be quirked. So the pci device id check mask is updated
-> > > and check of device ID moved into separate function.
-> > > 
-> > > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-> > > ---
-> > >  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
-> > >  1 file changed, 21 insertions(+), 8 deletions(-)
-> > 
-> > 
-> > Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-> > 
-> > Thanks for making the updates
-> >
-> 
-> Thank you for your patience and for your time, Alex.
-> 
-> 
-> 
-> Bjorn,
-> 
-> Would you mind to pick up this patch ?
-> 
-> WBR,
-> Vadim
-> 
-> > 
-> > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > > index a4d3361..0fd2e15 100644
-> > > --- a/drivers/pci/quirks.c
-> > > +++ b/drivers/pci/quirks.c
-> > > @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
-> > >  #endif
-> > >  }
-> > >  
-> > > -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> > > +/*
-> > > + * The Cavium downstream ports doesn't advertise their ACS capability registers.
-> > > + * However, the RTL internally implements similar protection as if
-> > > + * ACS had completion redirection, forwarding and validation features enabled.
-> > > + * So by this flags we're asserting that the hardware implements and
-> > > + * enables equivalent ACS functionality for these flags.
-> > > + */
-> > > +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
-> > > +
-> > > +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
-> > >  {
-> > >  	/*
-> > > -	 * Cavium devices matching this quirk do not perform peer-to-peer
-> > > -	 * with other functions, allowing masking out these bits as if they
-> > > -	 * were unimplemented in the ACS capability.
-> > > +	 * Effectively selects all downstream ports for whole ThunderX 1 family
-> > > +	 * by 0xa00 mask (which represents 8 SoCs), while the lower bits of device ID
+From: Evan Wang <xswang@marvell.com>
 
-Bjorn,
+There is an obvious typo issue in the definition of the PCIe maximum
+read request size: a bit shift is directly used as a value, while it
+should be used to shift the correct value.
 
-Please ignore this since I found one more typo here: it should be 0xa000, sorry. Will post v6.
-Sorry for wasting your time, guys.
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
 
-WBR,
-Vadim
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Signed-off-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-
-> > > +	 * are used to indicate which subdevice is used within the SoC.
-> > >  	 */
-> > > -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> > > -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> > > +	return (pci_is_pcie(dev) &&
-> > > +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
-> > > +		((dev->device & 0xf800) == 0xa000));
-> > > +}
-> > >  
-> > > -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
-> > > +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> > > +{
-> > > +	if (!pci_quirk_cavium_acs_match(dev))
-> > >  		return -ENOTTY;
-> > >  
-> > > -	return acs_flags ? 0 : 1;
-> > > +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
-> > >  }
-> > >  
-> > >  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
-> > 
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 461517a87eca..6d6a2ae35481 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -33,6 +33,7 @@
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ		0x2
+ #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
++#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ		0x2
+ #define     PCIE_CORE_MPS_UNIT_BYTE				128
+ #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
+ #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
+@@ -304,7 +305,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 		(PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ <<
+ 		 PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
+ 		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
+-		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
++		(PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ <<
++		 PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT);
+ 	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
+ 
+ 	/* Program PCIe Control 2 to disable strict ordering */
+-- 
+2.13.5
