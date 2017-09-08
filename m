@@ -1,77 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 6 Sep 2017 16:37:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: linux-next: Tree for Sep 6 (*msi.c but ! PCI_MSI)
-Message-ID: <20170906213745.GB29570@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170906155720.581b9204@canb.auug.org.au>
- <ab28c8c3-94b9-5448-ca91-307c686a1903@infradead.org>
- <20170906180353.GA29570@bhelgaas-glaptop.roam.corp.google.com>
- <eee7f3f1-f616-1bb3-9a6e-c84d7a837236@infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp5-g21.free.fr ([212.27.42.5]:19534 "EHLO smtp5-g21.free.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751577AbdIHL0k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Sep 2017 07:26:40 -0400
+Subject: Re: [PATCH 4/4] PCI: xgene: Clean up whitespace
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Scott Branden <sbranden@broadcom.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        bcm-kernel-feedback-list@broadcom.com
+References: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170905182721.27030.75771.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <6d9454ac-d238-fc64-04f2-4534b0a419de@free.fr>
+Date: Fri, 8 Sep 2017 13:26:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <eee7f3f1-f616-1bb3-9a6e-c84d7a837236@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170905182721.27030.75771.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 06, 2017 at 11:14:04AM -0700, Randy Dunlap wrote:
-> On 09/06/17 11:03, Bjorn Helgaas wrote:
-> > [+cc Marc, Thomas]
-> > 
-> > On Wed, Sep 06, 2017 at 08:53:04AM -0700, Randy Dunlap wrote:
-> >> On 09/05/17 22:57, Stephen Rothwell wrote:
-> >>> Hi all,
-> >>>
-> >>> Please do not add any v4.15 related material to your linux-next
-> >>> included branches until after v4.14-rc1 has been released.
-> >>>
-> >>> Changes since 20170905:
-> >>>
-> >>
-> >> on i386:
-> >>
-> >> CONFIG_PCI is not enabled, so CONFIG_PCI_MSI is not enabled.
-> >>
-> >>
-> >> ../kernel/irq/msi.c: In function 'msi_domain_alloc_irqs':
-> >> ../kernel/irq/msi.c:352:19: error: storage size of 'arg' isn't known
-> >>   msi_alloc_info_t arg;
-> >>                    ^
-> >>
-> >> ../drivers/base/platform-msi.c:37:19: error: field 'arg' has incomplete type
-> >>   msi_alloc_info_t arg;
-> >>                    ^
-> > 
-> > Thanks.  I assume this is a new regression in next-20170906, since
-> > you're responding to its announcement?
-> 
-> Yes, AFAIK. First time that I have seen it.
-> 
-> > I don't quite see where the problem is yet (looking at next-20170906).
-> > kernel/irq/msi.c includes linux/msi.h, which includes
-> > arch/x86/include/asm/msi.h, which includes
-> > arch/x86/include/asm/hw_irq.h and has a typedef for msi_alloc_info_t,
-> > but I don't see any CONFIG_PCI guards there that would be relevant.
-> 
-> CONFIG_GENERIC_MSI_IRQ=y
-> CONFIG_GENERIC_MSI_IRQ_DOMAIN=y
-> 
-> Full randconfig file is attached.
+On 05/09/2017 20:27, Bjorn Helgaas wrote:
 
-Thanks, I reproduced the problem.  That randconfig doesn't build in
-v4.12 or v4.13 either (though with slightly different errors).
+> Use tabs (not spaces) for indentation.  No functional change intended.
 
-I think the next-20170906 problem is that msi_alloc_info_t is
-typedef'd to struct irq_alloc_info, which is defined only under
-#ifdef CONFIG_X86_LOCAL_APIC, which isn't set in this config.
+git diff -b should be empty, right?
 
-This is outside my scope of knowledge, so I'm hoping the problem is
-obvious to Thomas or Marc.
+> @@ -280,12 +280,12 @@ static int xgene_v2_pcie_ecam_init(struct pci_config_window *cfg)
+>   }
+>   
+>   struct pci_ecam_ops xgene_v2_pcie_ecam_ops = {
+> -	.bus_shift      = 16,
+> -	.init           = xgene_v2_pcie_ecam_init,
+> -	.pci_ops        = {
+> -		.map_bus        = xgene_pcie_map_bus,
+> -		.read           = xgene_pcie_config_read32,
+> -		.write          = pci_generic_config_write,
+> +	.bus_shift	= 16,
+> +	.init		= xgene_v2_pcie_ecam_init,
+> +	.pci_ops	= {
+> +		.map_bus	= xgene_pcie_map_bus,
+> +		.read		= xgene_pcie_config_read32,
+> +		.writei		= pci_generic_config_write,
+>   	}
+>   };
+>   #endif
 
-Bjorn
+Spurious 'i' in '.writei' ;-)
+
+Regards.
