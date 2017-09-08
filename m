@@ -1,80 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:51058 "EHLO
-        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751328AbdINRLt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2017 13:11:49 -0400
-Received: by mail-yw0-f182.google.com with SMTP id k13so650215ywh.7
-        for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2017 10:11:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 14 Sep 2017 12:11:28 -0500
-Message-ID: <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        srinath.mannam@broadcom.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.free-electrons.com ([62.4.15.54]:41934 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752872AbdIHJx7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:53:59 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 0/7] PCI: aardvark: improve compatibility with PCI devices
+Date: Fri,  8 Sep 2017 11:53:41 +0200
+Message-Id: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+Hello,
 
-On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 09/12/2017 02:04 PM, Johannes Berg wrote:
->> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
->>
->>> CC'ing the guilty part and Bjorn. I'm assuming it's the
->>> pci_is_enabled() check, since the rest of the patch shouldn't have
->>> functional changes.
->>
->> and pci_enable_bridge() already checks if it's already enabled, but
->> still enables mastering in that case if it isn't:
->>
->> static void pci_enable_bridge(struct pci_dev *dev)
->> {
->> [...]
->>         if (pci_is_enabled(dev)) {
->>                 if (!dev->is_busmaster)
->>                         pci_set_master(dev);
->>                 return;
->>         }
->>
->> so I guess due to the new check we end up with mastering disabled, and
->> thus the firmware can't load since that's a DMA thing?
->
-> Bjorn/Srinath, any input here? This is a regression that prevents wifi
-> from working on a pretty standard laptop. It'd suck to have this be in
-> -rc1. Seems like the trivial fix would be:
->
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b0002daa50f3..ffbe11dbdd61 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->                 return 0;               /* already enabled */
->
->         bridge = pci_upstream_bridge(dev);
-> -       if (bridge && !pci_is_enabled(bridge))
-> +       if (bridge)
->                 pci_enable_bridge(bridge);
->
->         /* only skip sriov related */
->
->
+This patch series brings a number of fixes to the pci-aardvark driver
+that allows a much larger number of PCIe devices to be used.
 
-Looks like a reasonable fix.  I assume it works for you?  I don't have
-a way to test it, so if you can verify that it works and supply a
-Signed-off-by, I can merge it.
+It fixes kernel bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, and has been
+tested with an IGB NIC and a Marvell SATA PCIe card, which were not
+working previously.
 
-Bjorn
+They should be taken for the 4.14 cycle, as they are all bug fixes.
+
+Thanks a lot!
+
+Thomas
+
+Evan Wang (1):
+  PCI: aardvark: fix PCIe max read request size setting
+
+Thomas Petazzoni (1):
+  PCI: aardvark: define IRQ related hooks in pci_host_bridge
+
+Victor Gu (5):
+  PCI: aardvark: fix logic in PCI configuration read/write functions
+  PCI: aardvark: set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
+  PCI: aardvark: set host and device to the same MAX payload size
+  PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
+  PCI: aardvark: disable LOS state by default
+
+ drivers/pci/host/pci-aardvark.c | 116 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 92 insertions(+), 24 deletions(-)
+
+-- 
+2.13.5
