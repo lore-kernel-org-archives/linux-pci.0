@@ -1,139 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alln-iport-1.cisco.com ([173.37.142.88]:63407 "EHLO
-        alln-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751905AbdI0Vwb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2017 17:52:31 -0400
-From: Govindarajulu Varadarajan <gvaradar@cisco.com>
-To: benve@cisco.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
-        mingo@redhat.com, peterz@infradead.org
-Cc: Govindarajulu Varadarajan <gvaradar@cisco.com>
-Subject: [PATCH 4/4] lockdep: make MAX_LOCK_DEPTH configurable from Kconfig
-Date: Wed, 27 Sep 2017 14:42:20 -0700
-Message-Id: <20170927214220.41216-5-gvaradar@cisco.com>
-In-Reply-To: <20170927214220.41216-1-gvaradar@cisco.com>
-References: <20170927214220.41216-1-gvaradar@cisco.com>
+Received: from mout3.freenet.de ([195.4.92.93]:49940 "EHLO mout3.freenet.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752549AbdIHLdE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Sep 2017 07:33:04 -0400
+Subject: Re: AVIC warning - what does it mean?
+To: Mason <slash.tmp@free.fr>, linux-pci@vger.kernel.org
+Cc: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+        Radim Krcmar <rkrcmar@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>
+References: <524102f8-8879-2ed2-3dcb-3162df9062b6@01019freenet.de>
+ <48591d55-ba2f-9960-85ba-d2bede0b7aac@free.fr>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <9d8c90a5-49a7-ce06-9c41-fa067e359b97@maya.org>
+Date: Fri, 8 Sep 2017 13:23:59 +0200
+MIME-Version: 1.0
+In-Reply-To: <48591d55-ba2f-9960-85ba-d2bede0b7aac@free.fr>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make MAX_LOCK_DEPTH configurable. It is set to 48 right now. Number of
-VFs under a PCI pf bus can exceed 48 and this disables lockdep.
+On 09/08/2017 at 12:58 PM Mason wrote:
+> On 08/09/2017 11:58, Andreas Hartmann wrote:
+> 
+>> If AVIC is enabled, I'm usually getting one warning like the one below a
+>> few minutes after the VM has been started.
+>>
+>> What does it mean?
+>>
+>> There isn't any problem with that VM - it's just working as expected. If
+>> AVIC is disabled, the warning doesn't come up and the VM works fine, too.
+>>
+>> Base is a Ryzen system (RMA'd CPU w/o gcc segfaults meanwhile and X370
+>> chipset (ASUS Prime X370-PRO with Bios 0810)). Linux is 4.9.48.
+>>
+>>
+>> [ 1603.482692] ------------[ cut here ]------------
+>> [ 1603.482702] WARNING: CPU: 1 PID: 2936 at ../arch/x86/kvm/svm.c:1484 avic_vcpu_load+0x162/0x190 [kvm_amd]
+>> [ 1603.482703] Modules linked in: sr_mod cdrom uas usb_storage vhost_net tun vhost macvtap macvlan igb dca nf_log_ipv4 nf_log_common xt_LOG ipt_REJECT nf_reject_ipv4 xt_tcpudp nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack iptable_filter ip_tables x_tables vfio_pci vfio_iommu_type1 vfio_virqfd vfio br_netfilter bridge stp llc iscsi_ibft iscsi_boot_sysfs snd_hda_codec_generic snd_hda_codec_hdmi snd_hda_intel snd_hda_codec snd_hda_core snd_hwdep kvm_amd snd_pcm eeepc_wmi asus_wmi kvm sparse_keymap snd_seq rfkill video snd_seq_device mxm_wmi irqbypass snd_timer sp5100_tco i2c_piix4 snd pcspkr e1000e soundcore ptp pps_core fjes pinctrl_amd gpio_amdpt acpi_cpufreq gpio_generic 8250_dw tpm_tis shpchp i2c_designware_platform wmi i2c_designware_core tpm_tis_core button tpm nfsd auth_rp
+>>   cgss nfs_acl
+>> [ 1603.482740]  lockd grace sunrpc xfs libcrc32c dm_crypt algif_skcipher af_alg hid_generic usbhid raid1 md_mod amdkfd amd_iommu_v2 crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel radeon i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops ttm serio_raw drm ccp xhci_pci xhci_hcd usbcore aesni_intel aes_x86_64 glue_helper lrw ablk_helper cryptd ata_generic pata_atiixp dm_mirror dm_region_hash dm_log sg thermal dm_multipath dm_mod scsi_dh_rdac scsi_dh_emc scsi_dh_alua
+>> [ 1603.482766] CPU: 1 PID: 2936 Comm: CPU 2/KVM Not tainted 4.9.48-1.1-default #1
+>> [ 1603.482767] Hardware name: System manufacturer System Product Name/PRIME X370-PRO, BIOS 0810 08/01/2017
+>> [ 1603.482768]  ffffab614aa4fcb8 ffffffff893c14fa 0000000000000000 0000000000000000
+>> [ 1603.482772]  ffffab614aa4fcf8 ffffffff89085da1 000005cc004b6f7f 0000000000000001
+>> [ 1603.482774]  c0000007ea4bc001 0000000000000001 000001753dd1e17d ffff9e84ea7e0140
+>> [ 1603.482776] Call Trace:
+>> [ 1603.482798]  [<ffffffff893c14fa>] dump_stack+0x63/0x89
+>> [ 1603.482804]  [<ffffffff89085da1>] __warn+0xd1/0xf0
+>> [ 1603.482809]  [<ffffffff89085e8d>] warn_slowpath_null+0x1d/0x20
+>> [ 1603.482813]  [<ffffffffc15ade42>] avic_vcpu_load+0x162/0x190 [kvm_amd]
+>> [ 1603.482849]  [<ffffffffc0950da4>] ? kvm_cpu_has_interrupt+0x44/0x50 [kvm]
+>> [ 1603.482852]  [<ffffffffc15ae138>] svm_vcpu_unblocking+0x18/0x20 [kvm_amd]
+>> [ 1603.482868]  [<ffffffffc091b424>] kvm_vcpu_block+0xc4/0x310 [kvm]
+>> [ 1603.482889]  [<ffffffffc0937fac>] kvm_arch_vcpu_ioctl_run+0x19c/0x400 [kvm]
+>> [ 1603.482906]  [<ffffffffc091cc42>] kvm_vcpu_ioctl+0x312/0x5e0 [kvm]
+>> [ 1603.482913]  [<ffffffff8910d10f>] ? do_futex+0x10f/0x510
+>> [ 1603.482916]  [<ffffffff8923ec06>] do_vfs_ioctl+0x96/0x5b0
+>> [ 1603.482921]  [<ffffffff89249767>] ? __fget+0x77/0xb0
+>> [ 1603.482922]  [<ffffffff8923f199>] SyS_ioctl+0x79/0x90
+>> [ 1603.482927]  [<ffffffff8900393b>] do_syscall_64+0x5b/0xd0
+>> [ 1603.482932]  [<ffffffff89719c2f>] entry_SYSCALL64_slow_path+0x25/0x25
+>> [ 1603.484799] ---[ end trace d24b045704bb6ae7 ]---
+> 
+> For what it's worth...
+> 
+> http://elixir.free-electrons.com/linux/v4.9.48/source/arch/x86/kvm/svm.c#L1484
+> 
+>     entry = READ_ONCE(*(svm->avic_physical_id_cache));
+>     WARN_ON(entry & AVIC_PHYSICAL_ID_ENTRY_IS_RUNNING_MASK);
+> 
+> Added by commit 8221c13700561
+> 
+>     svm: Manage vcpu load/unload when enable AVIC
+>         When a vcpu is loaded/unloaded to a physical core, we need to update
+>     host physical APIC ID information in the Physical APIC-ID table
+>     accordingly.
+>         Also, when vCPU is blocking/un-blocking (due to halt instruction),
+>     we need to make sure that the is-running bit in set accordingly in the
+>     physical APIC-ID table.
 
-lockdep currently allows max of 63 held_locks.
+Thanks - I already found this - but I don't know how to estimate it. 
 
-Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
----
- fs/configfs/inode.c      |  2 +-
- include/linux/sched.h    |  3 +--
- kernel/locking/lockdep.c | 13 +++++++------
- lib/Kconfig.debug        | 10 ++++++++++
- 4 files changed, 19 insertions(+), 9 deletions(-)
+Should I worry about? Or is it just informative? As it is working 
+afterwards the same as before, it probably isn't critical? 
+Could the WARN_ON be removed?
 
-diff --git a/fs/configfs/inode.c b/fs/configfs/inode.c
-index ad718e5e37bb..a1e2a7ce69d0 100644
---- a/fs/configfs/inode.c
-+++ b/fs/configfs/inode.c
-@@ -41,7 +41,7 @@
- #include "configfs_internal.h"
- 
- #ifdef CONFIG_LOCKDEP
--static struct lock_class_key default_group_class[MAX_LOCK_DEPTH];
-+static struct lock_class_key default_group_class[CONFIG_MAX_LOCK_DEPTH];
- #endif
- 
- static const struct address_space_operations configfs_aops = {
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 92fb8dd5a9e4..9a81eec702be 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -841,11 +841,10 @@ struct task_struct {
- #endif
- 
- #ifdef CONFIG_LOCKDEP
--# define MAX_LOCK_DEPTH			48UL
- 	u64				curr_chain_key;
- 	int				lockdep_depth;
- 	unsigned int			lockdep_recursion;
--	struct held_lock		held_locks[MAX_LOCK_DEPTH];
-+	struct held_lock		held_locks[CONFIG_MAX_LOCK_DEPTH];
- #endif
- 
- #ifdef CONFIG_LOCKDEP_CROSSRELEASE
-diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
-index 44c8d0d17170..22a4a338616d 100644
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -3404,7 +3404,7 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
- 	/*
- 	 * Ran out of static storage for our per-task lock stack again have we?
- 	 */
--	if (DEBUG_LOCKS_WARN_ON(depth >= MAX_LOCK_DEPTH))
-+	if (DEBUG_LOCKS_WARN_ON(depth >= CONFIG_MAX_LOCK_DEPTH))
- 		return 0;
- 
- 	class_idx = class - lock_classes + 1;
-@@ -3513,11 +3513,11 @@ static int __lock_acquire(struct lockdep_map *lock, unsigned int subclass,
- 	if (unlikely(!debug_locks))
- 		return 0;
- #endif
--	if (unlikely(curr->lockdep_depth >= MAX_LOCK_DEPTH)) {
-+	if (unlikely(curr->lockdep_depth >= CONFIG_MAX_LOCK_DEPTH)) {
- 		debug_locks_off();
- 		print_lockdep_off("BUG: MAX_LOCK_DEPTH too low!");
- 		printk(KERN_DEBUG "depth: %i  max: %lu!\n",
--		       curr->lockdep_depth, MAX_LOCK_DEPTH);
-+		       curr->lockdep_depth, CONFIG_MAX_LOCK_DEPTH);
- 
- 		lockdep_print_held_locks(current);
- 		debug_show_all_locks();
-@@ -4276,7 +4276,8 @@ void lockdep_reset(void)
- 	current->curr_chain_key = 0;
- 	current->lockdep_depth = 0;
- 	current->lockdep_recursion = 0;
--	memset(current->held_locks, 0, MAX_LOCK_DEPTH*sizeof(struct held_lock));
-+	memset(current->held_locks, 0,
-+	       CONFIG_MAX_LOCK_DEPTH * sizeof(struct held_lock));
- 	nr_hardirq_chains = 0;
- 	nr_softirq_chains = 0;
- 	nr_process_chains = 0;
-@@ -4421,7 +4422,7 @@ void __init lockdep_info(void)
- 	printk("Lock dependency validator: Copyright (c) 2006 Red Hat, Inc., Ingo Molnar\n");
- 
- 	printk("... MAX_LOCKDEP_SUBCLASSES:  %lu\n", MAX_LOCKDEP_SUBCLASSES);
--	printk("... MAX_LOCK_DEPTH:          %lu\n", MAX_LOCK_DEPTH);
-+	printk("... MAX_LOCK_DEPTH:          %lu\n", CONFIG_MAX_LOCK_DEPTH);
- 	printk("... MAX_LOCKDEP_KEYS:        %lu\n", MAX_LOCKDEP_KEYS);
- 	printk("... CLASSHASH_SIZE:          %lu\n", CLASSHASH_SIZE);
- 	printk("... MAX_LOCKDEP_ENTRIES:     %lu\n", MAX_LOCKDEP_ENTRIES);
-@@ -4441,7 +4442,7 @@ void __init lockdep_info(void)
- 		);
- 
- 	printk(" per task-struct memory footprint: %lu bytes\n",
--		sizeof(struct held_lock) * MAX_LOCK_DEPTH);
-+		sizeof(struct held_lock) * CONFIG_MAX_LOCK_DEPTH);
- }
- 
- static void
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 2689b7c50c52..60bc084315a6 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -1187,6 +1187,16 @@ config DEBUG_LOCKDEP
- 	  additional runtime checks to debug itself, at the price
- 	  of more runtime overhead.
- 
-+config MAX_LOCK_DEPTH
-+	int "Maximum held_locks depth"
-+	depends on DEBUG_LOCKDEP
-+	default 48
-+	range 1 63
-+	help
-+	  This is maximum held_lock depth in task_struct for debugging.
-+	  Increment if you think a task can hold more than default(48) locks.
-+	  If unsure, set to default value, 48.
-+
- config DEBUG_ATOMIC_SLEEP
- 	bool "Sleep inside atomic section checking"
- 	select PREEMPT_COUNT
--- 
-2.14.1
+
+Regards,
+Andreas
