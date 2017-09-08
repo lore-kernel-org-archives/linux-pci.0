@@ -1,59 +1,148 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 25 Sep 2017 16:41:31 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:41970 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753527AbdIHJyA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:54:00 -0400
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/7] PCI: aardvark: improve compatibility with PCI devices
-Message-ID: <20170925164131.166bcfac@windsurf.lan>
+Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 4/7] PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
+Date: Fri,  8 Sep 2017 11:53:45 +0200
+Message-Id: <20170908095348.16578-5-thomas.petazzoni@free-electrons.com>
 In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
 References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
- Jason Cooper <jason@lakedaemon.net>, Hanna Hawa <hannah@marvell.com>,
- Nadav Haklai <nadavh@marvell.com>, Victor Gu <xigu@marvell.com>,
- =?UTF-8?B?TWlxdcOobA==?= Raynal <miquel.raynal@free-electrons.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Antoine Tenart <antoine.tenart@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+From: Victor Gu <xigu@marvell.com>
 
-On Fri,  8 Sep 2017 11:53:41 +0200, Thomas Petazzoni wrote:
+The Aardvark has two interrupts sets:
 
-> This patch series brings a number of fixes to the pci-aardvark driver
-> that allows a much larger number of PCIe devices to be used.
-> 
-> It fixes kernel bug
-> https://bugzilla.kernel.org/show_bug.cgi?id=196339, and has been
-> tested with an IGB NIC and a Marvell SATA PCIe card, which were not
-> working previously.
-> 
-> They should be taken for the 4.14 cycle, as they are all bug fixes.
+ - first set is bit[23:16] of PCIe ISR 0 register(RD0074840h)
 
-Do you have some feedback about this series? It fixes some important
-problems (reported by users), so it would be nice to have it in 4.14.
+ - second set is bit[11:8] of PCIe ISR 1 register(RD0074848h)
 
-Thanks a lot!
+Only one set should be used, while another set should be masked.
 
-Thomas
+The second set, ISR1, is more advanced, the Legacy INT_X status bit is
+asserted once Assert_INTX message is received, and de-asserted after
+Deassert_INTX message is received. Therefore, it matches what the
+driver is currently doing in the ->irq_mask() and ->irq_unmask()
+functions. The ISR0 requires additional work to deassert the
+interrupt, which the driver doesn't do currently.
+
+This commit resolves a number of issues with legacy interrupts.
+
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
+
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 41 ++++++++++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index e361c673732f..4a563d8526ae 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -105,7 +105,8 @@
+ #define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
+ #define     PCIE_ISR1_POWER_STATE_CHANGE	BIT(4)
+ #define     PCIE_ISR1_FLUSH			BIT(5)
+-#define     PCIE_ISR1_ALL_MASK			GENMASK(5, 4)
++#define     PCIE_ISR1_INTX_ASSERT(val)		BIT(8 + (val))
++#define     PCIE_ISR1_ALL_MASK			GENMASK(11, 4)
+ #define PCIE_MSI_ADDR_LOW_REG			(CONTROL_BASE_ADDR + 0x50)
+ #define PCIE_MSI_ADDR_HIGH_REG			(CONTROL_BASE_ADDR + 0x54)
+ #define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
+@@ -616,9 +617,9 @@ static void advk_pcie_irq_mask(struct irq_data *d)
+ 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 	u32 mask;
+ 
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	mask |= PCIE_ISR0_INTX_ASSERT(hwirq);
+-	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
++	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	mask |= PCIE_ISR1_INTX_ASSERT(hwirq);
++	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
+ }
+ 
+ static void advk_pcie_irq_unmask(struct irq_data *d)
+@@ -627,9 +628,9 @@ static void advk_pcie_irq_unmask(struct irq_data *d)
+ 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 	u32 mask;
+ 
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	mask &= ~PCIE_ISR0_INTX_ASSERT(hwirq);
+-	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
++	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	mask &= ~PCIE_ISR1_INTX_ASSERT(hwirq);
++	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
+ }
+ 
+ static int advk_pcie_irq_map(struct irq_domain *h,
+@@ -772,29 +773,35 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
+ 
+ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ {
+-	u32 val, mask, status;
++	u32 isr0_val, isr0_mask, isr0_status;
++	u32 isr1_val, isr1_mask, isr1_status;
+ 	int i, virq;
+ 
+-	val = advk_readl(pcie, PCIE_ISR0_REG);
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
++	isr0_val = advk_readl(pcie, PCIE_ISR0_REG);
++	isr0_mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
++	isr0_status = isr0_val & ((~isr0_mask) & PCIE_ISR0_ALL_MASK);
+ 
+-	if (!status) {
+-		advk_writel(pcie, val, PCIE_ISR0_REG);
++	isr1_val = advk_readl(pcie, PCIE_ISR1_REG);
++	isr1_mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
++
++	if (!isr0_status && !isr1_status) {
++		advk_writel(pcie, isr0_val, PCIE_ISR0_REG);
++		advk_writel(pcie, isr1_val, PCIE_ISR1_REG);
+ 		return;
+ 	}
+ 
+ 	/* Process MSI interrupts */
+-	if (status & PCIE_ISR0_MSI_INT_PENDING)
++	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
+ 		advk_pcie_handle_msi(pcie);
+ 
+ 	/* Process legacy interrupts */
+ 	for (i = 0; i < LEGACY_IRQ_NUM; i++) {
+-		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
++		if (!(isr1_status & PCIE_ISR1_INTX_ASSERT(i)))
+ 			continue;
+ 
+-		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
+-			    PCIE_ISR0_REG);
++		advk_writel(pcie, PCIE_ISR1_INTX_ASSERT(i),
++			    PCIE_ISR1_REG);
+ 
+ 		virq = irq_find_mapping(pcie->irq_domain, i);
+ 		generic_handle_irq(virq);
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.13.5
