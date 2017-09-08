@@ -1,14 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-To: Jan Luebbe <jlu@pengutronix.de>
-Subject: Re: [PATCH 1/2] bus: mbus: fix window size calculation for 4GB windows
-References: <20170828152517.24506-1-jlu@pengutronix.de>
- <20170828152517.24506-2-jlu@pengutronix.de>
-Date: Tue, 19 Sep 2017 16:43:18 +0200
-In-Reply-To: <20170828152517.24506-2-jlu@pengutronix.de> (Jan Luebbe's message
- of "Mon, 28 Aug 2017 17:25:16 +0200")
-Message-ID: <87wp4urbp5.fsf@free-electrons.com>
+From: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
+To: <vinod.koul@intel.com>, <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+ <michal.simek@xilinx.com>, <soren.brinkmann@xilinx.com>,
+ <dan.j.williams@intel.com>, <bhelgaas@google.com>, <vjonnal@xilinx.com>,
+ <lorenzo.pieralisi@arm.com>, <bharat.kumar.gogada@xilinx.com>,
+ <dmaengine@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rgummal@xilinx.com>
+Subject: [PATCH v2 2/5] PCI:xilinx-nwl: Correcting Styling checks
+Date: Fri, 8 Sep 2017 17:53:04 +0530
+Message-ID: <1504873388-29195-3-git-send-email-vjonnal@xilinx.com>
+In-Reply-To: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
+References: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -17,56 +21,61 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, kernel@pengutronix.de,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSmFuLAogCiBPbiBsdW4uLCBhb8O7dCAyOCAyMDE3LCBKYW4gTHVlYmJlIDxqbHVAcGVuZ3V0
-cm9uaXguZGU+IHdyb3RlOgoKPiBBdCBsZWFzdCB0aGUgQXJtYWRhIFhQIFNvQyBzdXBwb3J0cyA0
-R0Igb24gYSBzaW5nbGUgRFJBTSB3aW5kb3cuIEJlY2F1c2UKPiB0aGUgc2l6ZSByZWdpc3RlciB2
-YWx1ZXMgY29udGFpbiB0aGUgYWN0dWFsIHNpemUgLSAxLCB0aGUgTVNCIGlzIHNldCBpbgo+IHRo
-YXQgY2FzZS4gRm9yIGV4YW1wbGUsIHRoZSBTRFJBTSB3aW5kb3cncyBjb250cm9sIHJlZ2lzdGVy
-J3MgdmFsdWUgaXMKPiAweGZmZmZmZmUxIGZvciA0R0IgKGJpdHMgMzEgdG8gMjQgY29udGFpbiB0
-aGUgc2l6ZSkuCj4KPiBUaGUgTUJVUyBkcml2ZXIgcmVhZHMgYmFjayBlYWNoIHdpbmRvdydzIHNp
-emUgZnJvbSByZWdpc3RlcnMgYW5kCj4gY2FsY3VsYXRlcyB0aGUgYWN0dWFsIHNpemUgYXMgKGNv
-bnRyb2xfcmVnIHwgfkREUl9TSVpFX01BU0spICsgMSwgd2hpY2gKPiBvdmVyZmxvd3MgZm9yIDMy
-IGJpdCB2YWx1ZXMsIHJlc3VsdGluZyBpbiBvdGhlciBtaXNjYWxjdWxhdGlvbnMgZnVydGhlcgo+
-IG9uIChhIGJhZCBSQU0gd2luZG93IGZvciB0aGUgQ0VTQSBjcnlwdG8gZW5naW5lIGNhbGN1bGF0
-ZWQgYnkKPiBtdmVidV9tYnVzX3NldHVwX2NwdV90YXJnZXRfbm9vdmVybGFwKCkgaW4gbXkgY2Fz
-ZSkuCj4KPiBUaGlzIHBhdGNoIGNoYW5nZXMgdGhlIHR5cGUgaW4gJ3N0cnVjdCBtYnVzX2RyYW1f
-d2luZG93JyBmcm9tIHUzMiB0bwo+IHU2NCwgd2hpY2ggYWxsb3dzIHVzIHRvIGtlZXAgdXNpbmcg
-dGhlIHNhbWUgcmVnaXN0ZXIgY2FsY3VsYXRpb24gY29kZSBpbgo+IG1vc3QgTUJVUy11c2luZyBk
-cml2ZXJzICh3aGljaCBjYWxjdWxhdGUgLT5zaXplIC0gMSBhZ2FpbikuCj4KCllvdXIgcGF0Y2gg
-bG9va3MgZ29vZCwgYnV0IGFzIGl0IGlzIGEgZml4IHdlIHNob3VsZCBhbHNvIGFwcGx5IGl0IG9u
-CnN0YWJsZSwgY291bGQgeW91IHByb3ZpZGUgdGhlIGNvbW1pdCB0byBmaXg/CgpUaGFua3MsCgpH
-cmVnb3J5Cgo+IFNpZ25lZC1vZmYtYnk6IEphbiBMdWViYmUgPGpsdUBwZW5ndXRyb25peC5kZT4K
-PiAtLS0KPiAgZHJpdmVycy9idXMvbXZlYnUtbWJ1cy5jIHwgMiArLQo+ICBpbmNsdWRlL2xpbnV4
-L21idXMuaCAgICAgfCA0ICsrLS0KPiAgMiBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyks
-IDMgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9idXMvbXZlYnUtbWJ1cy5j
-IGIvZHJpdmVycy9idXMvbXZlYnUtbWJ1cy5jCj4gaW5kZXggYzdmMzk2OTAzMTg0Li43MGRiNGQ1
-NjM4YTYgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9idXMvbXZlYnUtbWJ1cy5jCj4gKysrIGIvZHJp
-dmVycy9idXMvbXZlYnUtbWJ1cy5jCj4gQEAgLTcyMCw3ICs3MjAsNyBAQCBtdmVidV9tYnVzX2Rl
-ZmF1bHRfc2V0dXBfY3B1X3RhcmdldChzdHJ1Y3QgbXZlYnVfbWJ1c19zdGF0ZSAqbWJ1cykKPiAg
-CQkJaWYgKG1idXMtPmh3X2lvX2NvaGVyZW5jeSkKPiAgCQkJCXctPm1idXNfYXR0ciB8PSBBVFRS
-X0hXX0NPSEVSRU5DWTsKPiAgCQkJdy0+YmFzZSA9IGJhc2UgJiBERFJfQkFTRV9DU19MT1dfTUFT
-SzsKPiAtCQkJdy0+c2l6ZSA9IChzaXplIHwgfkREUl9TSVpFX01BU0spICsgMTsKPiArCQkJdy0+
-c2l6ZSA9ICh1NjQpKHNpemUgfCB+RERSX1NJWkVfTUFTSykgKyAxOwo+ICAJCX0KPiAgCX0KPiAg
-CW12ZWJ1X21idXNfZHJhbV9pbmZvLm51bV9jcyA9IGNzOwo+IGRpZmYgLS1naXQgYS9pbmNsdWRl
-L2xpbnV4L21idXMuaCBiL2luY2x1ZGUvbGludXgvbWJ1cy5oCj4gaW5kZXggMGQzZjE0ZmQyNjIx
-Li40NzczMTQ1MjQ2ZWQgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVkZS9saW51eC9tYnVzLmgKPiArKysg
-Yi9pbmNsdWRlL2xpbnV4L21idXMuaAo+IEBAIC0zMSw4ICszMSw4IEBAIHN0cnVjdCBtYnVzX2Ry
-YW1fdGFyZ2V0X2luZm8KPiAgCXN0cnVjdCBtYnVzX2RyYW1fd2luZG93IHsKPiAgCQl1OAljc19p
-bmRleDsKPiAgCQl1OAltYnVzX2F0dHI7Cj4gLQkJdTMyCWJhc2U7Cj4gLQkJdTMyCXNpemU7Cj4g
-KwkJdTY0CWJhc2U7Cj4gKwkJdTY0CXNpemU7Cj4gIAl9IGNzWzRdOwo+ICB9Owo+ICAKPiAtLSAK
-PiAyLjExLjAKPgoKLS0gCkdyZWdvcnkgQ2xlbWVudCwgRnJlZSBFbGVjdHJvbnMKS2VybmVsLCBk
-cml2ZXJzLCByZWFsLXRpbWUgYW5kIGVtYmVkZGVkIExpbnV4CmRldmVsb3BtZW50LCBjb25zdWx0
-aW5nLCB0cmFpbmluZyBhbmQgc3VwcG9ydC4KaHR0cDovL2ZyZWUtZWxlY3Ryb25zLmNvbQoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtl
-cm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0
-dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5l
-bAo=
+Correcting Style checks thrown by checkpatch scripts
+
+Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
+Signed-off-by: RaviKiran Gummaluri <rgummal@xilinx.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 5766582..3c62e3d 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -506,15 +506,15 @@ static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 
+ 	for (i = 0; i < nr_irqs; i++) {
+ 		irq_domain_set_info(domain, virq + i, bit + i, &nwl_irq_chip,
+-				domain->host_data, handle_simple_irq,
+-				NULL, NULL);
++				    domain->host_data, handle_simple_irq,
++				    NULL, NULL);
+ 	}
+ 	mutex_unlock(&msi->lock);
+ 	return 0;
+ }
+ 
+ static void nwl_irq_domain_free(struct irq_domain *domain, unsigned int virq,
+-					unsigned int nr_irqs)
++				unsigned int nr_irqs)
+ {
+ 	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
+ 	struct nwl_pcie *pcie = irq_data_get_irq_chip_data(data);
+@@ -767,7 +767,6 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	/* Enable all misc interrupts */
+ 	nwl_bridge_writel(pcie, MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
+ 
+-
+ 	/* Disable all legacy interrupts */
+ 	nwl_bridge_writel(pcie, (u32)~MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
+ 
+@@ -932,4 +931,5 @@ static struct platform_driver nwl_pcie_driver = {
+ 	},
+ 	.probe = nwl_pcie_probe,
+ };
++
+ builtin_platform_driver(nwl_pcie_driver);
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
