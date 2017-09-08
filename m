@@ -1,70 +1,59 @@
-Return-Path: <SRS0=yaEI=A5=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=yaEI=A5=linuxfoundation.org=gregkh@kernel.org>
-Date: Thu, 28 Sep 2017 11:09:01 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	Alan Cox <alan@linux.intel.com>,
-	Dan J Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC 1/3] PCI: pci-driver: Introduce pci device delete list
-Message-ID: <20170928090901.GC12599@kroah.com>
-References: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
- <1506544822-2632-2-git-send-email-jonathan.derrick@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506544822-2632-2-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:41985 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753727AbdIHJyB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:54:01 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        stable@vger.kernel.org
+Subject: [PATCH 7/7] PCI: aardvark: define IRQ related hooks in pci_host_bridge
+Date: Fri,  8 Sep 2017 11:53:48 +0200
+Message-Id: <20170908095348.16578-8-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
+References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 27, 2017 at 04:40:20PM -0400, Jon Derrick wrote:
-> This patch introduces a new kernel command line parameter to mask pci
-> device ids from pci driver id tables. This prevents masked devices from
-> automatically binding to both built-in and module drivers.
-> 
-> Devices can be later attached through the driver's sysfs new_id
-> inteface.
-> 
-> The use cases for this are primarily for debugging, eg, being able to
-> prevent attachment before probes are set up. It can also be used to mask
-> off faulty built-in hardware or faulty simulated hardware.
-> 
-> Another use case is to prevent attachment of devices which will be
-> passed to VMs, shortcutting the detachment effort.
+Commit 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from
+pcibios_alloc_irq()") was assuming all PCI host controller drivers had
+been converted to use ->map_irq(), but that wasn't the case:
+pci-aardvark had not been converted. Due to this, it broke the support
+for legacy PCI interrupts when using the pci-aardvark driver (used on
+Marvell Armada 3720 platforms).
 
-Is the "shortcut" really that big of a deal?  unbind actually causes
-problems?  Is this an attempt to deal with devices being handled by more
-than one driver and then you want to manually bind it later on?
+In order to fix this, we make sure the ->map_irq and ->swizzle_irq
+fields of pci_host_bridge are properly filled in.
 
-> The format is similar to the sysfs new_id format. Device ids are
-> specified with:
-> 
-> VVVV:DDDD[:SVVV:SDDD][:CCCC][:MMMM]
-> 
-> Where:
-> VVVV = Vendor ID
-> DDDD = Device ID
-> SVVV = Subvendor ID
-> SDDD = Subdevice ID
-> CCCC = Class
-> MMMM = Class Mask
-> 
-> IDs can be chained with commas.
-> 
-> Examples:
-> 	<driver>.delete_id=1234:5678
-> 	<driver>.delete_id=ffffffff:ffffffff
-> 	<driver>.delete_id=ffffffff:ffffffff:ffffffff:ffffffff:010802
-> 	<driver>.delete_id=1234:5678,abcd:ef01,2345:ffffffff
+Fixes: 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()")
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: <stable@vger.kernel.org> # v4.13+
+---
+ drivers/pci/host/pci-aardvark.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-What about drivers that handle more than one bus type (i.e. USB and
-PCI?)  This format is specific to PCI, yet you are defining it as a
-"global" for all drivers :(
-
-This feels hacky, what is the real reason for this?  It feels like we
-have so many different ways to blacklist and unbind and bind devices to
-drivers already, why add yet-another way?
-
-thanks,
-
-greg k-h
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 6d6a2ae35481..f682650bf037 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -999,6 +999,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	bridge->sysdata = pcie;
+ 	bridge->busnr = 0;
+ 	bridge->ops = &advk_pcie_ops;
++	bridge->map_irq = of_irq_parse_and_map_pci;
++	bridge->swizzle_irq = pci_common_swizzle;
+ 
+ 	ret = pci_scan_root_bus_bridge(bridge);
+ 	if (ret < 0) {
+-- 
+2.13.5
