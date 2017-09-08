@@ -1,62 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34062 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933306AbdIYSzZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Sep 2017 14:55:25 -0400
-Date: Mon, 25 Sep 2017 13:55:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Filippo Sironi <sironi@amazon.de>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci: Expose offset, stride, and VF device ID via
- sysfs
-Message-ID: <20170925185523.GF15970@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503927530-26076-1-git-send-email-sironi@amazon.de>
- <1503927530-26076-2-git-send-email-sironi@amazon.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503927530-26076-2-git-send-email-sironi@amazon.de>
+Received: from mail.free-electrons.com ([62.4.15.54]:41961 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753442AbdIHJyA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:54:00 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        Victor Gu <xigu@marvell.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 3/7] PCI: aardvark: set host and device to the same MAX payload size
+Date: Fri,  8 Sep 2017 11:53:44 +0200
+Message-Id: <20170908095348.16578-4-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
+References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Filippo,
+From: Victor Gu <xigu@marvell.com>
 
-On Mon, Aug 28, 2017 at 03:38:50PM +0200, Filippo Sironi wrote:
-> +static ssize_t sriov_vf_did_show(struct device *dev,
-> +				 struct device_attribute *attr,
-> +				 char *buf)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	return sprintf(buf, "%x\n", pdev->sriov->vf_did);
-> +}
+Since the Aardvark does not implement a PCIe root bus, the Linux PCIe
+subsystem will not align the MAX payload size between the host and the
+device. This patch ensures that the host and device have the same MAX
+payload size, fixing a number of problems with various PCIe devices.
 
-What does the vf_did part look like in sysfs?  Do we have a directory with
-both "device" and "vf_did" in it?  If so, why do we have both and do we
-need both?  Could we put the vf_did in the "device" file?
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
 
->  static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
->  					    struct device_attribute *attr,
->  					    char *buf)
-> @@ -676,6 +703,9 @@ static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
->  static struct device_attribute sriov_numvfs_attr =
->  		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
->  		       sriov_numvfs_show, sriov_numvfs_store);
-> +static struct device_attribute sriov_offset_attr = __ATTR_RO(sriov_offset);
-> +static struct device_attribute sriov_stride_attr = __ATTR_RO(sriov_stride);
-> +static struct device_attribute sriov_vf_did_attr = __ATTR_RO(sriov_vf_did);
->  static struct device_attribute sriov_drivers_autoprobe_attr =
->  		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
->  		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
-> @@ -1744,6 +1774,9 @@ static struct attribute_group pci_dev_hp_attr_group = {
->  static struct attribute *sriov_dev_attrs[] = {
->  	&sriov_totalvfs_attr.attr,
->  	&sriov_numvfs_attr.attr,
-> +	&sriov_offset_attr.attr,
-> +	&sriov_stride_attr.attr,
-> +	&sriov_vf_did_attr.attr,
->  	&sriov_drivers_autoprobe_attr.attr,
->  	NULL,
->  };
-> -- 
-> 2.7.4
-> 
+Fixes: Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 60 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 59 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 68ff10e17c74..e361c673732f 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -30,8 +30,10 @@
+ #define PCIE_CORE_DEV_CTRL_STATS_REG				0xc8
+ #define     PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE	(0 << 4)
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
++#define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ		0x2
+ #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
++#define     PCIE_CORE_MPS_UNIT_BYTE				128
+ #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
+ #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
+ #define     PCIE_CORE_LINK_TRAINING				BIT(5)
+@@ -298,7 +300,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 
+ 	/* Set PCIe Device Control and Status 1 PF0 register */
+ 	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
+-		(7 << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
++		(PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ <<
++		 PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
+ 		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
+ 		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
+ 	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
+@@ -880,6 +883,58 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
+ 	return err;
+ }
+ 
++static int advk_pcie_find_smpss(struct pci_dev *dev, void *data)
++{
++	u8 *smpss = data;
++
++	if (!dev)
++		return 0;
++
++	if (!pci_is_pcie(dev))
++		return 0;
++
++	if (*smpss > dev->pcie_mpss)
++		*smpss = dev->pcie_mpss;
++
++	return 0;
++}
++
++static int advk_pcie_bus_configure_mps(struct pci_dev *dev, void *data)
++{
++	int mps;
++
++	if (!dev)
++		return 0;
++
++	if (!pci_is_pcie(dev))
++		return 0;
++
++	mps = PCIE_CORE_MPS_UNIT_BYTE << *(u8 *)data;
++	pcie_set_mps(dev, mps);
++
++	return 0;
++}
++
++static void advk_pcie_configure_mps(struct pci_bus *bus, struct advk_pcie *pcie)
++{
++	u8 smpss = PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ;
++	u32 reg;
++
++	/* Find the minimal supported MAX payload size */
++	advk_pcie_find_smpss(bus->self, &smpss);
++	pci_walk_bus(bus, advk_pcie_find_smpss, &smpss);
++
++	/* Configure RC MAX payload size */
++	reg = advk_readl(pcie, PCIE_CORE_DEV_CTRL_STATS_REG);
++	reg &= ~PCI_EXP_DEVCTL_PAYLOAD;
++	reg |= smpss << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT;
++	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
++
++	/* Configure device MAX payload size */
++	advk_pcie_bus_configure_mps(bus->self, &smpss);
++	pci_walk_bus(bus, advk_pcie_bus_configure_mps, &smpss);
++}
++
+ static int advk_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -951,6 +1006,9 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	list_for_each_entry(child, &bus->children, node)
+ 		pcie_bus_configure_settings(child);
+ 
++	/* Configure the MAX pay load size */
++	advk_pcie_configure_mps(bus, pcie);
++
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ }
+-- 
+2.13.5
