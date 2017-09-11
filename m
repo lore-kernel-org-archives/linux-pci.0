@@ -1,67 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nicolai Stange <nstange@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Adrian Salido <salidoa@google.com>,
-        Sasha Levin <sasha.levin@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Nicolai Stange <nstange@suse.de>
-Subject: [PATCH 2/3] PCI: don't use snprintf() in driver_override_show()
-Date: Mon, 11 Sep 2017 09:45:41 +0200
-Message-Id: <20170911074542.16777-3-nstange@suse.de>
-In-Reply-To: <20170911074542.16777-1-nstange@suse.de>
-References: <20170911074542.16777-1-nstange@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org,
+	bhelgaas@google.com
+Subject: [PATCH v5 0/3] PCI: rockchip: Move PCIE_WAKE handling into rockchip
+ pcie driver
+Date: Mon, 11 Sep 2017 23:10:26 +0800
+Message-Id: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Jeffy Chen <jeffy.chen@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
+ Will Deacon <will.deacon@arm.com>, dianders@chromium.org,
+ Rob Herring <robh+dt@kernel.org>, linux-rockchip@lists.infradead.org,
+ Matthias Kaehlcke <mka@chromium.org>,
+ Klaus Goger <klaus.goger@theobroma-systems.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Quote from Documentation/filesystems/sysfs.txt:
 
-  show() must not use snprintf() when formatting the value to be
-  returned to user space. If you can guarantee that an overflow
-  will never happen you can use sprintf() otherwise you must use
-  scnprintf().
+Currently we are handling pcie wake in mrvl wifi driver. But Brian
+suggests to move it into rockchip pcie driver.
 
-Commit 4efe874aace5 ("PCI: Don't read past the end of sysfs
-"driver_override" buffer") introduced such a snprintf() usage from
-driver_override_show() while at the same time tweaking
-driver_override_store() such that the write buffer can't ever get
-overflowed.
+Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
 
-Reasoning:
-Since aforementioned commit, driver_override_store() only accepts to be
-written buffers less than PAGE_SIZE - 1 in size.
 
-The then kstrndup()'ed driver_override string will be at most PAGE_SIZE - 1
-in length, including the trailing '\0'.
+Changes in v5:
+Rebase
+Move to pci.txt
+Use "wakeup" instead of "wake"
 
-After the addition of a '\n' in driver_override_show(), the result won't
-exceed PAGE_SIZE characters in length, again including the trailing '\0'.
+Changes in v3:
+Fix error handling
 
-Hence, snprintf(buf, PAGE_SIZE, ...) and sprintf(buf, ...) are equivalent
-at this point.
+Changes in v2:
+Use dev_pm_set_dedicated_wake_irq
+        -- Suggested by Brian Norris <briannorris@chromium.com>
 
-Replace the former by the latter in order to adhere to the rules in
-Documentation/filesystems/sysfs.txt.
+Jeffy Chen (3):
+  PCI: rockchip: Add support for pcie wake irq
+  dt-bindings: PCI: Add definition of pcie wake irq
+  arm64: dts: rockchip: Handle pcie wake in pcie driver for Gru
 
-This is a style fix only and there's no change in functionality.
+ Documentation/devicetree/bindings/pci/pci.txt |  2 ++
+ arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 15 +++++++++------
+ drivers/pci/host/pcie-rockchip.c              | 19 +++++++++++++++++--
+ 3 files changed, 28 insertions(+), 8 deletions(-)
 
-Signed-off-by: Nicolai Stange <nstange@suse.de>
----
- drivers/pci/pci-sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 8e075ea2743e..43f7fbede448 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -722,7 +722,7 @@ static ssize_t driver_override_show(struct device *dev,
- 	ssize_t len;
- 
- 	device_lock(dev);
--	len = snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
-+	len = sprintf(buf, "%s\n", pdev->driver_override);
- 	device_unlock(dev);
- 	return len;
- }
 -- 
-2.13.5
+2.11.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
