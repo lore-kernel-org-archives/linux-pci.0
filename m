@@ -1,65 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] pci: dwc: dra7xx: Add shutdown handler to cleanly turn
- off clocks
-To: Kishon Vijay Abraham I <kishon@ti.com>, <bhelgaas@google.com>
-References: <1504694351-32358-1-git-send-email-j-keerthy@ti.com>
- <ab942ae4-5152-e041-4084-825a20d732be@ti.com>
- <f0ffc120-c655-70ec-3b79-5bccbd98f169@ti.com>
-CC: <t-kristo@ti.com>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-From: Keerthy <j-keerthy@ti.com>
-Message-ID: <02d56b4e-f1d0-e062-1833-28b9f4131622@ti.com>
-Date: Wed, 6 Sep 2017 18:29:32 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35632 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750853AbdIKTYo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Sep 2017 15:24:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <f0ffc120-c655-70ec-3b79-5bccbd98f169@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170911151029.25185-3-jeffy.chen@rock-chips.com>
+References: <20170911151029.25185-1-jeffy.chen@rock-chips.com> <20170911151029.25185-3-jeffy.chen@rock-chips.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Mon, 11 Sep 2017 14:24:21 -0500
+Message-ID: <CAL_Jsq+n7B3d0BibVxj5yCTZuxJ_QYp9b0CGwc9envu9G8nSJA@mail.gmail.com>
+Subject: Re: [PATCH v5 2/3] dt-bindings: PCI: Add definition of pcie wake irq
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Doug Anderson <dianders@chromium.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Sep 11, 2017 at 10:10 AM, Jeffy Chen <jeffy.chen@rock-chips.com> wrote:
+> Add an optional interrupt for PCIE_WAKE pin.
+>
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
+>
+> Changes in v5:
+> Move to pci.txt
+>
+> Changes in v3: None
+> Changes in v2: None
+>
+>  Documentation/devicetree/bindings/pci/pci.txt | 2 ++
+>  1 file changed, 2 insertions(+)
 
-
-On Wednesday 06 September 2017 04:26 PM, Kishon Vijay Abraham I wrote:
-> 
-> 
-> On Wednesday 06 September 2017 04:23 PM, Kishon Vijay Abraham I wrote:
->> Keerthy,
->>
->> On Wednesday 06 September 2017 04:09 PM, Keerthy wrote:
->>> Add shutdown handler to cleanly turn off clocks.
->>
->> one minor comment below.. with that fixed you can add my
->>
->> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
->>>
->>> Signed-off-by: Keerthy <j-keerthy@ti.com>
->>> ---
->>>  drivers/pci/dwc/pci-dra7xx.c | 14 ++++++++++++++
->>>  1 file changed, 14 insertions(+)
->>>
->>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->>> index d4e98f3..66d1cfe 100644
->>> --- a/drivers/pci/dwc/pci-dra7xx.c
->>> +++ b/drivers/pci/dwc/pci-dra7xx.c
->>> @@ -874,6 +874,19 @@ static int dra7xx_pcie_suspend_noirq(struct device *dev)
->>>  	return 0;
->>>  }
->>>  
->>> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
->>> +{
->>> +	struct dra7xx_pcie *dra7xx = dev_get_drvdata(&pdev->dev);
->>
->> Use struct device *dev = &pdev->dev, instead of de-referencing device pointer
->> multiple times.
-> 
-> You might also have to dra7xx_pcie_stop_link() before disabling the clocks.
-
-Thanks for the quick review. I will incorporate the above comments and
-post v2.
-
-Regards,
-Keerthy
-
-> 
-> Thanks
-> Kishon
-> 
+Acked-by: Rob Herring <robh@kernel.org>
