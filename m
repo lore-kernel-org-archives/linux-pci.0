@@ -1,49 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] vfio/pci: Virtualize Maximum Payload Size
-To: Auger Eric <eric.auger@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20170919164952.13200.78849.stgit@gimli.home>
- <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
- <20170919142024.05723289@t450s.home>
- <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
- <a609bc8b-8c5b-0828-d175-50985d688fe3@codeaurora.org>
- <73d55003-6fcd-3741-73a1-365c73933538@redhat.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <97d4a49c-4864-42eb-7385-03747309ae55@codeaurora.org>
-Date: Wed, 20 Sep 2017 11:04:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <73d55003-6fcd-3741-73a1-365c73933538@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from baptiste.telenet-ops.be ([195.130.132.51]:35190 "EHLO
+        baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751125AbdIKM3S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2017 08:29:18 -0400
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Joerg Roedel <jroedel@suse.de>, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] pci: Add dummy for pci_acs_enabled() if CONFIG_PCI=n to fix iommmu build
+Date: Mon, 11 Sep 2017 14:29:15 +0200
+Message-Id: <1505132955-9517-1-git-send-email-geert@linux-m68k.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/20/2017 10:26 AM, Auger Eric wrote:
->> Because completions are required to be a minimum of MPS size. If MRRS > MPS,
->> read response is sent as multiple completions.
-> With that patch, you can end up with MRRS < MPS. Do I understand
-> correctly this is an issue?
+If CONFIG_PCI=n, and gcc (e.g. 4.1.2) decides not to inline
+get_pci_function_alias_group(), the build fails with:
 
-To give the right context, I tried to mean that you can't use MRRS as a length
-value for completions if MRRS is a fairly large number and bigger than MPS.
+    drivers/iommu/iommu.o: In function `get_pci_function_alias_group':
+    iommu.c:(.text+0xfdc): undefined reference to `pci_acs_enabled'
 
-Therefore, a single completion packet size needs to be less than MRRS and cannot
-exceed MPS. Spec is even calling for receivers to throw an error if completion
-length is greater than MPS.
+Due to the various dummies for PCI calls in the CONFIG_PCI=n case,
+pci_acs_enabled() isn't actually ever called, but not all versions of
+gcc are smart enough to realize that.
 
-single completion <= MPS (128) <= MRRS (4k)
+While explicitly marking get_pci_function_alias_group() inline would fix
+the build, this would inflate the code for the CONFIG_PCI=y case, as
+get_pci_function_alias_group() is a not-so-small function called from
+two places.
 
-I looked at the spec again. I have not seen anything in the spec that prohibits
-MRRS < MPS as long as completion size is less than MPS.
+Hence fix the issue by introducing a dummy for pci_acs_enabled()
+instead.
 
-single completion <= MRRS (128) < MPS (256)
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ include/linux/pci.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-I think this is also valid. 
-
-I hope I got it right this time.
-
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f68c58a93dd045b9..f4f8ee5a7362e982 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1685,6 +1685,8 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #define dev_is_pci(d) (false)
+ #define dev_is_pf(d) (false)
++static inline bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
++{ return false; }
+ #endif /* CONFIG_PCI */
+ 
+ /* Include architecture-dependent settings and functions */
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.7.4
