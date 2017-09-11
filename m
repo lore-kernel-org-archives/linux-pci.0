@@ -1,126 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 7 Sep 2017 09:40:11 +0200
-From: Jan Glauber <jan.glauber@caviumnetworks.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v3 3/3] PCI: Avoid slot reset for Cavium cn8xxx root ports
-Message-ID: <20170907074011.GA13490@hc>
-References: <20170830142454.10971-1-jglauber@cavium.com>
- <20170830142454.10971-4-jglauber@cavium.com>
- <20170830084012.19d91759@w520.home> <20170831094052.GA15906@hc>
- <20170831100130.5c8a922e@w520.home>
-MIME-Version: 1.0
-In-Reply-To: <20170831100130.5c8a922e@w520.home>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
- Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:51823 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751548AbdIKUIV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2017 16:08:21 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Andrew Morton <akpm@linux-foundation.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+        Magnus Damm <damm@opensource.se>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Ben Dooks <ben.dooks@codethink.co.uk>,
+        linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] [RESEND] of: provide of_n_{addr,size}_cells wrappers for !CONFIG_OF
+Date: Mon, 11 Sep 2017 22:07:49 +0200
+Message-Id: <20170911200805.3363318-1-arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 10:01:30AM -0600, Alex Williamson wrote:
-> On Thu, 31 Aug 2017 11:40:52 +0200
-> Jan Glauber <jan.glauber@caviumnetworks.com> wrote:
-> 
-> > On Wed, Aug 30, 2017 at 08:40:12AM -0600, Alex Williamson wrote:
-> > > On Wed, 30 Aug 2017 16:24:54 +0200
-> > > Jan Glauber <jglauber@cavium.com> wrote:
-> > >   
-> > > > Root ports of cn8xxx do not function after a slot reset when used with
-> > > > some e1000e and LSI HBA devices. Add a quirk to prevent slot reset on
-> > > > these root ports.
-> > > > 
-> > > > Signed-off-by: Jan Glauber <jglauber@cavium.com>
-> > > > ---
-> > > >  drivers/pci/quirks.c | 16 ++++++++++++++++
-> > > >  1 file changed, 16 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > > > index 85191b8..6679971 100644
-> > > > --- a/drivers/pci/quirks.c
-> > > > +++ b/drivers/pci/quirks.c
-> > > > @@ -845,6 +845,22 @@ static void quirk_cavium_sriov_rnm_link(struct pci_dev *dev)
-> > > >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa018, quirk_cavium_sriov_rnm_link);
-> > > >  #endif
-> > > >  
-> > > > +/*
-> > > > + * Root port on some Cavium CN8xxx chips do not successfully complete
-> > > > + * a bus reset when used with certain types of child devices. Config
-> > > > + * space access to the child may quit responding. Flag all devices under
-> > > > + * the secondary bus as non-resettable.
-> > > > + */
-> > > > +static void quirk_CN8xxx_secondary_bus(struct pci_dev *dev)
-> > > > +{
-> > > > +	struct pci_dev *pdev;
-> > > > +
-> > > > +	dev_warn(&dev->dev, "Cavium CN8xxx quirk detected; reset for devices on secondary bus disabled\n");
-> > > > +	list_for_each_entry(pdev, &dev->subordinate->devices, bus_list)
-> > > > +		pdev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
-> > > > +}
-> > > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_CN8xxx_secondary_bus);
-> > > > +
-> > > >  /*
-> > > >   * Some settings of MMRBC can lead to data corruption so block changes.
-> > > >   * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide  
-> > > 
-> > > 
-> > > This doesn't seem reliable, doesn't the user just need to remove and
-> > > reprobe the slot and the device would re-appear without this flag set?  
-> > 
-> > No, I tried before to disable the slot with "echo 0 > /sys/bus/pci/slots/3/power"
-> > but that does not work as it is not supported.
-> > 
-> > I'm not familiar with the quirk types, would another one be better
-> > suited here (even if we don't have the problem you descibed)?
-> 
-> The scenario I'm mentioning is to "echo 1 > /sys/bus/pci/devices/<some
-> device under the slot>/remove", then "echo <that device address> >
-> /sys/bus/pci/rescan".  This would break the ordering implicit in using
-> a fixup defined for the root port.  It seems like it'd make a lot more
-> sense to add a test on the parent bridge more similar to how the bus
-> reset works.  It's not the subordinate devices imposing the
-> no-bus-reset flag, it's the bridge device and the objects and code
-> should support and reflect that.  Thanks,
+The pci-rcar driver is enabled for compile tests, and this has
+shown that the driver cannot build without CONFIG_OF,
+following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+interrupt mapping when possible":
 
-Doing "echo <that device address> > /sys/bus/pci/rescan" after the
-remove did not work for me, but maybe the format of the device address
-needs to be different. Anyway, the sequence
-  echo 1 > /sys/bus/pci/devices/<some device under the slot>/remove
-  echo 1 > /sys/bus/pci/rescan
-still triggers the panic as you mentioned above.
+drivers/pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
+drivers/pci/host/pcie-rcar.c:1039:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
+  parser->pna = of_n_addr_cells(node);
+  ^
+As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+supposed to build fine, which we can achieve if we make the
+declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+and provide an empty inline function otherwise, as we do for
+a lot of other of interfaces.
 
-I agree that the subordinate devices are not causing the issue, still
-I need to make pci_slot_resetable() return false in our case.
+This lets us build the rcar_pci driver again without CONFIG_OF
+for build testing. All platforms using this driver select OF,
+so this doesn't change anything for the users.
 
-So what if we add an additional check like:
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <damm@opensource.se>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Frank Rowand <frank.rowand@sony.com>
+Fixes: c25da4778803 ("PCI: rcar: Add Renesas R-Car PCIe driver")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+I originally sent the patch in 2014 when things initially broke
+and then forgot about while it was applied in my randconfig patch
+stack. I sent it again in 2016 and then in July 2017 without reply.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fdf65a6..389db4b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4389,6 +4389,9 @@ static bool pci_slot_resetable(struct pci_slot *slot)
- {
-        struct pci_dev *dev;
+It's still broken and I think this is the correct fix.
+---
+ include/linux/of.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/include/linux/of.h b/include/linux/of.h
+index cfc34117fc92..fb700d1e1fab 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -734,6 +734,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
+ 	return NULL;
+ }
  
-+       if (slot->bus->self & PCI_DEV_FLAGS_NO_BUS_RESET)
-+               return false;
++static inline int of_n_addr_cells(struct device_node *np) { return 0; }
++static inline int of_n_size_cells(struct device_node *np) { return 0; }
 +
-        list_for_each_entry(dev, &slot->bus->devices, bus_list) {
-                if (!dev->slot || dev->slot != slot)
-                        continue;
-
---Jan
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ static inline int of_property_read_u64(const struct device_node *np,
+ 				       const char *propname, u64 *out_value)
+ {
+-- 
+2.9.0
