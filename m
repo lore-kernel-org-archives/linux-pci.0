@@ -1,133 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix legacy IRQ assignment execution stage
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        "David S. Miller" <davem@davemloft.net>,
-        Matt Turner <mattst88@gmail.com>
-References: <1506598627-8985-1-git-send-email-lorenzo.pieralisi@arm.com>
-From: Guenter Roeck <linux@roeck-us.net>
-Message-ID: <9da99ff6-8160-5e0e-4df1-92eb54a89bec@roeck-us.net>
-Date: Fri, 29 Sep 2017 18:27:19 -0700
-MIME-Version: 1.0
-In-Reply-To: <1506598627-8985-1-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:47701 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751089AbdIKHpv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Sep 2017 03:45:51 -0400
+From: Nicolai Stange <nstange@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Adrian Salido <salidoa@google.com>,
+        Sasha Levin <sasha.levin@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Nicolai Stange <nstange@suse.de>
+Subject: [PATCH 3/3] driver core: platform: Don't read past the end of "driver_override" buffer
+Date: Mon, 11 Sep 2017 09:45:42 +0200
+Message-Id: <20170911074542.16777-4-nstange@suse.de>
+In-Reply-To: <20170911074542.16777-1-nstange@suse.de>
+References: <20170911074542.16777-1-nstange@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/28/2017 04:37 AM, Lorenzo Pieralisi wrote:
-> Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
-> possible to define IRQ mapping functions on a per PCI host bridge basis.
-> 
-> Actual IRQ allocation is carried out by the pci_assign_irq() function in
-> pci_device_probe() - to make sure a device is assigned an IRQ only if it
-> is probed (ie match a driver); it retrieves a struct pci_host_bridge*
-> for a given PCI device and through {map/swizzle}_irq() hooks it carries
-> out the PCI IRQ allocation.
-> 
-> As it turned out, some legacy drivers (eg IDE layer) require that a
-> device allocates IRQ as soon as it is added so that its actual IRQ
-> settings are available early in the boot process. With current code
-> calling pci_assign_irq() in pci_device_probe() IDE IRQ probing fails
-> for some drivers:
-> 
-> ide0: disabled, no IRQ
-> ide0: failed to initialize IDE interface
-> ide0: disabling port
-> cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
-> CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
-> cmd64x 0000:00:02.0: can't reserve resources
-> CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
-> ide_generic: please use "probe_mask=0x3f" module parameter for probing
-> all legacy ISA IDE ports
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
-> sysfs: cannot create duplicate filename '/class/ide_port/ide0'
-> ...
-> 
-> Trace:
-> [<fffffc00003308a0>] __warn+0x160/0x190
-> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-> [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
-> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-> [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
-> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-> [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
-> [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
-> [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
-> [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
-> [<fffffc00005ba690>] device_create+0x50/0x70
-> [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
-> [<fffffc00005df330>] ide_host_register+0x450/0xa00
-> [<fffffc00005ba2a0>] device_register+0x20/0x50
-> [<fffffc00005df330>] ide_host_register+0x450/0xa00
-> [<fffffc00005df944>] ide_host_add+0x64/0xe0
-> [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
-> [<fffffc0000310288>] do_one_initcall+0x68/0x260
-> [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
-> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-> [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
-> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-> 
-> ---[ end trace 24a70433c3e4d374 ]---
-> ide0: disabling port
-> 
-> Fix the IRQ allocation issue by moving the pci_assign_irq() call from
-> pci_device_probe() to pci_device_add(), so that IRQs for a given PCI
-> device are allocated as soon as it is scanned by the PCI enumeration.
-> 
-> This has the drawback of allocating an IRQ even for PCI devices that
-> do not have a matching kernel driver but it should be safe to carry
-> out in all configurations.
-> 
-> Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
-> pci_device_probe()")
-> Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reported-by: Guenter Roeck <linux@roeck-us.net>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Richard Henderson <rth@twiddle.net>
-> Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: Matt Turner <mattst88@gmail.com>
+When printing the driver_override parameter when it is 4095 and 4094 bytes
+long, the printing code would access invalid memory because we need count+1
+bytes for printing.
 
-Tested-by: Guenter Roeck <linux@roeck-us.net>
+Reject driver_override values of these lengths in driver_override_store().
 
-> ---
->   drivers/pci/pci-driver.c | 2 --
->   drivers/pci/probe.c      | 3 +++
->   2 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 11bd267..750d688 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -415,8 +415,6 @@ static int pci_device_probe(struct device *dev)
->   	struct pci_dev *pci_dev = to_pci_dev(dev);
->   	struct pci_driver *drv = to_pci_driver(dev->driver);
->   
-> -	pci_assign_irq(pci_dev);
-> -
->   	error = pcibios_alloc_irq(pci_dev);
->   	if (error < 0)
->   		return error;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ff94b69..ba4e466 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2103,6 +2103,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->   	/* Initialize various capabilities */
->   	pci_init_capabilities(dev);
->   
-> +	/* Assign device IRQ number */
-> +	pci_assign_irq(dev);
-> +
->   	/*
->   	 * Add the device to our list of discovered devices
->   	 * and the bus list for fixup functions, etc.
-> 
+This is in close analogy to commit 4efe874aace5 ("PCI: Don't read past the
+end of sysfs "driver_override" buffer") from Sasha Levin.
+
+Fixes: 3d713e0e382e ("driver core: platform: add device binding path 'driver_override'")
+Cc: stable@vger.kernel.org	# v3.17+
+Signed-off-by: Nicolai Stange <nstange@suse.de>
+---
+ drivers/base/platform.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/base/platform.c b/drivers/base/platform.c
+index d1bd99271066..9045c5f3734e 100644
+--- a/drivers/base/platform.c
++++ b/drivers/base/platform.c
+@@ -868,7 +868,8 @@ static ssize_t driver_override_store(struct device *dev,
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	char *driver_override, *old, *cp;
+ 
+-	if (count > PATH_MAX)
++	/* We need to keep extra room for a newline */
++	if (count >= (PAGE_SIZE - 1))
+ 		return -EINVAL;
+ 
+ 	driver_override = kstrndup(buf, count, GFP_KERNEL);
+-- 
+2.13.5
