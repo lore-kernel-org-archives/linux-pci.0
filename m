@@ -1,125 +1,75 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        alex.williamson@redhat.com
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 3/5] PCI: make pci_flr_wait() generic and rename to pci_dev_wait()
-Date: Sat, 23 Sep 2017 20:16:56 -0400
-Message-Id: <1506212218-29103-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
-References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+From: Nicolai Stange <nstange@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Adrian Salido <salidoa@google.com>,
+        Sasha Levin <sasha.levin@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Nicolai Stange <nstange@suse.de>
+Subject: [PATCH 1/3] PCI: fix race condition with driver_override
+Date: Mon, 11 Sep 2017 09:45:40 +0200
+Message-Id: <20170911074542.16777-2-nstange@suse.de>
+In-Reply-To: <20170911074542.16777-1-nstange@suse.de>
+References: <20170911074542.16777-1-nstange@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rev 3.1 Sec 2.3.1 Request Handling Rules:
-Valid reset conditions after which a device is permitted to return CRS
-are:
-* Cold, Warm, and Hot Resets,
-* FLR
-* A reset initiated in response to a D3hot to D0 uninitialized
+The driver_override implementation is susceptible to a race condition when
+different threads are reading vs. storing a different driver override.
+Add locking to avoid the race condition.
 
-Try to reuse FLR implementation towards other reset types.
+This is in close analogy to commit 6265539776a0 ("driver core: platform:
+fix race condition with driver_override") from Adrian Salido.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Fixes: 782a985d7af2 ("PCI: Introduce new device binding path using pci_dev.driver_override")
+Cc: stable@vger.kernel.org	# v3.16+
+Signed-off-by: Nicolai Stange <nstange@suse.de>
 ---
- drivers/pci/pci.c | 45 ++++++++++++++++++++++++++++-----------------
- 1 file changed, 28 insertions(+), 17 deletions(-)
+ drivers/pci/pci-sysfs.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 27ec45d..fd4a3b6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3820,20 +3820,14 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_wait_for_pending_transaction);
- 
--static int pci_flr_wait(struct pci_dev *dev)
-+static int pci_dev_wait(struct pci_dev *dev, char *reset_type,
-+			int initial_wait, int timeout)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 1eecfa301f7f..8e075ea2743e 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -686,7 +686,7 @@ static ssize_t driver_override_store(struct device *dev,
+ 				     const char *buf, size_t count)
  {
--	int delay = 1, timeout = 60000;
-+	int delay = 1;
- 	u32 id;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+-	char *driver_override, *old = pdev->driver_override, *cp;
++	char *driver_override, *old, *cp;
  
- 	/*
--	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
--	 * 100ms, but may silently discard requests while the FLR is in
--	 * progress.  Wait 100ms before trying to access the device.
--	 */
--	msleep(100);
--
--	/*
--	 * After 100ms, the device should not silently discard config
-+	 * After reset, the device should not silently discard config
- 	 * requests, but it may still indicate that it needs more time by
- 	 * responding to them with CRS completions.  The Root Port will
- 	 * generally synthesize ~0 data to complete the read (except when
-@@ -3847,14 +3841,14 @@ static int pci_flr_wait(struct pci_dev *dev)
- 	pci_read_config_dword(dev, PCI_COMMAND, &id);
- 	while (id == ~0) {
- 		if (delay > timeout) {
--			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
--				 100 + delay - 1);
-+			dev_warn(&dev->dev, "not ready %dms after %s; giving up\n",
-+				 initial_wait + delay - 1, reset_type);
- 			return -ENOTTY;
- 		}
+ 	/* We need to keep extra room for a newline */
+ 	if (count >= (PAGE_SIZE - 1))
+@@ -700,12 +700,15 @@ static ssize_t driver_override_store(struct device *dev,
+ 	if (cp)
+ 		*cp = '\0';
  
- 		if (delay > 1000)
--			dev_info(&dev->dev, "not ready %dms after FLR; waiting\n",
--				 100 + delay - 1);
-+			dev_info(&dev->dev, "not ready %dms after %s; waiting\n",
-+				 initial_wait + delay - 1, reset_type);
- 
- 		msleep(delay);
- 		delay *= 2;
-@@ -3862,7 +3856,8 @@ static int pci_flr_wait(struct pci_dev *dev)
++	device_lock(dev);
++	old = pdev->driver_override;
+ 	if (strlen(driver_override)) {
+ 		pdev->driver_override = driver_override;
+ 	} else {
+ 		kfree(driver_override);
+ 		pdev->driver_override = NULL;
  	}
++	device_unlock(dev);
  
- 	if (delay > 1000)
--		dev_info(&dev->dev, "ready %dms after FLR\n", 100 + delay - 1);
-+		dev_info(&dev->dev, "ready %dms after %s\n",
-+			 initial_wait + delay - 1, reset_type);
+ 	kfree(old);
  
- 	return 0;
+@@ -716,8 +719,12 @@ static ssize_t driver_override_show(struct device *dev,
+ 				    struct device_attribute *attr, char *buf)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
++	ssize_t len;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
++	device_lock(dev);
++	len = snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
++	device_unlock(dev);
++	return len;
  }
-@@ -3899,7 +3894,15 @@ int pcie_flr(struct pci_dev *dev)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+ static DEVICE_ATTR_RW(driver_override);
  
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
--	return pci_flr_wait(dev);
-+
-+	/*
-+	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
-+	 * 100ms, but may silently discard requests while the FLR is in
-+	 * progress.  Wait 100ms before trying to access the device.
-+	 */
-+	msleep(100);
-+
-+	return pci_dev_wait(dev, "FLR", 100, 60000);
- }
- EXPORT_SYMBOL_GPL(pcie_flr);
- 
-@@ -3932,7 +3935,15 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
- 
- 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
--	return pci_flr_wait(dev);
-+
-+	/*
-+	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
-+	 * 100ms, but may silently discard requests while the FLR is in
-+	 * progress.  Wait 100ms before trying to access the device.
-+	 */
-+	msleep(100);
-+
-+	return pci_dev_wait(dev, "AF_FLR", 100, 60000);
- }
- 
- /**
 -- 
-1.9.1
+2.13.5
