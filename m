@@ -1,86 +1,97 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 26 Sep 2017 14:00:32 +0200
-From: Jan Glauber <jan.glauber@caviumnetworks.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [v4,0/3] Workaround for bus/slot reset on Cavium cn8xxx root ports
-Message-ID: <20170926120032.GA29861@hc>
-References: <20170908081033.3025-1-jglauber@cavium.com>
- <20170912094049.GA14111@localhost.localdomain>
- <20170920120912.7544420d@t450s.home>
+Return-Path: <SRS0=xM4e=AM=au1.ibm.com=andrew.donnellan@kernel.org>
+Return-Path: <SRS0=xM4e=AM=au1.ibm.com=andrew.donnellan@kernel.org>
+Subject: Re: [PATCH v3 2/3] drm: add fallback default device detection
+To: Daniel Axtens <dja@axtens.net>, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Cc: lorenzo.pieralisi@arm.com, gabriele.paoloni@huawei.com,
+        ard.biesheuvel@linaro.org, airlied@linux.ie, will.deacon@arm.com,
+        dri-devel@lists.freedesktop.org, z.liuxinliang@hisilicon.com,
+        alex.williamson@redhat.com, lukas@wunner.de, helgaas@kernel.org,
+        catalin.marinas@arm.com, zourongrong@gmail.com,
+        daniel.vetter@intel.com
+References: <20170901072744.2409-1-dja@axtens.net>
+ <20170901072744.2409-3-dja@axtens.net>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Date: Mon, 11 Sep 2017 14:35:51 +1000
 MIME-Version: 1.0
-In-Reply-To: <20170920120912.7544420d@t450s.home>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Alex Williamson <alex.williamson@redhat.com>, kvm@vger.kernel.org,
- david.daney@cavium.com, linux-pci@vger.kernel.org,
- Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
- linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
- Jon Masters <jcm@redhat.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170901072744.2409-3-dja@axtens.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <ccea6f96-4658-b25a-a8ba-2959815318e3@au1.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 20, 2017 at 12:09:12PM -0600, Alex Williamson wrote:
-> On Tue, 12 Sep 2017 02:40:49 -0700
-> Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+On 01/09/17 17:27, Daniel Axtens wrote:
+> The VGA arbiter selects a default VGA device that is enabled and
+> reachable via the legacy VGA resources (mem 0xa0000-0xbffff, io
+> 0x3b0-0x3bb, io 0x3c0-0x3df, etc).
 > 
-> > Hi all,
-> > 
-> > Are there any updates on this ?
-> > Comments/objections/acks/nacks ?
-> > 
-> > WBBR,
-> > Vadim
-> > 
-> > On Fri, Sep 08, 2017 at 10:10:30AM +0200, Jan Glauber wrote:
-> > > Using vfio-pci on a combination of cn8xxx and some PCI devices results in
-> > > a kernel panic. This is triggered by issuing a bus or a slot reset
-> > > on the PCI device.
-> > > 
-> > > With this series both checks indicate that the reset is not possible
-> > > preventing the kernel panic.
-> > > 
-> > > David Daney (2):
-> > >   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
-> > >   PCI: Avoid bus reset for Cavium cn8xxx root ports
-> > > 
-> > > Jan Glauber (1):
-> > >   PCI: Avoid slot reset if bus reset is not possible
-> > > 
-> > >  drivers/pci/pci.c    | 8 ++++++++
-> > >  drivers/pci/quirks.c | 8 ++++++++
-> > >  2 files changed, 16 insertions(+)  
+> (As a special case for x86 and IA64, this can be overridden by
+> EFI.)
 > 
+> If there is no such device, e.g., because there's no enabled VGA
+> device, the host bridge doesn't support access to those legacy
+> resources, or a PCI-PCI bridge doesn't have VGA Enable set, a
+> platform may select an arbitrary device by calling
+> pci_set_default_display(). powerpc does this, for example.
 > 
-> Looks ok to me, for series:
+> If there is also no platform hook, there will be no default
+> device nominated. This is not necessarily what we want.
 > 
-> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+> Add handling for devices that aren't handled by the vga arbiter or
+> platform by adding a late initcall and a class enable hook. If there
+> is no default from vgaarb or the platform then the first VGA card
+> that is enabled, has a driver bound, and can decode memory or I/O
+> will be marked as default.
 > 
-> I am curious why we're happy targeting this quirk at a single device ID
-> while at the same time trying to expand the ACS quirk to a notable
-> fraction of the Cavium PCI device ID address space.  Thanks,
+> This means single-card setups on systems without access to legacy
+> areas and without arch hooks will work. Multi-card setups on these
+> systems will nominate an arbitrary device, rather than no devices.
 > 
-> Alex
+> Signed-off-by: Daniel Axtens <dja@axtens.net>
+> 
+> ---
+> 
+> v3:
+> 
+> Split out from re-organisation for simplicity.
+> Add better description and better documentaion.
+> 
+> Thanks to (in no particular order), Daniel Vetter, Lorenzo Pieralisi,
+> Ard Biesheuvel and Dave Airlie. Special thanks to Ben Herrenschmidt
+> and Bjorn Helgass, whose prose I have borrowed.
+> 
+> v1:
+> 
+> Tested on:
+>   - x86_64 laptop
+>   - arm64 D05 board with hibmc card
+>   - qemu powerpc with tcg and bochs std-vga
+> 
+> I know this adds another config option and that's a bit sad, but
+> we can't include it unconditionally as it depends on PCI.
+> Suggestions welcome.
 
-Bjorn, would you take these patches? 
+Tested on our iMac G5, the fallback handler doesn't fire (which should 
+be correct).
 
-We might need to extend the quirk to cover more cn8xxx variants,
-this is not yet entirely clear on our side.
+Tested-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-Therefore I'd like to ask if we could merge this patches now to solve the
-long-standing issue for cn88xx.
+> +static void vga_default_enable_hook(struct pci_dev *pdev)
+> +{
+> +       if (!vga_default_active)
+> +	       return;
+> +
+> +       if (pci_default_display())
+> +               return;
+> +
+> +       vga_default_try_device(pdev);
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
+> +			       PCI_CLASS_DISPLAY_VGA, 8,
+> +			       vga_default_enable_hook)
+> 
 
-thanks,
-Jan
+Looks like you have some spaces/tabs inconsistencies here.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Andrew Donnellan              OzLabs, ADL Canberra
+andrew.donnellan@au1.ibm.com  IBM Australia Limited
