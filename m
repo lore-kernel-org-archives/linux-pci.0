@@ -1,73 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:41944 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751894AbdIHJx7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:53:59 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
-        Antoine Tenart <antoine.tenart@free-electrons.com>,
-        stable@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 1/7] PCI: aardvark: fix logic in PCI configuration read/write functions
-Date: Fri,  8 Sep 2017 11:53:42 +0200
-Message-Id: <20170908095348.16578-2-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
-References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
+Received: from mail-dm3nam03on0081.outbound.protection.outlook.com ([104.47.41.81]:45252
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751289AbdILLzd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Sep 2017 07:55:33 -0400
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: David.Daney@cavium.com, jcm@redhat.com, Robert.Richter@cavium.com,
+        Wilson.Snyder@cavium.com,
+        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Subject: [PATCH] PCI: quirks: update cavium ACS quirk implementation
+Date: Tue, 12 Sep 2017 04:55:16 -0700
+Message-Id: <1505217316-15702-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+This commit makes PIC ACS quirk applicable only to Cavium PCIE devices
+and Cavium PCIE Root Ports which has limited PCI capabilities in terms
+of no ACS support. Match function checks for ACS support and exact ACS
+bits set at the device capabilities.
+Also by this commit we get rid off device ID range values checkings.
 
-The PCI configuration space read/write functions were special casing
-the situation where PCI_SLOT(devfn) != 0, and returned
-PCIBIOS_DEVICE_NOT_FOUND in this case.
-
-However, will this is what is intended for the root bus, it is not
-intended for the child busses, as it prevents discovering devices with
-PCI_SLOT(x) != 0. Therefore, we return PCIBIOS_DEVICE_NOT_FOUND only
-if we're on the root bus.
-
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Wilson Ding <dingwei@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
 ---
- drivers/pci/host/pci-aardvark.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c | 30 +++++++++++++++++++++++++-----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 5fb9b620ac78..582d75f864e3 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -441,7 +441,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	u32 reg;
- 	int ret;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a4d3361..11ca951 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4211,6 +4211,29 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
+ }
  
--	if (PCI_SLOT(devfn) != 0) {
-+	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {
- 		*val = 0xffffffff;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
-@@ -495,7 +495,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	int offset;
- 	int ret;
++#define CAVIUM_ACS_FLAGS (PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | \
++			  PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT)
++
++static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
++{
++	int pos = 0;
++	u32 caps = 0;
++
++	/* Filter out a few obvious non-matches first */
++	if (!pci_is_pcie(dev) || pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
++		return false;
++
++	/* Get the ACS caps offset */
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (pos) {
++		pci_read_config_dword(dev, pos + PCI_ACS_CAP, &caps);
++		/* If we have no such bits set, then we will need a quirk */
++		return ((caps & CAVIUM_ACS_FLAGS) != CAVIUM_ACS_FLAGS);
++	}
++
++	return true;
++}
++
+ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+ {
+ 	/*
+@@ -4218,13 +4241,10 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+ 	 * with other functions, allowing masking out these bits as if they
+ 	 * were unimplemented in the ACS capability.
+ 	 */
+-	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+-		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+-
+-	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
++	if (!pci_quirk_cavium_acs_match(dev))
+ 		return -ENOTTY;
  
--	if (PCI_SLOT(devfn) != 0)
-+	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
+-	return acs_flags ? 0 : 1;
++	return acs_flags & ~(CAVIUM_ACS_FLAGS) ? 0 : 1;
+ }
  
- 	if (where % size)
+ static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
 -- 
-2.13.5
+2.9.5
