@@ -1,78 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Govindarajulu Varadarajan <gvaradar@cisco.com>
-To: benve@cisco.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
-        mingo@redhat.com, peterz@infradead.org
-Cc: Govindarajulu Varadarajan <gvaradar@cisco.com>
-Subject: [PATCH 1/4] pci: introduce __pci_walk_bus for caller with pci_bus_sem held
-Date: Wed, 27 Sep 2017 14:42:17 -0700
-Message-Id: <20170927214220.41216-2-gvaradar@cisco.com>
-In-Reply-To: <20170927214220.41216-1-gvaradar@cisco.com>
-References: <20170927214220.41216-1-gvaradar@cisco.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:46830 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751031AbdIMBUC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Sep 2017 21:20:02 -0400
+Subject: Re: VFIO on ARM64
+To: valmiki <valmikibow@gmail.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>
+References: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <8fd78f56-43ed-e480-1c98-5d1162452674@arm.com>
+Date: Wed, 13 Sep 2017 02:20:25 +0100
+MIME-Version: 1.0
+In-Reply-To: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move pci_bus_sem down/up out of pci_walk_bus and rename it to
-__pci_walk_bus. Caller who already hold pci_bus_sem can call
-__pci_walk_bus.
+Hi Valmiki,
 
-Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
----
- drivers/pci/bus.c   | 13 +++++++++++--
- include/linux/pci.h |  2 ++
- 2 files changed, 13 insertions(+), 2 deletions(-)
+On 12/09/17 19:01, valmiki wrote:
+> Hi, as per VFIO documentation i see that we need to see
+> "/sys/bus/pci/devices/0000:06:0d.0/iommu_group" in order to find group
+> in which PCI bus is attached.
+> But as per drivers/pci/pci-sysfs.c in static struct attribute
+> *pci_dev_attrs[], i don't see any such attribute.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index bc56cf19afd3..3cababe74af0 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -376,8 +376,10 @@ EXPORT_SYMBOL(pci_bus_add_devices);
-  *  We check the return of @cb each time. If it returns anything
-  *  other than 0, we break out.
-  *
-+ *  Should be called with read pci_bus_sem held.
-+ *
-  */
--void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
-+void __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		  void *userdata)
- {
- 	struct pci_dev *dev;
-@@ -386,7 +388,6 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 	int retval;
- 
- 	bus = top;
--	down_read(&pci_bus_sem);
- 	next = top->devices.next;
- 	for (;;) {
- 		if (next == &bus->devices) {
-@@ -409,6 +410,14 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		if (retval)
- 			break;
- 	}
-+}
-+EXPORT_SYMBOL_GPL(__pci_walk_bus);
-+
-+void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
-+		  void *userdata)
-+{
-+	down_read(&pci_bus_sem);
-+	__pci_walk_bus(top, cb, userdata);
- 	up_read(&pci_bus_sem);
- }
- EXPORT_SYMBOL_GPL(pci_walk_bus);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f68c58a93dd0..b4b1a8a164c0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1297,6 +1297,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
- 
- void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
- 		  void *userdata);
-+void __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
-+		    void *userdata);
- int pci_cfg_space_size(struct pci_dev *dev);
- unsigned char pci_bus_max_busnr(struct pci_bus *bus);
- void pci_setup_bridge(struct pci_bus *bus);
--- 
-2.14.1
+This iommu_group attribute is created by
+drivers/iommu/iommu.c:iommu_group_add_device. It is a symbolic link to
+/sys/kernel/iommu_groups/<group>.
+
+> I tried enabling SMMUv2 driver and SMMU for PCIe node on our SOC, but
+> this file doesn't show up and also in /sys/kernel/iommu_group i do not
+> see "/sys/kernel/iommu_groups/17/devices/0000:00:1f.00" file, i see only
+> PCIe root port device tree node in that group and not individual buses.
+> So on ARM64 for showing these paths i.e show specific to each bus, does
+> SMMU need any particular confguration (we have SMMUv2) > Do we need any specific kernel configuration ?
+
+I don't think so. If you're able to see the root complex in an IOMMU
+group, then the configuration is probably fine. Could you provide a little
+more information about your system, for example lspci along with "find
+/sys/kernel/iommu_groups/*/devices/*"?
+
+Ideally, each PCIe device will be in its own IOMMU group. So you shouldn't
+have each bus in a group, but rather one device per group. Linux puts
+multiple devices in a group if the IOMMU cannot properly isolate them. In
+general it's not something you want in your system, because all devices in
+a group will have the same address space and cannot be passed to a guest
+separately.
+
+Thanks,
+Jean
