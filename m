@@ -1,90 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from messagesink.samelson.uni-hildesheim.de ([147.172.172.66]:3658
-        "EHLO messagesink.samelson.uni-hildesheim.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751198AbdIOLed (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2017 07:34:33 -0400
-From: Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Klaus Schmid <schmid@sse.uni-hildesheim.de>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Date: Fri, 15 Sep 2017 13:33:51 +0200
-Subject: AW: [PATCH] PCI SUBSYSTEM allows inconsistent configuration,
- current Kernel version
-Message-ID: <f02a2ddd-8469-4a17-99fe-620c690be7c2@messagesink.samelson.uni-hildesheim.de>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:38696 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751092AbdIMRiU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Sep 2017 13:38:20 -0400
+Subject: Re: VFIO on ARM64
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+References: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
+ <8fd78f56-43ed-e480-1c98-5d1162452674@arm.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>
+From: valmiki <valmikibow@gmail.com>
+Message-ID: <e8effeac-bdfb-34dd-63e5-eb3fb08fd540@gmail.com>
+Date: Wed, 13 Sep 2017 23:08:42 +0530
 MIME-Version: 1.0
+In-Reply-To: <8fd78f56-43ed-e480-1c98-5d1162452674@arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn,
+On 9/13/2017 6:50 AM, Jean-Philippe Brucker wrote:
+> Hi Valmiki,
+>
+> On 12/09/17 19:01, valmiki wrote:
+>> Hi, as per VFIO documentation i see that we need to see
+>> "/sys/bus/pci/devices/0000:06:0d.0/iommu_group" in order to find group
+>> in which PCI bus is attached.
+>> But as per drivers/pci/pci-sysfs.c in static struct attribute
+>> *pci_dev_attrs[], i don't see any such attribute.
+>
+> This iommu_group attribute is created by
+> drivers/iommu/iommu.c:iommu_group_add_device. It is a symbolic link to
+> /sys/kernel/iommu_groups/<group>.
+>
+>> I tried enabling SMMUv2 driver and SMMU for PCIe node on our SOC, but
+>> this file doesn't show up and also in /sys/kernel/iommu_group i do not
+>> see "/sys/kernel/iommu_groups/17/devices/0000:00:1f.00" file, i see only
+>> PCIe root port device tree node in that group and not individual buses.
+>> So on ARM64 for showing these paths i.e show specific to each bus, does
+>> SMMU need any particular confguration (we have SMMUv2) > Do we need any specific kernel configuration ?
+>
+> I don't think so. If you're able to see the root complex in an IOMMU
+> group, then the configuration is probably fine. Could you provide a little
+> more information about your system, for example lspci along with "find
+> /sys/kernel/iommu_groups/*/devices/*"?
+>
+Here is the log:
+root@:~# lspci
+00:00.0 PCI bridge: Corporation Device a023
+01:00.0 Memory controller: Corporation Device a024
+root@:~# find /sys/kernel/iommu_groups/*/devices/*
+/sys/kernel/iommu_groups/0/devices/ad0c0000.pcie
+/sys/kernel/iommu_groups/1/devices/ad0f0000.spi
+/sys/kernel/iommu_groups/2/devices/adc70000.sdhci
+/sys/kernel/iommu_groups/3/devices/ad9d0000.usb0
+root@:~#
+> Ideally, each PCIe device will be in its own IOMMU group. So you shouldn't
+> have each bus in a group, but rather one device per group. Linux puts
+> multiple devices in a group if the IOMMU cannot properly isolate them. In
+> general it's not something you want in your system, because all devices in
+> a group will have the same address space and cannot be passed to a guest
+> separately.
+>
+So i don't see separate group per pci device.When you say one pci device 
+per group, when does smmu creates one group per pci device ?
+As per boot log i see that smmu drvier gets probed first and then pcie 
+root port driver, so how will smmu know number of pci devices present 
+downstream and create a group for each device ?
 
-Thank you for your help. Blow you'll find the inline patch to ensure the correct Kconfig configuration when PCI_REALLOC_ENABLE_AUTO is selected.
+Regards,
+Valmiki
 
-Best regards,
-Sascha El-Sharkawy
-
-Signed-off-by:  Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig index c32a77fc8b03..675d79c52709 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -42,13 +42,12 @@ config PCI_DEBUG
- config PCI_REALLOC_ENABLE_AUTO
- 	bool "Enable PCI resource re-allocation detection"
- 	depends on PCI
-+	select PCI_IOV
- 	help
- 	  Say Y here if you want the PCI core to detect if PCI resource
- 	  re-allocation needs to be enabled. You can always use pci=realloc=on
--          or pci=realloc=off to override it.  Note this feature is a no-op
--          unless PCI_IOV support is also enabled; in that case it will
--          automatically re-allocate PCI resources if SR-IOV BARs have not
--          been allocated by the BIOS.
-+	  or pci=realloc=off to override it.  It will automatically re-allocate
-+	  PCI resources if SR-IOV BARs have not been allocated by the BIOS.
- 
- 	  When in doubt, say N.
--- -----------------------------------------------------------------------
-Sascha El-Sharkawy, MSc
-University of Hildesheim                    Tel.: +49 (0) 5121 / 883-40336 Institute of Computer Science               Fax:  +49 (0) 5121 / 883-40337
-Universitätsplatz 1                           elscha@sse.uni-hildesheim.de
-D-31141 Hildesheim, Germany               http://www.sse.uni-hildesheim.de
-
-
-> On Thu, 14 Sep 2017 10:01:17 +0200, Bjorn Helgaas wrote:
-> 
-> Hi Sascha,
-> 
-> On Wed, Aug 23, 2017 at 08:22:38AM +0200, Sascha El-Sharkawy wrote:
-> > We detected that the selection of "PCI resource re-allocation detection"
-> > (CONFIG_PCI_REALLOC_ENABLE_AUTO) is ignored in some situations. This 
-> > can happen as the related functionality (drivers/pci/setup-bus.c, 
-> > lines 1702
-> > - 1738) depends on CONFIG_PCI_REALLOC_ENABLE_AUTO and
-> CONFIG_PCI_IOV,
-> > while in Kconfig (drivers/pci/Kconfig, lines 42 - 53) this 
-> > functionality is only controlled by CONFIG_PCI_REALLOC_ENABLE_AUTO.
-> >
-> > The dependency on CONFIG_PCI_IOV is only mentioned in the comment
-> of
-> > CONFIG_PCI_REALLOC_ENABLE_AUTO, but not checked by Kconfig. As 
-> > CONFIG_PCI_IOV is selected by many other configuration options, we 
-> > expect the failure to happen in very few configurations only, which 
-> > makes it even harder to detect and fix. However, there exist 
-> > configurations that will still be faulty.  The suggested fix ensures 
-> > that the re-allocation is always working as specified through an 
-> > automated selection of CONFIG_PCI_IOV if
-> CONFIG_PCI_REALLOC_ENABLE_AUTO is selected.
-> 
-> I'm sorry that I missed this patch.  I normally work from patchwork 
-> (https://patchwork.ozlabs.org/project/linux-pci/list/), and it 
-> apparently doesn't pick up patches that are attached (or maybe it just 
-> misses gzipped ones).
-> 
-> Can you please repost this as plain-text email with the patch included 
-> inline, with a changelog and Signed-off-by?  Then patchwork should 
-> pick it up and I won't forget about it.
-> 
-> For details about Signed-off-by, etc, see 
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tre
-> e/Docu mentation/process/submitting-patches.rst
-> 
-> Bjorn
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
