@@ -1,64 +1,28 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jan Glauber <jglauber@cavium.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v4 3/3] PCI: Avoid slot reset if bus reset is not possible
-Date: Fri,  8 Sep 2017 10:10:33 +0200
-Message-Id: <20170908081033.3025-4-jglauber@cavium.com>
-In-Reply-To: <20170908081033.3025-1-jglauber@cavium.com>
-References: <20170908081033.3025-1-jglauber@cavium.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
- Jan Glauber <jglauber@cavium.com>, Robert Richter <robert.richter@cavium.com>,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- Jon Masters <jcm@redhat.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0076.outbound.protection.outlook.com ([104.47.38.76]:12069
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751120AbdIMMBI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Sep 2017 08:01:08 -0400
+Date: Wed, 13 Sep 2017 05:01:03 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, David.Daney@cavium.com,
+        jcm@redhat.com, Robert.Richter@cavium.com, Wilson.Snyder@cavium.com
+Subject: Re: [PATCH] PCI: quirks: update cavium ACS quirk implementation
+Message-ID: <20170913120103.GB17702@localhost.localdomain>
+References: <1505217316-15702-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170912101545.01977624@t450s.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170912101545.01977624@t450s.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When checking to see if a PCI slot can safely be reset, we check to
-see if any of the children have their PCI_DEV_FLAGS_NO_BUS_RESET flag
-set.
+To my previous email, please ignore this for now:
 
-Some PCIe root port bridges do not behave well after a slot reset,
-and may cause the device in the slot to become unusable.
+> Would the resetting of RR/CR/UF/SV bits be more correct here ?
 
-Add a check for the PCI_DEV_FLAGS_NO_BUS_RESET flag being set in the
-bridge device to prevent the slot from being reset.
-
-Signed-off-by: Jan Glauber <jglauber@cavium.com>
----
- drivers/pci/pci.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b2a46ca7f133..45a086fc3592 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4393,6 +4393,10 @@ static bool pci_slot_resetable(struct pci_slot *slot)
- {
- 	struct pci_dev *dev;
- 
-+	if (slot->bus->self &&
-+	    (slot->bus->self->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET))
-+		return false;
-+
- 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
- 		if (!dev->slot || dev->slot != slot)
- 			continue;
--- 
-2.9.0.rc0.21.g7777322
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+WBR,
+Vadim
