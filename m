@@ -1,222 +1,45 @@
-Return-Path: <SRS0=sCe6=A3=free.fr=marc.w.gonzalez@kernel.org>
-Return-Path: <SRS0=sCe6=A3=free.fr=marc.w.gonzalez@kernel.org>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: [RESEND PATCH v11 2/3] PCI: Use of_pci_dma_range_parser_init API
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Marc Zyngier
- <marc.zyngier@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- Rob Herring <robh@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
- Mason <slash.tmp@free.fr>
-References: <93a30f88-17e1-af14-0c50-54f829c1158b@free.fr>
-Message-ID: <c0279429-e0e4-096f-70be-7f89887bde4c@free.fr>
-Date: Tue, 26 Sep 2017 12:26:55 +0200
-MIME-Version: 1.0
-In-Reply-To: <93a30f88-17e1-af14-0c50-54f829c1158b@free.fr>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50230 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751423AbdINRut (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Sep 2017 13:50:49 -0400
+Message-ID: <1505411442.31630.11.camel@sipsolutions.net>
+Subject: Re: iwlwifi firmware load broken in current -git
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Srinath Mannam <srinath.mannam@broadcom.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Thu, 14 Sep 2017 19:50:42 +0200
+In-Reply-To: <CABe79T5fzTthk=c9891iT-_pQrNGaf+THzyi-B7cdqghX15Vug@mail.gmail.com> (sfid-20170914_194402_921163_AF6959E0)
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+         <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+         <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+         <1505246657.1974.11.camel@sipsolutions.net>
+         <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+         <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+         <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+         <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+         <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+         <CABe79T5fzTthk=c9891iT-_pQrNGaf+THzyi-B7cdqghX15Vug@mail.gmail.com>
+         (sfid-20170914_194402_921163_AF6959E0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the factorized implementation.
+On Thu, 2017-09-14 at 23:14 +0530, Srinath Mannam wrote:
+> 
+> atomic_inc_return(&dev->enable_cnt) in function
+> pci_enable_device_flags enables passed pcie device.
+> !pci_is_enabled(bridge) check in "if (bridge &&
+> !pci_is_enabled(bridge))"  checks for bridge device of previous pcie
+> device.
+> So it will not stop bus_master of bridge device.
 
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
----
- drivers/pci/host/pci-ftpci100.c  | 20 +-------------------
- drivers/pci/host/pci-rcar-gen2.c | 20 +-------------------
- drivers/pci/host/pci-xgene.c     | 20 +-------------------
- drivers/pci/host/pcie-iproc.c    | 20 +-------------------
- drivers/pci/host/pcie-rcar.c     | 20 +-------------------
- 5 files changed, 5 insertions(+), 95 deletions(-)
+It also doesn't *enable* it though, does it?
 
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index 5162dffc102b..12d78bba1bd3 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -370,24 +370,6 @@ static int faraday_pci_setup_cascaded_irq(struct faraday_pci *p)
- 	return 0;
- }
- 
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--				     struct device_node *node)
--{
--	const int na = 3, ns = 2;
--	int rlen;
--
--	parser->node = node;
--	parser->pna = of_n_addr_cells(node);
--	parser->np = parser->pna + na + ns;
--
--	parser->range = of_get_property(node, "dma-ranges", &rlen);
--	if (!parser->range)
--		return -ENOENT;
--	parser->end = parser->range + rlen / sizeof(__be32);
--
--	return 0;
--}
--
- static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
- 					    struct device_node *np)
- {
-@@ -402,7 +384,7 @@ static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
- 	int i = 0;
- 	u32 val;
- 
--	if (pci_dma_range_parser_init(&parser, np)) {
-+	if (of_pci_dma_range_parser_init(&parser, np)) {
- 		dev_err(dev, "missing dma-ranges property\n");
- 		return -EINVAL;
- 	}
-diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-index 6f879685fedd..e46de69f0380 100644
---- a/drivers/pci/host/pci-rcar-gen2.c
-+++ b/drivers/pci/host/pci-rcar-gen2.c
-@@ -293,24 +293,6 @@ static struct pci_ops rcar_pci_ops = {
- 	.write	= pci_generic_config_write,
- };
- 
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--				     struct device_node *node)
--{
--	const int na = 3, ns = 2;
--	int rlen;
--
--	parser->node = node;
--	parser->pna = of_n_addr_cells(node);
--	parser->np = parser->pna + na + ns;
--
--	parser->range = of_get_property(node, "dma-ranges", &rlen);
--	if (!parser->range)
--		return -ENOENT;
--
--	parser->end = parser->range + rlen / sizeof(__be32);
--	return 0;
--}
--
- static int rcar_pci_parse_map_dma_ranges(struct rcar_pci_priv *pci,
- 					 struct device_node *np)
- {
-@@ -320,7 +302,7 @@ static int rcar_pci_parse_map_dma_ranges(struct rcar_pci_priv *pci,
- 	int index = 0;
- 
- 	/* Failure to parse is ok as we fall back to defaults */
--	if (pci_dma_range_parser_init(&parser, np))
-+	if (of_pci_dma_range_parser_init(&parser, np))
- 		return 0;
- 
- 	/* Get the dma-ranges from DT */
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index bd897479a215..f660513946d3 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -542,24 +542,6 @@ static void xgene_pcie_setup_ib_reg(struct xgene_pcie_port *port,
- 	xgene_pcie_setup_pims(port, pim_reg, pci_addr, ~(size - 1));
- }
- 
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--				     struct device_node *node)
--{
--	const int na = 3, ns = 2;
--	int rlen;
--
--	parser->node = node;
--	parser->pna = of_n_addr_cells(node);
--	parser->np = parser->pna + na + ns;
--
--	parser->range = of_get_property(node, "dma-ranges", &rlen);
--	if (!parser->range)
--		return -ENOENT;
--	parser->end = parser->range + rlen / sizeof(__be32);
--
--	return 0;
--}
--
- static int xgene_pcie_parse_map_dma_ranges(struct xgene_pcie_port *port)
- {
- 	struct device_node *np = port->node;
-@@ -568,7 +550,7 @@ static int xgene_pcie_parse_map_dma_ranges(struct xgene_pcie_port *port)
- 	struct device *dev = port->dev;
- 	u8 ib_reg_mask = 0;
- 
--	if (pci_dma_range_parser_init(&parser, np)) {
-+	if (of_pci_dma_range_parser_init(&parser, np)) {
- 		dev_err(dev, "missing dma-ranges property\n");
- 		return -EINVAL;
- 	}
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index c57486348856..aa4f6d519053 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -1000,24 +1000,6 @@ static int iproc_pcie_setup_ib(struct iproc_pcie *pcie,
- 	return ret;
- }
- 
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--				     struct device_node *node)
--{
--	const int na = 3, ns = 2;
--	int rlen;
--
--	parser->node = node;
--	parser->pna = of_n_addr_cells(node);
--	parser->np = parser->pna + na + ns;
--
--	parser->range = of_get_property(node, "dma-ranges", &rlen);
--	if (!parser->range)
--		return -ENOENT;
--
--	parser->end = parser->range + rlen / sizeof(__be32);
--	return 0;
--}
--
- static int iproc_pcie_map_dma_ranges(struct iproc_pcie *pcie)
- {
- 	struct of_pci_range range;
-@@ -1025,7 +1007,7 @@ static int iproc_pcie_map_dma_ranges(struct iproc_pcie *pcie)
- 	int ret;
- 
- 	/* Get the dma-ranges from DT */
--	ret = pci_dma_range_parser_init(&parser, pcie->dev->of_node);
-+	ret = of_pci_dma_range_parser_init(&parser, pcie->dev->of_node);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 246d485b24c6..7975b10e21e8 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -1029,24 +1029,6 @@ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
- 	return 0;
- }
- 
--static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
--				     struct device_node *node)
--{
--	const int na = 3, ns = 2;
--	int rlen;
--
--	parser->node = node;
--	parser->pna = of_n_addr_cells(node);
--	parser->np = parser->pna + na + ns;
--
--	parser->range = of_get_property(node, "dma-ranges", &rlen);
--	if (!parser->range)
--		return -ENOENT;
--
--	parser->end = parser->range + rlen / sizeof(__be32);
--	return 0;
--}
--
- static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
- 					  struct device_node *np)
- {
-@@ -1055,7 +1037,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
- 	int index = 0;
- 	int err;
- 
--	if (pci_dma_range_parser_init(&parser, np))
-+	if (of_pci_dma_range_parser_init(&parser, np))
- 		return -EINVAL;
- 
- 	/* Get the dma-ranges from DT */
--- 
-2.11.0
+johannes
