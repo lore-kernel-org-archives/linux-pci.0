@@ -1,142 +1,91 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] ACPI/IORT: Fix PCI ACS enablement
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20170919170539.6265-1-lorenzo.pieralisi@arm.com>
- <59C3A36A.2060202@hisilicon.com> <20170922094546.GE1523@red-moon>
- <59C5C655.8030607@hisilicon.com> <20170928154625.GA25853@red-moon>
-CC: <linux-acpi@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <59CDCAB6.3000906@hisilicon.com>
-Date: Fri, 29 Sep 2017 12:23:18 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f178.google.com ([209.85.223.178]:43203 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751323AbdINRf6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2017 13:35:58 -0400
+Received: by mail-io0-f178.google.com with SMTP id k101so2425348iod.0
+        for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2017 10:35:57 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+ <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+ <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+ <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+Date: Thu, 14 Sep 2017 11:35:54 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170928154625.GA25853@red-moon>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/9/28 23:46, Lorenzo Pieralisi wrote:
-> On Sat, Sep 23, 2017 at 10:26:29AM +0800, Zhou Wang wrote:
->> On 2017/9/22 17:45, Lorenzo Pieralisi wrote:
->>> On Thu, Sep 21, 2017 at 07:32:58PM +0800, Zhou Wang wrote:
->>>> On 2017/9/20 1:05, Lorenzo Pieralisi wrote:
->>>>> commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
->>>>> workarounds") removed kernel code that was allowing to initialize
->>>>> and probe the SMMU devices early (ie earlier than PCI devices through
->>>>> linker script callback entries) in the boot process because it was not
->>>>> needed any longer in that the SMMU devices/drivers now support deferred
->>>>> probing.
->>>>>
->>>>> Since the SMMUs probe routines are also in charge of requesting global
->>>>> PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
->>>>> up early-probing workarounds") also postponed PCI ACS enablement to
->>>>> SMMUs devices probe time, which may be too late given that PCI devices
->>>>> needs to detect if PCI ACS is enabled to init the respective capability
->>>>> through the following call path:
->>>>>
->>>>> pci_device_add()
->>>>>  -> pci_init_capabilities()
->>>>>   -> pci_enable_acs()
->>>>>
->>>>> Add code in the ACPI IORT SMMU platform devices initialization path
->>>>> (that is called before ACPI PCI enumeration) to detect if an SMMU is
->>>>> present in HW and enable PCI ACS if it actually is, restoring the
->>>>> correct PCI ACS enablement sequencing.
->>>>>
->>>>> Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
->>>>> Signed-workarounds")
->>>>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>>> Cc: Will Deacon <will.deacon@arm.com>
->>>>> Cc: Robin Murphy <robin.murphy@arm.com>
->>>>> Cc: Zhou Wang <wangzhou1@hisilicon.com>
->>>>> Cc: Alex Williamson <alex.williamson@redhat.com>
->>>>> ---
->>>>>  drivers/acpi/arm64/iort.c | 11 +++++++++++
->>>>>  1 file changed, 11 insertions(+)
->>>>>
->>>>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
->>>>> index 9565d57..71a7694 100644
->>>>> --- a/drivers/acpi/arm64/iort.c
->>>>> +++ b/drivers/acpi/arm64/iort.c
->>>>> @@ -1184,6 +1184,7 @@ static void __init iort_init_platform_devices(void)
->>>>>  	struct acpi_table_iort *iort;
->>>>>  	struct fwnode_handle *fwnode;
->>>>>  	int i, ret;
->>>>> +	bool smmu_detected = false;
->>>>>  
->>>>>  	/*
->>>>>  	 * iort_table and iort both point to the start of IORT table, but
->>>>> @@ -1218,11 +1219,21 @@ static void __init iort_init_platform_devices(void)
->>>>>  				acpi_free_fwnode_static(fwnode);
->>>>>  				return;
->>>>>  			}
->>>>> +
->>>>> +			smmu_detected = true;
->>>>>  		}
->>>>>  
->>>>>  		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
->>>>>  					 iort_node->length);
->>>>>  	}
->>>>> +
->>>>> +	/*
->>>>> +	 * If IORT reports an SMMU component make sure PCI ACS is
->>>>> +	 * requested so that PCI devices can enable it in their
->>>>> +	 * capabilities.
->>>>> +	 */
->>>>> +	if (smmu_detected)
->>>>> +		pci_request_acs();
->>>>>  }
->>>>>  
->>>>>  void __init acpi_iort_init(void)
->>>>>
->>>>
->>>> Hi Lorenzo,
->>>>
->>>> I tested this patch, it works well in my HiSilicon Hip08 based system.
->>>> However, setting ACS flag at the stage of SMMU device init seems not good,
->>>> I mean what if in one system there are only platform devices connected to
->>>> SMMU device.
+On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+> Hi Bjorn,
+> 
+> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>
+>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+>>> [+cc linux-pci]
 >>>
->>> That's a fair point if you explain to me how current pci_request_acs()
->>> usage copes with your remark above.
->>
->> The current pci_request_acs usage for ARM SMMU-V3 sets ACS flags under CONFIG_PCI.
->> However, as mentioned in your commit message, this setting is too late.
->>
->> For the usage of X86 and AMD, as I am not familiar with the devices used in these
->> two platforms, maybe the default devices in these platforms are PCIe based :)
-> 
-> I do not understand what your point is. ACS enablement is a global flag,
-> that is currently set whenever an x86/AMD/ARM IOMMU is detected/probed
-> AFAICS.
+>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+>>>>>
+>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+>>>>>> functional changes.
+>>>>>
+>>>>> and pci_enable_bridge() already checks if it's already enabled, but
+>>>>> still enables mastering in that case if it isn't:
+>>>>>
+>>>>> static void pci_enable_bridge(struct pci_dev *dev)
+>>>>> {
+>>>>> [...]
+>>>>>         if (pci_is_enabled(dev)) {
+>>>>>                 if (!dev->is_busmaster)
+>>>>>                         pci_set_master(dev);
+>>>>>                 return;
+>>>>>         }
+>>>>>
+>>>>> so I guess due to the new check we end up with mastering disabled, and
+>>>>> thus the firmware can't load since that's a DMA thing?
+>>>>
+>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+>>>> from working on a pretty standard laptop. It'd suck to have this be in
+>>>> -rc1. Seems like the trivial fix would be:
+>>>>
+>>>>
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index b0002daa50f3..ffbe11dbdd61 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>>>>                 return 0;               /* already enabled */
+>>>>
+>>>>         bridge = pci_upstream_bridge(dev);
+>>>> -       if (bridge && !pci_is_enabled(bridge))
+>>>> +       if (bridge)
+> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+> pci_enable_bridge functoin will causes a nexted lock.
 
-There are named devices(platform devices) and/or PCI devices connected to SMMU.
-However, ACS flags is only for PCI devices. So setting this flag in SMMU device init
-maybe need check if there are PCIe devices connected to SMMU, as maybe devices connected
-to SMMU are all named devices.
+Took a look, and looks like you are right. That code looks like a mess,
+fwiw.
 
-> 
-> I agree that ACS enablement should be done before PCI enumeration,
-> for other comments either you are questioning the current policy
-> behind ACS enablement in the kernel - which can be a fair point - or
-> I do not understand what you mean.
-> 
-> Let me know since I would like to queue this patch unless I hear
-> a compelling objection to it.
+I'd strongly suggest that the bad commit is reverted until a proper
+solution is found, since the simple one-liner could potentially
+introduce a deadlock with your patch applied.
 
-I think this is not a big problem. If you want to queue this patch, you can add:
-
-Tested-by: Zhou Wang <wangzhou1@hisilicon.com>
-
-Thanks,
-Zhou
-
-> 
-> Lorenzo
-> 
-> .
-> 
-
+-- 
+Jens Axboe
