@@ -1,178 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:41724 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751959AbdI0NRq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2017 09:17:46 -0400
-Message-ID: <1506517162.30379.2.camel@infradead.org>
-Subject: [PATCH] uio/uio_pci_generic: Add SR-IOV support
-From: David Woodhouse <dwmw2@infradead.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date: Wed, 27 Sep 2017 13:59:22 +0100
-Content-Type: multipart/signed; micalg="sha-256";
-        protocol="application/x-pkcs7-signature";
-        boundary="=-rNZY0+1pAO+mFup16fUc"
-Mime-Version: 1.0
+Received: from mail-it0-f41.google.com ([209.85.214.41]:52289 "EHLO
+        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751316AbdINRo3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2017 13:44:29 -0400
+Received: by mail-it0-f41.google.com with SMTP id c195so1078386itb.1
+        for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2017 10:44:28 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+From: Jens Axboe <axboe@kernel.dk>
+To: Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+ <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+ <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+ <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+Message-ID: <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+Date: Thu, 14 Sep 2017 11:44:25 -0600
+MIME-Version: 1.0
+In-Reply-To: <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 09/14/2017 11:35 AM, Jens Axboe wrote:
+> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+>> Hi Bjorn,
+>>
+>> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>
+>>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+>>>> [+cc linux-pci]
+>>>>
+>>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+>>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+>>>>>>
+>>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+>>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+>>>>>>> functional changes.
+>>>>>>
+>>>>>> and pci_enable_bridge() already checks if it's already enabled, but
+>>>>>> still enables mastering in that case if it isn't:
+>>>>>>
+>>>>>> static void pci_enable_bridge(struct pci_dev *dev)
+>>>>>> {
+>>>>>> [...]
+>>>>>>         if (pci_is_enabled(dev)) {
+>>>>>>                 if (!dev->is_busmaster)
+>>>>>>                         pci_set_master(dev);
+>>>>>>                 return;
+>>>>>>         }
+>>>>>>
+>>>>>> so I guess due to the new check we end up with mastering disabled, and
+>>>>>> thus the firmware can't load since that's a DMA thing?
+>>>>>
+>>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+>>>>> from working on a pretty standard laptop. It'd suck to have this be in
+>>>>> -rc1. Seems like the trivial fix would be:
+>>>>>
+>>>>>
+>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>>> index b0002daa50f3..ffbe11dbdd61 100644
+>>>>> --- a/drivers/pci/pci.c
+>>>>> +++ b/drivers/pci/pci.c
+>>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>>>>>                 return 0;               /* already enabled */
+>>>>>
+>>>>>         bridge = pci_upstream_bridge(dev);
+>>>>> -       if (bridge && !pci_is_enabled(bridge))
+>>>>> +       if (bridge)
+>> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+>> pci_enable_bridge functoin will causes a nexted lock.
+> 
+> Took a look, and looks like you are right. That code looks like a mess,
+> fwiw.
+> 
+> I'd strongly suggest that the bad commit is reverted until a proper
+> solution is found, since the simple one-liner could potentially
+> introduce a deadlock with your patch applied.
 
---=-rNZY0+1pAO+mFup16fUc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+BTW, your patch looks pretty bad too, introducing a random mutex
+deep on code that can be recursive. Why isn't this check in
+pci_enable_device_flags() enough to prevent double-enable of
+an upstream bridge?
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+if (atomic_inc_return(&dev->enable_cnt) > 1)                            
+	return 0;               /* already enabled */
 
-Allow userspace to configure SR-IOV VFs through sysfs.
-
-Currently, we need an in-kernel driver to permit this. But sometimes
-*all* we want to do is enable the VFs so that we can assign them to
-guests; we don't actually need to deal with the PF in any other way
-from the host kernel. So let's make it possible to use UIO for that.
-
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
-It's not entirely clear to me why we require the driver to "enable"
-SR-IOV like this anyway =E2=80=94 were there some which needed to do someth=
-ing
-special and device-specific instead of just falling through to
-pci_{en,dis}able_sriov(), such that we need to effectively whitelist
-this in the driver rather than blacklisting the "problematic" ones via
-PCI quirks?
-
- drivers/uio/uio_pci_generic.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/uio/uio_pci_generic.c b/drivers/uio/uio_pci_generic.c
-index a56fdf9..bd196f0 100644
---- a/drivers/uio/uio_pci_generic.c
-+++ b/drivers/uio/uio_pci_generic.c
-@@ -108,15 +108,27 @@ static void remove(struct pci_dev *pdev)
- 	struct uio_pci_generic_dev *gdev =3D pci_get_drvdata(pdev);
-=20
- 	uio_unregister_device(&gdev->info);
-+	pci_disable_sriov(pdev);
- 	pci_disable_device(pdev);
- 	kfree(gdev);
- }
-=20
-+static int sriov_configure(struct pci_dev *pdev, int num_vfs)
-+{
-+	if (!num_vfs) {
-+		pci_disable_sriov(pdev);
-+		return 0;
-+	}
-+
-+	return pci_enable_sriov(pdev, num_vfs);
-+}
-+
- static struct pci_driver uio_pci_driver =3D {
- 	.name =3D "uio_pci_generic",
- 	.id_table =3D NULL, /* only dynamic id's */
- 	.probe =3D probe,
- 	.remove =3D remove,
-+	.sriov_configure =3D sriov_configure,
- };
-=20
- module_pci_driver(uio_pci_driver);
---=20
-2.7.4
-
---=20
-dwmw2
---=-rNZY0+1pAO+mFup16fUc
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
-ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
-EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
-UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
-MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
-bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
-PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
-bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
-uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
-LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
-QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
-UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
-UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
-MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
-BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
-HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
-dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
-LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
-mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
-nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
-4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
-yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
-+nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
-CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
-MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
-ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
-MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
-pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
-An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
-p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
-HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
-AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
-dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
-MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
-BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
-UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
-Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
-gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
-dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
-Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
-DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
-eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
-hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
-PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
-QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
-WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
-ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
-bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
-U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
-SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
-RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
-dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
-iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
-M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
-FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
-HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
-BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
-BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
-dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
-U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
-Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
-ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
-BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
-2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
-vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
-YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
-fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
-GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
-R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
-TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
-ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDkyNzEyNTkyMlowLwYJ
-KoZIhvcNAQkEMSIEIEQcmJIqBSDhLbGGzyYsA/6XU5jcuCVs4IiloxSeKovEMIHBBgkrBgEEAYI3
-EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
-BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
-RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
-WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
-VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
-TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
-b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
-AQB7MtQZAlWZ0TDcGs5qClOhsXdEkbMCtWrWf8DN9JWwenY1tXJvFdNTYBrotUmjQ73Ph2pXVhW5
-o3ZcCuleNEdUvO2vmq0JAum6kaPp9FcdMacpL9MEb5y75SI1G0hssgNh4i10M2042scDAz6Ctu73
-fTg1zaOFeADKQg8eqgYDUdmDILplq8E/z3A/ywo1RduxCbIzqqBWoWVvkX8YgUI1u9Z07P4AG+1H
-4JjlpLerANo8k4LedDLPJmnbS8jR0L1bjMmbOausQzTKj01hBvDUrj6PyojanfZtbdWUWePlYtsK
-G9KdowTqNIRziAxVoON48GUQgndr9KPWp4Lvwjh3AAAAAAAA
-
-
---=-rNZY0+1pAO+mFup16fUc--
+-- 
+Jens Axboe
