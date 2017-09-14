@@ -1,133 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 25 Sep 2017 11:39:48 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52440 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751131AbdINIBa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Sep 2017 04:01:30 -0400
+Date: Thu, 14 Sep 2017 03:01:28 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH v3 0/3] Split default display handling out from VGA arbiter
-Message-ID: <20170925163948.GD15970@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170901072744.2409-1-dja@axtens.net>
+To: Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Klaus Schmid <schmid@sse.uni-hildesheim.de>
+Subject: Re: [PATCH] PCI SUBSYSTEM allows inconsistent configuration, current
+ Kernel version
+Message-ID: <20170914080128.GA32091@bhelgaas-glaptop.roam.corp.google.com>
+References: <171b5343-c8c2-47bb-b29d-ef21bac15637@messagesink.samelson.uni-hildesheim.de>
 MIME-Version: 1.0
-In-Reply-To: <20170901072744.2409-1-dja@axtens.net>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, catalin.marinas@arm.com,
- gabriele.paoloni@huawei.com, ard.biesheuvel@linaro.org, airlied@linux.ie,
- linux-pci@vger.kernel.org, will.deacon@arm.com,
- dri-devel@lists.freedesktop.org, z.liuxinliang@hisilicon.com,
- alex.williamson@redhat.com, lukas@wunner.de, benh@kernel.crashing.org,
- zourongrong@gmail.com, daniel.vetter@intel.com, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <171b5343-c8c2-47bb-b29d-ef21bac15637@messagesink.samelson.uni-hildesheim.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 01, 2017 at 05:27:41PM +1000, Daniel Axtens wrote:
-> This patch set:
+Hi Sascha,
+
+On Wed, Aug 23, 2017 at 08:22:38AM +0200, Sascha El-Sharkawy wrote:
+> We detected that the selection of "PCI resource re-allocation detection"
+> (CONFIG_PCI_REALLOC_ENABLE_AUTO) is ignored in some situations. This can
+> happen as the related functionality (drivers/pci/setup-bus.c, lines 1702
+> - 1738) depends on CONFIG_PCI_REALLOC_ENABLE_AUTO and CONFIG_PCI_IOV,
+> while in Kconfig (drivers/pci/Kconfig, lines 42 - 53) this functionality
+> is only controlled by CONFIG_PCI_REALLOC_ENABLE_AUTO.
 > 
->  - splits the default display handling out from VGA arbiter, into its
->    own file and behind its own Kconfig option (and gives the functions
->    better names).
-> 
->  - adds extra detection of default devices. To be nominated, the vga
->    arbiter and platform hooks must not have nominated a default. A
->    card will then only be nominated if it has a driver attached and
->    has IO or memory decoding enabled.
-> 
->  - adds relevant documentation.
-> 
-> The practical impact of this is improved X autoconfiguration on some
-> arm64 systems.
+> The dependency on CONFIG_PCI_IOV is only mentioned in the comment of
+> CONFIG_PCI_REALLOC_ENABLE_AUTO, but not checked by Kconfig. As
+> CONFIG_PCI_IOV is selected by many other configuration options, we expect
+> the failure to happen in very few configurations only, which makes it
+> even harder to detect and fix. However, there exist configurations that
+> will still be faulty.  The suggested fix ensures that the re-allocation
+> is always working as specified through an automated selection of
+> CONFIG_PCI_IOV if CONFIG_PCI_REALLOC_ENABLE_AUTO is selected.
 
-I think I gave you bad advice about trying to separate the "default
-device" idea from the VGA arbiter.
+I'm sorry that I missed this patch.  I normally work from patchwork
+(https://patchwork.ozlabs.org/project/linux-pci/list/), and it apparently
+doesn't pick up patches that are attached (or maybe it just misses gzipped
+ones).
 
-It is true that the "VGA arbiter" per se is related to routing the
-legacy VGA resources, and the arbiter currently only selects a default
-device if it finds a device to which those resources are routed.
+Can you please repost this as plain-text email with the patch included
+inline, with a changelog and Signed-off-by?  Then patchwork should pick it
+up and I won't forget about it.
 
-We have some cases where we want to select a default device that may
-not support the legacy VGA resources, or where they might not be
-routed to the device:
+For details about Signed-off-by, etc, see
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst
 
-  - systems where we match the EFI framebuffer address with a BAR, and
-    select that device as default,
-
-  - powerpc systems where there may be no host bridge window that maps
-    to the legacy VGA resources,
-
-  - your ARM64 systems where the default device may be behind a bridge
-    that doesn't support legacy VGA routing (PCI_BRIDGE_CTL_VGA)
-
-But I think trying to split the "default device" part out from the VGA
-arbiter ends up being overkill and making things more complicated
-instead of simpler.
-
-Would something like the following work for you as well as the powerpc
-case?  On powerpc, we already use vga_set_default_device() to select a
-device that doesn't use legacy VGA resources, so maybe we can just do
-the same on ARM64?
-
-I suppose there might be wrinkles in how the arbiter deals with
-multiple graphics devices on those systems, since I don't think it
-identifies these devices that don't use the legacy resources, but it
-seems like we live with whatever those on are powerpc and probably can
-on ARM64 as well.
-
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 02831a396419..0ac7aa346c69 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
--
--static void fixup_vga(struct pci_dev *pdev)
--{
--	u16 cmd;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
--	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
--		vga_set_default_device(pdev);
--
--}
--DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
--			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 76875f6299b8..9df4802c5f04 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -1468,6 +1468,21 @@ static int __init vga_arb_device_init(void)
- 			vgaarb_info(dev, "no bridge control possible\n");
- 	}
- 
-+	if (!vga_default_device()) {
-+		list_for_each_entry(vgadev, &vga_list, list) {
-+			struct device *dev = &vgadev->pdev->dev;
-+			u16 cmd;
-+
-+			pdev = vgadev->pdev;
-+			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-+				vgaarb_info(dev, "setting as boot device\n");
-+				vga_set_default_device(pdev);
-+				break;
-+			}
-+		}
-+	}
-+
- 	pr_info("loaded\n");
- 	return rc;
- }
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
