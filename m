@@ -1,92 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 0/2] PCI: dwc: convert remaining dbi read/writes to
- dw_pcie_readX_dbi/dw_pcie_writeX_dbi
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>
-References: <20170714120735.11993-1-niklas.cassel@axis.com>
- <20170815223946.GQ32525@bhelgaas-glaptop.roam.corp.google.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <90a9daea-d962-07a6-6c5d-be7a16810123@axis.com>
-Date: Mon, 4 Sep 2017 18:10:55 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f174.google.com ([209.85.223.174]:54066 "EHLO
+        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751316AbdINRoC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2017 13:44:02 -0400
+Received: by mail-io0-f174.google.com with SMTP id q11so2396911ioe.10
+        for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2017 10:44:02 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170815223946.GQ32525@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk> <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk> <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+Date: Thu, 14 Sep 2017 23:14:01 +0530
+Message-ID: <CABe79T5fzTthk=c9891iT-_pQrNGaf+THzyi-B7cdqghX15Vug@mail.gmail.com>
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/16/2017 12:39 AM, Bjorn Helgaas wrote:
-> [+cc Kishon, Pratyush]
-> 
-> On Fri, Jul 14, 2017 at 02:07:33PM +0200, Niklas Cassel wrote:
->> Since the introduction of the dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros,
->> most dw_pcie_read(pci->dbi_base, ..)/dw_pcie_write(pci->dbi_base, ..) calls
->> have been converted to dw_pcie_readX_dbi/dw_pcie_writeX_dbi calls.
->> Convert the remaining calls.
+Hi Jens Axboe,
+
+On Thu, Sep 14, 2017 at 11:05 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+>> Hi Bjorn,
 >>
->> Niklas Cassel (2):
->>   PCI: dwc: dra7xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
->>   PCI: dwc: spear13xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi
->>     macros
->>
->>  drivers/pci/dwc/pci-dra7xx.c     | 14 ++++++--------
->>  drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
->>  2 files changed, 16 insertions(+), 20 deletions(-)
-> 
-> These patches are short, but obscure, e.g.,
-> 
->   - dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_LNKCAP, 4, &val);
->   + val = dw_pcie_readl_dbi(pci, exp_cap_off + PCI_EXP_LNKCAP);
-> 
-> The original call path was:
-> 
->   dw_pcie_read(addr, ...)
->     readl(addr) 
-> 
-> and we're replacing it with the much more complicated:
-> 
->   dw_pcie_readl_dbi
->     __dw_pcie_read_dbi
->       if (pci->ops->read_dbi)
-> 	return pci->ops->read_dbi(pci, base, reg, size)
->       dw_pcie_read(base + reg, size, &val)
-> 	readl
-> 
-> This is not functionally equivalent (the new path uses ops->read_dbi
-> if it's set), so the changelog should say something about why we need
-> this change.
-> 
-> Neither dra7xx nor spear13xx sets .read_dbi, so my guess is this
-> doesn't actually fix anything that's broken and this is just for
-> consistency.
-
-Hello Bjorn,
-
-It is just for consistency.
-
-Sorry for my misleading cover letter.
-It should have said: "For consistency, convert all
-dw_pcie_read(pci->dbi_base, ..)/dw_pcie_write(pci->dbi_base, ..)
-calls to use the dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros".
-
-It is true that dw_pcie_readX_dbi/dw_pcie_writeX_dbi will use
-ops->read_dbi if it is set. However, if ops->read_dbi is set,
-you will most likely want to use that function for reading the dbi.
-Anyway, neither spear13xx nor dra7xx has ops->read_dbi set,
-so these patches shouldn't change their current behavior.
-
-Do you want me to resend these patches or would you prefer
-to just drop them?
-
-Best regards,
-Niklas
-
-> 
-> That's fine, but I'm confused because I looked for some of the
-> previous conversions you mentioned but couldn't find any.  I'm lost in
-> a maze of twisty little passages.
-> 
-> Bjorn
-> 
+>> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>
+>>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+>>>> [+cc linux-pci]
+>>>>
+>>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+>>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+>>>>>>
+>>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+>>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+>>>>>>> functional changes.
+>>>>>>
+>>>>>> and pci_enable_bridge() already checks if it's already enabled, but
+>>>>>> still enables mastering in that case if it isn't:
+>>>>>>
+>>>>>> static void pci_enable_bridge(struct pci_dev *dev)
+>>>>>> {
+>>>>>> [...]
+>>>>>>         if (pci_is_enabled(dev)) {
+>>>>>>                 if (!dev->is_busmaster)
+>>>>>>                         pci_set_master(dev);
+>>>>>>                 return;
+>>>>>>         }
+>>>>>>
+>>>>>> so I guess due to the new check we end up with mastering disabled, and
+>>>>>> thus the firmware can't load since that's a DMA thing?
+>>>>>
+>>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+>>>>> from working on a pretty standard laptop. It'd suck to have this be in
+>>>>> -rc1. Seems like the trivial fix would be:
+>>>>>
+>>>>>
+>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>>> index b0002daa50f3..ffbe11dbdd61 100644
+>>>>> --- a/drivers/pci/pci.c
+>>>>> +++ b/drivers/pci/pci.c
+>>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>>>>>                 return 0;               /* already enabled */
+>>>>>
+>>>>>         bridge = pci_upstream_bridge(dev);
+>>>>> -       if (bridge && !pci_is_enabled(bridge))
+>>>>> +       if (bridge)
+>> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+>> pci_enable_bridge functoin will causes a nexted lock.
+>
+> Took a look, and looks like you are right. That code looks like a mess,
+> fwiw.
+>
+> I'd strongly suggest that the bad commit is reverted until a proper
+> solution is found, since the simple one-liner could potentially
+> introduce a deadlock with your patch applied.
+atomic_inc_return(&dev->enable_cnt) in function
+pci_enable_device_flags enables passed pcie device.
+!pci_is_enabled(bridge) check in "if (bridge &&
+!pci_is_enabled(bridge))"  checks for bridge device of previous pcie
+device.
+So it will not stop bus_master of bridge device.
+In your case how many bridges in between endpoint and host bridge?
+Please provide the details about your use case.
+Thank you.
+>
+> --
+> Jens Axboe
+>
+Regards,
+Srinath.
