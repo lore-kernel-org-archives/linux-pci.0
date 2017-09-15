@@ -1,27 +1,145 @@
-Return-Path: <SRS0=sOfQ=A3=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=sOfQ=A3=linuxfoundation.org=gregkh@kernel.org>
-Date: Tue, 26 Sep 2017 08:51:19 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Nicolai Stange <nstange@suse.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Adrian Salido <salidoa@google.com>,
-	Sasha Levin <sasha.levin@oracle.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/3] driver core: platform: Don't read past the end of
- "driver_override" buffer
-Message-ID: <20170926065119.GA6250@kroah.com>
-References: <20170911074542.16777-1-nstange@suse.de>
- <20170911074542.16777-4-nstange@suse.de>
- <20170925235000.GI15970@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170925235000.GI15970@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:55050 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751831AbdIOTgr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2017 15:36:47 -0400
+Message-ID: <1505504195.5400.295.camel@coelho.fi>
+From: Luca Coelho <luca@coelho.fi>
+To: Jens Axboe <axboe@kernel.dk>,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 15 Sep 2017 22:36:35 +0300
+In-Reply-To: <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+         <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+         <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+         <1505246657.1974.11.camel@sipsolutions.net>
+         <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+         <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+         <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+         <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+         <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+         <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+         <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+         <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
+         <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: iwlwifi firmware load broken in current -git
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 25, 2017 at 06:50:00PM -0500, Bjorn Helgaas wrote:
-> Greg, I assume you'll deal with this one?  Just let me know if I
-> should do something with it.
+On Fri, 2017-09-15 at 13:32 -0600, Jens Axboe wrote:
+> On 09/14/2017 02:36 PM, Jens Axboe wrote:
+> > On 09/14/2017 02:04 PM, Srinath Mannam wrote:
+> > > Hi Jens Axboe,
+> > > 
+> > > 
+> > > On Thu, Sep 14, 2017 at 11:14 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > On 09/14/2017 11:35 AM, Jens Axboe wrote:
+> > > > > On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+> > > > > > Hi Bjorn,
+> > > > > > 
+> > > > > > On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > > > > 
+> > > > > > > On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+> > > > > > > > [+cc linux-pci]
+> > > > > > > > 
+> > > > > > > > On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> > > > > > > > > On 09/12/2017 02:04 PM, Johannes Berg wrote:
+> > > > > > > > > > On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+> > > > > > > > > > 
+> > > > > > > > > > > CC'ing the guilty part and Bjorn. I'm assuming it's the
+> > > > > > > > > > > pci_is_enabled() check, since the rest of the patch shouldn't have
+> > > > > > > > > > > functional changes.
+> > > > > > > > > > 
+> > > > > > > > > > and pci_enable_bridge() already checks if it's already enabled, but
+> > > > > > > > > > still enables mastering in that case if it isn't:
+> > > > > > > > > > 
+> > > > > > > > > > static void pci_enable_bridge(struct pci_dev *dev)
+> > > > > > > > > > {
+> > > > > > > > > > [...]
+> > > > > > > > > >         if (pci_is_enabled(dev)) {
+> > > > > > > > > >                 if (!dev->is_busmaster)
+> > > > > > > > > >                         pci_set_master(dev);
+> > > > > > > > > >                 return;
+> > > > > > > > > >         }
+> > > > > > > > > > 
+> > > > > > > > > > so I guess due to the new check we end up with mastering disabled, and
+> > > > > > > > > > thus the firmware can't load since that's a DMA thing?
+> > > > > > > > > 
+> > > > > > > > > Bjorn/Srinath, any input here? This is a regression that prevents wifi
+> > > > > > > > > from working on a pretty standard laptop. It'd suck to have this be in
+> > > > > > > > > -rc1. Seems like the trivial fix would be:
+> > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > > > > > > index b0002daa50f3..ffbe11dbdd61 100644
+> > > > > > > > > --- a/drivers/pci/pci.c
+> > > > > > > > > +++ b/drivers/pci/pci.c
+> > > > > > > > > @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+> > > > > > > > >                 return 0;               /* already enabled */
+> > > > > > > > > 
+> > > > > > > > >         bridge = pci_upstream_bridge(dev);
+> > > > > > > > > -       if (bridge && !pci_is_enabled(bridge))
+> > > > > > > > > +       if (bridge)
+> > > > > > 
+> > > > > > With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+> > > > > > pci_enable_bridge functoin will causes a nexted lock.
+> > > > > 
+> > > > > Took a look, and looks like you are right. That code looks like a mess,
+> > > > > fwiw.
+> > > > > 
+> > > > > I'd strongly suggest that the bad commit is reverted until a proper
+> > > > > solution is found, since the simple one-liner could potentially
+> > > > > introduce a deadlock with your patch applied.
+> > > > 
+> > > > BTW, your patch looks pretty bad too, introducing a random mutex
+> > > > deep on code that can be recursive. Why isn't this check in
+> > > > pci_enable_device_flags() enough to prevent double-enable of
+> > > > an upstream bridge?
+> > > > 
+> > > > if (atomic_inc_return(&dev->enable_cnt) > 1)
+> > > >         return 0;               /* already enabled */
+> > > > 
+> > > 
+> > > This check only to verify device enable not for the bus master check.
+> > > But device enable function calls the bridge enable if it has the bridge.
+> > > Bridge enable function enables both device and bus master.
+> > > 
+> > > Here the issue might be because, bridge of endpoint has already set
+> > > device enable without set bus master in some other context. which is
+> > > wrong.
+> > > because all bridges should enable with bridge_enable function only.
+> > > So we see the problem In this context, because "if (bridge &&
+> > > !pci_is_enabled(bridge))" check stops bridge enable which intern stops
+> > > bus master.
+> > > pci_enable_bridge function always makes sure that both device and bus
+> > > master are enabled in any case. If pci_enable_bridge function is not
+> > > called means, that bridge is already has device enable flag set. which
+> > > is not from pci_enable_bridge function.
+> > 
+> > In any case, your patch introduces a regression on systems. Please get
+> > it reverted now, and then you can come up with a new approach to fix the
+> > double enable of the upstream bridge.
+> 
+> Who's sending in the revert? I can certainly do it if no one else does,
+> but it needs to be done.
+> 
+> I'm not seeing any patches coming out of Srinath to fix up the
+> situation, so we should revert the broken patch until a better solution
+> exists.
 
-I've already applied it to my driver-core-next tree, thanks.
+Bjorn already sent it:
 
-greg k-h
+https://lkml.org/lkml/2017/9/15/46
+
+--
+Cheers,
+Luca.
