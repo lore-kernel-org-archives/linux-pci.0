@@ -1,123 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from messagesink.samelson.uni-hildesheim.de ([147.172.172.66]:15524
-        "EHLO messagesink.samelson.uni-hildesheim.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751184AbdIOMTf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2017 08:19:35 -0400
-From: Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Fri, 15 Sep 2017 14:18:56 +0200
-Subject: RE: [PATCH] PCI SUBSYSTEM allows inconsistent configuration,
- current Kernel version
-Message-ID: <F6127EC53C695C46907CD6EE43F346235291129018@messagesink.samelson.uni-hildesheim.de>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mail-sn1nam02on0083.outbound.protection.outlook.com ([104.47.36.83]:64640
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750866AbdIOH7m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Sep 2017 03:59:42 -0400
+To: "helgaas@kernel.org" <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Subject: Resizeable PCI BAR support V8
+Message-ID: <67f83c31-d4ea-6939-1a9a-682c5600026d@amd.com>
+Date: Fri, 15 Sep 2017 09:59:27 +0200
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I just recognized that my last mail misses some line breaks corrupting the patch. This fixes the broken patch.
+Hi Bjorn,
 
-Best regards,
-Sascha
+> This seems 99.9% done, but there were some kbuild issues that need to be
+> resolved.  Or did I miss the resolution of those?
 
-Signed-off-by:  Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig index c32a77fc8b03..675d79c52709 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -42,13 +42,12 @@ config PCI_DEBUG
- config PCI_REALLOC_ENABLE_AUTO
- 	bool "Enable PCI resource re-allocation detection"
- 	depends on PCI
-+	select PCI_IOV
- 	help
- 	  Say Y here if you want the PCI core to detect if PCI resource
- 	  re-allocation needs to be enabled. You can always use pci=realloc=on
--          or pci=realloc=off to override it.  Note this feature is a no-op
--          unless PCI_IOV support is also enabled; in that case it will
--          automatically re-allocate PCI resources if SR-IOV BARs have not
--          been allocated by the BIOS.
-+	  or pci=realloc=off to override it.  It will automatically re-allocate
-+	  PCI resources if SR-IOV BARs have not been allocated by the BIOS.
- 
- 	  When in doubt, say N.
+Sorry for the long delay, I've been extremely busy the last few month 
+and didn't had time to look into this task any more.
 
+But I promise that I want to get it upstream before Christmas. We even 
+have somebody new starting to work on our kernel driver next Monday, so 
+hopefully I will find time to finish this soon.
 
+And yeah I agree that it is 99.9% done, so if anybody wants to pick up 
+and finish the last 0.1% feel free to do it.
 
+BTW: My old mail address I've used for mailing list conversation doesn't 
+work any more. So please just always use the work address.
 
-> On Fri, 15 Sep 2017 at 01:34PM +0200, Sascha El-Sharkawy wrote
-> 
-> Dear Bjorn,
-> 
-> Thank you for your help. Blow you'll find the inline patch to ensure the
-> correct Kconfig configuration when PCI_REALLOC_ENABLE_AUTO is selected.
-> 
-> Best regards,
-> Sascha El-Sharkawy
-> 
-> Signed-off-by:  Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig index c32a77fc8b03..675d79c52709 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -42,13 +42,12 @@ config PCI_DEBUG
->  config PCI_REALLOC_ENABLE_AUTO
->  	bool "Enable PCI resource re-allocation detection"
->  	depends on PCI
-> +	select PCI_IOV
->  	help
->  	  Say Y here if you want the PCI core to detect if PCI resource
->  	  re-allocation needs to be enabled. You can always use
-> pci=realloc=on
-> -          or pci=realloc=off to override it.  Note this feature is a no-op
-> -          unless PCI_IOV support is also enabled; in that case it will
-> -          automatically re-allocate PCI resources if SR-IOV BARs have not
-> -          been allocated by the BIOS.
-> +	  or pci=realloc=off to override it.  It will automatically re-allocate
-> +	  PCI resources if SR-IOV BARs have not been allocated by the BIOS.
-> 
->  	  When in doubt, say N.
-> -- -----------------------------------------------------------------------
-> Sascha El-Sharkawy, MSc
-> University of Hildesheim                    Tel.: +49 (0) 5121 / 883-40336 Institute of
-> Computer Science               Fax:  +49 (0) 5121 / 883-40337
-> Universitätsplatz 1                           elscha@sse.uni-hildesheim.de
-> D-31141 Hildesheim, Germany               http://www.sse.uni-hildesheim.de
-> 
-> 
-> > On Thu, 14 Sep 2017 10:01:17 +0200, Bjorn Helgaas wrote:
-> >
-> > Hi Sascha,
-> >
-> > On Wed, Aug 23, 2017 at 08:22:38AM +0200, Sascha El-Sharkawy wrote:
-> > > We detected that the selection of "PCI resource re-allocation detection"
-> > > (CONFIG_PCI_REALLOC_ENABLE_AUTO) is ignored in some situations.
-> This
-> > > can happen as the related functionality (drivers/pci/setup-bus.c,
-> > > lines 1702
-> > > - 1738) depends on CONFIG_PCI_REALLOC_ENABLE_AUTO and
-> > CONFIG_PCI_IOV,
-> > > while in Kconfig (drivers/pci/Kconfig, lines 42 - 53) this
-> > > functionality is only controlled by CONFIG_PCI_REALLOC_ENABLE_AUTO.
-> > >
-> > > The dependency on CONFIG_PCI_IOV is only mentioned in the comment
-> > of
-> > > CONFIG_PCI_REALLOC_ENABLE_AUTO, but not checked by Kconfig. As
-> > > CONFIG_PCI_IOV is selected by many other configuration options, we
-> > > expect the failure to happen in very few configurations only, which
-> > > makes it even harder to detect and fix. However, there exist
-> > > configurations that will still be faulty.  The suggested fix ensures
-> > > that the re-allocation is always working as specified through an
-> > > automated selection of CONFIG_PCI_IOV if
-> > CONFIG_PCI_REALLOC_ENABLE_AUTO is selected.
-> >
-> > I'm sorry that I missed this patch.  I normally work from patchwork
-> > (https://patchwork.ozlabs.org/project/linux-pci/list/), and it
-> > apparently doesn't pick up patches that are attached (or maybe it just
-> > misses gzipped ones).
-> >
-> > Can you please repost this as plain-text email with the patch included
-> > inline, with a changelog and Signed-off-by?  Then patchwork should
-> > pick it up and I won't forget about it.
-> >
-> > For details about Signed-off-by, etc, see
-> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tre
-> > e/Docu mentation/process/submitting-patches.rst
-> >
-> > Bjorn
+Cheers,
+Christian.
