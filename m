@@ -1,368 +1,106 @@
-Return-Path: <SRS0=w0jq=AX=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=w0jq=AX=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH v1 1/3] powerpc/kernel: Split up pci_bus_add_device
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        mpe@ellerman.id.au, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>
-References: <20170918192651.78404-1-bryantly@linux.vnet.ibm.com>
- <20170918192651.78404-2-bryantly@linux.vnet.ibm.com>
- <20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Fri, 22 Sep 2017 08:46:26 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] Revert "PCI: Avoid race while enabling upstream bridges"
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linuxwifi@intel.com, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>
+References: <20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Message-ID: <8703af35-e888-1292-24d5-2469a3bda6a2@yandex-team.ru>
+Date: Fri, 15 Sep 2017 16:28:54 +0300
 MIME-Version: 1.0
-In-Reply-To: <20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: multipart/alternative;
- boundary="------------0B9EC22EE5D642BE41404790"
-Message-Id: <1a13b02a-4e32-adff-1083-8bf538cbdf9b@linux.vnet.ibm.com>
+In-Reply-To: <20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------0B9EC22EE5D642BE41404790
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+On 15.09.2017 10:23, Bjorn Helgaas wrote:
+> This reverts commit 40f11adc7cd9281227f0a6a627d966dd0a5f0cd9.
+> 
+> Jens found that iwlwifi firmware loading failed on a Lenovo X1 Carbon,
+> gen4:
+> 
+>    iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+>    iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+>    iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+>    iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
+>    iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+>    ...
+>    iwlwifi 0000:04:00.0: Failed to load firmware chunk!
+>    iwlwifi 0000:04:00.0: Could not load the [0] uCode section
+>    iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110
+>    iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110
+> 
+> He bisected it to 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
+> bridges").  Revert that commit to fix the regression.
 
+I've found this too. Bug in fast-path: reverting last hunk is enough
+http://lkml.kernel.org/r/150547971091.977464.16294045866179907260.stgit@buzz
 
-
-On 9/21/17 3:43 PM, Bjorn Helgaas wrote:
-> On Mon, Sep 18, 2017 at 02:26:49PM -0500, Bryant G. Ly wrote:
->> When enabling SR-IOV one might want to have their
->> own version of starting device drivers for the VFs.
->> This patch allows for SR-IOV callers to use
->> pci_bus_add_virtfn_device instead of generic
->> pci_bus_add_device.
->>
->> When enabling SR-IOV in PSeries architecture the
->> dynamic VFs created within the sriov_configure sysfs call
->> will not load the device driver as firmware will load
->> the device node when the VF device is assigned to the
->> logical partition. So we needed a way to overwrite the
->> way device driver matching is done for virtual functions
->> on powervm.
->>
->> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
->> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
->> ---
->>   drivers/pci/bus.c   | 51 ++++++++++++++++++++++++++++++++++++++++++---------
->>   drivers/pci/iov.c   |  2 +-
->>   include/linux/pci.h |  3 +++
->>   3 files changed, 46 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index bc56cf19afd3..86daf62c4048 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -302,16 +302,9 @@ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
->>   
->>   void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
->>   
->> -/**
->> - * pci_bus_add_device - start driver for a single device
->> - * @dev: device to add
->> - *
->> - * This adds add sysfs entries and start device drivers
->> - */
->> -void pci_bus_add_device(struct pci_dev *dev)
->> -{
->> -	int retval;
->>   
->> +void pci_bus_add_sysfs_entries(struct pci_dev *dev)
->> +{
->>   	/*
->>   	 * Can not put in pci_device_add yet because resources
->>   	 * are not assigned yet for some devices.
->> @@ -321,6 +314,11 @@ void pci_bus_add_device(struct pci_dev *dev)
->>   	pci_create_sysfs_dev_files(dev);
->>   	pci_proc_attach_device(dev);
->>   	pci_bridge_d3_update(dev);
->> +}
->> +
->> +void pci_bus_match_device_driver(struct pci_dev *dev)
->> +{
->> +	int retval;
->>   
->>   	dev->match_driver = true;
->>   	retval = device_attach(&dev->dev);
->> @@ -333,6 +331,41 @@ void pci_bus_add_device(struct pci_dev *dev)
->>   
->>   	dev->is_added = 1;
->>   }
->> +
->> +#ifdef CONFIG_PCI_IOV
->> +void __weak pci_bus_match_virtfn_driver(struct pci_dev *dev)
->> +{
->> +	pci_bus_match_device_driver(dev);
->> +}
->> +
->> +/**
->> + * pci_bus_add_virtfn_device - start driver for a virtual function device
->> + * @dev: device to add
->> + *
->> + * This adds add sysfs entries and start device drivers for
->> + * virtual function devices
->> + *
->> + */
->> +void pci_bus_add_virtfn_device(struct pci_dev *pdev)
->> +{
->> +	pci_bus_add_sysfs_entries(pdev);
->> +	pci_bus_match_virtfn_driver(pdev);
->> +}
->> +EXPORT_SYMBOL_GPL(pci_bus_add_virtfn_device);
-> Is there any way we can avoid adding this new interface?  I don't
-> really want a new global exported symbol just to support this highly
-> platform-specific functionality.
->
-> If we could figure out a way to set dev->match_driver to false instead
-> of true in pci_bus_add_device(), it *looks* like that would be enough
-> to accomplish what you need.  Maybe that could be done via a pcibios
-> hook or a new function pointer in struct pci_host_bridge, similar to
-> the swizzle_irq pointer?
-
-Yes! I will remove the first two patches in the series and only utilize the third
-patch but addingpdev->match_driver = -1; under pseries_pcibios_bus_add_device, which is 
-a new function I added for machine dependent bus add of a device. The 
-patch will then require https://patchwork.kernel.org/patch/9882915/ 
-which basically allows for match_driver state to not get changed later 
-under the pci_bus_match due to allowing for the match_driver to be a int 
-vs a bool. I will push up another patch removing the first two patches 
-and adding that extra line. -Bryant
-
->> +#endif
->> +
->> +/**
->> + * pci_bus_add_device - start driver for a single device
->> + * @dev: device to add
->> + *
->> + * This adds add sysfs entries and start device drivers
->> + */
->> +void pci_bus_add_device(struct pci_dev *dev)
->> +{
->> +	pci_bus_add_sysfs_entries(dev);
->> +	pci_bus_match_device_driver(dev);
->> +}
->> +
->>   EXPORT_SYMBOL_GPL(pci_bus_add_device);
->>   
->>   /**
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index ac41c8be9200..16cc72545847 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -162,7 +162,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
->>   
->>   	pci_device_add(virtfn, virtfn->bus);
->>   
->> -	pci_bus_add_device(virtfn);
->> +	pci_bus_add_virtfn_device(virtfn);
->>   	sprintf(buf, "virtfn%u", id);
->>   	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
->>   	if (rc)
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index f68c58a93dd0..39f5c0b4bf23 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -911,6 +911,9 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
->>   void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
->>   unsigned int pci_scan_child_bus(struct pci_bus *bus);
->>   void pci_bus_add_device(struct pci_dev *dev);
->> +#ifdef CONFIG_PCI_IOV
->> +void pci_bus_add_virtfn_device(struct pci_dev *dev);
->> +#endif
->>   void pci_read_bridge_bases(struct pci_bus *child);
->>   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
->>   					  struct resource *res);
->> -- 
->> 2.11.0 (Apple Git-81)
->>
-
-
---------------0B9EC22EE5D642BE41404790
-Content-Type: text/html; charset=utf-8
-Content-Transfer-Encoding: 7bit
-
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  </head>
-  <body text="#000000" bgcolor="#FFFFFF">
-    <p><br>
-    </p>
-    <br>
-    <div class="moz-cite-prefix">On 9/21/17 3:43 PM, Bjorn Helgaas
-      wrote:<br>
-    </div>
-    <blockquote type="cite"
-      cite="mid:20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com">
-      <pre wrap="">On Mon, Sep 18, 2017 at 02:26:49PM -0500, Bryant G. Ly wrote:
-</pre>
-      <blockquote type="cite">
-        <pre wrap="">When enabling SR-IOV one might want to have their
-own version of starting device drivers for the VFs.
-This patch allows for SR-IOV callers to use
-pci_bus_add_virtfn_device instead of generic
-pci_bus_add_device.
-
-When enabling SR-IOV in PSeries architecture the
-dynamic VFs created within the sriov_configure sysfs call
-will not load the device driver as firmware will load
-the device node when the VF device is assigned to the
-logical partition. So we needed a way to overwrite the
-way device driver matching is done for virtual functions
-on powervm.
-
-Signed-off-by: Bryant G. Ly <a class="moz-txt-link-rfc2396E" href="mailto:bryantly@linux.vnet.ibm.com">&lt;bryantly@linux.vnet.ibm.com&gt;</a>
-Signed-off-by: Juan J. Alvarez <a class="moz-txt-link-rfc2396E" href="mailto:jjalvare@us.ibm.com">&lt;jjalvare@us.ibm.com&gt;</a>
----
- drivers/pci/bus.c   | 51 ++++++++++++++++++++++++++++++++++++++++++---------
- drivers/pci/iov.c   |  2 +-
- include/linux/pci.h |  3 +++
- 3 files changed, 46 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index bc56cf19afd3..86daf62c4048 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -302,16 +302,9 @@ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
- 
- void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
- 
--/**
-- * pci_bus_add_device - start driver for a single device
-- * @dev: device to add
-- *
-- * This adds add sysfs entries and start device drivers
-- */
--void pci_bus_add_device(struct pci_dev *dev)
--{
--	int retval;
- 
-+void pci_bus_add_sysfs_entries(struct pci_dev *dev)
-+{
- 	/*
- 	 * Can not put in pci_device_add yet because resources
- 	 * are not assigned yet for some devices.
-@@ -321,6 +314,11 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
- 	pci_bridge_d3_update(dev);
-+}
-+
-+void pci_bus_match_device_driver(struct pci_dev *dev)
-+{
-+	int retval;
- 
- 	dev-&gt;match_driver = true;
- 	retval = device_attach(&amp;dev-&gt;dev);
-@@ -333,6 +331,41 @@ void pci_bus_add_device(struct pci_dev *dev)
- 
- 	dev-&gt;is_added = 1;
- }
-+
-+#ifdef CONFIG_PCI_IOV
-+void __weak pci_bus_match_virtfn_driver(struct pci_dev *dev)
-+{
-+	pci_bus_match_device_driver(dev);
-+}
-+
-+/**
-+ * pci_bus_add_virtfn_device - start driver for a virtual function device
-+ * @dev: device to add
-+ *
-+ * This adds add sysfs entries and start device drivers for
-+ * virtual function devices
-+ *
-+ */
-+void pci_bus_add_virtfn_device(struct pci_dev *pdev)
-+{
-+	pci_bus_add_sysfs_entries(pdev);
-+	pci_bus_match_virtfn_driver(pdev);
-+}
-+EXPORT_SYMBOL_GPL(pci_bus_add_virtfn_device);
-</pre>
-      </blockquote>
-      <pre wrap="">
-Is there any way we can avoid adding this new interface?  I don't
-really want a new global exported symbol just to support this highly
-platform-specific functionality.
-
-If we could figure out a way to set dev-&gt;match_driver to false instead
-of true in pci_bus_add_device(), it *looks* like that would be enough
-to accomplish what you need.  Maybe that could be done via a pcibios
-hook or a new function pointer in struct pci_host_bridge, similar to
-the swizzle_irq pointer?
-</pre>
-    </blockquote>
-    <pre>Yes! I will remove the first two patches in the series and only utilize the third
-patch but adding <span class="blob-code-inner" style="box-sizing: border-box; overflow: visible; font-family: SFMono-Regular,Consolas,&quot;Liberation Mono&quot;,Menlo,Courier,monospace; font-size: 12px; overflow-wrap: break-word; white-space: pre-wrap; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; text-align: start; text-indent: 0px; text-transform: none; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;">pdev-&gt;match_driver = -<span class="pl-c1" style="box-sizing: border-box;">1</span>; under <tt>pseries_pcibios_bus_add_device, which
-is a new function I added for machine dependent bus add of a device. 
-
-The patch will then require <a class="moz-txt-link-freetext" href="https://patchwork.kernel.org/patch/9882915/">https://patchwork.kernel.org/patch/9882915/</a>
-which basically allows for match_driver state to not get changed later under the
-pci_bus_match due to allowing for the match_driver to be a int vs a bool. 
-
-I will push up another patch removing the first two patches and adding that extra line.
-
--Bryant</tt></span></pre>
-    <blockquote type="cite"
-      cite="mid:20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com">
-      <pre wrap="">
-</pre>
-      <blockquote type="cite">
-        <pre wrap="">+#endif
-+
-+/**
-+ * pci_bus_add_device - start driver for a single device
-+ * @dev: device to add
-+ *
-+ * This adds add sysfs entries and start device drivers
-+ */
-+void pci_bus_add_device(struct pci_dev *dev)
-+{
-+	pci_bus_add_sysfs_entries(dev);
-+	pci_bus_match_device_driver(dev);
-+}
-+
- EXPORT_SYMBOL_GPL(pci_bus_add_device);
- 
- /**
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ac41c8be9200..16cc72545847 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -162,7 +162,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
- 
- 	pci_device_add(virtfn, virtfn-&gt;bus);
- 
--	pci_bus_add_device(virtfn);
-+	pci_bus_add_virtfn_device(virtfn);
- 	sprintf(buf, "virtfn%u", id);
- 	rc = sysfs_create_link(&amp;dev-&gt;dev.kobj, &amp;virtfn-&gt;dev.kobj, buf);
- 	if (rc)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f68c58a93dd0..39f5c0b4bf23 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -911,6 +911,9 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
- unsigned int pci_scan_child_bus(struct pci_bus *bus);
- void pci_bus_add_device(struct pci_dev *dev);
-+#ifdef CONFIG_PCI_IOV
-+void pci_bus_add_virtfn_device(struct pci_dev *dev);
-+#endif
- void pci_read_bridge_bases(struct pci_bus *child);
- struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 					  struct resource *res);
--- 
-2.11.0 (Apple Git-81)
-
-</pre>
-      </blockquote>
-      <pre wrap="">
-</pre>
-    </blockquote>
-    <br>
-  </body>
-</html>
-
---------------0B9EC22EE5D642BE41404790--
+> 
+> Link: http://lkml.kernel.org/r/4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk
+> Fixes: 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Srinath Mannam <srinath.mannam@broadcom.com>
+> CC: Jens Axboe <axboe@kernel.dk>
+> CC: Luca Coelho <luca@coelho.fi>
+> CC: Johannes Berg <johannes@sipsolutions.net>
+> CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>   drivers/pci/pci.c |   13 ++-----------
+>   1 file changed, 2 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b0002daa50f3..6078dfc11b11 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -52,7 +52,6 @@ static void pci_pme_list_scan(struct work_struct *work);
+>   static LIST_HEAD(pci_pme_list);
+>   static DEFINE_MUTEX(pci_pme_list_mutex);
+>   static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
+> -static DEFINE_MUTEX(pci_bridge_mutex);
+>   
+>   struct pci_pme_device {
+>   	struct list_head list;
+> @@ -1351,16 +1350,10 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>   	if (bridge)
+>   		pci_enable_bridge(bridge);
+>   
+> -	/*
+> -	 * Hold pci_bridge_mutex to prevent a race when enabling two
+> -	 * devices below the bridge simultaneously.  The race may cause a
+> -	 * PCI_COMMAND_MEMORY update to be lost (see changelog).
+> -	 */
+> -	mutex_lock(&pci_bridge_mutex);
+>   	if (pci_is_enabled(dev)) {
+>   		if (!dev->is_busmaster)
+>   			pci_set_master(dev);
+> -		goto end;
+> +		return;
+>   	}
+>   
+>   	retval = pci_enable_device(dev);
+> @@ -1368,8 +1361,6 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>   		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+>   			retval);
+>   	pci_set_master(dev);
+> -end:
+> -	mutex_unlock(&pci_bridge_mutex);
+>   }
+>   
+>   static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+> @@ -1394,7 +1385,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>   		return 0;		/* already enabled */
+>   
+>   	bridge = pci_upstream_bridge(dev);
+> -	if (bridge && !pci_is_enabled(bridge))
+> +	if (bridge)
+>   		pci_enable_bridge(bridge);
+>   
+>   	/* only skip sriov related */
+> 
+> 
