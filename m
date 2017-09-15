@@ -1,132 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] vfio/pci: Virtualize Maximum Payload Size
-To: Alex Williamson <alex.williamson@redhat.com>
-References: <20170919164952.13200.78849.stgit@gimli.home>
- <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
- <20170919142024.05723289@t450s.home>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Sinan Kaya <okaya@codeaurora.org>
-From: Auger Eric <eric.auger@redhat.com>
-Message-ID: <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
-Date: Wed, 20 Sep 2017 09:59:31 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:45333 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751463AbdIOTsK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2017 15:48:10 -0400
+Received: by mail-pg0-f44.google.com with SMTP id 188so2079445pgb.2
+        for <linux-pci@vger.kernel.org>; Fri, 15 Sep 2017 12:48:10 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Srinath Mannam <srinath.mannam@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+ <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+ <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+ <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+ <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+ <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+ <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
+ <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+ <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <fe610637-ecfd-8096-8c44-4f78b4a5811a@kernel.dk>
+Date: Fri, 15 Sep 2017 13:48:06 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170919142024.05723289@t450s.home>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
-
-On 19/09/2017 22:20, Alex Williamson wrote:
-> [cc +linux-pci, Sinan]
-> 
-> On Tue, 19 Sep 2017 19:50:37 +0200
-> Auger Eric <eric.auger@redhat.com> wrote:
-> 
->> Hi Alex,
+On 09/15/2017 01:38 PM, Linus Torvalds wrote:
+> On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>
+>>> In any case, your patch introduces a regression on systems. Please get
+>>> it reverted now, and then you can come up with a new approach to fix the
+>>> double enable of the upstream bridge.
 >>
->> On 19/09/2017 18:58, Alex Williamson wrote:
->>> With virtual PCI-Express chipsets, we now see userspace/guest drivers
->>> trying to match the physical MPS setting to a virtual downstream port.
->>> Of course a lone physical device surrounded by virtual interconnects
->>> cannot make a correct decision for a proper MPS setting.  Instead,
->>> let's virtualize the MPS control register so that writes through to
->>> hardware are disallowed.  Userspace drivers like QEMU assume they can
->>> write anything to the device and we'll filter out anything dangerous.
->>> Since mismatched MPS can lead to AER and other faults, let's add it
->>> to the kernel side rather than relying on userspace virtualization to
->>> handle it.
->>>
->>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->>> ---
->>>
->>> Do we have any reason to suspect that a userspace driver has any
->>> dependencies on the physical MPS setting or is this only tuning the
->>> protocol layer and it's transparent to the driver?  Note that per the
->>> PCI spec, a device supporting only 128B MPS can hardwire the control
->>> register to 000b, but it doesn't seem PCIe compliant to hardwire it to
->>> any given value, such as would be the appearance if we exposed this as
->>> a read-only register rather than virtualizing it.  QEMU would then be
->>> responsible for virtualizing it, which makes coordinating the upgrade
->>> troublesome.
->>>
->>>  drivers/vfio/pci/vfio_pci_config.c |    6 ++++--
->>>  1 file changed, 4 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
->>> index 5628fe114347..91335e6de88a 100644
->>> --- a/drivers/vfio/pci/vfio_pci_config.c
->>> +++ b/drivers/vfio/pci/vfio_pci_config.c
->>> @@ -849,11 +849,13 @@ static int __init init_pci_cap_exp_perm(struct perm_bits *perm)
->>>  
->>>  	/*
->>>  	 * Allow writes to device control fields, except devctl_phantom,
->>> -	 * which could confuse IOMMU, and the ARI bit in devctl2, which
->>> +	 * which could confuse IOMMU, MPS, which can break communication
->>> +	 * with other physical devices, and the ARI bit in devctl2, which
->>>  	 * is set at probe time.  FLR gets virtualized via our writefn.
->>>  	 */
->>>  	p_setw(perm, PCI_EXP_DEVCTL,
->>> -	       PCI_EXP_DEVCTL_BCR_FLR, ~PCI_EXP_DEVCTL_PHANTOM);
->>> +	       PCI_EXP_DEVCTL_BCR_FLR | PCI_EXP_DEVCTL_PAYLOAD,
->>> +	       ~PCI_EXP_DEVCTL_PHANTOM);
->>>  	p_setw(perm, PCI_EXP_DEVCTL2, NO_VIRT, ~PCI_EXP_DEVCTL2_ARI);  
->> Is it correct that the read value still will be the one written by the
->> guest?
-> 
-> If we don't do this, the register is read-only, which is what I'm
-> suggesting in my comment above doesn't seem spec compliant.  If the
-> kernel makes it read-only, then userspace (ex. QEMU) would need to
-> virtualize it, and we get into a more complicated, two part fix.
->  
->> I see the MMRS can take the read MPS value in some pcie_bus_config
->> values. So a consequence could be that the applied MMRS (which is not
->> virtualized) is lower than what is set by host, due to a guest pcie root
->> port MPSS for instance.
+>> Who's sending in the revert? I can certainly do it if no one else does,
+>> but it needs to be done.
 >>
->> So if the above is not totally wrong, shouldn't we virtualize MMRS as well?
+>> I'm not seeing any patches coming out of Srinath to fix up the
+>> situation, so we should revert the broken patch until a better solution
+>> exists.
 > 
-> I think MPSS is Maximum Payload Size Supported and MMRS... did you mean
-> MRRS (Maximum Read Request Size)?
-Yes sorry for the typo. Indeed I meant MRRS.
+> Hmm. I don't have the history here (apparently it never made lkml, for
+> example), so I don't even know which commit you're talking about.
 > 
-> My impression is that MRRS is predominantly device and driver
-> dependent, not topology dependent.  A device can send a read request
-> with a size larger than MPS, which implies that the device supplying
-> the read data would split it into multiple TLPs based on MPS.
-I read that too on the net. However in in 6.3.4.1. (3.0. Nov 10), Rules
-for SW Configuration it is written:
-"Software must set Max_Read_Request_Size of an isochronous-configured
-device with a value that does not exceed the Max_Payload_Size set for
-the device."
+> From some of the context it looks like commit 40f11adc7cd9 ("PCI:
+> Avoid race while enabling upstream bridges"), is that correct?
 
-But on the the other hand some drivers are setting the MMRS directly
-without further checking the MPS?
-  The
-> implementation note in PCIe rev3.1 sec 7.8.4 suggests there may be QoS
-> implications of MRRS such that if MRRS>MPS, then the device requesting
-> the data may use fewer tokens for the request.  I have no idea how we
-> could infer any sort of QoS policy though and I don't see that
-> in-kernel drivers are bound to any sort of policy.
-> 
-> The pcie_write_mrrs() function also implies a protocol (which I can't
-> find a spec reference to) where it will re-try writing MRRS if the
-> value written doesn't stick (and generate a dev_warn on each
-> iteration).  Unless we want extra warnings in VMs, that suggests we
-> don't want this to be read-only.
-> 
-> So I think we need to allow MRRS writes through to hardware, but I do
-> question whether we need to fill the gap that a VM might casually write
-> MRRS to a value less than the physical MPS.  This is what we'd expect
-> today where the virtual topology has an MPS of 128B regardless of the
-> physical topology.  Do we virtualize MRRS writes such that an MRRS
-> value less the physical MPS value never reaches hardware?  Can we
-> assume that's always invalid?  Thanks,
+Yes, Luca says that Bjorn already sent in the revert request, I just
+didn't see it since I wasn't CC'ed on it. So looks like we're all
+good, provided that makes it into -rc1. 40f11adc7cd9 is the broken
+commit.
 
-Thanks
-
-Eric
-> 
-> Alex
-> 
+-- 
+Jens Axboe
