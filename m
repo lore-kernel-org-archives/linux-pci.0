@@ -1,82 +1,152 @@
-Return-Path: <SRS0=V6ft=AU=intel.com=alexander.shishkin@kernel.org>
-Return-Path: <SRS0=V6ft=AU=intel.com=alexander.shishkin@kernel.org>
-From: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fixup the RTIT_BAR of Intel TH on Denverton
-In-Reply-To: <20170919165842.GA22312@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170919145136.13527-1-alexander.shishkin@linux.intel.com> <20170919165842.GA22312@bhelgaas-glaptop.roam.corp.google.com>
-Date: Tue, 19 Sep 2017 20:27:08 +0300
-Message-ID: <87vaketx8z.fsf@ashishki-desk.ger.corp.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:44700 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751499AbdIOTqt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2017 15:46:49 -0400
+Received: by mail-pf0-f174.google.com with SMTP id e1so1958032pfk.1
+        for <linux-pci@vger.kernel.org>; Fri, 15 Sep 2017 12:46:49 -0700 (PDT)
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Luca Coelho <luca@coelho.fi>,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
+ <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
+ <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
+ <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+ <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+ <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+ <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
+ <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+ <1505504195.5400.295.camel@coelho.fi>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <a9913d13-c14d-c261-e4ed-739bccc7755d@kernel.dk>
+Date: Fri, 15 Sep 2017 13:46:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1505504195.5400.295.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+On 09/15/2017 01:36 PM, Luca Coelho wrote:
+> On Fri, 2017-09-15 at 13:32 -0600, Jens Axboe wrote:
+>> On 09/14/2017 02:36 PM, Jens Axboe wrote:
+>>> On 09/14/2017 02:04 PM, Srinath Mannam wrote:
+>>>> Hi Jens Axboe,
+>>>>
+>>>>
+>>>> On Thu, Sep 14, 2017 at 11:14 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>> On 09/14/2017 11:35 AM, Jens Axboe wrote:
+>>>>>> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
+>>>>>>> Hi Bjorn,
+>>>>>>>
+>>>>>>> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>>
+>>>>>>>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
+>>>>>>>>> [+cc linux-pci]
+>>>>>>>>>
+>>>>>>>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
+>>>>>>>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
+>>>>>>>>>>>
+>>>>>>>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
+>>>>>>>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
+>>>>>>>>>>>> functional changes.
+>>>>>>>>>>>
+>>>>>>>>>>> and pci_enable_bridge() already checks if it's already enabled, but
+>>>>>>>>>>> still enables mastering in that case if it isn't:
+>>>>>>>>>>>
+>>>>>>>>>>> static void pci_enable_bridge(struct pci_dev *dev)
+>>>>>>>>>>> {
+>>>>>>>>>>> [...]
+>>>>>>>>>>>         if (pci_is_enabled(dev)) {
+>>>>>>>>>>>                 if (!dev->is_busmaster)
+>>>>>>>>>>>                         pci_set_master(dev);
+>>>>>>>>>>>                 return;
+>>>>>>>>>>>         }
+>>>>>>>>>>>
+>>>>>>>>>>> so I guess due to the new check we end up with mastering disabled, and
+>>>>>>>>>>> thus the firmware can't load since that's a DMA thing?
+>>>>>>>>>>
+>>>>>>>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
+>>>>>>>>>> from working on a pretty standard laptop. It'd suck to have this be in
+>>>>>>>>>> -rc1. Seems like the trivial fix would be:
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>>>>>>>> index b0002daa50f3..ffbe11dbdd61 100644
+>>>>>>>>>> --- a/drivers/pci/pci.c
+>>>>>>>>>> +++ b/drivers/pci/pci.c
+>>>>>>>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>>>>>>>>>>                 return 0;               /* already enabled */
+>>>>>>>>>>
+>>>>>>>>>>         bridge = pci_upstream_bridge(dev);
+>>>>>>>>>> -       if (bridge && !pci_is_enabled(bridge))
+>>>>>>>>>> +       if (bridge)
+>>>>>>>
+>>>>>>> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
+>>>>>>> pci_enable_bridge functoin will causes a nexted lock.
+>>>>>>
+>>>>>> Took a look, and looks like you are right. That code looks like a mess,
+>>>>>> fwiw.
+>>>>>>
+>>>>>> I'd strongly suggest that the bad commit is reverted until a proper
+>>>>>> solution is found, since the simple one-liner could potentially
+>>>>>> introduce a deadlock with your patch applied.
+>>>>>
+>>>>> BTW, your patch looks pretty bad too, introducing a random mutex
+>>>>> deep on code that can be recursive. Why isn't this check in
+>>>>> pci_enable_device_flags() enough to prevent double-enable of
+>>>>> an upstream bridge?
+>>>>>
+>>>>> if (atomic_inc_return(&dev->enable_cnt) > 1)
+>>>>>         return 0;               /* already enabled */
+>>>>>
+>>>>
+>>>> This check only to verify device enable not for the bus master check.
+>>>> But device enable function calls the bridge enable if it has the bridge.
+>>>> Bridge enable function enables both device and bus master.
+>>>>
+>>>> Here the issue might be because, bridge of endpoint has already set
+>>>> device enable without set bus master in some other context. which is
+>>>> wrong.
+>>>> because all bridges should enable with bridge_enable function only.
+>>>> So we see the problem In this context, because "if (bridge &&
+>>>> !pci_is_enabled(bridge))" check stops bridge enable which intern stops
+>>>> bus master.
+>>>> pci_enable_bridge function always makes sure that both device and bus
+>>>> master are enabled in any case. If pci_enable_bridge function is not
+>>>> called means, that bridge is already has device enable flag set. which
+>>>> is not from pci_enable_bridge function.
+>>>
+>>> In any case, your patch introduces a regression on systems. Please get
+>>> it reverted now, and then you can come up with a new approach to fix the
+>>> double enable of the upstream bridge.
+>>
+>> Who's sending in the revert? I can certainly do it if no one else does,
+>> but it needs to be done.
+>>
+>> I'm not seeing any patches coming out of Srinath to fix up the
+>> situation, so we should revert the broken patch until a better solution
+>> exists.
+> 
+> Bjorn already sent it:
+> 
+> https://lkml.org/lkml/2017/9/15/46
 
-> Hi Alexander,
+Huh ok, I would have thought the various folks in this discussion would
+have been CC'ed on that. But good to know, that takes care of my
+concern.
 
-Hi Bjorn,
-
-> On Tue, Sep 19, 2017 at 05:51:36PM +0300, Alexander Shishkin wrote:
->> On some intergrations of the Intel TH the reported size of RTIT_BAR
->
-> s/intergrations/integrations/
-
-Oops.
-
-> What is "TH"?  If there's a public spec for it, can you include a
-> reference here?
-
-Intel Trace Hub,
-https://software.intel.com/sites/default/files/managed/d3/3c/intel-th-developer-manual.pdf
-
-There's an overview at Documentation/trace/intel_th.txt.
-
-> I guess this is an erratum, since the device responds to more MMIO
-> space than it advertises via the BAR.  Can you include a reference to
-> the published erratum?
-
-There's no erratum at the moment, unfortunately.
-
->> doesn't match its actual size, which leads to overlaps with other
->> devices' resources.
->
-> So I suppose the BIOS relies on the size advertised via the BAR,
-> assigns it to be just below the XHCI space, and now both the TH and
-> XHCI respond there?  I assume this causes some sort of "unexpected
-> response" error?  Is there a bug report about this?  What does it look
-> like when a user hits this?  I'm trying to make this fix discoverable
-> to users who might trip over the problem.
-
-When the intel_th pci device gets enabled (on modprobe, for example),
-XHCI starts seeing 0xffffffff in its MMIO registers, which makes it go
-
-xhci_hcd: xHCI host controller not responding, assume dead
-xhci_hcd: xHC not responding in xhci_irq, assume controller is dead
-xhci_hcd: HC died; cleaning up
-
-followed by disappearance of keyboards and user's profound confusion.
-I'll make sure to mention all this in the commit message.
-
->> For this reason, we need to resize the RTIT_BAR on Denverton where
->> it would overlap with XHCI MMIO space.
->> 
->> Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
->> Fixes: 5118ccd347 ("intel_th: pci: Add Denverton SOC support")
->
-> Please use a 12-char SHA1.
-
-Will do.
-
->> Cc: stable@vger.kernel.org
->
-> I guess this is only applicable to v4.11+, since 5118ccd34780 appeared in
-> v4.11-rc4?
-
-Right, my git-send-email keeps trying to CC "# v4.11+" if I leave it in the
-Cc: stable line.
-
-Regards,
---
-Alex
+-- 
+Jens Axboe
