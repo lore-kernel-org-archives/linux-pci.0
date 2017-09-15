@@ -1,58 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:44164 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752987AbdI1M6y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 08:58:54 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Hanna Hawa <hannah@marvell.com>,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@free-electrons.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        stable@vger.kernel.org
-Subject: [PATCH v2 7/7] PCI: aardvark: define IRQ related hooks in pci_host_bridge
-Date: Thu, 28 Sep 2017 14:58:38 +0200
-Message-Id: <20170928125838.11887-8-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+Received: from mail-it0-f47.google.com ([209.85.214.47]:52495 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751619AbdIOTiL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2017 15:38:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
+ <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
+ <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> <1505246657.1974.11.camel@sipsolutions.net>
+ <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk> <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
+ <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk> <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk> <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+ <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+ <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk> <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 15 Sep 2017 12:38:09 -0700
+Message-ID: <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Srinath Mannam <srinath.mannam@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        linuxwifi <linuxwifi@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from
-pcibios_alloc_irq()") was assuming all PCI host controller drivers had
-been converted to use ->map_irq(), but that wasn't the case:
-pci-aardvark had not been converted. Due to this, it broke the support
-for legacy PCI interrupts when using the pci-aardvark driver (used on
-Marvell Armada 3720 platforms).
+On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>
+>> In any case, your patch introduces a regression on systems. Please get
+>> it reverted now, and then you can come up with a new approach to fix the
+>> double enable of the upstream bridge.
+>
+> Who's sending in the revert? I can certainly do it if no one else does,
+> but it needs to be done.
+>
+> I'm not seeing any patches coming out of Srinath to fix up the
+> situation, so we should revert the broken patch until a better solution
+> exists.
 
-In order to fix this, we make sure the ->map_irq and ->swizzle_irq
-fields of pci_host_bridge are properly filled in.
+Hmm. I don't have the history here (apparently it never made lkml, for
+example), so I don't even know which commit you're talking about.
 
-Fixes: 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()")
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: <stable@vger.kernel.org> # v4.13+
----
- drivers/pci/host/pci-aardvark.c | 2 ++
- 1 file changed, 2 insertions(+)
+>From some of the context it looks like commit 40f11adc7cd9 ("PCI:
+Avoid race while enabling upstream bridges"), is that correct?
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index c1093b023e48..249a088b463c 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -998,6 +998,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	bridge->sysdata = pcie;
- 	bridge->busnr = 0;
- 	bridge->ops = &advk_pcie_ops;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
-+	bridge->swizzle_irq = pci_common_swizzle;
- 
- 	ret = pci_scan_root_bus_bridge(bridge);
- 	if (ret < 0) {
--- 
-2.13.5
+           Linus
