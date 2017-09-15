@@ -1,59 +1,45 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/2] PCI: iproc: export iproc_pcie_shutdown symbol
-Date: Tue,  5 Sep 2017 09:19:44 +0200
-Message-Id: <20170905072004.3959082-1-arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Arnd Bergmann <arnd@arndb.de>, Scott Branden <sbranden@broadcom.com>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- linux-kernel@vger.kernel.org, Oza Pawandeep <oza.oza@broadcom.com>,
- linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH bisected regression in 4.14] PCI: fix race while enabling
+ upstream bridges concurrently
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Srinath Mannam <srinath.mannam@broadcom.com>
+Date: Fri, 15 Sep 2017 15:48:30 +0300
+Message-ID: <150547971091.977464.16294045866179907260.stgit@buzz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The shutdown bugfix introduce a build regression for allmodconfig
-kernels as the new function is not exported:
+In pci_enable_bridge() pci_enable_device() is called before calling
+pci_set_master(), thus check pci_is_enabled() becomes true in the
+middle of this sequence. As a result in pci_enable_device_flags()
+concurrent enable of device on same bridge could think that this
+bridge is completely enabled, but actually it's not yet.
 
-ERROR: "iproc_pcie_shutdown" [drivers/pci/host/pcie-iproc-platform.ko] undefined!
+For me this race broke ethernet devices after booting kernel via
+kexec, normal reboot was fine.
 
-This adds the missing export.
+This patch removes racy fast-path: pci_enable_bridge() will take
+pci_bridge_mutex and do nothing if bridge is already enabled.
 
-Fixes: 2a9912565c05 ("PCI: iproc: Add 500ms delay during device shutdown")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Fixes: 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
 ---
- drivers/pci/host/pcie-iproc.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 8bd5e544b1c1..d7f4c29aed96 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -704,6 +704,7 @@ int iproc_pcie_shutdown(struct iproc_pcie *pcie)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b0002daa50f3..ffbe11dbdd61 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 		return 0;		/* already enabled */
  
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(iproc_pcie_shutdown);
+ 	bridge = pci_upstream_bridge(dev);
+-	if (bridge && !pci_is_enabled(bridge))
++	if (bridge)
+ 		pci_enable_bridge(bridge);
  
- static int iproc_pcie_check_link(struct iproc_pcie *pcie)
- {
--- 
-2.9.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ 	/* only skip sriov related */
