@@ -1,52 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47701 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751089AbdIKHpv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Sep 2017 03:45:51 -0400
-From: Nicolai Stange <nstange@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Adrian Salido <salidoa@google.com>,
-        Sasha Levin <sasha.levin@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Nicolai Stange <nstange@suse.de>
-Subject: [PATCH 3/3] driver core: platform: Don't read past the end of "driver_override" buffer
-Date: Mon, 11 Sep 2017 09:45:42 +0200
-Message-Id: <20170911074542.16777-4-nstange@suse.de>
-In-Reply-To: <20170911074542.16777-1-nstange@suse.de>
-References: <20170911074542.16777-1-nstange@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alex.williamson@redhat.com
+Cc: Wilson.Snyder@cavium.com, David.Daney@cavium.com, jcm@redhat.com,
+        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Subject: [PATCH v3] PCI: quirks: update Cavium ThunderX ACS quirk implementation
+Date: Fri, 15 Sep 2017 05:57:13 -0700
+Message-Id: <1505480233-22694-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+In-Reply-To: <1505217316-15702-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+References: <1505217316-15702-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When printing the driver_override parameter when it is 4095 and 4094 bytes
-long, the printing code would access invalid memory because we need count+1
-bytes for printing.
+This commit makes Cavium PCI ACS quirk applicable only to Cavium
+ThunderX (CN81/83/88XX) PCIE Root Ports which has limited PCI capabilities
+in terms of no ACS support advertisement. However, the RTL internally
+implements similar protection as if ACS had completion redirection,
+blocking and validation features enabled.
 
-Reject driver_override values of these lengths in driver_override_store().
+Following settings are enforced by hardware on 8xxx although it does not have ACS:
 
-This is in close analogy to commit 4efe874aace5 ("PCI: Don't read past the
-end of sysfs "driver_override" buffer") from Sasha Levin.
+$PCCBR_XXX_ACS_CAP_CTL (as if it present)
+---------------------------------------------------------------------------------------------------------
+ Bit     Field Field   Reset      Typical    Field
+ Pos     Name  Type    Value      Value      Description
+---------------------------------------------------------------------------------------------------------
+ <31:23> --    RAZ     --         --         Reserved.
+ <22>    DTE   R/W     0          --         ACS direct translated P2P enable. Value ignored by hardware.
+ <21>    ECE   RO      0          0          ACS P2P egress control enable. Always clear.
+ <20>    UFE   R/W     0          --         ACS upstream forwarding enable. Value ignored by hardware.
+ <19>    CRE   R/W     0          --         ACS completion redirect enable. Value ignored by hardware.
+ <18>    RRE   R/W     0          --         ACS P2P request redirect enable. Value ignored by hardware.
+ <17>    TBE   R/W     0          --         ACS transaction blocking enable. Value ignored by hardware.
+ <16>    SVE   R/W     0          --         ACS source validation enable. Value ignored by hardware.
+ <15:8>  ECVS  RO      0x0        0x0        Egress control vector size. Always zero.
+ <7>     --    RAZ     --         --         Reserved.
+ <6>     DT    RO      1          1          ACS direct translated P2P. Always set.
+ <5>     EC    RO      0          0          ACS P2P egress control. Always clear.
+ <4>     UF    RO      1          1          ACS upstream forwarding. Always set.
+ <3>     CR    RO      1          1          ACS completion redirect. Always set.
+ <2>     RR    RO      1          1          ACS P2P request redirect. Always set.
+ <1>     TB    RO      1          1          ACS transaction blocking. Always set.
+ <0>     SV    RO      1          1          ACS source validation. Always set.
+---------------------------------------------------------------------------------------------------------
 
-Fixes: 3d713e0e382e ("driver core: platform: add device binding path 'driver_override'")
-Cc: stable@vger.kernel.org	# v3.17+
-Signed-off-by: Nicolai Stange <nstange@suse.de>
+Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
 ---
- drivers/base/platform.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/quirks.c | 28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-index d1bd99271066..9045c5f3734e 100644
---- a/drivers/base/platform.c
-+++ b/drivers/base/platform.c
-@@ -868,7 +868,8 @@ static ssize_t driver_override_store(struct device *dev,
- 	struct platform_device *pdev = to_platform_device(dev);
- 	char *driver_override, *old, *cp;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a4d3361..f1786a5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4211,20 +4211,28 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
+ }
  
--	if (count > PATH_MAX)
-+	/* We need to keep extra room for a newline */
-+	if (count >= (PAGE_SIZE - 1))
- 		return -EINVAL;
+-static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
++/*
++ * The CN8XXX on-chip devices' PCCBR's do not advertise
++ * ACS, although the RTL internally implements similar protections as to
++ * if ACS had completion redirection, blocking and validation features
++ * enabled.
++ */
++#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | \
++				 PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT)
++
++static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+ {
+-	/*
+-	 * Cavium devices matching this quirk do not perform peer-to-peer
+-	 * with other functions, allowing masking out these bits as if they
+-	 * were unimplemented in the ACS capability.
+-	 */
+-	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+-		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
++	return (pci_is_pcie(dev) &&
++		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
++		((dev->device & 0xf800) == 0xa000));
++}
  
- 	driver_override = kstrndup(buf, count, GFP_KERNEL);
+-	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
++static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
++{
++	if (!pci_quirk_cavium_acs_match(dev))
+ 		return -ENOTTY;
+ 
+-	return acs_flags ? 0 : 1;
++	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+ }
+ 
+ static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
 -- 
-2.13.5
+2.9.5
