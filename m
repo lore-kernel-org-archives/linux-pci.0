@@ -1,42 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [PATCH v5 2/3] dt-bindings: PCI: Add definition of pcie wake irq
-Date: Mon, 11 Sep 2017 23:10:28 +0800
-Message-Id: <20170911151029.25185-3-jeffy.chen@rock-chips.com>
-In-Reply-To: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
-References: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60106 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750871AbdIOHXx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Sep 2017 03:23:53 -0400
+Subject: [PATCH] Revert "PCI: Avoid race while enabling upstream bridges"
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linuxwifi@intel.com, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>
+Date: Fri, 15 Sep 2017 02:23:52 -0500
+Message-ID: <20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add an optional interrupt for PCIE_WAKE pin.
+This reverts commit 40f11adc7cd9281227f0a6a627d966dd0a5f0cd9.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Jens found that iwlwifi firmware loading failed on a Lenovo X1 Carbon,
+gen4:
+
+  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
+  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
+  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
+  iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
+  iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+  ...
+  iwlwifi 0000:04:00.0: Failed to load firmware chunk!
+  iwlwifi 0000:04:00.0: Could not load the [0] uCode section
+  iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110
+  iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110
+
+He bisected it to 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
+bridges").  Revert that commit to fix the regression.
+
+Link: http://lkml.kernel.org/r/4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk
+Fixes: 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Srinath Mannam <srinath.mannam@broadcom.com>
+CC: Jens Axboe <axboe@kernel.dk>
+CC: Luca Coelho <luca@coelho.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>
+CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ drivers/pci/pci.c |   13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
-Changes in v5:
-Move to pci.txt
-
-Changes in v3: None
-Changes in v2: None
-
- Documentation/devicetree/bindings/pci/pci.txt | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index c77981c5dd18..5ae3a9e0134d 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,3 +24,5 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
-+- interrupts: Interrupt specifier for each name in interrupt-names.
-+- interrupt-names: May contains "wakeup" for PCI WAKE# interrupt.
--- 
-2.11.0
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b0002daa50f3..6078dfc11b11 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -52,7 +52,6 @@ static void pci_pme_list_scan(struct work_struct *work);
+ static LIST_HEAD(pci_pme_list);
+ static DEFINE_MUTEX(pci_pme_list_mutex);
+ static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
+-static DEFINE_MUTEX(pci_bridge_mutex);
+ 
+ struct pci_pme_device {
+ 	struct list_head list;
+@@ -1351,16 +1350,10 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
+ 
+-	/*
+-	 * Hold pci_bridge_mutex to prevent a race when enabling two
+-	 * devices below the bridge simultaneously.  The race may cause a
+-	 * PCI_COMMAND_MEMORY update to be lost (see changelog).
+-	 */
+-	mutex_lock(&pci_bridge_mutex);
+ 	if (pci_is_enabled(dev)) {
+ 		if (!dev->is_busmaster)
+ 			pci_set_master(dev);
+-		goto end;
++		return;
+ 	}
+ 
+ 	retval = pci_enable_device(dev);
+@@ -1368,8 +1361,6 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+ 			retval);
+ 	pci_set_master(dev);
+-end:
+-	mutex_unlock(&pci_bridge_mutex);
+ }
+ 
+ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+@@ -1394,7 +1385,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 		return 0;		/* already enabled */
+ 
+ 	bridge = pci_upstream_bridge(dev);
+-	if (bridge && !pci_is_enabled(bridge))
++	if (bridge)
+ 		pci_enable_bridge(bridge);
+ 
+ 	/* only skip sriov related */
