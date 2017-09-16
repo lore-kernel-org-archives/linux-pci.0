@@ -1,106 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] Revert "PCI: Avoid race while enabling upstream bridges"
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linuxwifi@intel.com, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>
-References: <20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Message-ID: <8703af35-e888-1292-24d5-2469a3bda6a2@yandex-team.ru>
-Date: Fri, 15 Sep 2017 16:28:54 +0300
+Return-Path: <SRS0=SqQa=AR=kernel.dk=axboe@kernel.org>
+Return-Path: <SRS0=SqQa=AR=kernel.dk=axboe@kernel.org>
+Subject: Re: iwlwifi firmware load broken in current -git
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Luca Coelho <luca@coelho.fi>,
+ Linus Torvalds <torvalds@linux-foundation.org>,
+ Srinath Mannam <srinath.mannam@broadcom.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Johannes Berg <johannes@sipsolutions.net>,
+ "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+ linuxwifi <linuxwifi@intel.com>,
+ "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
+ <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
+ <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
+ <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
+ <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
+ <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
+ <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
+ <fe610637-ecfd-8096-8c44-4f78b4a5811a@kernel.dk>
+ <1505505062.32032.1.camel@coelho.fi>
+ <79b26165-7baf-c6ee-7552-1ccccb3b7192@kernel.dk>
+ <20170916030311.GB16731@bhelgaas-glaptop.roam.corp.google.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <913e8f70-699c-8f87-a86c-7030fddd19b7@kernel.dk>
+Date: Sat, 16 Sep 2017 12:53:10 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170916030311.GB16731@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15.09.2017 10:23, Bjorn Helgaas wrote:
-> This reverts commit 40f11adc7cd9281227f0a6a627d966dd0a5f0cd9.
+On 09/15/2017 09:03 PM, Bjorn Helgaas wrote:
+> On Fri, Sep 15, 2017 at 01:55:57PM -0600, Jens Axboe wrote:
+>> On 09/15/2017 01:51 PM, Luca Coelho wrote:
+>>> On Fri, 2017-09-15 at 13:48 -0600, Jens Axboe wrote:
+>>>> On 09/15/2017 01:38 PM, Linus Torvalds wrote:
+>>>>> On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>>>>>>>
+>>>>>>> In any case, your patch introduces a regression on systems. Please get
+>>>>>>> it reverted now, and then you can come up with a new approach to fix the
+>>>>>>> double enable of the upstream bridge.
+>>>>>>
+>>>>>> Who's sending in the revert? I can certainly do it if no one else does,
+>>>>>> but it needs to be done.
+>>>>>>
+>>>>>> I'm not seeing any patches coming out of Srinath to fix up the
+>>>>>> situation, so we should revert the broken patch until a better solution
+>>>>>> exists.
+>>>>>
+>>>>> Hmm. I don't have the history here (apparently it never made lkml, for
+>>>>> example), so I don't even know which commit you're talking about.
+>>>>>
+>>>>> From some of the context it looks like commit 40f11adc7cd9 ("PCI:
+>>>>> Avoid race while enabling upstream bridges"), is that correct?
+>>>>
+>>>> Yes, Luca says that Bjorn already sent in the revert request, I just
+>>>> didn't see it since I wasn't CC'ed on it. So looks like we're all
+>>>> good, provided that makes it into -rc1. 40f11adc7cd9 is the broken
+>>>> commit.
+>>>
+>>> Strange... AFAICT you *were* CCed on it.  And so was everyone else in
+>>> the original thread (+LKML)...
+>>
+>> Hmm, never showed up here. Very odd!
 > 
-> Jens found that iwlwifi firmware loading failed on a Lenovo X1 Carbon,
-> gen4:
-> 
->    iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
->    iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
->    iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
->    iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
->    iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
->    ...
->    iwlwifi 0000:04:00.0: Failed to load firmware chunk!
->    iwlwifi 0000:04:00.0: Could not load the [0] uCode section
->    iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110
->    iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110
-> 
-> He bisected it to 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
-> bridges").  Revert that commit to fix the regression.
+> Sorry, I think this is probably because I'm an idiot and sent it from
+> an @google.com account and it got rejected because the DMARC check
+> failed.
 
-I've found this too. Bug in fast-path: reverting last hunk is enough
-http://lkml.kernel.org/r/150547971091.977464.16294045866179907260.stgit@buzz
+Ah, good to know why it didn't show up. Thanks.
 
-> 
-> Link: http://lkml.kernel.org/r/4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk
-> Fixes: 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Srinath Mannam <srinath.mannam@broadcom.com>
-> CC: Jens Axboe <axboe@kernel.dk>
-> CC: Luca Coelho <luca@coelho.fi>
-> CC: Johannes Berg <johannes@sipsolutions.net>
-> CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
->   drivers/pci/pci.c |   13 ++-----------
->   1 file changed, 2 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b0002daa50f3..6078dfc11b11 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -52,7 +52,6 @@ static void pci_pme_list_scan(struct work_struct *work);
->   static LIST_HEAD(pci_pme_list);
->   static DEFINE_MUTEX(pci_pme_list_mutex);
->   static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
-> -static DEFINE_MUTEX(pci_bridge_mutex);
->   
->   struct pci_pme_device {
->   	struct list_head list;
-> @@ -1351,16 +1350,10 @@ static void pci_enable_bridge(struct pci_dev *dev)
->   	if (bridge)
->   		pci_enable_bridge(bridge);
->   
-> -	/*
-> -	 * Hold pci_bridge_mutex to prevent a race when enabling two
-> -	 * devices below the bridge simultaneously.  The race may cause a
-> -	 * PCI_COMMAND_MEMORY update to be lost (see changelog).
-> -	 */
-> -	mutex_lock(&pci_bridge_mutex);
->   	if (pci_is_enabled(dev)) {
->   		if (!dev->is_busmaster)
->   			pci_set_master(dev);
-> -		goto end;
-> +		return;
->   	}
->   
->   	retval = pci_enable_device(dev);
-> @@ -1368,8 +1361,6 @@ static void pci_enable_bridge(struct pci_dev *dev)
->   		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
->   			retval);
->   	pci_set_master(dev);
-> -end:
-> -	mutex_unlock(&pci_bridge_mutex);
->   }
->   
->   static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-> @@ -1394,7 +1385,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->   		return 0;		/* already enabled */
->   
->   	bridge = pci_upstream_bridge(dev);
-> -	if (bridge && !pci_is_enabled(bridge))
-> +	if (bridge)
->   		pci_enable_bridge(bridge);
->   
->   	/* only skip sriov related */
-> 
-> 
+-- 
+Jens Axboe
