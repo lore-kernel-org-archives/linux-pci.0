@@ -1,101 +1,278 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/7] PCI: Improvements for native PCIe hotplug
-Date: Tue, 26 Sep 2017 17:17:13 +0300
-Message-Id: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36926 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750868AbdIRT1d (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2017 15:27:33 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8IJOh5F000991
+        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2017 15:27:33 -0400
+Received: from e11.ny.us.ibm.com (e11.ny.us.ibm.com [129.33.205.201])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2d2kqh1ymc-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2017 15:27:32 -0400
+Received: from localhost
+        by e11.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Mon, 18 Sep 2017 15:27:32 -0400
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>
+Subject: [PATCH v1 3/3] powerpc/kernel: Separate SR-IOV Calls
+Date: Mon, 18 Sep 2017 14:26:51 -0500
+In-Reply-To: <20170918192651.78404-1-bryantly@linux.vnet.ibm.com>
+References: <20170918192651.78404-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20170918192651.78404-4-bryantly@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+SR-IOV can now be enabled in PowerNV platforms and Pseries
+platforms. Therefore, the appropriate calls were moved to
+machine dependent code instead of definition at compile time.
 
-Currently when plugging PCIe device using native PCIe hotplug Linux PCI
-core tries to allocate bus space and resources so that the newly enumerated
-topology barely fits there. Now, if the PCIe topology that was just plugged
-in has more PCIe hotplug ports we will run out of bus space and resources
-pretty quickly. There is a workaround for this by passing pci=hpbussize=N
-in the kernel command line but it runs to the same situation after next
-hotplug.
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+---
+ arch/powerpc/include/asm/machdep.h           |  7 ++++++
+ arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+ arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+ arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+ arch/powerpc/kernel/pci_dn.c                 |  6 -----
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 34 +++++++++++++++-------------
+ arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+ 7 files changed, 55 insertions(+), 29 deletions(-)
 
-A good example where this is a problem is Thunderbolt where each
-Thunderbolt device includes PCIe switch and the topology can be extended up
-to 6 chained devices.
-
-Future platforms will move from BIOS assisted (ACPI) hotplug from native
-PCIe hotplug because then it is possible to power down PCIe hotplug ports
-without confusing the SMI handler which is not necessary when native PCIe
-hotplug is used. Also Macs have been using native PCIe hotplug from the
-beginning. The upcoming Windows already learned how to handle these complex
-PCIe topologies and we will reuse the same knowledge in Linux with this
-patch series.
-
-The idea is to distribute available bus space and resources to hotplug PCIe
-downstream ports so that the PCIe chain can be extended from those points.
-The initial available space is configured by the BIOS to the root port in
-question.
-
-This series first teaches the Linux PCI core to distribute available bus
-space and resources if PCIe hotplug is used. Then following are fixes for
-issues found while testing.
-
-With this series applied I can connect the maximum length Thunderbolt PCIe
-chain (6 devices) to a Macbook Pro as can be seen from the 'lspci -t'
-output below:
-
--[0000:00]-+-00.0
-           +-02.0
-           +-14.0
-           +-16.0
-           +-19.0
-           +-1c.0-[01]----00.0
-           +-1c.4-[03-78]----00.0-[04-78]--+-00.0-[05]----00.0
-           |                               +-01.0-[07-3f]----00.0-[08-3f]--+-01.0-[09]----00.0
-           |                               |                               \-04.0-[0a-3f]----00.0-[0b-3f]--+-01.0-[0c]----00.0
-           |                               |                                                               \-04.0-[0d-3f]----00.0-[0e-3f]--+-01.0-[0f]--
-           |                               |                                                                                               \-04.0-[10-3f]----00.0-[11-3f]--+-01.0-[12]----00.0
-           |                               |                                                                                                                               \-04.0-[13-3f]----00.0-[14-3f]--+-01.0-[15]----00.0
-           |                               |                                                                                                                                                               \-04.0-[16-3f]----00.0-[17-3f]----00.0-[18-3f]----00.0
-           |                               +-02.0-[06]----00.0
-           |                               \-04.0-[40-78]--
-           +-1d.0-[79-ee]----00.0-[7a-ee]--+-00.0-[7b]----00.0
-           |                               +-01.0-[7d-b5]--
-           |                               +-02.0-[7c]----00.0
-           |                               \-04.0-[b6-ee]--
-           +-1d.3-[02]----00.0
-           +-1e.0
-           +-1e.1
-           +-1e.3
-           +-1f.0
-           +-1f.2
-           +-1f.3
-           \-1f.4
-
-Mika Westerberg (7):
-  PCI: Do not allocate more buses than available in parent
-  PCI: Introduce pcie_upstream_port()
-  PCI: Distribute available buses to hotplug capable PCIe downstream ports
-  PCI: Distribute available resources to hotplug capable PCIe downstream ports
-  PCI: pciehp: Fix race condition handling surprise link down
-  PCI: pciehp: Do not clear Presence Detect Changed during initialization
-  PCI: pciehp: Check that the device is really present before touching it
-
- drivers/pci/hotplug-pci.c         |  13 ++-
- drivers/pci/hotplug/pciehp_ctrl.c |   7 +-
- drivers/pci/hotplug/pciehp_hpc.c  |  13 ++-
- drivers/pci/hotplug/pciehp_pci.c  |  18 +++-
- drivers/pci/probe.c               | 113 +++++++++++++++++++++----
- drivers/pci/setup-bus.c           | 169 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h               |  30 ++++++-
- 7 files changed, 332 insertions(+), 31 deletions(-)
-
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 73b92017b6d7..20f68d36af8c 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -172,11 +172,18 @@ struct machdep_calls {
+ 	/* Called after scan and before resource survey */
+ 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
+ 
++	/* Called after device has been added to bus and
++	 * before sysfs has been created
++	 */
++	void (*pcibios_bus_add_device)(struct pci_dev *pdev);
++
+ 	resource_size_t (*pcibios_default_alignment)(void);
+ 
+ #ifdef CONFIG_PCI_IOV
+ 	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
+ 	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *, int resno);
++	int (*pcibios_sriov_enable)(struct pci_dev *pdev, u16 num_vfs);
++	int (*pcibios_sriov_disable)(struct pci_dev *pdev);
+ #endif /* CONFIG_PCI_IOV */
+ 
+ 	/* Called to shutdown machine specific hardware not already controlled
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 0b8aa1fe2d5f..323628ca4d6d 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -203,10 +203,9 @@ struct pci_dn {
+ 	struct eeh_dev *edev;		/* eeh device */
+ #endif
+ #define IODA_INVALID_PE		0xFFFFFFFF
+-#ifdef CONFIG_PPC_POWERNV
+ 	unsigned int pe_number;
+-	int     vf_index;		/* VF index in the PF */
+ #ifdef CONFIG_PCI_IOV
++	int     vf_index;		/* VF index in the PF */
+ 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+ 	u16     num_vfs;		/* number of VFs enabled*/
+ 	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
+@@ -215,7 +214,6 @@ struct pci_dn {
+ 	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
+ 	int	mps;			/* Maximum Payload Size */
+-#endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+ };
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index 8b840191df59..f2d1b369974d 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -440,7 +440,7 @@ static void *eeh_add_virt_device(void *data, void *userdata)
+ 			return NULL;
+ 	}
+ 
+-#ifdef CONFIG_PPC_POWERNV
++#ifdef CONFIG_PCI_IOV
+ 	pci_iov_add_virtfn(edev->physfn, pdn->vf_index, 0);
+ #endif
+ 	return NULL;
+@@ -496,7 +496,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 		(*removed)++;
+ 
+ 	if (edev->physfn) {
+-#ifdef CONFIG_PPC_POWERNV
++#ifdef CONFIG_PCI_IOV
+ 		struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+ 
+ 		pci_iov_remove_virtfn(edev->physfn, pdn->vf_index, 0);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 02831a396419..d45b956d2e3a 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -249,8 +249,31 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev, int resno)
+ 
+ 	return pci_iov_resource_size(pdev, resno);
+ }
++
++int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
++{
++	if (ppc_md.pcibios_sriov_enable)
++		return ppc_md.pcibios_sriov_enable(pdev, num_vfs);
++
++	return 0;
++}
++
++int pcibios_sriov_disable(struct pci_dev *pdev)
++{
++	if (ppc_md.pcibios_sriov_disable)
++		return ppc_md.pcibios_sriov_disable(pdev);
++
++	return 0;
++}
++
+ #endif /* CONFIG_PCI_IOV */
+ 
++void pcibios_bus_add_device(struct pci_dev *pdev)
++{
++	if (ppc_md.pcibios_bus_add_device)
++		ppc_md.pcibios_bus_add_device(pdev);
++}
++
+ static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+ {
+ #ifdef CONFIG_PPC64
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index 0e395afbf0f4..ab147a1909c8 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -156,10 +156,8 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 	pdn->parent = parent;
+ 	pdn->busno = busno;
+ 	pdn->devfn = devfn;
+-#ifdef CONFIG_PPC_POWERNV
+ 	pdn->vf_index = vf_index;
+ 	pdn->pe_number = IODA_INVALID_PE;
+-#endif
+ 	INIT_LIST_HEAD(&pdn->child_list);
+ 	INIT_LIST_HEAD(&pdn->list);
+ 	list_add_tail(&pdn->list, &parent->child_list);
+@@ -226,9 +224,7 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+ 	 */
+ 	if (pdev->is_virtfn) {
+ 		pdn = pci_get_pdn(pdev);
+-#ifdef CONFIG_PPC_POWERNV
+ 		pdn->pe_number = IODA_INVALID_PE;
+-#endif
+ 		return;
+ 	}
+ 
+@@ -294,9 +290,7 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+ 		return NULL;
+ 	dn->data = pdn;
+ 	pdn->phb = hose;
+-#ifdef CONFIG_PPC_POWERNV
+ 	pdn->pe_number = IODA_INVALID_PE;
+-#endif
+ 	regs = of_get_property(dn, "reg", NULL);
+ 	if (regs) {
+ 		u32 addr = of_read_number(regs, 1);
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 8864065eba22..349571e995ea 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -44,6 +44,22 @@
+ static bool pnv_eeh_nb_init = false;
+ static int eeh_event_irq = -EINVAL;
+ 
++void pnv_pcibios_bus_add_device(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/*
++	 * The following operations will fail if VF's sysfs files
++	 * aren't created or its resources aren't finalized.
++	 */
++	eeh_add_device_early(pdn);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
++}
++
+ static int pnv_eeh_init(void)
+ {
+ 	struct pci_controller *hose;
+@@ -88,6 +104,8 @@ static int pnv_eeh_init(void)
+ 
+ 	eeh_set_pe_aux_size(max_diag_size);
+ 
++	ppc_md.pcibios_bus_add_device = pnv_pcibios_bus_add_device;
++
+ 	return 0;
+ }
+ 
+@@ -1747,22 +1765,6 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.restore_config		= pnv_eeh_restore_config
+ };
+ 
+-void pcibios_bus_add_device(struct pci_dev *pdev)
+-{
+-	struct pci_dn *pdn = pci_get_pdn(pdev);
+-
+-	if (!pdev->is_virtfn)
+-		return;
+-
+-	/*
+-	 * The following operations will fail if VF's sysfs files
+-	 * aren't created or its resources aren't finalized.
+-	 */
+-	eeh_add_device_early(pdn);
+-	eeh_add_device_late(pdev);
+-	eeh_sysfs_add_device(pdev);
+-}
+-
+ #ifdef CONFIG_PCI_IOV
+ static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
+ {
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 57f9e55f4352..f7fed25e06ba 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1674,7 +1674,7 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ 	return ret;
+ }
+ 
+-int pcibios_sriov_disable(struct pci_dev *pdev)
++int pnv_pcibios_sriov_disable(struct pci_dev *pdev)
+ {
+ 	pnv_pci_sriov_disable(pdev);
+ 
+@@ -1683,7 +1683,7 @@ int pcibios_sriov_disable(struct pci_dev *pdev)
+ 	return 0;
+ }
+ 
+-int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
++int pnv_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ {
+ 	/* Allocate PCI data */
+ 	add_dev_pci_data(pdev);
+@@ -4002,6 +4002,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ #ifdef CONFIG_PCI_IOV
+ 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
+ 	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
++	ppc_md.pcibios_sriov_enable = pnv_pcibios_sriov_enable;
++	ppc_md.pcibios_sriov_disable = pnv_pcibios_sriov_disable;
+ #endif
+ 
+ 	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
 -- 
-2.14.1
+2.11.0 (Apple Git-81)
