@@ -1,51 +1,71 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jan Glauber <jglauber@cavium.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v4 0/3] Workaround for bus/slot reset on Cavium cn8xxx root
- ports
-Date: Fri,  8 Sep 2017 10:10:30 +0200
-Message-Id: <20170908081033.3025-1-jglauber@cavium.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
- Jan Glauber <jglauber@cavium.com>, Robert Richter <robert.richter@cavium.com>,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- Jon Masters <jcm@redhat.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56302 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750868AbdIRT1a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2017 15:27:30 -0400
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8IJOT1u074173
+        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2017 15:27:30 -0400
+Received: from e12.ny.us.ibm.com (e12.ny.us.ibm.com [129.33.205.202])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2d2hacjph9-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2017 15:27:29 -0400
+Received: from localhost
+        by e12.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Mon, 18 Sep 2017 15:27:28 -0400
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>
+Subject: [PATCH v1 2/3] pseries: Override pci_bus_match_virtfn_driver
+Date: Mon, 18 Sep 2017 14:26:50 -0500
+In-Reply-To: <20170918192651.78404-1-bryantly@linux.vnet.ibm.com>
+References: <20170918192651.78404-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20170918192651.78404-3-bryantly@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Using vfio-pci on a combination of cn8xxx and some PCI devices results in
-a kernel panic. This is triggered by issuing a bus or a slot reset
-on the PCI device.
+For Powervm SR-IOV (Pseries) enablement we dont want to match
+the virtual function's device drivers since firmware
+plans to load the device node in the device tree
+dynamically when Novalink assigns the VF to a partition.
 
-With this series both checks indicate that the reset is not possible
-preventing the kernel panic.
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+---
+ arch/powerpc/platforms/pseries/pci.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-David Daney (2):
-  PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
-  PCI: Avoid bus reset for Cavium cn8xxx root ports
-
-Jan Glauber (1):
-  PCI: Avoid slot reset if bus reset is not possible
-
- drivers/pci/pci.c    | 8 ++++++++
- drivers/pci/quirks.c | 8 ++++++++
- 2 files changed, 16 insertions(+)
-
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index 09eba5a9929a..15d5145a622d 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -58,6 +58,23 @@ void pcibios_name_device(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
+ #endif
+ 
++#ifdef CONFIG_PCI_IOV
++void pci_bus_match_virtfn_driver(struct pci_dev *dev)
++{
++	/*
++	 * Per PSeries SR-IOV requirement there is no need to
++	 * match virtual function device driver as firmware
++	 * will load the device node in the device tree dynamically.
++	 * Since there is no matching of device driver there is
++	 * no failure when attaching driver, therefore there is no
++	 * need to remove sysfs file. Furthermore, the VF platform
++	 * management still needs to exist in sysfs files to be used
++	 * by management.
++	 */
++	dev->is_added = 1;
++}
++#endif
++
+ static void __init pSeries_request_regions(void)
+ {
+ 	if (!isa_io_base)
 -- 
-2.9.0.rc0.21.g7777322
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0 (Apple Git-81)
