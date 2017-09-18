@@ -1,45 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 15 Sep 2017 21:59:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxwifi@intel.com, linux-wireless@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Jens Axboe <axboe@kernel.dk>, Luca Coelho <luca@coelho.fi>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [GIT PULL] PCI fixes for v4.14
-Message-ID: <20170916025923.GA16731@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57532 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750711AbdIRT1W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2017 15:27:22 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8IJQVHn040041
+        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2017 15:27:22 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2d2ma2g1d6-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2017 15:27:22 -0400
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Mon, 18 Sep 2017 15:27:21 -0400
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v1 0/3] Prepartion for SR-IOV PowerVM Enablement
+Date: Mon, 18 Sep 2017 14:26:48 -0500
+Message-Id: <20170918192651.78404-1-bryantly@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fix:
+This patch series is to prepare for enabling SR-IOV
+on pseries. It separates the calls to be machine dependent
+and does not change any current functionality.
 
-  - revert an attempt to fix a race while enabling upstream bridges because
-    it broke iwlwifi firmware loading
+Bryant G. Ly (3):
+  powerpc/kernel: Split up pci_bus_add_device
+  pseries: Override pci_bus_match_virtfn_driver
+  powerpc/kernel: Separate SR-IOV Calls
 
+ arch/powerpc/include/asm/machdep.h           |  7 ++++
+ arch/powerpc/include/asm/pci-bridge.h        |  4 +--
+ arch/powerpc/kernel/eeh_driver.c             |  4 +--
+ arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++
+ arch/powerpc/kernel/pci_dn.c                 |  6 ----
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 34 ++++++++++---------
+ arch/powerpc/platforms/powernv/pci-ioda.c    |  6 ++--
+ arch/powerpc/platforms/pseries/pci.c         | 17 ++++++++++
+ drivers/pci/bus.c                            | 51 +++++++++++++++++++++++-----
+ drivers/pci/iov.c                            |  2 +-
+ include/linux/pci.h                          |  3 ++
+ 11 files changed, 118 insertions(+), 39 deletions(-)
 
-The following changes since commit 711aab1dbb324d321e3d84368a435a78908c7bce:
-
-  vfs: constify path argument to kernel_read_file_from_path (2017-09-14 20:18:45 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.14-fixes-1
-
-for you to fetch changes up to 0f50a49e3008597abed0fff052d487f77db89093:
-
-  Revert "PCI: Avoid race while enabling upstream bridges" (2017-09-15 01:33:51 -0500)
-
-----------------------------------------------------------------
-pci-v4.14-fixes-1
-
-----------------------------------------------------------------
-Bjorn Helgaas (1):
-      Revert "PCI: Avoid race while enabling upstream bridges"
-
- drivers/pci/pci.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+-- 
+2.11.0 (Apple Git-81)
