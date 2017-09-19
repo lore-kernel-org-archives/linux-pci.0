@@ -1,17 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linuxppc-dev@lists.ozlabs.org>, <marc.zyngier@arm.com>,
- <robh+dt@kernel.org>, <mark.rutland@arm.com>, <bhelgaas@google.com>,
- <shawnguo@kernel.org>, <Mingkai.Hu@nxp.com>, <Minghuan.Lian@nxp.com>,
- <roy.zang@nxp.com>
-Subject: [PATCH 2/5] arm64: dts: ls1012a: Add MSI controller DT node
-Date: Tue, 19 Sep 2017 17:26:55 +0800
-Message-ID: <20170919092658.22482-3-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
-References: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+To: Jan Luebbe <jlu@pengutronix.de>
+Subject: Re: [PATCH 1/2] bus: mbus: fix window size calculation for 4GB windows
+References: <20170828152517.24506-1-jlu@pengutronix.de>
+ <20170828152517.24506-2-jlu@pengutronix.de>
+Date: Tue, 19 Sep 2017 16:43:18 +0200
+In-Reply-To: <20170828152517.24506-2-jlu@pengutronix.de> (Jan Luebbe's message
+ of "Mon, 28 Aug 2017 17:25:16 +0200")
+Message-ID: <87wp4urbp5.fsf@free-electrons.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -20,43 +17,56 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-
-Add MSI controller node for ls1012a platform.
-
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-index df83915d6ea6..a7698ac7264b 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
-@@ -471,5 +471,12 @@
- 			dr_mode = "host";
- 			phy_type = "ulpi";
- 		};
-+
-+		msi: msi-controller1@1572000 {
-+			compatible = "fsl,ls1012a-msi";
-+			reg = <0x0 0x1572000 0x0 0x8>;
-+			msi-controller;
-+			interrupts = <0 126 IRQ_TYPE_LEVEL_HIGH>;
-+		};
- 	};
- };
--- 
-2.14.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGkgSmFuLAogCiBPbiBsdW4uLCBhb8O7dCAyOCAyMDE3LCBKYW4gTHVlYmJlIDxqbHVAcGVuZ3V0
+cm9uaXguZGU+IHdyb3RlOgoKPiBBdCBsZWFzdCB0aGUgQXJtYWRhIFhQIFNvQyBzdXBwb3J0cyA0
+R0Igb24gYSBzaW5nbGUgRFJBTSB3aW5kb3cuIEJlY2F1c2UKPiB0aGUgc2l6ZSByZWdpc3RlciB2
+YWx1ZXMgY29udGFpbiB0aGUgYWN0dWFsIHNpemUgLSAxLCB0aGUgTVNCIGlzIHNldCBpbgo+IHRo
+YXQgY2FzZS4gRm9yIGV4YW1wbGUsIHRoZSBTRFJBTSB3aW5kb3cncyBjb250cm9sIHJlZ2lzdGVy
+J3MgdmFsdWUgaXMKPiAweGZmZmZmZmUxIGZvciA0R0IgKGJpdHMgMzEgdG8gMjQgY29udGFpbiB0
+aGUgc2l6ZSkuCj4KPiBUaGUgTUJVUyBkcml2ZXIgcmVhZHMgYmFjayBlYWNoIHdpbmRvdydzIHNp
+emUgZnJvbSByZWdpc3RlcnMgYW5kCj4gY2FsY3VsYXRlcyB0aGUgYWN0dWFsIHNpemUgYXMgKGNv
+bnRyb2xfcmVnIHwgfkREUl9TSVpFX01BU0spICsgMSwgd2hpY2gKPiBvdmVyZmxvd3MgZm9yIDMy
+IGJpdCB2YWx1ZXMsIHJlc3VsdGluZyBpbiBvdGhlciBtaXNjYWxjdWxhdGlvbnMgZnVydGhlcgo+
+IG9uIChhIGJhZCBSQU0gd2luZG93IGZvciB0aGUgQ0VTQSBjcnlwdG8gZW5naW5lIGNhbGN1bGF0
+ZWQgYnkKPiBtdmVidV9tYnVzX3NldHVwX2NwdV90YXJnZXRfbm9vdmVybGFwKCkgaW4gbXkgY2Fz
+ZSkuCj4KPiBUaGlzIHBhdGNoIGNoYW5nZXMgdGhlIHR5cGUgaW4gJ3N0cnVjdCBtYnVzX2RyYW1f
+d2luZG93JyBmcm9tIHUzMiB0bwo+IHU2NCwgd2hpY2ggYWxsb3dzIHVzIHRvIGtlZXAgdXNpbmcg
+dGhlIHNhbWUgcmVnaXN0ZXIgY2FsY3VsYXRpb24gY29kZSBpbgo+IG1vc3QgTUJVUy11c2luZyBk
+cml2ZXJzICh3aGljaCBjYWxjdWxhdGUgLT5zaXplIC0gMSBhZ2FpbikuCj4KCllvdXIgcGF0Y2gg
+bG9va3MgZ29vZCwgYnV0IGFzIGl0IGlzIGEgZml4IHdlIHNob3VsZCBhbHNvIGFwcGx5IGl0IG9u
+CnN0YWJsZSwgY291bGQgeW91IHByb3ZpZGUgdGhlIGNvbW1pdCB0byBmaXg/CgpUaGFua3MsCgpH
+cmVnb3J5Cgo+IFNpZ25lZC1vZmYtYnk6IEphbiBMdWViYmUgPGpsdUBwZW5ndXRyb25peC5kZT4K
+PiAtLS0KPiAgZHJpdmVycy9idXMvbXZlYnUtbWJ1cy5jIHwgMiArLQo+ICBpbmNsdWRlL2xpbnV4
+L21idXMuaCAgICAgfCA0ICsrLS0KPiAgMiBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyks
+IDMgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9idXMvbXZlYnUtbWJ1cy5j
+IGIvZHJpdmVycy9idXMvbXZlYnUtbWJ1cy5jCj4gaW5kZXggYzdmMzk2OTAzMTg0Li43MGRiNGQ1
+NjM4YTYgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9idXMvbXZlYnUtbWJ1cy5jCj4gKysrIGIvZHJp
+dmVycy9idXMvbXZlYnUtbWJ1cy5jCj4gQEAgLTcyMCw3ICs3MjAsNyBAQCBtdmVidV9tYnVzX2Rl
+ZmF1bHRfc2V0dXBfY3B1X3RhcmdldChzdHJ1Y3QgbXZlYnVfbWJ1c19zdGF0ZSAqbWJ1cykKPiAg
+CQkJaWYgKG1idXMtPmh3X2lvX2NvaGVyZW5jeSkKPiAgCQkJCXctPm1idXNfYXR0ciB8PSBBVFRS
+X0hXX0NPSEVSRU5DWTsKPiAgCQkJdy0+YmFzZSA9IGJhc2UgJiBERFJfQkFTRV9DU19MT1dfTUFT
+SzsKPiAtCQkJdy0+c2l6ZSA9IChzaXplIHwgfkREUl9TSVpFX01BU0spICsgMTsKPiArCQkJdy0+
+c2l6ZSA9ICh1NjQpKHNpemUgfCB+RERSX1NJWkVfTUFTSykgKyAxOwo+ICAJCX0KPiAgCX0KPiAg
+CW12ZWJ1X21idXNfZHJhbV9pbmZvLm51bV9jcyA9IGNzOwo+IGRpZmYgLS1naXQgYS9pbmNsdWRl
+L2xpbnV4L21idXMuaCBiL2luY2x1ZGUvbGludXgvbWJ1cy5oCj4gaW5kZXggMGQzZjE0ZmQyNjIx
+Li40NzczMTQ1MjQ2ZWQgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVkZS9saW51eC9tYnVzLmgKPiArKysg
+Yi9pbmNsdWRlL2xpbnV4L21idXMuaAo+IEBAIC0zMSw4ICszMSw4IEBAIHN0cnVjdCBtYnVzX2Ry
+YW1fdGFyZ2V0X2luZm8KPiAgCXN0cnVjdCBtYnVzX2RyYW1fd2luZG93IHsKPiAgCQl1OAljc19p
+bmRleDsKPiAgCQl1OAltYnVzX2F0dHI7Cj4gLQkJdTMyCWJhc2U7Cj4gLQkJdTMyCXNpemU7Cj4g
+KwkJdTY0CWJhc2U7Cj4gKwkJdTY0CXNpemU7Cj4gIAl9IGNzWzRdOwo+ICB9Owo+ICAKPiAtLSAK
+PiAyLjExLjAKPgoKLS0gCkdyZWdvcnkgQ2xlbWVudCwgRnJlZSBFbGVjdHJvbnMKS2VybmVsLCBk
+cml2ZXJzLCByZWFsLXRpbWUgYW5kIGVtYmVkZGVkIExpbnV4CmRldmVsb3BtZW50LCBjb25zdWx0
+aW5nLCB0cmFpbmluZyBhbmQgc3VwcG9ydC4KaHR0cDovL2ZyZWUtZWxlY3Ryb25zLmNvbQoKX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtl
+cm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0
+dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5l
+bAo=
