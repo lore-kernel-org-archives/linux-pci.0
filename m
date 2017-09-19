@@ -1,144 +1,105 @@
-Return-Path: <SRS0=PRmL=A5=twosheds.srs.infradead.org=BATV+cbe7ec5e68669085430c+5149+infradead.org+dwmw2@kernel.org>
-Return-Path: <SRS0=PRmL=A5=twosheds.srs.infradead.org=BATV+cbe7ec5e68669085430c+5149+infradead.org+dwmw2@kernel.org>
-Message-ID: <1506613946.7476.130.camel@infradead.org>
-Subject: Re: [PATCH] uio/uio_pci_generic: Add SR-IOV support
-From: David Woodhouse <dwmw2@infradead.org>
-To: Don Dutile <ddutile@redhat.com>, Alexander Duyck
- <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, linux-pci <linux-pci@vger.kernel.org>,
- linux-kernel <linux-kernel@vger.kernel.org>, Alexander Duyck
- <alexander.h.duyck@intel.com>, "Bryant G. Ly"
- <bryantly@linux.vnet.ibm.com>, Bodong Wang <bodong@mellanox.com>, Alex
- Williamson <alex.williamson@redhat.com>, "Michael S. Tsirkin"
- <mst@redhat.com>, kvm@vger.kernel.org
-In-Reply-To: <7bbb6cce-3462-fbb2-9ae4-5c08ab2b01b4@redhat.com>
-References: <1506517162.30379.2.camel@infradead.org>
-	 <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
-	 <1506550852.7476.33.camel@infradead.org>
-	 <CAKgT0UeAg01Yy189pyzo_wDGYOEX6mBgsr_M9Lsi3u0+a-cW2w@mail.gmail.com>
-	 <bb77ab51-858b-df31-e672-7ccee964b269@redhat.com>
-	 <1506606369.7476.96.camel@infradead.org>
-	 <7bbb6cce-3462-fbb2-9ae4-5c08ab2b01b4@redhat.com>
-Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-O7xl8d4fW9V0tied2fYz"
-Date: Thu, 28 Sep 2017 16:52:26 +0100
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45754 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750919AbdISTZs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Sep 2017 15:25:48 -0400
+Date: Tue, 19 Sep 2017 14:25:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: John Keeping <john@metanate.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: use correct "end of test" interrupt
+Message-ID: <20170919192546.GC22312@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170906135524.12548-1-john@metanate.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170906135524.12548-1-john@metanate.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 06, 2017 at 02:55:24PM +0100, John Keeping wrote:
+> pci_epf_test_raise_irq() reads the interrupt to use for the response
+> from reg->command, but this has been cleared at the beginning of the
+> command handler so the value is always zero at this point.
+> 
+> Instead, extract the interrupt index before handling the command and
+> then pass the requested interrupt into pci_epf_test_raise_irq().  This
+> allows us to remove the specific code to extract the interrupt for
+> COMMAND_RAISE_MSI_IRQ since it is now handled in common code.
+> 
+> Signed-off-by: John Keeping <john@metanate.com>
 
---=-O7xl8d4fW9V0tied2fYz
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Applied with Kishon's ack to pci/endpoint for v4.15, thanks!
 
-On Thu, 2017-09-28 at 11:05 -0400, Don Dutile wrote:
-> ah, nickel summary: no in-kernel driver w/.sriov-configure method.
-> if so, now I'm up to speed with you....
-> hmmmm....
-> so, that would imply we need an in-kernel, pcie-common, .sriov-
-> configure method
-> that's invoked if a driver isn't bound to a device? ... yes?
-
-Well that was kind of the point in my question below the ---
-
-Is that something we want to be generic? Would we want to have quirks
-for the devices where we might *not* want it?=C2=A0
-
-Anything that *has* a driver for the PF, should have .sriov_configure
-already. Anything that doesn't have a driver can (now) use UIO to
-enable SR-IOV. So we don't *have* to make it unconditionally
-available...
---=-O7xl8d4fW9V0tied2fYz
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
-ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
-EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
-UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
-MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
-bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
-PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
-bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
-uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
-LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
-QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
-UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
-UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
-MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
-BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
-HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
-dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
-LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
-mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
-nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
-4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
-yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
-+nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
-CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
-MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
-ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
-MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
-pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
-An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
-p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
-HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
-AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
-dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
-MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
-BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
-UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
-Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
-gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
-dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
-Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
-DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
-eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
-hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
-PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
-QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
-WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
-ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
-bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
-U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
-SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
-RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
-dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
-iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
-M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
-FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
-HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
-BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
-BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
-dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
-U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
-Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
-ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
-BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
-2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
-vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
-YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
-fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
-GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
-R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
-TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
-ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDkyODE1NTIyNlowLwYJ
-KoZIhvcNAQkEMSIEIKcLViALc2U0Cc2pTbQrKRU7QVY9y6yL/DquVGgi0ZjXMIHBBgkrBgEEAYI3
-EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
-BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
-RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
-WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
-VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
-TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
-b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
-AQAyvXgbgOiePglDUYD8rHryQ0ufx2vbfbja3As6Rp29XjIT2BjAuH+/cdNX5DXvRW1gAgJBH1+T
-Ekq40Yj7uJShvPPxzuVEjv4pb97yXPBY72i9Vbz/ZdFUT8yQw7TFz+JBPwoz0Ub2GR2Lh3myrQhC
-/V7rh2aG+tHhUSDXMNHFVtVQIorzdHac5ojflnoVu8qWc28Ru6B9+GUTLTwAO9fQrZ/2UJZSwD89
-XVR+ZsRlTUHASo5n9MgnzllY+vj2NeUhsaelRIrjID9hrUOwbtfzSNu/bK7aiB2N2UWCn8lYMyb1
-E2IWuMk/Oxl63vWdE/wx5qf/emUXlpvys+YvtlQLAAAAAAAA
-
-
---=-O7xl8d4fW9V0tied2fYz--
+> ---
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 4ddc6e8f9fe7..f9308c2f22e6 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -251,9 +251,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+>  	return ret;
+>  }
+>  
+> -static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
+> +static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
+>  {
+> -	u8 irq;
+>  	u8 msi_count;
+>  	struct pci_epf *epf = epf_test->epf;
+>  	struct pci_epc *epc = epf->epc;
+> @@ -262,7 +261,6 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
+>  
+>  	reg->status |= STATUS_IRQ_RAISED;
+>  	msi_count = pci_epc_get_msi(epc);
+> -	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+>  	if (irq > msi_count || msi_count <= 0)
+>  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
+>  	else
+> @@ -289,6 +287,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  	reg->command = 0;
+>  	reg->status = 0;
+>  
+> +	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+> +
+>  	if (command & COMMAND_RAISE_LEGACY_IRQ) {
+>  		reg->status = STATUS_IRQ_RAISED;
+>  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
+> @@ -301,7 +301,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  			reg->status |= STATUS_WRITE_FAIL;
+>  		else
+>  			reg->status |= STATUS_WRITE_SUCCESS;
+> -		pci_epf_test_raise_irq(epf_test);
+> +		pci_epf_test_raise_irq(epf_test, irq);
+>  		goto reset_handler;
+>  	}
+>  
+> @@ -311,7 +311,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  			reg->status |= STATUS_READ_SUCCESS;
+>  		else
+>  			reg->status |= STATUS_READ_FAIL;
+> -		pci_epf_test_raise_irq(epf_test);
+> +		pci_epf_test_raise_irq(epf_test, irq);
+>  		goto reset_handler;
+>  	}
+>  
+> @@ -321,13 +321,12 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>  			reg->status |= STATUS_COPY_SUCCESS;
+>  		else
+>  			reg->status |= STATUS_COPY_FAIL;
+> -		pci_epf_test_raise_irq(epf_test);
+> +		pci_epf_test_raise_irq(epf_test, irq);
+>  		goto reset_handler;
+>  	}
+>  
+>  	if (command & COMMAND_RAISE_MSI_IRQ) {
+>  		msi_count = pci_epc_get_msi(epc);
+> -		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+>  		if (irq > msi_count || msi_count <= 0)
+>  			goto reset_handler;
+>  		reg->status = STATUS_IRQ_RAISED;
+> -- 
+> 2.14.1
+> 
