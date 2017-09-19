@@ -1,41 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35632 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750853AbdIKTYo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Sep 2017 15:24:44 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <marc.zyngier@arm.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <bhelgaas@google.com>, <shawnguo@kernel.org>, <Mingkai.Hu@nxp.com>,
+        <Minghuan.Lian@nxp.com>, <roy.zang@nxp.com>
+CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 3/5] PCI: layerscape: Add support for ls1012a
+Date: Tue, 19 Sep 2017 17:26:56 +0800
+Message-ID: <20170919092658.22482-4-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
+References: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20170911151029.25185-3-jeffy.chen@rock-chips.com>
-References: <20170911151029.25185-1-jeffy.chen@rock-chips.com> <20170911151029.25185-3-jeffy.chen@rock-chips.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Mon, 11 Sep 2017 14:24:21 -0500
-Message-ID: <CAL_Jsq+n7B3d0BibVxj5yCTZuxJ_QYp9b0CGwc9envu9G8nSJA@mail.gmail.com>
-Subject: Re: [PATCH v5 2/3] dt-bindings: PCI: Add definition of pcie wake irq
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Doug Anderson <dianders@chromium.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 11, 2017 at 10:10 AM, Jeffy Chen <jeffy.chen@rock-chips.com> wrote:
-> Add an optional interrupt for PCIE_WAKE pin.
->
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
->
-> Changes in v5:
-> Move to pci.txt
->
-> Changes in v3: None
-> Changes in v2: None
->
->  Documentation/devicetree/bindings/pci/pci.txt | 2 ++
->  1 file changed, 2 insertions(+)
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+ Documentation/devicetree/bindings/pci/layerscape-pci.txt | 1 +
+ drivers/pci/dwc/pci-layerscape.c                         | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index c0484da0f20d..66df1e81e0b8 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -18,6 +18,7 @@ Required properties:
+         "fsl,ls2088a-pcie"
+         "fsl,ls1088a-pcie"
+         "fsl,ls1046a-pcie"
++        "fsl,ls1012a-pcie"
+ - reg: base addresses and lengths of the PCIe controller register blocks.
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 87fa486bee2c..3b01e309a55e 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -253,6 +253,7 @@ static struct ls_pcie_drvdata ls2088_drvdata = {
+ };
+ 
+ static const struct of_device_id ls_pcie_of_match[] = {
++	{ .compatible = "fsl,ls1012a-pcie", .data = &ls1046_drvdata },
+ 	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
+ 	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
+ 	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
+-- 
+2.14.1
