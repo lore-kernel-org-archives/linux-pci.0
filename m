@@ -1,123 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 28 Sep 2017 16:46:25 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] ACPI/IORT: Fix PCI ACS enablement
-Message-ID: <20170928154625.GA25853@red-moon>
-References: <20170919170539.6265-1-lorenzo.pieralisi@arm.com>
- <59C3A36A.2060202@hisilicon.com>
- <20170922094546.GE1523@red-moon>
- <59C5C655.8030607@hisilicon.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 19 Sep 2017 11:58:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fixup the RTIT_BAR of Intel TH on Denverton
+Message-ID: <20170919165842.GA22312@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170919145136.13527-1-alexander.shishkin@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <59C5C655.8030607@hisilicon.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170919145136.13527-1-alexander.shishkin@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 23, 2017 at 10:26:29AM +0800, Zhou Wang wrote:
-> On 2017/9/22 17:45, Lorenzo Pieralisi wrote:
-> > On Thu, Sep 21, 2017 at 07:32:58PM +0800, Zhou Wang wrote:
-> >> On 2017/9/20 1:05, Lorenzo Pieralisi wrote:
-> >>> commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
-> >>> workarounds") removed kernel code that was allowing to initialize
-> >>> and probe the SMMU devices early (ie earlier than PCI devices through
-> >>> linker script callback entries) in the boot process because it was not
-> >>> needed any longer in that the SMMU devices/drivers now support deferred
-> >>> probing.
-> >>>
-> >>> Since the SMMUs probe routines are also in charge of requesting global
-> >>> PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
-> >>> up early-probing workarounds") also postponed PCI ACS enablement to
-> >>> SMMUs devices probe time, which may be too late given that PCI devices
-> >>> needs to detect if PCI ACS is enabled to init the respective capability
-> >>> through the following call path:
-> >>>
-> >>> pci_device_add()
-> >>>  -> pci_init_capabilities()
-> >>>   -> pci_enable_acs()
-> >>>
-> >>> Add code in the ACPI IORT SMMU platform devices initialization path
-> >>> (that is called before ACPI PCI enumeration) to detect if an SMMU is
-> >>> present in HW and enable PCI ACS if it actually is, restoring the
-> >>> correct PCI ACS enablement sequencing.
-> >>>
-> >>> Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
-> >>> Signed-workarounds")
-> >>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >>> Cc: Will Deacon <will.deacon@arm.com>
-> >>> Cc: Robin Murphy <robin.murphy@arm.com>
-> >>> Cc: Zhou Wang <wangzhou1@hisilicon.com>
-> >>> Cc: Alex Williamson <alex.williamson@redhat.com>
-> >>> ---
-> >>>  drivers/acpi/arm64/iort.c | 11 +++++++++++
-> >>>  1 file changed, 11 insertions(+)
-> >>>
-> >>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> >>> index 9565d57..71a7694 100644
-> >>> --- a/drivers/acpi/arm64/iort.c
-> >>> +++ b/drivers/acpi/arm64/iort.c
-> >>> @@ -1184,6 +1184,7 @@ static void __init iort_init_platform_devices(void)
-> >>>  	struct acpi_table_iort *iort;
-> >>>  	struct fwnode_handle *fwnode;
-> >>>  	int i, ret;
-> >>> +	bool smmu_detected = false;
-> >>>  
-> >>>  	/*
-> >>>  	 * iort_table and iort both point to the start of IORT table, but
-> >>> @@ -1218,11 +1219,21 @@ static void __init iort_init_platform_devices(void)
-> >>>  				acpi_free_fwnode_static(fwnode);
-> >>>  				return;
-> >>>  			}
-> >>> +
-> >>> +			smmu_detected = true;
-> >>>  		}
-> >>>  
-> >>>  		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
-> >>>  					 iort_node->length);
-> >>>  	}
-> >>> +
-> >>> +	/*
-> >>> +	 * If IORT reports an SMMU component make sure PCI ACS is
-> >>> +	 * requested so that PCI devices can enable it in their
-> >>> +	 * capabilities.
-> >>> +	 */
-> >>> +	if (smmu_detected)
-> >>> +		pci_request_acs();
-> >>>  }
-> >>>  
-> >>>  void __init acpi_iort_init(void)
-> >>>
-> >>
-> >> Hi Lorenzo,
-> >>
-> >> I tested this patch, it works well in my HiSilicon Hip08 based system.
-> >> However, setting ACS flag at the stage of SMMU device init seems not good,
-> >> I mean what if in one system there are only platform devices connected to
-> >> SMMU device.
-> > 
-> > That's a fair point if you explain to me how current pci_request_acs()
-> > usage copes with your remark above.
+Hi Alexander,
+
+On Tue, Sep 19, 2017 at 05:51:36PM +0300, Alexander Shishkin wrote:
+> On some intergrations of the Intel TH the reported size of RTIT_BAR
+
+s/intergrations/integrations/
+
+What is "TH"?  If there's a public spec for it, can you include a
+reference here?
+
+I guess this is an erratum, since the device responds to more MMIO
+space than it advertises via the BAR.  Can you include a reference to
+the published erratum?
+
+I'm surprised that this issue occurs so often on Intel parts.  I would
+think that after being burned a few times, Intel would figure out a
+process to validate this.
+
+> doesn't match its actual size, which leads to overlaps with other
+> devices' resources.
+
+So I suppose the BIOS relies on the size advertised via the BAR,
+assigns it to be just below the XHCI space, and now both the TH and
+XHCI respond there?  I assume this causes some sort of "unexpected
+response" error?  Is there a bug report about this?  What does it look
+like when a user hits this?  I'm trying to make this fix discoverable
+to users who might trip over the problem.
+
+> For this reason, we need to resize the RTIT_BAR on Denverton where
+> it would overlap with XHCI MMIO space.
 > 
-> The current pci_request_acs usage for ARM SMMU-V3 sets ACS flags under CONFIG_PCI.
-> However, as mentioned in your commit message, this setting is too late.
+> Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+> Fixes: 5118ccd347 ("intel_th: pci: Add Denverton SOC support")
+
+Please use a 12-char SHA1.
+
+> Cc: stable@vger.kernel.org
+
+I guess this is only applicable to v4.11+, since 5118ccd34780 appeared in
+v4.11-rc4?
+
+> ---
+>  drivers/pci/quirks.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
-> For the usage of X86 and AMD, as I am not familiar with the devices used in these
-> two platforms, maybe the default devices in these platforms are PCIe based :)
-
-I do not understand what your point is. ACS enablement is a global flag,
-that is currently set whenever an x86/AMD/ARM IOMMU is detected/probed
-AFAICS.
-
-I agree that ACS enablement should be done before PCI enumeration,
-for other comments either you are questioning the current policy
-behind ACS enablement in the kernel - which can be a fair point - or
-I do not understand what you mean.
-
-Let me know since I would like to queue this patch unless I hear
-a compelling objection to it.
-
-Lorenzo
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6967c6b4cf..08a1e6629f 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4681,3 +4681,19 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
+> +
+> +static void quirk_intel_th_dnv(struct pci_dev *dev)
+> +{
+> +	struct resource *r = &dev->resource[4];
+> +
+> +	/*
+> +	 * Denverton reports 2k of RTIT_BAR (intel_th resource 4), which
+> +	 * appears to be 4 MB in reality.
+> +	 */
+> +	if (r->end == r->start + 0x7ff) {
+> +		r->start = 0;
+> +		r->end   = 0x3fffff;
+> +		r->flags |= IORESOURCE_UNSET;
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x19e1, quirk_intel_th_dnv);
+> -- 
+> 2.14.1
+> 
