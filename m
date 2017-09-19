@@ -1,64 +1,53 @@
-Return-Path: <SRS0=+Syg=AX=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=+Syg=AX=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 22 Sep 2017 14:44:01 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marek =?iso-8859-1?Q?Beh=FAn?= <marek.behun@nic.cz>,
-	linux-pci@vger.kernel.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: aardvark pci controller ath9k request_irq fail
-Message-ID: <20170922134401.GA5207@red-moon>
-References: <20170922132444.588e27cb@dellmb.labs.office.nic.cz>
- <20170922133515.GA12546@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:49466 "EHLO
+        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750783AbdISBxu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2017 21:53:50 -0400
+Received: by mail-io0-f173.google.com with SMTP id 21so6614674iof.6
+        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2017 18:53:50 -0700 (PDT)
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+From: Stuart Hayes <stuart.w.hayes@gmail.com>
+Subject: SR-IOV & virtfn/physfn sysfs links
+Message-ID: <d3328861-2da2-918d-c3db-cc0795ab1586@gmail.com>
+Date: Mon, 18 Sep 2017 20:53:45 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170922133515.GA12546@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 22, 2017 at 08:35:15AM -0500, Bjorn Helgaas wrote:
-> [+cc Thomas (aardvark maintainer), Lorenzo]
-> 
-> On Fri, Sep 22, 2017 at 01:24:44PM +0200, Marek Behún wrote:
-> > Hello,
-> > we are developing a new board based on Marvell Armada 3720.
-> > While testing the PCI-e slot, I have enountered this problem:
-> > 
-> > - lspci always correctly prints information about the PCIe card in the
-> >   slot
-> > - when a ath9k card is in the slot, ath9k fails to initialize with
-> >      ath9k 0000:00:00.0: request_irq failed
-> > 
-> >   The irq number passed to the request_irq function is from the irq
-> >   member of struct pci_dev:
-> >      request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
-> > 
-> >   this number (pdev->irq) is 255
-> > 
-> >   The request_irq function fails in request_threaded_irq on line:
-> >      desc = irq_to_desc(irq);
-> >   (desc is NULL and thus -EINVAL is returned.)
-> > 
-> > - what is strange is that another card, Intel Centrino Ultimate-N 6300
-> >   with iwlwifi works.
-> > 
-> > - another card (ath10k driver) also does not work.
-> > 
-> > Is this a problem with the pci-aardvark driver for the Aardvark
-> > controller?
-> 
-> What kernel version are you using?  Has any kernel version worked
-> correctly?  There have been significant IRQ mapping changes in the
-> last couple releases.
-> 
-> dev->irq should be assigned in pci_assign_irq().  Can you turn on the
-> debug there (and maybe add more) and collect the complete dmesg log?
+Bjorn et al,
 
-It is very likely this will fix it:
+I'm hoping to enhance network device naming in systemd to parse sysfs "virtfn%u" and "physfn" links, so it understands virtual devices.
 
-https://patchwork.ozlabs.org/patch/811432/
+I've noticed that the udev event which triggers the systemd/biosdevname network device naming--the udev "add" event for the network device, which happens within pci_bus_add_device() when the network driver's probe function calls register_netdev()--occurs before the sysfs links "physfn" and "virtfn%u" are created.  This creates a race when the network naming code tries to look at those links (something biosdevname already does).
 
-Apologies to you and Thomas again - I went through a number of changes
-and mechanically missed pci-aardvark.
+Is there any reason why we couldn't switch the order of those calls to eliminate the race, as shown in the patch below?  I couldn't think of any, since those links apply to the pci subsystem devices in sysfs (which are already created), not the net subsystem devices.  I'd be happy to submit a patch if that looks ok.
 
-Thanks,
-Lorenzo
+Thank you,
+Stuart
+
+
+--- linux-4.14-rc1/drivers/pci/iov.c.orig	2017-09-18 15:00:43.168255665 -0500
++++ linux-4.14-rc1/drivers/pci/iov.c	2017-09-18 15:07:04.792280999 -0500
+@@ -162,7 +162,6 @@ int pci_iov_add_virtfn(struct pci_dev *d
+ 
+ 	pci_device_add(virtfn, virtfn->bus);
+ 
+-	pci_bus_add_device(virtfn);
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+ 	if (rc)
+@@ -173,6 +172,8 @@ int pci_iov_add_virtfn(struct pci_dev *d
+ 
+ 	kobject_uevent(&virtfn->dev.kobj, KOBJ_CHANGE);
+ 
++	pci_bus_add_device(virtfn);
++
+ 	return 0;
+ 
+ failed2:
+
+
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
