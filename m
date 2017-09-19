@@ -1,95 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:41924 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751979AbdIVOGz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Sep 2017 10:06:55 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v8ME6gKr108728
-        for <linux-pci@vger.kernel.org>; Fri, 22 Sep 2017 10:06:54 -0400
-Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2d51nhtt0v-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Fri, 22 Sep 2017 10:06:54 -0400
-Received: from localhost
-        by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
-        Fri, 22 Sep 2017 08:06:24 -0600
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        mpe@ellerman.id.au
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>
-Subject: [PATCH v2 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-Date: Fri, 22 Sep 2017 09:06:08 -0500
-In-Reply-To: <20170922140608.47665-1-bryantly@linux.vnet.ibm.com>
-References: <20170922140608.47665-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20170922140608.47665-3-bryantly@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.99]:46336 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750733AbdISTaS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Sep 2017 15:30:18 -0400
+Date: Tue, 19 Sep 2017 14:30:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keerthy <j-keerthy@ti.com>
+Cc: kishon@ti.com, bhelgaas@google.com, t-kristo@ti.com,
+        linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] pci: dwc: dra7xx: Add shutdown handler to cleanly
+ turn off clocks
+Message-ID: <20170919193016.GD22312@bhelgaas-glaptop.roam.corp.google.com>
+References: <1504847694-23701-1-git-send-email-j-keerthy@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1504847694-23701-1-git-send-email-j-keerthy@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the machine dependent call for
-pcibios_bus_add_device, since the previous patch
-separated the calls out between the PowerNV and PowerVM.
+On Fri, Sep 08, 2017 at 10:44:54AM +0530, Keerthy wrote:
+> Add shutdown handler to cleanly turn off clocks. This will help
+> in cases of kexec where in a new kernel can boot abruptly.
+> 
+> Signed-off-by: Keerthy <j-keerthy@ti.com>
+> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> 
+> Changes in v3:
+> 
+>   * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
+>   * Added more details to commit log.
+> 
+> Changes in v2:
+> 
+>   * used a local dev pointer instead of dereferencing dev at multiple places.
+>   * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
 
-The difference here is that for the PowerVM environment
-we do not want match_driver set because in this environment
-we do not want the VF device drivers to load immediately, due to
-firmware loading the device node when VF device is assigned to the
-logical partition.
+You lost both these changes in v3.  I assume you'll post a v4.
 
-This patch will depend on the patch linked below, which is under
-review.
-
-https://patchwork.kernel.org/patch/9882915/
-
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
----
- arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index 1eef46d9cf30..ac72011a045c 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
- static DEFINE_SPINLOCK(slot_errbuf_lock);
- static int eeh_error_buf_size;
- 
-+void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	pdn->device_id  =  pdev->device;
-+	pdn->vendor_id  =  pdev->vendor;
-+	pdn->class_code =  pdev->class;
-+
-+	/*
-+	 * The following operations will fail if VF's sysfs files
-+	 * aren't created or its resources aren't finalized.
-+	 */
-+	eeh_add_device_early(pdn);
-+	eeh_add_device_late(pdev);
-+	eeh_sysfs_add_device(pdev);
-+	pdev->match_driver = -1;
-+}
-+
- /**
-  * pseries_eeh_init - EEH platform dependent initialization
-  *
-@@ -120,6 +141,9 @@ static int pseries_eeh_init(void)
- 	/* Set EEH probe mode */
- 	eeh_add_flag(EEH_PROBE_MODE_DEVTREE | EEH_ENABLE_IO_FOR_LOG);
- 
-+	/* Set EEH machine dependent code */
-+	ppc_md.pcibios_bus_add_device = pseries_pcibios_bus_add_device;
-+
- 	return 0;
- }
- 
--- 
-2.11.0 (Apple Git-81)
+>  drivers/pci/dwc/pci-dra7xx.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 0f9adf2..ec8f842 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -794,6 +794,19 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>  }
+>  #endif
+>  
+> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
+> +{
+> +	struct dra7xx_pcie *dra7xx = dev_get_drvdata(&pdev->dev);
+> +	int ret;
+> +
+> +	ret = pm_runtime_put_sync(&pdev->dev);
+> +	if (ret < 0)
+> +		dev_dbg(&pdev->dev, "pm_runtime_put_sync failed\n");
+> +
+> +	pm_runtime_disable(&pdev->dev);
+> +	dra7xx_pcie_disable_phy(dra7xx);
+> +}
+> +
+>  static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+>  	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
+>  	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
+> @@ -807,5 +820,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>  		.suppress_bind_attrs = true,
+>  		.pm	= &dra7xx_pcie_pm_ops,
+>  	},
+> +	.shutdown = dra7xx_pcie_shutdown,
+>  };
+>  builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
+> -- 
+> 1.9.1
+> 
