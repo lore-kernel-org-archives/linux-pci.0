@@ -1,63 +1,62 @@
-Return-Path: <SRS0=o6Kt=A5=redhat.com=ddutile@kernel.org>
-Return-Path: <SRS0=o6Kt=A5=redhat.com=ddutile@kernel.org>
-Subject: Re: [PATCH] uio/uio_pci_generic: Add SR-IOV support
-To: David Woodhouse <dwmw2@infradead.org>,
- Alexander Duyck <alexander.duyck@gmail.com>
-References: <1506517162.30379.2.camel@infradead.org>
- <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
- <1506550852.7476.33.camel@infradead.org>
- <CAKgT0UeAg01Yy189pyzo_wDGYOEX6mBgsr_M9Lsi3u0+a-cW2w@mail.gmail.com>
- <bb77ab51-858b-df31-e672-7ccee964b269@redhat.com>
- <1506606369.7476.96.camel@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- linux-pci <linux-pci@vger.kernel.org>,
- linux-kernel <linux-kernel@vger.kernel.org>,
- Alexander Duyck <alexander.h.duyck@intel.com>,
- "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
- Bodong Wang <bodong@mellanox.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
-From: Don Dutile <ddutile@redhat.com>
-Message-ID: <7bbb6cce-3462-fbb2-9ae4-5c08ab2b01b4@redhat.com>
-Date: Thu, 28 Sep 2017 11:05:24 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linuxppc-dev@lists.ozlabs.org>, <marc.zyngier@arm.com>,
+ <robh+dt@kernel.org>, <mark.rutland@arm.com>, <bhelgaas@google.com>,
+ <shawnguo@kernel.org>, <Mingkai.Hu@nxp.com>, <Minghuan.Lian@nxp.com>,
+ <roy.zang@nxp.com>
+Subject: [PATCH 2/5] arm64: dts: ls1012a: Add MSI controller DT node
+Date: Tue, 19 Sep 2017 17:26:55 +0800
+Message-ID: <20170919092658.22482-3-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
+References: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <1506606369.7476.96.camel@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/28/2017 09:46 AM, David Woodhouse wrote:
-> On Thu, 2017-09-28 at 08:22 -0400, Don Dutile wrote:
->>
->> After reading Alex's response, I now understand Dave's question
->> better and why the patch won't work in general.
->
-> UIO doesn't work "in general". It requires a very *specific* userspace
-> driver for the hardware in question, which needs to know what it's
-> doing.
->
->> In every SRIOV capable device I've run into to date, the PF has
->> to know the VFs are being assigned due to some resource mgmt, if not
->> internal (e.g., switch) configuration reasons.
->> The reasons are often subtle.
->
-> Sure. If there's actually a userspace driver (which in my case there
-> isn't), and if that's needed for the hardware ins question (which in my
-> case it isn't), then it'd need to do that before enabling the VFs via
-> the user-level sysfs interface of which you speak.
->
->>  From the context of the patches (uio), why aren't VFs enabled via
->> user-level sysfs interface? That was provided for user-mgmt apps
->> to have a PCIe-generic/common, device-independent method of VF
->> enablement
->
-> That is *precisely* what we're doing. But the user-space sysfs
-> interface doesn't actually *exist* unless a driver is bound to the
-> device in question, with a .sriov-configure method. Which is where I
-> came in... :)
->
-ah, nickel summary: no in-kernel driver w/.sriov-configure method.
-if so, now I'm up to speed with you....
-hmmmm....
-so, that would imply we need an in-kernel, pcie-common, .sriov-configure method
-that's invoked if a driver isn't bound to a device? ... yes?
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+
+Add MSI controller node for ls1012a platform.
+
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+ arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
+index df83915d6ea6..a7698ac7264b 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
+@@ -471,5 +471,12 @@
+ 			dr_mode = "host";
+ 			phy_type = "ulpi";
+ 		};
++
++		msi: msi-controller1@1572000 {
++			compatible = "fsl,ls1012a-msi";
++			reg = <0x0 0x1572000 0x0 0x8>;
++			msi-controller;
++			interrupts = <0 126 IRQ_TYPE_LEVEL_HIGH>;
++		};
+ 	};
+ };
+-- 
+2.14.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
