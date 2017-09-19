@@ -1,44 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52810 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbdI3Nbj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Sep 2017 09:31:39 -0400
-Subject: Re: [PATCH V2] PCI: AER: fix deadlock in do_recovery
-To: Govindarajulu Varadarajan <gvaradar@cisco.com>, benve@cisco.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
-        mingo@redhat.com, peterz@infradead.org
-References: <20170930054938.43271-1-gvaradar@cisco.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <a9b14502-4ac6-58dc-89ee-a91354f4d2da@codeaurora.org>
-Date: Sat, 30 Sep 2017 09:31:35 -0400
+Received: from mail-it0-f67.google.com ([209.85.214.67]:33674 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751000AbdISM3G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Sep 2017 08:29:06 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170930054938.43271-1-gvaradar@cisco.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170919104939.3313-1-lorenzo.pieralisi@arm.com>
+References: <20170919104939.3313-1-lorenzo.pieralisi@arm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Tue, 19 Sep 2017 14:29:05 +0200
+Message-ID: <CAK8P3a3C=hD3Goo_=aCwWWUA_mAAPBL1Oii94Ed1y=cK6hiG8w@mail.gmail.com>
+Subject: Re: [PATCH] MIPS: Fix PCI host bridge map_irq() hook section mismatches
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Steve French <smfrench@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/30/2017 1:49 AM, Govindarajulu Varadarajan wrote:
-> This patch does a pci_bus_walk and adds all the devices to a list. After
-> unlocking (up_read) &pci_bus_sem, we go through the list and call
-> err_handler of the devices with devic_lock() held. This way, we dont try
-> to hold both locks at same time.
+On Tue, Sep 19, 2017 at 12:49 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> Commit 04c81c7293df ("MIPS: PCI: Replace pci_fixup_irqs() call with host
+> bridge IRQ mapping hooks") allowed to move the PCI irq fixup to the new
+> host bridge map/swizzle_irq() hooks mechanism. Those hooks can also be
+> called after boot completed - with all __init/__initdata/__initconst
+> sections freed by the kernel -  therefore functions called by them (and
+> the data they refer to) must not be marked as
+> __init/__initdata/__initconst lest compilation triggers section
+> mismatches warnings.
+>
+> Fix all the boards files map_irq() hooks by simply removing the
+> respective __init/__initdata/__initconst section markers and by
+> adding another persistent hook IRQ map for the txx9 board files.
+>
+> Fixes: 04c81c7293df ("MIPS: PCI: Replace pci_fixup_irqs() call with host
+> bridge IRQ mapping hooks")
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-I do like this approach with some more feedback.
+Aside from one typo
 
-I need a little bit of help here from someone that knows get/put device calls.
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 
-I understand get_device() and put_device() are there to increment/decrement
-reference counters. This patch seems to use them as an alternative for device_lock()
-and device_unlock() API. 
+> diff --git a/arch/mips/txx9/generic/pci.c b/arch/mips/txx9/generic/pci.c
+> index 0bd2a1e..499da2d 100644
+> --- a/arch/mips/txx9/generic/pci.c
+> +++ b/arch/mips/txx9/generic/pci.c
+> @@ -386,9 +386,10 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
+>         return 0;
+>  }
+>
+> -int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> +static int (*txx9_pci_map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
+> +int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>  {
+> -       return txx9_board_vec->pci_map_irq(dev, slot, pin);
+> +       return txx9_map_irq(dev, slot, pin);
+>  }
+>
+>  char * (*txx9_board_pcibios_setup)(char *str) __initdata;
 
-If this is a good assumption, then you can get away with just replacing device_lock()
-with get_device() and device_unlock() with put_device() in the existing code as
-well. Then, you don't need to build a linklist.
+s/pcibios_map_irq/txx9_pci_map_irq/
 
-A nit is your history messages in the commit message belongs to a cover letter.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+      Arnd
