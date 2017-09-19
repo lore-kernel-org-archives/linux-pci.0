@@ -1,72 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
-To: <vinod.koul@intel.com>, <robh+dt@kernel.org>, <mark.rutland@arm.com>,
- <michal.simek@xilinx.com>, <soren.brinkmann@xilinx.com>,
- <dan.j.williams@intel.com>, <bhelgaas@google.com>, <vjonnal@xilinx.com>,
- <lorenzo.pieralisi@arm.com>, <bharat.kumar.gogada@xilinx.com>,
- <dmaengine@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rgummal@xilinx.com>
-Subject: [PATCH v2 0/5] dmaengine: ZynqMP PS PCIe DMA driver
-Date: Fri, 8 Sep 2017 17:53:02 +0530
-Message-ID: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <marc.zyngier@arm.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <bhelgaas@google.com>, <shawnguo@kernel.org>, <Mingkai.Hu@nxp.com>,
+        <Minghuan.Lian@nxp.com>, <roy.zang@nxp.com>
+CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 4/5] arm64: dts: ls1012a: Add PCIe controller DT node
+Date: Tue, 19 Sep 2017 17:26:57 +0800
+Message-ID: <20170919092658.22482-5-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
+References: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ZynqMP devices have PCIe Bridge along with DMA in PS.
-These devices can be configured as either PCIe Endpoints
-or as PCIe Root Complex.
-This patch series shall provide a driver to initiate
-transactions using this DMA.
-Single platform driver shall handle both EndPoint and
-Root DMA transfers.
-Patch 1 enables Root DMA register translation and
-	interrupts
-Patch 2 corrects styling errors seen with checkpatch
-Patch 3 adds PCIe driver for end points
-Patch 4 adds Platform driver which handles DMA transactions
-	for both PCI end points and Root DMA
-Patch 5 describes device tree bindings for Root DMA
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
+Add PCIe controller node for ls1012a platform.
 
-Ravi Shankar Jonnalagadda (5):
-  PCI:xilinx-nwl: Enable Root DMA
-  PCI:xilinx-nwl: Correcting Styling checks
-  dmaengine: zynqmp_ps_pcie: Adding PS PCIe DMA driver
-  dmaengine: zynqmp_ps_pcie: Adding PS PCIe platform DMA driver
-  devicetree: zynqmp_ps_pcie: Devicetree binding for Root DMA
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+ arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
- .../devicetree/bindings/dma/xilinx/ps-pcie-dma.txt |   67 +
- drivers/dma/Kconfig                                |   12 +
- drivers/dma/xilinx/Makefile                        |    2 +
- drivers/dma/xilinx/ps_pcie.h                       |   44 +
- drivers/dma/xilinx/ps_pcie_main.c                  |  200 ++
- drivers/dma/xilinx/ps_pcie_platform.c              | 3055 ++++++++++++++++++++
- drivers/pci/host/pcie-xilinx-nwl.c                 |   23 +-
- include/linux/dma/ps_pcie_dma.h                    |   69 +
- 8 files changed, 3468 insertions(+), 4 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/dma/xilinx/ps-pcie-dma.txt
- create mode 100644 drivers/dma/xilinx/ps_pcie.h
- create mode 100644 drivers/dma/xilinx/ps_pcie_main.c
- create mode 100644 drivers/dma/xilinx/ps_pcie_platform.c
- create mode 100644 include/linux/dma/ps_pcie_dma.h
-
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
+index a7698ac7264b..140570d45ff3 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi
+@@ -478,5 +478,29 @@
+ 			msi-controller;
+ 			interrupts = <0 126 IRQ_TYPE_LEVEL_HIGH>;
+ 		};
++
++		pcie@3400000 {
++			compatible = "fsl,ls1012a-pcie", "snps,dw-pcie";
++			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
++			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
++			reg-names = "regs", "config";
++			interrupts = <0 118 0x4>, /* controller interrupt */
++				     <0 117 0x4>; /* PME interrupt */
++			interrupt-names = "aer", "pme";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			num-lanes = <4>;
++			bus-range = <0x0 0xff>;
++			ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
++				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
++			msi-parent = <&msi>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 7>;
++			interrupt-map = <0000 0 0 1 &gic 0 110 IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 2 &gic 0 111 IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 3 &gic 0 112 IRQ_TYPE_LEVEL_HIGH>,
++					<0000 0 0 4 &gic 0 113 IRQ_TYPE_LEVEL_HIGH>;
++		};
+ 	};
+ };
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.1
