@@ -1,165 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34696 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:59826 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934771AbdIZR5c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Sep 2017 13:57:32 -0400
-Date: Tue, 26 Sep 2017 12:57:30 -0500
+        id S1751394AbdISRKw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Sep 2017 13:10:52 -0400
+Date: Tue, 19 Sep 2017 12:10:48 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan =?iso-8859-1?Q?H=2E_Sch=F6nherr?= <jschoenh@amazon.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Russell Currey <ruscur@russell.cc>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH 1/2] PCI: Remove reset argument from
- pci_iov_{add,remove}_virtfn()
-Message-ID: <20170926175730.GN15970@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504653683-11543-1-git-send-email-jschoenh@amazon.de>
+To: Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI SUBSYSTEM allows inconsistent configuration, current
+ Kernel version
+Message-ID: <20170919171048.GB22312@bhelgaas-glaptop.roam.corp.google.com>
+References: <F6127EC53C695C46907CD6EE43F346235291129018@messagesink.samelson.uni-hildesheim.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1504653683-11543-1-git-send-email-jschoenh@amazon.de>
+In-Reply-To: <F6127EC53C695C46907CD6EE43F346235291129018@messagesink.samelson.uni-hildesheim.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 06, 2017 at 01:21:22AM +0200, Jan H. Schönherr wrote:
-> The reset argument passed to pci_iov_add_virtfn() and
-> pci_iov_remove_virtfn() is always zero since commit 46cb7b1bd86fc227a
-> ("PCI: Remove unused SR-IOV VF Migration support").
-> 
-> Remove the argument together with the associated code.
-> 
-> Signed-off-by: Jan H. Schönherr <jschoenh@amazon.de>
+Hi Sascha,
 
-Applied both (with Russell's ack on the first) to pci/virtualization
-for v4.14, thanks!
+This needs a changelog.  Can you take a look through the linux-pci
+archives and follow the style there (format of subject line, contents
+of changelog, etc)?  I *can* fix all that up myself, but it goes a lot
+faster if you can save me the trouble.
 
-> ---
->  arch/powerpc/kernel/eeh_driver.c |  4 ++--
->  drivers/pci/iov.c                | 18 +++++-------------
->  include/linux/pci.h              |  8 ++++----
->  3 files changed, 11 insertions(+), 19 deletions(-)
+Bjorn
+
+On Fri, Sep 15, 2017 at 02:18:56PM +0200, Sascha El-Sharkawy wrote:
+> I just recognized that my last mail misses some line breaks corrupting the patch. This fixes the broken patch.
 > 
-> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-> index c405c79..23ea86f 100644
-> --- a/arch/powerpc/kernel/eeh_driver.c
-> +++ b/arch/powerpc/kernel/eeh_driver.c
-> @@ -441,7 +441,7 @@ static void *eeh_add_virt_device(void *data, void *userdata)
->  	}
->  
->  #ifdef CONFIG_PPC_POWERNV
-> -	pci_iov_add_virtfn(edev->physfn, pdn->vf_index, 0);
-> +	pci_iov_add_virtfn(edev->physfn, pdn->vf_index);
->  #endif
->  	return NULL;
->  }
-> @@ -499,7 +499,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
->  #ifdef CONFIG_PPC_POWERNV
->  		struct pci_dn *pdn = eeh_dev_to_pdn(edev);
->  
-> -		pci_iov_remove_virtfn(edev->physfn, pdn->vf_index, 0);
-> +		pci_iov_remove_virtfn(edev->physfn, pdn->vf_index);
->  		edev->pdev = NULL;
->  
->  		/*
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 120485d..21b55ca 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -113,7 +113,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
->  	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
->  }
->  
-> -int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
-> +int pci_iov_add_virtfn(struct pci_dev *dev, int id)
->  {
->  	int i;
->  	int rc = -ENOMEM;
-> @@ -157,9 +157,6 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
->  		BUG_ON(rc);
->  	}
->  
-> -	if (reset)
-> -		__pci_reset_function(virtfn);
-> -
->  	pci_device_add(virtfn, virtfn->bus);
->  
->  	pci_bus_add_device(virtfn);
-> @@ -187,7 +184,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
->  	return rc;
->  }
->  
-> -void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
-> +void pci_iov_remove_virtfn(struct pci_dev *dev, int id)
->  {
->  	char buf[VIRTFN_ID_LEN];
->  	struct pci_dev *virtfn;
-> @@ -198,11 +195,6 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
->  	if (!virtfn)
->  		return;
->  
-> -	if (reset) {
-> -		device_release_driver(&virtfn->dev);
-> -		__pci_reset_function(virtfn);
-> -	}
-> -
->  	sprintf(buf, "virtfn%u", id);
->  	sysfs_remove_link(&dev->dev.kobj, buf);
->  	/*
-> @@ -317,7 +309,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	pci_cfg_access_unlock(dev);
->  
->  	for (i = 0; i < initial; i++) {
-> -		rc = pci_iov_add_virtfn(dev, i, 0);
-> +		rc = pci_iov_add_virtfn(dev, i);
->  		if (rc)
->  			goto failed;
->  	}
-> @@ -329,7 +321,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  
->  failed:
->  	while (i--)
-> -		pci_iov_remove_virtfn(dev, i, 0);
-> +		pci_iov_remove_virtfn(dev, i);
->  
->  	pcibios_sriov_disable(dev);
->  err_pcibios:
-> @@ -355,7 +347,7 @@ static void sriov_disable(struct pci_dev *dev)
->  		return;
->  
->  	for (i = 0; i < iov->num_VFs; i++)
-> -		pci_iov_remove_virtfn(dev, i, 0);
-> +		pci_iov_remove_virtfn(dev, i);
->  
->  	pcibios_sriov_disable(dev);
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index f958d07..4acf321 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1903,8 +1903,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
->  
->  int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
->  void pci_disable_sriov(struct pci_dev *dev);
-> -int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset);
-> -void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset);
-> +int pci_iov_add_virtfn(struct pci_dev *dev, int id);
-> +void pci_iov_remove_virtfn(struct pci_dev *dev, int id);
->  int pci_num_vf(struct pci_dev *dev);
->  int pci_vfs_assigned(struct pci_dev *dev);
->  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
-> @@ -1921,12 +1921,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
->  }
->  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
->  { return -ENODEV; }
-> -static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
-> +static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id)
->  {
->  	return -ENOSYS;
->  }
->  static inline void pci_iov_remove_virtfn(struct pci_dev *dev,
-> -					 int id, int reset) { }
-> +					 int id) { }
->  static inline void pci_disable_sriov(struct pci_dev *dev) { }
->  static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
->  static inline int pci_vfs_assigned(struct pci_dev *dev)
-> -- 
-> 2.10.0.1.g70cd14e
+> Best regards,
+> Sascha
 > 
+> Signed-off-by:  Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig index c32a77fc8b03..675d79c52709 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -42,13 +42,12 @@ config PCI_DEBUG
+>  config PCI_REALLOC_ENABLE_AUTO
+>  	bool "Enable PCI resource re-allocation detection"
+>  	depends on PCI
+> +	select PCI_IOV
+>  	help
+>  	  Say Y here if you want the PCI core to detect if PCI resource
+>  	  re-allocation needs to be enabled. You can always use pci=realloc=on
+> -          or pci=realloc=off to override it.  Note this feature is a no-op
+> -          unless PCI_IOV support is also enabled; in that case it will
+> -          automatically re-allocate PCI resources if SR-IOV BARs have not
+> -          been allocated by the BIOS.
+> +	  or pci=realloc=off to override it.  It will automatically re-allocate
+> +	  PCI resources if SR-IOV BARs have not been allocated by the BIOS.
+>  
+>  	  When in doubt, say N.
+> 
+> 
+> 
+> 
+> > On Fri, 15 Sep 2017 at 01:34PM +0200, Sascha El-Sharkawy wrote
+> > 
+> > Dear Bjorn,
+> > 
+> > Thank you for your help. Blow you'll find the inline patch to ensure the
+> > correct Kconfig configuration when PCI_REALLOC_ENABLE_AUTO is selected.
+> > 
+> > Best regards,
+> > Sascha El-Sharkawy
+> > 
+> > Signed-off-by:  Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig index c32a77fc8b03..675d79c52709 100644
+> > --- a/drivers/pci/Kconfig
+> > +++ b/drivers/pci/Kconfig
+> > @@ -42,13 +42,12 @@ config PCI_DEBUG
+> >  config PCI_REALLOC_ENABLE_AUTO
+> >  	bool "Enable PCI resource re-allocation detection"
+> >  	depends on PCI
+> > +	select PCI_IOV
+> >  	help
+> >  	  Say Y here if you want the PCI core to detect if PCI resource
+> >  	  re-allocation needs to be enabled. You can always use
+> > pci=realloc=on
+> > -          or pci=realloc=off to override it.  Note this feature is a no-op
+> > -          unless PCI_IOV support is also enabled; in that case it will
+> > -          automatically re-allocate PCI resources if SR-IOV BARs have not
+> > -          been allocated by the BIOS.
+> > +	  or pci=realloc=off to override it.  It will automatically re-allocate
+> > +	  PCI resources if SR-IOV BARs have not been allocated by the BIOS.
+> > 
+> >  	  When in doubt, say N.
+> > -- -----------------------------------------------------------------------
+> > Sascha El-Sharkawy, MSc
+> > University of Hildesheim                    Tel.: +49 (0) 5121 / 883-40336 Institute of
+> > Computer Science               Fax:  +49 (0) 5121 / 883-40337
+> > Universitätsplatz 1                           elscha@sse.uni-hildesheim.de
+> > D-31141 Hildesheim, Germany               http://www.sse.uni-hildesheim.de
+> > 
+> > 
+> > > On Thu, 14 Sep 2017 10:01:17 +0200, Bjorn Helgaas wrote:
+> > >
+> > > Hi Sascha,
+> > >
+> > > On Wed, Aug 23, 2017 at 08:22:38AM +0200, Sascha El-Sharkawy wrote:
+> > > > We detected that the selection of "PCI resource re-allocation detection"
+> > > > (CONFIG_PCI_REALLOC_ENABLE_AUTO) is ignored in some situations.
+> > This
+> > > > can happen as the related functionality (drivers/pci/setup-bus.c,
+> > > > lines 1702
+> > > > - 1738) depends on CONFIG_PCI_REALLOC_ENABLE_AUTO and
+> > > CONFIG_PCI_IOV,
+> > > > while in Kconfig (drivers/pci/Kconfig, lines 42 - 53) this
+> > > > functionality is only controlled by CONFIG_PCI_REALLOC_ENABLE_AUTO.
+> > > >
+> > > > The dependency on CONFIG_PCI_IOV is only mentioned in the comment
+> > > of
+> > > > CONFIG_PCI_REALLOC_ENABLE_AUTO, but not checked by Kconfig. As
+> > > > CONFIG_PCI_IOV is selected by many other configuration options, we
+> > > > expect the failure to happen in very few configurations only, which
+> > > > makes it even harder to detect and fix. However, there exist
+> > > > configurations that will still be faulty.  The suggested fix ensures
+> > > > that the re-allocation is always working as specified through an
+> > > > automated selection of CONFIG_PCI_IOV if
+> > > CONFIG_PCI_REALLOC_ENABLE_AUTO is selected.
+> > >
+> > > I'm sorry that I missed this patch.  I normally work from patchwork
+> > > (https://patchwork.ozlabs.org/project/linux-pci/list/), and it
+> > > apparently doesn't pick up patches that are attached (or maybe it just
+> > > misses gzipped ones).
+> > >
+> > > Can you please repost this as plain-text email with the patch included
+> > > inline, with a changelog and Signed-off-by?  Then patchwork should
+> > > pick it up and I won't forget about it.
+> > >
+> > > For details about Signed-off-by, etc, see
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tre
+> > > e/Docu mentation/process/submitting-patches.rst
+> > >
+> > > Bjorn
