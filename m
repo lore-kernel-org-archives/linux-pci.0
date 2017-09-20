@@ -1,58 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 20 Sep 2017 10:14:59 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Joerg Roedel <jroedel@suse.de>, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Add dummy for pci_acs_enabled() if CONFIG_PCI=n to
- fix iommmu build
-Message-ID: <20170920101459.3a6735ad@w520.home>
-In-Reply-To: <1505132955-9517-1-git-send-email-geert@linux-m68k.org>
-References: <1505132955-9517-1-git-send-email-geert@linux-m68k.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [v4,0/3] Workaround for bus/slot reset on Cavium cn8xxx root ports
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
+ Jan Glauber <jglauber@cavium.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
+ linux-arm-kernel@lists.infradead.org
+References: <20170908081033.3025-1-jglauber@cavium.com>
+ <20170912094049.GA14111@localhost.localdomain>
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <f90f2900-4008-5195-f16d-54ccdc1edb37@redhat.com>
+Date: Wed, 20 Sep 2017 13:50:41 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170912094049.GA14111@localhost.localdomain>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Robert Richter <robert.richter@cavium.com>, david.daney@cavium.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 11 Sep 2017 14:29:15 +0200
-Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+On 09/12/2017 05:40 AM, Vadim Lomovtsev wrote:
 
-> If CONFIG_PCI=n, and gcc (e.g. 4.1.2) decides not to inline
-> get_pci_function_alias_group(), the build fails with:
-> 
->     drivers/iommu/iommu.o: In function `get_pci_function_alias_group':
->     iommu.c:(.text+0xfdc): undefined reference to `pci_acs_enabled'
-> 
-> Due to the various dummies for PCI calls in the CONFIG_PCI=n case,
-> pci_acs_enabled() isn't actually ever called, but not all versions of
-> gcc are smart enough to realize that.
-> 
-> While explicitly marking get_pci_function_alias_group() inline would fix
-> the build, this would inflate the code for the CONFIG_PCI=y case, as
-> get_pci_function_alias_group() is a not-so-small function called from
-> two places.
-> 
-> Hence fix the issue by introducing a dummy for pci_acs_enabled()
-> instead.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> ---
->  include/linux/pci.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index f68c58a93dd045b9..f4f8ee5a7362e982 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1685,6 +1685,8 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
->  
->  #define dev_is_pci(d) (false)
->  #define dev_is_pf(d) (false)
-> +static inline bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
-> +{ return false; }
->  #endif /* CONFIG_PCI */
->  
->  /* Include architecture-dependent settings and functions */
+> Are there any updates on this ?
+> Comments/objections/acks/nacks ?
 
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+Any more comments?
+
+Jon.
+
+> On Fri, Sep 08, 2017 at 10:10:30AM +0200, Jan Glauber wrote:
+>> Using vfio-pci on a combination of cn8xxx and some PCI devices results in
+>> a kernel panic. This is triggered by issuing a bus or a slot reset
+>> on the PCI device.
+>>
+>> With this series both checks indicate that the reset is not possible
+>> preventing the kernel panic.
+>>
+>> David Daney (2):
+>>   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
+>>   PCI: Avoid bus reset for Cavium cn8xxx root ports
+>>
+>> Jan Glauber (1):
+>>   PCI: Avoid slot reset if bus reset is not possible
+>>
+>>  drivers/pci/pci.c    | 8 ++++++++
+>>  drivers/pci/quirks.c | 8 ++++++++
+>>  2 files changed, 16 insertions(+)
+
+
+-- 
+Computer Architect | Sent from my Fedora powered laptop
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
