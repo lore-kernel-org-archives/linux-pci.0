@@ -1,47 +1,119 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <bhelgaas@google.com>, <roy.zang@nxp.com>,
- <mingkai.hu@nxp.com>, <minghuan.lian@nxp.com>
-Subject: [PATCH 0/2] PCI: layerscape: add fixes for layerscape-pcie errata
-Date: Fri, 22 Sep 2017 15:25:20 +0800
-Message-ID: <20170922072522.36306-1-Zhiqiang.Hou@nxp.com>
+Return-Path: <SRS0=Gr4L=AV=axis.com=niklas.cassel@kernel.org>
+Return-Path: <SRS0=Gr4L=AV=axis.com=niklas.cassel@kernel.org>
+Subject: Re: Re: [PATCH] PCI: endpoint: use correct "end of test" interrupt
+To: Bjorn Helgaas <helgaas@kernel.org>, John Keeping <john@metanate.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+References: <20170906135524.12548-1-john@metanate.com>
+ <20170919192546.GC22312@bhelgaas-glaptop.roam.corp.google.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <4ee1e759-ab9b-fd84-3e1f-2ceff782a6fc@axis.com>
+Date: Wed, 20 Sep 2017 16:21:44 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170919192546.GC22312@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On 09/19/2017 09:25 PM, Bjorn Helgaas wrote:
+> On Wed, Sep 06, 2017 at 02:55:24PM +0100, John Keeping wrote:
+>> pci_epf_test_raise_irq() reads the interrupt to use for the response
+>> from reg->command, but this has been cleared at the beginning of the
+>> command handler so the value is always zero at this point.
+>>
+>> Instead, extract the interrupt index before handling the command and
+>> then pass the requested interrupt into pci_epf_test_raise_irq().  This
+>> allows us to remove the specific code to extract the interrupt for
+>> COMMAND_RAISE_MSI_IRQ since it is now handled in common code.
+>>
+>> Signed-off-by: John Keeping <john@metanate.com>
+> 
+> Applied with Kishon's ack to pci/endpoint for v4.15, thanks!
 
-The [1/2] is to fix layerscape PCIe MSI/MSI-X capability errata.
-The [2/2] is to change the default AXI system error response behavior
-for PCI Express outbound non-posted requests.
+Hello PCI hackers!
 
-Hou Zhiqiang (1):
-  PCI: Disable MSI for Freescale PCIe RC mode
+I actually think that this patch should be applied to v4.14,
+since it actually fixes a regression introduced by commit
+3ecf3232c54c ("PCI: endpoint: Do not reset *command* inadvertently")
+which is included in v4.14-rc1.
 
-Minghuan Lian (1):
-  pci/layerscape: change the default error response behavior
+It would have been nice if this patch actually had a fixes-tag.
 
- drivers/pci/dwc/pci-layerscape.c | 25 +++++++++++++++++++++++++
- drivers/pci/quirks.c             |  8 ++++++++
- 2 files changed, 33 insertions(+)
+(I cannot do any read/write/copy tests if I include 3ecf3232c54c,
+but if I include 3ecf3232c54c + this patch, all tests work again.)
 
--- 
-2.14.1
+Regards,
+Niklas
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+>> ---
+>>  drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++-------
+>>  1 file changed, 6 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+>> index 4ddc6e8f9fe7..f9308c2f22e6 100644
+>> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+>> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+>> @@ -251,9 +251,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+>>  	return ret;
+>>  }
+>>  
+>> -static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
+>> +static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
+>>  {
+>> -	u8 irq;
+>>  	u8 msi_count;
+>>  	struct pci_epf *epf = epf_test->epf;
+>>  	struct pci_epc *epc = epf->epc;
+>> @@ -262,7 +261,6 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
+>>  
+>>  	reg->status |= STATUS_IRQ_RAISED;
+>>  	msi_count = pci_epc_get_msi(epc);
+>> -	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+>>  	if (irq > msi_count || msi_count <= 0)
+>>  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
+>>  	else
+>> @@ -289,6 +287,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>>  	reg->command = 0;
+>>  	reg->status = 0;
+>>  
+>> +	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+>> +
+>>  	if (command & COMMAND_RAISE_LEGACY_IRQ) {
+>>  		reg->status = STATUS_IRQ_RAISED;
+>>  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
+>> @@ -301,7 +301,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>>  			reg->status |= STATUS_WRITE_FAIL;
+>>  		else
+>>  			reg->status |= STATUS_WRITE_SUCCESS;
+>> -		pci_epf_test_raise_irq(epf_test);
+>> +		pci_epf_test_raise_irq(epf_test, irq);
+>>  		goto reset_handler;
+>>  	}
+>>  
+>> @@ -311,7 +311,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>>  			reg->status |= STATUS_READ_SUCCESS;
+>>  		else
+>>  			reg->status |= STATUS_READ_FAIL;
+>> -		pci_epf_test_raise_irq(epf_test);
+>> +		pci_epf_test_raise_irq(epf_test, irq);
+>>  		goto reset_handler;
+>>  	}
+>>  
+>> @@ -321,13 +321,12 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+>>  			reg->status |= STATUS_COPY_SUCCESS;
+>>  		else
+>>  			reg->status |= STATUS_COPY_FAIL;
+>> -		pci_epf_test_raise_irq(epf_test);
+>> +		pci_epf_test_raise_irq(epf_test, irq);
+>>  		goto reset_handler;
+>>  	}
+>>  
+>>  	if (command & COMMAND_RAISE_MSI_IRQ) {
+>>  		msi_count = pci_epc_get_msi(epc);
+>> -		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+>>  		if (irq > msi_count || msi_count <= 0)
+>>  			goto reset_handler;
+>>  		reg->status = STATUS_IRQ_RAISED;
+>> -- 
+>> 2.14.1
+>>
