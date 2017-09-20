@@ -1,46 +1,38 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 21 Sep 2017 18:30:33 -0500
-From: Rob Herring <robh@kernel.org>
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Subject: Re: [PATCH 1/5] irqchip/ls-scfg-msi: add LS1012a MSI support
-Message-ID: <20170921233033.zy7xt7hdfxvhjg7o@rob-hp-laptop>
-References: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
- <20170919092658.22482-2-Zhiqiang.Hou@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from messagesink.samelson.uni-hildesheim.de ([147.172.172.66]:58918
+        "EHLO messagesink.samelson.uni-hildesheim.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751635AbdITGpA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Sep 2017 02:45:00 -0400
+From: Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Wed, 20 Sep 2017 08:44:20 +0200
+Subject: [PATCH] PCI: Avoid non working configurations for
+ PCI_REALLOC_ENABLE_AUTO
+Message-ID: <F6127EC53C695C46907CD6EE43F346235291129068@messagesink.samelson.uni-hildesheim.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170919092658.22482-2-Zhiqiang.Hou@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, roy.zang@nxp.com,
- marc.zyngier@arm.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Minghuan.Lian@nxp.com, Mingkai.Hu@nxp.com, bhelgaas@google.com,
- shawnguo@kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 19, 2017 at 05:26:54PM +0800, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> The ls1012a implement only 1 msi controller, and it is the same as
-> ls1043a.
-> 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> ---
->  .../devicetree/bindings/interrupt-controller/fsl,ls-scfg-msi.txt         | 1 +
->  drivers/irqchip/irq-ls-scfg-msi.c                                        | 1 +
->  2 files changed, 2 insertions(+)
-
-Acked-by: Rob Herring <robh@kernel.org>
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+RW5zdXJlIG9ubHkgdmFsaWQgS2NvbmZpZyBjb25maWd1cmF0aW9ucyBmb3IgUENJX1JFQUxMT0Nf
+RU5BQkxFX0FVVE8uIFRoaXMNCmlzIGRvbmUgYnkgc2VsZWN0aW5nIFBDSV9JT1YsIHdoaWNoIGlz
+IHJlcXVpcmVkIGJ5IFBDSV9SRUFMTE9DX0VOQUJMRV9BVVRPDQp0byB3b3JrLg0KDQpTaWduZWQt
+b2ZmLWJ5OiAgU2FzY2hhIEVsLVNoYXJrYXd5IDxlbHNjaGFAc3NlLnVuaS1oaWxkZXNoZWltLmRl
+Pg0KLS0tDQogZHJpdmVycy9wY2kvS2NvbmZpZyB8ICAgIDggKysrKy0tLS0NCiAxIGZpbGUgY2hh
+bmdlZCwgNCBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9wY2kvS2NvbmZpZyBiL2RyaXZlcnMvcGNpL0tjb25maWcgaW5kZXggYzMyYTc3ZmM4YjAz
+Li42NzVkNzljNTI3MDkgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9LY29uZmlnDQorKysgYi9k
+cml2ZXJzL3BjaS9LY29uZmlnDQpAQCAtNDIsMTMgKzQyLDEzIEBAIGNvbmZpZyBQQ0lfREVCVUcN
+CiBjb25maWcgUENJX1JFQUxMT0NfRU5BQkxFX0FVVE8NCiAJYm9vbCAiRW5hYmxlIFBDSSByZXNv
+dXJjZSByZS1hbGxvY2F0aW9uIGRldGVjdGlvbiINCiAJZGVwZW5kcyBvbiBQQ0kNCisJZGVwZW5k
+cyBvbiBQQ0lfSU9WDQogCWhlbHANCiAJICBTYXkgWSBoZXJlIGlmIHlvdSB3YW50IHRoZSBQQ0kg
+Y29yZSB0byBkZXRlY3QgaWYgUENJIHJlc291cmNlDQogCSAgcmUtYWxsb2NhdGlvbiBuZWVkcyB0
+byBiZSBlbmFibGVkLiBZb3UgY2FuIGFsd2F5cyB1c2UgcGNpPXJlYWxsb2M9b24NCi0gICAgICAg
+ICAgb3IgcGNpPXJlYWxsb2M9b2ZmIHRvIG92ZXJyaWRlIGl0LiAgTm90ZSB0aGlzIGZlYXR1cmUg
+aXMgYSBuby1vcA0KLSAgICAgICAgICB1bmxlc3MgUENJX0lPViBzdXBwb3J0IGlzIGFsc28gZW5h
+YmxlZDsgaW4gdGhhdCBjYXNlIGl0IHdpbGwNCi0gICAgICAgICAgYXV0b21hdGljYWxseSByZS1h
+bGxvY2F0ZSBQQ0kgcmVzb3VyY2VzIGlmIFNSLUlPViBCQVJzIGhhdmUgbm90DQotICAgICAgICAg
+IGJlZW4gYWxsb2NhdGVkIGJ5IHRoZSBCSU9TLg0KKwkgIG9yIHBjaT1yZWFsbG9jPW9mZiB0byBv
+dmVycmlkZSBpdC4gIEl0IHdpbGwgYXV0b21hdGljYWxseQ0KKwkgIHJlLWFsbG9jYXRlIFBDSSBy
+ZXNvdXJjZXMgaWYgU1ItSU9WIEJBUnMgaGF2ZSBub3QgYmVlbiBhbGxvY2F0ZWQgYnkNCisJICB0
+aGUgQklPUy4NCiANCiAJICBXaGVuIGluIGRvdWJ0LCBzYXkgTi4NCg0K
