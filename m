@@ -1,62 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:7129 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751341AbdITGqR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Sep 2017 02:46:17 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 4/4] arm64: tegra: Enable PCIe on Jetson TX2
-Date: Wed, 20 Sep 2017 12:12:44 +0530
-Message-ID: <1505889764-19397-5-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1505889764-19397-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1505889764-19397-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] vfio/pci: Virtualize Maximum Payload Size
+To: Auger Eric <eric.auger@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <20170919164952.13200.78849.stgit@gimli.home>
+ <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
+ <20170919142024.05723289@t450s.home>
+ <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <a609bc8b-8c5b-0828-d175-50985d688fe3@codeaurora.org>
+Date: Wed, 20 Sep 2017 09:01:09 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable x4 PCIe slot on Jetson TX2.
+On 9/20/2017 3:59 AM, Auger Eric wrote:
+>> My impression is that MRRS is predominantly device and driver
+>> dependent, not topology dependent.  A device can send a read request
+>> with a size larger than MPS, which implies that the device supplying
+>> the read data would split it into multiple TLPs based on MPS.
+> I read that too on the net. However in in 6.3.4.1. (3.0. Nov 10), Rules
+> for SW Configuration it is written:
+> "Software must set Max_Read_Request_Size of an isochronous-configured
+> device with a value that does not exceed the Max_Payload_Size set for
+> the device."
+> 
+> But on the the other hand some drivers are setting the MMRS directly
+> without further checking the MPS?
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
- arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+We discussed this on LPC. MRRS and MPS are two independent concepts and
+are not related to each other under normal circumstances. 
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi b/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi
-index cf84d7046ad5..a4d96b2a23b4 100644
---- a/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi
-@@ -378,4 +378,28 @@
- 			vin-supply = <&vdd_1v8>;
- 		};
- 	};
-+
-+	pcie@10003000 {
-+		status = "okay";
-+
-+		dvdd-pex-supply = <&vdd_pex>;
-+		hvdd-pex-pll-supply = <&vdd_1v8>;
-+		hvdd-pex-supply = <&vdd_1v8>;
-+		vddio-pexctl-aud-supply = <&vdd_1v8>;
-+
-+		pci@1,0 {
-+			nvidia,num-lanes = <4>;
-+			status = "okay";
-+		};
-+
-+		pci@2,0 {
-+			nvidia,num-lanes = <0>;
-+			status = "disabled";
-+		};
-+
-+		pci@3,0 {
-+			nvidia,num-lanes = <1>;
-+			status = "disabled";
-+		};
-+	};
- };
+The only valid criteria is that MRRS needs to be a multiple of MPS.
+
+https://linuxplumbersconf.org/2017/ocw//system/presentations/4732/original/crs.pdf
+
+Because completions are required to be a minimum of MPS size. If MRRS > MPS,
+read response is sent as multiple completions.
+
+The only reason you want to match MRRS==MPS is that you don't want a single
+device to hog system resources. You can have MRRS 4k and MPS 128 bytes. Completions
+come in as 128 x N packets on the PCI bus. 
+
+If you are sharing the same PCI bus with some other device, switch; you are effectively
+stalling other devices. That's why, isochronous devices are requesting small MRRS.
+
+An Isochronous device is an exception not norm.
+
 -- 
-2.1.4
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
