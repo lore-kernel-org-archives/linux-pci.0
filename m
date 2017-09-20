@@ -1,102 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0080.outbound.protection.outlook.com ([104.47.41.80]:23808
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750954AbdI2MWn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Sep 2017 08:22:43 -0400
-Date: Fri, 29 Sep 2017 05:22:38 -0700
-From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Wilson.Snyder@cavium.com, alex.williamson@redhat.com
-Subject: Re: [PATCH v6] PCI: quirks: update Cavium ThunderX ACS quirk
- implementation
-Message-ID: <20170929122238.GA527@localhost.localdomain>
-References: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <20170927141854.2ff65c73@w520.home>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 20 Sep 2017 12:09:12 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Subject: Re: [v4,0/3] Workaround for bus/slot reset on Cavium cn8xxx root ports
+Message-ID: <20170920120912.7544420d@t450s.home>
+In-Reply-To: <20170912094049.GA14111@localhost.localdomain>
+References: <20170908081033.3025-1-jglauber@cavium.com>
+ <20170912094049.GA14111@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170927141854.2ff65c73@w520.home>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
+ Jan Glauber <jglauber@cavium.com>, linux-kernel@vger.kernel.org,
+ Robert Richter <robert.richter@cavium.com>, Jon Masters <jcm@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Tue, 12 Sep 2017 02:40:49 -0700
+Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
 
-On Wed, Sep 27, 2017 at 02:18:54PM -0600, Alex Williamson wrote:
-> On Wed, 27 Sep 2017 11:20:39 -0700
-> Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+> Hi all,
 > 
-> > This commit makes Cavium PCI ACS quirk applicable only to Cavium
-> > ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
-> > in terms of no ACS support advertisement. However, the RTL internally
-> > implements similar protection as if ACS had completion/request redirection,
-> > upstream forwarding and validation features enabled.
-> > 
-> > Current quirk implementation doesn't take into account PCIERCs which
-> > also needs to be quirked. So the pci device id check mask is updated
-> > and check of device ID moved into separate function.
-> > 
-> > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-> > ---
-> > 	v5 -> v6: comment typo fix: change 0xa00 to 0xa000
+> Are there any updates on this ?
+> Comments/objections/acks/nacks ?
 > 
-> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
->
-
-If there is no any objections, could you please take this patch ?
-
-WBR,
-Vadim
-
->  
-> >  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
-> >  1 file changed, 21 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index a4d3361..ed6c76d 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
-> >  #endif
-> >  }
-> >  
-> > -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> > +/*
-> > + * The Cavium downstream ports doesn't advertise their ACS capability registers.
-> > + * However, the RTL internally implements similar protection as if
-> > + * ACS had completion redirection, forwarding and validation features enabled.
-> > + * So by this flags we're asserting that the hardware implements and
-> > + * enables equivalent ACS functionality for these flags.
-> > + */
-> > +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
-> > +
-> > +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
-> >  {
-> >  	/*
-> > -	 * Cavium devices matching this quirk do not perform peer-to-peer
-> > -	 * with other functions, allowing masking out these bits as if they
-> > -	 * were unimplemented in the ACS capability.
-> > +	 * Effectively selects all downstream ports for whole ThunderX 1 family
-> > +	 * by 0xa000 mask (which represents 8 SoCs), while the lower bits of device ID
-> > +	 * are used to indicate which subdevice is used within the SoC.
-> >  	 */
-> > -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> > -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> > +	return (pci_is_pcie(dev) &&
-> > +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
-> > +		((dev->device & 0xf800) == 0xa000));
-> > +}
-> >  
-> > -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
-> > +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> > +{
-> > +	if (!pci_quirk_cavium_acs_match(dev))
-> >  		return -ENOTTY;
-> >  
-> > -	return acs_flags ? 0 : 1;
-> > +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
-> >  }
-> >  
-> >  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+> WBBR,
+> Vadim
 > 
+> On Fri, Sep 08, 2017 at 10:10:30AM +0200, Jan Glauber wrote:
+> > Using vfio-pci on a combination of cn8xxx and some PCI devices results in
+> > a kernel panic. This is triggered by issuing a bus or a slot reset
+> > on the PCI device.
+> > 
+> > With this series both checks indicate that the reset is not possible
+> > preventing the kernel panic.
+> > 
+> > David Daney (2):
+> >   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
+> >   PCI: Avoid bus reset for Cavium cn8xxx root ports
+> > 
+> > Jan Glauber (1):
+> >   PCI: Avoid slot reset if bus reset is not possible
+> > 
+> >  drivers/pci/pci.c    | 8 ++++++++
+> >  drivers/pci/quirks.c | 8 ++++++++
+> >  2 files changed, 16 insertions(+)  
+
+
+Looks ok to me, for series:
+
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+
+I am curious why we're happy targeting this quirk at a single device ID
+while at the same time trying to expand the ACS quirk to a notable
+fraction of the Cavium PCI device ID address space.  Thanks,
+
+Alex
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
