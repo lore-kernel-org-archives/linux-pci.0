@@ -1,33 +1,132 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v7] PCI: Workaround wrong flags completions for IDT switch
-To: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Subject: Re: [PATCH] vfio/pci: Virtualize Maximum Payload Size
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <20170919164952.13200.78849.stgit@gimli.home>
+ <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
+ <20170919142024.05723289@t450s.home>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <59C02719.5050103@oracle.com>
- <9741d204-1dd6-2cc2-c133-2ef49c8a404b@codeaurora.org>
- <59CAB001.10207@oracle.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <7084085b-89e7-80fa-d10b-06f121eb57be@codeaurora.org>
-Date: Tue, 26 Sep 2017 16:03:13 -0400
+        Sinan Kaya <okaya@codeaurora.org>
+From: Auger Eric <eric.auger@redhat.com>
+Message-ID: <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
+Date: Wed, 20 Sep 2017 09:59:31 +0200
 MIME-Version: 1.0
-In-Reply-To: <59CAB001.10207@oracle.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170919142024.05723289@t450s.home>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/26/2017 3:52 PM, James Puthukattukaran wrote:
->> I think you want to do the part above as part of a quirk that runs before
->> the probe.
+Hi Alex,
+
+On 19/09/2017 22:20, Alex Williamson wrote:
+> [cc +linux-pci, Sinan]
 > 
-> I don't think there's a way to run this early enough?
+> On Tue, 19 Sep 2017 19:50:37 +0200
+> Auger Eric <eric.auger@redhat.com> wrote:
+> 
+>> Hi Alex,
+>>
+>> On 19/09/2017 18:58, Alex Williamson wrote:
+>>> With virtual PCI-Express chipsets, we now see userspace/guest drivers
+>>> trying to match the physical MPS setting to a virtual downstream port.
+>>> Of course a lone physical device surrounded by virtual interconnects
+>>> cannot make a correct decision for a proper MPS setting.  Instead,
+>>> let's virtualize the MPS control register so that writes through to
+>>> hardware are disallowed.  Userspace drivers like QEMU assume they can
+>>> write anything to the device and we'll filter out anything dangerous.
+>>> Since mismatched MPS can lead to AER and other faults, let's add it
+>>> to the kernel side rather than relying on userspace virtualization to
+>>> handle it.
+>>>
+>>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+>>> ---
+>>>
+>>> Do we have any reason to suspect that a userspace driver has any
+>>> dependencies on the physical MPS setting or is this only tuning the
+>>> protocol layer and it's transparent to the driver?  Note that per the
+>>> PCI spec, a device supporting only 128B MPS can hardwire the control
+>>> register to 000b, but it doesn't seem PCIe compliant to hardwire it to
+>>> any given value, such as would be the appearance if we exposed this as
+>>> a read-only register rather than virtualizing it.  QEMU would then be
+>>> responsible for virtualizing it, which makes coordinating the upgrade
+>>> troublesome.
+>>>
+>>>  drivers/vfio/pci/vfio_pci_config.c |    6 ++++--
+>>>  1 file changed, 4 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+>>> index 5628fe114347..91335e6de88a 100644
+>>> --- a/drivers/vfio/pci/vfio_pci_config.c
+>>> +++ b/drivers/vfio/pci/vfio_pci_config.c
+>>> @@ -849,11 +849,13 @@ static int __init init_pci_cap_exp_perm(struct perm_bits *perm)
+>>>  
+>>>  	/*
+>>>  	 * Allow writes to device control fields, except devctl_phantom,
+>>> -	 * which could confuse IOMMU, and the ARI bit in devctl2, which
+>>> +	 * which could confuse IOMMU, MPS, which can break communication
+>>> +	 * with other physical devices, and the ARI bit in devctl2, which
+>>>  	 * is set at probe time.  FLR gets virtualized via our writefn.
+>>>  	 */
+>>>  	p_setw(perm, PCI_EXP_DEVCTL,
+>>> -	       PCI_EXP_DEVCTL_BCR_FLR, ~PCI_EXP_DEVCTL_PHANTOM);
+>>> +	       PCI_EXP_DEVCTL_BCR_FLR | PCI_EXP_DEVCTL_PAYLOAD,
+>>> +	       ~PCI_EXP_DEVCTL_PHANTOM);
+>>>  	p_setw(perm, PCI_EXP_DEVCTL2, NO_VIRT, ~PCI_EXP_DEVCTL2_ARI);  
+>> Is it correct that the read value still will be the one written by the
+>> guest?
+> 
+> If we don't do this, the register is read-only, which is what I'm
+> suggesting in my comment above doesn't seem spec compliant.  If the
+> kernel makes it read-only, then userspace (ex. QEMU) would need to
+> virtualize it, and we get into a more complicated, two part fix.
+>  
+>> I see the MMRS can take the read MPS value in some pcie_bus_config
+>> values. So a consequence could be that the applied MMRS (which is not
+>> virtualized) is lower than what is set by host, due to a guest pcie root
+>> port MPSS for instance.
+>>
+>> So if the above is not totally wrong, shouldn't we virtualize MMRS as well?
+> 
+> I think MPSS is Maximum Payload Size Supported and MMRS... did you mean
+> MRRS (Maximum Read Request Size)?
+Yes sorry for the typo. Indeed I meant MRRS.
+> 
+> My impression is that MRRS is predominantly device and driver
+> dependent, not topology dependent.  A device can send a read request
+> with a size larger than MPS, which implies that the device supplying
+> the read data would split it into multiple TLPs based on MPS.
+I read that too on the net. However in in 6.3.4.1. (3.0. Nov 10), Rules
+for SW Configuration it is written:
+"Software must set Max_Read_Request_Size of an isochronous-configured
+device with a value that does not exceed the Max_Payload_Size set for
+the device."
 
-Bjorn?
+But on the the other hand some drivers are setting the MMRS directly
+without further checking the MPS?
+  The
+> implementation note in PCIe rev3.1 sec 7.8.4 suggests there may be QoS
+> implications of MRRS such that if MRRS>MPS, then the device requesting
+> the data may use fewer tokens for the request.  I have no idea how we
+> could infer any sort of QoS policy though and I don't see that
+> in-kernel drivers are bound to any sort of policy.
+> 
+> The pcie_write_mrrs() function also implies a protocol (which I can't
+> find a spec reference to) where it will re-try writing MRRS if the
+> value written doesn't stick (and generate a dev_warn on each
+> iteration).  Unless we want extra warnings in VMs, that suggests we
+> don't want this to be read-only.
+> 
+> So I think we need to allow MRRS writes through to hardware, but I do
+> question whether we need to fill the gap that a VM might casually write
+> MRRS to a value less than the physical MPS.  This is what we'd expect
+> today where the virtual topology has an MPS of 128B regardless of the
+> physical topology.  Do we virtualize MRRS writes such that an MRRS
+> value less the physical MPS value never reaches hardware?  Can we
+> assume that's always invalid?  Thanks,
 
-I have seen multiple quirk types in quirks.c some prefixed with EARLY and other
-LATE.
+Thanks
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Eric
+> 
+> Alex
+> 
