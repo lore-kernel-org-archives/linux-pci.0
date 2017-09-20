@@ -1,91 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:43203 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751323AbdINRf6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2017 13:35:58 -0400
-Received: by mail-io0-f178.google.com with SMTP id k101so2425348iod.0
-        for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2017 10:35:57 -0700 (PDT)
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Srinath Mannam <srinath.mannam@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
- <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
- <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
- <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
- <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
-Date: Thu, 14 Sep 2017 11:35:54 -0600
+Return-Path: <SRS0=ClcQ=AV=ti.com=j-keerthy@kernel.org>
+Return-Path: <SRS0=ClcQ=AV=ti.com=j-keerthy@kernel.org>
+Subject: Re: [PATCH v3] pci: dwc: dra7xx: Add shutdown handler to cleanly turn
+ off clocks
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1504847694-23701-1-git-send-email-j-keerthy@ti.com>
+ <20170919193016.GD22312@bhelgaas-glaptop.roam.corp.google.com>
+CC: <kishon@ti.com>, <bhelgaas@google.com>, <t-kristo@ti.com>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+From: Keerthy <j-keerthy@ti.com>
+Message-ID: <f116dc3e-7908-adba-cc17-2d4b8f2eb998@ti.com>
+Date: Wed, 20 Sep 2017 10:56:46 +0530
 MIME-Version: 1.0
-In-Reply-To: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170919193016.GD22312@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/14/2017 11:28 AM, Srinath Mannam wrote:
-> Hi Bjorn,
-> 
-> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+
+
+On Wednesday 20 September 2017 01:00 AM, Bjorn Helgaas wrote:
+> On Fri, Sep 08, 2017 at 10:44:54AM +0530, Keerthy wrote:
+>> Add shutdown handler to cleanly turn off clocks. This will help
+>> in cases of kexec where in a new kernel can boot abruptly.
 >>
->> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
->>> [+cc linux-pci]
->>>
->>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
->>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
->>>>>
->>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
->>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
->>>>>> functional changes.
->>>>>
->>>>> and pci_enable_bridge() already checks if it's already enabled, but
->>>>> still enables mastering in that case if it isn't:
->>>>>
->>>>> static void pci_enable_bridge(struct pci_dev *dev)
->>>>> {
->>>>> [...]
->>>>>         if (pci_is_enabled(dev)) {
->>>>>                 if (!dev->is_busmaster)
->>>>>                         pci_set_master(dev);
->>>>>                 return;
->>>>>         }
->>>>>
->>>>> so I guess due to the new check we end up with mastering disabled, and
->>>>> thus the firmware can't load since that's a DMA thing?
->>>>
->>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
->>>> from working on a pretty standard laptop. It'd suck to have this be in
->>>> -rc1. Seems like the trivial fix would be:
->>>>
->>>>
->>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index b0002daa50f3..ffbe11dbdd61 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->>>>                 return 0;               /* already enabled */
->>>>
->>>>         bridge = pci_upstream_bridge(dev);
->>>> -       if (bridge && !pci_is_enabled(bridge))
->>>> +       if (bridge)
-> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
-> pci_enable_bridge functoin will causes a nexted lock.
+>> Signed-off-by: Keerthy <j-keerthy@ti.com>
+>> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>
+>> Changes in v3:
+>>
+>>   * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
+>>   * Added more details to commit log.
+>>
+>> Changes in v2:
+>>
+>>   * used a local dev pointer instead of dereferencing dev at multiple places.
+>>   * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
+> 
+> You lost both these changes in v3.  I assume you'll post a v4.
 
-Took a look, and looks like you are right. That code looks like a mess,
-fwiw.
+Thanks Bjorn for catching this!
 
-I'd strongly suggest that the bad commit is reverted until a proper
-solution is found, since the simple one-liner could potentially
-introduce a deadlock with your patch applied.
+Sent v4 with the corrections.
 
--- 
-Jens Axboe
+https://patchwork.ozlabs.org/patch/816010/
+
+Regards,
+Keerthy
+
+> 
+>>  drivers/pci/dwc/pci-dra7xx.c | 14 ++++++++++++++
+>>  1 file changed, 14 insertions(+)
+>>
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index 0f9adf2..ec8f842 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -794,6 +794,19 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>>  }
+>>  #endif
+>>  
+>> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
+>> +{
+>> +	struct dra7xx_pcie *dra7xx = dev_get_drvdata(&pdev->dev);
+>> +	int ret;
+>> +
+>> +	ret = pm_runtime_put_sync(&pdev->dev);
+>> +	if (ret < 0)
+>> +		dev_dbg(&pdev->dev, "pm_runtime_put_sync failed\n");
+>> +
+>> +	pm_runtime_disable(&pdev->dev);
+>> +	dra7xx_pcie_disable_phy(dra7xx);
+>> +}
+>> +
+>>  static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+>>  	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
+>>  	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
+>> @@ -807,5 +820,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>>  		.suppress_bind_attrs = true,
+>>  		.pm	= &dra7xx_pcie_pm_ops,
+>>  	},
+>> +	.shutdown = dra7xx_pcie_shutdown,
+>>  };
+>>  builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
+>> -- 
+>> 1.9.1
+>>
