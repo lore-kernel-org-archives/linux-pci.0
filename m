@@ -1,151 +1,163 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 21 Sep 2017 16:03:13 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47630 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751697AbdIUUn2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Sep 2017 16:43:28 -0400
+Date: Thu, 21 Sep 2017 15:43:26 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v4 4/5] drivers: pci: add support for relative addressing
- in quirk tables
-Message-ID: <20170921210312.GK22312@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170920195721.7939-1-ard.biesheuvel@linaro.org>
- <20170920195721.7939-5-ard.biesheuvel@linaro.org>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>
+Subject: Re: [PATCH v1 1/3] powerpc/kernel: Split up pci_bus_add_device
+Message-ID: <20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170918192651.78404-1-bryantly@linux.vnet.ibm.com>
+ <20170918192651.78404-2-bryantly@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170920195721.7939-5-ard.biesheuvel@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Heiko Carstens <heiko.carstens@de.ibm.com>, Paul Mackerras <paulus@samba.org>,
- "H. Peter Anvin" <hpa@zytor.com>, Nicolas Pitre <nico@linaro.org>,
- Michael Ellerman <mpe@ellerman.id.au>, Ingo Molnar <mingo@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- "Serge E. Hallyn" <serge@hallyn.com>, Petr Mladek <pmladek@suse.com>,
- Kees Cook <keescook@chromium.org>, Arnd Bergmann <arnd@arndb.de>,
- Will Deacon <will.deacon@arm.com>, Steven Rostedt <rostedt@goodmis.org>,
- James Morris <james.l.morris@oracle.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
- Jessica Yu <jeyu@kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Linus Torvalds <torvalds@linux-foundation.org>,
- Thomas Garnier <thgarnie@google.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170918192651.78404-2-bryantly@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
-
-You copied LKML on some previous versions, but not this one.  Seems
-like that would be useful.
-
-Please adjust the subject line of this one so it matches the typical
-ones for this file, e.g.,
-
-  PCI: Add support for relative addressing in quirk tables
-
-On Wed, Sep 20, 2017 at 12:57:20PM -0700, Ard Biesheuvel wrote:
-> Allow the PCI quirk tables to be emitted in a way that avoids absolute
-> references to the hook functions. This reduces the size of the entries,
-> and, more importantly, makes them invariant under runtime relocation
-> (e.g., for KASLR)
+On Mon, Sep 18, 2017 at 02:26:49PM -0500, Bryant G. Ly wrote:
+> When enabling SR-IOV one might want to have their
+> own version of starting device drivers for the VFs.
+> This patch allows for SR-IOV callers to use
+> pci_bus_add_virtfn_device instead of generic
+> pci_bus_add_device.
 > 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-This really uglifies the code (and initcall_from_entry() in the other
-patch makes my head hurt), but I don't have any cleaner implementation
-ideas, and it does seem like a worthwhile space optimization.
-
+> When enabling SR-IOV in PSeries architecture the
+> dynamic VFs created within the sriov_configure sysfs call
+> will not load the device driver as firmware will load
+> the device node when the VF device is assigned to the
+> logical partition. So we needed a way to overwrite the
+> way device driver matching is done for virtual functions
+> on powervm.
+> 
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
 > ---
->  drivers/pci/quirks.c | 13 ++++++++++---
->  include/linux/pci.h  | 20 ++++++++++++++++++++
->  2 files changed, 30 insertions(+), 3 deletions(-)
+>  drivers/pci/bus.c   | 51 ++++++++++++++++++++++++++++++++++++++++++---------
+>  drivers/pci/iov.c   |  2 +-
+>  include/linux/pci.h |  3 +++
+>  3 files changed, 46 insertions(+), 10 deletions(-)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index a4d33619a7bb..82a66235d60c 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3548,9 +3548,16 @@ static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->  		     f->vendor == (u16) PCI_ANY_ID) &&
->  		    (f->device == dev->device ||
->  		     f->device == (u16) PCI_ANY_ID)) {
-> -			calltime = fixup_debug_start(dev, f->hook);
-> -			f->hook(dev);
-> -			fixup_debug_report(dev, calltime, f->hook);
-> +			void (*hook)(struct pci_dev *dev);
-> +#ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
-> +			hook = (void *)((unsigned long)&f->hook_offset +
-> +					f->hook_offset);
-> +#else
-> +			hook = f->hook;
-> +#endif
-> +			calltime = fixup_debug_start(dev, hook);
-> +			hook(dev);
-> +			fixup_debug_report(dev, calltime, hook);
->  		}
->  }
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index bc56cf19afd3..86daf62c4048 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -302,16 +302,9 @@ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
 >  
+>  void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
+>  
+> -/**
+> - * pci_bus_add_device - start driver for a single device
+> - * @dev: device to add
+> - *
+> - * This adds add sysfs entries and start device drivers
+> - */
+> -void pci_bus_add_device(struct pci_dev *dev)
+> -{
+> -	int retval;
+>  
+> +void pci_bus_add_sysfs_entries(struct pci_dev *dev)
+> +{
+>  	/*
+>  	 * Can not put in pci_device_add yet because resources
+>  	 * are not assigned yet for some devices.
+> @@ -321,6 +314,11 @@ void pci_bus_add_device(struct pci_dev *dev)
+>  	pci_create_sysfs_dev_files(dev);
+>  	pci_proc_attach_device(dev);
+>  	pci_bridge_d3_update(dev);
+> +}
+> +
+> +void pci_bus_match_device_driver(struct pci_dev *dev)
+> +{
+> +	int retval;
+>  
+>  	dev->match_driver = true;
+>  	retval = device_attach(&dev->dev);
+> @@ -333,6 +331,41 @@ void pci_bus_add_device(struct pci_dev *dev)
+>  
+>  	dev->is_added = 1;
+>  }
+> +
+> +#ifdef CONFIG_PCI_IOV
+> +void __weak pci_bus_match_virtfn_driver(struct pci_dev *dev)
+> +{
+> +	pci_bus_match_device_driver(dev);
+> +}
+> +
+> +/**
+> + * pci_bus_add_virtfn_device - start driver for a virtual function device
+> + * @dev: device to add
+> + *
+> + * This adds add sysfs entries and start device drivers for
+> + * virtual function devices
+> + *
+> + */
+> +void pci_bus_add_virtfn_device(struct pci_dev *pdev)
+> +{
+> +	pci_bus_add_sysfs_entries(pdev);
+> +	pci_bus_match_virtfn_driver(pdev);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_bus_add_virtfn_device);
+
+Is there any way we can avoid adding this new interface?  I don't
+really want a new global exported symbol just to support this highly
+platform-specific functionality.
+
+If we could figure out a way to set dev->match_driver to false instead
+of true in pci_bus_add_device(), it *looks* like that would be enough
+to accomplish what you need.  Maybe that could be done via a pcibios
+hook or a new function pointer in struct pci_host_bridge, similar to
+the swizzle_irq pointer?
+
+> +#endif
+> +
+> +/**
+> + * pci_bus_add_device - start driver for a single device
+> + * @dev: device to add
+> + *
+> + * This adds add sysfs entries and start device drivers
+> + */
+> +void pci_bus_add_device(struct pci_dev *dev)
+> +{
+> +	pci_bus_add_sysfs_entries(dev);
+> +	pci_bus_match_device_driver(dev);
+> +}
+> +
+>  EXPORT_SYMBOL_GPL(pci_bus_add_device);
+>  
+>  /**
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ac41c8be9200..16cc72545847 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -162,7 +162,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+>  
+>  	pci_device_add(virtfn, virtfn->bus);
+>  
+> -	pci_bus_add_device(virtfn);
+> +	pci_bus_add_virtfn_device(virtfn);
+>  	sprintf(buf, "virtfn%u", id);
+>  	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+>  	if (rc)
 > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index f68c58a93dd0..d7a01d7fc3a7 100644
+> index f68c58a93dd0..39f5c0b4bf23 100644
 > --- a/include/linux/pci.h
 > +++ b/include/linux/pci.h
-> @@ -1791,7 +1791,11 @@ struct pci_fixup {
->  	u16 device;		/* You can use PCI_ANY_ID here of course */
->  	u32 class;		/* You can use PCI_ANY_ID here too */
->  	unsigned int class_shift;	/* should be 0, 8, 16 */
-> +#ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
-> +	signed int hook_offset;
-> +#else
->  	void (*hook)(struct pci_dev *dev);
+> @@ -911,6 +911,9 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
+>  unsigned int pci_scan_child_bus(struct pci_bus *bus);
+>  void pci_bus_add_device(struct pci_dev *dev);
+> +#ifdef CONFIG_PCI_IOV
+> +void pci_bus_add_virtfn_device(struct pci_dev *dev);
 > +#endif
->  };
->  
->  enum pci_fixup_pass {
-> @@ -1805,12 +1809,28 @@ enum pci_fixup_pass {
->  	pci_fixup_suspend_late,	/* pci_device_suspend_late() */
->  };
->  
-> +#ifdef CONFIG_HAVE_ARCH_PREL32_RELOCATIONS
-> +#define __DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
-> +				    class_shift, hook)			\
-> +	__ADDRESSABLE(hook)						\
-> +	asm(".section "	#sec ", \"a\"				\n"	\
-> +	    ".balign	16					\n"	\
-> +	    ".short "	#vendor ", " #device "			\n"	\
-> +	    ".long "	#class ", " #class_shift "		\n"	\
-> +	    ".long "	VMLINUX_SYMBOL_STR(hook) " - .		\n"	\
-> +	    ".previous						\n");
-> +#define DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
-> +				  class_shift, hook)			\
-> +	__DECLARE_PCI_FIXUP_SECTION(sec, name, vendor, device, class,	\
-> +				  class_shift, hook)
-> +#else
->  /* Anonymous variables would be nice... */
->  #define DECLARE_PCI_FIXUP_SECTION(section, name, vendor, device, class,	\
->  				  class_shift, hook)			\
->  	static const struct pci_fixup __PASTE(__pci_fixup_##name,__LINE__) __used	\
->  	__attribute__((__section__(#section), aligned((sizeof(void *)))))    \
->  		= { vendor, device, class, class_shift, hook };
-> +#endif
->  
->  #define DECLARE_PCI_FIXUP_CLASS_EARLY(vendor, device, class,		\
->  					 class_shift, hook)		\
+>  void pci_read_bridge_bases(struct pci_bus *child);
+>  struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>  					  struct resource *res);
 > -- 
-> 2.11.0
+> 2.11.0 (Apple Git-81)
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
