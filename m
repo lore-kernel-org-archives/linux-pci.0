@@ -1,14 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 6 Sep 2017 10:55:38 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Subject: Re: [Question] PCI ACS is broken for ARM SMMU v3?
-Message-ID: <20170906095537.GA28379@red-moon>
-References: <59A81B4C.3020402@hisilicon.com> <59AD4812.3020602@hisilicon.com>
- <20170904155948.GA20601@red-moon> <59AE9CD3.1020700@hisilicon.com>
+Date: Thu, 21 Sep 2017 10:06:59 +0200
+From: Jan Glauber <jan.glauber@caviumnetworks.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [v4,0/3] Workaround for bus/slot reset on Cavium cn8xxx root ports
+Message-ID: <20170921080659.GA12818@hc>
+References: <20170908081033.3025-1-jglauber@cavium.com>
+ <20170912094049.GA14111@localhost.localdomain>
+ <20170920120912.7544420d@t450s.home>
 MIME-Version: 1.0
-In-Reply-To: <59AE9CD3.1020700@hisilicon.com>
+In-Reply-To: <20170920120912.7544420d@t450s.home>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,65 +17,63 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- Will Deacon <will.deacon@arm.com>, linux-arm-kernel@lists.infradead.org
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
+ linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
+ Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 05, 2017 at 08:47:15PM +0800, Zhou Wang wrote:
-> On 2017/9/4 23:59, Lorenzo Pieralisi wrote:
-> > On Mon, Sep 04, 2017 at 08:33:22PM +0800, Zhou Wang wrote:
-> >> +to: Lorenzo
-> >>
-> >> On 2017/8/31 22:21, Zhou Wang wrote:
-> >>> Hi Will and Alex,
-> >>>
-> >>> pci_request_acs is called in drivers/iommu/arm-smmu-v3.c to set pci_acs_enable.
-> >>>
-> >>> PCI subsystem tries to enable ACS as below:
-> >>>
-> >>> 	pci_device_add
-> >>> 		--> pci_init_capabilities
-> >>> 			--> pci_enable_acs
-> >>>
-> >>> in ACPI PCI driver. However, ACPI PCI driver will be called before SMMU v3 driver,
-> >>> which will lead pci_enable_acs to return directly as pci_acs_enable is not set
-> >>> before SMMU v3 driver loading.
-> >>>
-> >>> I think this is a bug, what do you think about this problem?
+On Wed, Sep 20, 2017 at 12:09:12PM -0600, Alex Williamson wrote:
+> On Tue, 12 Sep 2017 02:40:49 -0700
+> Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+> 
+> > Hi all,
 > > 
-> > I think that it is a bug that affects OF/ACPI alike. One way of solving
+> > Are there any updates on this ?
+> > Comments/objections/acks/nacks ?
+> > 
+> > WBBR,
+> > Vadim
+> > 
+> > On Fri, Sep 08, 2017 at 10:10:30AM +0200, Jan Glauber wrote:
+> > > Using vfio-pci on a combination of cn8xxx and some PCI devices results in
+> > > a kernel panic. This is triggered by issuing a bus or a slot reset
+> > > on the PCI device.
+> > > 
+> > > With this series both checks indicate that the reset is not possible
+> > > preventing the kernel panic.
+> > > 
+> > > David Daney (2):
+> > >   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
+> > >   PCI: Avoid bus reset for Cavium cn8xxx root ports
+> > > 
+> > > Jan Glauber (1):
+> > >   PCI: Avoid slot reset if bus reset is not possible
+> > > 
+> > >  drivers/pci/pci.c    | 8 ++++++++
+> > >  drivers/pci/quirks.c | 8 ++++++++
+> > >  2 files changed, 16 insertions(+)  
 > 
-> Yes, DT also has this problem.
 > 
-> > it is requesting ACS at IORT init following appropriate checks (ie
-> > mappings PCI->IOMMU - that would not solve the OF path though). I can
-> > put together a quick fix, the overall problem needs some thinking
-> > though.
+> Looks ok to me, for series:
 > 
-> I am not familiar with IORT init, but can we do it like:
-> 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index a3215ee..a6f1a21 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -1131,6 +1131,7 @@ static void __init iort_init_platform_devices(void)
-> 				acpi_free_fwnode_static(fwnode);
-> 				return;
-> 			}
-> + 			pci_request_acs();
-> 		}
-> 
-> 		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
-> 
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 
-Yep, will send something similar shortly.
+Thanks for the review. And also for being patient with my iterations.
 
-Thanks,
-Lorenzo
+> I am curious why we're happy targeting this quirk at a single device ID
+> while at the same time trying to expand the ACS quirk to a notable
+> fraction of the Cavium PCI device ID address space.  Thanks,
+
+David, please correct me if I'm wrong but I think this problem only
+exists on cn88xx (device id 0xa100) but not on cn81xx/cn83xx (0xa200,
+0xa300). I've seen the bridge causing the problem only on cn88xx.
+
+--Jan
 
 _______________________________________________
 linux-arm-kernel mailing list
