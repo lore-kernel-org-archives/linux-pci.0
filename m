@@ -1,45 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH bisected regression in 4.14] PCI: fix race while enabling
- upstream bridges concurrently
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Srinath Mannam <srinath.mannam@broadcom.com>
-Date: Fri, 15 Sep 2017 15:48:30 +0300
-Message-ID: <150547971091.977464.16294045866179907260.stgit@buzz>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH] ACPI/IORT: Fix PCI ACS enablement
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-acpi@vger.kernel.org>
+References: <20170919170539.6265-1-lorenzo.pieralisi@arm.com>
+CC: <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, "Will Deacon" <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "Alex Williamson" <alex.williamson@redhat.com>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+Message-ID: <59C3A36A.2060202@hisilicon.com>
+Date: Thu, 21 Sep 2017 19:32:58 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170919170539.6265-1-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In pci_enable_bridge() pci_enable_device() is called before calling
-pci_set_master(), thus check pci_is_enabled() becomes true in the
-middle of this sequence. As a result in pci_enable_device_flags()
-concurrent enable of device on same bridge could think that this
-bridge is completely enabled, but actually it's not yet.
+On 2017/9/20 1:05, Lorenzo Pieralisi wrote:
+> commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
+> workarounds") removed kernel code that was allowing to initialize
+> and probe the SMMU devices early (ie earlier than PCI devices through
+> linker script callback entries) in the boot process because it was not
+> needed any longer in that the SMMU devices/drivers now support deferred
+> probing.
+> 
+> Since the SMMUs probe routines are also in charge of requesting global
+> PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
+> up early-probing workarounds") also postponed PCI ACS enablement to
+> SMMUs devices probe time, which may be too late given that PCI devices
+> needs to detect if PCI ACS is enabled to init the respective capability
+> through the following call path:
+> 
+> pci_device_add()
+>  -> pci_init_capabilities()
+>   -> pci_enable_acs()
+> 
+> Add code in the ACPI IORT SMMU platform devices initialization path
+> (that is called before ACPI PCI enumeration) to detect if an SMMU is
+> present in HW and enable PCI ACS if it actually is, restoring the
+> correct PCI ACS enablement sequencing.
+> 
+> Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
+> Signed-workarounds")
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> Cc: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  drivers/acpi/arm64/iort.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index 9565d57..71a7694 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -1184,6 +1184,7 @@ static void __init iort_init_platform_devices(void)
+>  	struct acpi_table_iort *iort;
+>  	struct fwnode_handle *fwnode;
+>  	int i, ret;
+> +	bool smmu_detected = false;
+>  
+>  	/*
+>  	 * iort_table and iort both point to the start of IORT table, but
+> @@ -1218,11 +1219,21 @@ static void __init iort_init_platform_devices(void)
+>  				acpi_free_fwnode_static(fwnode);
+>  				return;
+>  			}
+> +
+> +			smmu_detected = true;
+>  		}
+>  
+>  		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
+>  					 iort_node->length);
+>  	}
+> +
+> +	/*
+> +	 * If IORT reports an SMMU component make sure PCI ACS is
+> +	 * requested so that PCI devices can enable it in their
+> +	 * capabilities.
+> +	 */
+> +	if (smmu_detected)
+> +		pci_request_acs();
+>  }
+>  
+>  void __init acpi_iort_init(void)
+>
 
-For me this race broke ethernet devices after booting kernel via
-kexec, normal reboot was fine.
+Hi Lorenzo,
 
-This patch removes racy fast-path: pci_enable_bridge() will take
-pci_bridge_mutex and do nothing if bridge is already enabled.
+I tested this patch, it works well in my HiSilicon Hip08 based system.
+However, setting ACS flag at the stage of SMMU device init seems not good,
+I mean what if in one system there are only platform devices connected to
+SMMU device.
 
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Fixes: 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
----
- drivers/pci/pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Best,
+Zhou
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b0002daa50f3..ffbe11dbdd61 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 		return 0;		/* already enabled */
- 
- 	bridge = pci_upstream_bridge(dev);
--	if (bridge && !pci_is_enabled(bridge))
-+	if (bridge)
- 		pci_enable_bridge(bridge);
- 
- 	/* only skip sriov related */
