@@ -1,66 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:33674 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751000AbdISM3G (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Sep 2017 08:29:06 -0400
+Return-Path: <SRS0=+Syg=AX=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=+Syg=AX=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 22 Sep 2017 14:44:01 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marek =?iso-8859-1?Q?Beh=FAn?= <marek.behun@nic.cz>,
+	linux-pci@vger.kernel.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: aardvark pci controller ath9k request_irq fail
+Message-ID: <20170922134401.GA5207@red-moon>
+References: <20170922132444.588e27cb@dellmb.labs.office.nic.cz>
+ <20170922133515.GA12546@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170919104939.3313-1-lorenzo.pieralisi@arm.com>
-References: <20170919104939.3313-1-lorenzo.pieralisi@arm.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Tue, 19 Sep 2017 14:29:05 +0200
-Message-ID: <CAK8P3a3C=hD3Goo_=aCwWWUA_mAAPBL1Oii94Ed1y=cK6hiG8w@mail.gmail.com>
-Subject: Re: [PATCH] MIPS: Fix PCI host bridge map_irq() hook section mismatches
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Steve French <smfrench@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20170922133515.GA12546@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 19, 2017 at 12:49 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> Commit 04c81c7293df ("MIPS: PCI: Replace pci_fixup_irqs() call with host
-> bridge IRQ mapping hooks") allowed to move the PCI irq fixup to the new
-> host bridge map/swizzle_irq() hooks mechanism. Those hooks can also be
-> called after boot completed - with all __init/__initdata/__initconst
-> sections freed by the kernel -  therefore functions called by them (and
-> the data they refer to) must not be marked as
-> __init/__initdata/__initconst lest compilation triggers section
-> mismatches warnings.
->
-> Fix all the boards files map_irq() hooks by simply removing the
-> respective __init/__initdata/__initconst section markers and by
-> adding another persistent hook IRQ map for the txx9 board files.
->
-> Fixes: 04c81c7293df ("MIPS: PCI: Replace pci_fixup_irqs() call with host
-> bridge IRQ mapping hooks")
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+On Fri, Sep 22, 2017 at 08:35:15AM -0500, Bjorn Helgaas wrote:
+> [+cc Thomas (aardvark maintainer), Lorenzo]
+> 
+> On Fri, Sep 22, 2017 at 01:24:44PM +0200, Marek Behún wrote:
+> > Hello,
+> > we are developing a new board based on Marvell Armada 3720.
+> > While testing the PCI-e slot, I have enountered this problem:
+> > 
+> > - lspci always correctly prints information about the PCIe card in the
+> >   slot
+> > - when a ath9k card is in the slot, ath9k fails to initialize with
+> >      ath9k 0000:00:00.0: request_irq failed
+> > 
+> >   The irq number passed to the request_irq function is from the irq
+> >   member of struct pci_dev:
+> >      request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
+> > 
+> >   this number (pdev->irq) is 255
+> > 
+> >   The request_irq function fails in request_threaded_irq on line:
+> >      desc = irq_to_desc(irq);
+> >   (desc is NULL and thus -EINVAL is returned.)
+> > 
+> > - what is strange is that another card, Intel Centrino Ultimate-N 6300
+> >   with iwlwifi works.
+> > 
+> > - another card (ath10k driver) also does not work.
+> > 
+> > Is this a problem with the pci-aardvark driver for the Aardvark
+> > controller?
+> 
+> What kernel version are you using?  Has any kernel version worked
+> correctly?  There have been significant IRQ mapping changes in the
+> last couple releases.
+> 
+> dev->irq should be assigned in pci_assign_irq().  Can you turn on the
+> debug there (and maybe add more) and collect the complete dmesg log?
 
-Aside from one typo
+It is very likely this will fix it:
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+https://patchwork.ozlabs.org/patch/811432/
 
-> diff --git a/arch/mips/txx9/generic/pci.c b/arch/mips/txx9/generic/pci.c
-> index 0bd2a1e..499da2d 100644
-> --- a/arch/mips/txx9/generic/pci.c
-> +++ b/arch/mips/txx9/generic/pci.c
-> @@ -386,9 +386,10 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
->         return 0;
->  }
->
-> -int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> +static int (*txx9_pci_map_irq)(const struct pci_dev *dev, u8 slot, u8 pin);
-> +int pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->  {
-> -       return txx9_board_vec->pci_map_irq(dev, slot, pin);
-> +       return txx9_map_irq(dev, slot, pin);
->  }
->
->  char * (*txx9_board_pcibios_setup)(char *str) __initdata;
+Apologies to you and Thomas again - I went through a number of changes
+and mechanically missed pci-aardvark.
 
-s/pcibios_map_irq/txx9_pci_map_irq/
-
-      Arnd
+Thanks,
+Lorenzo
