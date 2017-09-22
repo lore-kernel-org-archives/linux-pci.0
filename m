@@ -1,108 +1,368 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44156 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751378AbdITQbw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Sep 2017 12:31:52 -0400
-Date: Wed, 20 Sep 2017 10:31:51 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Wilson.Snyder@cavium.com
-Subject: Re: [PATCH v4] PCI: quirks: update Cavium ThunderX ACS quirk
- implementation
-Message-ID: <20170920103151.7e3fdb77@w520.home>
-In-Reply-To: <1505724481-28413-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-References: <1505480233-22694-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-        <1505724481-28413-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Return-Path: <SRS0=w0jq=AX=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=w0jq=AX=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v1 1/3] powerpc/kernel: Split up pci_bus_add_device
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>
+References: <20170918192651.78404-1-bryantly@linux.vnet.ibm.com>
+ <20170918192651.78404-2-bryantly@linux.vnet.ibm.com>
+ <20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Fri, 22 Sep 2017 08:46:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/alternative;
+ boundary="------------0B9EC22EE5D642BE41404790"
+Message-Id: <1a13b02a-4e32-adff-1083-8bf538cbdf9b@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 18 Sep 2017 01:48:01 -0700
-Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+This is a multi-part message in MIME format.
+--------------0B9EC22EE5D642BE41404790
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> This commit makes Cavium PCI ACS quirk applicable only to Cavium
-> ThunderX (CN81/83/88XX) PCIE Root Ports which has limited PCI capabilities
-> in terms of no ACS support advertisement. However, the RTL internally
-> implements similar protection as if ACS had completion/request redirection,
-> upstream forwarding and validation features enabled.
-> 
-> Current quirk implementation doesn't take into account PCIERCs which
-> also needs to be quirked. So the pci device id check mask is updated
-> and check of device ID moved into separate function.
-> 
-> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-> ---
-> 	v1	: put device check into separate function and extend it to all
-> 		  Cavium PCIERC/PCCBR devices;
-> 	v1 -> v2: update match function in order to filter only ThunderX devices by device
-> 	      	  ids to properly filter CN8XXX devices, update subject & description with
-> 		  ACS register info (rejected by maillist due to triple X in subject);
-> 	v2 -> v3: update subject: remove CN8XXX from subject line, replace it with ThunderX;
-> 	v3 -> v4: update ACS mask (remove TB and TD bits), update commit message (remove
-> 	      	  ACS register printout);
-> 
->  drivers/pci/quirks.c | 26 ++++++++++++++++----------
->  1 file changed, 16 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index a4d3361..e6b904a 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4211,20 +4211,26 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
->  #endif
->  }
->  
-> -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> +/*
-> + * Cavium devices matching this quirk do not perform peer-to-peer
-> + * with other functions, allowing masking out these bits as if they
-> + * were unimplemented in the ACS capability.
 
-nit, the description here still steals too much from the multifunction
-quirk.  Multifunction devices can often support ACS with unimplemented
-capabilities, which indicate that the device does not support the
-behavior described by that capability bit.  However, downstream ports
-are required to implement certain ACS capabilities if they implement
-ACS at all.  So the code is actually asserting that the hardware
-implements *and* enables equivalent ACS functionality for these flags.
 
-> + */
-> +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
-> +
-> +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
->  {
-> -	/*
-> -	 * Cavium devices matching this quirk do not perform peer-to-peer
-> -	 * with other functions, allowing masking out these bits as if they
-> -	 * were unimplemented in the ACS capability.
-> -	 */
-> -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> +	return (pci_is_pcie(dev) &&
-> +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
-> +		((dev->device & 0xf800) == 0xa000));
+On 9/21/17 3:43 PM, Bjorn Helgaas wrote:
+> On Mon, Sep 18, 2017 at 02:26:49PM -0500, Bryant G. Ly wrote:
+>> When enabling SR-IOV one might want to have their
+>> own version of starting device drivers for the VFs.
+>> This patch allows for SR-IOV callers to use
+>> pci_bus_add_virtfn_device instead of generic
+>> pci_bus_add_device.
+>>
+>> When enabling SR-IOV in PSeries architecture the
+>> dynamic VFs created within the sriov_configure sysfs call
+>> will not load the device driver as firmware will load
+>> the device node when the VF device is assigned to the
+>> logical partition. So we needed a way to overwrite the
+>> way device driver matching is done for virtual functions
+>> on powervm.
+>>
+>> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+>> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+>> ---
+>>   drivers/pci/bus.c   | 51 ++++++++++++++++++++++++++++++++++++++++++---------
+>>   drivers/pci/iov.c   |  2 +-
+>>   include/linux/pci.h |  3 +++
+>>   3 files changed, 46 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index bc56cf19afd3..86daf62c4048 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -302,16 +302,9 @@ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+>>   
+>>   void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
+>>   
+>> -/**
+>> - * pci_bus_add_device - start driver for a single device
+>> - * @dev: device to add
+>> - *
+>> - * This adds add sysfs entries and start device drivers
+>> - */
+>> -void pci_bus_add_device(struct pci_dev *dev)
+>> -{
+>> -	int retval;
+>>   
+>> +void pci_bus_add_sysfs_entries(struct pci_dev *dev)
+>> +{
+>>   	/*
+>>   	 * Can not put in pci_device_add yet because resources
+>>   	 * are not assigned yet for some devices.
+>> @@ -321,6 +314,11 @@ void pci_bus_add_device(struct pci_dev *dev)
+>>   	pci_create_sysfs_dev_files(dev);
+>>   	pci_proc_attach_device(dev);
+>>   	pci_bridge_d3_update(dev);
+>> +}
+>> +
+>> +void pci_bus_match_device_driver(struct pci_dev *dev)
+>> +{
+>> +	int retval;
+>>   
+>>   	dev->match_driver = true;
+>>   	retval = device_attach(&dev->dev);
+>> @@ -333,6 +331,41 @@ void pci_bus_add_device(struct pci_dev *dev)
+>>   
+>>   	dev->is_added = 1;
+>>   }
+>> +
+>> +#ifdef CONFIG_PCI_IOV
+>> +void __weak pci_bus_match_virtfn_driver(struct pci_dev *dev)
+>> +{
+>> +	pci_bus_match_device_driver(dev);
+>> +}
+>> +
+>> +/**
+>> + * pci_bus_add_virtfn_device - start driver for a virtual function device
+>> + * @dev: device to add
+>> + *
+>> + * This adds add sysfs entries and start device drivers for
+>> + * virtual function devices
+>> + *
+>> + */
+>> +void pci_bus_add_virtfn_device(struct pci_dev *pdev)
+>> +{
+>> +	pci_bus_add_sysfs_entries(pdev);
+>> +	pci_bus_match_virtfn_driver(pdev);
+>> +}
+>> +EXPORT_SYMBOL_GPL(pci_bus_add_virtfn_device);
+> Is there any way we can avoid adding this new interface?  I don't
+> really want a new global exported symbol just to support this highly
+> platform-specific functionality.
+>
+> If we could figure out a way to set dev->match_driver to false instead
+> of true in pci_bus_add_device(), it *looks* like that would be enough
+> to accomplish what you need.  Maybe that could be done via a pcibios
+> hook or a new function pointer in struct pci_host_bridge, similar to
+> the swizzle_irq pointer?
 
-That's effectively 2k device IDs, 0xa000-0xa7ff that you and Cavium are
-vouching for ACS equivalent isolation.  How many of these actually
-exist?  The PCI IDs database gets really sparse after the first 64
-entries.  Internally are these device IDs allocated to programs based on
-the same ASICs or is this just a slightly more restricted crystal ball
-(ie. wishful thinking)?  Thanks,
+Yes! I will remove the first two patches in the series and only utilize the third
+patch but addingpdev->match_driver = -1; under pseries_pcibios_bus_add_device, which is 
+a new function I added for machine dependent bus add of a device. The 
+patch will then require https://patchwork.kernel.org/patch/9882915/ 
+which basically allows for match_driver state to not get changed later 
+under the pci_bus_match due to allowing for the match_driver to be a int 
+vs a bool. I will push up another patch removing the first two patches 
+and adding that extra line. -Bryant
 
-Alex
+>> +#endif
+>> +
+>> +/**
+>> + * pci_bus_add_device - start driver for a single device
+>> + * @dev: device to add
+>> + *
+>> + * This adds add sysfs entries and start device drivers
+>> + */
+>> +void pci_bus_add_device(struct pci_dev *dev)
+>> +{
+>> +	pci_bus_add_sysfs_entries(dev);
+>> +	pci_bus_match_device_driver(dev);
+>> +}
+>> +
+>>   EXPORT_SYMBOL_GPL(pci_bus_add_device);
+>>   
+>>   /**
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index ac41c8be9200..16cc72545847 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -162,7 +162,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+>>   
+>>   	pci_device_add(virtfn, virtfn->bus);
+>>   
+>> -	pci_bus_add_device(virtfn);
+>> +	pci_bus_add_virtfn_device(virtfn);
+>>   	sprintf(buf, "virtfn%u", id);
+>>   	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
+>>   	if (rc)
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index f68c58a93dd0..39f5c0b4bf23 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -911,6 +911,9 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+>>   void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
+>>   unsigned int pci_scan_child_bus(struct pci_bus *bus);
+>>   void pci_bus_add_device(struct pci_dev *dev);
+>> +#ifdef CONFIG_PCI_IOV
+>> +void pci_bus_add_virtfn_device(struct pci_dev *dev);
+>> +#endif
+>>   void pci_read_bridge_bases(struct pci_bus *child);
+>>   struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>>   					  struct resource *res);
+>> -- 
+>> 2.11.0 (Apple Git-81)
+>>
 
-> +}
->  
-> -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
-> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> +{
-> +	if (!pci_quirk_cavium_acs_match(dev))
->  		return -ENOTTY;
->  
-> -	return acs_flags ? 0 : 1;
-> +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
->  }
->  
->  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+
+--------------0B9EC22EE5D642BE41404790
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  </head>
+  <body text="#000000" bgcolor="#FFFFFF">
+    <p><br>
+    </p>
+    <br>
+    <div class="moz-cite-prefix">On 9/21/17 3:43 PM, Bjorn Helgaas
+      wrote:<br>
+    </div>
+    <blockquote type="cite"
+      cite="mid:20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com">
+      <pre wrap="">On Mon, Sep 18, 2017 at 02:26:49PM -0500, Bryant G. Ly wrote:
+</pre>
+      <blockquote type="cite">
+        <pre wrap="">When enabling SR-IOV one might want to have their
+own version of starting device drivers for the VFs.
+This patch allows for SR-IOV callers to use
+pci_bus_add_virtfn_device instead of generic
+pci_bus_add_device.
+
+When enabling SR-IOV in PSeries architecture the
+dynamic VFs created within the sriov_configure sysfs call
+will not load the device driver as firmware will load
+the device node when the VF device is assigned to the
+logical partition. So we needed a way to overwrite the
+way device driver matching is done for virtual functions
+on powervm.
+
+Signed-off-by: Bryant G. Ly <a class="moz-txt-link-rfc2396E" href="mailto:bryantly@linux.vnet.ibm.com">&lt;bryantly@linux.vnet.ibm.com&gt;</a>
+Signed-off-by: Juan J. Alvarez <a class="moz-txt-link-rfc2396E" href="mailto:jjalvare@us.ibm.com">&lt;jjalvare@us.ibm.com&gt;</a>
+---
+ drivers/pci/bus.c   | 51 ++++++++++++++++++++++++++++++++++++++++++---------
+ drivers/pci/iov.c   |  2 +-
+ include/linux/pci.h |  3 +++
+ 3 files changed, 46 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index bc56cf19afd3..86daf62c4048 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -302,16 +302,9 @@ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+ 
+ void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
+ 
+-/**
+- * pci_bus_add_device - start driver for a single device
+- * @dev: device to add
+- *
+- * This adds add sysfs entries and start device drivers
+- */
+-void pci_bus_add_device(struct pci_dev *dev)
+-{
+-	int retval;
+ 
++void pci_bus_add_sysfs_entries(struct pci_dev *dev)
++{
+ 	/*
+ 	 * Can not put in pci_device_add yet because resources
+ 	 * are not assigned yet for some devices.
+@@ -321,6 +314,11 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	pci_create_sysfs_dev_files(dev);
+ 	pci_proc_attach_device(dev);
+ 	pci_bridge_d3_update(dev);
++}
++
++void pci_bus_match_device_driver(struct pci_dev *dev)
++{
++	int retval;
+ 
+ 	dev-&gt;match_driver = true;
+ 	retval = device_attach(&amp;dev-&gt;dev);
+@@ -333,6 +331,41 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 
+ 	dev-&gt;is_added = 1;
+ }
++
++#ifdef CONFIG_PCI_IOV
++void __weak pci_bus_match_virtfn_driver(struct pci_dev *dev)
++{
++	pci_bus_match_device_driver(dev);
++}
++
++/**
++ * pci_bus_add_virtfn_device - start driver for a virtual function device
++ * @dev: device to add
++ *
++ * This adds add sysfs entries and start device drivers for
++ * virtual function devices
++ *
++ */
++void pci_bus_add_virtfn_device(struct pci_dev *pdev)
++{
++	pci_bus_add_sysfs_entries(pdev);
++	pci_bus_match_virtfn_driver(pdev);
++}
++EXPORT_SYMBOL_GPL(pci_bus_add_virtfn_device);
+</pre>
+      </blockquote>
+      <pre wrap="">
+Is there any way we can avoid adding this new interface?  I don't
+really want a new global exported symbol just to support this highly
+platform-specific functionality.
+
+If we could figure out a way to set dev-&gt;match_driver to false instead
+of true in pci_bus_add_device(), it *looks* like that would be enough
+to accomplish what you need.  Maybe that could be done via a pcibios
+hook or a new function pointer in struct pci_host_bridge, similar to
+the swizzle_irq pointer?
+</pre>
+    </blockquote>
+    <pre>Yes! I will remove the first two patches in the series and only utilize the third
+patch but adding <span class="blob-code-inner" style="box-sizing: border-box; overflow: visible; font-family: SFMono-Regular,Consolas,&quot;Liberation Mono&quot;,Menlo,Courier,monospace; font-size: 12px; overflow-wrap: break-word; white-space: pre-wrap; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; text-align: start; text-indent: 0px; text-transform: none; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-style: initial; text-decoration-color: initial;">pdev-&gt;match_driver = -<span class="pl-c1" style="box-sizing: border-box;">1</span>; under <tt>pseries_pcibios_bus_add_device, which
+is a new function I added for machine dependent bus add of a device. 
+
+The patch will then require <a class="moz-txt-link-freetext" href="https://patchwork.kernel.org/patch/9882915/">https://patchwork.kernel.org/patch/9882915/</a>
+which basically allows for match_driver state to not get changed later under the
+pci_bus_match due to allowing for the match_driver to be a int vs a bool. 
+
+I will push up another patch removing the first two patches and adding that extra line.
+
+-Bryant</tt></span></pre>
+    <blockquote type="cite"
+      cite="mid:20170921204326.GJ22312@bhelgaas-glaptop.roam.corp.google.com">
+      <pre wrap="">
+</pre>
+      <blockquote type="cite">
+        <pre wrap="">+#endif
++
++/**
++ * pci_bus_add_device - start driver for a single device
++ * @dev: device to add
++ *
++ * This adds add sysfs entries and start device drivers
++ */
++void pci_bus_add_device(struct pci_dev *dev)
++{
++	pci_bus_add_sysfs_entries(dev);
++	pci_bus_match_device_driver(dev);
++}
++
+ EXPORT_SYMBOL_GPL(pci_bus_add_device);
+ 
+ /**
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ac41c8be9200..16cc72545847 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -162,7 +162,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+ 
+ 	pci_device_add(virtfn, virtfn-&gt;bus);
+ 
+-	pci_bus_add_device(virtfn);
++	pci_bus_add_virtfn_device(virtfn);
+ 	sprintf(buf, "virtfn%u", id);
+ 	rc = sysfs_create_link(&amp;dev-&gt;dev.kobj, &amp;virtfn-&gt;dev.kobj, buf);
+ 	if (rc)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f68c58a93dd0..39f5c0b4bf23 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -911,6 +911,9 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
+ unsigned int pci_scan_child_bus(struct pci_bus *bus);
+ void pci_bus_add_device(struct pci_dev *dev);
++#ifdef CONFIG_PCI_IOV
++void pci_bus_add_virtfn_device(struct pci_dev *dev);
++#endif
+ void pci_read_bridge_bases(struct pci_bus *child);
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res);
+-- 
+2.11.0 (Apple Git-81)
+
+</pre>
+      </blockquote>
+      <pre wrap="">
+</pre>
+    </blockquote>
+    <br>
+  </body>
+</html>
+
+--------------0B9EC22EE5D642BE41404790--
