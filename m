@@ -1,56 +1,47 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linuxppc-dev@lists.ozlabs.org>, <marc.zyngier@arm.com>,
- <robh+dt@kernel.org>, <mark.rutland@arm.com>, <bhelgaas@google.com>,
- <shawnguo@kernel.org>, <Mingkai.Hu@nxp.com>, <Minghuan.Lian@nxp.com>,
- <roy.zang@nxp.com>
-Subject: [PATCH 0/5] arm64: add ls1012a and ls1046a pcie support
-Date: Tue, 19 Sep 2017 17:26:53 +0800
-Message-ID: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
+To: <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <roy.zang@nxp.com>, <mingkai.hu@nxp.com>, <minghuan.lian@nxp.com>
+CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 1/2] PCI: Disable MSI for Freescale PCIe RC mode
+Date: Fri, 22 Sep 2017 15:25:21 +0800
+Message-ID: <20170922072522.36306-2-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170922072522.36306-1-Zhiqiang.Hou@nxp.com>
+References: <20170922072522.36306-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-This patch set adds ls1012a MSI and PCIe support, including driver
-and device tree nodes. The ls1046a's MSI support patch and PCIe
-driver patch has been applied, so only adds the PCIe device tree
-nodes.
+The Freescale PCIe controller advertises the MSI/MSI-X capability
+in both RC and Endpoint mode, but in RC mode it doesn't support
+MSI/MSI-X by it self, it can only transfer MSI/MSI-X from downstream
+devices. So add this quirk to prevent use of MSI/MSI-X in RC mode.
 
-Hou Zhiqiang (5):
-  irqchip/ls-scfg-msi: add LS1012a MSI support
-  arm64: dts: ls1012a: Add MSI controller DT node
-  PCI: layerscape: Add support for ls1012a
-  arm64: dts: ls1012a: Add PCIe controller DT node
-  arm64: dts: ls1046a: add PCIe controller DT nodes
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+ drivers/pci/quirks.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
- .../interrupt-controller/fsl,ls-scfg-msi.txt       |  1 +
- .../devicetree/bindings/pci/layerscape-pci.txt     |  1 +
- arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi     | 31 +++++++++
- arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi     | 75 ++++++++++++++++++++++
- drivers/irqchip/irq-ls-scfg-msi.c                  |  1 +
- drivers/pci/dwc/pci-layerscape.c                   |  1 +
- 6 files changed, 110 insertions(+)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a4d33619a7bb..c1063a420f0c 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4799,3 +4799,11 @@ static void quirk_no_ats(struct pci_dev *pdev)
+ /* AMD Stoney platform GPU */
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_no_ats);
+ #endif /* CONFIG_PCI_ATS */
++
++/* Freescale PCIe doesn't support MSI in RC mode */
++static void quirk_fsl_no_msi(struct pci_dev *pdev)
++{
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
++		pdev->no_msi = 1;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, quirk_fsl_no_msi);
 -- 
 2.14.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
