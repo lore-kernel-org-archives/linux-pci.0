@@ -1,152 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:44700 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751499AbdIOTqt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2017 15:46:49 -0400
-Received: by mail-pf0-f174.google.com with SMTP id e1so1958032pfk.1
-        for <linux-pci@vger.kernel.org>; Fri, 15 Sep 2017 12:46:49 -0700 (PDT)
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Luca Coelho <luca@coelho.fi>,
-        Srinath Mannam <srinath.mannam@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk>
- <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk>
- <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
- <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk>
- <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
- <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
- <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
- <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
- <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
- <1505504195.5400.295.camel@coelho.fi>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <a9913d13-c14d-c261-e4ed-739bccc7755d@kernel.dk>
-Date: Fri, 15 Sep 2017 13:46:45 -0600
+Received: from szxga05-in.huawei.com ([45.249.212.191]:6555 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750762AbdIWHZV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Sep 2017 03:25:21 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <yinghai@kernel.org>
+CC: <linux-pci@vger.kernel.org>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [RFC PATCH] PCI: Fix prefetchable range broken in pci_bridge_check_ranges
+Date: Sat, 23 Sep 2017 15:24:42 +0800
+Message-ID: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <1505504195.5400.295.camel@coelho.fi>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/15/2017 01:36 PM, Luca Coelho wrote:
-> On Fri, 2017-09-15 at 13:32 -0600, Jens Axboe wrote:
->> On 09/14/2017 02:36 PM, Jens Axboe wrote:
->>> On 09/14/2017 02:04 PM, Srinath Mannam wrote:
->>>> Hi Jens Axboe,
->>>>
->>>>
->>>> On Thu, Sep 14, 2017 at 11:14 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>> On 09/14/2017 11:35 AM, Jens Axboe wrote:
->>>>>> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
->>>>>>> Hi Bjorn,
->>>>>>>
->>>>>>> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>>
->>>>>>>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
->>>>>>>>> [+cc linux-pci]
->>>>>>>>>
->>>>>>>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>>>>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
->>>>>>>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
->>>>>>>>>>>
->>>>>>>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
->>>>>>>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
->>>>>>>>>>>> functional changes.
->>>>>>>>>>>
->>>>>>>>>>> and pci_enable_bridge() already checks if it's already enabled, but
->>>>>>>>>>> still enables mastering in that case if it isn't:
->>>>>>>>>>>
->>>>>>>>>>> static void pci_enable_bridge(struct pci_dev *dev)
->>>>>>>>>>> {
->>>>>>>>>>> [...]
->>>>>>>>>>>         if (pci_is_enabled(dev)) {
->>>>>>>>>>>                 if (!dev->is_busmaster)
->>>>>>>>>>>                         pci_set_master(dev);
->>>>>>>>>>>                 return;
->>>>>>>>>>>         }
->>>>>>>>>>>
->>>>>>>>>>> so I guess due to the new check we end up with mastering disabled, and
->>>>>>>>>>> thus the firmware can't load since that's a DMA thing?
->>>>>>>>>>
->>>>>>>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
->>>>>>>>>> from working on a pretty standard laptop. It'd suck to have this be in
->>>>>>>>>> -rc1. Seems like the trivial fix would be:
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>>>>>>> index b0002daa50f3..ffbe11dbdd61 100644
->>>>>>>>>> --- a/drivers/pci/pci.c
->>>>>>>>>> +++ b/drivers/pci/pci.c
->>>>>>>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->>>>>>>>>>                 return 0;               /* already enabled */
->>>>>>>>>>
->>>>>>>>>>         bridge = pci_upstream_bridge(dev);
->>>>>>>>>> -       if (bridge && !pci_is_enabled(bridge))
->>>>>>>>>> +       if (bridge)
->>>>>>>
->>>>>>> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
->>>>>>> pci_enable_bridge functoin will causes a nexted lock.
->>>>>>
->>>>>> Took a look, and looks like you are right. That code looks like a mess,
->>>>>> fwiw.
->>>>>>
->>>>>> I'd strongly suggest that the bad commit is reverted until a proper
->>>>>> solution is found, since the simple one-liner could potentially
->>>>>> introduce a deadlock with your patch applied.
->>>>>
->>>>> BTW, your patch looks pretty bad too, introducing a random mutex
->>>>> deep on code that can be recursive. Why isn't this check in
->>>>> pci_enable_device_flags() enough to prevent double-enable of
->>>>> an upstream bridge?
->>>>>
->>>>> if (atomic_inc_return(&dev->enable_cnt) > 1)
->>>>>         return 0;               /* already enabled */
->>>>>
->>>>
->>>> This check only to verify device enable not for the bus master check.
->>>> But device enable function calls the bridge enable if it has the bridge.
->>>> Bridge enable function enables both device and bus master.
->>>>
->>>> Here the issue might be because, bridge of endpoint has already set
->>>> device enable without set bus master in some other context. which is
->>>> wrong.
->>>> because all bridges should enable with bridge_enable function only.
->>>> So we see the problem In this context, because "if (bridge &&
->>>> !pci_is_enabled(bridge))" check stops bridge enable which intern stops
->>>> bus master.
->>>> pci_enable_bridge function always makes sure that both device and bus
->>>> master are enabled in any case. If pci_enable_bridge function is not
->>>> called means, that bridge is already has device enable flag set. which
->>>> is not from pci_enable_bridge function.
->>>
->>> In any case, your patch introduces a regression on systems. Please get
->>> it reverted now, and then you can come up with a new approach to fix the
->>> double enable of the upstream bridge.
->>
->> Who's sending in the revert? I can certainly do it if no one else does,
->> but it needs to be done.
->>
->> I'm not seeing any patches coming out of Srinath to fix up the
->> situation, so we should revert the broken patch until a better solution
->> exists.
-> 
-> Bjorn already sent it:
-> 
-> https://lkml.org/lkml/2017/9/15/46
+When double checking 64bit prefetch range, we will change the prefetch range
+in a time slot by writing 0xffffffff to PCI_PREF_BASE_UPPER32. This may break
+transfers through related bridge at that time.
 
-Huh ok, I would have thought the various folks in this discussion would
-have been CC'ed on that. But good to know, that takes care of my
-concern.
+E.g. if we have below PCIe topology:
 
+-[0000:00]-+-00.0-[01-02]--+-00.0  Device 8086:10fb
+           |               \-00.1  Device 8086:10fb
+           \-08.0-[03]----00.0  Device 8086:0953
+
+When rescan 00:08.0, it will call:
+
+        pci_rescan_bus
+                -> pci_assign_unassigned_bus_resources
+                        -> __pci_bus_size_bridges
+                                -> pci_bridge_check_ranges
+                                        -> pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, 0xffffffff)
+
+This will change the prefetch range of 00:00.0 in a time slot, so traffic of
+01:00.0 or 01:00.1 may be broken.
+
+In fact, we can get if one bridge supports 64bit range by the bottom 4bits of
+prefetchable memory base/limit. Honestly speaking, I don't know why 1f82de10d6b1
+("PCI/86: don't assume prefetchable ranges are 64bit") has added the double
+check code.
+
+So Can we remove the double checking of prefetchable range to avoid this problem?
+
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ drivers/pci/setup-bus.c | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 958da7d..23010a9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -778,20 +778,6 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
+ 		}
+ 	}
+-
+-	/* double check if bridge does support 64 bit pref */
+-	if (b_res[2].flags & IORESOURCE_MEM_64) {
+-		u32 mem_base_hi, tmp;
+-		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+-					 &mem_base_hi);
+-		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+-					       0xffffffff);
+-		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
+-		if (!tmp)
+-			b_res[2].flags &= ~IORESOURCE_MEM_64;
+-		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+-				       mem_base_hi);
+-	}
+ }
+ 
+ /* Helper function for sizing routines: find first available
 -- 
-Jens Axboe
+1.9.1
