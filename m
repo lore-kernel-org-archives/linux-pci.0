@@ -1,163 +1,127 @@
-Return-Path: <SRS0=NZsj=A6=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=NZsj=A6=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 29 Sep 2017 18:19:58 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Matt Turner <mattst88@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-arm-kernel@lists.infradead.org,
-	Richard Henderson <rth@twiddle.net>
-Subject: Re: [PATCH] PCI: Fix legacy IRQ assignment execution stage
-Message-ID: <20170929171958.GA18114@red-moon>
-References: <1506598627-8985-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20170928223719.GY15970@bhelgaas-glaptop.roam.corp.google.com>
- <20170929160226.GA17398@red-moon>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH 2/5] PCI: handle FLR failure and allow other reset types
+Date: Sat, 23 Sep 2017 20:16:55 -0400
+Message-Id: <1506212218-29103-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170929160226.GA17398@red-moon>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 29, 2017 at 05:02:26PM +0100, Lorenzo Pieralisi wrote:
-> On Thu, Sep 28, 2017 at 05:37:19PM -0500, Bjorn Helgaas wrote:
-> > On Thu, Sep 28, 2017 at 12:37:07PM +0100, Lorenzo Pieralisi wrote:
-> > > Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
-> > > possible to define IRQ mapping functions on a per PCI host bridge basis.
-> > > 
-> > > Actual IRQ allocation is carried out by the pci_assign_irq() function in
-> > > pci_device_probe() - to make sure a device is assigned an IRQ only if it
-> > > is probed (ie match a driver); it retrieves a struct pci_host_bridge*
-> > > for a given PCI device and through {map/swizzle}_irq() hooks it carries
-> > > out the PCI IRQ allocation.
-> > > 
-> > > As it turned out, some legacy drivers (eg IDE layer) require that a
-> > > device allocates IRQ as soon as it is added so that its actual IRQ
-> > > settings are available early in the boot process. With current code
-> > > calling pci_assign_irq() in pci_device_probe() IDE IRQ probing fails
-> > > for some drivers:
-> > 
-> > I think the patch is fine, but I don't understand the changelog.  I
-> > want to know specifically what the dependency on dev->irq is.  "Early
-> > in the boot process" is pretty vague.
-> > 
-> > I *thought* we were doing something like this:
-> > 
-> >   pci_device_probe(dev1)
-> >     pci_assign_irq(dev1)
-> >       ...
-> >         ide_pci_init_two(dev1, dev2, ...)
-> >           do_ide_setup_pci_device(dev1)
-> >             pciirq = dev1->irq                # this one is fine
-> >           do_ide_setup_pci_device(dev2)
-> >             pciirq = dev2->irq                # not fine
-> > 
-> > where the problem is that we haven't called pci_assign_irq(dev2), so
-> > dev2->irq hasn't been set.
-> > 
-> > But that doesn't match the data because we should be coming through
-> > cmd64x_init_one(), which calls ide_pci_init_one(), so we shouldn't
-> > have a dev2 in this path.
-> 
-> I *think* I understand what's going on here, the key is:
-> 
-> ide_scan_pcibus()
-> 
-> and CONFIG_IDEPCI_PCIBUS_ORDER
-> 
-> I still have to replicate it but I suspect that
-> do_ide_setup_pci_device() for dev1 finds an unallocated IRQ (ie dev->irq
-> == 0) because the probing did NOT happen via pci_device_probe(), ie
-> pci_device_probe() was not called for the dev1, the cmd64x probe
-> routine is called straight from ide_scan_pcidev().
-> 
-> I am struggling to understand the logic behind:
-> 
-> ide_pci_register_driver() and ide_scan_pcibus()
-> 
-> and the sequence wrt PCI bus probing but I think that's the problem
-> and that's why moving pci_assign_irq() to pci_device_add() will
-> sort this out, adding pci_assign_irq() in ide_scan_pcidev() will
-> solve the problem too (patch below).
-> 
-> Needless to say, ide_scan_pcibus() relies on pre_init global variable
-> to make sure ide_pci_register_driver() chooses the "right" way of
-> registering a driver, see:
-> 
-> __ide_pci_register_driver()
-> 
-> Patch here to verify my assumption in case Guenter has a chance to
-> run it if I do not beat him to it:
+pci_flr_wait() and pci_af_flr() functions assume graceful return even
+though the device is inaccessible under error conditions.
 
-That's what's happening unfortunately.
+Return -ENOTTY in error cases so that __pci_reset_function_locked() can
+try other reset types if AF_FLR/FLR reset fails.
 
-We end up probing twice (both fails):
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pci.c   | 18 ++++++++++--------
+ include/linux/pci.h |  2 +-
+ 2 files changed, 11 insertions(+), 9 deletions(-)
 
-(1)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 23681f4..27ec45d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3820,7 +3820,7 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+ 
+-static void pci_flr_wait(struct pci_dev *dev)
++static int pci_flr_wait(struct pci_dev *dev)
+ {
+ 	int delay = 1, timeout = 60000;
+ 	u32 id;
+@@ -3849,7 +3849,7 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 		if (delay > timeout) {
+ 			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
+ 				 100 + delay - 1);
+-			return;
++			return -ENOTTY;
+ 		}
+ 
+ 		if (delay > 1000)
+@@ -3863,6 +3863,8 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 
+ 	if (delay > 1000)
+ 		dev_info(&dev->dev, "ready %dms after FLR\n", 100 + delay - 1);
++
++	return 0;
+ }
+ 
+ /**
+@@ -3891,13 +3893,13 @@ static bool pcie_has_flr(struct pci_dev *dev)
+  * device supports FLR before calling this function, e.g. by using the
+  * pcie_has_flr() helper.
+  */
+-void pcie_flr(struct pci_dev *dev)
++int pcie_flr(struct pci_dev *dev)
+ {
+ 	if (!pci_wait_for_pending_transaction(dev))
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+ 
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+-	pci_flr_wait(dev);
++	return pci_flr_wait(dev);
+ }
+ EXPORT_SYMBOL_GPL(pcie_flr);
+ 
+@@ -3930,8 +3932,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
+ 
+ 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+-	pci_flr_wait(dev);
+-	return 0;
++	return pci_flr_wait(dev);
+ }
+ 
+ /**
+@@ -4203,8 +4204,9 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+ 	if (rc != -ENOTTY)
+ 		return rc;
+ 	if (pcie_has_flr(dev)) {
+-		pcie_flr(dev);
+-		return 0;
++		rc = pcie_flr(dev);
++		if (rc != -ENOTTY)
++			return rc;
+ 	}
+ 	rc = pci_af_flr(dev, 0);
+ 	if (rc != -ENOTTY)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f68c58a..104224f7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1088,7 +1088,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+-void pcie_flr(struct pci_dev *dev);
++int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.9.1
 
-->ide_scan_pcidev()
-  ->d->probe()
-     ->cmd64x_init_one()
-       ->ide_pci_init_one()
-         ->ide_pci_init_two()
-           [...]
-           -> ide_host_register() !! Fails in hwif_init(), no IRQ
 
-(2) ->pci_device_probe()
-     ->cmd64x_init_one()
-       ->ide_pci_init_one()
-         ->ide_pci_init_two()
-	   [...]
-	   -> ide_pci_enable() !! Fails with -EBUSY,
-	   pci_request_selected_regions() can't reserve already reserved
-	   regions (ie step (1) did not unwind resource reservation)
-
-That's my reading and patch patch below fixes it and given that
-IDE created its own PCI bus probing layer may be a more appropriate
-kludge than forcing us to move pci_assign_irq() to pci_device_add()
-for all PCI devices, please let me know what's your preferred solution.
-
-With fix below (1) still tries to re-probe cmd64x through
-pci_device_probe() but the device has already a driver attached
-to it so second probe stops before calling the cmd64x probe routine.
-
-I hope Guenter can give it a go too to confirm my findings.
-
-Lorenzo
-
-> -- >8 --
-> diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
-> index 86aa88a..86b570a 100644
-> --- a/drivers/ide/ide-scan-pci.c
-> +++ b/drivers/ide/ide-scan-pci.c
-> @@ -56,6 +56,8 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
->  {
->  	struct list_head *l;
->  	struct pci_driver *d;
-> +	int ret;
-> +
->  
->  	list_for_each(l, &ide_pci_drivers) {
->  		d = list_entry(l, struct pci_driver, node);
-> @@ -63,10 +65,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
->  			const struct pci_device_id *id =
->  				pci_match_id(d->id_table, dev);
->  
-> -			if (id != NULL && d->probe(dev, id) >= 0) {
-> -				dev->driver = d;
-> -				pci_dev_get(dev);
-> -				return 1;
-> +			if (id != NULL) {
-> +				pci_assign_irq(dev);
-> +				ret = d->probe(dev, id);
-> +				if (ret >= 0) {
-> +					dev->driver = d;
-> +					pci_dev_get(dev);
-> +					return 1;
-> +				}
->  			}
->  		}
->  	}
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
