@@ -1,36 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] vfio/pci: Virtualize Maximum Payload Size
-To: Alex Williamson <alex.williamson@redhat.com>,
-        Auger Eric <eric.auger@redhat.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20170919164952.13200.78849.stgit@gimli.home>
- <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
- <20170919142024.05723289@t450s.home>
- <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
- <a609bc8b-8c5b-0828-d175-50985d688fe3@codeaurora.org>
- <73d55003-6fcd-3741-73a1-365c73933538@redhat.com>
- <20170920101133.33b68d8f@w520.home>
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <2c094ad6-4641-ebee-7faa-21ad9beeca72@codeaurora.org>
-Date: Wed, 20 Sep 2017 12:29:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170920101133.33b68d8f@w520.home>
-Content-Type: text/plain; charset=utf-8
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        alex.williamson@redhat.com
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 5/5] PCI: add device wait after slot and bus reset
+Date: Sat, 23 Sep 2017 20:16:58 -0400
+Message-Id: <1506212218-29103-5-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/20/2017 12:11 PM, Alex Williamson wrote:
-> My impression is that the issue would be inefficiency.  There should be
-> nothing functionally wrong with a read request less than MPS, but we're
-> not "filling" the TLP as much as the topology allows.  Is that your
-> understanding as well, Sinan?
+Rev 3.1 Sec 2.3.1 Request Handling Rules indicates that a device can issue
+CRS following secondary bus reset. Handle device presence gracefully.
 
-That's my understanding as well. It would be a performance hit to use a
-value less than MPS.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pci.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 074adf9..7131aab 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4056,7 +4056,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+ 
+ 	pci_reset_bridge_secondary_bus(dev->bus->self);
+ 
+-	return 0;
++	return pci_dev_wait(dev, "bus reset", 1000, 60000);
+ }
+ 
+ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
+@@ -4077,6 +4077,7 @@ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
+ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
+ {
+ 	struct pci_dev *pdev;
++	int rc;
+ 
+ 	if (dev->subordinate || !dev->slot ||
+ 	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+@@ -4086,7 +4087,11 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
+ 		if (pdev != dev && pdev->slot == dev->slot)
+ 			return -ENOTTY;
+ 
+-	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
++	rc = pci_reset_hotplug_slot(dev->slot->hotplug, probe);
++	if (!rc && !probe)
++		rc = pci_dev_wait(dev, "slot reset", 1000, 60000);
++
++	return rc;
+ }
+ 
+ static void pci_dev_lock(struct pci_dev *dev)
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.9.1
