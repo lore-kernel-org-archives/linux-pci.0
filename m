@@ -1,43 +1,39 @@
-Return-Path: <SRS0=96pX=A7=huawei.com=zhengqiang10@kernel.org>
-Return-Path: <SRS0=96pX=A7=huawei.com=zhengqiang10@kernel.org>
-From: Qiang Zheng <zhengqiang10@huawei.com>
-To: <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>
-Subject: [PATCH V2] Bug fix for PME interrupt handler, add Root Status check
-Date: Sat, 30 Sep 2017 10:12:06 +0800
-Message-ID: <1506737526-94266-1-git-send-email-zhengqiang10@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59982 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751630AbdIXAUb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Sep 2017 20:20:31 -0400
+Subject: Re: [PATCH 5/5] PCI: add device wait after slot and bus reset
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        alex.williamson@redhat.com
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+ <1506212218-29103-5-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <a74c385e-f82d-1ec3-bda8-26209749bbe7@codeaurora.org>
+Date: Sat, 23 Sep 2017 20:20:27 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1506212218-29103-5-git-send-email-okaya@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe PME and hot plug share same interrupt number. In some special case,
-Link down event cause hot plug interrupt, devices is not disconnected,
-But read config will return 0xff.
+On 9/23/2017 8:16 PM, Sinan Kaya wrote:
+> @@ -4056,7 +4056,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+>  
+>  	pci_reset_bridge_secondary_bus(dev->bus->self);
+>  
+> -	return 0;
+> +	return pci_dev_wait(dev, "bus reset", 1000, 60000);
+>  }
 
-In that case, PME work function will run and not return Because
-Root Status PME bit always 1 and can not be cleared.
+This doesn't solve the warm reset message getting broadcasted. I wanted to get
+feedback on the direction first with this version.
 
-This patch add Root Status check in PME interrupt handler,
-Just do same as pciehp isr Slot status check.
-
-Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
----
- drivers/pci/pcie/pme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index fafdb16..2ff2e57 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -273,7 +273,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
- 	spin_lock_irqsave(&data->lock, flags);
- 	pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
- 
--	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
-+	if (rtsta == U32_MAX || !(rtsta & PCI_EXP_RTSTA_PME)) {
- 		spin_unlock_irqrestore(&data->lock, flags);
- 		return IRQ_NONE;
- 	}
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
