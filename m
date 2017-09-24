@@ -1,13 +1,12 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-Subject: [PATCH v5 1/3] PCI: rockchip: Add support for pcie wake irq
-Date: Mon, 11 Sep 2017 23:10:27 +0800
-Message-Id: <20170911151029.25185-2-jeffy.chen@rock-chips.com>
-In-Reply-To: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
-References: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH 4/5] PCI: wait device ready after pci_pm_reset()
+Date: Sat, 23 Sep 2017 20:16:57 -0400
+Message-Id: <1506212218-29103-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,9 +14,8 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
- dianders@chromium.org, linux-rockchip@lists.infradead.org,
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
  linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -25,88 +23,41 @@ Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for PCIE_WAKE pin in rockchip pcie driver.
+Rev 3.1 Sec 2.3.1 Request Handling Rules says a device can issue CRS
+following a D3hot->D0 transition. Add pci_dev_wait() call with 1 second
+timeout to see if device is available before returning.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
+ drivers/pci/pci.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Changes in v5:
-Rebase
-
-Changes in v3:
-Fix error handling
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq
-        -- Suggested by Brian Norris <briannorris@chromium.com>
-
- drivers/pci/host/pcie-rockchip.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 9051c6c8fea4..a8b7272597a7 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -37,6 +37,7 @@
- #include <linux/pci_ids.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
-+#include <linux/pm_wakeirq.h>
- #include <linux/reset.h>
- #include <linux/regmap.h>
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index fd4a3b6..074adf9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3963,6 +3963,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+  */
+ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ {
++	unsigned int delay = dev->d3_delay;
+ 	u16 csr;
  
-@@ -995,6 +996,15 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
- 		return err;
- 	}
+ 	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
+@@ -3988,7 +3989,10 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+ 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+ 	pci_dev_d3_sleep(dev);
  
-+	/* Must init wakeup before setting dedicated wakeup irq. */
-+	device_init_wakeup(dev, true);
-+	irq = platform_get_irq_byname(pdev, "wakeup");
-+	if (irq >= 0) {
-+		err = dev_pm_set_dedicated_wake_irq(dev, irq);
-+		if (err)
-+			dev_err(dev, "failed to setup PCIe wakeup IRQ\n");
-+	}
+-	return 0;
++	if (delay < pci_pm_d3_delay)
++		delay = pci_pm_d3_delay;
 +
- 	return 0;
++	return pci_dev_wait(dev, "PM D3->D0", delay, 1000);
  }
  
-@@ -1542,11 +1552,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 
- 	err = rockchip_pcie_parse_dt(rockchip);
- 	if (err)
--		return err;
-+		goto err_disable_wake;
- 
- 	err = rockchip_pcie_enable_clocks(rockchip);
- 	if (err)
--		return err;
-+		goto err_disable_wake;
- 
- 	err = rockchip_pcie_set_vpcie(rockchip);
- 	if (err) {
-@@ -1656,6 +1666,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		regulator_disable(rockchip->vpcie0v9);
- err_set_vpcie:
- 	rockchip_pcie_disable_clocks(rockchip);
-+err_disable_wake:
-+	dev_pm_clear_wake_irq(dev);
-+	device_init_wakeup(dev, false);
- 	return err;
- }
- 
-@@ -1682,6 +1695,8 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 	if (!IS_ERR(rockchip->vpcie0v9))
- 		regulator_disable(rockchip->vpcie0v9);
- 
-+	dev_pm_clear_wake_irq(dev);
-+	device_init_wakeup(dev, false);
- 	return 0;
- }
- 
+ void pci_reset_secondary_bus(struct pci_dev *dev)
 -- 
-2.11.0
-
+1.9.1
 
 
 _______________________________________________
