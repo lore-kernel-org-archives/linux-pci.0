@@ -1,49 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:5956 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753515AbdIDMdk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Sep 2017 08:33:40 -0400
-Subject: Re: [Question] PCI ACS is broken for ARM SMMU v3?
-To: Alex Williamson <alex.williamson@redhat.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <59A81B4C.3020402@hisilicon.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <59AD4812.3020602@hisilicon.com>
-Date: Mon, 4 Sep 2017 20:33:22 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PM / PCI: Do not resume any devices in pci_pm_prepare()
+Date: Mon, 25 Sep 2017 01:33:13 +0200
+Message-ID: <1877076.QiUpNxchJO@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <59A81B4C.3020402@hisilicon.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+to: Lorenzo
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On 2017/8/31 22:21, Zhou Wang wrote:
-> Hi Will and Alex,
-> 
-> pci_request_acs is called in drivers/iommu/arm-smmu-v3.c to set pci_acs_enable.
-> 
-> PCI subsystem tries to enable ACS as below:
-> 
-> 	pci_device_add
-> 		--> pci_init_capabilities
-> 			--> pci_enable_acs
-> 
-> in ACPI PCI driver. However, ACPI PCI driver will be called before SMMU v3 driver,
-> which will lead pci_enable_acs to return directly as pci_acs_enable is not set
-> before SMMU v3 driver loading.
-> 
-> I think this is a bug, what do you think about this problem?
-> 
-> Best,
-> Zhou
-> 
-> 
-> 
-> 
-> 
-> .
-> 
+It should not be necessary to resume devices with ignore_children set
+in pci_pm_prepare(), because they should be resumed explcitly by
+their children drivers during suspend if need be and they will be
+resumed by pci_pm_suspend() after that anyway, so avoid doing that.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-driver.c |    7 -------
+ 1 file changed, 7 deletions(-)
+
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -680,13 +680,6 @@ static int pci_pm_prepare(struct device
+ {
+ 	struct device_driver *drv = dev->driver;
+ 
+-	/*
+-	 * Devices having power.ignore_children set may still be necessary for
+-	 * suspending their children in the next phase of device suspend.
+-	 */
+-	if (dev->power.ignore_children)
+-		pm_runtime_resume(dev);
+-
+ 	if (drv && drv->pm && drv->pm->prepare) {
+ 		int error = drv->pm->prepare(dev);
+ 		if (error)
