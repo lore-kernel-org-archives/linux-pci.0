@@ -1,61 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        alex.williamson@redhat.com
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 5/5] PCI: add device wait after slot and bus reset
-Date: Sat, 23 Sep 2017 20:16:58 -0400
-Message-Id: <1506212218-29103-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
-References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH 1/5] PCI: protect restore with device lock to be consistent
+Date: Sat, 23 Sep 2017 20:16:54 -0400
+Message-Id: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rev 3.1 Sec 2.3.1 Request Handling Rules indicates that a device can issue
-CRS following secondary bus reset. Handle device presence gracefully.
+Commit b014e96d1abb ("PCI: Protect pci_error_handlers->reset_notify() usage
+with device_lock()") added protection around pci_dev_restore() function so
+that device specific remove callback does not cause a race condition
+against hotplug.
+
+pci_dev_lock() usage has been forgotten in two different places in the
+code. Adding locks for pci_slot_restore() and moving pci_dev_restore()
+inside the locks for pci_try_reset_function().
 
 Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/pci.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/pci/pci.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 074adf9..7131aab 100644
+index 6078dfc..23681f4 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -4056,7 +4056,7 @@ static int pci_parent_bus_reset(struct pci_dev *dev, int probe)
+@@ -4344,9 +4344,9 @@ int pci_try_reset_function(struct pci_dev *dev)
  
- 	pci_reset_bridge_secondary_bus(dev->bus->self);
+ 	pci_dev_save_and_disable(dev);
+ 	rc = __pci_reset_function_locked(dev);
++	pci_dev_restore(dev);
+ 	pci_dev_unlock(dev);
  
--	return 0;
-+	return pci_dev_wait(dev, "bus reset", 1000, 60000);
+-	pci_dev_restore(dev);
+ 	return rc;
  }
- 
- static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
-@@ -4077,6 +4077,7 @@ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, int probe)
- static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
- {
- 	struct pci_dev *pdev;
-+	int rc;
- 
- 	if (dev->subordinate || !dev->slot ||
- 	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
-@@ -4086,7 +4087,11 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
- 		if (pdev != dev && pdev->slot == dev->slot)
- 			return -ENOTTY;
- 
--	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
-+	rc = pci_reset_hotplug_slot(dev->slot->hotplug, probe);
-+	if (!rc && !probe)
-+		rc = pci_dev_wait(dev, "slot reset", 1000, 60000);
-+
-+	return rc;
- }
- 
- static void pci_dev_lock(struct pci_dev *dev)
+ EXPORT_SYMBOL_GPL(pci_try_reset_function);
+@@ -4546,7 +4546,9 @@ static void pci_slot_restore(struct pci_slot *slot)
+ 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+ 		if (!dev->slot || dev->slot != slot)
+ 			continue;
++		pci_dev_lock(dev);
+ 		pci_dev_restore(dev);
++		pci_dev_unlock(dev);
+ 		if (dev->subordinate)
+ 			pci_bus_restore(dev->subordinate);
+ 	}
 -- 
 1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
