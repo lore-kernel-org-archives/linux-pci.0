@@ -1,148 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Khuong Dinh <kdinh@apm.com>
-To: lorenzo.pieralisi@arm.com, marc.zyngier@arm.com, msalter@redhat.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, jcm@redhat.com
-Subject: [PATCH v4 pci 1/2] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
- boot for X-Gene v1
-Date: Tue, 26 Sep 2017 11:49:20 -0600
-Message-Id: <1506448161-30961-2-git-send-email-kdinh@apm.com>
-In-Reply-To: <1506448161-30961-1-git-send-email-kdinh@apm.com>
-References: <1506448161-30961-1-git-send-email-kdinh@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, Khuong Dinh <kdinh@apm.com>, patches@apm.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54964 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933685AbdIYXom (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Sep 2017 19:44:42 -0400
+Date: Mon, 25 Sep 2017 18:44:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Nicolai Stange <nstange@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Adrian Salido <salidoa@google.com>,
+        Sasha Levin <sasha.levin@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: fix race condition with driver_override
+Message-ID: <20170925234439.GG15970@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170911074542.16777-1-nstange@suse.de>
+ <20170911074542.16777-2-nstange@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170911074542.16777-2-nstange@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch makes pci-xgene-msi driver ACPI-aware and provides
-MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+On Mon, Sep 11, 2017 at 09:45:40AM +0200, Nicolai Stange wrote:
+> The driver_override implementation is susceptible to a race condition when
+> different threads are reading vs. storing a different driver override.
+> Add locking to avoid the race condition.
+> 
+> This is in close analogy to commit 6265539776a0 ("driver core: platform:
+> fix race condition with driver_override") from Adrian Salido.
+> 
+> Fixes: 782a985d7af2 ("PCI: Introduce new device binding path using pci_dev.driver_override")
+> Cc: stable@vger.kernel.org	# v3.16+
+> Signed-off-by: Nicolai Stange <nstange@suse.de>
 
-Signed-off-by: Khuong Dinh <kdinh@apm.com>
-        [Take over from Duc Dang]
----
- drivers/pci/host/pci-xgene-msi.c |   38 +++++++++++++++++++++++++++++++++++---
- 1 files changed, 35 insertions(+), 3 deletions(-)
+Applied to for-linus for v4.14, thanks!
 
-diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-index 1f42a20..d657248 100644
---- a/drivers/pci/host/pci-xgene-msi.c
-+++ b/drivers/pci/host/pci-xgene-msi.c
-@@ -4,6 +4,7 @@
-  * Copyright (c) 2014, Applied Micro Circuits Corporation
-  * Author: Tanmay Inamdar <tinamdar@apm.com>
-  *	   Duc Dang <dhdang@apm.com>
-+ *	   Khuong Dinh <kdinh@apm.com>
-  *
-  * This program is free software; you can redistribute  it and/or modify it
-  * under  the terms of  the GNU General  Public License as published by the
-@@ -24,6 +25,7 @@
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/of_pci.h>
-+#include <linux/acpi.h>
- 
- #define MSI_IR0			0x000000
- #define MSI_INT0		0x800000
-@@ -39,7 +41,7 @@ struct xgene_msi_group {
- };
- 
- struct xgene_msi {
--	struct device_node	*node;
-+	struct fwnode_handle	*fwnode;
- 	struct irq_domain	*inner_domain;
- 	struct irq_domain	*msi_domain;
- 	u64			msi_addr;
-@@ -249,6 +251,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
- 	.free   = xgene_irq_domain_free,
- };
- 
-+#ifdef CONFIG_ACPI
-+static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
-+{
-+	return xgene_msi_ctrl.fwnode;
-+}
-+#endif
-+
- static int xgene_allocate_domains(struct xgene_msi *msi)
- {
- 	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-@@ -256,7 +265,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
- 	if (!msi->inner_domain)
- 		return -ENOMEM;
- 
--	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
-+	msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
- 						    &xgene_msi_domain_info,
- 						    msi->inner_domain);
- 
-@@ -265,6 +274,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
- 		return -ENOMEM;
- 	}
- 
-+#ifdef CONFIG_ACPI
-+	pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
-+#endif
- 	return 0;
- }
- 
-@@ -449,6 +461,14 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
- 	{},
- };
- 
-+#ifdef CONFIG_ACPI
-+static const struct acpi_device_id xgene_msi_acpi_ids[] = {
-+	{"APMC0D0E", 0},
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(acpi, xgene_msi_acpi_ids);
-+#endif
-+
- static int xgene_msi_probe(struct platform_device *pdev)
- {
- 	struct resource *res;
-@@ -469,7 +489,18 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 		goto error;
- 	}
- 	xgene_msi->msi_addr = res->start;
--	xgene_msi->node = pdev->dev.of_node;
-+
-+	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
-+	if (!xgene_msi->fwnode) {
-+		xgene_msi->fwnode =
-+			irq_domain_alloc_fwnode((void *)xgene_msi->msi_addr);
-+		if (!xgene_msi->fwnode) {
-+			dev_err(&pdev->dev, "Failed to create fwnode\n");
-+			rc = ENOMEM;
-+			goto error;
-+		}
-+	}
-+
- 	xgene_msi->num_cpus = num_possible_cpus();
- 
- 	rc = xgene_msi_init_allocator(xgene_msi);
-@@ -540,6 +571,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 	.driver = {
- 		.name = "xgene-msi",
- 		.of_match_table = xgene_msi_match_table,
-+		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
- 	},
- 	.probe = xgene_msi_probe,
- 	.remove = xgene_msi_remove,
--- 
-1.7.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/pci-sysfs.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 1eecfa301f7f..8e075ea2743e 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -686,7 +686,7 @@ static ssize_t driver_override_store(struct device *dev,
+>  				     const char *buf, size_t count)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> -	char *driver_override, *old = pdev->driver_override, *cp;
+> +	char *driver_override, *old, *cp;
+>  
+>  	/* We need to keep extra room for a newline */
+>  	if (count >= (PAGE_SIZE - 1))
+> @@ -700,12 +700,15 @@ static ssize_t driver_override_store(struct device *dev,
+>  	if (cp)
+>  		*cp = '\0';
+>  
+> +	device_lock(dev);
+> +	old = pdev->driver_override;
+>  	if (strlen(driver_override)) {
+>  		pdev->driver_override = driver_override;
+>  	} else {
+>  		kfree(driver_override);
+>  		pdev->driver_override = NULL;
+>  	}
+> +	device_unlock(dev);
+>  
+>  	kfree(old);
+>  
+> @@ -716,8 +719,12 @@ static ssize_t driver_override_show(struct device *dev,
+>  				    struct device_attribute *attr, char *buf)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> +	ssize_t len;
+>  
+> -	return snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
+> +	device_lock(dev);
+> +	len = snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
+> +	device_unlock(dev);
+> +	return len;
+>  }
+>  static DEVICE_ATTR_RW(driver_override);
+>  
+> -- 
+> 2.13.5
+> 
