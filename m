@@ -1,46 +1,84 @@
-Return-Path: <SRS0=Xovj=A4=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=Xovj=A4=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Arjan van de Ven <arjan@linux.intel.com>,
-	Alan Cox <alan@linux.intel.com>,
-	Dan J Williams <dan.j.williams@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [RFC 2/3] module: Ignore delete_id parameter
-Date: Wed, 27 Sep 2017 16:40:21 -0400
-Message-Id: <1506544822-2632-3-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
-References: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0054.outbound.protection.outlook.com ([104.47.32.54]:48544
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S934495AbdIYNI7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Sep 2017 09:08:59 -0400
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Wilson.Snyder@cavium.com, jcm@redhat.com,
+        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Subject: [PATCH v5] PCI: quirks: update Cavium ThunderX ACS quirk implementation
+Date: Mon, 25 Sep 2017 06:08:40 -0700
+Message-Id: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+In-Reply-To: <1505724481-28413-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+References: <1505724481-28413-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI driver delete_id parameter is handled in each individual driver
-registration callback.
+This commit makes Cavium PCI ACS quirk applicable only to Cavium
+ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
+in terms of no ACS support advertisement. However, the RTL internally
+implements similar protection as if ACS had completion/request redirection,
+upstream forwarding and validation features enabled.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+Current quirk implementation doesn't take into account PCIERCs which
+also needs to be quirked. So the pci device id check mask is updated
+and check of device ID moved into separate function.
+
+Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
 ---
- kernel/module.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
+ 1 file changed, 21 insertions(+), 8 deletions(-)
 
-diff --git a/kernel/module.c b/kernel/module.c
-index de66ec8..2b2dccf 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -3620,6 +3620,13 @@ static int unknown_module_param_cb(char *param, char *val, const char *modname,
- 		return 0;
- 	}
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a4d3361..0fd2e15 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
+ }
  
-+	/*
-+	 * Ignore driver delete list arguments. They are handled by driver
-+	 * registration callbacks
-+	 */
-+	if (strcmp(param, "delete_id") == 0)
-+		return 0;
+-static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
++/*
++ * The Cavium downstream ports doesn't advertise their ACS capability registers.
++ * However, the RTL internally implements similar protection as if
++ * ACS had completion redirection, forwarding and validation features enabled.
++ * So by this flags we're asserting that the hardware implements and
++ * enables equivalent ACS functionality for these flags.
++ */
++#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
 +
- 	/* Check for magic 'dyndbg' arg */
- 	ret = ddebug_dyndbg_module_param_cb(param, val, modname);
- 	if (ret != 0)
++static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+ {
+ 	/*
+-	 * Cavium devices matching this quirk do not perform peer-to-peer
+-	 * with other functions, allowing masking out these bits as if they
+-	 * were unimplemented in the ACS capability.
++	 * Effectively selects all downstream ports for whole ThunderX 1 family
++	 * by 0xa00 mask (which represents 8 SoCs), while the lower bits of device ID
++	 * are used to indicate which subdevice is used within the SoC.
+ 	 */
+-	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+-		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
++	return (pci_is_pcie(dev) &&
++		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
++		((dev->device & 0xf800) == 0xa000));
++}
+ 
+-	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
++static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
++{
++	if (!pci_quirk_cavium_acs_match(dev))
+ 		return -ENOTTY;
+ 
+-	return acs_flags ? 0 : 1;
++	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+ }
+ 
+ static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
 -- 
-1.8.3.1
+2.9.5
