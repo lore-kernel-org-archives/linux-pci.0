@@ -1,117 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20222 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751353AbdISUUq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Sep 2017 16:20:46 -0400
-Date: Tue, 19 Sep 2017 14:20:24 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Auger Eric <eric.auger@redhat.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] vfio/pci: Virtualize Maximum Payload Size
-Message-ID: <20170919142024.05723289@t450s.home>
-In-Reply-To: <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
-References: <20170919164952.13200.78849.stgit@gimli.home>
-        <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
+Return-Path: <SRS0=mkfs=A3=suse.de=nstange@kernel.org>
+Return-Path: <SRS0=mkfs=A3=suse.de=nstange@kernel.org>
+From: Nicolai Stange <nstange@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Nicolai Stange <nstange@suse.de>,  Bjorn Helgaas <bhelgaas@google.com>,  Adrian Salido <salidoa@google.com>,  Sasha Levin <sasha.levin@oracle.com>,  linux-kernel@vger.kernel.org,  linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/3] PCI: don't use snprintf() in driver_override_show()
+References: <20170911074542.16777-1-nstange@suse.de>
+	<20170911074542.16777-3-nstange@suse.de>
+	<20170911115511.GB16198@kroah.com>
+	<20170925234819.GH15970@bhelgaas-glaptop.roam.corp.google.com>
+Date: Tue, 26 Sep 2017 08:36:11 +0200
+In-Reply-To: <20170925234819.GH15970@bhelgaas-glaptop.roam.corp.google.com>
+	(Bjorn Helgaas's message of "Mon, 25 Sep 2017 18:48:19 -0500")
+Message-ID: <87zi9ivuec.fsf@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-[cc +linux-pci, Sinan]
+Bjorn Helgaas <helgaas@kernel.org> writes:
 
-On Tue, 19 Sep 2017 19:50:37 +0200
-Auger Eric <eric.auger@redhat.com> wrote:
+> On Mon, Sep 11, 2017 at 04:55:11AM -0700, Greg Kroah-Hartman wrote:
+>> On Mon, Sep 11, 2017 at 09:45:41AM +0200, Nicolai Stange wrote:
+>> > Quote from Documentation/filesystems/sysfs.txt:
+>> > 
+>> >   show() must not use snprintf() when formatting the value to be
+>> >   returned to user space. If you can guarantee that an overflow
+>> >   will never happen you can use sprintf() otherwise you must use
+>> >   scnprintf().
+>> > 
+>> > Commit 4efe874aace5 ("PCI: Don't read past the end of sysfs
+>> > "driver_override" buffer") introduced such a snprintf() usage from
+>> > driver_override_show() while at the same time tweaking
+>> > driver_override_store() such that the write buffer can't ever get
+>> > overflowed.
+>> > 
+>> > Reasoning:
+>> > Since aforementioned commit, driver_override_store() only accepts to be
+>> > written buffers less than PAGE_SIZE - 1 in size.
+>> > 
+>> > The then kstrndup()'ed driver_override string will be at most PAGE_SIZE - 1
+>> > in length, including the trailing '\0'.
+>> > 
+>> > After the addition of a '\n' in driver_override_show(), the result won't
+>> > exceed PAGE_SIZE characters in length, again including the trailing '\0'.
+>> > 
+>> > Hence, snprintf(buf, PAGE_SIZE, ...) and sprintf(buf, ...) are equivalent
+>> > at this point.
+>> > 
+>> > Replace the former by the latter in order to adhere to the rules in
+>> > Documentation/filesystems/sysfs.txt.
+>> > 
+>> > This is a style fix only and there's no change in functionality.
+>> > 
+>> > Signed-off-by: Nicolai Stange <nstange@suse.de>
+>> > ---
+>> >  drivers/pci/pci-sysfs.c | 2 +-
+>> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>> > 
+>> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> > index 8e075ea2743e..43f7fbede448 100644
+>> > --- a/drivers/pci/pci-sysfs.c
+>> > +++ b/drivers/pci/pci-sysfs.c
+>> > @@ -722,7 +722,7 @@ static ssize_t driver_override_show(struct device *dev,
+>> >  	ssize_t len;
+>> >  
+>> >  	device_lock(dev);
+>> > -	len = snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
+>> > +	len = sprintf(buf, "%s\n", pdev->driver_override);
+>> 
+>> While I'm all for changes like this, it's an uphill battle to change
+>> them, usually it's best to just catch them before they go into the tree.
 
-> Hi Alex,
-> 
-> On 19/09/2017 18:58, Alex Williamson wrote:
-> > With virtual PCI-Express chipsets, we now see userspace/guest drivers
-> > trying to match the physical MPS setting to a virtual downstream port.
-> > Of course a lone physical device surrounded by virtual interconnects
-> > cannot make a correct decision for a proper MPS setting.  Instead,
-> > let's virtualize the MPS control register so that writes through to
-> > hardware are disallowed.  Userspace drivers like QEMU assume they can
-> > write anything to the device and we'll filter out anything dangerous.
-> > Since mismatched MPS can lead to AER and other faults, let's add it
-> > to the kernel side rather than relying on userspace virtualization to
-> > handle it.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> > 
-> > Do we have any reason to suspect that a userspace driver has any
-> > dependencies on the physical MPS setting or is this only tuning the
-> > protocol layer and it's transparent to the driver?  Note that per the
-> > PCI spec, a device supporting only 128B MPS can hardwire the control
-> > register to 000b, but it doesn't seem PCIe compliant to hardwire it to
-> > any given value, such as would be the appearance if we exposed this as
-> > a read-only register rather than virtualizing it.  QEMU would then be
-> > responsible for virtualizing it, which makes coordinating the upgrade
-> > troublesome.
-> > 
-> >  drivers/vfio/pci/vfio_pci_config.c |    6 ++++--
-> >  1 file changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> > index 5628fe114347..91335e6de88a 100644
-> > --- a/drivers/vfio/pci/vfio_pci_config.c
-> > +++ b/drivers/vfio/pci/vfio_pci_config.c
-> > @@ -849,11 +849,13 @@ static int __init init_pci_cap_exp_perm(struct perm_bits *perm)
-> >  
-> >  	/*
-> >  	 * Allow writes to device control fields, except devctl_phantom,
-> > -	 * which could confuse IOMMU, and the ARI bit in devctl2, which
-> > +	 * which could confuse IOMMU, MPS, which can break communication
-> > +	 * with other physical devices, and the ARI bit in devctl2, which
-> >  	 * is set at probe time.  FLR gets virtualized via our writefn.
-> >  	 */
-> >  	p_setw(perm, PCI_EXP_DEVCTL,
-> > -	       PCI_EXP_DEVCTL_BCR_FLR, ~PCI_EXP_DEVCTL_PHANTOM);
-> > +	       PCI_EXP_DEVCTL_BCR_FLR | PCI_EXP_DEVCTL_PAYLOAD,
-> > +	       ~PCI_EXP_DEVCTL_PHANTOM);
-> >  	p_setw(perm, PCI_EXP_DEVCTL2, NO_VIRT, ~PCI_EXP_DEVCTL2_ARI);  
-> Is it correct that the read value still will be the one written by the
-> guest?
+I did this patch mostly for demonstrating why the exclusion of the
+sprintf() -> snprintf() change from the port of
 
-If we don't do this, the register is read-only, which is what I'm
-suggesting in my comment above doesn't seem spec compliant.  If the
-kernel makes it read-only, then userspace (ex. QEMU) would need to
-virtualize it, and we get into a more complicated, two part fix.
- 
-> I see the MMRS can take the read MPS value in some pcie_bus_config
-> values. So a consequence could be that the applied MMRS (which is not
-> virtualized) is lower than what is set by host, due to a guest pcie root
-> port MPSS for instance.
-> 
-> So if the above is not totally wrong, shouldn't we virtualize MMRS as well?
+  3d713e0e382e ("driver core: platform: add device binding path 'driver_override'")
 
-I think MPSS is Maximum Payload Size Supported and MMRS... did you mean
-MRRS (Maximum Read Request Size)?
+to platform in [3/3] is safe. Because I'm pretty sure that [3/3] would
+have been rejected if it had included that chunk -- due to the
+non-conformity to Documentation/.
 
-My impression is that MRRS is predominantly device and driver
-dependent, not topology dependent.  A device can send a read request
-with a size larger than MPS, which implies that the device supplying
-the read data would split it into multiple TLPs based on MPS.  The
-implementation note in PCIe rev3.1 sec 7.8.4 suggests there may be QoS
-implications of MRRS such that if MRRS>MPS, then the device requesting
-the data may use fewer tokens for the request.  I have no idea how we
-could infer any sort of QoS policy though and I don't see that
-in-kernel drivers are bound to any sort of policy.
 
-The pcie_write_mrrs() function also implies a protocol (which I can't
-find a spec reference to) where it will re-try writing MRRS if the
-value written doesn't stick (and generate a dev_warn on each
-iteration).  Unless we want extra warnings in VMs, that suggests we
-don't want this to be read-only.
+>> Anyway, nice summary, very good job with that.
+>> 
+>> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+> Why use snprintf() instead of scnprintf()?  
 
-So I think we need to allow MRRS writes through to hardware, but I do
-question whether we need to fill the gap that a VM might casually write
-MRRS to a value less than the physical MPS.  This is what we'd expect
-today where the virtual topology has an MPS of 128B regardless of the
-physical topology.  Do we virtualize MRRS writes such that an MRRS
-value less the physical MPS value never reaches hardware?  Can we
-assume that's always invalid?  Thanks,
+s/snprintf/sprintf/, right?
 
-Alex
+
+> It looks like snprintf() is probably safe, but requires a bunch of
+> analysis to prove that, while scnprintf() would be obviously safe.
+
+Personal preference, I guess. Something like "using sprintf() would
+implicitly document that the buffer is always large enough", i.e. that
+the size check in driver_override_store() is already strict enough / correct.
+
+Anyway, I don't have a strong opinion on that. So if you want me to
+change this, I'll do, of course. Just note that Greg K-H. has queued up
+[3/3] somewhere already and thus, it would probably require two patches
+rather than only this one to make PCI and platform look the same again,
+provided that's what is wanted.
+
+So, given that this patch has fulfilled its purpose already, I'm fine
+with either of
+- dropping it
+- taking it
+- s/sprintf/scnprintf/ and do the same for platform.
+
+
+Thanks,
+
+Nicolai
