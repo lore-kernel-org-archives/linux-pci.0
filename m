@@ -1,43 +1,50 @@
-Return-Path: <SRS0=xSYP=A5=huawei.com=zhengqiang10@kernel.org>
-Return-Path: <SRS0=xSYP=A5=huawei.com=zhengqiang10@kernel.org>
-From: Qiang <zhengqiang10@huawei.com>
-To: <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>
-Subject: [PATCH] Bug fix for PME interrupt handler, add Root Status check
-Date: Thu, 28 Sep 2017 11:54:34 +0800
-Message-ID: <1506570874-136126-1-git-send-email-zhengqiang10@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 26 Sep 2017 23:04:35 +0530
+From: Vinod Koul <vinod.koul@intel.com>
+To: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
+Subject: Re: [PATCH v2 4/5] dmaengine: zynqmp_ps_pcie: Adding PS PCIe
+ platform DMA driver
+Message-ID: <20170926173435.GS30097@localhost>
+References: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
+ <1504873388-29195-6-git-send-email-vjonnal@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1504873388-29195-6-git-send-email-vjonnal@xilinx.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+ dmaengine@vger.kernel.org, bharat.kumar.gogada@xilinx.com,
+ linux-pci@vger.kernel.org, michal.simek@xilinx.com,
+ linux-kernel@vger.kernel.org, vjonnal@xilinx.com, robh+dt@kernel.org,
+ rgummal@xilinx.com, linux-arm-kernel@lists.infradead.org, bhelgaas@google.com,
+ dan.j.williams@intel.com, soren.brinkmann@xilinx.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe PME and hot plug share same interrupt number. In some special case,
-Link down event cause hot plug interrupt, devices is not disconnected,
-But read config will return 0xff.
+On Fri, Sep 08, 2017 at 05:53:07PM +0530, Ravi Shankar Jonnalagadda wrote:
+> Platform driver handles transactions for PCIe EP DMA and Root DMA
+> 
+> Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
+> Signed-off-by: RaviKiran Gummaluri <rgummal@xilinx.com>
+> ---
+>  drivers/dma/xilinx/ps_pcie_platform.c | 3055 +++++++++++++++++++++++++++++++++
 
-In that case, PME work function will run and not return Because
-Root Status PME bit always 1 and can not be cleared.
+I dont want to loose my sanity trying to review a 3k patch. If you don't put
+an effort to make your code easier to review, I dont want to see this...
 
-This patch add Root Status check in PME interrupt handler,
-Just do same as pciehp isr Slot status check.
+Nacked-by: Vinod Koul <vinod.koul@intel.com>
 
-Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
----
- drivers/pci/pcie/pme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index fafdb16..67144f5 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -273,7 +273,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
- 	spin_lock_irqsave(&data->lock, flags);
- 	pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
- 
--	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
-+	if (rtsta == (u32)(~0) || !(rtsta & PCI_EXP_RTSTA_PME)) {
- 		spin_unlock_irqrestore(&data->lock, flags);
- 		return IRQ_NONE;
- 	}
 -- 
-1.9.1
+~Vinod
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
