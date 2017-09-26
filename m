@@ -1,136 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59826 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751394AbdISRKw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Sep 2017 13:10:52 -0400
-Date: Tue, 19 Sep 2017 12:10:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI SUBSYSTEM allows inconsistent configuration, current
- Kernel version
-Message-ID: <20170919171048.GB22312@bhelgaas-glaptop.roam.corp.google.com>
-References: <F6127EC53C695C46907CD6EE43F346235291129018@messagesink.samelson.uni-hildesheim.de>
+Return-Path: <SRS0=sCe6=A3=free.fr=marc.w.gonzalez@kernel.org>
+Return-Path: <SRS0=sCe6=A3=free.fr=marc.w.gonzalez@kernel.org>
+Subject: [RESEND PATCH v11 1/3] of/pci: Add dma-ranges parsing support
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>, Marc Zyngier
+ <marc.zyngier@arm.com>, Robin Murphy <robin.murphy@arm.com>,
+ Rob Herring <robh@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+ Mason <slash.tmp@free.fr>
+References: <93a30f88-17e1-af14-0c50-54f829c1158b@free.fr>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Message-ID: <5f6bcfa9-05ec-4cdc-483d-65b098b198d8@free.fr>
+Date: Tue, 26 Sep 2017 12:22:54 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <F6127EC53C695C46907CD6EE43F346235291129018@messagesink.samelson.uni-hildesheim.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <93a30f88-17e1-af14-0c50-54f829c1158b@free.fr>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sascha,
+Several host bridge drivers duplicate of_pci_range_parser_init()
+in order to parse their dma-ranges property.
 
-This needs a changelog.  Can you take a look through the linux-pci
-archives and follow the style there (format of subject line, contents
-of changelog, etc)?  I *can* fix all that up myself, but it goes a lot
-faster if you can save me the trouble.
+Provide of_pci_dma_range_parser_init() for that use-case.
 
-Bjorn
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+---
+ drivers/of/address.c       | 19 ++++++++++++++++---
+ include/linux/of_address.h | 10 +++++++++-
+ 2 files changed, 25 insertions(+), 4 deletions(-)
 
-On Fri, Sep 15, 2017 at 02:18:56PM +0200, Sascha El-Sharkawy wrote:
-> I just recognized that my last mail misses some line breaks corrupting the patch. This fixes the broken patch.
-> 
-> Best regards,
-> Sascha
-> 
-> Signed-off-by:  Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig index c32a77fc8b03..675d79c52709 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -42,13 +42,12 @@ config PCI_DEBUG
->  config PCI_REALLOC_ENABLE_AUTO
->  	bool "Enable PCI resource re-allocation detection"
->  	depends on PCI
-> +	select PCI_IOV
->  	help
->  	  Say Y here if you want the PCI core to detect if PCI resource
->  	  re-allocation needs to be enabled. You can always use pci=realloc=on
-> -          or pci=realloc=off to override it.  Note this feature is a no-op
-> -          unless PCI_IOV support is also enabled; in that case it will
-> -          automatically re-allocate PCI resources if SR-IOV BARs have not
-> -          been allocated by the BIOS.
-> +	  or pci=realloc=off to override it.  It will automatically re-allocate
-> +	  PCI resources if SR-IOV BARs have not been allocated by the BIOS.
->  
->  	  When in doubt, say N.
-> 
-> 
-> 
-> 
-> > On Fri, 15 Sep 2017 at 01:34PM +0200, Sascha El-Sharkawy wrote
-> > 
-> > Dear Bjorn,
-> > 
-> > Thank you for your help. Blow you'll find the inline patch to ensure the
-> > correct Kconfig configuration when PCI_REALLOC_ENABLE_AUTO is selected.
-> > 
-> > Best regards,
-> > Sascha El-Sharkawy
-> > 
-> > Signed-off-by:  Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig index c32a77fc8b03..675d79c52709 100644
-> > --- a/drivers/pci/Kconfig
-> > +++ b/drivers/pci/Kconfig
-> > @@ -42,13 +42,12 @@ config PCI_DEBUG
-> >  config PCI_REALLOC_ENABLE_AUTO
-> >  	bool "Enable PCI resource re-allocation detection"
-> >  	depends on PCI
-> > +	select PCI_IOV
-> >  	help
-> >  	  Say Y here if you want the PCI core to detect if PCI resource
-> >  	  re-allocation needs to be enabled. You can always use
-> > pci=realloc=on
-> > -          or pci=realloc=off to override it.  Note this feature is a no-op
-> > -          unless PCI_IOV support is also enabled; in that case it will
-> > -          automatically re-allocate PCI resources if SR-IOV BARs have not
-> > -          been allocated by the BIOS.
-> > +	  or pci=realloc=off to override it.  It will automatically re-allocate
-> > +	  PCI resources if SR-IOV BARs have not been allocated by the BIOS.
-> > 
-> >  	  When in doubt, say N.
-> > -- -----------------------------------------------------------------------
-> > Sascha El-Sharkawy, MSc
-> > University of Hildesheim                    Tel.: +49 (0) 5121 / 883-40336 Institute of
-> > Computer Science               Fax:  +49 (0) 5121 / 883-40337
-> > Universitätsplatz 1                           elscha@sse.uni-hildesheim.de
-> > D-31141 Hildesheim, Germany               http://www.sse.uni-hildesheim.de
-> > 
-> > 
-> > > On Thu, 14 Sep 2017 10:01:17 +0200, Bjorn Helgaas wrote:
-> > >
-> > > Hi Sascha,
-> > >
-> > > On Wed, Aug 23, 2017 at 08:22:38AM +0200, Sascha El-Sharkawy wrote:
-> > > > We detected that the selection of "PCI resource re-allocation detection"
-> > > > (CONFIG_PCI_REALLOC_ENABLE_AUTO) is ignored in some situations.
-> > This
-> > > > can happen as the related functionality (drivers/pci/setup-bus.c,
-> > > > lines 1702
-> > > > - 1738) depends on CONFIG_PCI_REALLOC_ENABLE_AUTO and
-> > > CONFIG_PCI_IOV,
-> > > > while in Kconfig (drivers/pci/Kconfig, lines 42 - 53) this
-> > > > functionality is only controlled by CONFIG_PCI_REALLOC_ENABLE_AUTO.
-> > > >
-> > > > The dependency on CONFIG_PCI_IOV is only mentioned in the comment
-> > > of
-> > > > CONFIG_PCI_REALLOC_ENABLE_AUTO, but not checked by Kconfig. As
-> > > > CONFIG_PCI_IOV is selected by many other configuration options, we
-> > > > expect the failure to happen in very few configurations only, which
-> > > > makes it even harder to detect and fix. However, there exist
-> > > > configurations that will still be faulty.  The suggested fix ensures
-> > > > that the re-allocation is always working as specified through an
-> > > > automated selection of CONFIG_PCI_IOV if
-> > > CONFIG_PCI_REALLOC_ENABLE_AUTO is selected.
-> > >
-> > > I'm sorry that I missed this patch.  I normally work from patchwork
-> > > (https://patchwork.ozlabs.org/project/linux-pci/list/), and it
-> > > apparently doesn't pick up patches that are attached (or maybe it just
-> > > misses gzipped ones).
-> > >
-> > > Can you please repost this as plain-text email with the patch included
-> > > inline, with a changelog and Signed-off-by?  Then patchwork should
-> > > pick it up and I won't forget about it.
-> > >
-> > > For details about Signed-off-by, etc, see
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tre
-> > > e/Docu mentation/process/submitting-patches.rst
-> > >
-> > > Bjorn
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 580bbf6ca2b1..4cfd29e4ee1b 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -232,8 +232,8 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
+ }
+ EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
+ 
+-int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+-				struct device_node *node)
++static int parser_init(struct of_pci_range_parser *parser,
++			struct device_node *node, const char *name)
+ {
+ 	const int na = 3, ns = 2;
+ 	int rlen;
+@@ -242,7 +242,7 @@ int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 	parser->pna = of_n_addr_cells(node);
+ 	parser->np = parser->pna + na + ns;
+ 
+-	parser->range = of_get_property(node, "ranges", &rlen);
++	parser->range = of_get_property(node, name, &rlen);
+ 	if (parser->range == NULL)
+ 		return -ENOENT;
+ 
+@@ -250,8 +250,21 @@ int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 
+ 	return 0;
+ }
++
++int of_pci_range_parser_init(struct of_pci_range_parser *parser,
++				struct device_node *node)
++{
++	return parser_init(parser, node, "ranges");
++}
+ EXPORT_SYMBOL_GPL(of_pci_range_parser_init);
+ 
++int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
++				struct device_node *node)
++{
++	return parser_init(parser, node, "dma-ranges");
++}
++EXPORT_SYMBOL_GPL(of_pci_dma_range_parser_init);
++
+ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
+ 						struct of_pci_range *range)
+ {
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 37864734ca50..8beed2de98e9 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -49,6 +49,8 @@ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node);
++extern int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
++			struct device_node *node);
+ extern struct of_pci_range *of_pci_range_parser_one(
+ 					struct of_pci_range_parser *parser,
+ 					struct of_pci_range *range);
+@@ -85,7 +87,13 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+ static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node)
+ {
+-	return -1;
++	return -ENOSYS;
++}
++
++static inline int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
++			struct device_node *node)
++{
++	return -ENOSYS;
+ }
+ 
+ static inline struct of_pci_range *of_pci_range_parser_one(
+-- 
+2.11.0
