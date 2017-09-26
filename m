@@ -1,87 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 19 Sep 2017 11:58:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fixup the RTIT_BAR of Intel TH on Denverton
-Message-ID: <20170919165842.GA22312@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170919145136.13527-1-alexander.shishkin@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0081.outbound.protection.outlook.com ([104.47.40.81]:39396
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S964826AbdIZPXg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Sep 2017 11:23:36 -0400
+Date: Tue, 26 Sep 2017 08:23:27 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Wilson.Snyder@cavium.com, jcm@redhat.com,
+        Vadim.Lomovtsev@cavium.com
+Subject: Re: [PATCH v5] PCI: quirks: update Cavium ThunderX ACS quirk
+ implementation
+Message-ID: <20170926152327.GA26588@localhost.localdomain>
+References: <1505724481-28413-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170919145136.13527-1-alexander.shishkin@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alexander,
+Hi guys,
 
-On Tue, Sep 19, 2017 at 05:51:36PM +0300, Alexander Shishkin wrote:
-> On some intergrations of the Intel TH the reported size of RTIT_BAR
+Could you please consider to review following patch?
 
-s/intergrations/integrations/
+For v5 changes:
+- ACS mask comment has been updated.
+- comment has been added for device id filtering mask at match
+  function to provide explantion of CN8xxx devid scheme.
 
-What is "TH"?  If there's a public spec for it, can you include a
-reference here?
+WBR,
+Vadim
 
-I guess this is an erratum, since the device responds to more MMIO
-space than it advertises via the BAR.  Can you include a reference to
-the published erratum?
-
-I'm surprised that this issue occurs so often on Intel parts.  I would
-think that after being burned a few times, Intel would figure out a
-process to validate this.
-
-> doesn't match its actual size, which leads to overlaps with other
-> devices' resources.
-
-So I suppose the BIOS relies on the size advertised via the BAR,
-assigns it to be just below the XHCI space, and now both the TH and
-XHCI respond there?  I assume this causes some sort of "unexpected
-response" error?  Is there a bug report about this?  What does it look
-like when a user hits this?  I'm trying to make this fix discoverable
-to users who might trip over the problem.
-
-> For this reason, we need to resize the RTIT_BAR on Denverton where
-> it would overlap with XHCI MMIO space.
+On Mon, Sep 25, 2017 at 06:08:40AM -0700, Vadim Lomovtsev wrote:
+> This commit makes Cavium PCI ACS quirk applicable only to Cavium
+> ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
+> in terms of no ACS support advertisement. However, the RTL internally
+> implements similar protection as if ACS had completion/request redirection,
+> upstream forwarding and validation features enabled.
 > 
-> Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-> Fixes: 5118ccd347 ("intel_th: pci: Add Denverton SOC support")
-
-Please use a 12-char SHA1.
-
-> Cc: stable@vger.kernel.org
-
-I guess this is only applicable to v4.11+, since 5118ccd34780 appeared in
-v4.11-rc4?
-
+> Current quirk implementation doesn't take into account PCIERCs which
+> also needs to be quirked. So the pci device id check mask is updated
+> and check of device ID moved into separate function.
+> 
+> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
 > ---
->  drivers/pci/quirks.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
+>  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
+>  1 file changed, 21 insertions(+), 8 deletions(-)
 > 
 > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6967c6b4cf..08a1e6629f 100644
+> index a4d3361..0fd2e15 100644
 > --- a/drivers/pci/quirks.c
 > +++ b/drivers/pci/quirks.c
-> @@ -4681,3 +4681,19 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+> @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+>  #endif
 >  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
+>  
+> -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> +/*
+> + * The Cavium downstream ports doesn't advertise their ACS capability registers.
+> + * However, the RTL internally implements similar protection as if
+> + * ACS had completion redirection, forwarding and validation features enabled.
+> + * So by this flags we're asserting that the hardware implements and
+> + * enables equivalent ACS functionality for these flags.
+> + */
+> +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
 > +
-> +static void quirk_intel_th_dnv(struct pci_dev *dev)
-> +{
-> +	struct resource *r = &dev->resource[4];
-> +
-> +	/*
-> +	 * Denverton reports 2k of RTIT_BAR (intel_th resource 4), which
-> +	 * appears to be 4 MB in reality.
-> +	 */
-> +	if (r->end == r->start + 0x7ff) {
-> +		r->start = 0;
-> +		r->end   = 0x3fffff;
-> +		r->flags |= IORESOURCE_UNSET;
-> +	}
+> +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+>  {
+>  	/*
+> -	 * Cavium devices matching this quirk do not perform peer-to-peer
+> -	 * with other functions, allowing masking out these bits as if they
+> -	 * were unimplemented in the ACS capability.
+> +	 * Effectively selects all downstream ports for whole ThunderX 1 family
+> +	 * by 0xa00 mask (which represents 8 SoCs), while the lower bits of device ID
+> +	 * are used to indicate which subdevice is used within the SoC.
+>  	 */
+> -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> +	return (pci_is_pcie(dev) &&
+> +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
+> +		((dev->device & 0xf800) == 0xa000));
 > +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x19e1, quirk_intel_th_dnv);
+>  
+> -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> +{
+> +	if (!pci_quirk_cavium_acs_match(dev))
+>  		return -ENOTTY;
+>  
+> -	return acs_flags ? 0 : 1;
+> +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+>  }
+>  
+>  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
 > -- 
-> 2.14.1
+> 2.9.5
 > 
