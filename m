@@ -1,34 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] vfio/pci: Virtualize Maximum Payload Size
-To: Auger Eric <eric.auger@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20170919164952.13200.78849.stgit@gimli.home>
- <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
- <20170919142024.05723289@t450s.home>
- <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
- <a609bc8b-8c5b-0828-d175-50985d688fe3@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <2d1bb8bf-074b-493b-ff39-3c053fc5f32e@codeaurora.org>
-Date: Wed, 20 Sep 2017 09:02:23 -0400
-MIME-Version: 1.0
-In-Reply-To: <a609bc8b-8c5b-0828-d175-50985d688fe3@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:56468 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030457AbdIZOR1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Sep 2017 10:17:27 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 6/7] PCI: pciehp: Do not clear Presence Detect Changed during initialization
+Date: Tue, 26 Sep 2017 17:17:19 +0300
+Message-Id: <20170926141720.25067-7-mika.westerberg@linux.intel.com>
+In-Reply-To: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/20/2017 9:01 AM, Sinan Kaya wrote:
-> The only valid criteria is that MRRS needs to be a multiple of MPS.
-> 
-> https://linuxplumbersconf.org/2017/ocw//system/presentations/4732/original/crs.pdf
-> 
+It is possible that the hotplug event has already happened before the
+driver is attached to a PCIe hotplug downstream port. If we just clear
+the status we never get the hotplug interrupt and thus the event will be
+missed.
 
-Apologies for sending the wrong link. Correcting it.
+To make sure that does not happen, we leave Presence Detect Changed bit
+untouched during initialization. Then once the event is unmasked we get
+an interrupt and handle the hotplug event properly.
 
-https://linuxplumbersconf.org/2017/ocw//system/presentations/4737/original/mps.pdf
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 83c93f9da65a..bc1622aa7a05 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -862,11 +862,16 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
+ 		ctrl->link_active_reporting = 1;
+ 
+-	/* Clear all remaining event bits in Slot Status register */
++	/*
++	 * Clear all remaining event bits in Slot Status register except
++	 * Presence Detect Changed. We want to make sure possible
++	 * hotplug event is triggered when the interrupt is unmasked so
++	 * that we don't lose that event.
++	 */
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+ 		PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+-		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+-		PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
++		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
++		PCI_EXP_SLTSTA_DLLSC);
+ 
+ 	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c\n",
+ 		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.14.1
