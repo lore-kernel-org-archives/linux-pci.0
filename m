@@ -1,56 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] vfio/pci: Virtualize Maximum Payload Size
-To: Auger Eric <eric.auger@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20170919164952.13200.78849.stgit@gimli.home>
- <c3bbb645-50a9-a1b4-c8f2-8973f0478a2a@redhat.com>
- <20170919142024.05723289@t450s.home>
- <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <a609bc8b-8c5b-0828-d175-50985d688fe3@codeaurora.org>
-Date: Wed, 20 Sep 2017 09:01:09 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49754 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S937368AbdIZPnp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Sep 2017 11:43:45 -0400
+Date: Tue, 26 Sep 2017 09:43:43 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, Wilson.Snyder@cavium.com, jcm@redhat.com
+Subject: Re: [PATCH v5] PCI: quirks: update Cavium ThunderX ACS quirk
+ implementation
+Message-ID: <20170926094343.3e0d8d90@w520.home>
+In-Reply-To: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+References: <1505724481-28413-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+        <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <3dd92928-3cda-50c1-6a67-10721c003c10@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/20/2017 3:59 AM, Auger Eric wrote:
->> My impression is that MRRS is predominantly device and driver
->> dependent, not topology dependent.  A device can send a read request
->> with a size larger than MPS, which implies that the device supplying
->> the read data would split it into multiple TLPs based on MPS.
-> I read that too on the net. However in in 6.3.4.1. (3.0. Nov 10), Rules
-> for SW Configuration it is written:
-> "Software must set Max_Read_Request_Size of an isochronous-configured
-> device with a value that does not exceed the Max_Payload_Size set for
-> the device."
+On Mon, 25 Sep 2017 06:08:40 -0700
+Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+
+> This commit makes Cavium PCI ACS quirk applicable only to Cavium
+> ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
+> in terms of no ACS support advertisement. However, the RTL internally
+> implements similar protection as if ACS had completion/request redirection,
+> upstream forwarding and validation features enabled.
 > 
-> But on the the other hand some drivers are setting the MMRS directly
-> without further checking the MPS?
+> Current quirk implementation doesn't take into account PCIERCs which
+> also needs to be quirked. So the pci device id check mask is updated
+> and check of device ID moved into separate function.
+> 
+> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> ---
+>  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
+>  1 file changed, 21 insertions(+), 8 deletions(-)
 
-We discussed this on LPC. MRRS and MPS are two independent concepts and
-are not related to each other under normal circumstances. 
 
-The only valid criteria is that MRRS needs to be a multiple of MPS.
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 
-https://linuxplumbersconf.org/2017/ocw//system/presentations/4732/original/crs.pdf
+Thanks for making the updates
 
-Because completions are required to be a minimum of MPS size. If MRRS > MPS,
-read response is sent as multiple completions.
 
-The only reason you want to match MRRS==MPS is that you don't want a single
-device to hog system resources. You can have MRRS 4k and MPS 128 bytes. Completions
-come in as 128 x N packets on the PCI bus. 
-
-If you are sharing the same PCI bus with some other device, switch; you are effectively
-stalling other devices. That's why, isochronous devices are requesting small MRRS.
-
-An Isochronous device is an exception not norm.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index a4d3361..0fd2e15 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+>  #endif
+>  }
+>  
+> -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> +/*
+> + * The Cavium downstream ports doesn't advertise their ACS capability registers.
+> + * However, the RTL internally implements similar protection as if
+> + * ACS had completion redirection, forwarding and validation features enabled.
+> + * So by this flags we're asserting that the hardware implements and
+> + * enables equivalent ACS functionality for these flags.
+> + */
+> +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
+> +
+> +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+>  {
+>  	/*
+> -	 * Cavium devices matching this quirk do not perform peer-to-peer
+> -	 * with other functions, allowing masking out these bits as if they
+> -	 * were unimplemented in the ACS capability.
+> +	 * Effectively selects all downstream ports for whole ThunderX 1 family
+> +	 * by 0xa00 mask (which represents 8 SoCs), while the lower bits of device ID
+> +	 * are used to indicate which subdevice is used within the SoC.
+>  	 */
+> -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> +	return (pci_is_pcie(dev) &&
+> +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
+> +		((dev->device & 0xf800) == 0xa000));
+> +}
+>  
+> -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> +{
+> +	if (!pci_quirk_cavium_acs_match(dev))
+>  		return -ENOTTY;
+>  
+> -	return acs_flags ? 0 : 1;
+> +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+>  }
+>  
+>  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
