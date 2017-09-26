@@ -1,186 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:2949 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751284AbdITGoy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Sep 2017 02:44:54 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 1/4] dt-bindings: pci: tegra: Document Tegra186 PCIe DT
-Date: Wed, 20 Sep 2017 12:12:41 +0530
-Message-ID: <1505889764-19397-2-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1505889764-19397-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1505889764-19397-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 26 Sep 2017 09:00:26 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: Alex Williamson <alex.williamson@redhat.com>, bhelgaas@google.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Wilson.Snyder@cavium.com, jcm@redhat.com,
+        Vadim.Lomovtsev@cavium.com
+Subject: Re: [PATCH v5] PCI: quirks: update Cavium ThunderX ACS quirk
+ implementation
+Message-ID: <20170926160026.GA26639@localhost.localdomain>
+References: <1505724481-28413-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170926094343.3e0d8d90@w520.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170926094343.3e0d8d90@w520.home>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra186 PCIe controller DT properties has couple of differences
-wrt Tegra210 PCIe, rest of the DT properties are same.
+On Tue, Sep 26, 2017 at 09:43:43AM -0600, Alex Williamson wrote:
+> On Mon, 25 Sep 2017 06:08:40 -0700
+> Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+> 
+> > This commit makes Cavium PCI ACS quirk applicable only to Cavium
+> > ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
+> > in terms of no ACS support advertisement. However, the RTL internally
+> > implements similar protection as if ACS had completion/request redirection,
+> > upstream forwarding and validation features enabled.
+> > 
+> > Current quirk implementation doesn't take into account PCIERCs which
+> > also needs to be quirked. So the pci device id check mask is updated
+> > and check of device ID moved into separate function.
+> > 
+> > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> > ---
+> >  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
+> >  1 file changed, 21 insertions(+), 8 deletions(-)
+> 
+> 
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+> 
+> Thanks for making the updates
+>
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
- .../bindings/pci/nvidia,tegra20-pcie.txt           | 134 ++++++++++++++++++++-
- 1 file changed, 130 insertions(+), 4 deletions(-)
+Thank you for your patience and for your time, Alex.
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-index 982a74ea6df9..753b67327373 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-@@ -1,10 +1,15 @@
- NVIDIA Tegra PCIe controller
- 
- Required properties:
--- compatible: For Tegra20, must contain "nvidia,tegra20-pcie".  For Tegra30,
--  "nvidia,tegra30-pcie".  For Tegra124, must contain "nvidia,tegra124-pcie".
--  Otherwise, must contain "nvidia,<chip>-pcie", plus one of the above, where
--  <chip> is tegra132 or tegra210.
-+- compatible: Must be:
-+  - "nvidia,tegra20-pcie": for Tegra20
-+  - "nvidia,tegra30-pcie": for Tegra30
-+  - "nvidia,tegra124-pcie": for Tegra124 and Tegra132
-+  - "nvidia,tegra210-pcie": for Tegra210
-+  - "nvidia,tegra186-pcie": for Tegra186
-+- power-domains: To ungate power partition by BPMP powergate driver. Must
-+contain BPMP phandle and PCIe power partition ID. This is required only
-+for Tegra186.
- - device_type: Must be "pci"
- - reg: A list of physical base address and length for each set of controller
-   registers. Must contain an entry for each entry in the reg-names property.
-@@ -124,6 +129,16 @@ Power supplies for Tegra210:
-   - vddio-pex-ctl-supply: Power supply for PCIe control I/O partition. Must
-     supply 1.8 V.
- 
-+Power supplies for Tegra186:
-+- Required:
-+  - dvdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
-+  - hvdd-pex-pll-supply: High-voltage supply for PLLE (shared with USB3). Must
-+    supply 1.8 V.
-+  - hvdd-pex-supply: High-voltage supply for PCIe I/O and PCIe output clocks.
-+    Must supply 1.8 V.
-+  - vddio-pexctl-aud-supply: Power supply for PCIe side band signals. Must
-+    supply 1.8 V.
-+
- Root ports are defined as subnodes of the PCIe controller node.
- 
- Required properties:
-@@ -546,3 +561,114 @@ Board DTS:
- 			status = "okay";
- 		};
- 	};
-+
-+Tegra186:
-+---------
-+
-+SoC DTSI:
-+
-+	pcie@10003000 {
-+		compatible = "nvidia,tegra186-pcie";
-+		power-domains = <&bpmp TEGRA186_POWER_DOMAIN_PCX>;
-+		device_type = "pci";
-+		reg = <0x0 0x10003000 0x0 0x00000800   /* PADS registers */
-+		       0x0 0x10003800 0x0 0x00000800   /* AFI registers */
-+		       0x0 0x40000000 0x0 0x10000000>; /* configuration space */
-+		reg-names = "pads", "afi", "cs";
-+
-+		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
-+			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		bus-range = <0x00 0xff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		ranges = <0x82000000 0 0x10000000 0x0 0x10000000 0 0x00001000   /* port 0 configuration space */
-+			  0x82000000 0 0x10001000 0x0 0x10001000 0 0x00001000   /* port 1 configuration space */
-+			  0x82000000 0 0x10004000 0x0 0x10004000 0 0x00001000   /* port 2 configuration space */
-+			  0x81000000 0 0x0        0x0 0x50000000 0 0x00010000   /* downstream I/O (64 KiB) */
-+			  0x82000000 0 0x50100000 0x0 0x50100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
-+			  0xc2000000 0 0x58000000 0x0 0x58000000 0 0x28000000>; /* prefetchable memory (640 MiB) */
-+
-+		clocks = <&bpmp TEGRA186_CLK_AFI>,
-+			 <&bpmp TEGRA186_CLK_PCIE>,
-+			 <&bpmp TEGRA186_CLK_PLLE>;
-+		clock-names = "afi", "pex", "pll_e";
-+
-+		resets = <&bpmp TEGRA186_RESET_AFI>,
-+			 <&bpmp TEGRA186_RESET_PCIE>,
-+			 <&bpmp TEGRA186_RESET_PCIEXCLK>;
-+		reset-names = "afi", "pex", "pcie_x";
-+
-+		status = "disabled";
-+
-+		pci@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x10000000 0 0x1000>;
-+			reg = <0x000800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x10001000 0 0x1000>;
-+			reg = <0x001000 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <1>;
-+		};
-+
-+		pci@3,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001800 0 0x10004000 0 0x1000>;
-+			reg = <0x001800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <1>;
-+		};
-+	};
-+
-+Board DTS:
-+
-+	pcie@10003000 {
-+		status = "okay";
-+
-+		dvdd-pex-supply = <&vdd_pex>;
-+		hvdd-pex-pll-supply = <&vdd_1v8>;
-+		hvdd-pex-supply = <&vdd_1v8>;
-+		vddio-pexctl-aud-supply = <&vdd_1v8>;
-+
-+		pci@1,0 {
-+			nvidia,num-lanes = <4>;
-+			status = "okay";
-+		};
-+
-+		pci@2,0 {
-+			nvidia,num-lanes = <0>;
-+			status = "disabled";
-+		};
-+
-+		pci@3,0 {
-+			nvidia,num-lanes = <1>;
-+			status = "disabled";
-+		};
-+	};
--- 
-2.1.4
+
+
+Bjorn,
+
+Would you mind to pick up this patch ?
+
+WBR,
+Vadim
+
+> 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index a4d3361..0fd2e15 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+> >  #endif
+> >  }
+> >  
+> > -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +/*
+> > + * The Cavium downstream ports doesn't advertise their ACS capability registers.
+> > + * However, the RTL internally implements similar protection as if
+> > + * ACS had completion redirection, forwarding and validation features enabled.
+> > + * So by this flags we're asserting that the hardware implements and
+> > + * enables equivalent ACS functionality for these flags.
+> > + */
+> > +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
+> > +
+> > +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+> >  {
+> >  	/*
+> > -	 * Cavium devices matching this quirk do not perform peer-to-peer
+> > -	 * with other functions, allowing masking out these bits as if they
+> > -	 * were unimplemented in the ACS capability.
+> > +	 * Effectively selects all downstream ports for whole ThunderX 1 family
+> > +	 * by 0xa00 mask (which represents 8 SoCs), while the lower bits of device ID
+> > +	 * are used to indicate which subdevice is used within the SoC.
+> >  	 */
+> > -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> > -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> > +	return (pci_is_pcie(dev) &&
+> > +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
+> > +		((dev->device & 0xf800) == 0xa000));
+> > +}
+> >  
+> > -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+> > +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +{
+> > +	if (!pci_quirk_cavium_acs_match(dev))
+> >  		return -ENOTTY;
+> >  
+> > -	return acs_flags ? 0 : 1;
+> > +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+> >  }
+> >  
+> >  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+> 
