@@ -1,71 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:44159 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753116AbdI1M6x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 08:58:53 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        Nadav Haklai <nadavh@marvell.com>,
-        Hanna Hawa <hannah@marvell.com>,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@free-electrons.com>,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
-        Evan Wang <xswang@marvell.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH v2 6/7] PCI: aardvark: fix PCIe max read request size setting
-Date: Thu, 28 Sep 2017 14:58:37 +0200
-Message-Id: <20170928125838.11887-7-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 7/7] PCI: pciehp: Check that the device is really present before touching it
+Date: Tue, 26 Sep 2017 17:17:20 +0300
+Message-Id: <20170926141720.25067-8-mika.westerberg@linux.intel.com>
+In-Reply-To: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Evan Wang <xswang@marvell.com>
+During surprise hot-unplug the device is not there anymore. When that
+happens we read 0xffffffff from the registers and pciehp_unconfigure_device()
+inadvertently thinks the device is a display device because bridge
+control register returns 0xff refusing to remove it:
 
-There is an obvious typo issue in the definition of the PCIe maximum
-read request size: a bit shift is directly used as a value, while it
-should be used to shift the correct value.
+  pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
+  pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
+  pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
 
-This is part of fixing bug
-https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
-reported as the user to be important to get a Intel 7260 mini-PCIe
-WiFi card working.
+This causes the hotplug functionality to leave the hierarcy untouched
+preventing further hotplug operations.
 
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Signed-off-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To fix this verify presence of a device by calling pci_device_is_present()
+for it before we touch it any further.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/host/pci-aardvark.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/hotplug/pciehp_pci.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index a173f31853df..c1093b023e48 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -33,6 +33,7 @@
- #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ		0x2
- #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
- #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
-+#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ		0x2
- #define     PCIE_CORE_MPS_UNIT_BYTE				128
- #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
- #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
-@@ -303,7 +304,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 		(PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ <<
- 		 PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
- 		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
--		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
-+		(PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ <<
-+		 PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT);
- 	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
- 
- 	/* Program PCIe Control 2 to disable strict ordering */
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index b31702f76149..2a3a62393ba9 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -101,8 +101,14 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 	 */
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
++		bool present;
++
+ 		pci_dev_get(dev);
+-		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
++
++		/* Check if the device is really there anymore */
++		present = presence ? pci_device_is_present(dev) : false;
++
++		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && present) {
+ 			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+ 			if (bctl & PCI_BRIDGE_CTL_VGA) {
+ 				ctrl_err(ctrl,
+@@ -113,7 +119,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 				break;
+ 			}
+ 		}
+-		if (!presence) {
++		if (!present) {
+ 			pci_dev_set_disconnected(dev, NULL);
+ 			if (pci_has_subordinate(dev))
+ 				pci_walk_bus(dev->subordinate,
+@@ -124,7 +130,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 		 * Ensure that no new Requests will be generated from
+ 		 * the device.
+ 		 */
+-		if (presence) {
++		if (present) {
+ 			pci_read_config_word(dev, PCI_COMMAND, &command);
+ 			command &= ~(PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
+ 			command |= PCI_COMMAND_INTX_DISABLE;
 -- 
-2.13.5
+2.14.1
