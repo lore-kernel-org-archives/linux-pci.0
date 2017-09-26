@@ -1,104 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:33057 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750742AbdIGF7T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2017 01:59:19 -0400
-Subject: Re: [PATCH] PCI: endpoint: use correct "end of test" interrupt
-To: John Keeping <john@metanate.com>
-References: <20170906135524.12548-1-john@metanate.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <fee983c5-1fb9-85c0-f2cd-ce282dad7df3@ti.com>
-Date: Thu, 7 Sep 2017 11:28:31 +0530
+Received: from mail.kernel.org ([198.145.29.99]:60406 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030394AbdIZVaw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Sep 2017 17:30:52 -0400
+Date: Tue, 26 Sep 2017 16:30:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Avoid non working configurations for
+ PCI_REALLOC_ENABLE_AUTO
+Message-ID: <20170926213050.GT15970@bhelgaas-glaptop.roam.corp.google.com>
+References: <F6127EC53C695C46907CD6EE43F346235291129068@messagesink.samelson.uni-hildesheim.de>
 MIME-Version: 1.0
-In-Reply-To: <20170906135524.12548-1-john@metanate.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <F6127EC53C695C46907CD6EE43F346235291129068@messagesink.samelson.uni-hildesheim.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Wednesday 06 September 2017 07:25 PM, John Keeping wrote:
-> pci_epf_test_raise_irq() reads the interrupt to use for the response
-> from reg->command, but this has been cleared at the beginning of the
-> command handler so the value is always zero at this point.
+On Wed, Sep 20, 2017 at 08:44:20AM +0200, Sascha El-Sharkawy wrote:
+> Ensure only valid Kconfig configurations for PCI_REALLOC_ENABLE_AUTO. This
+> is done by selecting PCI_IOV, which is required by PCI_REALLOC_ENABLE_AUTO
+> to work.
 > 
-> Instead, extract the interrupt index before handling the command and
-> then pass the requested interrupt into pci_epf_test_raise_irq().  This
-> allows us to remove the specific code to extract the interrupt for
-> COMMAND_RAISE_MSI_IRQ since it is now handled in common code.
+> Signed-off-by:  Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
 
-Nice!
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> 
-> Signed-off-by: John Keeping <john@metanate.com>
+Applied to pci/virtualization for v4.15, thanks!
+
+I had to apply this manually because it wasn't plain ASCII and had CR
+line endings.  But this was small enough to do by hand :)
+
 > ---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++-------
->  1 file changed, 6 insertions(+), 7 deletions(-)
+>  drivers/pci/Kconfig |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 4ddc6e8f9fe7..f9308c2f22e6 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -251,9 +251,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
->  	return ret;
->  }
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig index c32a77fc8b03..675d79c52709 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -42,13 +42,13 @@ config PCI_DEBUG
+>  config PCI_REALLOC_ENABLE_AUTO
+>  	bool "Enable PCI resource re-allocation detection"
+>  	depends on PCI
+> +	depends on PCI_IOV
+>  	help
+>  	  Say Y here if you want the PCI core to detect if PCI resource
+>  	  re-allocation needs to be enabled. You can always use pci=realloc=on
+> -          or pci=realloc=off to override it.  Note this feature is a no-op
+> -          unless PCI_IOV support is also enabled; in that case it will
+> -          automatically re-allocate PCI resources if SR-IOV BARs have not
+> -          been allocated by the BIOS.
+> +	  or pci=realloc=off to override it.  It will automatically
+> +	  re-allocate PCI resources if SR-IOV BARs have not been allocated by
+> +	  the BIOS.
 >  
-> -static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
-> +static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
->  {
-> -	u8 irq;
->  	u8 msi_count;
->  	struct pci_epf *epf = epf_test->epf;
->  	struct pci_epc *epc = epf->epc;
-> @@ -262,7 +261,6 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
->  
->  	reg->status |= STATUS_IRQ_RAISED;
->  	msi_count = pci_epc_get_msi(epc);
-> -	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
->  	if (irq > msi_count || msi_count <= 0)
->  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
->  	else
-> @@ -289,6 +287,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  	reg->command = 0;
->  	reg->status = 0;
->  
-> +	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-> +
->  	if (command & COMMAND_RAISE_LEGACY_IRQ) {
->  		reg->status = STATUS_IRQ_RAISED;
->  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-> @@ -301,7 +301,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  			reg->status |= STATUS_WRITE_FAIL;
->  		else
->  			reg->status |= STATUS_WRITE_SUCCESS;
-> -		pci_epf_test_raise_irq(epf_test);
-> +		pci_epf_test_raise_irq(epf_test, irq);
->  		goto reset_handler;
->  	}
->  
-> @@ -311,7 +311,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  			reg->status |= STATUS_READ_SUCCESS;
->  		else
->  			reg->status |= STATUS_READ_FAIL;
-> -		pci_epf_test_raise_irq(epf_test);
-> +		pci_epf_test_raise_irq(epf_test, irq);
->  		goto reset_handler;
->  	}
->  
-> @@ -321,13 +321,12 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  			reg->status |= STATUS_COPY_SUCCESS;
->  		else
->  			reg->status |= STATUS_COPY_FAIL;
-> -		pci_epf_test_raise_irq(epf_test);
-> +		pci_epf_test_raise_irq(epf_test, irq);
->  		goto reset_handler;
->  	}
->  
->  	if (command & COMMAND_RAISE_MSI_IRQ) {
->  		msi_count = pci_epc_get_msi(epc);
-> -		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
->  		if (irq > msi_count || msi_count <= 0)
->  			goto reset_handler;
->  		reg->status = STATUS_IRQ_RAISED;
+>  	  When in doubt, say N.
 > 
