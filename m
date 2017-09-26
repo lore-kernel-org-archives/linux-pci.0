@@ -1,70 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 20 Sep 2017 18:37:16 +0200
-From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: Re: [PATCH 1/2] bus: mbus: fix window size calculation for 4GB windows
-Message-ID: <20170920163716.l6kpf56ig5gfqzbi@pengutronix.de>
-References: <20170828152517.24506-1-jlu@pengutronix.de>
- <20170828152517.24506-2-jlu@pengutronix.de>
- <87wp4urbp5.fsf@free-electrons.com>
-MIME-Version: 1.0
-In-Reply-To: <87wp4urbp5.fsf@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>, Jan Luebbe <jlu@pengutronix.de>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, kernel@pengutronix.de,
- linux-arm-kernel@lists.infradead.org, Jason Cooper <jason@lakedaemon.net>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:56468 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030477AbdIZOR3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Sep 2017 10:17:29 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/7] PCI: pciehp: Fix race condition handling surprise link down
+Date: Tue, 26 Sep 2017 17:17:18 +0300
+Message-Id: <20170926141720.25067-6-mika.westerberg@linux.intel.com>
+In-Reply-To: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 19, 2017 at 04:43:18PM +0200, Gregory CLEMENT wrote:
-> Hi Jan,
->  =
+A surprise link down may retrain very quickly causing the same slot
+generate a link up event before handling the link down event completes.
 
->  On lun., ao=FBt 28 2017, Jan Luebbe <jlu@pengutronix.de> wrote:
-> =
+Since the link is active, the power off work queued from the first link
+down will cause a second down event when power is disabled. However, the
+link up event sets the slot state to POWERON_STATE before the event to
+handle this is enqueued, making the second down event believe it needs
+to do something.
 
-> > At least the Armada XP SoC supports 4GB on a single DRAM window. Because
-> > the size register values contain the actual size - 1, the MSB is set in
-> > that case. For example, the SDRAM window's control register's value is
-> > 0xffffffe1 for 4GB (bits 31 to 24 contain the size).
-> >
-> > The MBUS driver reads back each window's size from registers and
-> > calculates the actual size as (control_reg | ~DDR_SIZE_MASK) + 1, which
-> > overflows for 32 bit values, resulting in other miscalculations further
-> > on (a bad RAM window for the CESA crypto engine calculated by
-> > mvebu_mbus_setup_cpu_target_nooverlap() in my case).
-> >
-> > This patch changes the type in 'struct mbus_dram_window' from u32 to
-> > u64, which allows us to keep using the same register calculation code in
-> > most MBUS-using drivers (which calculate ->size - 1 again).
-> >
-> =
+This creates constant link up and down event cycle.
 
-> Your patch looks good, but as it is a fix we should also apply it on
-> stable, could you provide the commit to fix?
+To prevent this it is better to handle each event at the time in order
+it occurred, so change the driver to use ordered workqueue instead.
 
-It was there just from the start: the .c file was introduced in
-v3.10-rc1~64^2~1^2~8^2~2 and already did that 32 bit calculus.
+A normal device hotplug triggers two events (presense detect and link
+up) that are already handled properly in the driver but we currently log
+an error if we find an existing device in the slot. Since this is not an
+error change the log level to be debug instead to avoid scaring users.
 
-Best regards
-Uwe
+This is based on the original work by Ashok Raj.
 
--- =
+Link: https://patchwork.kernel.org/patch/9469023
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c | 7 ++++---
+ drivers/pci/hotplug/pciehp_hpc.c  | 2 +-
+ drivers/pci/hotplug/pciehp_pci.c  | 6 +++++-
+ 3 files changed, 10 insertions(+), 5 deletions(-)
 
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index ec0b4c11ccd9..83f3d4af3677 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -113,10 +113,11 @@ static int board_added(struct slot *p_slot)
+ 
+ 	retval = pciehp_configure_device(p_slot);
+ 	if (retval) {
+-		ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
+-			 pci_domain_nr(parent), parent->number);
+-		if (retval != -EEXIST)
++		if (retval != -EEXIST) {
++			ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
++				 pci_domain_nr(parent), parent->number);
+ 			goto err_exit;
++		}
+ 	}
+ 
+ 	pciehp_green_led_on(p_slot);
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index e5d5ce9e3010..83c93f9da65a 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -795,7 +795,7 @@ static int pcie_init_slot(struct controller *ctrl)
+ 	if (!slot)
+ 		return -ENOMEM;
+ 
+-	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
++	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
+ 	if (!slot->wq)
+ 		goto abort;
+ 
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 19f30a9f461d..b31702f76149 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -46,7 +46,11 @@ int pciehp_configure_device(struct slot *p_slot)
+ 
+ 	dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
+ 	if (dev) {
+-		ctrl_err(ctrl, "Device %s already exists at %04x:%02x:00, cannot hot-add\n",
++		/*
++		 * The device is already there. Either configured by the
++		 * boot firmware or a previous hotplug event.
++		 */
++		ctrl_dbg(ctrl, "Device %s already exists at %04x:%02x:00, skipping hot-add\n",
+ 			 pci_name(dev), pci_domain_nr(parent), parent->number);
+ 		pci_dev_put(dev);
+ 		ret = -EEXIST;
+-- 
+2.14.1
