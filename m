@@ -1,33 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38162 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751355AbdI1QMW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 12:12:22 -0400
-Subject: Re: [PATCH 1/4] pci: introduce __pci_walk_bus for caller with
- pci_bus_sem held
-To: Govindarajulu Varadarajan <gvaradar@cisco.com>, benve@cisco.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
-        mingo@redhat.com, peterz@infradead.org
-References: <20170927214220.41216-1-gvaradar@cisco.com>
- <20170927214220.41216-2-gvaradar@cisco.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5bbeefd2-a409-168c-b596-bcaa29a54eb7@codeaurora.org>
-Date: Thu, 28 Sep 2017 12:12:19 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 26 Sep 2017 14:00:32 +0200
+From: Jan Glauber <jan.glauber@caviumnetworks.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [v4,0/3] Workaround for bus/slot reset on Cavium cn8xxx root ports
+Message-ID: <20170926120032.GA29861@hc>
+References: <20170908081033.3025-1-jglauber@cavium.com>
+ <20170912094049.GA14111@localhost.localdomain>
+ <20170920120912.7544420d@t450s.home>
 MIME-Version: 1.0
-In-Reply-To: <20170927214220.41216-2-gvaradar@cisco.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170920120912.7544420d@t450s.home>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Alex Williamson <alex.williamson@redhat.com>, kvm@vger.kernel.org,
+ david.daney@cavium.com, linux-pci@vger.kernel.org,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
+ linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
+ Jon Masters <jcm@redhat.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9/27/2017 5:42 PM, Govindarajulu Varadarajan wrote:
-> +void __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
-> +		    void *userdata);
+On Wed, Sep 20, 2017 at 12:09:12PM -0600, Alex Williamson wrote:
+> On Tue, 12 Sep 2017 02:40:49 -0700
+> Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+> 
+> > Hi all,
+> > 
+> > Are there any updates on this ?
+> > Comments/objections/acks/nacks ?
+> > 
+> > WBBR,
+> > Vadim
+> > 
+> > On Fri, Sep 08, 2017 at 10:10:30AM +0200, Jan Glauber wrote:
+> > > Using vfio-pci on a combination of cn8xxx and some PCI devices results in
+> > > a kernel panic. This is triggered by issuing a bus or a slot reset
+> > > on the PCI device.
+> > > 
+> > > With this series both checks indicate that the reset is not possible
+> > > preventing the kernel panic.
+> > > 
+> > > David Daney (2):
+> > >   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
+> > >   PCI: Avoid bus reset for Cavium cn8xxx root ports
+> > > 
+> > > Jan Glauber (1):
+> > >   PCI: Avoid slot reset if bus reset is not possible
+> > > 
+> > >  drivers/pci/pci.c    | 8 ++++++++
+> > >  drivers/pci/quirks.c | 8 ++++++++
+> > >  2 files changed, 16 insertions(+)  
+> 
+> 
+> Looks ok to me, for series:
+> 
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+> 
+> I am curious why we're happy targeting this quirk at a single device ID
+> while at the same time trying to expand the ACS quirk to a notable
+> fraction of the Cavium PCI device ID address space.  Thanks,
+> 
+> Alex
 
-pci_walk_bus_locked would be a better name as you are assuming that caller is
-holding the lock. 
+Bjorn, would you take these patches? 
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+We might need to extend the quirk to cover more cn8xxx variants,
+this is not yet entirely clear on our side.
+
+Therefore I'd like to ask if we could merge this patches now to solve the
+long-standing issue for cn88xx.
+
+thanks,
+Jan
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
