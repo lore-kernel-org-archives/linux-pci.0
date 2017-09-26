@@ -1,125 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Govindarajulu Varadarajan <gvaradar@cisco.com>
-To: benve@cisco.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
-        mingo@redhat.com, peterz@infradead.org
-Cc: Govindarajulu Varadarajan <gvaradar@cisco.com>
-Subject: [PATCH 2/4] pci: code refactor pci_bus_lock/unlock/trylock
-Date: Wed, 27 Sep 2017 14:42:18 -0700
-Message-Id: <20170927214220.41216-3-gvaradar@cisco.com>
-In-Reply-To: <20170927214220.41216-1-gvaradar@cisco.com>
-References: <20170927214220.41216-1-gvaradar@cisco.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 26 Sep 2017 15:25:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jork Loeser <jloeser@microsoft.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Subject: Re: [PATCH] ACPI / PCI: Bail early in acpi_pci_add_bus() if there is
+ no ACPI handle
+Message-ID: <20170926202508.GQ15970@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170914145014.2834-1-vkuznets@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170914145014.2834-1-vkuznets@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce __pci_bus_trylock and __pci_bus_unlock with lock and unlock cb
-functions as arguments. User can pass on what they want to lock in pci_dev.
+On Thu, Sep 14, 2017 at 04:50:14PM +0200, Vitaly Kuznetsov wrote:
+> Hyper-V instances support PCI pass-through which is implemented through
+> PV pci-hyperv driver. When a device is passed through a new root PCI bus
+> is created in the guest. The bus sits on top of VMBus and has no
+> associated information in ACPI. acpi_pci_add_bus() in this case proceeds
+> all the way to acpi_evaluate_dsm() with reports
+> 
+>     ACPI: \: failed to evaluate _DSM (0x1001)
+> 
+> While acpi_pci_slot_enumerate() and acpiphp_enumerate_slots() are protected
+> against ACPI_HANDLE() being NULL and do nothing acpi_evaluate_dsm() is not
+> and gives us the error. It seems the correct fix is to not do anything in
+> acpi_pci_add_bus() in such cases.
+> 
+> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
 
-Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
----
- drivers/pci/pci.c   | 38 +++++++++++++++++++++++++++-----------
- include/linux/pci.h | 16 ++++++++++++++++
- 2 files changed, 43 insertions(+), 11 deletions(-)
+Applied to pci/acpi for v4.15, thanks!
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6078dfc11b11..3c6a9210f27c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4377,29 +4377,38 @@ static void pci_bus_lock(struct pci_bus *bus)
- 	}
- }
- 
--/* Unlock devices from the bottom of the tree up */
--static void pci_bus_unlock(struct pci_bus *bus)
-+void __pci_bus_unlock(struct pci_bus *bus,
-+		      void (*unlock)(struct pci_dev *dev))
- {
- 	struct pci_dev *dev;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		if (dev->subordinate)
--			pci_bus_unlock(dev->subordinate);
--		pci_dev_unlock(dev);
-+			__pci_bus_unlock(dev->subordinate, unlock);
-+		unlock(dev);
- 	}
- }
-+EXPORT_SYMBOL_GPL(__pci_bus_unlock);
- 
--/* Return 1 on successful lock, 0 on contention */
--static int pci_bus_trylock(struct pci_bus *bus)
-+/* Unlock devices from the bottom of the tree up */
-+static void pci_bus_unlock(struct pci_bus *bus)
-+{
-+	__pci_bus_unlock(bus, pci_dev_unlock);
-+}
-+
-+int __pci_bus_trylock(struct pci_bus *bus,
-+		      int (*lock)(struct pci_dev *dev),
-+		      void (*unlock)(struct pci_dev *dev))
- {
- 	struct pci_dev *dev;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
--		if (!pci_dev_trylock(dev))
-+		if (!lock(dev))
- 			goto unlock;
- 		if (dev->subordinate) {
--			if (!pci_bus_trylock(dev->subordinate)) {
--				pci_dev_unlock(dev);
-+			if (!__pci_bus_trylock(dev->subordinate, lock,
-+					       unlock)) {
-+				unlock(dev);
- 				goto unlock;
- 			}
- 		}
-@@ -4409,11 +4418,18 @@ static int pci_bus_trylock(struct pci_bus *bus)
- unlock:
- 	list_for_each_entry_continue_reverse(dev, &bus->devices, bus_list) {
- 		if (dev->subordinate)
--			pci_bus_unlock(dev->subordinate);
--		pci_dev_unlock(dev);
-+			__pci_bus_unlock(dev->subordinate, unlock);
-+		unlock(dev);
- 	}
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(__pci_bus_trylock);
-+
-+/* Return 1 on successful lock, 0 on contention */
-+static int pci_bus_trylock(struct pci_bus *bus)
-+{
-+	return __pci_bus_trylock(bus, pci_dev_trylock, pci_dev_unlock);
-+}
- 
- /* Do any devices on or below this slot prevent a bus reset? */
- static bool pci_slot_resetable(struct pci_slot *slot)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index b4b1a8a164c0..33359c64cd2e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1515,6 +1515,22 @@ void pci_cfg_access_lock(struct pci_dev *dev);
- bool pci_cfg_access_trylock(struct pci_dev *dev);
- void pci_cfg_access_unlock(struct pci_dev *dev);
- 
-+void __pci_bus_unlock(struct pci_bus *bus,
-+		      void (*unlock)(struct pci_dev *dev));
-+int __pci_bus_trylock(struct pci_bus *bus,
-+		      int (*lock)(struct pci_dev *dev),
-+		      void (*unlock)(struct pci_dev *dev));
-+static inline int pci_device_trylock(struct pci_dev *dev)
-+{
-+	return device_trylock(&dev->dev);
-+}
-+
-+static inline void pci_device_unlock(struct pci_dev *dev)
-+{
-+	device_unlock(&dev->dev);
-+}
-+
-+
- /*
-  * PCI domain support.  Sometimes called PCI segment (eg by ACPI),
-  * a PCI domain is defined to be a set of PCI buses which share
--- 
-2.14.1
+Rafael, let me know if you have any objections or if you'd rather take
+it yourself.
+
+> ---
+>  drivers/pci/pci-acpi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index a8da543b3814..4708eb9df71b 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -624,7 +624,7 @@ void acpi_pci_add_bus(struct pci_bus *bus)
+>  	union acpi_object *obj;
+>  	struct pci_host_bridge *bridge;
+>  
+> -	if (acpi_pci_disabled || !bus->bridge)
+> +	if (acpi_pci_disabled || !bus->bridge || !ACPI_HANDLE(bus->bridge))
+>  		return;
+>  
+>  	acpi_pci_slot_enumerate(bus);
+> -- 
+> 2.13.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
