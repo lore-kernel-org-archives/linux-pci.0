@@ -1,73 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48874 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751257AbdIPDDN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Sep 2017 23:03:13 -0400
-Date: Fri, 15 Sep 2017 22:03:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Luca Coelho <luca@coelho.fi>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: iwlwifi firmware load broken in current -git
-Message-ID: <20170916030311.GB16731@bhelgaas-glaptop.roam.corp.google.com>
-References: <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
- <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
- <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
- <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk>
- <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
- <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com>
- <fe610637-ecfd-8096-8c44-4f78b4a5811a@kernel.dk>
- <1505505062.32032.1.camel@coelho.fi>
- <79b26165-7baf-c6ee-7552-1ccccb3b7192@kernel.dk>
+Return-Path: <SRS0=24fv=A4=linaro.org=linus.walleij@kernel.org>
+Return-Path: <SRS0=24fv=A4=linaro.org=linus.walleij@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <79b26165-7baf-c6ee-7552-1ccccb3b7192@kernel.dk>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170926191639.GO15970@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170908124503.4491-1-linus.walleij@linaro.org> <20170926191639.GO15970@bhelgaas-glaptop.roam.corp.google.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Wed, 27 Sep 2017 15:25:53 +0200
+Message-ID: <CACRpkdYeo667tTsis-5ZLz-bK-87Ygd3ziD2qH_2KXWf+Oq=mA@mail.gmail.com>
+Subject: Re: [PATCH 1/2 v4] PCI: v3: Update the device tree bindings
+To: Bjorn Helgaas <helgaas@kernel.org>, Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-pci <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 15, 2017 at 01:55:57PM -0600, Jens Axboe wrote:
-> On 09/15/2017 01:51 PM, Luca Coelho wrote:
-> > On Fri, 2017-09-15 at 13:48 -0600, Jens Axboe wrote:
-> >> On 09/15/2017 01:38 PM, Linus Torvalds wrote:
-> >>> On Fri, Sep 15, 2017 at 12:32 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> >>>>>
-> >>>>> In any case, your patch introduces a regression on systems. Please get
-> >>>>> it reverted now, and then you can come up with a new approach to fix the
-> >>>>> double enable of the upstream bridge.
-> >>>>
-> >>>> Who's sending in the revert? I can certainly do it if no one else does,
-> >>>> but it needs to be done.
-> >>>>
-> >>>> I'm not seeing any patches coming out of Srinath to fix up the
-> >>>> situation, so we should revert the broken patch until a better solution
-> >>>> exists.
-> >>>
-> >>> Hmm. I don't have the history here (apparently it never made lkml, for
-> >>> example), so I don't even know which commit you're talking about.
-> >>>
-> >>> From some of the context it looks like commit 40f11adc7cd9 ("PCI:
-> >>> Avoid race while enabling upstream bridges"), is that correct?
-> >>
-> >> Yes, Luca says that Bjorn already sent in the revert request, I just
-> >> didn't see it since I wasn't CC'ed on it. So looks like we're all
-> >> good, provided that makes it into -rc1. 40f11adc7cd9 is the broken
-> >> commit.
-> > 
-> > Strange... AFAICT you *were* CCed on it.  And so was everyone else in
-> > the original thread (+LKML)...
-> 
-> Hmm, never showed up here. Very odd!
+On Tue, Sep 26, 2017 at 9:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Sep 08, 2017 at 02:45:02PM +0200, Linus Walleij wrote:
+>> The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
+>> and predates the more formal format we have adopted for the bindings.
+>>
+>> Update them a bit so it is easier to read, and add the Integrator AP-
+>> specific compatible so we can detect that we are running on that specific
+>> platform.
+>>
+>> Add a second register bank for the configuration memory area. The
+>> device tree specs does specify a memory range for configuration
+>> space but it is not applicable to custom accessors like this. Instead
+>> follow the pattern from the Versatile PCI adapter and simply add
+>> a second register bank for this memory.
+>>
+>> Cc: devicetree@vger.kernel.org
+>> Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+>> Acked-by: Rob Herring <robh@kernel.org>
+>> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+>
+> Applied both to pci/host-v3-semi for v4.15, thanks!
 
-Sorry, I think this is probably because I'm an idiot and sent it from
-an @google.com account and it got rejected because the DMARC check
-failed.
+Oh it fails to build right now (as the zeroday builder noticed)
+since it is using Marc Gonzalez new helper for DMA ranges
+parsing.
 
-Bjorn
+If Marc's patches are getting applied they will solve the issue
+so I wouldn't care in that case.
+
+Yours,
+Linus Walleij
