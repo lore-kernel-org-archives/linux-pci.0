@@ -1,90 +1,98 @@
-Return-Path: <SRS0=T5Vu=A5=arm.com=will.deacon@kernel.org>
-Return-Path: <SRS0=T5Vu=A5=arm.com=will.deacon@kernel.org>
-Date: Thu, 28 Sep 2017 10:03:39 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, mw@semihalf.com,
-	Leif Lindholm <leif.lindholm@linaro.org>,
-	Graeme Gregory <graeme.gregory@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>, Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v3 1/2] pci: designware: add driver for DWC controller in
- ECAM shift mode
-Message-ID: <20170928090339.GA21499@arm.com>
-References: <20170828180437.2646-1-ard.biesheuvel@linaro.org>
- <20170828180437.2646-2-ard.biesheuvel@linaro.org>
- <20170926173200.GL15970@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam03on0046.outbound.protection.outlook.com ([104.47.42.46]:43003
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751569AbdI0UDp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Sep 2017 16:03:45 -0400
+Date: Wed, 27 Sep 2017 13:03:36 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Wilson.Snyder@cavium.com, alex.williamson@redhat.com,
+        vadim.lomovtsev@cavium.com
+Subject: Re: [PATCH v6] PCI: quirks: update Cavium ThunderX ACS quirk
+ implementation
+Message-ID: <20170927200336.GA29443@localhost.localdomain>
+References: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170926173200.GL15970@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 26, 2017 at 12:32:00PM -0500, Bjorn Helgaas wrote:
-> [+cc Will]
-> 
-> On Mon, Aug 28, 2017 at 07:04:36PM +0100, Ard Biesheuvel wrote:
-> > Some implementations of the Synopsys Designware PCIe controller implement
-> > a so-called ECAM shift mode, which allows a static memory window to be
-> > configured that covers the configuration space of the entire bus range.
-> > 
-> > If the firmware performs all the low level configuration that is required
-> > to expose this controller in a fully ECAM compatible manner, we can
-> > simply describe it as "pci-host-ecam-generic" and be done with it.
-> > However, it appears that in some cases (one of which is the Armada 80x0),
-> > the IP is synthesized with an ATU window size that does not allow the
-> > first bus to be mapped in a way that prevents the device on the
-> > downstream port from appearing more than once.
-> > 
-> > So implement a driver that relies on the firmware to perform all low
-> > level initialization, and drives the controller in ECAM mode, but
-> > overrides the config space accessors to take the above quirk into
-> > account.
-> > 
-> > Note that, unlike most drivers for this IP, this driver does not expose
-> > a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
-> > given that this is not a true bridge, and does not require any windows
-> > to be configured in order for the downstream device to operate correctly.
-> > Omitting it also prevents the PCI resource allocation routines from
-> > handing out BAR space to it unnecessarily.
-> 
-> This is a tangent, but does this mean the other drivers do not need to
-> expose a fake 00:00.0 device either?
-> 
-> s/Designware/DesignWare/ in comments, changelogs, Kconfig text, etc.
-> 
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Jingoo Han <jingoohan1@gmail.com>
-> > Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-> > Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-> > ---
-> >  drivers/pci/dwc/Kconfig                | 11 +++
-> >  drivers/pci/dwc/Makefile               |  1 +
-> >  drivers/pci/dwc/pcie-designware-ecam.c | 77 ++++++++++++++++++++
-> 
-> This really doesn't have any DesignWare specifics in it, and it seems
-> more related to drivers/pci/host/pci-host-generic.c than to anything
-> in drivers/pci/dwc.  Maybe it should be
-> drivers/pci/host/pci-host-generic-quirks.c or something?  That's
-> unwieldy, I admit.
-> 
-> Putting it in pci/dwc would make Jingoo and Joao the default
-> maintainers; I don't know how they feel about that.  We would probably
-> have to tweak MAINTAINERS if we *didn't* put it in pci/dwc.
-> 
-> Any thoughts on this, Will?
+Hi guys,
 
-The idea of a "generic quirk" makes me smile, I must admit :)
+I've found one typo (0xa00 instead of 0xa000 at code comment) and v6 has it fixed.
+I bring my apologies for that, could you please review this patch once again.
 
-I think there are two options:
+WBR,
+Vadim
 
-  1. Use the full DWC driver, and don't rely on firmware
--or-
-  2. Rely on firmware, but teach pci-host-generic to deal with the funny
-     config space
-
-For (2), we probably want to describe this as generically as possible
-in case some other SoCs run into the same problem.
-
-Will
+On Wed, Sep 27, 2017 at 11:20:39AM -0700, Vadim Lomovtsev wrote:
+> This commit makes Cavium PCI ACS quirk applicable only to Cavium
+> ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
+> in terms of no ACS support advertisement. However, the RTL internally
+> implements similar protection as if ACS had completion/request redirection,
+> upstream forwarding and validation features enabled.
+> 
+> Current quirk implementation doesn't take into account PCIERCs which
+> also needs to be quirked. So the pci device id check mask is updated
+> and check of device ID moved into separate function.
+> 
+> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> ---
+> 	v5 -> v6: comment typo fix: change 0xa00 to 0xa000
+> 
+>  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
+>  1 file changed, 21 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index a4d3361..ed6c76d 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+>  #endif
+>  }
+>  
+> -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> +/*
+> + * The Cavium downstream ports doesn't advertise their ACS capability registers.
+> + * However, the RTL internally implements similar protection as if
+> + * ACS had completion redirection, forwarding and validation features enabled.
+> + * So by this flags we're asserting that the hardware implements and
+> + * enables equivalent ACS functionality for these flags.
+> + */
+> +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
+> +
+> +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+>  {
+>  	/*
+> -	 * Cavium devices matching this quirk do not perform peer-to-peer
+> -	 * with other functions, allowing masking out these bits as if they
+> -	 * were unimplemented in the ACS capability.
+> +	 * Effectively selects all downstream ports for whole ThunderX 1 family
+> +	 * by 0xa000 mask (which represents 8 SoCs), while the lower bits of device ID
+> +	 * are used to indicate which subdevice is used within the SoC.
+>  	 */
+> -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> +	return (pci_is_pcie(dev) &&
+> +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
+> +		((dev->device & 0xf800) == 0xa000));
+> +}
+>  
+> -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> +{
+> +	if (!pci_quirk_cavium_acs_match(dev))
+>  		return -ENOTTY;
+>  
+> -	return acs_flags ? 0 : 1;
+> +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+>  }
+>  
+>  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+> -- 
+> 2.4.11
+> 
