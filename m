@@ -1,56 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:14165 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750862AbdISOvu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Sep 2017 10:51:50 -0400
-From: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        stable@vger.kernel.org
-Subject: [PATCH] PCI: Fixup the RTIT_BAR of Intel TH on Denverton
-Date: Tue, 19 Sep 2017 17:51:36 +0300
-Message-Id: <20170919145136.13527-1-alexander.shishkin@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 27 Sep 2017 17:00:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Donald Dutile <ddutile@redhat.com>,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
+Subject: Re: [PATCH] uio/uio_pci_generic: Add SR-IOV support
+Message-ID: <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506517162.30379.2.camel@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1506517162.30379.2.camel@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some intergrations of the Intel TH the reported size of RTIT_BAR
-doesn't match its actual size, which leads to overlaps with other
-devices' resources.
+[+cc Don, Alex D, Alex W, Bryant, Bodong, Michael, kvm list]
 
-For this reason, we need to resize the RTIT_BAR on Denverton where
-it would overlap with XHCI MMIO space.
+On Wed, Sep 27, 2017 at 01:59:22PM +0100, David Woodhouse wrote:
+> From: David Woodhouse <dwmw@amazon.co.uk>
+> 
+> Allow userspace to configure SR-IOV VFs through sysfs.
+> 
+> Currently, we need an in-kernel driver to permit this. But sometimes
+> *all* we want to do is enable the VFs so that we can assign them to
+> guests; we don't actually need to deal with the PF in any other way
+> from the host kernel. So let's make it possible to use UIO for that.
+> 
+> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+> ---
+> It's not entirely clear to me why we require the driver to "enable"
+> SR-IOV like this anyway — were there some which needed to do something
+> special and device-specific instead of just falling through to
+> pci_{en,dis}able_sriov(), such that we need to effectively whitelist
+> this in the driver rather than blacklisting the "problematic" ones via
+> PCI quirks?
 
-Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-Fixes: 5118ccd347 ("intel_th: pci: Add Denverton SOC support")
-Cc: stable@vger.kernel.org
----
- drivers/pci/quirks.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+IIUC, this question is basically "why doesn't the PCI core enable IOV
+automatically when it sees an IOV-capable device?"
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6967c6b4cf..08a1e6629f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4681,3 +4681,19 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
-+
-+static void quirk_intel_th_dnv(struct pci_dev *dev)
-+{
-+	struct resource *r = &dev->resource[4];
-+
-+	/*
-+	 * Denverton reports 2k of RTIT_BAR (intel_th resource 4), which
-+	 * appears to be 4 MB in reality.
-+	 */
-+	if (r->end == r->start + 0x7ff) {
-+		r->start = 0;
-+		r->end   = 0x3fffff;
-+		r->flags |= IORESOURCE_UNSET;
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x19e1, quirk_intel_th_dnv);
--- 
-2.14.1
+I think one reason is that an admin might want to control the number
+of VFs we enable (e.g., via 1789382a72a5 ("PCI: SRIOV control and
+status via sysfs" [1]).  But I guess you already know about that,
+since this patch uses that sysfs path, so maybe I don't understand
+your question.
+
+[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=1789382a72a5
+
+>  drivers/uio/uio_pci_generic.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/uio/uio_pci_generic.c b/drivers/uio/uio_pci_generic.c
+> index a56fdf9..bd196f0 100644
+> --- a/drivers/uio/uio_pci_generic.c
+> +++ b/drivers/uio/uio_pci_generic.c
+> @@ -108,15 +108,27 @@ static void remove(struct pci_dev *pdev)
+>  	struct uio_pci_generic_dev *gdev = pci_get_drvdata(pdev);
+>  
+>  	uio_unregister_device(&gdev->info);
+> +	pci_disable_sriov(pdev);
+>  	pci_disable_device(pdev);
+>  	kfree(gdev);
+>  }
+>  
+> +static int sriov_configure(struct pci_dev *pdev, int num_vfs)
+> +{
+> +	if (!num_vfs) {
+> +		pci_disable_sriov(pdev);
+> +		return 0;
+> +	}
+> +
+> +	return pci_enable_sriov(pdev, num_vfs);
+> +}
+> +
+>  static struct pci_driver uio_pci_driver = {
+>  	.name = "uio_pci_generic",
+>  	.id_table = NULL, /* only dynamic id's */
+>  	.probe = probe,
+>  	.remove = remove,
+> +	.sriov_configure = sriov_configure,
+>  };
+>  
+>  module_pci_driver(uio_pci_driver);
+> -- 
+> 2.7.4
+> 
+> -- 
+> dwmw2
