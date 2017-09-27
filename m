@@ -1,101 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60106 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750871AbdIOHXx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Sep 2017 03:23:53 -0400
-Subject: [PATCH] Revert "PCI: Avoid race while enabling upstream bridges"
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linuxwifi@intel.com, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>
-Date: Fri, 15 Sep 2017 02:23:52 -0500
-Message-ID: <20170915072352.10453.31977.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from casper.infradead.org ([85.118.1.10]:41724 "EHLO
+        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751959AbdI0NRq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2017 09:17:46 -0400
+Message-ID: <1506517162.30379.2.camel@infradead.org>
+Subject: [PATCH] uio/uio_pci_generic: Add SR-IOV support
+From: David Woodhouse <dwmw2@infradead.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date: Wed, 27 Sep 2017 13:59:22 +0100
+Content-Type: multipart/signed; micalg="sha-256";
+        protocol="application/x-pkcs7-signature";
+        boundary="=-rNZY0+1pAO+mFup16fUc"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 40f11adc7cd9281227f0a6a627d966dd0a5f0cd9.
 
-Jens found that iwlwifi firmware loading failed on a Lenovo X1 Carbon,
-gen4:
+--=-rNZY0+1pAO+mFup16fUc
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-34.ucode failed with error -2
-  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-33.ucode failed with error -2
-  iwlwifi 0000:04:00.0: Direct firmware load for iwlwifi-8000C-32.ucode failed with error -2
-  iwlwifi 0000:04:00.0: loaded firmware version 31.532993.0 op_mode iwlmvm
-  iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
-  ...
-  iwlwifi 0000:04:00.0: Failed to load firmware chunk!
-  iwlwifi 0000:04:00.0: Could not load the [0] uCode section
-  iwlwifi 0000:04:00.0: Failed to start INIT ucode: -110
-  iwlwifi 0000:04:00.0: Failed to run INIT ucode: -110
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-He bisected it to 40f11adc7cd9 ("PCI: Avoid race while enabling upstream
-bridges").  Revert that commit to fix the regression.
+Allow userspace to configure SR-IOV VFs through sysfs.
 
-Link: http://lkml.kernel.org/r/4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk
-Fixes: 40f11adc7cd9 ("PCI: Avoid race while enabling upstream bridges")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Srinath Mannam <srinath.mannam@broadcom.com>
-CC: Jens Axboe <axboe@kernel.dk>
-CC: Luca Coelho <luca@coelho.fi>
-CC: Johannes Berg <johannes@sipsolutions.net>
-CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Currently, we need an in-kernel driver to permit this. But sometimes
+*all* we want to do is enable the VFs so that we can assign them to
+guests; we don't actually need to deal with the PF in any other way
+from the host kernel. So let's make it possible to use UIO for that.
+
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
 ---
- drivers/pci/pci.c |   13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+It's not entirely clear to me why we require the driver to "enable"
+SR-IOV like this anyway =E2=80=94 were there some which needed to do someth=
+ing
+special and device-specific instead of just falling through to
+pci_{en,dis}able_sriov(), such that we need to effectively whitelist
+this in the driver rather than blacklisting the "problematic" ones via
+PCI quirks?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b0002daa50f3..6078dfc11b11 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -52,7 +52,6 @@ static void pci_pme_list_scan(struct work_struct *work);
- static LIST_HEAD(pci_pme_list);
- static DEFINE_MUTEX(pci_pme_list_mutex);
- static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
--static DEFINE_MUTEX(pci_bridge_mutex);
- 
- struct pci_pme_device {
- 	struct list_head list;
-@@ -1351,16 +1350,10 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 	if (bridge)
- 		pci_enable_bridge(bridge);
- 
--	/*
--	 * Hold pci_bridge_mutex to prevent a race when enabling two
--	 * devices below the bridge simultaneously.  The race may cause a
--	 * PCI_COMMAND_MEMORY update to be lost (see changelog).
--	 */
--	mutex_lock(&pci_bridge_mutex);
- 	if (pci_is_enabled(dev)) {
- 		if (!dev->is_busmaster)
- 			pci_set_master(dev);
--		goto end;
-+		return;
- 	}
- 
- 	retval = pci_enable_device(dev);
-@@ -1368,8 +1361,6 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
- 			retval);
- 	pci_set_master(dev);
--end:
--	mutex_unlock(&pci_bridge_mutex);
+ drivers/uio/uio_pci_generic.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/uio/uio_pci_generic.c b/drivers/uio/uio_pci_generic.c
+index a56fdf9..bd196f0 100644
+--- a/drivers/uio/uio_pci_generic.c
++++ b/drivers/uio/uio_pci_generic.c
+@@ -108,15 +108,27 @@ static void remove(struct pci_dev *pdev)
+ 	struct uio_pci_generic_dev *gdev =3D pci_get_drvdata(pdev);
+=20
+ 	uio_unregister_device(&gdev->info);
++	pci_disable_sriov(pdev);
+ 	pci_disable_device(pdev);
+ 	kfree(gdev);
  }
- 
- static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-@@ -1394,7 +1385,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 		return 0;		/* already enabled */
- 
- 	bridge = pci_upstream_bridge(dev);
--	if (bridge && !pci_is_enabled(bridge))
-+	if (bridge)
- 		pci_enable_bridge(bridge);
- 
- 	/* only skip sriov related */
+=20
++static int sriov_configure(struct pci_dev *pdev, int num_vfs)
++{
++	if (!num_vfs) {
++		pci_disable_sriov(pdev);
++		return 0;
++	}
++
++	return pci_enable_sriov(pdev, num_vfs);
++}
++
+ static struct pci_driver uio_pci_driver =3D {
+ 	.name =3D "uio_pci_generic",
+ 	.id_table =3D NULL, /* only dynamic id's */
+ 	.probe =3D probe,
+ 	.remove =3D remove,
++	.sriov_configure =3D sriov_configure,
+ };
+=20
+ module_pci_driver(uio_pci_driver);
+--=20
+2.7.4
+
+--=20
+dwmw2
+--=-rNZY0+1pAO+mFup16fUc
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
+ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
+EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
+UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
+MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
+bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
+PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
+bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
+uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
+LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
+QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
+UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
+UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
+MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
+BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
+HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
+dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
+LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
+mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
+nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
+4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
+yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
++nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
+CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
+MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
+ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
+MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
+pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
+An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
+p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
+HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
+AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
+dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
+MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
+BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
+UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
+Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
+gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
+dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
+Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
+DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
+eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
+hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
+PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
+QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
+WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
+ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
+bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
+U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
+SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
+RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
+dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
+iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
+M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
+FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
+HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
+BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
+BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
+dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
+U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
+Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
+ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
+BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
+2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
+vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
+YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
+fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
+GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
+R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
+TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
+ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
+CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDkyNzEyNTkyMlowLwYJ
+KoZIhvcNAQkEMSIEIEQcmJIqBSDhLbGGzyYsA/6XU5jcuCVs4IiloxSeKovEMIHBBgkrBgEEAYI3
+EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
+BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
+RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
+WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
+VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
+TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
+b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
+AQB7MtQZAlWZ0TDcGs5qClOhsXdEkbMCtWrWf8DN9JWwenY1tXJvFdNTYBrotUmjQ73Ph2pXVhW5
+o3ZcCuleNEdUvO2vmq0JAum6kaPp9FcdMacpL9MEb5y75SI1G0hssgNh4i10M2042scDAz6Ctu73
+fTg1zaOFeADKQg8eqgYDUdmDILplq8E/z3A/ywo1RduxCbIzqqBWoWVvkX8YgUI1u9Z07P4AG+1H
+4JjlpLerANo8k4LedDLPJmnbS8jR0L1bjMmbOausQzTKj01hBvDUrj6PyojanfZtbdWUWePlYtsK
+G9KdowTqNIRziAxVoON48GUQgndr9KPWp4Lvwjh3AAAAAAAA
+
+
+--=-rNZY0+1pAO+mFup16fUc--
