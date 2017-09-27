@@ -1,99 +1,111 @@
-Return-Path: <SRS0=sw7U=A5=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=sw7U=A5=intel.com=jonathan.derrick@kernel.org>
-Subject: Re: [RFC 1/3] PCI: pci-driver: Introduce pci device delete list
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>,
- Alan Cox <alan@linux.intel.com>, Dan J Williams <dan.j.williams@intel.com>
-References: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
- <1506544822-2632-2-git-send-email-jonathan.derrick@intel.com>
- <20170928090901.GC12599@kroah.com>
-From: Jon Derrick <jonathan.derrick@intel.com>
-Message-ID: <c7f0a859-302d-05a1-d24f-d5a6057420fa@intel.com>
-Date: Thu, 28 Sep 2017 09:53:18 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f65.google.com ([209.85.214.65]:45699 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750934AbdI0Gig (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2017 02:38:36 -0400
+Received: by mail-it0-f65.google.com with SMTP id x15so5875930itb.0
+        for <linux-pci@vger.kernel.org>; Tue, 26 Sep 2017 23:38:35 -0700 (PDT)
+Subject: Re: [PATCH kernel] powerpc/powernv: Reserve a hole which appears
+ after enabling IOV
+To: linuxppc-dev@lists.ozlabs.org
+Cc: David Gibson <david@gibson.dropbear.id.au>,
+        kvm-ppc@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Russell Currey <ruscur@russell.cc>, linux-pci@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20170927060949.10284-1-aik@ozlabs.ru>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <7cdef2e9-65a1-5417-1d06-5733512b9efc@ozlabs.ru>
+Date: Wed, 27 Sep 2017 16:38:29 +1000
 MIME-Version: 1.0
-In-Reply-To: <20170928090901.GC12599@kroah.com>
+In-Reply-To: <20170927060949.10284-1-aik@ozlabs.ru>
 Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg,
-
-On 09/28/2017 03:09 AM, Greg Kroah-Hartman wrote:
-> On Wed, Sep 27, 2017 at 04:40:20PM -0400, Jon Derrick wrote:
->> This patch introduces a new kernel command line parameter to mask pci
->> device ids from pci driver id tables. This prevents masked devices from
->> automatically binding to both built-in and module drivers.
->>
->> Devices can be later attached through the driver's sysfs new_id
->> inteface.
->>
->> The use cases for this are primarily for debugging, eg, being able to
->> prevent attachment before probes are set up. It can also be used to mask
->> off faulty built-in hardware or faulty simulated hardware.
->>
->> Another use case is to prevent attachment of devices which will be
->> passed to VMs, shortcutting the detachment effort.
+On 27/09/17 16:09, Alexey Kardashevskiy wrote:
+> In order to make generic IOV code work, the physical function IOV BAR
+> should start from offset of the first VF. Since M64 segments share
+> PE number space across PHB, and some PEs may be in use at the time
+> when IOV is enabled, the existing code shifts the IOV BAR to the index
+> of the first PE/VF. This creates a hole in IOMEM space which can be
+> potentially taken by some other device.
 > 
-> Is the "shortcut" really that big of a deal?  unbind actually causes
-> problems?  Is this an attempt to deal with devices being handled by more
-> than one driver and then you want to manually bind it later on?
-> 
->> The format is similar to the sysfs new_id format. Device ids are
->> specified with:
->>
->> VVVV:DDDD[:SVVV:SDDD][:CCCC][:MMMM]
->>
->> Where:
->> VVVV = Vendor ID
->> DDDD = Device ID
->> SVVV = Subvendor ID
->> SDDD = Subdevice ID
->> CCCC = Class
->> MMMM = Class Mask
->>
->> IDs can be chained with commas.
->>
->> Examples:
->> 	<driver>.delete_id=1234:5678
->> 	<driver>.delete_id=ffffffff:ffffffff
->> 	<driver>.delete_id=ffffffff:ffffffff:ffffffff:ffffffff:010802
->> 	<driver>.delete_id=1234:5678,abcd:ef01,2345:ffffffff
-> 
-> What about drivers that handle more than one bus type (i.e. USB and
-> PCI?)  This format is specific to PCI, yet you are defining it as a
-> "global" for all drivers :(
-> 
-I was hoping to extend it to other bus types as well, but just wanted
-some early feedback on the idea. Pci was the easier implementation for
-me. Could prepending pci:, usb:, etc on the format be an option?
+> This reserves a temporary hole on a parent and releases it when IOV is
+> disabled; the temporary resources are stored in pci_dn to avoid
+> kmalloc/free.
 
-> This feels hacky, what is the real reason for this?  It feels like we
-> have so many different ways to blacklist and unbind and bind devices to
-> drivers already, why add yet-another way?
+Please ignore that, I'll post v2.
+
+
+
 > 
-I ran into an issue a while back where I needed to disable a device from
-a built-in driver to perform a regression test. I worked around that
-issue by doing an initcall_blacklist on the pci-driver declaration, but
-that also preventing later binding because the driver was never registered.
-
-I've also had issues with remote systems where pluggable devices were
-broken or otherwise non-responsive, and it would have been nice to have
-been able to keep them from binding on module loading as a temporary
-workaround until someone could have removed those devices (though
-impossible on built-in hardware).
-
-I'm not sure about hacky; I think the implementation in this patch (1/3)
-is pretty clean :). I'm not familiar with all the different ways of
-blacklisting. Is there another way to work around the issues I listed above?
-
-I understand the concern about having it exist in the format <driver>.
-and only supporting one or a few bus types. I have another set that
-extends the pci= parameter instead.
-
-> thanks,
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> ---
 > 
-> greg k-h
+> I assume this goes to powerpc next branch but before this I'd like to
+> get Bjorn's opinion as he continously commented on this bit.
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h     |  1 +
+>  arch/powerpc/platforms/powernv/pci-ioda.c | 21 ++++++++++++++++++---
+>  2 files changed, 19 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 0b8aa1fe2d5f..62ed83db04ae 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -218,6 +218,7 @@ struct pci_dn {
+>  #endif
+>  	struct list_head child_list;
+>  	struct list_head list;
+> +	struct resource holes[PCI_SRIOV_NUM_BARS];
+>  };
+>  
+>  /* Get the pointer to a device_node's pci_dn */
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 57f9e55f4352..d01c1ac02ea4 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -1002,9 +1002,12 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>  	}
+>  
+>  	/*
+> -	 * After doing so, there would be a "hole" in the /proc/iomem when
+> -	 * offset is a positive value. It looks like the device return some
+> -	 * mmio back to the system, which actually no one could use it.
+> +	 * Since M64 BAR shares segments among all possible 256 PEs,
+> +	 * we have to shift the beginning of PF IOV BAR to make it start from
+> +	 * the segment which belongs to the PE number assigned to the first VF.
+> +	 * This creates a "hole" in the /proc/iomem which could be used for
+> +	 * allocating other resources so we reserve this area below and
+> +	 * release when IOV is released.
+>  	 */
+>  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>  		res = &dev->resource[i + PCI_IOV_RESOURCES];
+> @@ -1019,6 +1022,18 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>  			 i, &res2, res, (offset > 0) ? "En" : "Dis",
+>  			 num_vfs, offset);
+>  		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
+> +
+> +		if (offset > 0) {
+> +			pdn->holes[i].start = res2.start;
+> +			pdn->holes[i].end = res2.start + size * offset - 1;
+> +			pdn->holes[i].flags = IORESOURCE_BUS;
+> +			pdn->holes[i].name = "pnv_iov_reserved";
+> +			devm_request_resource(&dev->dev, res->parent,
+> +					&pdn->holes[i]);
+> +		} else {
+> +			devm_release_resource(&dev->dev, &pdn->holes[i]);
+> +			memset(&pdn->holes[i], 0, sizeof(pdn->holes[i]));
+> +		}
+>  	}
+>  	return 0;
+>  }
 > 
 
-Best,
-Jon
+
+-- 
+Alexey
