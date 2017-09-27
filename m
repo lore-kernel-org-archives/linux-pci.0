@@ -1,53 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp5-g21.free.fr ([212.27.42.5]:19534 "EHLO smtp5-g21.free.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751577AbdIHL0k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Sep 2017 07:26:40 -0400
-Subject: Re: [PATCH 4/4] PCI: xgene: Clean up whitespace
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Scott Branden <sbranden@broadcom.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        bcm-kernel-feedback-list@broadcom.com
-References: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20170905182721.27030.75771.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <6d9454ac-d238-fc64-04f2-4534b0a419de@free.fr>
-Date: Fri, 8 Sep 2017 13:26:21 +0200
+Return-Path: <SRS0=yQ5U=A4=axtens.net=dja@kernel.org>
+Return-Path: <SRS0=yQ5U=A4=axtens.net=dja@kernel.org>
+From: Daniel Axtens <dja@axtens.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, benh@kernel.crashing.org, z.liuxinliang@hisilicon.com, zourongrong@gmail.com, catalin.marinas@arm.com, will.deacon@arm.com, gabriele.paoloni@huawei.com, airlied@linux.ie, daniel.vetter@intel.com, alex.williamson@redhat.com, dri-devel@lists.freedesktop.org, lukas@wunner.de, ard.biesheuvel@linaro.org, lorenzo.pieralisi@arm.com
+Subject: Re: [PATCH v3 0/3] Split default display handling out from VGA arbiter
+In-Reply-To: <20170925163948.GD15970@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170901072744.2409-1-dja@axtens.net> <20170925163948.GD15970@bhelgaas-glaptop.roam.corp.google.com>
+Date: Wed, 27 Sep 2017 13:52:55 +1000
+Message-ID: <87k20kyezs.fsf@linkitivity.dja.id.au>
 MIME-Version: 1.0
-In-Reply-To: <20170905182721.27030.75771.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/09/2017 20:27, Bjorn Helgaas wrote:
+Hi Bjorn,
 
-> Use tabs (not spaces) for indentation.  No functional change intended.
+Yes, this works:
 
-git diff -b should be empty, right?
+Tested-by: Daniel Axtens <dja@axtens.net> # arm64, ppc64-qemu-tcg
 
-> @@ -280,12 +280,12 @@ static int xgene_v2_pcie_ecam_init(struct pci_config_window *cfg)
->   }
->   
->   struct pci_ecam_ops xgene_v2_pcie_ecam_ops = {
-> -	.bus_shift      = 16,
-> -	.init           = xgene_v2_pcie_ecam_init,
-> -	.pci_ops        = {
-> -		.map_bus        = xgene_pcie_map_bus,
-> -		.read           = xgene_pcie_config_read32,
-> -		.write          = pci_generic_config_write,
-> +	.bus_shift	= 16,
-> +	.init		= xgene_v2_pcie_ecam_init,
-> +	.pci_ops	= {
-> +		.map_bus	= xgene_pcie_map_bus,
-> +		.read		= xgene_pcie_config_read32,
-> +		.writei		= pci_generic_config_write,
->   	}
->   };
->   #endif
 
-Spurious 'i' in '.writei' ;-)
-
-Regards.
+Regards,
+Daniel
+> On Fri, Sep 01, 2017 at 05:27:41PM +1000, Daniel Axtens wrote:
+>> This patch set:
+>> 
+>>  - splits the default display handling out from VGA arbiter, into its
+>>    own file and behind its own Kconfig option (and gives the functions
+>>    better names).
+>> 
+>>  - adds extra detection of default devices. To be nominated, the vga
+>>    arbiter and platform hooks must not have nominated a default. A
+>>    card will then only be nominated if it has a driver attached and
+>>    has IO or memory decoding enabled.
+>> 
+>>  - adds relevant documentation.
+>> 
+>> The practical impact of this is improved X autoconfiguration on some
+>> arm64 systems.
+>
+> I think I gave you bad advice about trying to separate the "default
+> device" idea from the VGA arbiter.
+>
+> It is true that the "VGA arbiter" per se is related to routing the
+> legacy VGA resources, and the arbiter currently only selects a default
+> device if it finds a device to which those resources are routed.
+>
+> We have some cases where we want to select a default device that may
+> not support the legacy VGA resources, or where they might not be
+> routed to the device:
+>
+>   - systems where we match the EFI framebuffer address with a BAR, and
+>     select that device as default,
+>
+>   - powerpc systems where there may be no host bridge window that maps
+>     to the legacy VGA resources,
+>
+>   - your ARM64 systems where the default device may be behind a bridge
+>     that doesn't support legacy VGA routing (PCI_BRIDGE_CTL_VGA)
+>
+> But I think trying to split the "default device" part out from the VGA
+> arbiter ends up being overkill and making things more complicated
+> instead of simpler.
+>
+> Would something like the following work for you as well as the powerpc
+> case?  On powerpc, we already use vga_set_default_device() to select a
+> device that doesn't use legacy VGA resources, so maybe we can just do
+> the same on ARM64?
+>
+> I suppose there might be wrinkles in how the arbiter deals with
+> multiple graphics devices on those systems, since I don't think it
+> identifies these devices that don't use the legacy resources, but it
+> seems like we live with whatever those on are powerpc and probably can
+> on ARM64 as well.
+>
+>
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 02831a396419..0ac7aa346c69 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+> -
+> -static void fixup_vga(struct pci_dev *pdev)
+> -{
+> -	u16 cmd;
+> -
+> -	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> -	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+> -		vga_set_default_device(pdev);
+> -
+> -}
+> -DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+> -			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
+> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> index 76875f6299b8..9df4802c5f04 100644
+> --- a/drivers/gpu/vga/vgaarb.c
+> +++ b/drivers/gpu/vga/vgaarb.c
+> @@ -1468,6 +1468,21 @@ static int __init vga_arb_device_init(void)
+>  			vgaarb_info(dev, "no bridge control possible\n");
+>  	}
+>  
+> +	if (!vga_default_device()) {
+> +		list_for_each_entry(vgadev, &vga_list, list) {
+> +			struct device *dev = &vgadev->pdev->dev;
+> +			u16 cmd;
+> +
+> +			pdev = vgadev->pdev;
+> +			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+> +				vgaarb_info(dev, "setting as boot device\n");
+> +				vga_set_default_device(pdev);
+> +				break;
+> +			}
+> +		}
+> +	}
+> +
+>  	pr_info("loaded\n");
+>  	return rc;
+>  }
