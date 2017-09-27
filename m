@@ -1,144 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:41961 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753442AbdIHJyA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:54:00 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
-        Antoine Tenart <antoine.tenart@free-electrons.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 3/7] PCI: aardvark: set host and device to the same MAX payload size
-Date: Fri,  8 Sep 2017 11:53:44 +0200
-Message-Id: <20170908095348.16578-4-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
-References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Xovj=A4=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=Xovj=A4=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	Alan Cox <alan@linux.intel.com>,
+	Dan J Williams <dan.j.williams@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [RFC 0/3] Introduce PCI device blacklisting
+Date: Wed, 27 Sep 2017 16:40:19 -0400
+Message-Id: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+This set introduces a method to keep devices from matching driver id
+tables.
 
-Since the Aardvark does not implement a PCIe root bus, the Linux PCIe
-subsystem will not align the MAX payload size between the host and the
-device. This patch ensures that the host and device have the same MAX
-payload size, fixing a number of problems with various PCIe devices.
+Please see 0001 for more details of the motivation and implementation.
 
-This is part of fixing bug
-https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
-reported as the user to be important to get a Intel 7260 mini-PCIe
-WiFi card working.
+This set currently applies to Bjorn's next (v4.14-rc1) branch.
 
-Fixes: Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-aardvark.c | 60 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 59 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 68ff10e17c74..e361c673732f 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -30,8 +30,10 @@
- #define PCIE_CORE_DEV_CTRL_STATS_REG				0xc8
- #define     PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE	(0 << 4)
- #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
-+#define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ		0x2
- #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
- #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
-+#define     PCIE_CORE_MPS_UNIT_BYTE				128
- #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
- #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
- #define     PCIE_CORE_LINK_TRAINING				BIT(5)
-@@ -298,7 +300,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 
- 	/* Set PCIe Device Control and Status 1 PF0 register */
- 	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
--		(7 << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
-+		(PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ <<
-+		 PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
- 		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
- 		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
- 	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
-@@ -880,6 +883,58 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
- 	return err;
- }
- 
-+static int advk_pcie_find_smpss(struct pci_dev *dev, void *data)
-+{
-+	u8 *smpss = data;
-+
-+	if (!dev)
-+		return 0;
-+
-+	if (!pci_is_pcie(dev))
-+		return 0;
-+
-+	if (*smpss > dev->pcie_mpss)
-+		*smpss = dev->pcie_mpss;
-+
-+	return 0;
-+}
-+
-+static int advk_pcie_bus_configure_mps(struct pci_dev *dev, void *data)
-+{
-+	int mps;
-+
-+	if (!dev)
-+		return 0;
-+
-+	if (!pci_is_pcie(dev))
-+		return 0;
-+
-+	mps = PCIE_CORE_MPS_UNIT_BYTE << *(u8 *)data;
-+	pcie_set_mps(dev, mps);
-+
-+	return 0;
-+}
-+
-+static void advk_pcie_configure_mps(struct pci_bus *bus, struct advk_pcie *pcie)
-+{
-+	u8 smpss = PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ;
-+	u32 reg;
-+
-+	/* Find the minimal supported MAX payload size */
-+	advk_pcie_find_smpss(bus->self, &smpss);
-+	pci_walk_bus(bus, advk_pcie_find_smpss, &smpss);
-+
-+	/* Configure RC MAX payload size */
-+	reg = advk_readl(pcie, PCIE_CORE_DEV_CTRL_STATS_REG);
-+	reg &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+	reg |= smpss << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT;
-+	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
-+
-+	/* Configure device MAX payload size */
-+	advk_pcie_bus_configure_mps(bus->self, &smpss);
-+	pci_walk_bus(bus, advk_pcie_bus_configure_mps, &smpss);
-+}
-+
- static int advk_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -951,6 +1006,9 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	list_for_each_entry(child, &bus->children, node)
- 		pcie_bus_configure_settings(child);
- 
-+	/* Configure the MAX pay load size */
-+	advk_pcie_configure_mps(bus, pcie);
-+
- 	pci_bus_add_devices(bus);
- 	return 0;
- }
+Jon Derrick (3):
+  PCI: pci-driver: Introduce pci device delete list
+  module: Ignore delete_id parameter
+  Documentation: Add pci device delete_id interface
+
+ Documentation/admin-guide/kernel-parameters.txt |  13 ++
+ drivers/pci/pci-driver.c                        | 253 +++++++++++++++++++++++-
+ include/linux/pci.h                             |   1 +
+ kernel/module.c                                 |   7 +
+ 4 files changed, 272 insertions(+), 2 deletions(-)
+
 -- 
-2.13.5
+1.8.3.1
