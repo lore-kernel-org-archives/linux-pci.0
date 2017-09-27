@@ -1,113 +1,78 @@
-Return-Path: <SRS0=bmG0=A5=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=bmG0=A5=linaro.org=ard.biesheuvel@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20170928160019.GC9892@arm.com>
-References: <20170828180437.2646-1-ard.biesheuvel@linaro.org>
- <20170828180437.2646-2-ard.biesheuvel@linaro.org> <20170926173200.GL15970@bhelgaas-glaptop.roam.corp.google.com>
- <20170928090339.GA21499@arm.com> <CAKv+Gu-7OWG0=7VcWxaVqtAYoWrmNd1xhweS+EhSZES3cNJ+Kw@mail.gmail.com>
- <20170928160019.GC9892@arm.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 28 Sep 2017 09:04:09 -0700
-Message-ID: <CAKv+Gu-rSUVEufN71uazdTz443PLJDw56jMKxo=y8xYV-5ziZw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] pci: designware: add driver for DWC controller in
- ECAM shift mode
-To: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Marcin Wojtas <mw@semihalf.com>,
-	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>, Rob Herring <robh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Govindarajulu Varadarajan <gvaradar@cisco.com>
+To: benve@cisco.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
+        mingo@redhat.com, peterz@infradead.org
+Cc: Govindarajulu Varadarajan <gvaradar@cisco.com>
+Subject: [PATCH 1/4] pci: introduce __pci_walk_bus for caller with pci_bus_sem held
+Date: Wed, 27 Sep 2017 14:42:17 -0700
+Message-Id: <20170927214220.41216-2-gvaradar@cisco.com>
+In-Reply-To: <20170927214220.41216-1-gvaradar@cisco.com>
+References: <20170927214220.41216-1-gvaradar@cisco.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28 September 2017 at 09:00, Will Deacon <will.deacon@arm.com> wrote:
-> On Thu, Sep 28, 2017 at 08:57:28AM -0700, Ard Biesheuvel wrote:
->> On 28 September 2017 at 02:03, Will Deacon <will.deacon@arm.com> wrote:
->> > On Tue, Sep 26, 2017 at 12:32:00PM -0500, Bjorn Helgaas wrote:
->> >> [+cc Will]
->> >>
->> >> On Mon, Aug 28, 2017 at 07:04:36PM +0100, Ard Biesheuvel wrote:
->> >> > Some implementations of the Synopsys Designware PCIe controller implement
->> >> > a so-called ECAM shift mode, which allows a static memory window to be
->> >> > configured that covers the configuration space of the entire bus range.
->> >> >
->> >> > If the firmware performs all the low level configuration that is required
->> >> > to expose this controller in a fully ECAM compatible manner, we can
->> >> > simply describe it as "pci-host-ecam-generic" and be done with it.
->> >> > However, it appears that in some cases (one of which is the Armada 80x0),
->> >> > the IP is synthesized with an ATU window size that does not allow the
->> >> > first bus to be mapped in a way that prevents the device on the
->> >> > downstream port from appearing more than once.
->> >> >
->> >> > So implement a driver that relies on the firmware to perform all low
->> >> > level initialization, and drives the controller in ECAM mode, but
->> >> > overrides the config space accessors to take the above quirk into
->> >> > account.
->> >> >
->> >> > Note that, unlike most drivers for this IP, this driver does not expose
->> >> > a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
->> >> > given that this is not a true bridge, and does not require any windows
->> >> > to be configured in order for the downstream device to operate correctly.
->> >> > Omitting it also prevents the PCI resource allocation routines from
->> >> > handing out BAR space to it unnecessarily.
->> >>
->> >> This is a tangent, but does this mean the other drivers do not need to
->> >> expose a fake 00:00.0 device either?
->> >>
->> >> s/Designware/DesignWare/ in comments, changelogs, Kconfig text, etc.
->> >>
->> >> > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> >> > Cc: Jingoo Han <jingoohan1@gmail.com>
->> >> > Cc: Joao Pinto <Joao.Pinto@synopsys.com>
->> >> > Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
->> >> > ---
->> >> >  drivers/pci/dwc/Kconfig                | 11 +++
->> >> >  drivers/pci/dwc/Makefile               |  1 +
->> >> >  drivers/pci/dwc/pcie-designware-ecam.c | 77 ++++++++++++++++++++
->> >>
->> >> This really doesn't have any DesignWare specifics in it, and it seems
->> >> more related to drivers/pci/host/pci-host-generic.c than to anything
->> >> in drivers/pci/dwc.  Maybe it should be
->> >> drivers/pci/host/pci-host-generic-quirks.c or something?  That's
->> >> unwieldy, I admit.
->> >>
->> >> Putting it in pci/dwc would make Jingoo and Joao the default
->> >> maintainers; I don't know how they feel about that.  We would probably
->> >> have to tweak MAINTAINERS if we *didn't* put it in pci/dwc.
->> >>
->> >> Any thoughts on this, Will?
->> >
->> > The idea of a "generic quirk" makes me smile, I must admit :)
->> >
->> > I think there are two options:
->> >
->> >   1. Use the full DWC driver, and don't rely on firmware
->> > -or-
->> >   2. Rely on firmware, but teach pci-host-generic to deal with the funny
->> >      config space
->> >
->> > For (2), we probably want to describe this as generically as possible
->> > in case some other SoCs run into the same problem.
->> >
->>
->> I take it this implies a DT property. I could add one that consists of
->> an array of val/mask tuples or base/size tuples that allow us to
->> disable arbitrary subregions of the config space. I could also add a
->> simple boolean property that implements this exact quirk. Do you have
->> any preference?
->
-> I'd say either a boolean property or a new compatible string. I think Rob
-> prefers the latter, from what he said recently on an SMMU thread.
->
+Move pci_bus_sem down/up out of pci_walk_bus and rename it to
+__pci_walk_bus. Caller who already hold pci_bus_sem can call
+__pci_walk_bus.
 
-OK. Given that Rob already acked the binding for this driver, I'll go
-ahead and rework the patch to add
+Signed-off-by: Govindarajulu Varadarajan <gvaradar@cisco.com>
+---
+ drivers/pci/bus.c   | 13 +++++++++++--
+ include/linux/pci.h |  2 ++
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-+       { .compatible = "marvell,armada8k-pcie-ecam" },
-+       { .compatible = "socionext,synquacer-pcie-ecam" },
-+       { .compatible = "snps,dw-pcie-ecam" },
-
-to the pci-host-ecam-generic driver instead.
-
-Thanks,
-Ard.
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index bc56cf19afd3..3cababe74af0 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -376,8 +376,10 @@ EXPORT_SYMBOL(pci_bus_add_devices);
+  *  We check the return of @cb each time. If it returns anything
+  *  other than 0, we break out.
+  *
++ *  Should be called with read pci_bus_sem held.
++ *
+  */
+-void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
++void __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+ 		  void *userdata)
+ {
+ 	struct pci_dev *dev;
+@@ -386,7 +388,6 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+ 	int retval;
+ 
+ 	bus = top;
+-	down_read(&pci_bus_sem);
+ 	next = top->devices.next;
+ 	for (;;) {
+ 		if (next == &bus->devices) {
+@@ -409,6 +410,14 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+ 		if (retval)
+ 			break;
+ 	}
++}
++EXPORT_SYMBOL_GPL(__pci_walk_bus);
++
++void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
++		  void *userdata)
++{
++	down_read(&pci_bus_sem);
++	__pci_walk_bus(top, cb, userdata);
+ 	up_read(&pci_bus_sem);
+ }
+ EXPORT_SYMBOL_GPL(pci_walk_bus);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f68c58a93dd0..b4b1a8a164c0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1297,6 +1297,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+ 		  void *userdata);
++void __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
++		    void *userdata);
+ int pci_cfg_space_size(struct pci_dev *dev);
+ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+-- 
+2.14.1
