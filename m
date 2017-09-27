@@ -1,114 +1,190 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Abhishek Shah <abhishek.shah@broadcom.com>
-To: Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>
-Subject: [PATCH v2] nvme-pci: Use PCI bus address for data/queues in CMB
-Date: Sat, 30 Sep 2017 14:58:42 +0530
-Message-Id: <1506763722-10687-1-git-send-email-abhishek.shah@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com,
- stable@vger.kernel.org, Abhishek Shah <abhishek.shah@broadcom.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:13217 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750854AbdI0MAP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2017 08:00:15 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <bhelgaas@google.com>, <thierry.reding@gmail.com>,
+        <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <mperttunen@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 1/4] dt-bindings: pci: tegra: Document Tegra186 PCIe DT
+Date: Wed, 27 Sep 2017 17:28:34 +0530
+Message-ID: <1506513517-25870-2-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, NVMe PCI host driver is programming CMB dma address as
-I/O SQs addresses. This results in failures on systems where 1:1
-outbound mapping is not used (example Broadcom iProc SOCs) because
-CMB BAR will be progammed with PCI bus address but NVMe PCI EP will
-try to access CMB using dma address.
+Tegra186 PCIe controller DT properties has couple of differences
+wrt Tegra210 PCIe, rest of the DT properties are same.
 
-To have CMB working on systems without 1:1 outbound mapping, we
-program PCI bus address for I/O SQs instead of dma address. This
-approach will work on systems with/without 1:1 outbound mapping.
-
-The patch is tested on Broadcom Stingray platform(arm64), which
-does not have 1:1 outbound mapping, as well as on x86 platform,
-which has 1:1 outbound mapping.
-
-Fixes: 8ffaadf7 ("NVMe: Use CMB for the IO SQes if available")
-Cc: stable@vger.kernel.org
-Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
 ---
- drivers/nvme/host/pci.c | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+V2: No change in this patch
+ .../bindings/pci/nvidia,tegra20-pcie.txt           | 134 ++++++++++++++++++++-
+ 1 file changed, 130 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 4a21213..1387050 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -94,6 +94,7 @@ struct nvme_dev {
- 	bool subsystem;
- 	void __iomem *cmb;
- 	dma_addr_t cmb_dma_addr;
-+	pci_bus_addr_t cmb_bus_addr;
- 	u64 cmb_size;
- 	u32 cmbsz;
- 	u32 cmbloc;
-@@ -1220,7 +1221,7 @@ static int nvme_alloc_sq_cmds(struct nvme_dev *dev, struct nvme_queue *nvmeq,
- 	if (qid && dev->cmb && use_cmb_sqes && NVME_CMB_SQS(dev->cmbsz)) {
- 		unsigned offset = (qid - 1) * roundup(SQ_SIZE(depth),
- 						      dev->ctrl.page_size);
--		nvmeq->sq_dma_addr = dev->cmb_dma_addr + offset;
-+		nvmeq->sq_dma_addr = dev->cmb_bus_addr + offset;
- 		nvmeq->sq_cmds_io = dev->cmb + offset;
- 	} else {
- 		nvmeq->sq_cmds = dma_alloc_coherent(dev->dev, SQ_SIZE(depth),
-@@ -1514,6 +1515,25 @@ static ssize_t nvme_cmb_show(struct device *dev,
- }
- static DEVICE_ATTR(cmb, S_IRUGO, nvme_cmb_show, NULL);
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+index 982a74ea6df9..753b67327373 100644
+--- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+@@ -1,10 +1,15 @@
+ NVIDIA Tegra PCIe controller
  
-+static int nvme_find_cmb_bus_addr(struct pci_dev *pdev,
-+				  dma_addr_t dma_addr,
-+				  u64 size,
-+				  pci_bus_addr_t *bus_addr)
-+{
-+	struct resource *res;
-+	struct pci_bus_region region;
-+	struct resource tres = DEFINE_RES_MEM(dma_addr, size);
-+
-+	res = pci_find_resource(pdev, &tres);
-+	if (!res)
-+		return -EIO;
-+
-+	pcibios_resource_to_bus(pdev->bus, &region, res);
-+	*bus_addr = region.start + (dma_addr - res->start);
-+
-+	return 0;
-+}
-+
- static void __iomem *nvme_map_cmb(struct nvme_dev *dev)
- {
- 	u64 szu, size, offset;
-@@ -1547,6 +1567,9 @@ static void __iomem *nvme_map_cmb(struct nvme_dev *dev)
- 		size = bar_size - offset;
+ Required properties:
+-- compatible: For Tegra20, must contain "nvidia,tegra20-pcie".  For Tegra30,
+-  "nvidia,tegra30-pcie".  For Tegra124, must contain "nvidia,tegra124-pcie".
+-  Otherwise, must contain "nvidia,<chip>-pcie", plus one of the above, where
+-  <chip> is tegra132 or tegra210.
++- compatible: Must be:
++  - "nvidia,tegra20-pcie": for Tegra20
++  - "nvidia,tegra30-pcie": for Tegra30
++  - "nvidia,tegra124-pcie": for Tegra124 and Tegra132
++  - "nvidia,tegra210-pcie": for Tegra210
++  - "nvidia,tegra186-pcie": for Tegra186
++- power-domains: To ungate power partition by BPMP powergate driver. Must
++contain BPMP phandle and PCIe power partition ID. This is required only
++for Tegra186.
+ - device_type: Must be "pci"
+ - reg: A list of physical base address and length for each set of controller
+   registers. Must contain an entry for each entry in the reg-names property.
+@@ -124,6 +129,16 @@ Power supplies for Tegra210:
+   - vddio-pex-ctl-supply: Power supply for PCIe control I/O partition. Must
+     supply 1.8 V.
  
- 	dma_addr = pci_resource_start(pdev, NVME_CMB_BIR(dev->cmbloc)) + offset;
-+	if (nvme_find_cmb_bus_addr(pdev, dma_addr, size, &dev->cmb_bus_addr))
-+		return NULL;
++Power supplies for Tegra186:
++- Required:
++  - dvdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
++  - hvdd-pex-pll-supply: High-voltage supply for PLLE (shared with USB3). Must
++    supply 1.8 V.
++  - hvdd-pex-supply: High-voltage supply for PCIe I/O and PCIe output clocks.
++    Must supply 1.8 V.
++  - vddio-pexctl-aud-supply: Power supply for PCIe side band signals. Must
++    supply 1.8 V.
 +
- 	cmb = ioremap_wc(dma_addr, size);
- 	if (!cmb)
- 		return NULL;
+ Root ports are defined as subnodes of the PCIe controller node.
+ 
+ Required properties:
+@@ -546,3 +561,114 @@ Board DTS:
+ 			status = "okay";
+ 		};
+ 	};
++
++Tegra186:
++---------
++
++SoC DTSI:
++
++	pcie@10003000 {
++		compatible = "nvidia,tegra186-pcie";
++		power-domains = <&bpmp TEGRA186_POWER_DOMAIN_PCX>;
++		device_type = "pci";
++		reg = <0x0 0x10003000 0x0 0x00000800   /* PADS registers */
++		       0x0 0x10003800 0x0 0x00000800   /* AFI registers */
++		       0x0 0x40000000 0x0 0x10000000>; /* configuration space */
++		reg-names = "pads", "afi", "cs";
++
++		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
++			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
++		interrupt-names = "intr", "msi";
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
++
++		bus-range = <0x00 0xff>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		ranges = <0x82000000 0 0x10000000 0x0 0x10000000 0 0x00001000   /* port 0 configuration space */
++			  0x82000000 0 0x10001000 0x0 0x10001000 0 0x00001000   /* port 1 configuration space */
++			  0x82000000 0 0x10004000 0x0 0x10004000 0 0x00001000   /* port 2 configuration space */
++			  0x81000000 0 0x0        0x0 0x50000000 0 0x00010000   /* downstream I/O (64 KiB) */
++			  0x82000000 0 0x50100000 0x0 0x50100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
++			  0xc2000000 0 0x58000000 0x0 0x58000000 0 0x28000000>; /* prefetchable memory (640 MiB) */
++
++		clocks = <&bpmp TEGRA186_CLK_AFI>,
++			 <&bpmp TEGRA186_CLK_PCIE>,
++			 <&bpmp TEGRA186_CLK_PLLE>;
++		clock-names = "afi", "pex", "pll_e";
++
++		resets = <&bpmp TEGRA186_RESET_AFI>,
++			 <&bpmp TEGRA186_RESET_PCIE>,
++			 <&bpmp TEGRA186_RESET_PCIEXCLK>;
++		reset-names = "afi", "pex", "pcie_x";
++
++		status = "disabled";
++
++		pci@1,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82000800 0 0x10000000 0 0x1000>;
++			reg = <0x000800 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <2>;
++		};
++
++		pci@2,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001000 0 0x10001000 0 0x1000>;
++			reg = <0x001000 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <1>;
++		};
++
++		pci@3,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001800 0 0x10004000 0 0x1000>;
++			reg = <0x001800 0 0 0 0>;
++			status = "disabled";
++
++			#address-cells = <3>;
++			#size-cells = <2>;
++			ranges;
++
++			nvidia,num-lanes = <1>;
++		};
++	};
++
++Board DTS:
++
++	pcie@10003000 {
++		status = "okay";
++
++		dvdd-pex-supply = <&vdd_pex>;
++		hvdd-pex-pll-supply = <&vdd_1v8>;
++		hvdd-pex-supply = <&vdd_1v8>;
++		vddio-pexctl-aud-supply = <&vdd_1v8>;
++
++		pci@1,0 {
++			nvidia,num-lanes = <4>;
++			status = "okay";
++		};
++
++		pci@2,0 {
++			nvidia,num-lanes = <0>;
++			status = "disabled";
++		};
++
++		pci@3,0 {
++			nvidia,num-lanes = <1>;
++			status = "disabled";
++		};
++	};
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.1.4
