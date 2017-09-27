@@ -1,80 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from alln-iport-4.cisco.com ([173.37.142.91]:19850 "EHLO
-        alln-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751099AbdI3GAr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Sep 2017 02:00:47 -0400
-Date: Fri, 29 Sep 2017 23:00:39 -0700
-From: Govindarajulu Varadarajan <gvaradar@cisco.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-CC: <benve@cisco.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <jlbec@evilplan.org>, <hch@lst.de>, <mingo@redhat.com>,
-        <peterz@infradead.org>
-Subject: Re: [PATCH 3/4] pci aer: fix deadlock in do_recovery
-In-Reply-To: <0a2a41c5-2872-fdb6-8ad2-97b0b6dc69b1@codeaurora.org>
-Message-ID: <alpine.LNX.2.20.1709292250520.24635@cae-iprp-alln-lb.cisco.com>
-References: <20170927214220.41216-1-gvaradar@cisco.com> <20170927214220.41216-4-gvaradar@cisco.com> <2dc437fe-2ab4-23e3-44f3-f06feaf88d86@codeaurora.org> <alpine.LNX.2.20.1709281624330.24635@cae-iprp-alln-lb.cisco.com>
- <0a2a41c5-2872-fdb6-8ad2-97b0b6dc69b1@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ApAb=A4=twosheds.srs.infradead.org=BATV+49eae56de9840e8b69d1+5148+infradead.org+dwmw2@kernel.org>
+Return-Path: <SRS0=ApAb=A4=twosheds.srs.infradead.org=BATV+49eae56de9840e8b69d1+5148+infradead.org+dwmw2@kernel.org>
+Message-ID: <1506550852.7476.33.camel@infradead.org>
+Subject: Re: [PATCH] uio/uio_pci_generic: Add SR-IOV support
+From: David Woodhouse <dwmw2@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci
+ <linux-pci@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>,
+ Donald Dutile <ddutile@redhat.com>, Alexander Duyck
+ <alexander.h.duyck@intel.com>, "Bryant G. Ly"
+ <bryantly@linux.vnet.ibm.com>, Bodong Wang <bodong@mellanox.com>, Alex
+ Williamson <alex.williamson@redhat.com>, "Michael S. Tsirkin"
+ <mst@redhat.com>, kvm@vger.kernel.org
+In-Reply-To: <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506517162.30379.2.camel@infradead.org>
+	 <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-6HA7wm9Hvi4sPObu/XZT"
+Date: Wed, 27 Sep 2017 23:20:52 +0100
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 29 Sep 2017, Sinan Kaya wrote:
 
-> On 9/28/2017 7:46 PM, Govindarajulu Varadarajan wrote:
->>> How about releasing the device_lock here on CPU0?>
->>
->> pci_device_add() is called by driver's pci probe function. device_lock(dev)
->> should be held before calling pci driver probe function.
->
-> I see. The goal of the lock held here is to protect probe() operation from
-> being disrupted. I also don't think we can change this.
->
->>
->>> or in other words keep device_lock as short as possible?
->>
->> The problem is not the duration device_lock is held. It is the order two locks
->> are aquired. We cannot control or implement a restriction that during
->> device_lock() is held, driver probe should not call pci function which aquires
->> pci_bus_sem. And in case of pci aer, aer handler needs to call driver err_handler()
->> for which we need to hold device_lock() before calling err_handler(). In order
->> to find all the devices on a pci bus, we should hold pci_bus_sem to do
->> pci_walk_bus().
->
-> I was reacting to this to see if there is a better way to do this.
->
-> "Only fix I could think of is to lock &pci_bus_sem and try locking all
-> device->mutex under that pci_bus. If it fails, unlock all device->mutex
-> and &pci_bus_sem and try again."
->
-> How about gracefully returning from report_error_detected() when we cannot obtain
-> the device_lock() by replacing it with device_trylock()?
->
+--=-6HA7wm9Hvi4sPObu/XZT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Some of the devices may miss the error reporthing. I have sent V2 where we do
-a pci_bus_walk and adds all the devices to a list. After unlocking (up_read)
-&pci_bus_sem, we go through the list and call err_handler of the devices with
-devic_lock() held. This way, we dont try to hold both locks at same time and
-we dont hold 50+ device_lock. Let me know if this approach is better.
+On Wed, 2017-09-27 at 17:00 -0500, Bjorn Helgaas wrote:
+>=20
+>=20
+> IIUC, this question is basically "why doesn't the PCI core enable IOV
+> automatically when it sees an IOV-capable device?"
+>=20
+> I think one reason is that an admin might want to control the number
+> of VFs we enable (e.g., via 1789382a72a5 ("PCI: SRIOV control and
+> status via sysfs" [1]).=C2=A0 But I guess you already know about that,
+> since this patch uses that sysfs path, so maybe I don't understand
+> your question.
 
-> aer_pci_walk_bus() can still poll like you did until it gets the lock. At least,
-> we don't get to introduce a new API, new lock semantics and code refactoring.
-> __pci_bus_trylock() looked very powerful and also dangerously flexible to
-> introduce new bugs to me.
->
-> For instance, you called it like this.
->
-> +		down_read(&pci_bus_sem);
-> +		locked = __pci_bus_trylock(bus, pci_device_trylock,
-> +					   pci_device_unlock);
->
-> pci_bus_trylock() would obtain device + cfg locks whereas pci_device_trylock() only
-> obtains the device lock. Can it race against cfg lock? It depends on the caller.
-> Very subtle difference.
->
-> -- 
-> Sinan Kaya
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
->
+
+I mean, why doesn't the PCI core *allow* SR-IOV to be enabled via
+sysfs, unless the driver does this?
+--=-6HA7wm9Hvi4sPObu/XZT
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
+ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
+EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
+UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
+MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
+bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
+PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
+bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
+uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
+LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
+QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
+UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
+UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
+MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
+BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
+HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
+dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
+LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
+mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
+nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
+4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
+yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
++nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
+CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
+MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
+ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
+MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
+pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
+An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
+p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
+HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
+AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
+dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
+MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
+BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
+UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
+Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
+gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
+dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
+Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
+DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
+eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
+hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
+PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
+QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
+WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
+ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
+bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
+U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
+SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
+RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
+dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
+iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
+M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
+FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
+HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
+BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
+BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
+dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
+U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
+Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
+ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
+BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
+2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
+vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
+YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
+fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
+GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
+R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
+TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
+ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
+CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDkyNzIyMjA1MlowLwYJ
+KoZIhvcNAQkEMSIEII4VW6K+sfCVaEuUXU6uOaR7yCWXei3P8jFnN5uzaGZiMIHBBgkrBgEEAYI3
+EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
+BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
+RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
+WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
+VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
+TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
+b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
+AQCWGMroDuJZVQ8gHSd/X/7P6w+8wRQ+OhvAtfs85d0t8X0ZmFHiULBiUESyd07NNYB3eCpEfjHA
+KfaojftHEu4k8H4/hoA4YEvlizrjZUdkJEPXk2M5Rvz6SXOxa+EyCuzF4IChd7e9vh5STpv54FG8
+P1zYcywYOVpJB/1V7fZvFDk+qiTFRDQrw56Ooot/YGFE84aPf5N+1jJRj4f3Tla4WiCFmhfxk8ZA
+mDI5DwaRpMUhs1r7C1IT1oWwXHEbcALDJpFaqgeamGUuHhzWwbmjpBAyUgaV10Eks8FKMGIywUYp
+o9Yjt4Pm3Ylc5wTSUVEoyDtaqXmh/YrnNhjt1qDRAAAAAAAA
+
+
+--=-6HA7wm9Hvi4sPObu/XZT--
