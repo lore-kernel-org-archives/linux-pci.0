@@ -1,39 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35795 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751484AbdILSAi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Sep 2017 14:00:38 -0400
-To: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-pci <linux-pci@vger.kernel.org>
-Cc: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        kevin.tian@intel.com
-From: valmiki <valmikibow@gmail.com>
-Subject: VFIO on ARM64
-Message-ID: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
-Date: Tue, 12 Sep 2017 23:31:00 +0530
+Return-Path: <SRS0=NYlB=A5=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=NYlB=A5=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <liudongdong3@huawei.com>
+Subject: [PATCH v3] PCIe AER: report uncorrectable errors only to the functions that logged the errors
+Date: Thu, 28 Sep 2017 15:33:05 +0100
+Message-ID: <1506609185-8800-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, as per VFIO documentation i see that we need to see 
-"/sys/bus/pci/devices/0000:06:0d.0/iommu_group" in order to find group 
-in which PCI bus is attached.
-But as per drivers/pci/pci-sysfs.c in static struct attribute 
-*pci_dev_attrs[], i don't see any such attribute.
-I tried enabling SMMUv2 driver and SMMU for PCIe node on our SOC, but 
-this file doesn't show up and also in /sys/kernel/iommu_group i do not 
-see "/sys/kernel/iommu_groups/17/devices/0000:00:1f.00" file, i see only 
-PCIe root port device tree node in that group and not individual buses.
-So on ARM64 for showing these paths i.e show specific to each bus, does 
-SMMU need any particular confguration (we have SMMUv2) ?
-Do we need any specific kernel configuration ?
+Currently if an uncorrectable error is reported by an EP the AER
+driver walks over all the devices connected to the upstream port
+bus and in turns call the report_error_detected() callback.
+If any of the devices connected to the bus does not implement
+dev->driver->err_handler->error_detected() do_recovery() will fail
+leaving all the bus hierarchy devices unrecovered.
 
+According to section "6.2.2.2.2. Non-Fatal Errors" of the PCIe specs
+<< Non-fatal errors are uncorrectable errors which cause a particular
+transaction to be unreliable but the Link is otherwise fully functional.
+Isolating Non-fatal from Fatal errors provides Requester/Receiver logic
+in a device or system management software the opportunity to recover
+from the error without resetting the components on the Link and
+disturbing other transactions in progress. Devices not associated with
+the transaction in error are not impacted by the error.>>
+therefore for non fatal errors the PCIe link should not be considered
+compromised and it makes sense to report the error only to all the
+functions that logged an error.
 
-Regards,
-Valmiki
+This patch implements this new behaviour for non fatal errors.
+Also this patch fixes a bug (filed as in the link below)
 
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=197055
+Fixes: 6c2b374d7485 ("PCI-Express AER implemetation: AER core and aerdriver")
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 ---
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+Changes from v2:
+   - no functional changes
+   - Added reference in the commit log to the bugzilla ticket
+   - Added reference in the commit log the commit that this patch fixes
+   - Added reference in the commit log to the PCIe specs for Non-fatal
+     error handling rules
+ 
+Changes from v1:
+   - now errors are reported only to the fucntions that logged the error
+     instead of all the functions in the same device.
+   - the patch subject has changed to match the new implementation
+---
+ drivers/pci/pcie/aer/aerdrv_core.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 890efcc..7448052 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -390,7 +390,14 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 		 * If the error is reported by an end point, we think this
+ 		 * error is related to the upstream link of the end point.
+ 		 */
+-		pci_walk_bus(dev->bus, cb, &result_data);
++		if (state == pci_channel_io_normal)
++			/*
++			 * the error is non fatal so the bus is ok, just invoke
++			 * the callback for the function that logged the error.
++			 */
++			cb(dev, &result_data);
++		else
++			pci_walk_bus(dev->bus, cb, &result_data);
+ 	}
+ 
+ 	return result_data.result;
+-- 
+2.7.4
