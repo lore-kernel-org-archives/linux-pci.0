@@ -1,148 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:41970 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753527AbdIHJyA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:54:00 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
-        Antoine Tenart <antoine.tenart@free-electrons.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 4/7] PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
-Date: Fri,  8 Sep 2017 11:53:45 +0200
-Message-Id: <20170908095348.16578-5-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
-References: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=bmG0=A5=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=bmG0=A5=linaro.org=ard.biesheuvel@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20170928160019.GC9892@arm.com>
+References: <20170828180437.2646-1-ard.biesheuvel@linaro.org>
+ <20170828180437.2646-2-ard.biesheuvel@linaro.org> <20170926173200.GL15970@bhelgaas-glaptop.roam.corp.google.com>
+ <20170928090339.GA21499@arm.com> <CAKv+Gu-7OWG0=7VcWxaVqtAYoWrmNd1xhweS+EhSZES3cNJ+Kw@mail.gmail.com>
+ <20170928160019.GC9892@arm.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 28 Sep 2017 09:04:09 -0700
+Message-ID: <CAKv+Gu-rSUVEufN71uazdTz443PLJDw56jMKxo=y8xYV-5ziZw@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] pci: designware: add driver for DWC controller in
+ ECAM shift mode
+To: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Marcin Wojtas <mw@semihalf.com>,
+	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>, Rob Herring <robh@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+On 28 September 2017 at 09:00, Will Deacon <will.deacon@arm.com> wrote:
+> On Thu, Sep 28, 2017 at 08:57:28AM -0700, Ard Biesheuvel wrote:
+>> On 28 September 2017 at 02:03, Will Deacon <will.deacon@arm.com> wrote:
+>> > On Tue, Sep 26, 2017 at 12:32:00PM -0500, Bjorn Helgaas wrote:
+>> >> [+cc Will]
+>> >>
+>> >> On Mon, Aug 28, 2017 at 07:04:36PM +0100, Ard Biesheuvel wrote:
+>> >> > Some implementations of the Synopsys Designware PCIe controller implement
+>> >> > a so-called ECAM shift mode, which allows a static memory window to be
+>> >> > configured that covers the configuration space of the entire bus range.
+>> >> >
+>> >> > If the firmware performs all the low level configuration that is required
+>> >> > to expose this controller in a fully ECAM compatible manner, we can
+>> >> > simply describe it as "pci-host-ecam-generic" and be done with it.
+>> >> > However, it appears that in some cases (one of which is the Armada 80x0),
+>> >> > the IP is synthesized with an ATU window size that does not allow the
+>> >> > first bus to be mapped in a way that prevents the device on the
+>> >> > downstream port from appearing more than once.
+>> >> >
+>> >> > So implement a driver that relies on the firmware to perform all low
+>> >> > level initialization, and drives the controller in ECAM mode, but
+>> >> > overrides the config space accessors to take the above quirk into
+>> >> > account.
+>> >> >
+>> >> > Note that, unlike most drivers for this IP, this driver does not expose
+>> >> > a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+>> >> > given that this is not a true bridge, and does not require any windows
+>> >> > to be configured in order for the downstream device to operate correctly.
+>> >> > Omitting it also prevents the PCI resource allocation routines from
+>> >> > handing out BAR space to it unnecessarily.
+>> >>
+>> >> This is a tangent, but does this mean the other drivers do not need to
+>> >> expose a fake 00:00.0 device either?
+>> >>
+>> >> s/Designware/DesignWare/ in comments, changelogs, Kconfig text, etc.
+>> >>
+>> >> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> >> > Cc: Jingoo Han <jingoohan1@gmail.com>
+>> >> > Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+>> >> > Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>> >> > ---
+>> >> >  drivers/pci/dwc/Kconfig                | 11 +++
+>> >> >  drivers/pci/dwc/Makefile               |  1 +
+>> >> >  drivers/pci/dwc/pcie-designware-ecam.c | 77 ++++++++++++++++++++
+>> >>
+>> >> This really doesn't have any DesignWare specifics in it, and it seems
+>> >> more related to drivers/pci/host/pci-host-generic.c than to anything
+>> >> in drivers/pci/dwc.  Maybe it should be
+>> >> drivers/pci/host/pci-host-generic-quirks.c or something?  That's
+>> >> unwieldy, I admit.
+>> >>
+>> >> Putting it in pci/dwc would make Jingoo and Joao the default
+>> >> maintainers; I don't know how they feel about that.  We would probably
+>> >> have to tweak MAINTAINERS if we *didn't* put it in pci/dwc.
+>> >>
+>> >> Any thoughts on this, Will?
+>> >
+>> > The idea of a "generic quirk" makes me smile, I must admit :)
+>> >
+>> > I think there are two options:
+>> >
+>> >   1. Use the full DWC driver, and don't rely on firmware
+>> > -or-
+>> >   2. Rely on firmware, but teach pci-host-generic to deal with the funny
+>> >      config space
+>> >
+>> > For (2), we probably want to describe this as generically as possible
+>> > in case some other SoCs run into the same problem.
+>> >
+>>
+>> I take it this implies a DT property. I could add one that consists of
+>> an array of val/mask tuples or base/size tuples that allow us to
+>> disable arbitrary subregions of the config space. I could also add a
+>> simple boolean property that implements this exact quirk. Do you have
+>> any preference?
+>
+> I'd say either a boolean property or a new compatible string. I think Rob
+> prefers the latter, from what he said recently on an SMMU thread.
+>
 
-The Aardvark has two interrupts sets:
+OK. Given that Rob already acked the binding for this driver, I'll go
+ahead and rework the patch to add
 
- - first set is bit[23:16] of PCIe ISR 0 register(RD0074840h)
++       { .compatible = "marvell,armada8k-pcie-ecam" },
++       { .compatible = "socionext,synquacer-pcie-ecam" },
++       { .compatible = "snps,dw-pcie-ecam" },
 
- - second set is bit[11:8] of PCIe ISR 1 register(RD0074848h)
+to the pci-host-ecam-generic driver instead.
 
-Only one set should be used, while another set should be masked.
-
-The second set, ISR1, is more advanced, the Legacy INT_X status bit is
-asserted once Assert_INTX message is received, and de-asserted after
-Deassert_INTX message is received. Therefore, it matches what the
-driver is currently doing in the ->irq_mask() and ->irq_unmask()
-functions. The ISR0 requires additional work to deassert the
-interrupt, which the driver doesn't do currently.
-
-This commit resolves a number of issues with legacy interrupts.
-
-This is part of fixing bug
-https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
-reported as the user to be important to get a Intel 7260 mini-PCIe
-WiFi card working.
-
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Evan Wang <xswang@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-aardvark.c | 41 ++++++++++++++++++++++++-----------------
- 1 file changed, 24 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index e361c673732f..4a563d8526ae 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -105,7 +105,8 @@
- #define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
- #define     PCIE_ISR1_POWER_STATE_CHANGE	BIT(4)
- #define     PCIE_ISR1_FLUSH			BIT(5)
--#define     PCIE_ISR1_ALL_MASK			GENMASK(5, 4)
-+#define     PCIE_ISR1_INTX_ASSERT(val)		BIT(8 + (val))
-+#define     PCIE_ISR1_ALL_MASK			GENMASK(11, 4)
- #define PCIE_MSI_ADDR_LOW_REG			(CONTROL_BASE_ADDR + 0x50)
- #define PCIE_MSI_ADDR_HIGH_REG			(CONTROL_BASE_ADDR + 0x54)
- #define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
-@@ -616,9 +617,9 @@ static void advk_pcie_irq_mask(struct irq_data *d)
- 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
- 	u32 mask;
- 
--	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--	mask |= PCIE_ISR0_INTX_ASSERT(hwirq);
--	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
-+	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
-+	mask |= PCIE_ISR1_INTX_ASSERT(hwirq);
-+	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
- }
- 
- static void advk_pcie_irq_unmask(struct irq_data *d)
-@@ -627,9 +628,9 @@ static void advk_pcie_irq_unmask(struct irq_data *d)
- 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
- 	u32 mask;
- 
--	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--	mask &= ~PCIE_ISR0_INTX_ASSERT(hwirq);
--	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
-+	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
-+	mask &= ~PCIE_ISR1_INTX_ASSERT(hwirq);
-+	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
- }
- 
- static int advk_pcie_irq_map(struct irq_domain *h,
-@@ -772,29 +773,35 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
- 
- static void advk_pcie_handle_int(struct advk_pcie *pcie)
- {
--	u32 val, mask, status;
-+	u32 isr0_val, isr0_mask, isr0_status;
-+	u32 isr1_val, isr1_mask, isr1_status;
- 	int i, virq;
- 
--	val = advk_readl(pcie, PCIE_ISR0_REG);
--	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--	status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
-+	isr0_val = advk_readl(pcie, PCIE_ISR0_REG);
-+	isr0_mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
-+	isr0_status = isr0_val & ((~isr0_mask) & PCIE_ISR0_ALL_MASK);
- 
--	if (!status) {
--		advk_writel(pcie, val, PCIE_ISR0_REG);
-+	isr1_val = advk_readl(pcie, PCIE_ISR1_REG);
-+	isr1_mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
-+	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
-+
-+	if (!isr0_status && !isr1_status) {
-+		advk_writel(pcie, isr0_val, PCIE_ISR0_REG);
-+		advk_writel(pcie, isr1_val, PCIE_ISR1_REG);
- 		return;
- 	}
- 
- 	/* Process MSI interrupts */
--	if (status & PCIE_ISR0_MSI_INT_PENDING)
-+	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
- 		advk_pcie_handle_msi(pcie);
- 
- 	/* Process legacy interrupts */
- 	for (i = 0; i < LEGACY_IRQ_NUM; i++) {
--		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
-+		if (!(isr1_status & PCIE_ISR1_INTX_ASSERT(i)))
- 			continue;
- 
--		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
--			    PCIE_ISR0_REG);
-+		advk_writel(pcie, PCIE_ISR1_INTX_ASSERT(i),
-+			    PCIE_ISR1_REG);
- 
- 		virq = irq_find_mapping(pcie->irq_domain, i);
- 		generic_handle_irq(virq);
--- 
-2.13.5
+Thanks,
+Ard.
