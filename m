@@ -1,58 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53420 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750966AbdIHPvn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Sep 2017 11:51:43 -0400
-Date: Fri, 8 Sep 2017 10:51:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        bcm-kernel-feedback-list@broadcom.com
-Subject: Re: [PATCH 4/4] PCI: xgene: Clean up whitespace
-Message-ID: <20170908155141.GC29570@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170905181602.27030.65715.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20170905182721.27030.75771.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <6d9454ac-d238-fc64-04f2-4534b0a419de@free.fr>
+Return-Path: <SRS0=sw7U=A5=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=sw7U=A5=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [RFC 2/3] module: Ignore delete_id parameter
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Arjan van de Ven <arjan@linux.intel.com>, Alan Cox <alan@linux.intel.com>
+References: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
+ <1506544822-2632-3-git-send-email-jonathan.derrick@intel.com>
+ <CAPcyv4gS9Hp_4v0iybrNzj6pod7F1+9iQcOT6Sw=5xt0=-u=jA@mail.gmail.com>
+Message-ID: <77cbeca1-c5a6-1fe0-d342-e248462eb3e9@intel.com>
+Date: Thu, 28 Sep 2017 09:57:56 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6d9454ac-d238-fc64-04f2-4534b0a419de@free.fr>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAPcyv4gS9Hp_4v0iybrNzj6pod7F1+9iQcOT6Sw=5xt0=-u=jA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 08, 2017 at 01:26:21PM +0200, Mason wrote:
-> On 05/09/2017 20:27, Bjorn Helgaas wrote:
+On 09/28/2017 12:03 AM, Dan Williams wrote:
+> On Wed, Sep 27, 2017 at 1:40 PM, Jon Derrick <jonathan.derrick@intel.com> wrote:
+>> The PCI driver delete_id parameter is handled in each individual driver
+>> registration callback.
+>>
+>> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+>> ---
+>>  kernel/module.c | 7 +++++++
+>>  1 file changed, 7 insertions(+)
+>>
+>> diff --git a/kernel/module.c b/kernel/module.c
+>> index de66ec8..2b2dccf 100644
+>> --- a/kernel/module.c
+>> +++ b/kernel/module.c
+>> @@ -3620,6 +3620,13 @@ static int unknown_module_param_cb(char *param, char *val, const char *modname,
+>>                 return 0;
+>>         }
+>>
+>> +       /*
+>> +        * Ignore driver delete list arguments. They are handled by driver
+>> +        * registration callbacks
+>> +        */
+>> +       if (strcmp(param, "delete_id") == 0)
+>> +               return 0;
+>> +
 > 
-> >Use tabs (not spaces) for indentation.  No functional change intended.
+> Does this preclude something like:
 > 
-> git diff -b should be empty, right?
-
-Empty except for a line join.
-
-> >@@ -280,12 +280,12 @@ static int xgene_v2_pcie_ecam_init(struct pci_config_window *cfg)
-> >  }
-> >  struct pci_ecam_ops xgene_v2_pcie_ecam_ops = {
-> >-	.bus_shift      = 16,
-> >-	.init           = xgene_v2_pcie_ecam_init,
-> >-	.pci_ops        = {
-> >-		.map_bus        = xgene_pcie_map_bus,
-> >-		.read           = xgene_pcie_config_read32,
-> >-		.write          = pci_generic_config_write,
-> >+	.bus_shift	= 16,
-> >+	.init		= xgene_v2_pcie_ecam_init,
-> >+	.pci_ops	= {
-> >+		.map_bus	= xgene_pcie_map_bus,
-> >+		.read		= xgene_pcie_config_read32,
-> >+		.writei		= pci_generic_config_write,
-> >  	}
-> >  };
-> >  #endif
+>     modprobe ahci delete_id=1234:5678?
 > 
-> Spurious 'i' in '.writei' ;-)
 
-Indeed, "git diff -b" would have saved me a trip through the
-auto-builder.  But this is fixed.
+It does seem like it would. I can look into calling into the pci
+callback for this, but val is a struct module here and I haven't figured
+out the plumbing to get the [correct] driver from that.
+
+Maybe if I enforce the format of 'modprobe ahci ahci.delete_id=xxxx' to
+ensure the driver is specified (and would be required in cases with
+multi-driver modules).
