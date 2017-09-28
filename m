@@ -1,32 +1,86 @@
-Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
-Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
-From: Daniel Axtens <dja@axtens.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, "linux-arm-kernel\@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>, Zou Rongrong <zourongrong@gmail.com>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>, Bjorn Helgaas <helgaas@kernel.org>, David Airlie <airlied@linux.ie>, "Vetter\, Daniel" <daniel.vetter@intel.com>, Alex Williamson <alex.williamson@redhat.com>, dri-devel <dri-devel@lists.freedesktop.org>, Lukas Wunner <lukas@wunner.de>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v3 0/3] Split default display handling out from VGA arbiter
-In-Reply-To: <CAKv+Gu84njSF5uOvNtknGdOd5auU7zw9scFeTq5v-=OhExgOqA@mail.gmail.com>
-References: <20170901072744.2409-1-dja@axtens.net> <CAKv+Gu84njSF5uOvNtknGdOd5auU7zw9scFeTq5v-=OhExgOqA@mail.gmail.com>
-Date: Fri, 01 Sep 2017 21:34:03 +1000
-Message-ID: <877exi4pqs.fsf@linkitivity.dja.id.au>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 1/7] PCI: aardvark: fix logic in PCI configuration
+ read/write functions
+Date: Thu, 28 Sep 2017 14:58:32 +0200
+Message-Id: <20170928125838.11887-2-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
+ Jason Cooper <jason@lakedaemon.net>, Hanna Hawa <hannah@marvell.com>,
+ stable@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>,
+ Victor Gu <xigu@marvell.com>,
+ =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Antoine Tenart <antoine.tenart@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ard,
+From: Victor Gu <xigu@marvell.com>
 
-> If we are all in agreement that fixing X is not an option, I think
-> this is a reasonable approach
+The PCI configuration space read/write functions were special casing
+the situation where PCI_SLOT(devfn) != 0, and returned
+PCIBIOS_DEVICE_NOT_FOUND in this case.
 
-This did come up in discussion at some earlier point in one of the many
-spins we've done of this - I don't remember if you brought it up or
-someone else did - but my concern was this: If it were just X we would
-be fine, but if we go down that path I'm worried about also having to
-fix Mir/Wayland/whatever-the-new-exciting-display-server-is-this-week,
-ad nauseum.
+However, will this is what is intended for the root bus, it is not
+intended for the child busses, as it prevents discovering devices with
+PCI_SLOT(x) != 0. Therefore, we return PCIBIOS_DEVICE_NOT_FOUND only
+if we're on the root bus.
 
-> Acked-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Wilson Ding <dingwei@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks!
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 89f4e3d072d7..da2881ba7737 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -440,7 +440,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
+ 	u32 reg;
+ 	int ret;
+ 
+-	if (PCI_SLOT(devfn) != 0) {
++	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {
+ 		*val = 0xffffffff;
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	}
+@@ -494,7 +494,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+ 	int offset;
+ 	int ret;
+ 
+-	if (PCI_SLOT(devfn) != 0)
++	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0))
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	if (where % size)
+-- 
+2.13.5
 
-Regards,
-Daniel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
