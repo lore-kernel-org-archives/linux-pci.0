@@ -1,48 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.nic.cz ([217.31.204.67]:35409 "EHLO mail.nic.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751928AbdIVLb2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Sep 2017 07:31:28 -0400
-Received: from dellmb.labs.office.nic.cz (unknown [IPv6:2001:1488:fffe:6:8982:ed8c:62b1:c0c8])
-        by mail.nic.cz (Postfix) with ESMTPS id 05CDB6231D
-        for <linux-pci@vger.kernel.org>; Fri, 22 Sep 2017 13:26:03 +0200 (CEST)
-Date: Fri, 22 Sep 2017 13:24:44 +0200
-From: Marek =?ISO-8859-1?Q?Beh=FAn?= <marek.behun@nic.cz>
-To: linux-pci@vger.kernel.org
-Subject: aardvark pci controller ath9k request_irq fail
-Message-ID: <20170922132444.588e27cb@dellmb.labs.office.nic.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.free-electrons.com ([62.4.15.54]:44154 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753158AbdI1M6x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 08:58:53 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Victor Gu <xigu@marvell.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v2 4/7] PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
+Date: Thu, 28 Sep 2017 14:58:35 +0200
+Message-Id: <20170928125838.11887-5-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-we are developing a new board based on Marvell Armada 3720.
-While testing the PCI-e slot, I have enountered this problem:
+From: Victor Gu <xigu@marvell.com>
 
-- lspci always correctly prints information about the PCIe card in the
-  slot
-- when a ath9k card is in the slot, ath9k fails to initialize with
-     ath9k 0000:00:00.0: request_irq failed
+The Aardvark has two interrupts sets:
 
-  The irq number passed to the request_irq function is from the irq
-  member of struct pci_dev:
-     request_irq(pdev->irq, ath_isr, IRQF_SHARED, "ath9k", sc);
+ - first set is bit[23:16] of PCIe ISR 0 register(RD0074840h)
 
-  this number (pdev->irq) is 255
+ - second set is bit[11:8] of PCIe ISR 1 register(RD0074848h)
 
-  The request_irq function fails in request_threaded_irq on line:
-     desc = irq_to_desc(irq);
-  (desc is NULL and thus -EINVAL is returned.)
+Only one set should be used, while another set should be masked.
 
-- what is strange is that another card, Intel Centrino Ultimate-N 6300
-  with iwlwifi works.
+The second set, ISR1, is more advanced, the Legacy INT_X status bit is
+asserted once Assert_INTX message is received, and de-asserted after
+Deassert_INTX message is received. Therefore, it matches what the
+driver is currently doing in the ->irq_mask() and ->irq_unmask()
+functions. The ISR0 requires additional work to deassert the
+interrupt, which the driver doesn't do currently.
 
-- another card (ath10k driver) also does not work.
+This commit resolves a number of issues with legacy interrupts.
 
-Is this a problem with the pci-aardvark driver for the Aardvark
-controller?
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
 
-Thank you.
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 41 ++++++++++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 17 deletions(-)
 
-Marek
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index c8a97bad6c4c..23e243135ebe 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -105,7 +105,8 @@
+ #define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
+ #define     PCIE_ISR1_POWER_STATE_CHANGE	BIT(4)
+ #define     PCIE_ISR1_FLUSH			BIT(5)
+-#define     PCIE_ISR1_ALL_MASK			GENMASK(5, 4)
++#define     PCIE_ISR1_INTX_ASSERT(val)		BIT(8 + (val))
++#define     PCIE_ISR1_ALL_MASK			GENMASK(11, 4)
+ #define PCIE_MSI_ADDR_LOW_REG			(CONTROL_BASE_ADDR + 0x50)
+ #define PCIE_MSI_ADDR_HIGH_REG			(CONTROL_BASE_ADDR + 0x54)
+ #define PCIE_MSI_STATUS_REG			(CONTROL_BASE_ADDR + 0x58)
+@@ -615,9 +616,9 @@ static void advk_pcie_irq_mask(struct irq_data *d)
+ 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 	u32 mask;
+ 
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	mask |= PCIE_ISR0_INTX_ASSERT(hwirq);
+-	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
++	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	mask |= PCIE_ISR1_INTX_ASSERT(hwirq);
++	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
+ }
+ 
+ static void advk_pcie_irq_unmask(struct irq_data *d)
+@@ -626,9 +627,9 @@ static void advk_pcie_irq_unmask(struct irq_data *d)
+ 	irq_hw_number_t hwirq = irqd_to_hwirq(d);
+ 	u32 mask;
+ 
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	mask &= ~PCIE_ISR0_INTX_ASSERT(hwirq);
+-	advk_writel(pcie, mask, PCIE_ISR0_MASK_REG);
++	mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	mask &= ~PCIE_ISR1_INTX_ASSERT(hwirq);
++	advk_writel(pcie, mask, PCIE_ISR1_MASK_REG);
+ }
+ 
+ static int advk_pcie_irq_map(struct irq_domain *h,
+@@ -771,29 +772,35 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
+ 
+ static void advk_pcie_handle_int(struct advk_pcie *pcie)
+ {
+-	u32 val, mask, status;
++	u32 isr0_val, isr0_mask, isr0_status;
++	u32 isr1_val, isr1_mask, isr1_status;
+ 	int i, virq;
+ 
+-	val = advk_readl(pcie, PCIE_ISR0_REG);
+-	mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+-	status = val & ((~mask) & PCIE_ISR0_ALL_MASK);
++	isr0_val = advk_readl(pcie, PCIE_ISR0_REG);
++	isr0_mask = advk_readl(pcie, PCIE_ISR0_MASK_REG);
++	isr0_status = isr0_val & ((~isr0_mask) & PCIE_ISR0_ALL_MASK);
+ 
+-	if (!status) {
+-		advk_writel(pcie, val, PCIE_ISR0_REG);
++	isr1_val = advk_readl(pcie, PCIE_ISR1_REG);
++	isr1_mask = advk_readl(pcie, PCIE_ISR1_MASK_REG);
++	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
++
++	if (!isr0_status && !isr1_status) {
++		advk_writel(pcie, isr0_val, PCIE_ISR0_REG);
++		advk_writel(pcie, isr1_val, PCIE_ISR1_REG);
+ 		return;
+ 	}
+ 
+ 	/* Process MSI interrupts */
+-	if (status & PCIE_ISR0_MSI_INT_PENDING)
++	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
+ 		advk_pcie_handle_msi(pcie);
+ 
+ 	/* Process legacy interrupts */
+ 	for (i = 0; i < PCI_NUM_INTX; i++) {
+-		if (!(status & PCIE_ISR0_INTX_ASSERT(i)))
++		if (!(isr1_status & PCIE_ISR1_INTX_ASSERT(i)))
+ 			continue;
+ 
+-		advk_writel(pcie, PCIE_ISR0_INTX_ASSERT(i),
+-			    PCIE_ISR0_REG);
++		advk_writel(pcie, PCIE_ISR1_INTX_ASSERT(i),
++			    PCIE_ISR1_REG);
+ 
+ 		virq = irq_find_mapping(pcie->irq_domain, i);
+ 		generic_handle_irq(virq);
+-- 
+2.13.5
