@@ -1,86 +1,123 @@
-Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
-Return-Path: <SRS0=QMlO=AC=axtens.net=dja@kernel.org>
-From: Daniel Axtens <dja@axtens.net>
-To: linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: benh@kernel.crashing.org,
-	z.liuxinliang@hisilicon.com,
-	zourongrong@gmail.com,
-	catalin.marinas@arm.com,
-	will.deacon@arm.com,
-	gabriele.paoloni@huawei.com,
-	helgaas@kernel.org,
-	airlied@linux.ie,
-	daniel.vetter@intel.com,
-	alex.williamson@redhat.com,
-	dri-devel@lists.freedesktop.org,
-	lukas@wunner.de,
-	ard.biesheuvel@linaro.org,
-	lorenzo.pieralisi@arm.com,
-	Daniel Axtens <dja@axtens.net>
-Subject: [PATCH v3 0/3] Split default display handling out from VGA arbiter
-Date: Fri,  1 Sep 2017 17:27:41 +1000
-Message-Id: <20170901072744.2409-1-dja@axtens.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 28 Sep 2017 16:46:25 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH] ACPI/IORT: Fix PCI ACS enablement
+Message-ID: <20170928154625.GA25853@red-moon>
+References: <20170919170539.6265-1-lorenzo.pieralisi@arm.com>
+ <59C3A36A.2060202@hisilicon.com>
+ <20170922094546.GE1523@red-moon>
+ <59C5C655.8030607@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <59C5C655.8030607@hisilicon.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set:
+On Sat, Sep 23, 2017 at 10:26:29AM +0800, Zhou Wang wrote:
+> On 2017/9/22 17:45, Lorenzo Pieralisi wrote:
+> > On Thu, Sep 21, 2017 at 07:32:58PM +0800, Zhou Wang wrote:
+> >> On 2017/9/20 1:05, Lorenzo Pieralisi wrote:
+> >>> commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
+> >>> workarounds") removed kernel code that was allowing to initialize
+> >>> and probe the SMMU devices early (ie earlier than PCI devices through
+> >>> linker script callback entries) in the boot process because it was not
+> >>> needed any longer in that the SMMU devices/drivers now support deferred
+> >>> probing.
+> >>>
+> >>> Since the SMMUs probe routines are also in charge of requesting global
+> >>> PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
+> >>> up early-probing workarounds") also postponed PCI ACS enablement to
+> >>> SMMUs devices probe time, which may be too late given that PCI devices
+> >>> needs to detect if PCI ACS is enabled to init the respective capability
+> >>> through the following call path:
+> >>>
+> >>> pci_device_add()
+> >>>  -> pci_init_capabilities()
+> >>>   -> pci_enable_acs()
+> >>>
+> >>> Add code in the ACPI IORT SMMU platform devices initialization path
+> >>> (that is called before ACPI PCI enumeration) to detect if an SMMU is
+> >>> present in HW and enable PCI ACS if it actually is, restoring the
+> >>> correct PCI ACS enablement sequencing.
+> >>>
+> >>> Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
+> >>> Signed-workarounds")
+> >>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >>> Cc: Will Deacon <will.deacon@arm.com>
+> >>> Cc: Robin Murphy <robin.murphy@arm.com>
+> >>> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> >>> Cc: Alex Williamson <alex.williamson@redhat.com>
+> >>> ---
+> >>>  drivers/acpi/arm64/iort.c | 11 +++++++++++
+> >>>  1 file changed, 11 insertions(+)
+> >>>
+> >>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> >>> index 9565d57..71a7694 100644
+> >>> --- a/drivers/acpi/arm64/iort.c
+> >>> +++ b/drivers/acpi/arm64/iort.c
+> >>> @@ -1184,6 +1184,7 @@ static void __init iort_init_platform_devices(void)
+> >>>  	struct acpi_table_iort *iort;
+> >>>  	struct fwnode_handle *fwnode;
+> >>>  	int i, ret;
+> >>> +	bool smmu_detected = false;
+> >>>  
+> >>>  	/*
+> >>>  	 * iort_table and iort both point to the start of IORT table, but
+> >>> @@ -1218,11 +1219,21 @@ static void __init iort_init_platform_devices(void)
+> >>>  				acpi_free_fwnode_static(fwnode);
+> >>>  				return;
+> >>>  			}
+> >>> +
+> >>> +			smmu_detected = true;
+> >>>  		}
+> >>>  
+> >>>  		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
+> >>>  					 iort_node->length);
+> >>>  	}
+> >>> +
+> >>> +	/*
+> >>> +	 * If IORT reports an SMMU component make sure PCI ACS is
+> >>> +	 * requested so that PCI devices can enable it in their
+> >>> +	 * capabilities.
+> >>> +	 */
+> >>> +	if (smmu_detected)
+> >>> +		pci_request_acs();
+> >>>  }
+> >>>  
+> >>>  void __init acpi_iort_init(void)
+> >>>
+> >>
+> >> Hi Lorenzo,
+> >>
+> >> I tested this patch, it works well in my HiSilicon Hip08 based system.
+> >> However, setting ACS flag at the stage of SMMU device init seems not good,
+> >> I mean what if in one system there are only platform devices connected to
+> >> SMMU device.
+> > 
+> > That's a fair point if you explain to me how current pci_request_acs()
+> > usage copes with your remark above.
+> 
+> The current pci_request_acs usage for ARM SMMU-V3 sets ACS flags under CONFIG_PCI.
+> However, as mentioned in your commit message, this setting is too late.
+> 
+> For the usage of X86 and AMD, as I am not familiar with the devices used in these
+> two platforms, maybe the default devices in these platforms are PCIe based :)
 
- - splits the default display handling out from VGA arbiter, into its
-   own file and behind its own Kconfig option (and gives the functions
-   better names).
+I do not understand what your point is. ACS enablement is a global flag,
+that is currently set whenever an x86/AMD/ARM IOMMU is detected/probed
+AFAICS.
 
- - adds extra detection of default devices. To be nominated, the vga
-   arbiter and platform hooks must not have nominated a default. A
-   card will then only be nominated if it has a driver attached and
-   has IO or memory decoding enabled.
+I agree that ACS enablement should be done before PCI enumeration,
+for other comments either you are questioning the current policy
+behind ACS enablement in the kernel - which can be a fair point - or
+I do not understand what you mean.
 
- - adds relevant documentation.
+Let me know since I would like to queue this patch unless I hear
+a compelling objection to it.
 
-The practical impact of this is improved X autoconfiguration on some
-arm64 systems.
-
-Changes in v3:
-
- - Add documentation - thanks Daniel Vetter for pointing it out.
-
- - Clarify explanations. Thanks to everyone for continuing to bear
-   with my incomplete understanding of PCI and provide some clarity.
-
- - Split refactoring and adding functionality.
-
-Changes in v2: https://www.spinics.net/lists/linux-pci/msg64007.html
-
-Drop all the powerpc patches. [explanation snipped]
-
-v1: https://www.spinics.net/lists/linux-pci/msg63581.html
-
-Regards,
-Daniel
-
-Daniel Axtens (3):
-  drm: split default display handler out of VGA arbiter
-  drm: add fallback default device detection
-  drm: documentation for default display device
-
- Documentation/gpu/default_display.rst |  93 +++++++++++++++++++
- Documentation/gpu/index.rst           |   1 +
- arch/ia64/pci/fixup.c                 |   6 +-
- arch/powerpc/kernel/pci-common.c      |   6 +-
- arch/x86/pci/fixup.c                  |   6 +-
- arch/x86/video/fbdev.c                |   4 +-
- drivers/gpu/vga/Kconfig               |  12 +++
- drivers/gpu/vga/Makefile              |   1 +
- drivers/gpu/vga/default_display.c     | 163 ++++++++++++++++++++++++++++++++++
- drivers/gpu/vga/vga_switcheroo.c      |   8 +-
- drivers/gpu/vga/vgaarb.c              |  61 +++----------
- drivers/pci/pci-sysfs.c               |   4 +-
- include/linux/default_display.h       |  44 +++++++++
- include/linux/vgaarb.h                |  15 ----
- 14 files changed, 344 insertions(+), 80 deletions(-)
- create mode 100644 Documentation/gpu/default_display.rst
- create mode 100644 drivers/gpu/vga/default_display.c
- create mode 100644 include/linux/default_display.h
-
--- 
-2.11.0
+Lorenzo
