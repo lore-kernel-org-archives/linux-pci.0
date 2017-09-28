@@ -1,190 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:13217 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750854AbdI0MAP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2017 08:00:15 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <mperttunen@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 1/4] dt-bindings: pci: tegra: Document Tegra186 PCIe DT
-Date: Wed, 27 Sep 2017 17:28:34 +0530
-Message-ID: <1506513517-25870-2-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.free-electrons.com ([62.4.15.54]:44157 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753170AbdI1M6x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 08:58:53 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Victor Gu <xigu@marvell.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v2 5/7] PCI: aardvark: disable LOS state by default
+Date: Thu, 28 Sep 2017 14:58:36 +0200
+Message-Id: <20170928125838.11887-6-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra186 PCIe controller DT properties has couple of differences
-wrt Tegra210 PCIe, rest of the DT properties are same.
+From: Victor Gu <xigu@marvell.com>
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
-Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
+Some PCIe devices do not support LOS, and will cause timeouts if the
+root complex forces the LOS state. This patch disables the LOS state
+by default.
+
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
+
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Signed-off-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
-V2: No change in this patch
- .../bindings/pci/nvidia,tegra20-pcie.txt           | 134 ++++++++++++++++++++-
- 1 file changed, 130 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-aardvark.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-index 982a74ea6df9..753b67327373 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-@@ -1,10 +1,15 @@
- NVIDIA Tegra PCIe controller
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 23e243135ebe..a173f31853df 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -368,8 +368,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
  
- Required properties:
--- compatible: For Tegra20, must contain "nvidia,tegra20-pcie".  For Tegra30,
--  "nvidia,tegra30-pcie".  For Tegra124, must contain "nvidia,tegra124-pcie".
--  Otherwise, must contain "nvidia,<chip>-pcie", plus one of the above, where
--  <chip> is tegra132 or tegra210.
-+- compatible: Must be:
-+  - "nvidia,tegra20-pcie": for Tegra20
-+  - "nvidia,tegra30-pcie": for Tegra30
-+  - "nvidia,tegra124-pcie": for Tegra124 and Tegra132
-+  - "nvidia,tegra210-pcie": for Tegra210
-+  - "nvidia,tegra186-pcie": for Tegra186
-+- power-domains: To ungate power partition by BPMP powergate driver. Must
-+contain BPMP phandle and PCIe power partition ID. This is required only
-+for Tegra186.
- - device_type: Must be "pci"
- - reg: A list of physical base address and length for each set of controller
-   registers. Must contain an entry for each entry in the reg-names property.
-@@ -124,6 +129,16 @@ Power supplies for Tegra210:
-   - vddio-pex-ctl-supply: Power supply for PCIe control I/O partition. Must
-     supply 1.8 V.
+ 	advk_pcie_wait_for_link(pcie);
  
-+Power supplies for Tegra186:
-+- Required:
-+  - dvdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
-+  - hvdd-pex-pll-supply: High-voltage supply for PLLE (shared with USB3). Must
-+    supply 1.8 V.
-+  - hvdd-pex-supply: High-voltage supply for PCIe I/O and PCIe output clocks.
-+    Must supply 1.8 V.
-+  - vddio-pexctl-aud-supply: Power supply for PCIe side band signals. Must
-+    supply 1.8 V.
-+
- Root ports are defined as subnodes of the PCIe controller node.
+-	reg = PCIE_CORE_LINK_L0S_ENTRY |
+-		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
++	reg = (1 << PCIE_CORE_LINK_WIDTH_SHIFT);
+ 	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
  
- Required properties:
-@@ -546,3 +561,114 @@ Board DTS:
- 			status = "okay";
- 		};
- 	};
-+
-+Tegra186:
-+---------
-+
-+SoC DTSI:
-+
-+	pcie@10003000 {
-+		compatible = "nvidia,tegra186-pcie";
-+		power-domains = <&bpmp TEGRA186_POWER_DOMAIN_PCX>;
-+		device_type = "pci";
-+		reg = <0x0 0x10003000 0x0 0x00000800   /* PADS registers */
-+		       0x0 0x10003800 0x0 0x00000800   /* AFI registers */
-+		       0x0 0x40000000 0x0 0x10000000>; /* configuration space */
-+		reg-names = "pads", "afi", "cs";
-+
-+		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
-+			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		bus-range = <0x00 0xff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		ranges = <0x82000000 0 0x10000000 0x0 0x10000000 0 0x00001000   /* port 0 configuration space */
-+			  0x82000000 0 0x10001000 0x0 0x10001000 0 0x00001000   /* port 1 configuration space */
-+			  0x82000000 0 0x10004000 0x0 0x10004000 0 0x00001000   /* port 2 configuration space */
-+			  0x81000000 0 0x0        0x0 0x50000000 0 0x00010000   /* downstream I/O (64 KiB) */
-+			  0x82000000 0 0x50100000 0x0 0x50100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
-+			  0xc2000000 0 0x58000000 0x0 0x58000000 0 0x28000000>; /* prefetchable memory (640 MiB) */
-+
-+		clocks = <&bpmp TEGRA186_CLK_AFI>,
-+			 <&bpmp TEGRA186_CLK_PCIE>,
-+			 <&bpmp TEGRA186_CLK_PLLE>;
-+		clock-names = "afi", "pex", "pll_e";
-+
-+		resets = <&bpmp TEGRA186_RESET_AFI>,
-+			 <&bpmp TEGRA186_RESET_PCIE>,
-+			 <&bpmp TEGRA186_RESET_PCIEXCLK>;
-+		reset-names = "afi", "pex", "pcie_x";
-+
-+		status = "disabled";
-+
-+		pci@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x10000000 0 0x1000>;
-+			reg = <0x000800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x10001000 0 0x1000>;
-+			reg = <0x001000 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <1>;
-+		};
-+
-+		pci@3,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001800 0 0x10004000 0 0x1000>;
-+			reg = <0x001800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <1>;
-+		};
-+	};
-+
-+Board DTS:
-+
-+	pcie@10003000 {
-+		status = "okay";
-+
-+		dvdd-pex-supply = <&vdd_pex>;
-+		hvdd-pex-pll-supply = <&vdd_1v8>;
-+		hvdd-pex-supply = <&vdd_1v8>;
-+		vddio-pexctl-aud-supply = <&vdd_1v8>;
-+
-+		pci@1,0 {
-+			nvidia,num-lanes = <4>;
-+			status = "okay";
-+		};
-+
-+		pci@2,0 {
-+			nvidia,num-lanes = <0>;
-+			status = "disabled";
-+		};
-+
-+		pci@3,0 {
-+			nvidia,num-lanes = <1>;
-+			status = "disabled";
-+		};
-+	};
+ 	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
 -- 
-2.1.4
+2.13.5
