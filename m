@@ -1,154 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45440 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1030327AbdIZTQn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Sep 2017 15:16:43 -0400
-Date: Tue, 26 Sep 2017 14:16:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: Re: [PATCH 1/2 v4] PCI: v3: Update the device tree bindings
-Message-ID: <20170926191639.GO15970@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170908124503.4491-1-linus.walleij@linaro.org>
+Return-Path: <SRS0=sw7U=A5=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=sw7U=A5=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [RFC 2/3] module: Ignore delete_id parameter
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Arjan van de Ven <arjan@linux.intel.com>,
+ Alan Cox <alan@linux.intel.com>, Dan J Williams <dan.j.williams@intel.com>
+References: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
+ <1506544822-2632-3-git-send-email-jonathan.derrick@intel.com>
+ <20170928090234.GB12599@kroah.com>
+Message-ID: <c9b6b6d0-27bb-1d37-da34-06ecc714bbc4@intel.com>
+Date: Thu, 28 Sep 2017 09:57:02 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170908124503.4491-1-linus.walleij@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170928090234.GB12599@kroah.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 08, 2017 at 02:45:02PM +0200, Linus Walleij wrote:
-> The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
-> and predates the more formal format we have adopted for the bindings.
+On 09/28/2017 03:02 AM, Greg Kroah-Hartman wrote:
+> On Wed, Sep 27, 2017 at 04:40:21PM -0400, Jon Derrick wrote:
+>> The PCI driver delete_id parameter is handled in each individual driver
+>> registration callback.
+>>
+>> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+>> ---
+>>  kernel/module.c | 7 +++++++
+>>  1 file changed, 7 insertions(+)
+>>
+>> diff --git a/kernel/module.c b/kernel/module.c
+>> index de66ec8..2b2dccf 100644
+>> --- a/kernel/module.c
+>> +++ b/kernel/module.c
+>> @@ -3620,6 +3620,13 @@ static int unknown_module_param_cb(char *param, char *val, const char *modname,
+>>  		return 0;
+>>  	}
+>>  
+>> +	/*
+>> +	 * Ignore driver delete list arguments. They are handled by driver
+>> +	 * registration callbacks
+>> +	 */
+>> +	if (strcmp(param, "delete_id") == 0)
+>> +		return 0;
 > 
-> Update them a bit so it is easier to read, and add the Integrator AP-
-> specific compatible so we can detect that we are running on that specific
-> platform.
+> Why?  This is only for the PCI core as you have defined it in this
+> patchset, but you just broke this module id for all other kernel modules
+> in the system :(
 > 
-> Add a second register bank for the configuration memory area. The
-> device tree specs does specify a memory range for configuration
-> space but it is not applicable to custom accessors like this. Instead
-> follow the pattern from the Versatile PCI adapter and simply add
-> a second register bank for this memory.
+> If you want to do this, you need to provide this feature for _all_
+> kernel drivers...
 > 
-> Cc: devicetree@vger.kernel.org
-> Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> Acked-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-
-Applied both to pci/host-v3-semi for v4.15, thanks!
-
-> ---
-> ChangeLog v3->v4:
-> - Add bus-range to the example and the required properties.
-> ChangeLog v2->v3:
-> - Add a second register bank for the config space.
-> - Mention that nonpre and pre memory must be 256MB and adjacent
-> - Make the prefetched and non-prefetched memory mapped 1:1 to
->   the PCI address space so that local bus 0x40000000 and
->   0x50000000 maps to the *same* local (CPU) bus addresses.
-> - Add reference to dma-ranges and that this is required.
-> - Add an example from the ARM Integrator/AP
-> - Rob ACKed an earlier version, he might want to have a glance
->   at this before merging.
-> ChangeLog v1->v2:
-> - Added Rob's ACK.
+> thanks,
 > 
-> Bjorn: please merge this when you feel confident with it.
-> ---
->  .../devicetree/bindings/pci/v3-v360epc-pci.txt     | 75 ++++++++++++++++++++--
->  1 file changed, 68 insertions(+), 7 deletions(-)
+> greg k-h
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-> index 30b364e504ba..11063293f761 100644
-> --- a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-> @@ -2,14 +2,75 @@ V3 Semiconductor V360 EPC PCI bridge
->  
->  This bridge is found in the ARM Integrator/AP (Application Platform)
->  
-> -Integrator-specific notes:
-> +Required properties:
-> +- compatible: should be one of:
-> +  "v3,v360epc-pci"
-> +  "arm,integrator-ap-pci", "v3,v360epc-pci"
-> +- reg: should contain two register areas:
-> +  first the base address of the V3 host bridge controller, 64KB
-> +  second the configuration area register space, 16MB
-> +- interrupts: should contain a reference to the V3 error interrupt
-> +  as routed on the system.
-> +- bus-range: see pci.txt
-> +- ranges: this follows the standard PCI bindings in the IEEE Std
-> +  1275-1994 (see pci.txt) with the following restriction:
-> +  - The non-prefetchable and prefetchable memory windows must
-> +    each be exactly 256MB (0x10000000) in size.
-> +  - The prefetchable memory window must be immediately adjacent
-> +    to the non-prefetcable memory window
-> +- dma-ranges: three ranges for the inbound memory region. The ranges must
-> +  be aligned to a 1MB boundary, and may be 1MB, 2MB, 4MB, 8MB, 16MB, 32MB,
-> +  64MB, 128MB, 256MB, 512MB, 1GB or 2GB in size. The memory should be marked
-> +  as pre-fetchable. Two ranges are supported by the hardware.
->  
-> -- syscon: should contain a link to the syscon device node (since
-> +Integrator-specific required properties:
-> +- syscon: should contain a link to the syscon device node, since
->    on the Integrator, some registers in the syscon are required to
-> -  operate the V3).
-> +  operate the V3 host bridge.
->  
-> -V360 EPC specific notes:
-> +Example:
->  
-> -- reg: should contain the base address of the V3 adapter.
-> -- interrupts: should contain a reference to the V3 error interrupt
-> -  as routed on the system.
-> +pci: pciv3@62000000 {
-> +	compatible = "arm,integrator-ap-pci", "v3,v360epc-pci";
-> +	#interrupt-cells = <1>;
-> +	#size-cells = <2>;
-> +	#address-cells = <3>;
-> +	reg = <0x62000000 0x10000>, <0x61000000 0x01000000>;
-> +	interrupt-parent = <&pic>;
-> +	interrupts = <17>; /* Bus error IRQ */
-> +	clocks = <&pciclk>;
-> +	bus-range = <0x00 0xff>;
-> +	ranges = 0x01000000 0 0x00000000 /* I/O space @00000000 */
-> +		0x60000000 0 0x01000000 /* 16 MiB @ LB 60000000 */
-> +		0x02000000 0 0x40000000 /* non-prefectable memory @40000000 */
-> +		0x40000000 0 0x10000000 /* 256 MiB @ LB 40000000 1:1 */
-> +		0x42000000 0 0x50000000 /* prefetchable memory @50000000 */
-> +		0x50000000 0 0x10000000>; /* 256 MiB @ LB 50000000 1:1 */
-> +	dma-ranges = <0x02000000 0 0x20000000 /* EBI memory space */
-> +		0x20000000 0 0x20000000 /* 512 MB @ LB 20000000 1:1 */
-> +		0x02000000 0 0x80000000 /* Core module alias memory */
-> +		0x80000000 0 0x40000000>; /* 1GB @ LB 80000000 */
-> +	interrupt-map-mask = <0xf800 0 0 0x7>;
-> +	interrupt-map = <
-> +	/* IDSEL 9 */
-> +	0x4800 0 0 1 &pic 13 /* INT A on slot 9 is irq 13 */
-> +	0x4800 0 0 2 &pic 14 /* INT B on slot 9 is irq 14 */
-> +	0x4800 0 0 3 &pic 15 /* INT C on slot 9 is irq 15 */
-> +	0x4800 0 0 4 &pic 16 /* INT D on slot 9 is irq 16 */
-> +	/* IDSEL 10 */
-> +	0x5000 0 0 1 &pic 14 /* INT A on slot 10 is irq 14 */
-> +	0x5000 0 0 2 &pic 15 /* INT B on slot 10 is irq 15 */
-> +	0x5000 0 0 3 &pic 16 /* INT C on slot 10 is irq 16 */
-> +	0x5000 0 0 4 &pic 13 /* INT D on slot 10 is irq 13 */
-> +	/* IDSEL 11 */
-> +	0x5800 0 0 1 &pic 15 /* INT A on slot 11 is irq 15 */
-> +	0x5800 0 0 2 &pic 16 /* INT B on slot 11 is irq 16 */
-> +	0x5800 0 0 3 &pic 13 /* INT C on slot 11 is irq 13 */
-> +	0x5800 0 0 4 &pic 14 /* INT D on slot 11 is irq 14 */
-> +	/* IDSEL 12 */
-> +	0x6000 0 0 1 &pic 16 /* INT A on slot 12 is irq 16 */
-> +	0x6000 0 0 2 &pic 13 /* INT B on slot 12 is irq 13 */
-> +	0x6000 0 0 3 &pic 14 /* INT C on slot 12 is irq 14 */
-> +	0x6000 0 0 4 &pic 15 /* INT D on slot 12 is irq 15 */
-> +	>;
-> +};
-> -- 
-> 2.13.5
-> 
+Yes I'm not particularly happy about this one either. I will make this
+more robust if the blacklisting idea is sound.
