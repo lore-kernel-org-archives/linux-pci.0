@@ -1,107 +1,71 @@
-Return-Path: <SRS0=sCe6=A3=free.fr=marc.w.gonzalez@kernel.org>
-Return-Path: <SRS0=sCe6=A3=free.fr=marc.w.gonzalez@kernel.org>
-Subject: [RESEND PATCH v11 1/3] of/pci: Add dma-ranges parsing support
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Marc Zyngier
- <marc.zyngier@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- Rob Herring <robh@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
- Mason <slash.tmp@free.fr>
-References: <93a30f88-17e1-af14-0c50-54f829c1158b@free.fr>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Message-ID: <5f6bcfa9-05ec-4cdc-483d-65b098b198d8@free.fr>
-Date: Tue, 26 Sep 2017 12:22:54 +0200
-MIME-Version: 1.0
-In-Reply-To: <93a30f88-17e1-af14-0c50-54f829c1158b@free.fr>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:44159 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753116AbdI1M6x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 08:58:53 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
+        Evan Wang <xswang@marvell.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v2 6/7] PCI: aardvark: fix PCIe max read request size setting
+Date: Thu, 28 Sep 2017 14:58:37 +0200
+Message-Id: <20170928125838.11887-7-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several host bridge drivers duplicate of_pci_range_parser_init()
-in order to parse their dma-ranges property.
+From: Evan Wang <xswang@marvell.com>
 
-Provide of_pci_dma_range_parser_init() for that use-case.
+There is an obvious typo issue in the definition of the PCIe maximum
+read request size: a bit shift is directly used as a value, while it
+should be used to shift the correct value.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+This is part of fixing bug
+https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+reported as the user to be important to get a Intel 7260 mini-PCIe
+WiFi card working.
+
+Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+Signed-off-by: Evan Wang <xswang@marvell.com>
+Reviewed-by: Victor Gu <xigu@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+[Thomas: tweak commit log.]
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/of/address.c       | 19 ++++++++++++++++---
- include/linux/of_address.h | 10 +++++++++-
- 2 files changed, 25 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-aardvark.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 580bbf6ca2b1..4cfd29e4ee1b 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -232,8 +232,8 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
- }
- EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index a173f31853df..c1093b023e48 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -33,6 +33,7 @@
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ		0x2
+ #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
+ #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
++#define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ		0x2
+ #define     PCIE_CORE_MPS_UNIT_BYTE				128
+ #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
+ #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
+@@ -303,7 +304,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 		(PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ <<
+ 		 PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
+ 		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
+-		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
++		(PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SZ <<
++		 PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT);
+ 	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
  
--int of_pci_range_parser_init(struct of_pci_range_parser *parser,
--				struct device_node *node)
-+static int parser_init(struct of_pci_range_parser *parser,
-+			struct device_node *node, const char *name)
- {
- 	const int na = 3, ns = 2;
- 	int rlen;
-@@ -242,7 +242,7 @@ int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 	parser->pna = of_n_addr_cells(node);
- 	parser->np = parser->pna + na + ns;
- 
--	parser->range = of_get_property(node, "ranges", &rlen);
-+	parser->range = of_get_property(node, name, &rlen);
- 	if (parser->range == NULL)
- 		return -ENOENT;
- 
-@@ -250,8 +250,21 @@ int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 
- 	return 0;
- }
-+
-+int of_pci_range_parser_init(struct of_pci_range_parser *parser,
-+				struct device_node *node)
-+{
-+	return parser_init(parser, node, "ranges");
-+}
- EXPORT_SYMBOL_GPL(of_pci_range_parser_init);
- 
-+int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+				struct device_node *node)
-+{
-+	return parser_init(parser, node, "dma-ranges");
-+}
-+EXPORT_SYMBOL_GPL(of_pci_dma_range_parser_init);
-+
- struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
- 						struct of_pci_range *range)
- {
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 37864734ca50..8beed2de98e9 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -49,6 +49,8 @@ extern const __be32 *of_get_address(struct device_node *dev, int index,
- 
- extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 			struct device_node *node);
-+extern int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+			struct device_node *node);
- extern struct of_pci_range *of_pci_range_parser_one(
- 					struct of_pci_range_parser *parser,
- 					struct of_pci_range *range);
-@@ -85,7 +87,13 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
- static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 			struct device_node *node)
- {
--	return -1;
-+	return -ENOSYS;
-+}
-+
-+static inline int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+			struct device_node *node)
-+{
-+	return -ENOSYS;
- }
- 
- static inline struct of_pci_range *of_pci_range_parser_one(
+ 	/* Program PCIe Control 2 to disable strict ordering */
 -- 
-2.11.0
+2.13.5
