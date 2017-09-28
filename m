@@ -1,41 +1,53 @@
-Return-Path: <SRS0=9kPM=AX=suse.de=jroedel@kernel.org>
-Return-Path: <SRS0=9kPM=AX=suse.de=jroedel@kernel.org>
-Date: Fri, 22 Sep 2017 19:51:53 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Add dummy for pci_acs_enabled() if CONFIG_PCI=n to
- fix iommmu build
-Message-ID: <20170922175153.phtxn5jhe7ioz4ps@suse.de>
-References: <1505132955-9517-1-git-send-email-geert@linux-m68k.org>
- <20170922155605.GB15970@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=yaEI=A5=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=yaEI=A5=linuxfoundation.org=gregkh@kernel.org>
+Date: Thu, 28 Sep 2017 11:02:34 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Arjan van de Ven <arjan@linux.intel.com>,
+	Alan Cox <alan@linux.intel.com>,
+	Dan J Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC 2/3] module: Ignore delete_id parameter
+Message-ID: <20170928090234.GB12599@kroah.com>
+References: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
+ <1506544822-2632-3-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170922155605.GB15970@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1506544822-2632-3-git-send-email-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Bjorn,
-
-On Fri, Sep 22, 2017 at 10:56:05AM -0500, Bjorn Helgaas wrote:
-> Joerg, if you pick this up, would you mind capitalizing the subject
-> line to match the PCI convention, e.g.,
+On Wed, Sep 27, 2017 at 04:40:21PM -0400, Jon Derrick wrote:
+> The PCI driver delete_id parameter is handled in each individual driver
+> registration callback.
 > 
->   PCI: Add dummy pci_acs_enabled() for CONFIG_PCI=n build
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+> ---
+>  kernel/module.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> If it's too late for you to pick this up this week, I can include it
-> next week.  I assume this is not related to a specific change, i.e.,
-> it's not a regression?  Should it be marked for stable?
+> diff --git a/kernel/module.c b/kernel/module.c
+> index de66ec8..2b2dccf 100644
+> --- a/kernel/module.c
+> +++ b/kernel/module.c
+> @@ -3620,6 +3620,13 @@ static int unknown_module_param_cb(char *param, char *val, const char *modname,
+>  		return 0;
+>  	}
+>  
+> +	/*
+> +	 * Ignore driver delete list arguments. They are handled by driver
+> +	 * registration callbacks
+> +	 */
+> +	if (strcmp(param, "delete_id") == 0)
+> +		return 0;
 
-I sent iommu fixes out today, this was not included. So if you are
-sending fixes upstream next week anyway, please pick it up. I am not
-sure if I have anything to send next week, so you are probably faster.
+Why?  This is only for the PCI core as you have defined it in this
+patchset, but you just broke this module id for all other kernel modules
+in the system :(
 
-I think its stable material too.
+If you want to do this, you need to provide this feature for _all_
+kernel drivers...
 
-Thanks,
+thanks,
 
-	Joerg
+greg k-h
