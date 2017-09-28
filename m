@@ -1,125 +1,154 @@
-Return-Path: <SRS0=NZsj=A6=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=NZsj=A6=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 29 Sep 2017 17:02:26 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Matt Turner <mattst88@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-arm-kernel@lists.infradead.org,
-	Richard Henderson <rth@twiddle.net>
-Subject: Re: [PATCH] PCI: Fix legacy IRQ assignment execution stage
-Message-ID: <20170929160226.GA17398@red-moon>
-References: <1506598627-8985-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20170928223719.GY15970@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=bmG0=A5=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=bmG0=A5=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170928223719.GY15970@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170928174847.GW15970@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170828180437.2646-1-ard.biesheuvel@linaro.org>
+ <20170828180437.2646-2-ard.biesheuvel@linaro.org> <20170926173200.GL15970@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu8CCcm_R3S1PbXZFqzvjAJVfU_bKpimVxbeQ78ciAgJyA@mail.gmail.com> <20170928174847.GW15970@bhelgaas-glaptop.roam.corp.google.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 28 Sep 2017 11:33:17 -0700
+Message-ID: <CAKv+Gu8Z-pJ2bcWvwLU28dQP6_KbgEoMktqXN3B+Zb=cDM-0tw@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] pci: designware: add driver for DWC controller in
+ ECAM shift mode
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Marcin Wojtas <mw@semihalf.com>,
+	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>, Rob Herring <robh@kernel.org>,
+	Will Deacon <will.deacon@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 28, 2017 at 05:37:19PM -0500, Bjorn Helgaas wrote:
-> On Thu, Sep 28, 2017 at 12:37:07PM +0100, Lorenzo Pieralisi wrote:
-> > Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
-> > possible to define IRQ mapping functions on a per PCI host bridge basis.
-> > 
-> > Actual IRQ allocation is carried out by the pci_assign_irq() function in
-> > pci_device_probe() - to make sure a device is assigned an IRQ only if it
-> > is probed (ie match a driver); it retrieves a struct pci_host_bridge*
-> > for a given PCI device and through {map/swizzle}_irq() hooks it carries
-> > out the PCI IRQ allocation.
-> > 
-> > As it turned out, some legacy drivers (eg IDE layer) require that a
-> > device allocates IRQ as soon as it is added so that its actual IRQ
-> > settings are available early in the boot process. With current code
-> > calling pci_assign_irq() in pci_device_probe() IDE IRQ probing fails
-> > for some drivers:
-> 
-> I think the patch is fine, but I don't understand the changelog.  I
-> want to know specifically what the dependency on dev->irq is.  "Early
-> in the boot process" is pretty vague.
-> 
-> I *thought* we were doing something like this:
-> 
->   pci_device_probe(dev1)
->     pci_assign_irq(dev1)
->       ...
->         ide_pci_init_two(dev1, dev2, ...)
->           do_ide_setup_pci_device(dev1)
->             pciirq = dev1->irq                # this one is fine
->           do_ide_setup_pci_device(dev2)
->             pciirq = dev2->irq                # not fine
-> 
-> where the problem is that we haven't called pci_assign_irq(dev2), so
-> dev2->irq hasn't been set.
-> 
-> But that doesn't match the data because we should be coming through
-> cmd64x_init_one(), which calls ide_pci_init_one(), so we shouldn't
-> have a dev2 in this path.
+On 28 September 2017 at 10:48, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Sep 28, 2017 at 08:51:43AM -0700, Ard Biesheuvel wrote:
+>> On 26 September 2017 at 10:32, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Mon, Aug 28, 2017 at 07:04:36PM +0100, Ard Biesheuvel wrote:
+>> >> Some implementations of the Synopsys Designware PCIe controller implement
+>> >> a so-called ECAM shift mode, which allows a static memory window to be
+>> >> configured that covers the configuration space of the entire bus range.
+>
+>> >> Note that, unlike most drivers for this IP, this driver does not expose
+>> >> a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+>> >> given that this is not a true bridge, and does not require any windows
+>> >> to be configured in order for the downstream device to operate correctly.
+>> >> Omitting it also prevents the PCI resource allocation routines from
+>> >> handing out BAR space to it unnecessarily.
+>> >
+>> > This is a tangent, but does this mean the other drivers do not need to
+>> > expose a fake 00:00.0 device either?
+>>
+>> To be honest, I am not so sure anymore. I am seeing some issues in
+>> ASPM code making the assumption that any device which is not a root
+>> port has a parent. If this is mandated by the spec, I guess there
+>> isn't a whole lot we can do except expose a fake root port on b/d/f
+>> 0/0/0. This used to work fine, though, and I have to confirm whether
+>> the issues I am seeing currently are due to different hardware or
+>> changes in the software.
+>
+> I agree that our ASPM code had some assumptions that any non-root port
+> device should have a parent.  I think the spec also makes that
+> assumption, but I haven't found an explicit mandate.  And there *are*
+> systems lacking root ports:
+>
+> http://lkml.kernel.org/r/1439808478-23253-1-git-send-email-wangyijing@huawei.com
+>
+> We fixed one such assumption in that thread, but I wouldn't be
+> surprised if more remain.  If there are, I think we should fix the
+> code to remove the assumption.
+>
 
-I *think* I understand what's going on here, the key is:
+OK, that is good to know. What I am seeing on my board is the following crash
 
-ide_scan_pcibus()
+Unable to handle kernel NULL pointer dereference at virtual address 00000090
+[0000000000000090] user address but active_mm is swapper
+Internal error: Oops: 96000004 [#1] SMP
+Modules linked in:
+CPU: 23 PID: 1 Comm: swapper/0 Not tainted 4.13.0+ #1
+Hardware name: Synquacer Evaluation Board (DT)
+task: ffff800f5c574080 task.stack: ffff800f5c578000
+PC is at pcie_aspm_init_link_state+0x204/0xa38
+LR is at pcie_aspm_init_link_state+0x184/0xa38
+   ...
+[<ffff0000084fda0c>] pcie_aspm_init_link_state+0x204/0xa38
+[<ffff0000084e2924>] pci_scan_slot+0x10c/0x150
+[<ffff0000084e3a9c>] pci_scan_child_bus+0x3c/0x1b0
+[<ffff0000084e37b4>] pci_scan_bridge+0x30c/0x5b8
+[<ffff0000084e3b1c>] pci_scan_child_bus+0xbc/0x1b0
+[<ffff0000084e37b4>] pci_scan_bridge+0x30c/0x5b8
+[<ffff0000084e3b1c>] pci_scan_child_bus+0xbc/0x1b0
+[<ffff0000084e3e0c>] pci_scan_root_bus_bridge+0xdc/0xf8
+[<ffff000008509c28>] pci_host_common_probe+0x148/0x400
+[<ffff00000850ee4c>] pci_dw_ecam_probe+0x2c/0x38
+[<ffff0000086348c8>] platform_drv_probe+0x60/0xc8
+[<ffff000008631b3c>] driver_probe_device+0x2e4/0x460
+[<ffff000008631de4>] __driver_attach+0x12c/0x130
+[<ffff00000862f1e0>] bus_for_each_dev+0x88/0xe8
+[<ffff000008631218>] driver_attach+0x30/0x40
+[<ffff000008630b90>] bus_add_driver+0x200/0x2b8
+[<ffff000008632fd8>] driver_register+0x68/0x100
+[<ffff0000086347ec>] __platform_driver_register+0x54/0x60
+[<ffff000008c44520>] pci_dw_ecam_driver_init+0x20/0x28
+[<ffff00000808399c>] do_one_initcall+0x5c/0x168
+[<ffff000008c10f98>] kernel_init_freeable+0x1e8/0x288
+[<ffff0000088ae9b8>] kernel_init+0x18/0x108
+[<ffff0000080836d0>] ret_from_fork+0x10/0x40
+Code: 54000f20 f9400aa0 f9400800 f9401c00 (f9404816)
 
-and CONFIG_IDEPCI_PCIBUS_ORDER
+which is essentially caused by this code [in alloc_pcie_link_state()]
 
-I still have to replicate it but I suspect that
-do_ide_setup_pci_device() for dev1 finds an unallocated IRQ (ie dev->irq
-== 0) because the probing did NOT happen via pci_device_probe(), ie
-pci_device_probe() was not called for the dev1, the cmd64x probe
-routine is called straight from ide_scan_pcidev().
+if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
+    pci_pcie_type(pdev) == PCI_EXP_TYPE_PCIE_BRIDGE) {
+        link->root = link;
+} else {
+        struct pcie_link_state *parent;
 
-I am struggling to understand the logic behind:
+        parent = pdev->bus->parent->self->link_state;
+    ...
 
-ide_pci_register_driver() and ide_scan_pcibus()
+so I guess we should fix this instance as well.
 
-and the sequence wrt PCI bus probing but I think that's the problem
-and that's why moving pci_assign_irq() to pci_device_add() will
-sort this out, adding pci_assign_irq() in ide_scan_pcidev() will
-solve the problem too (patch below).
+>> > This really doesn't have any DesignWare specifics in it, and it seems
+>> > more related to drivers/pci/host/pci-host-generic.c than to anything
+>> > in drivers/pci/dwc.  Maybe it should be
+>> > drivers/pci/host/pci-host-generic-quirks.c or something?  That's
+>> > unwieldy, I admit.
+>>
+>> I don't care where we put it, and I am fine with owning it if you prefer.
+>
+> I think Will's idea of teaching pci-host-generic to deal with this is
+> perfect.
+>
 
-Needless to say, ide_scan_pcibus() relies on pre_init global variable
-to make sure ide_pci_register_driver() chooses the "right" way of
-registering a driver, see:
+I agree. I originally thought people would prefer the DesignWare
+quirks to live under dwc/, but it does fit more naturally into the
+generic driver.
 
-__ide_pci_register_driver()
+>> >> +config PCIE_DW_HOST_ECAM
+>> >> +     bool "Synopsys DesignWare PCIe controller in ECAM mode"
+>> >> +     depends on OF && PCI
+>> >> +     select PCI_HOST_COMMON
+>> >> +     select IRQ_DOMAIN
+>> >> +     help
+>> >> +       Add support for Synopsys DesignWare PCIe controllers configured
+>> >> +       by the firmware into ECAM shift mode. In some cases, these are
+>> >> +       fully ECAM compliant, in which case the pci-host-generic driver
+>> >> +       may be used instead.
+>> >
+>> > This doesn't quite read right.  It sounds like a controller in ECAM
+>> > shift mode might be fully ECAM compliant, but I don't think that's
+>> > what you intended.
+>>
+>> Yes, that is what I mean. ECAM shift mode results in a fully compliant
+>> ECAM config space iff the IP was synthesized with a 32 KB granularity
+>> for the iATU windows. The default is 64 KB, though, in which case you
+>> need this driver.
+>
+> OK.  I'm trying to figure out how I as a user would know whether to
+> select this option.  Maybe the config option will go away if you add
+> the smarts to pci-host-generic?
+>
 
-Patch here to verify my assumption in case Guenter has a chance to
-run it if I do not beat him to it:
-
--- >8 --
-diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
-index 86aa88a..86b570a 100644
---- a/drivers/ide/ide-scan-pci.c
-+++ b/drivers/ide/ide-scan-pci.c
-@@ -56,6 +56,8 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
- {
- 	struct list_head *l;
- 	struct pci_driver *d;
-+	int ret;
-+
- 
- 	list_for_each(l, &ide_pci_drivers) {
- 		d = list_entry(l, struct pci_driver, node);
-@@ -63,10 +65,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
- 			const struct pci_device_id *id =
- 				pci_match_id(d->id_table, dev);
- 
--			if (id != NULL && d->probe(dev, id) >= 0) {
--				dev->driver = d;
--				pci_dev_get(dev);
--				return 1;
-+			if (id != NULL) {
-+				pci_assign_irq(dev);
-+				ret = d->probe(dev, id);
-+				if (ret >= 0) {
-+					dev->driver = d;
-+					pci_dev_get(dev);
-+					return 1;
-+				}
- 			}
- 		}
- 	}
+Yes. The firmware knows, and so the firmware should expose the correct
+compatible string in this case, either pci-host-ecam-generic or one of
+the quirked ones.
