@@ -1,117 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] ACPI/IORT: Fix PCI ACS enablement
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20170919170539.6265-1-lorenzo.pieralisi@arm.com>
- <59C3A36A.2060202@hisilicon.com> <20170922094546.GE1523@red-moon>
-CC: <linux-acpi@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <59C5C655.8030607@hisilicon.com>
-Date: Sat, 23 Sep 2017 10:26:29 +0800
+Return-Path: <SRS0=AvtO=A5=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=AvtO=A5=intel.com=dan.j.williams@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170922094546.GE1523@red-moon>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170928090901.GC12599@kroah.com>
+References: <1506544822-2632-1-git-send-email-jonathan.derrick@intel.com>
+ <1506544822-2632-2-git-send-email-jonathan.derrick@intel.com> <20170928090901.GC12599@kroah.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 28 Sep 2017 08:58:29 -0700
+Message-ID: <CAPcyv4iWTFCte_KTe8N6w5yQ6MuwFqBnitquJ8sVTmvhrF-MKQ@mail.gmail.com>
+Subject: Re: [RFC 1/3] PCI: pci-driver: Introduce pci device delete list
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jon Derrick <jonathan.derrick@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Arjan van de Ven <arjan@linux.intel.com>,
+	Alan Cox <alan@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/9/22 17:45, Lorenzo Pieralisi wrote:
-> On Thu, Sep 21, 2017 at 07:32:58PM +0800, Zhou Wang wrote:
->> On 2017/9/20 1:05, Lorenzo Pieralisi wrote:
->>> commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
->>> workarounds") removed kernel code that was allowing to initialize
->>> and probe the SMMU devices early (ie earlier than PCI devices through
->>> linker script callback entries) in the boot process because it was not
->>> needed any longer in that the SMMU devices/drivers now support deferred
->>> probing.
->>>
->>> Since the SMMUs probe routines are also in charge of requesting global
->>> PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
->>> up early-probing workarounds") also postponed PCI ACS enablement to
->>> SMMUs devices probe time, which may be too late given that PCI devices
->>> needs to detect if PCI ACS is enabled to init the respective capability
->>> through the following call path:
->>>
->>> pci_device_add()
->>>  -> pci_init_capabilities()
->>>   -> pci_enable_acs()
->>>
->>> Add code in the ACPI IORT SMMU platform devices initialization path
->>> (that is called before ACPI PCI enumeration) to detect if an SMMU is
->>> present in HW and enable PCI ACS if it actually is, restoring the
->>> correct PCI ACS enablement sequencing.
->>>
->>> Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
->>> Signed-workarounds")
->>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>> Cc: Will Deacon <will.deacon@arm.com>
->>> Cc: Robin Murphy <robin.murphy@arm.com>
->>> Cc: Zhou Wang <wangzhou1@hisilicon.com>
->>> Cc: Alex Williamson <alex.williamson@redhat.com>
->>> ---
->>>  drivers/acpi/arm64/iort.c | 11 +++++++++++
->>>  1 file changed, 11 insertions(+)
->>>
->>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
->>> index 9565d57..71a7694 100644
->>> --- a/drivers/acpi/arm64/iort.c
->>> +++ b/drivers/acpi/arm64/iort.c
->>> @@ -1184,6 +1184,7 @@ static void __init iort_init_platform_devices(void)
->>>  	struct acpi_table_iort *iort;
->>>  	struct fwnode_handle *fwnode;
->>>  	int i, ret;
->>> +	bool smmu_detected = false;
->>>  
->>>  	/*
->>>  	 * iort_table and iort both point to the start of IORT table, but
->>> @@ -1218,11 +1219,21 @@ static void __init iort_init_platform_devices(void)
->>>  				acpi_free_fwnode_static(fwnode);
->>>  				return;
->>>  			}
->>> +
->>> +			smmu_detected = true;
->>>  		}
->>>  
->>>  		iort_node = ACPI_ADD_PTR(struct acpi_iort_node, iort_node,
->>>  					 iort_node->length);
->>>  	}
->>> +
->>> +	/*
->>> +	 * If IORT reports an SMMU component make sure PCI ACS is
->>> +	 * requested so that PCI devices can enable it in their
->>> +	 * capabilities.
->>> +	 */
->>> +	if (smmu_detected)
->>> +		pci_request_acs();
->>>  }
->>>  
->>>  void __init acpi_iort_init(void)
->>>
+On Thu, Sep 28, 2017 at 2:09 AM, Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Wed, Sep 27, 2017 at 04:40:20PM -0400, Jon Derrick wrote:
+>> This patch introduces a new kernel command line parameter to mask pci
+>> device ids from pci driver id tables. This prevents masked devices from
+>> automatically binding to both built-in and module drivers.
 >>
->> Hi Lorenzo,
+>> Devices can be later attached through the driver's sysfs new_id
+>> inteface.
 >>
->> I tested this patch, it works well in my HiSilicon Hip08 based system.
->> However, setting ACS flag at the stage of SMMU device init seems not good,
->> I mean what if in one system there are only platform devices connected to
->> SMMU device.
-> 
-> That's a fair point if you explain to me how current pci_request_acs()
-> usage copes with your remark above.
+>> The use cases for this are primarily for debugging, eg, being able to
+>> prevent attachment before probes are set up. It can also be used to mask
+>> off faulty built-in hardware or faulty simulated hardware.
+>>
+>> Another use case is to prevent attachment of devices which will be
+>> passed to VMs, shortcutting the detachment effort.
+>
+> Is the "shortcut" really that big of a deal?  unbind actually causes
+> problems?  Is this an attempt to deal with devices being handled by more
+> than one driver and then you want to manually bind it later on?
+>
+>> The format is similar to the sysfs new_id format. Device ids are
+>> specified with:
+>>
+>> VVVV:DDDD[:SVVV:SDDD][:CCCC][:MMMM]
+>>
+>> Where:
+>> VVVV = Vendor ID
+>> DDDD = Device ID
+>> SVVV = Subvendor ID
+>> SDDD = Subdevice ID
+>> CCCC = Class
+>> MMMM = Class Mask
+>>
+>> IDs can be chained with commas.
+>>
+>> Examples:
+>>       <driver>.delete_id=1234:5678
+>>       <driver>.delete_id=ffffffff:ffffffff
+>>       <driver>.delete_id=ffffffff:ffffffff:ffffffff:ffffffff:010802
+>>       <driver>.delete_id=1234:5678,abcd:ef01,2345:ffffffff
+>
+> What about drivers that handle more than one bus type (i.e. USB and
+> PCI?)  This format is specific to PCI, yet you are defining it as a
+> "global" for all drivers :(
 
-The current pci_request_acs usage for ARM SMMU-V3 sets ACS flags under CONFIG_PCI.
-However, as mentioned in your commit message, this setting is too late.
+I assume other buses could define their own "delete_id" format and
+it's up to those bus_type implementations to check for "delete_id"
+statements for the drivers attached to it. Somewhat similar to what we
+have for "new_id" where it appears to be global sysfs attribute, but
+implemented per-bus.
 
-For the usage of X86 and AMD, as I am not familiar with the devices used in these
-two platforms, maybe the default devices in these platforms are PCIe based :)
+> This feels hacky, what is the real reason for this?  It feels like we
+> have so many different ways to blacklist and unbind and bind devices to
+> drivers already, why add yet-another way?
 
-Best,
-Zhou
-
-> 
-> Lorenzo
-> 
-> .
-> 
-
+Unbind after the fact may be too late, and builtin-drivers eliminate
+modprobe blacklisting. I've missed having this functionality in the
+past for platform bring up.
