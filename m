@@ -1,147 +1,116 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 13 Sep 2017 15:25:34 -0500
-From: Rob Herring <robh@kernel.org>
-To: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
-Subject: Re: [PATCH v2 5/5] devicetree: zynqmp_ps_pcie: Devicetree binding
- for Root DMA
-Message-ID: <20170913202534.vf4r7dmuyfectbmv@rob-hp-laptop>
-References: <1504873388-29195-1-git-send-email-vjonnal@xilinx.com>
- <1504873388-29195-7-git-send-email-vjonnal@xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:45455 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751953AbdI1OTQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 10:19:16 -0400
+Date: Thu, 28 Sep 2017 16:19:12 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: vidya sagar <sagar.tv@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: Use different MSI target address for Tegra20
+Message-ID: <20170928141912.GB28022@ulmo>
+References: <20170923061740.6012-1-treding@nvidia.com>
+ <CAN7O0+JyG3XT5SsWGsiZs0vrk0ha1vQ5N7rjYxs3tM_NvdONdw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1504873388-29195-7-git-send-email-vjonnal@xilinx.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- dmaengine@vger.kernel.org, vinod.koul@intel.com, linux-pci@vger.kernel.org,
- michal.simek@xilinx.com, linux-kernel@vger.kernel.org, vjonnal@xilinx.com,
- rgummal@xilinx.com, linux-arm-kernel@lists.infradead.org, bhelgaas@google.com,
- dan.j.williams@intel.com, bharat.kumar.gogada@xilinx.com,
- soren.brinkmann@xilinx.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="ZoaI/ZTpAVc4A5k6"
+In-Reply-To: <CAN7O0+JyG3XT5SsWGsiZs0vrk0ha1vQ5N7rjYxs3tM_NvdONdw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 08, 2017 at 05:53:08PM +0530, Ravi Shankar Jonnalagadda wrote:
-> Binding explaining devicetree usage for enabling Root DMA capability
-> 
-> Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
-> Signed-off-by: RaviKiran Gummaluri <rgummal@xilinx.com>
-> ---
->  .../devicetree/bindings/dma/xilinx/ps-pcie-dma.txt | 67 ++++++++++++++++++++++
->  1 file changed, 67 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/dma/xilinx/ps-pcie-dma.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/dma/xilinx/ps-pcie-dma.txt b/Documentation/devicetree/bindings/dma/xilinx/ps-pcie-dma.txt
-> new file mode 100644
-> index 0000000..1522a49
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/dma/xilinx/ps-pcie-dma.txt
-> @@ -0,0 +1,67 @@
-> +* Xilinx PS PCIe Root DMA
-> +
-> +Required properties:
-> +- compatible: Should be "xlnx,ps_pcie_dma-1.00.a"
-> +- reg: Register offset for Root DMA channels
-> +- reg-names: Name for the register. Should be "xlnx,ps_pcie_regbase"
 
-*-names for a single entry is pointless.
+--ZoaI/ZTpAVc4A5k6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> +- interrupts: Interrupt pin for Root DMA
-> +- interrupt-names: Name for the interrupt. Should be "xlnx,ps_pcie_rootdma_intr"
+On Mon, Sep 25, 2017 at 10:44:29AM +0530, vidya sagar wrote:
+> Inline...
+>=20
+> On Sat, Sep 23, 2017 at 11:47 AM, Thierry Reding
+> <thierry.reding@gmail.com> wrote:
+> >
+> > The Tegra20 PCIe controller has a different address range for MSI, so
+> > select a different target address.
+> >
+> > Fixes: d7bd554f27c9 ("PCI: tegra: Do not allocate MSI target memory")
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+> > ---
+> >  drivers/pci/host/pci-tegra.c | 12 +++++++++++-
+> >  1 file changed, 11 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > index e8e1ddbaabc9..5b02ea59524b 100644
+> > --- a/drivers/pci/host/pci-tegra.c
+> > +++ b/drivers/pci/host/pci-tegra.c
+> > @@ -1563,8 +1563,18 @@ static int tegra_pcie_enable_msi(struct tegra_pc=
+ie *pcie)
+> >          * none of the Tegra SoCs that contain this PCI host bridge can
+> >          * address more than 16 GiB of system memory, the last 4 KiB of
+> >          * these 1012 GiB is a good candidate.
+> > +        *
+> > +        * Unfortunately, Tegra20 is slightly different in that the phy=
+sical
+> > +        * address for this MSI region is limited to the lower 32 bits =
+of the
+> > +        * address map, so the address that we pick is going to have to=
+ be
+> > +        * located somewhere within the region addressable by the CPU a=
+nd
+> > +        * on-SoC controllers. To be on the safe side, we select an add=
+ress
+> > +        * from a region that is marked unused (0xf0010000 - 0xfffeffff=
+).
+> >          */
+> > -       msi->phys =3D 0xfcfffff000;
+> > +       if (soc->msi_base_shift > 0)
+> > +               msi->phys =3D 0xfcfffff000;
+> > +       else
+> > +               msi->phys =3D 0x00f0010000;
+>=20
+> Can we use this for later Tegra chip versions as well?
+> Reason being, if an end point's config space says that it cannot
+> support >32-bit MSI addresses (Marvel SATA controller being one
+> example), with the current code, we still allocate an address of
+> >32-bits, resulting in end point not being able to generate MSI
+> interrupt (as it discards >32-bits where generating upstream memory
+> write transaction for MSI)
 
-ditto
+Looks like the universal fix for this may not be trivial, so perhaps in
+the meantime this one could go in in order to restore MSI for TrimSlice
+(and other Tegra20 boards)?
 
-> +- interrupt-parent: Should be gic in case of zynqmp
-> +- xlnx,rootdma: Indicates this platform device is root dma.
-> +	This is required as the same platform driver will be invoked by pcie end points too
+Bjorn: do you have any objections to taking this into v4.13 via a stable
+backport? 32-bit only MSI were never guaranteed to work because prior to
+this patch the address was taken from an allocated page, which may or
+may not have been > 4 GiB.
 
-platform device and driver are Linux terms.
+We could then go and fix 32-bit MSI hopefully in time for 4.14, but it'd
+be a shame if v4.13 keeps being broken just because we're trying to
+settle on the right solution for 32-bit MSI.
 
-> +- xlnx,dma_vendorid: 16 bit PCIe device vendor id.
-> +	This can be later used by dma client for matching while using dma_request_channel
-> +- xlnx,dma_deviceid: 16 bit PCIe device id
-> +	This can be later used by dma client for matching while using dma_request_channel
+Thierry
 
-This is the id's of the client? Sounds like you should use the DMA 
-binding.
+--ZoaI/ZTpAVc4A5k6
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> +- xlnx,numchannels: Indicates number of channels to be enabled for the device.
-> +	Valid values are from 1 to 4 for zynqmp
+-----BEGIN PGP SIGNATURE-----
 
-DMA binding has a similar property.
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlnNBN0ACgkQ3SOs138+
+s6ER9g//VAYNmyvfIpGDGM9/w6J+Tz0hrsaOuOGE/W41pyfzAAr+mCDRIXwAXTMV
+LTRnWBr9xFMJOrHBy2I7HBURke7GdU4yz+L0GvYUbwI5wgyI+GGzNwdlnwN956Yi
+2XsP2UWuj0qs0Sb1xqvPHkzXkehL4NKy48xmu/0lF3tP6Eh9oIKL1ZnXDHlAHVJ3
+5AjUNCpqsHNriLTapc95AGjucaCuu79bx3jQUL84YwfZ/lZF5n7cuGVkOR2567KF
+S7+SoCl9nLPyNQuzHepAr/ixYlXYUFXx0BBclkieY8ERS9shauyyicMg5SeZFo5S
+CqSLhVfG/gidimqzcYvW5PIi+zYPTUrw23cTq4xXKQ2kTUflPRzlJsTfVV2ZVcRY
+khOGaR8WsO1k7GtPCtxuEmERzh+JCYcbmXx43oDAcUojydQ1apSNy5DuikQCk+f5
+SfTAljT6ZnWWTrNKyTPq6YY/mjjruvtKEQzp23SBa+QNKysFnSgrLHTwmCk1+jzU
+On/hYTIIvNAR+HETq7P5n21C+s+G+rVSWoA/Qgw8urrUAnb+QcmCvYDOQ5Qky0LE
++1t2pdKJ9TyVQejMjUD74YKiW0jD+KMZ+7jGiGMpkWx29eoCEWkjlR+YleUtyI78
+1TuZy+yXO5Kq6mGVy0510JjAwndTp4ZvQzVNUBU+C+tSTDy1UPY=
+=C3fW
+-----END PGP SIGNATURE-----
 
-> +- xlnx,ps_pcie_channel : One for each channel to be enabled.
-
-s/_/-/
-
-> +	This array contains channel specific properties.
-> +	Index 0: Direction of channel
-> +		Direction of channel can be either PCIe Memory to AXI memory i.e., Host to Card or
-> +		AXI Memory to PCIe memory i.e., Card to Host
-> +		PCIe to AXI Channel Direction is represented as 0x1
-> +		AXI to PCIe Channel Direction is represented as 0x0
-> +	Index 1: Number of Buffer Descriptors
-> +		This number describes number of buffer descriptors to be allocated for a channel
-> +	Index 2: Number of Queues
-> +		Each Channel has four DMA Buffer Descriptor Queues.
-> +		By default All four Queues will be managed by Root DMA driver.
-> +		User may choose to have only two queues either Source and it's Status Queue or
-> +			Destination and it's Status Queue to be handled by Driver.
-> +		The other two queues need to be handled by user logic which will not be part of this driver.
-> +		All Queues on Host is represented by 0x4
-> +		Two Queues on Host is represented by 0x2
-> +	Index 3: Coaelse Count
-> +		This number indicates the number of transfers after which interrupt needs to
-> +		be raised for the particular channel. The allowed range is from 0 to 255
-> +	Index 4: Coaelse Count Timer frequency
-> +		This property is used to control the frequency of poll timer. Poll timer is
-> +		created for a channel whenever coalesce count value (>= 1) is programmed for the particular
-> +		channel. This timer is helpful in draining out completed transactions even though interrupt is
-> +		not generated.
-> +
-> +Client Usage:
-> +	DMA clients can request for these channels using dma_request_channel API
-> +
-> +
-> +Xilinx PS PCIe Root DMA node Example
-> +++++++++++++++++++++++++++++++++++++
-> +
-> +	pci_rootdma: rootdma@fd0f0000 {
-
-dma-controller@...
-
-> +		compatible = "xlnx,ps_pcie_dma-1.00.a";
-> +		reg = <0x0 0xfd0f0000 0x0 0x1000>;
-> +		reg-names = "xlnx,ps_pcie_regbase";
-> +		interrupts = <0 117 4>;
-> +		interrupt-names = "xlnx,ps_pcie_rootdma_intr";
-> +		interrupt-parent = <&gic>;
-> +		xlnx,rootdma;
-> +		xlnx,dma_vendorid = /bits/ 16 <0x10EE>;
-> +		xlnx,dma_deviceid = /bits/ 16 <0xD021>;
-> +		xlnx,numchannels = <0x4>;
-> +		#size-cells = <0x5>;
-> +		xlnx,ps_pcie_channel0 = <0x1 0x7CF 0x4 0x0 0x3E8>;
-> +		xlnx,ps_pcie_channel1 = <0x0 0x7CF 0x4 0x0 0x3E8>;
-> +		xlnx,ps_pcie_channel2 = <0x1 0x7CF 0x4 0x0 0x3E8>;
-> +		xlnx,ps_pcie_channel3 = <0x0 0x7CF 0x4 0x0 0x3E8>;
-> +    };
-> -- 
-> 2.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--ZoaI/ZTpAVc4A5k6--
