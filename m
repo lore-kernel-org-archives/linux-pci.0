@@ -1,122 +1,106 @@
-Return-Path: <SRS0=yQ5U=A4=axtens.net=dja@kernel.org>
-Return-Path: <SRS0=yQ5U=A4=axtens.net=dja@kernel.org>
-From: Daniel Axtens <dja@axtens.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, benh@kernel.crashing.org, z.liuxinliang@hisilicon.com, zourongrong@gmail.com, catalin.marinas@arm.com, will.deacon@arm.com, gabriele.paoloni@huawei.com, airlied@linux.ie, daniel.vetter@intel.com, alex.williamson@redhat.com, dri-devel@lists.freedesktop.org, lukas@wunner.de, ard.biesheuvel@linaro.org, lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH v3 0/3] Split default display handling out from VGA arbiter
-In-Reply-To: <20170925163948.GD15970@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170901072744.2409-1-dja@axtens.net> <20170925163948.GD15970@bhelgaas-glaptop.roam.corp.google.com>
-Date: Wed, 27 Sep 2017 13:52:55 +1000
-Message-ID: <87k20kyezs.fsf@linkitivity.dja.id.au>
+Return-Path: <SRS0=T5Vu=A5=arm.com=will.deacon@kernel.org>
+Return-Path: <SRS0=T5Vu=A5=arm.com=will.deacon@kernel.org>
+Date: Thu, 28 Sep 2017 17:00:20 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Marcin Wojtas <mw@semihalf.com>,
+	Leif Lindholm <leif.lindholm@linaro.org>,
+	Graeme Gregory <graeme.gregory@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>, Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v3 1/2] pci: designware: add driver for DWC controller in
+ ECAM shift mode
+Message-ID: <20170928160019.GC9892@arm.com>
+References: <20170828180437.2646-1-ard.biesheuvel@linaro.org>
+ <20170828180437.2646-2-ard.biesheuvel@linaro.org>
+ <20170926173200.GL15970@bhelgaas-glaptop.roam.corp.google.com>
+ <20170928090339.GA21499@arm.com>
+ <CAKv+Gu-7OWG0=7VcWxaVqtAYoWrmNd1xhweS+EhSZES3cNJ+Kw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKv+Gu-7OWG0=7VcWxaVqtAYoWrmNd1xhweS+EhSZES3cNJ+Kw@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Thu, Sep 28, 2017 at 08:57:28AM -0700, Ard Biesheuvel wrote:
+> On 28 September 2017 at 02:03, Will Deacon <will.deacon@arm.com> wrote:
+> > On Tue, Sep 26, 2017 at 12:32:00PM -0500, Bjorn Helgaas wrote:
+> >> [+cc Will]
+> >>
+> >> On Mon, Aug 28, 2017 at 07:04:36PM +0100, Ard Biesheuvel wrote:
+> >> > Some implementations of the Synopsys Designware PCIe controller implement
+> >> > a so-called ECAM shift mode, which allows a static memory window to be
+> >> > configured that covers the configuration space of the entire bus range.
+> >> >
+> >> > If the firmware performs all the low level configuration that is required
+> >> > to expose this controller in a fully ECAM compatible manner, we can
+> >> > simply describe it as "pci-host-ecam-generic" and be done with it.
+> >> > However, it appears that in some cases (one of which is the Armada 80x0),
+> >> > the IP is synthesized with an ATU window size that does not allow the
+> >> > first bus to be mapped in a way that prevents the device on the
+> >> > downstream port from appearing more than once.
+> >> >
+> >> > So implement a driver that relies on the firmware to perform all low
+> >> > level initialization, and drives the controller in ECAM mode, but
+> >> > overrides the config space accessors to take the above quirk into
+> >> > account.
+> >> >
+> >> > Note that, unlike most drivers for this IP, this driver does not expose
+> >> > a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+> >> > given that this is not a true bridge, and does not require any windows
+> >> > to be configured in order for the downstream device to operate correctly.
+> >> > Omitting it also prevents the PCI resource allocation routines from
+> >> > handing out BAR space to it unnecessarily.
+> >>
+> >> This is a tangent, but does this mean the other drivers do not need to
+> >> expose a fake 00:00.0 device either?
+> >>
+> >> s/Designware/DesignWare/ in comments, changelogs, Kconfig text, etc.
+> >>
+> >> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> > Cc: Jingoo Han <jingoohan1@gmail.com>
+> >> > Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+> >> > Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+> >> > ---
+> >> >  drivers/pci/dwc/Kconfig                | 11 +++
+> >> >  drivers/pci/dwc/Makefile               |  1 +
+> >> >  drivers/pci/dwc/pcie-designware-ecam.c | 77 ++++++++++++++++++++
+> >>
+> >> This really doesn't have any DesignWare specifics in it, and it seems
+> >> more related to drivers/pci/host/pci-host-generic.c than to anything
+> >> in drivers/pci/dwc.  Maybe it should be
+> >> drivers/pci/host/pci-host-generic-quirks.c or something?  That's
+> >> unwieldy, I admit.
+> >>
+> >> Putting it in pci/dwc would make Jingoo and Joao the default
+> >> maintainers; I don't know how they feel about that.  We would probably
+> >> have to tweak MAINTAINERS if we *didn't* put it in pci/dwc.
+> >>
+> >> Any thoughts on this, Will?
+> >
+> > The idea of a "generic quirk" makes me smile, I must admit :)
+> >
+> > I think there are two options:
+> >
+> >   1. Use the full DWC driver, and don't rely on firmware
+> > -or-
+> >   2. Rely on firmware, but teach pci-host-generic to deal with the funny
+> >      config space
+> >
+> > For (2), we probably want to describe this as generically as possible
+> > in case some other SoCs run into the same problem.
+> >
+> 
+> I take it this implies a DT property. I could add one that consists of
+> an array of val/mask tuples or base/size tuples that allow us to
+> disable arbitrary subregions of the config space. I could also add a
+> simple boolean property that implements this exact quirk. Do you have
+> any preference?
 
-Yes, this works:
+I'd say either a boolean property or a new compatible string. I think Rob
+prefers the latter, from what he said recently on an SMMU thread.
 
-Tested-by: Daniel Axtens <dja@axtens.net> # arm64, ppc64-qemu-tcg
-
-
-Regards,
-Daniel
-> On Fri, Sep 01, 2017 at 05:27:41PM +1000, Daniel Axtens wrote:
->> This patch set:
->> 
->>  - splits the default display handling out from VGA arbiter, into its
->>    own file and behind its own Kconfig option (and gives the functions
->>    better names).
->> 
->>  - adds extra detection of default devices. To be nominated, the vga
->>    arbiter and platform hooks must not have nominated a default. A
->>    card will then only be nominated if it has a driver attached and
->>    has IO or memory decoding enabled.
->> 
->>  - adds relevant documentation.
->> 
->> The practical impact of this is improved X autoconfiguration on some
->> arm64 systems.
->
-> I think I gave you bad advice about trying to separate the "default
-> device" idea from the VGA arbiter.
->
-> It is true that the "VGA arbiter" per se is related to routing the
-> legacy VGA resources, and the arbiter currently only selects a default
-> device if it finds a device to which those resources are routed.
->
-> We have some cases where we want to select a default device that may
-> not support the legacy VGA resources, or where they might not be
-> routed to the device:
->
->   - systems where we match the EFI framebuffer address with a BAR, and
->     select that device as default,
->
->   - powerpc systems where there may be no host bridge window that maps
->     to the legacy VGA resources,
->
->   - your ARM64 systems where the default device may be behind a bridge
->     that doesn't support legacy VGA routing (PCI_BRIDGE_CTL_VGA)
->
-> But I think trying to split the "default device" part out from the VGA
-> arbiter ends up being overkill and making things more complicated
-> instead of simpler.
->
-> Would something like the following work for you as well as the powerpc
-> case?  On powerpc, we already use vga_set_default_device() to select a
-> device that doesn't use legacy VGA resources, so maybe we can just do
-> the same on ARM64?
->
-> I suppose there might be wrinkles in how the arbiter deals with
-> multiple graphics devices on those systems, since I don't think it
-> identifies these devices that don't use the legacy resources, but it
-> seems like we live with whatever those on are powerpc and probably can
-> on ARM64 as well.
->
->
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 02831a396419..0ac7aa346c69 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
-> -
-> -static void fixup_vga(struct pci_dev *pdev)
-> -{
-> -	u16 cmd;
-> -
-> -	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> -	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-> -		vga_set_default_device(pdev);
-> -
-> -}
-> -DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-> -			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
-> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> index 76875f6299b8..9df4802c5f04 100644
-> --- a/drivers/gpu/vga/vgaarb.c
-> +++ b/drivers/gpu/vga/vgaarb.c
-> @@ -1468,6 +1468,21 @@ static int __init vga_arb_device_init(void)
->  			vgaarb_info(dev, "no bridge control possible\n");
->  	}
->  
-> +	if (!vga_default_device()) {
-> +		list_for_each_entry(vgadev, &vga_list, list) {
-> +			struct device *dev = &vgadev->pdev->dev;
-> +			u16 cmd;
-> +
-> +			pdev = vgadev->pdev;
-> +			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-> +				vgaarb_info(dev, "setting as boot device\n");
-> +				vga_set_default_device(pdev);
-> +				break;
-> +			}
-> +		}
-> +	}
-> +
->  	pr_info("loaded\n");
->  	return rc;
->  }
+Will
