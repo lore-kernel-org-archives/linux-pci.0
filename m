@@ -1,51 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:46528 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751452AbdIOTvL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2017 15:51:11 -0400
+Return-Path: <SRS0=bmG0=A5=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=bmG0=A5=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1505504598.5400.296.camel@coelho.fi>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk> <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
- <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk> <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk> <93bfbc9b-8829-66fa-f4d6-6d47124e460c@kernel.dk>
- <CABe79T79WhBh66iQB-5LLCQO0d37evg5tsKUGkj7+z8vNGTHcA@mail.gmail.com>
- <a5fd0c11-916f-1404-c979-2fd566ed72ec@kernel.dk> <ee04c95d-167b-0782-1860-253a2271d66c@kernel.dk>
- <CA+55aFzjz2c=q4Uatso1Lp6HAUOAyGdbZLWorFW56MiapoF5Sg@mail.gmail.com> <1505504598.5400.296.camel@coelho.fi>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 15 Sep 2017 12:51:10 -0700
-Message-ID: <CA+55aFxUUTJo=EPHqHB8qEm_72mrM6P0pzbLqL0PQ8s2SM+ZiQ@mail.gmail.com>
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Luca Coelho <luca@coelho.fi>
-Cc: Jens Axboe <axboe@kernel.dk>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20170928090339.GA21499@arm.com>
+References: <20170828180437.2646-1-ard.biesheuvel@linaro.org>
+ <20170828180437.2646-2-ard.biesheuvel@linaro.org> <20170926173200.GL15970@bhelgaas-glaptop.roam.corp.google.com>
+ <20170928090339.GA21499@arm.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 28 Sep 2017 08:57:28 -0700
+Message-ID: <CAKv+Gu-7OWG0=7VcWxaVqtAYoWrmNd1xhweS+EhSZES3cNJ+Kw@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] pci: designware: add driver for DWC controller in
+ ECAM shift mode
+To: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Marcin Wojtas <mw@semihalf.com>,
+	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>, Rob Herring <robh@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 15, 2017 at 12:43 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Fri, 2017-09-15 at 12:38 -0700, Linus Torvalds wrote:
+On 28 September 2017 at 02:03, Will Deacon <will.deacon@arm.com> wrote:
+> On Tue, Sep 26, 2017 at 12:32:00PM -0500, Bjorn Helgaas wrote:
+>> [+cc Will]
 >>
->> From some of the context it looks like commit 40f11adc7cd9 ("PCI:
->> Avoid race while enabling upstream bridges"), is that correct?
+>> On Mon, Aug 28, 2017 at 07:04:36PM +0100, Ard Biesheuvel wrote:
+>> > Some implementations of the Synopsys Designware PCIe controller implement
+>> > a so-called ECAM shift mode, which allows a static memory window to be
+>> > configured that covers the configuration space of the entire bus range.
+>> >
+>> > If the firmware performs all the low level configuration that is required
+>> > to expose this controller in a fully ECAM compatible manner, we can
+>> > simply describe it as "pci-host-ecam-generic" and be done with it.
+>> > However, it appears that in some cases (one of which is the Armada 80x0),
+>> > the IP is synthesized with an ATU window size that does not allow the
+>> > first bus to be mapped in a way that prevents the device on the
+>> > downstream port from appearing more than once.
+>> >
+>> > So implement a driver that relies on the firmware to perform all low
+>> > level initialization, and drives the controller in ECAM mode, but
+>> > overrides the config space accessors to take the above quirk into
+>> > account.
+>> >
+>> > Note that, unlike most drivers for this IP, this driver does not expose
+>> > a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+>> > given that this is not a true bridge, and does not require any windows
+>> > to be configured in order for the downstream device to operate correctly.
+>> > Omitting it also prevents the PCI resource allocation routines from
+>> > handing out BAR space to it unnecessarily.
+>>
+>> This is a tangent, but does this mean the other drivers do not need to
+>> expose a fake 00:00.0 device either?
+>>
+>> s/Designware/DesignWare/ in comments, changelogs, Kconfig text, etc.
+>>
+>> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > Cc: Jingoo Han <jingoohan1@gmail.com>
+>> > Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+>> > Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>> > ---
+>> >  drivers/pci/dwc/Kconfig                | 11 +++
+>> >  drivers/pci/dwc/Makefile               |  1 +
+>> >  drivers/pci/dwc/pcie-designware-ecam.c | 77 ++++++++++++++++++++
+>>
+>> This really doesn't have any DesignWare specifics in it, and it seems
+>> more related to drivers/pci/host/pci-host-generic.c than to anything
+>> in drivers/pci/dwc.  Maybe it should be
+>> drivers/pci/host/pci-host-generic-quirks.c or something?  That's
+>> unwieldy, I admit.
+>>
+>> Putting it in pci/dwc would make Jingoo and Joao the default
+>> maintainers; I don't know how they feel about that.  We would probably
+>> have to tweak MAINTAINERS if we *didn't* put it in pci/dwc.
+>>
+>> Any thoughts on this, Will?
 >
-> Yes, that's the one.  And Bjorn already sent a revert:
+> The idea of a "generic quirk" makes me smile, I must admit :)
 >
-> https://lkml.org/lkml/2017/9/15/46
+> I think there are two options:
+>
+>   1. Use the full DWC driver, and don't rely on firmware
+> -or-
+>   2. Rely on firmware, but teach pci-host-generic to deal with the funny
+>      config space
+>
+> For (2), we probably want to describe this as generically as possible
+> in case some other SoCs run into the same problem.
+>
 
-Well, he may have sent a revert to lkml, but not to me. I'm assuming
-it's in his tree and I'll get a pull request. Hopefully soon, so that
-it makes rc.
-
-Jens, you were actually cc'd on that revert according to the email
-headers, so check your spam-box.
-
-                 Linus
+I take it this implies a DT property. I could add one that consists of
+an array of val/mask tuples or base/size tuples that allow us to
+disable arbitrary subregions of the config space. I could also add a
+simple boolean property that implements this exact quirk. Do you have
+any preference?
