@@ -1,75 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Nicolai Stange <nstange@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Adrian Salido <salidoa@google.com>,
-        Sasha Levin <sasha.levin@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Nicolai Stange <nstange@suse.de>
-Subject: [PATCH 1/3] PCI: fix race condition with driver_override
-Date: Mon, 11 Sep 2017 09:45:40 +0200
-Message-Id: <20170911074542.16777-2-nstange@suse.de>
-In-Reply-To: <20170911074542.16777-1-nstange@suse.de>
-References: <20170911074542.16777-1-nstange@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from alln-iport-2.cisco.com ([173.37.142.89]:28664 "EHLO
+        alln-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750857AbdI1Xqq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 19:46:46 -0400
+Date: Thu, 28 Sep 2017 16:46:23 -0700
+From: Govindarajulu Varadarajan <gvaradar@cisco.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+CC: <benve@cisco.com>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <jlbec@evilplan.org>, <hch@lst.de>, <mingo@redhat.com>,
+        <peterz@infradead.org>
+Subject: Re: [PATCH 3/4] pci aer: fix deadlock in do_recovery
+In-Reply-To: <2dc437fe-2ab4-23e3-44f3-f06feaf88d86@codeaurora.org>
+Message-ID: <alpine.LNX.2.20.1709281624330.24635@cae-iprp-alln-lb.cisco.com>
+References: <20170927214220.41216-1-gvaradar@cisco.com> <20170927214220.41216-4-gvaradar@cisco.com> <2dc437fe-2ab4-23e3-44f3-f06feaf88d86@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The driver_override implementation is susceptible to a race condition when
-different threads are reading vs. storing a different driver override.
-Add locking to avoid the race condition.
+On Thu, 28 Sep 2017, Sinan Kaya wrote:
 
-This is in close analogy to commit 6265539776a0 ("driver core: platform:
-fix race condition with driver_override") from Adrian Salido.
+> On 9/27/2017 5:42 PM, Govindarajulu Varadarajan wrote:
+>> CPU0					CPU1
+>> ---------------------------------------------------------------------
+>> __driver_attach()
+>> device_lock(&dev->mutex) <--- device mutex lock here
+>> driver_probe_device()
+>> pci_enable_sriov()
+>> pci_iov_add_virtfn()
+>> pci_device_add()
+>> 					aer_isr()		<--- pci aer error
+>> 					do_recovery()
+>> 					broadcast_error_message()
+>> 					pci_walk_bus()
+>> 					down_read(&pci_bus_sem) <--- rd sem
+>
+> How about releasing the device_lock here on CPU0?>
 
-Fixes: 782a985d7af2 ("PCI: Introduce new device binding path using pci_dev.driver_override")
-Cc: stable@vger.kernel.org	# v3.16+
-Signed-off-by: Nicolai Stange <nstange@suse.de>
----
- drivers/pci/pci-sysfs.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+pci_device_add() is called by driver's pci probe function. device_lock(dev)
+should be held before calling pci driver probe function.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 1eecfa301f7f..8e075ea2743e 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -686,7 +686,7 @@ static ssize_t driver_override_store(struct device *dev,
- 				     const char *buf, size_t count)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
--	char *driver_override, *old = pdev->driver_override, *cp;
-+	char *driver_override, *old, *cp;
- 
- 	/* We need to keep extra room for a newline */
- 	if (count >= (PAGE_SIZE - 1))
-@@ -700,12 +700,15 @@ static ssize_t driver_override_store(struct device *dev,
- 	if (cp)
- 		*cp = '\0';
- 
-+	device_lock(dev);
-+	old = pdev->driver_override;
- 	if (strlen(driver_override)) {
- 		pdev->driver_override = driver_override;
- 	} else {
- 		kfree(driver_override);
- 		pdev->driver_override = NULL;
- 	}
-+	device_unlock(dev);
- 
- 	kfree(old);
- 
-@@ -716,8 +719,12 @@ static ssize_t driver_override_show(struct device *dev,
- 				    struct device_attribute *attr, char *buf)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	ssize_t len;
- 
--	return snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
-+	device_lock(dev);
-+	len = snprintf(buf, PAGE_SIZE, "%s\n", pdev->driver_override);
-+	device_unlock(dev);
-+	return len;
- }
- static DEVICE_ATTR_RW(driver_override);
- 
--- 
-2.13.5
+> or in other words keep device_lock as short as possible?
+
+The problem is not the duration device_lock is held. It is the order two locks
+are aquired. We cannot control or implement a restriction that during
+device_lock() is held, driver probe should not call pci function which aquires
+pci_bus_sem. And in case of pci aer, aer handler needs to call driver err_handler()
+for which we need to hold device_lock() before calling err_handler(). In order
+to find all the devices on a pci bus, we should hold pci_bus_sem to do
+pci_walk_bus().
+
+>> down_write(&pci_bus_sem) <-- stuck on wr sem
+>> 					report_error_detected()
+>> 					device_lock(&dev->mutex)<--- DEAD LOCK
