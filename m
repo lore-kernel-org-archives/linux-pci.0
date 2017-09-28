@@ -1,44 +1,33 @@
-Return-Path: <SRS0=wdry=A3=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=wdry=A3=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38162 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751355AbdI1QMW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2017 12:12:22 -0400
+Subject: Re: [PATCH 1/4] pci: introduce __pci_walk_bus for caller with
+ pci_bus_sem held
+To: Govindarajulu Varadarajan <gvaradar@cisco.com>, benve@cisco.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
+        mingo@redhat.com, peterz@infradead.org
+References: <20170927214220.41216-1-gvaradar@cisco.com>
+ <20170927214220.41216-2-gvaradar@cisco.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5bbeefd2-a409-168c-b596-bcaa29a54eb7@codeaurora.org>
+Date: Thu, 28 Sep 2017 12:12:19 -0400
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20170926213455.GU15970@bhelgaas-glaptop.roam.corp.google.com>
-References: <1877076.QiUpNxchJO@aspire.rjw.lan> <20170926213455.GU15970@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 26 Sep 2017 23:39:29 +0200
-Message-ID: <CAJZ5v0gTZrRyF_ne3UP88HKUjXcdVCWHuPHLRhB9qS6aoHcddQ@mail.gmail.com>
-Subject: Re: [PATCH] PM / PCI: Do not resume any devices in pci_pm_prepare()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PCI <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Alan Stern <stern@rowland.harvard.edu>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170927214220.41216-2-gvaradar@cisco.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 26, 2017 at 11:34 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Sep 25, 2017 at 01:33:13AM +0200, Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> It should not be necessary to resume devices with ignore_children set
->> in pci_pm_prepare(), because they should be resumed explcitly by
->
-> s/explcitly/explicitly/
+On 9/27/2017 5:42 PM, Govindarajulu Varadarajan wrote:
+> +void __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+> +		    void *userdata);
 
-Yup.
+pci_walk_bus_locked would be a better name as you are assuming that caller is
+holding the lock. 
 
->> their children drivers during suspend if need be and they will be
->> resumed by pci_pm_suspend() after that anyway, so avoid doing that.
->>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> I think your previous patches to this file mostly used a "PCI / PM"
-> subject line prefix (as opposed to the "PM / PCI" here).  But maybe
-> the difference means something?
-
-No, it doesn't.  I'll change it to match the previous ones. :-)
-
-Thanks,
-Rafael
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
