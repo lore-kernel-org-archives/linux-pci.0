@@ -1,90 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:39255 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751685AbdITJxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Sep 2017 05:53:00 -0400
-Subject: Re: [PATCH 0/4] Add Tegra186 PCIe support
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
-        thierry.reding@gmail.com, jonathanh@nvidia.com
-References: <1505889764-19397-1-git-send-email-mmaddireddy@nvidia.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <15262fbd-7750-bb70-9336-42ff9d1b26d8@kapsi.fi>
-Date: Wed, 20 Sep 2017 12:52:50 +0300
+Return-Path: <SRS0=o6Kt=A5=redhat.com=ddutile@kernel.org>
+Return-Path: <SRS0=o6Kt=A5=redhat.com=ddutile@kernel.org>
+Subject: Re: [PATCH] uio/uio_pci_generic: Add SR-IOV support
+To: Bjorn Helgaas <helgaas@kernel.org>, David Woodhouse <dwmw2@infradead.org>
+References: <1506517162.30379.2.camel@infradead.org>
+ <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ linux-kernel <linux-kernel@vger.kernel.org>,
+ Alexander Duyck <alexander.h.duyck@intel.com>,
+ "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+ Bodong Wang <bodong@mellanox.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
+From: Don Dutile <ddutile@redhat.com>
+Message-ID: <2627d7e8-eb5b-674b-2e70-6074597cb90b@redhat.com>
+Date: Thu, 28 Sep 2017 08:12:22 -0400
 MIME-Version: 1.0
-In-Reply-To: <1505889764-19397-1-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-The series,
-
-Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
-Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
-
-verified with an Intel 82574L ethernet card.
-
-Mikko
-
-On 20.09.2017 09:42, Manikanta Maddireddy wrote:
-> Tegra186 has three PCIe controllers which can be operated
-> in 401, 211 or 111 lane configurations. Tegra TX2 platform
-> has x4 and M.2 Key E PCIe slots, these patches enables
-> x4 slot. BPMP programs UPHY lane0 ownership to USB,
-> so M.2 Key E PCIe will not work.
+On 09/27/2017 06:00 PM, Bjorn Helgaas wrote:
+> [+cc Don, Alex D, Alex W, Bryant, Bodong, Michael, kvm list]
 >
-> Testing: x4 slot is verified with PCIe based USB3.1 card.
-> PCIe link up, usb flash drive mounting and file copy are
-> verified. Pasting PCIe link up logs below.
+> On Wed, Sep 27, 2017 at 01:59:22PM +0100, David Woodhouse wrote:
+>> From: David Woodhouse <dwmw@amazon.co.uk>
+>>
+>> Allow userspace to configure SR-IOV VFs through sysfs.
+>>
+>> Currently, we need an in-kernel driver to permit this. But sometimes
+>> *all* we want to do is enable the VFs so that we can assign them to
+>> guests; we don't actually need to deal with the PF in any other way
+>> from the host kernel. So let's make it possible to use UIO for that.
+>>
+>> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+>> ---
+>> It's not entirely clear to me why we require the driver to "enable"
+>> SR-IOV like this anyway — were there some which needed to do something
+>> special and device-specific instead of just falling through to
+>> pci_{en,dis}able_sriov(), such that we need to effectively whitelist
+>> this in the driver rather than blacklisting the "problematic" ones via
+>> PCI quirks?
 >
-> [    1.452512] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
-> [    1.452723] tegra-pcie 10003000.pcie: Failed to get supply 'dvdd-pex': -517
-> [    1.561824] ehci-pci: EHCI PCI platform driver
-> [    1.591587] ohci-pci: OHCI PCI platform driver
-> [    3.072464] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
-> [    3.078989] tegra-pcie 10003000.pcie: probing port 0, using 4 lanes
-> [    3.087272] tegra-pcie 10003000.pcie: Slot present pin change, signature: 00000018
-> [    3.128818] tegra-pcie 10003000.pcie: PCI host bridge to bus 0000:00
-> [    3.135174] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-> [    3.141352] pci_bus 0000:00: root bus resource [mem 0x50100000-0x57ffffff]
-> [    3.148221] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7fffffff pref]
-> [    3.155542] pci_bus 0000:00: root bus resource [bus 00-ff]
-> [    3.161173] pci 0000:00:01.0: [10de:10e5] type 01 class 0x060400
-> [    3.161188] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
-> [    3.170838] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
-> [    3.180532] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x52 may corrupt adjacent RW1C bits
-> [    3.190305] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3cold
-> [    3.190312] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4c may corrupt adjacent RW1C bits
-> [    3.200158] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> [    3.208158] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-> [    3.217918] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-> [    3.227649] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-> [    3.237382] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x6 may corrupt adjacent RW1C bits
-> [    3.247135] pci 0000:01:00.0: [1b21:1242] type 00 class 0x0c0330
-> [    3.247157] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
-> [    3.256807] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
-> [    3.266477] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 64bit]
-> [    3.266544] pci 0000:01:00.0: enabling Extended Tags
-> [    3.271622] pci 0000:01:00.0: PME# supported from D3hot D3cold
-> [    3.271775] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-> [    3.271798] pci 0000:00:01.0: BAR 14: assigned [mem 0x50100000-0x501fffff]
-> [    3.278671] pci 0000:01:00.0: BAR 0: assigned [mem 0x50100000-0x50107fff 64bit]
-> [    3.285993] pci 0000:00:01.0: PCI bridge to [bus 01]
-> [    3.290959] pci 0000:00:01.0:   bridge window [mem 0x50100000-0x501fffff]
-> [    3.297763] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host bridge
-> [    3.304784] pcieport 0000:00:01.0: enabling device (0000 -> 0002)
-> [    3.311014] pcieport 0000:00:01.0: Signaling PME with IRQ 57
-> [    3.316768] pci 0000:01:00.0: enabling device (0000 -> 0002)
+> IIUC, this question is basically "why doesn't the PCI core enable IOV
+> automatically when it sees an IOV-capable device?"
 >
-> Manikanta Maddireddy (4):
->   dt-bindings: pci: tegra: Document Tegra186 PCIe DT
->   PCI: tegra: Add Tegra186 PCIe support
->   arm64: tegra: Add PCIe node for Tegra186
->   arm64: tegra: Enable PCIe on Jetson TX2
+> I think one reason is that an admin might want to control the number
+> of VFs we enable (e.g., via 1789382a72a5 ("PCI: SRIOV control and
+> status via sysfs" [1]).  But I guess you already know about that,
+> since this patch uses that sysfs path, so maybe I don't understand
+> your question.
 >
->  .../bindings/pci/nvidia,tegra20-pcie.txt           | 134 ++++++++++++++++++++-
->  arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi     |  24 ++++
->  arch/arm64/boot/dts/nvidia/tegra186.dtsi           |  82 +++++++++++++
->  drivers/pci/host/pci-tegra.c                       | 123 +++++++++++++++----
->  4 files changed, 338 insertions(+), 25 deletions(-)
+The major reason is that most bios don't scan extended pci config for
+SRIOV info, and thus, dont provide enough resources to configure VFs.
+If an SRIOV-capable device is one of the first devices scanned in a PCI tree
+(off a PCI Root Port), then it could consume all the bus resources,
+and fail configuring the rest of the PCI devices, often leaving the system
+unbootable.
+Another reason why it's not an all-or-nothing selection when a PF's VFs are
+enabled as well -- there may be enough resources available for some VFs to
+be enabled, but not all.  The (needs-to-be-ECN'd) req that VFs of a PF
+have to be aligned to the VF BAR[n]*num_VFs_enabled is the real difficulty,
+since large, aligned free mmio space is not commonly 'free' after a PCI bus(tree)
+scan and resource allocation. Free bus num space (gaps), and MSI resources
+add further complications.
+
+Will try to make some time later today to dig into the patches further
+and add more concrete suggestions/feedback afterward.
+
+> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=1789382a72a5
+>
+>>  drivers/uio/uio_pci_generic.c | 12 ++++++++++++
+>>  1 file changed, 12 insertions(+)
+>>
+>> diff --git a/drivers/uio/uio_pci_generic.c b/drivers/uio/uio_pci_generic.c
+>> index a56fdf9..bd196f0 100644
+>> --- a/drivers/uio/uio_pci_generic.c
+>> +++ b/drivers/uio/uio_pci_generic.c
+>> @@ -108,15 +108,27 @@ static void remove(struct pci_dev *pdev)
+>>  	struct uio_pci_generic_dev *gdev = pci_get_drvdata(pdev);
+>>
+>>  	uio_unregister_device(&gdev->info);
+>> +	pci_disable_sriov(pdev);
+>>  	pci_disable_device(pdev);
+>>  	kfree(gdev);
+>>  }
+>>
+>> +static int sriov_configure(struct pci_dev *pdev, int num_vfs)
+>> +{
+>> +	if (!num_vfs) {
+>> +		pci_disable_sriov(pdev);
+>> +		return 0;
+>> +	}
+>> +
+>> +	return pci_enable_sriov(pdev, num_vfs);
+>> +}
+>> +
+>>  static struct pci_driver uio_pci_driver = {
+>>  	.name = "uio_pci_generic",
+>>  	.id_table = NULL, /* only dynamic id's */
+>>  	.probe = probe,
+>>  	.remove = remove,
+>> +	.sriov_configure = sriov_configure,
+>>  };
+>>
+>>  module_pci_driver(uio_pci_driver);
+>> --
+>> 2.7.4
+>>
+>> --
+>> dwmw2
+>
 >
