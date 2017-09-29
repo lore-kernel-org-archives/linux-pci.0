@@ -1,81 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/7] PCI: Do not allocate more buses than available in parent
-Date: Tue, 26 Sep 2017 17:17:14 +0300
-Message-Id: <20170926141720.25067-2-mika.westerberg@linux.intel.com>
-In-Reply-To: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
-References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48574 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751176AbdI2Ncp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Sep 2017 09:32:45 -0400
+Subject: Re: [PATCH 3/4] pci aer: fix deadlock in do_recovery
+To: Govindarajulu Varadarajan <gvaradar@cisco.com>
+Cc: benve@cisco.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
+        mingo@redhat.com, peterz@infradead.org
+References: <20170927214220.41216-1-gvaradar@cisco.com>
+ <20170927214220.41216-4-gvaradar@cisco.com>
+ <2dc437fe-2ab4-23e3-44f3-f06feaf88d86@codeaurora.org>
+ <alpine.LNX.2.20.1709281624330.24635@cae-iprp-alln-lb.cisco.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0a2a41c5-2872-fdb6-8ad2-97b0b6dc69b1@codeaurora.org>
+Date: Fri, 29 Sep 2017 09:32:42 -0400
+MIME-Version: 1.0
+In-Reply-To: <alpine.LNX.2.20.1709281624330.24635@cae-iprp-alln-lb.cisco.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-One can ask more buses to be reserved for hotplug bridges by passing
-pci=hpbussize=N in the kernel command line. However, if the parent bus
-does not have enough bus space available we still create child bus with
-the requested number of subordinate buses.
+On 9/28/2017 7:46 PM, Govindarajulu Varadarajan wrote:
+>> How about releasing the device_lock here on CPU0?>
+> 
+> pci_device_add() is called by driver's pci probe function. device_lock(dev)
+> should be held before calling pci driver probe function.
 
-In the example below hpbussize is set to one more than we have available
-buses in the root port:
+I see. The goal of the lock held here is to protect probe() operation from
+being disrupted. I also don't think we can change this. 
 
-  pci 0000:07:00.0: [8086:1578] type 01 class 0x060400
-  pci 0000:07:00.0: calling pci_fixup_transparent_bridge+0x0/0x20
-  pci 0000:07:00.0: supports D1 D2
-  pci 0000:07:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-  pci 0000:07:00.0: PME# disabled
-  pci 0000:07:00.0: scanning [bus 00-00] behind bridge, pass 0
-  pci 0000:07:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-  pci 0000:07:00.0: scanning [bus 00-00] behind bridge, pass 1
-  pci_bus 0000:08: busn_res: can not insert [bus 08-ff] under [bus 07-3f] (conflicts with (null) [bus 07-3f])
-  pci_bus 0000:08: scanning bus
-  ...
-  pci_bus 0000:0a: bus scan returning with max=40
-  pci_bus 0000:0a: busn_res: [bus 0a-ff] end is updated to 40
-  pci_bus 0000:0a: [bus 0a-40] partially hidden behind bridge 0000:07 [bus 07-3f]
-  pci_bus 0000:08: bus scan returning with max=40
-  pci_bus 0000:08: busn_res: [bus 08-ff] end is updated to 40
+> 
+>> or in other words keep device_lock as short as possible?
+> 
+> The problem is not the duration device_lock is held. It is the order two locks
+> are aquired. We cannot control or implement a restriction that during
+> device_lock() is held, driver probe should not call pci function which aquires
+> pci_bus_sem. And in case of pci aer, aer handler needs to call driver err_handler()
+> for which we need to hold device_lock() before calling err_handler(). In order
+> to find all the devices on a pci bus, we should hold pci_bus_sem to do
+> pci_walk_bus().
 
-Instead of allowing this we limit the subordinate number to be less than
-or equal the maximum subordinate number allocated for the parent bus (if
-it has any).
+I was reacting to this to see if there is a better way to do this.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/probe.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+"Only fix I could think of is to lock &pci_bus_sem and try locking all
+device->mutex under that pci_bus. If it fails, unlock all device->mutex
+and &pci_bus_sem and try again."
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ff94b69738a8..f285cd74088e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1076,7 +1076,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			child = pci_add_new_bus(bus, dev, max+1);
- 			if (!child)
- 				goto out;
--			pci_bus_insert_busn_res(child, max+1, 0xff);
-+			pci_bus_insert_busn_res(child, max+1,
-+						bus->busn_res.end);
- 		}
- 		max++;
- 		buses = (buses & 0xff000000)
-@@ -2433,6 +2434,10 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
- 	if (bus->self && bus->self->is_hotplug_bridge && pci_hotplug_bus_size) {
- 		if (max - bus->busn_res.start < pci_hotplug_bus_size - 1)
- 			max = bus->busn_res.start + pci_hotplug_bus_size - 1;
-+
-+		/* Do not allocate more buses than we have room left */
-+		if (max > bus->busn_res.end)
-+			max = bus->busn_res.end;
- 	}
- 
- 	/*
+How about gracefully returning from report_error_detected() when we cannot obtain
+the device_lock() by replacing it with device_trylock()? 
+
+aer_pci_walk_bus() can still poll like you did until it gets the lock. At least,
+we don't get to introduce a new API, new lock semantics and code refactoring.
+__pci_bus_trylock() looked very powerful and also dangerously flexible to
+introduce new bugs to me.
+
+For instance, you called it like this.
+
++		down_read(&pci_bus_sem);
++		locked = __pci_bus_trylock(bus, pci_device_trylock,
++					   pci_device_unlock);
+
+pci_bus_trylock() would obtain device + cfg locks whereas pci_device_trylock() only
+obtains the device lock. Can it race against cfg lock? It depends on the caller.
+Very subtle difference.
+
 -- 
-2.14.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
