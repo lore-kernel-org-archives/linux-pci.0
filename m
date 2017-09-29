@@ -1,86 +1,45 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v2 1/7] PCI: aardvark: fix logic in PCI configuration
- read/write functions
-Date: Thu, 28 Sep 2017 14:58:32 +0200
-Message-Id: <20170928125838.11887-2-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
- Jason Cooper <jason@lakedaemon.net>, Hanna Hawa <hannah@marvell.com>,
- stable@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>,
- Victor Gu <xigu@marvell.com>,
- =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Antoine Tenart <antoine.tenart@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 29 Sep 2017 11:23:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Govindarajulu Varadarajan <gvaradar@cisco.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, benve@cisco.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
+        mingo@redhat.com
+Subject: Re: [PATCH 4/4] lockdep: make MAX_LOCK_DEPTH configurable from
+ Kconfig
+Message-ID: <20170929162332.GA15567@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170927214220.41216-1-gvaradar@cisco.com>
+ <20170927214220.41216-5-gvaradar@cisco.com>
+ <20170928092600.qvehxzikcjr65hvw@hirez.programming.kicks-ass.net>
+ <alpine.LNX.2.20.1709281646360.24635@cae-iprp-alln-lb.cisco.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.20.1709281646360.24635@cae-iprp-alln-lb.cisco.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Victor Gu <xigu@marvell.com>
+On Thu, Sep 28, 2017 at 04:51:46PM -0700, Govindarajulu Varadarajan wrote:
+> On Thu, 28 Sep 2017, Peter Zijlstra wrote:
+> 
+> >On Wed, Sep 27, 2017 at 02:42:20PM -0700, Govindarajulu Varadarajan wrote:
+> >>Make MAX_LOCK_DEPTH configurable. It is set to 48 right now. Number of
+> >>VFs under a PCI pf bus can exceed 48 and this disables lockdep.
+> >>
+> >>lockdep currently allows max of 63 held_locks.
+> >
+> >But why a config knob? Why not just raise the number to 64
+> >unconditionally? And is that sufficient; you only state 48 is
+> >insufficient, you don't actually state the VF limit.
+> >
+> 
+> I did not want to change the default configuration for everyone.
+> 
+> I will change it 63 unconditionally in v2 and resubmit the series.
 
-The PCI configuration space read/write functions were special casing
-the situation where PCI_SLOT(devfn) != 0, and returned
-PCIBIOS_DEVICE_NOT_FOUND in this case.
+I'm not happy about having to increase MAX_LOCK_DEPTH based on a
+number of VFs.  I haven't had time to look at the locking strategy
+you're proposing, but it just doesn't feel right to have to take 50+
+locks for one operation.
 
-However, will this is what is intended for the root bus, it is not
-intended for the child busses, as it prevents discovering devices with
-PCI_SLOT(x) != 0. Therefore, we return PCIBIOS_DEVICE_NOT_FOUND only
-if we're on the root bus.
-
-Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Victor Gu <xigu@marvell.com>
-Reviewed-by: Wilson Ding <dingwei@marvell.com>
-Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-[Thomas: tweak commit log.]
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/pci-aardvark.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 89f4e3d072d7..da2881ba7737 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -440,7 +440,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
- 	u32 reg;
- 	int ret;
- 
--	if (PCI_SLOT(devfn) != 0) {
-+	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0)) {
- 		*val = 0xffffffff;
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
-@@ -494,7 +494,7 @@ static int advk_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	int offset;
- 	int ret;
- 
--	if (PCI_SLOT(devfn) != 0)
-+	if ((bus->number == pcie->root_bus_nr) && (PCI_SLOT(devfn) != 0))
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	if (where % size)
--- 
-2.13.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
