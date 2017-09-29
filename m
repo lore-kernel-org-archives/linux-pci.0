@@ -1,104 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:54066 "EHLO
-        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751316AbdINRoC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2017 13:44:02 -0400
-Received: by mail-io0-f174.google.com with SMTP id q11so2396911ioe.10
-        for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2017 10:44:02 -0700 (PDT)
+Return-Path: <SRS0=WKXZ=A6=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=WKXZ=A6=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
-References: <04c9b578-693c-1dc6-9f0f-904580231b21@kernel.dk>
- <1505232673.5400.243.camel@intel.com> <1505234187.5400.249.camel@coelho.fi>
- <4bcbcbc1-7c79-09f0-5071-bc2f53bf6574@kernel.dk> <1505246657.1974.11.camel@sipsolutions.net>
- <feabbc25-eb85-ffa2-0fd6-254c07e3574b@kernel.dk> <CAErSpo777jq9FVRtmoHXVbzE-ZOc7mnT+eRJ_PhP_Dd=MbKv4g@mail.gmail.com>
- <e7af2f85-0ab3-e524-a544-c2ccdf4f8bd6@kernel.dk> <CABe79T7WObM+LOGdPFfYC7hf0dKrhm5NwMgQ3DpcWst3eP6kNg@mail.gmail.com>
- <8de8d1e2-1673-e1ff-d0ac-6d3bb03e9e99@kernel.dk>
-From: Srinath Mannam <srinath.mannam@broadcom.com>
-Date: Thu, 14 Sep 2017 23:14:01 +0530
-Message-ID: <CABe79T5fzTthk=c9891iT-_pQrNGaf+THzyi-B7cdqghX15Vug@mail.gmail.com>
-Subject: Re: iwlwifi firmware load broken in current -git
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        linuxwifi <linuxwifi@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Sender: rjwysocki@gmail.com
+In-Reply-To: <59CDE3E8.7050702@huawei.com>
+References: <1506570874-136126-1-git-send-email-zhengqiang10@huawei.com>
+ <CAJZ5v0izo1xeCMqDx2wmn+aC=CntWEV6f9kDupXx=Rgx9uZVPw@mail.gmail.com> <59CDE3E8.7050702@huawei.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 29 Sep 2017 15:12:16 +0200
+Message-ID: <CAJZ5v0ii5CSzmnNqrgGTyAG-2ckc8cebJDWH6f+BU3__9umDDQ@mail.gmail.com>
+Subject: Re: [PATCH] Bug fix for PME interrupt handler, add Root Status check
+To: Zhengqiang <zhengqiang10@huawei.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>, Linux PM <linux-pm@vger.kernel.org>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>, Linuxarm <linuxarm@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jens Axboe,
-
-On Thu, Sep 14, 2017 at 11:05 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 09/14/2017 11:28 AM, Srinath Mannam wrote:
->> Hi Bjorn,
->>
->> On Thu, Sep 14, 2017 at 10:52 PM, Jens Axboe <axboe@kernel.dk> wrote:
+On Fri, Sep 29, 2017 at 8:10 AM, Zhengqiang <zhengqiang10@huawei.com> wrote:
+> Hi,Rafael, thanks for you reply.
+> please see my comment.
+>
+> On 2017/9/29 7:13, Rafael J. Wysocki wrote:
+>> On Thu, Sep 28, 2017 at 5:54 AM, Qiang <zhengqiang10@huawei.com> wrote:
+>>> PCIe PME and hot plug share same interrupt number. In some special case,
+>>> Link down event cause hot plug interrupt, devices is not disconnected,
+>>> But read config will return 0xff.
 >>>
->>> On 09/14/2017 11:11 AM, Bjorn Helgaas wrote:
->>>> [+cc linux-pci]
->>>>
->>>> On Thu, Sep 14, 2017 at 12:00 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>> On 09/12/2017 02:04 PM, Johannes Berg wrote:
->>>>>> On Tue, 2017-09-12 at 13:43 -0600, Jens Axboe wrote:
->>>>>>
->>>>>>> CC'ing the guilty part and Bjorn. I'm assuming it's the
->>>>>>> pci_is_enabled() check, since the rest of the patch shouldn't have
->>>>>>> functional changes.
->>>>>>
->>>>>> and pci_enable_bridge() already checks if it's already enabled, but
->>>>>> still enables mastering in that case if it isn't:
->>>>>>
->>>>>> static void pci_enable_bridge(struct pci_dev *dev)
->>>>>> {
->>>>>> [...]
->>>>>>         if (pci_is_enabled(dev)) {
->>>>>>                 if (!dev->is_busmaster)
->>>>>>                         pci_set_master(dev);
->>>>>>                 return;
->>>>>>         }
->>>>>>
->>>>>> so I guess due to the new check we end up with mastering disabled, and
->>>>>> thus the firmware can't load since that's a DMA thing?
->>>>>
->>>>> Bjorn/Srinath, any input here? This is a regression that prevents wifi
->>>>> from working on a pretty standard laptop. It'd suck to have this be in
->>>>> -rc1. Seems like the trivial fix would be:
->>>>>
->>>>>
->>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>> index b0002daa50f3..ffbe11dbdd61 100644
->>>>> --- a/drivers/pci/pci.c
->>>>> +++ b/drivers/pci/pci.c
->>>>> @@ -1394,7 +1394,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
->>>>>                 return 0;               /* already enabled */
->>>>>
->>>>>         bridge = pci_upstream_bridge(dev);
->>>>> -       if (bridge && !pci_is_enabled(bridge))
->>>>> +       if (bridge)
->> With this change and keeping "mutex_lock(&pci_bridge_mutex);" in
->> pci_enable_bridge functoin will causes a nexted lock.
->
-> Took a look, and looks like you are right. That code looks like a mess,
-> fwiw.
->
-> I'd strongly suggest that the bad commit is reverted until a proper
-> solution is found, since the simple one-liner could potentially
-> introduce a deadlock with your patch applied.
-atomic_inc_return(&dev->enable_cnt) in function
-pci_enable_device_flags enables passed pcie device.
-!pci_is_enabled(bridge) check in "if (bridge &&
-!pci_is_enabled(bridge))"  checks for bridge device of previous pcie
-device.
-So it will not stop bus_master of bridge device.
-In your case how many bridges in between endpoint and host bridge?
-Please provide the details about your use case.
-Thank you.
->
-> --
-> Jens Axboe
->
-Regards,
-Srinath.
+>>> In that case, PME work function will run and not return Because
+>>> Root Status PME bit always 1 and can not be cleared.
+>>>
+>>> This patch add Root Status check in PME interrupt handler,
+>>> Just do same as pciehp isr Slot status check.
+>>>
+>>> Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
+>>> ---
+>>>  drivers/pci/pcie/pme.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+>>> index fafdb16..67144f5 100644
+>>> --- a/drivers/pci/pcie/pme.c
+>>> +++ b/drivers/pci/pcie/pme.c
+>>> @@ -273,7 +273,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
+>>>         spin_lock_irqsave(&data->lock, flags);
+>>>         pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+>>>
+>>> -       if (!(rtsta & PCI_EXP_RTSTA_PME)) {
+>>> +       if (rtsta == (u32)(~0) || !(rtsta & PCI_EXP_RTSTA_PME)) {
+>>>                 spin_unlock_irqrestore(&data->lock, flags);
+>>>                 return IRQ_NONE;
+>>>         }
+>>
+>> OK, but isn't there a symbol for all ones in u32?  And if there isn't,
+>> what about adding it?
+>>
+> Here is Root Status register definitions.
+
+Well, that's not what I meant.
+
+You have "rtsta == (u32)(~0)" in the patch above, but you could do
+"rtsta == U32_MAX" instead.
+
+Thanks,
+Rafael
