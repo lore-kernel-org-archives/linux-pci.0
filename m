@@ -1,96 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dougal.metanate.com ([90.155.101.14]:58265 "EHLO metanate.com"
+Received: from mail-dm3nam03on0080.outbound.protection.outlook.com ([104.47.41.80]:23808
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932280AbdIFOSA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Sep 2017 10:18:00 -0400
-From: John Keeping <john@metanate.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        John Keeping <john@metanate.com>
-Subject: [PATCH] PCI: endpoint: use correct "end of test" interrupt
-Date: Wed,  6 Sep 2017 14:55:24 +0100
-Message-Id: <20170906135524.12548-1-john@metanate.com>
+        id S1750954AbdI2MWn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Sep 2017 08:22:43 -0400
+Date: Fri, 29 Sep 2017 05:22:38 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Wilson.Snyder@cavium.com, alex.williamson@redhat.com
+Subject: Re: [PATCH v6] PCI: quirks: update Cavium ThunderX ACS quirk
+ implementation
+Message-ID: <20170929122238.GA527@localhost.localdomain>
+References: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170927141854.2ff65c73@w520.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170927141854.2ff65c73@w520.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_epf_test_raise_irq() reads the interrupt to use for the response
-from reg->command, but this has been cleared at the beginning of the
-command handler so the value is always zero at this point.
+Hi Bjorn,
 
-Instead, extract the interrupt index before handling the command and
-then pass the requested interrupt into pci_epf_test_raise_irq().  This
-allows us to remove the specific code to extract the interrupt for
-COMMAND_RAISE_MSI_IRQ since it is now handled in common code.
+On Wed, Sep 27, 2017 at 02:18:54PM -0600, Alex Williamson wrote:
+> On Wed, 27 Sep 2017 11:20:39 -0700
+> Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+> 
+> > This commit makes Cavium PCI ACS quirk applicable only to Cavium
+> > ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
+> > in terms of no ACS support advertisement. However, the RTL internally
+> > implements similar protection as if ACS had completion/request redirection,
+> > upstream forwarding and validation features enabled.
+> > 
+> > Current quirk implementation doesn't take into account PCIERCs which
+> > also needs to be quirked. So the pci device id check mask is updated
+> > and check of device ID moved into separate function.
+> > 
+> > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> > ---
+> > 	v5 -> v6: comment typo fix: change 0xa00 to 0xa000
+> 
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+>
 
-Signed-off-by: John Keeping <john@metanate.com>
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+If there is no any objections, could you please take this patch ?
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 4ddc6e8f9fe7..f9308c2f22e6 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -251,9 +251,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 	return ret;
- }
- 
--static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
-+static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
- {
--	u8 irq;
- 	u8 msi_count;
- 	struct pci_epf *epf = epf_test->epf;
- 	struct pci_epc *epc = epf->epc;
-@@ -262,7 +261,6 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
- 
- 	reg->status |= STATUS_IRQ_RAISED;
- 	msi_count = pci_epc_get_msi(epc);
--	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
- 	if (irq > msi_count || msi_count <= 0)
- 		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
- 	else
-@@ -289,6 +287,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 	reg->command = 0;
- 	reg->status = 0;
- 
-+	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-+
- 	if (command & COMMAND_RAISE_LEGACY_IRQ) {
- 		reg->status = STATUS_IRQ_RAISED;
- 		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-@@ -301,7 +301,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 			reg->status |= STATUS_WRITE_FAIL;
- 		else
- 			reg->status |= STATUS_WRITE_SUCCESS;
--		pci_epf_test_raise_irq(epf_test);
-+		pci_epf_test_raise_irq(epf_test, irq);
- 		goto reset_handler;
- 	}
- 
-@@ -311,7 +311,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 			reg->status |= STATUS_READ_SUCCESS;
- 		else
- 			reg->status |= STATUS_READ_FAIL;
--		pci_epf_test_raise_irq(epf_test);
-+		pci_epf_test_raise_irq(epf_test, irq);
- 		goto reset_handler;
- 	}
- 
-@@ -321,13 +321,12 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 			reg->status |= STATUS_COPY_SUCCESS;
- 		else
- 			reg->status |= STATUS_COPY_FAIL;
--		pci_epf_test_raise_irq(epf_test);
-+		pci_epf_test_raise_irq(epf_test, irq);
- 		goto reset_handler;
- 	}
- 
- 	if (command & COMMAND_RAISE_MSI_IRQ) {
- 		msi_count = pci_epc_get_msi(epc);
--		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
- 		if (irq > msi_count || msi_count <= 0)
- 			goto reset_handler;
- 		reg->status = STATUS_IRQ_RAISED;
--- 
-2.14.1
+WBR,
+Vadim
+
+>  
+> >  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
+> >  1 file changed, 21 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index a4d3361..ed6c76d 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+> >  #endif
+> >  }
+> >  
+> > -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +/*
+> > + * The Cavium downstream ports doesn't advertise their ACS capability registers.
+> > + * However, the RTL internally implements similar protection as if
+> > + * ACS had completion redirection, forwarding and validation features enabled.
+> > + * So by this flags we're asserting that the hardware implements and
+> > + * enables equivalent ACS functionality for these flags.
+> > + */
+> > +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
+> > +
+> > +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+> >  {
+> >  	/*
+> > -	 * Cavium devices matching this quirk do not perform peer-to-peer
+> > -	 * with other functions, allowing masking out these bits as if they
+> > -	 * were unimplemented in the ACS capability.
+> > +	 * Effectively selects all downstream ports for whole ThunderX 1 family
+> > +	 * by 0xa000 mask (which represents 8 SoCs), while the lower bits of device ID
+> > +	 * are used to indicate which subdevice is used within the SoC.
+> >  	 */
+> > -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> > -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> > +	return (pci_is_pcie(dev) &&
+> > +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
+> > +		((dev->device & 0xf800) == 0xa000));
+> > +}
+> >  
+> > -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+> > +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +{
+> > +	if (!pci_quirk_cavium_acs_match(dev))
+> >  		return -ENOTTY;
+> >  
+> > -	return acs_flags ? 0 : 1;
+> > +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+> >  }
+> >  
+> >  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+> 
