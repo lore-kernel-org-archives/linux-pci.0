@@ -1,78 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46336 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750733AbdISTaS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Sep 2017 15:30:18 -0400
-Date: Tue, 19 Sep 2017 14:30:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keerthy <j-keerthy@ti.com>
-Cc: kishon@ti.com, bhelgaas@google.com, t-kristo@ti.com,
-        linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] pci: dwc: dra7xx: Add shutdown handler to cleanly
- turn off clocks
-Message-ID: <20170919193016.GD22312@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504847694-23701-1-git-send-email-j-keerthy@ti.com>
+Return-Path: <SRS0=NZsj=A6=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=NZsj=A6=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 29 Sep 2017 18:19:58 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matt Turner <mattst88@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-arm-kernel@lists.infradead.org,
+	Richard Henderson <rth@twiddle.net>
+Subject: Re: [PATCH] PCI: Fix legacy IRQ assignment execution stage
+Message-ID: <20170929171958.GA18114@red-moon>
+References: <1506598627-8985-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20170928223719.GY15970@bhelgaas-glaptop.roam.corp.google.com>
+ <20170929160226.GA17398@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1504847694-23701-1-git-send-email-j-keerthy@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170929160226.GA17398@red-moon>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 08, 2017 at 10:44:54AM +0530, Keerthy wrote:
-> Add shutdown handler to cleanly turn off clocks. This will help
-> in cases of kexec where in a new kernel can boot abruptly.
+On Fri, Sep 29, 2017 at 05:02:26PM +0100, Lorenzo Pieralisi wrote:
+> On Thu, Sep 28, 2017 at 05:37:19PM -0500, Bjorn Helgaas wrote:
+> > On Thu, Sep 28, 2017 at 12:37:07PM +0100, Lorenzo Pieralisi wrote:
+> > > Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
+> > > possible to define IRQ mapping functions on a per PCI host bridge basis.
+> > > 
+> > > Actual IRQ allocation is carried out by the pci_assign_irq() function in
+> > > pci_device_probe() - to make sure a device is assigned an IRQ only if it
+> > > is probed (ie match a driver); it retrieves a struct pci_host_bridge*
+> > > for a given PCI device and through {map/swizzle}_irq() hooks it carries
+> > > out the PCI IRQ allocation.
+> > > 
+> > > As it turned out, some legacy drivers (eg IDE layer) require that a
+> > > device allocates IRQ as soon as it is added so that its actual IRQ
+> > > settings are available early in the boot process. With current code
+> > > calling pci_assign_irq() in pci_device_probe() IDE IRQ probing fails
+> > > for some drivers:
+> > 
+> > I think the patch is fine, but I don't understand the changelog.  I
+> > want to know specifically what the dependency on dev->irq is.  "Early
+> > in the boot process" is pretty vague.
+> > 
+> > I *thought* we were doing something like this:
+> > 
+> >   pci_device_probe(dev1)
+> >     pci_assign_irq(dev1)
+> >       ...
+> >         ide_pci_init_two(dev1, dev2, ...)
+> >           do_ide_setup_pci_device(dev1)
+> >             pciirq = dev1->irq                # this one is fine
+> >           do_ide_setup_pci_device(dev2)
+> >             pciirq = dev2->irq                # not fine
+> > 
+> > where the problem is that we haven't called pci_assign_irq(dev2), so
+> > dev2->irq hasn't been set.
+> > 
+> > But that doesn't match the data because we should be coming through
+> > cmd64x_init_one(), which calls ide_pci_init_one(), so we shouldn't
+> > have a dev2 in this path.
 > 
-> Signed-off-by: Keerthy <j-keerthy@ti.com>
-> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
+> I *think* I understand what's going on here, the key is:
 > 
-> Changes in v3:
+> ide_scan_pcibus()
 > 
->   * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
->   * Added more details to commit log.
+> and CONFIG_IDEPCI_PCIBUS_ORDER
 > 
-> Changes in v2:
+> I still have to replicate it but I suspect that
+> do_ide_setup_pci_device() for dev1 finds an unallocated IRQ (ie dev->irq
+> == 0) because the probing did NOT happen via pci_device_probe(), ie
+> pci_device_probe() was not called for the dev1, the cmd64x probe
+> routine is called straight from ide_scan_pcidev().
 > 
->   * used a local dev pointer instead of dereferencing dev at multiple places.
->   * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
+> I am struggling to understand the logic behind:
+> 
+> ide_pci_register_driver() and ide_scan_pcibus()
+> 
+> and the sequence wrt PCI bus probing but I think that's the problem
+> and that's why moving pci_assign_irq() to pci_device_add() will
+> sort this out, adding pci_assign_irq() in ide_scan_pcidev() will
+> solve the problem too (patch below).
+> 
+> Needless to say, ide_scan_pcibus() relies on pre_init global variable
+> to make sure ide_pci_register_driver() chooses the "right" way of
+> registering a driver, see:
+> 
+> __ide_pci_register_driver()
+> 
+> Patch here to verify my assumption in case Guenter has a chance to
+> run it if I do not beat him to it:
 
-You lost both these changes in v3.  I assume you'll post a v4.
+That's what's happening unfortunately.
 
->  drivers/pci/dwc/pci-dra7xx.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 0f9adf2..ec8f842 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -794,6 +794,19 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->  }
->  #endif
->  
-> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
-> +{
-> +	struct dra7xx_pcie *dra7xx = dev_get_drvdata(&pdev->dev);
+We end up probing twice (both fails):
+
+(1)
+
+->ide_scan_pcidev()
+  ->d->probe()
+     ->cmd64x_init_one()
+       ->ide_pci_init_one()
+         ->ide_pci_init_two()
+           [...]
+           -> ide_host_register() !! Fails in hwif_init(), no IRQ
+
+(2) ->pci_device_probe()
+     ->cmd64x_init_one()
+       ->ide_pci_init_one()
+         ->ide_pci_init_two()
+	   [...]
+	   -> ide_pci_enable() !! Fails with -EBUSY,
+	   pci_request_selected_regions() can't reserve already reserved
+	   regions (ie step (1) did not unwind resource reservation)
+
+That's my reading and patch patch below fixes it and given that
+IDE created its own PCI bus probing layer may be a more appropriate
+kludge than forcing us to move pci_assign_irq() to pci_device_add()
+for all PCI devices, please let me know what's your preferred solution.
+
+With fix below (1) still tries to re-probe cmd64x through
+pci_device_probe() but the device has already a driver attached
+to it so second probe stops before calling the cmd64x probe routine.
+
+I hope Guenter can give it a go too to confirm my findings.
+
+Lorenzo
+
+> -- >8 --
+> diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
+> index 86aa88a..86b570a 100644
+> --- a/drivers/ide/ide-scan-pci.c
+> +++ b/drivers/ide/ide-scan-pci.c
+> @@ -56,6 +56,8 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+>  {
+>  	struct list_head *l;
+>  	struct pci_driver *d;
 > +	int ret;
 > +
-> +	ret = pm_runtime_put_sync(&pdev->dev);
-> +	if (ret < 0)
-> +		dev_dbg(&pdev->dev, "pm_runtime_put_sync failed\n");
-> +
-> +	pm_runtime_disable(&pdev->dev);
-> +	dra7xx_pcie_disable_phy(dra7xx);
-> +}
-> +
->  static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
->  	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
->  	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
-> @@ -807,5 +820,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->  		.suppress_bind_attrs = true,
->  		.pm	= &dra7xx_pcie_pm_ops,
->  	},
-> +	.shutdown = dra7xx_pcie_shutdown,
->  };
->  builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
-> -- 
-> 1.9.1
-> 
+>  
+>  	list_for_each(l, &ide_pci_drivers) {
+>  		d = list_entry(l, struct pci_driver, node);
+> @@ -63,10 +65,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+>  			const struct pci_device_id *id =
+>  				pci_match_id(d->id_table, dev);
+>  
+> -			if (id != NULL && d->probe(dev, id) >= 0) {
+> -				dev->driver = d;
+> -				pci_dev_get(dev);
+> -				return 1;
+> +			if (id != NULL) {
+> +				pci_assign_irq(dev);
+> +				ret = d->probe(dev, id);
+> +				if (ret >= 0) {
+> +					dev->driver = d;
+> +					pci_dev_get(dev);
+> +					return 1;
+> +				}
+>  			}
+>  		}
+>  	}
