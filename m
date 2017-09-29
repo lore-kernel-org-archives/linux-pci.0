@@ -1,57 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49814 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752039AbdI0Nz2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Sep 2017 09:55:28 -0400
-Date: Wed, 27 Sep 2017 08:55:26 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 29 Sep 2017 16:31:02 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 1/2 v4] PCI: v3: Update the device tree bindings
-Message-ID: <20170927135526.GA23674@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170908124503.4491-1-linus.walleij@linaro.org>
- <20170926191639.GO15970@bhelgaas-glaptop.roam.corp.google.com>
- <CACRpkdYeo667tTsis-5ZLz-bK-87Ygd3ziD2qH_2KXWf+Oq=mA@mail.gmail.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: bhelgaas@google.com, linuxarm@huawei.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        liudongdong3@huawei.com
+Subject: Re: [PATCH v3] PCIe AER: report uncorrectable errors only to the
+ functions that logged the errors
+Message-ID: <20170929213102.GE31210@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506609185-8800-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20170929211526.GD31210@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACRpkdYeo667tTsis-5ZLz-bK-87Ygd3ziD2qH_2KXWf+Oq=mA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170929211526.GD31210@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 27, 2017 at 03:25:53PM +0200, Linus Walleij wrote:
-> On Tue, Sep 26, 2017 at 9:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Sep 08, 2017 at 02:45:02PM +0200, Linus Walleij wrote:
-> >> The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
-> >> and predates the more formal format we have adopted for the bindings.
-> >>
-> >> Update them a bit so it is easier to read, and add the Integrator AP-
-> >> specific compatible so we can detect that we are running on that specific
-> >> platform.
-> >>
-> >> Add a second register bank for the configuration memory area. The
-> >> device tree specs does specify a memory range for configuration
-> >> space but it is not applicable to custom accessors like this. Instead
-> >> follow the pattern from the Versatile PCI adapter and simply add
-> >> a second register bank for this memory.
-> >>
-> >> Cc: devicetree@vger.kernel.org
-> >> Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> >> Acked-by: Rob Herring <robh@kernel.org>
-> >> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> >
-> > Applied both to pci/host-v3-semi for v4.15, thanks!
+On Fri, Sep 29, 2017 at 04:15:26PM -0500, Bjorn Helgaas wrote:
+> On Thu, Sep 28, 2017 at 03:33:05PM +0100, Gabriele Paoloni wrote:
+> > Currently if an uncorrectable error is reported by an EP the AER
+> > driver walks over all the devices connected to the upstream port
+> > bus and in turns call the report_error_detected() callback.
+> > If any of the devices connected to the bus does not implement
+> > dev->driver->err_handler->error_detected() do_recovery() will fail
+> > leaving all the bus hierarchy devices unrecovered.
+> > 
+> > According to section "6.2.2.2.2. Non-Fatal Errors" of the PCIe specs
+> > << Non-fatal errors are uncorrectable errors which cause a particular
+> > transaction to be unreliable but the Link is otherwise fully functional.
+> > Isolating Non-fatal from Fatal errors provides Requester/Receiver logic
+> > in a device or system management software the opportunity to recover
+> > from the error without resetting the components on the Link and
+> > disturbing other transactions in progress. Devices not associated with
+> > the transaction in error are not impacted by the error.>>
+> > therefore for non fatal errors the PCIe link should not be considered
+> > compromised and it makes sense to report the error only to all the
+> > functions that logged an error.
+> > 
+> > This patch implements this new behaviour for non fatal errors.
+> > Also this patch fixes a bug (filed as in the link below)
+> > 
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=197055
+> > Fixes: 6c2b374d7485 ("PCI-Express AER implemetation: AER core and aerdriver")
+> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 > 
-> Oh it fails to build right now (as the zeroday builder noticed)
-> since it is using Marc Gonzalez new helper for DMA ranges
-> parsing.
+> Applied to pci/aer for v4.15, thanks!
 > 
-> If Marc's patches are getting applied they will solve the issue
-> so I wouldn't care in that case.
+> I rewrote some of the changelog to say "non-fatal" instead of
+> "uncorrectable", since "uncorrectable" also includes fatal errors,
+> and you're not changing those.  Take a look and let me know if
+> I broke anything.
 
-I applied Marc's patches and rebased pci/host-v3-semi on top of his
-patch that adds the helper.  Sorry I didn't notice this up front!
+Here it is so you don't have to look it up :)
+
+commit 34ba6e7d5f3e37a369097c07c00bfed567860b8c
+Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Date:   Thu Sep 28 15:33:05 2017 +0100
+
+    PCI/AER: Report non-fatal errors only to the affected endpoint
+    
+    Previously, if an non-fatal error was reported by an endpoint, we
+    called report_error_detected() for the endpoint, every sibling on the
+    bus, and their descendents.  If any of them did not implement the
+    .error_detected() method, do_recovery() failed, leaving all these
+    devices unrecovered.
+    
+    For example, the system described in the bugzilla below has two devices:
+    
+      0000:74:02.0 [19e5:a230] SAS controller, driver has .error_detected()
+      0000:74:03.0 [19e5:a235] SATA controller, driver lacks .error_detected()
+    
+    When a device such as 74:02.0 reported a non-fatal error, do_recovery()
+    failed because 74:03.0 lacked an .error_detected() method.  But per PCIe
+    r3.1, sec 6.2.2.2.2, such an error does not compromise the Link and
+    does not affect 74:03.0:
+    
+      Non-fatal errors are uncorrectable errors which cause a particular
+      transaction to be unreliable but the Link is otherwise fully functional.
+      Isolating Non-fatal from Fatal errors provides Requester/Receiver logic
+      in a device or system management software the opportunity to recover from
+      the error without resetting the components on the Link and disturbing
+      other transactions in progress.  Devices not associated with the
+      transaction in error are not impacted by the error.
+    
+    Report non-fatal errors only to the endpoint that reported them.  We really
+    want to check for AER_NONFATAL here, but the current code structure doesn't
+    allow that.  Looking for pci_channel_io_normal is the best we can do now.
+    
+    Link: https://bugzilla.kernel.org/show_bug.cgi?id=197055
+    Fixes: 6c2b374d7485 ("PCI-Express AER implemetation: AER core and aerdriver")
+    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+    Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+    [bhelgaas: changelog]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index 890efcc574cb..744805232155 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -390,7 +390,14 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 		 * If the error is reported by an end point, we think this
+ 		 * error is related to the upstream link of the end point.
+ 		 */
+-		pci_walk_bus(dev->bus, cb, &result_data);
++		if (state == pci_channel_io_normal)
++			/*
++			 * the error is non fatal so the bus is ok, just invoke
++			 * the callback for the function that logged the error.
++			 */
++			cb(dev, &result_data);
++		else
++			pci_walk_bus(dev->bus, cb, &result_data);
+ 	}
+ 
+ 	return result_data.result;
