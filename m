@@ -1,58 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:41934 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752872AbdIHJx7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2017 05:53:59 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        =?UTF-8?q?Miqu=C3=A8l=20Raynal?= <miquel.raynal@free-electrons.com>,
-        Antoine Tenart <antoine.tenart@free-electrons.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 0/7] PCI: aardvark: improve compatibility with PCI devices
-Date: Fri,  8 Sep 2017 11:53:41 +0200
-Message-Id: <20170908095348.16578-1-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=3JMZ=A6=huawei.com=zhengqiang10@kernel.org>
+Return-Path: <SRS0=3JMZ=A6=huawei.com=zhengqiang10@kernel.org>
+Subject: Re: [PATCH] Bug fix for PME interrupt handler, add Root Status check
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1506570874-136126-1-git-send-email-zhengqiang10@huawei.com>
+ <CAJZ5v0izo1xeCMqDx2wmn+aC=CntWEV6f9kDupXx=Rgx9uZVPw@mail.gmail.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Gabriele Paoloni
+	<gabriele.paoloni@huawei.com>,
+        Linuxarm <linuxarm@huawei.com>
+From: Zhengqiang <zhengqiang10@huawei.com>
+Message-ID: <59CDE3E8.7050702@huawei.com>
+Date: Fri, 29 Sep 2017 14:10:48 +0800
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0izo1xeCMqDx2wmn+aC=CntWEV6f9kDupXx=Rgx9uZVPw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Hi,Rafael, thanks for you reply.
+please see my comment.
 
-This patch series brings a number of fixes to the pci-aardvark driver
-that allows a much larger number of PCIe devices to be used.
+On 2017/9/29 7:13, Rafael J. Wysocki wrote:
+> On Thu, Sep 28, 2017 at 5:54 AM, Qiang <zhengqiang10@huawei.com> wrote:
+>> PCIe PME and hot plug share same interrupt number. In some special case,
+>> Link down event cause hot plug interrupt, devices is not disconnected,
+>> But read config will return 0xff.
+>>
+>> In that case, PME work function will run and not return Because
+>> Root Status PME bit always 1 and can not be cleared.
+>>
+>> This patch add Root Status check in PME interrupt handler,
+>> Just do same as pciehp isr Slot status check.
+>>
+>> Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
+>> ---
+>>  drivers/pci/pcie/pme.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+>> index fafdb16..67144f5 100644
+>> --- a/drivers/pci/pcie/pme.c
+>> +++ b/drivers/pci/pcie/pme.c
+>> @@ -273,7 +273,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
+>>         spin_lock_irqsave(&data->lock, flags);
+>>         pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+>>
+>> -       if (!(rtsta & PCI_EXP_RTSTA_PME)) {
+>> +       if (rtsta == (u32)(~0) || !(rtsta & PCI_EXP_RTSTA_PME)) {
+>>                 spin_unlock_irqrestore(&data->lock, flags);
+>>                 return IRQ_NONE;
+>>         }
+> 
+> OK, but isn't there a symbol for all ones in u32?  And if there isn't,
+> what about adding it?
+> 
+Here is Root Status register definitions.
 
-It fixes kernel bug
-https://bugzilla.kernel.org/show_bug.cgi?id=196339, and has been
-tested with an IGB NIC and a Marvell SATA PCIe card, which were not
-working previously.
+Bit Location    Register Description        					Attributes
+15:0            PME Requester ID – 						RO
+		This field indicates the PCI Requester ID of the
+		last PME Requester. This field is only valid
+		when the PME Status bit is Set.
 
-They should be taken for the 4.14 cycle, as they are all bug fixes.
+16              PME Status – This bit RW1C					RW1C
+		indicates that PME was asserted by the PME Requester
+		indicated in the PME Requester ID field. Subsequent PMEs
+		are kept pending until the status register is cleared by
+		software by writing a 1b.
+		Default value of this bit is 0b.
 
-Thanks a lot!
+17              PME Pending – 							RO
+		This bit indicates that another PME is pending 		
+		when the PME Status bit is Set. When the PME Status bit is
+		cleared by software; the PME is delivered by hardware by
+		setting the PME Status bit again and updating the PME
+		Requester ID field appropriately. The PME Pending bit is
+		cleared by hardware if no more PMEs are pending.
+31:18		RsvdZ
 
-Thomas
+Bit[31:18] is RsvdZ, read only and must return zero when read.
 
-Evan Wang (1):
-  PCI: aardvark: fix PCIe max read request size setting
+So, i guess there is no a symbol for all ones in u32.
+If read Root Status return 0xff, perhaps RC is disconnected or accessed timeout.
 
-Thomas Petazzoni (1):
-  PCI: aardvark: define IRQ related hooks in pci_host_bridge
-
-Victor Gu (5):
-  PCI: aardvark: fix logic in PCI configuration read/write functions
-  PCI: aardvark: set PIO_ADDR_LS correctly in advk_pcie_rd_conf()
-  PCI: aardvark: set host and device to the same MAX payload size
-  PCI: aardvark: use isr1 instead of isr0 interrupt in legacy irq mode
-  PCI: aardvark: disable LOS state by default
-
- drivers/pci/host/pci-aardvark.c | 116 +++++++++++++++++++++++++++++++---------
- 1 file changed, 92 insertions(+), 24 deletions(-)
-
--- 
-2.13.5
+> Thanks,
+> Rafael
+> 
+> .
+> 
+Thanks
