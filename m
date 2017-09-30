@@ -1,56 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46830 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751031AbdIMBUC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Sep 2017 21:20:02 -0400
-Subject: Re: VFIO on ARM64
-To: valmiki <valmikibow@gmail.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>
-References: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <8fd78f56-43ed-e480-1c98-5d1162452674@arm.com>
-Date: Wed, 13 Sep 2017 02:20:25 +0100
+Return-Path: <SRS0=96pX=A7=huawei.com=zhengqiang10@kernel.org>
+Return-Path: <SRS0=96pX=A7=huawei.com=zhengqiang10@kernel.org>
+From: Qiang Zheng <zhengqiang10@huawei.com>
+To: <helgaas@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>
+Subject: [PATCH V2] Bug fix for PME interrupt handler, add Root Status check
+Date: Sat, 30 Sep 2017 10:12:06 +0800
+Message-ID: <1506737526-94266-1-git-send-email-zhengqiang10@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Valmiki,
+PCIe PME and hot plug share same interrupt number. In some special case,
+Link down event cause hot plug interrupt, devices is not disconnected,
+But read config will return 0xff.
 
-On 12/09/17 19:01, valmiki wrote:
-> Hi, as per VFIO documentation i see that we need to see
-> "/sys/bus/pci/devices/0000:06:0d.0/iommu_group" in order to find group
-> in which PCI bus is attached.
-> But as per drivers/pci/pci-sysfs.c in static struct attribute
-> *pci_dev_attrs[], i don't see any such attribute.
+In that case, PME work function will run and not return Because
+Root Status PME bit always 1 and can not be cleared.
 
-This iommu_group attribute is created by
-drivers/iommu/iommu.c:iommu_group_add_device. It is a symbolic link to
-/sys/kernel/iommu_groups/<group>.
+This patch add Root Status check in PME interrupt handler,
+Just do same as pciehp isr Slot status check.
 
-> I tried enabling SMMUv2 driver and SMMU for PCIe node on our SOC, but
-> this file doesn't show up and also in /sys/kernel/iommu_group i do not
-> see "/sys/kernel/iommu_groups/17/devices/0000:00:1f.00" file, i see only
-> PCIe root port device tree node in that group and not individual buses.
-> So on ARM64 for showing these paths i.e show specific to each bus, does
-> SMMU need any particular confguration (we have SMMUv2) > Do we need any specific kernel configuration ?
+Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
+---
+ drivers/pci/pcie/pme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I don't think so. If you're able to see the root complex in an IOMMU
-group, then the configuration is probably fine. Could you provide a little
-more information about your system, for example lspci along with "find
-/sys/kernel/iommu_groups/*/devices/*"?
-
-Ideally, each PCIe device will be in its own IOMMU group. So you shouldn't
-have each bus in a group, but rather one device per group. Linux puts
-multiple devices in a group if the IOMMU cannot properly isolate them. In
-general it's not something you want in your system, because all devices in
-a group will have the same address space and cannot be passed to a guest
-separately.
-
-Thanks,
-Jean
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index fafdb16..2ff2e57 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -273,7 +273,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
+ 	spin_lock_irqsave(&data->lock, flags);
+ 	pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+ 
+-	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
++	if (rtsta == U32_MAX || !(rtsta & PCI_EXP_RTSTA_PME)) {
+ 		spin_unlock_irqrestore(&data->lock, flags);
+ 		return IRQ_NONE;
+ 	}
+-- 
+1.9.1
