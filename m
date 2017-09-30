@@ -1,105 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45754 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750919AbdISTZs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Sep 2017 15:25:48 -0400
-Date: Tue, 19 Sep 2017 14:25:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: John Keeping <john@metanate.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: endpoint: use correct "end of test" interrupt
-Message-ID: <20170919192546.GC22312@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170906135524.12548-1-john@metanate.com>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:7482 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752591AbdI3BPf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Sep 2017 21:15:35 -0400
+Subject: Re: [RFC PATCH] PCI: Fix prefetchable range broken in
+ pci_bridge_check_ranges
+To: Bjorn Helgaas <bhelgaas@google.com>, <yinghai@kernel.org>
+References: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
+CC: <linux-pci@vger.kernel.org>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+Message-ID: <59CEF030.9040007@hisilicon.com>
+Date: Sat, 30 Sep 2017 09:15:28 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170906135524.12548-1-john@metanate.com>
+In-Reply-To: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 06, 2017 at 02:55:24PM +0100, John Keeping wrote:
-> pci_epf_test_raise_irq() reads the interrupt to use for the response
-> from reg->command, but this has been cleared at the beginning of the
-> command handler so the value is always zero at this point.
+On 2017/9/23 15:24, Zhou Wang wrote:
+> When double checking 64bit prefetch range, we will change the prefetch range
+> in a time slot by writing 0xffffffff to PCI_PREF_BASE_UPPER32. This may break
+> transfers through related bridge at that time.
 > 
-> Instead, extract the interrupt index before handling the command and
-> then pass the requested interrupt into pci_epf_test_raise_irq().  This
-> allows us to remove the specific code to extract the interrupt for
-> COMMAND_RAISE_MSI_IRQ since it is now handled in common code.
+> E.g. if we have below PCIe topology:
 > 
-> Signed-off-by: John Keeping <john@metanate.com>
-
-Applied with Kishon's ack to pci/endpoint for v4.15, thanks!
-
+> -[0000:00]-+-00.0-[01-02]--+-00.0  Device 8086:10fb
+>            |               \-00.1  Device 8086:10fb
+>            \-08.0-[03]----00.0  Device 8086:0953
+> 
+> When rescan 00:08.0, it will call:
+> 
+>         pci_rescan_bus
+>                 -> pci_assign_unassigned_bus_resources
+>                         -> __pci_bus_size_bridges
+>                                 -> pci_bridge_check_ranges
+>                                         -> pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, 0xffffffff)
+> 
+> This will change the prefetch range of 00:00.0 in a time slot, so traffic of
+> 01:00.0 or 01:00.1 may be broken.
+> 
+> In fact, we can get if one bridge supports 64bit range by the bottom 4bits of
+> prefetchable memory base/limit. Honestly speaking, I don't know why 1f82de10d6b1
+> ("PCI/86: don't assume prefetchable ranges are 64bit") has added the double
+> check code.
+> 
+> So Can we remove the double checking of prefetchable range to avoid this problem?
+> 
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 > ---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 13 ++++++-------
->  1 file changed, 6 insertions(+), 7 deletions(-)
+>  drivers/pci/setup-bus.c | 14 --------------
+>  1 file changed, 14 deletions(-)
 > 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 4ddc6e8f9fe7..f9308c2f22e6 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -251,9 +251,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
->  	return ret;
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 958da7d..23010a9 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -778,20 +778,6 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+>  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
+>  		}
+>  	}
+> -
+> -	/* double check if bridge does support 64 bit pref */
+> -	if (b_res[2].flags & IORESOURCE_MEM_64) {
+> -		u32 mem_base_hi, tmp;
+> -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> -					 &mem_base_hi);
+> -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> -					       0xffffffff);
+> -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
+> -		if (!tmp)
+> -			b_res[2].flags &= ~IORESOURCE_MEM_64;
+> -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> -				       mem_base_hi);
+> -	}
 >  }
 >  
-> -static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
-> +static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
->  {
-> -	u8 irq;
->  	u8 msi_count;
->  	struct pci_epf *epf = epf_test->epf;
->  	struct pci_epc *epc = epf->epc;
-> @@ -262,7 +261,6 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
->  
->  	reg->status |= STATUS_IRQ_RAISED;
->  	msi_count = pci_epc_get_msi(epc);
-> -	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
->  	if (irq > msi_count || msi_count <= 0)
->  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
->  	else
-> @@ -289,6 +287,8 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  	reg->command = 0;
->  	reg->status = 0;
->  
-> +	irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-> +
->  	if (command & COMMAND_RAISE_LEGACY_IRQ) {
->  		reg->status = STATUS_IRQ_RAISED;
->  		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-> @@ -301,7 +301,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  			reg->status |= STATUS_WRITE_FAIL;
->  		else
->  			reg->status |= STATUS_WRITE_SUCCESS;
-> -		pci_epf_test_raise_irq(epf_test);
-> +		pci_epf_test_raise_irq(epf_test, irq);
->  		goto reset_handler;
->  	}
->  
-> @@ -311,7 +311,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  			reg->status |= STATUS_READ_SUCCESS;
->  		else
->  			reg->status |= STATUS_READ_FAIL;
-> -		pci_epf_test_raise_irq(epf_test);
-> +		pci_epf_test_raise_irq(epf_test, irq);
->  		goto reset_handler;
->  	}
->  
-> @@ -321,13 +321,12 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  			reg->status |= STATUS_COPY_SUCCESS;
->  		else
->  			reg->status |= STATUS_COPY_FAIL;
-> -		pci_epf_test_raise_irq(epf_test);
-> +		pci_epf_test_raise_irq(epf_test, irq);
->  		goto reset_handler;
->  	}
->  
->  	if (command & COMMAND_RAISE_MSI_IRQ) {
->  		msi_count = pci_epc_get_msi(epc);
-> -		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
->  		if (irq > msi_count || msi_count <= 0)
->  			goto reset_handler;
->  		reg->status = STATUS_IRQ_RAISED;
-> -- 
-> 2.14.1
-> 
+>  /* Helper function for sizing routines: find first available
+>
+
+Any idea about this problem?
+
+Best Regards，
+Zhou
