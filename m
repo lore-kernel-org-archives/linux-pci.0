@@ -1,68 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 25 Sep 2017 06:07:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Cc: linux-nvme@lists.infradead.org
-Subject: ACPI object counter overrun on frequent nvme resets
-Message-ID: <20170925130729.GA14151@infradead.org>
+Return-Path: <SRS0=96pX=A7=huawei.com=zhengqiang10@kernel.org>
+Return-Path: <SRS0=96pX=A7=huawei.com=zhengqiang10@kernel.org>
+Subject: Re: [PATCH] Bug fix for PME interrupt handler, add Root Status check
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1506570874-136126-1-git-send-email-zhengqiang10@huawei.com>
+ <CAJZ5v0izo1xeCMqDx2wmn+aC=CntWEV6f9kDupXx=Rgx9uZVPw@mail.gmail.com>
+ <59CDE3E8.7050702@huawei.com>
+ <CAJZ5v0ii5CSzmnNqrgGTyAG-2ckc8cebJDWH6f+BU3__9umDDQ@mail.gmail.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Gabriele Paoloni
+	<gabriele.paoloni@huawei.com>,
+        Linuxarm <linuxarm@huawei.com>
+From: Zhengqiang <zhengqiang10@huawei.com>
+Message-ID: <59CEF768.5040804@huawei.com>
+Date: Sat, 30 Sep 2017 09:46:16 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0ii5CSzmnNqrgGTyAG-2ckc8cebJDWH6f+BU3__9umDDQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
 
-when doing an error injection test with the nvme-pci driver on Linux 4.14
-almost rc2 (820bf5c419e4b85298e5c3001bd1b5be46d60765 plus a few nvme
-patches) that does a lot of nvme resets which shut down and re-enable the
-PCI device I see a flood of warnings like:
 
-[   78.237286] ACPI Warning: Large Reference Count (0x1001) in object ffff88007d702c68, Type=0x1D (20170728/utdelete-473)
+On 2017/9/29 21:12, Rafael J. Wysocki wrote:
+> On Fri, Sep 29, 2017 at 8:10 AM, Zhengqiang <zhengqiang10@huawei.com> wrote:
+>> Hi,Rafael, thanks for you reply.
+>> please see my comment.
+>>
+>> On 2017/9/29 7:13, Rafael J. Wysocki wrote:
+>>> On Thu, Sep 28, 2017 at 5:54 AM, Qiang <zhengqiang10@huawei.com> wrote:
+>>>> PCIe PME and hot plug share same interrupt number. In some special case,
+>>>> Link down event cause hot plug interrupt, devices is not disconnected,
+>>>> But read config will return 0xff.
+>>>>
+>>>> In that case, PME work function will run and not return Because
+>>>> Root Status PME bit always 1 and can not be cleared.
+>>>>
+>>>> This patch add Root Status check in PME interrupt handler,
+>>>> Just do same as pciehp isr Slot status check.
+>>>>
+>>>> Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
+>>>> ---
+>>>>  drivers/pci/pcie/pme.c | 2 +-
+>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+>>>> index fafdb16..67144f5 100644
+>>>> --- a/drivers/pci/pcie/pme.c
+>>>> +++ b/drivers/pci/pcie/pme.c
+>>>> @@ -273,7 +273,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
+>>>>         spin_lock_irqsave(&data->lock, flags);
+>>>>         pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+>>>>
+>>>> -       if (!(rtsta & PCI_EXP_RTSTA_PME)) {
+>>>> +       if (rtsta == (u32)(~0) || !(rtsta & PCI_EXP_RTSTA_PME)) {
+>>>>                 spin_unlock_irqrestore(&data->lock, flags);
+>>>>                 return IRQ_NONE;
+>>>>         }
+>>>
+>>> OK, but isn't there a symbol for all ones in u32?  And if there isn't,
+>>> what about adding it?
+>>>
+>> Here is Root Status register definitions.
+> 
+> Well, that's not what I meant.
+> 
+> You have "rtsta == (u32)(~0)" in the patch above, but you could do
+> "rtsta == U32_MAX" instead.
+> 
+Sure, I will change it next patch .Thanks.
 
-Throwing in a dump_stack into the path it comes from:
-
-[   78.238387] CPU: 0 PID: 286 Comm: kworker/u8:3 Not tainted 4.14.0-rc1+ #134
-[   78.238998] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
-[   78.239720] Workqueue: nvme-wq nvme_reset_work
-[   78.239995] Call Trace:
-[   78.239995]  dump_stack+0x63/0x83
-[   78.239995]  acpi_ut_update_ref_count+0x2f7/0x2fe
-[   78.239995]  acpi_ut_update_object_reference+0x114/0x182
-[   78.239995]  acpi_ut_add_reference+0x1b/0x1e
-[   78.239995]  acpi_ds_init_package_element+0x149/0x16e
-[   78.239995]  ? acpi_ds_build_internal_object+0xca/0x12c
-[   78.239995]  acpi_ds_build_internal_package_obj+0x1b2/0x258
-[   78.239995]  ? acpi_ds_build_internal_package_obj+0x1b2/0x258
-[   78.239995]  acpi_ds_eval_data_object_operands+0xd3/0x123
-[   78.239995]  acpi_ds_exec_end_op+0x288/0x3e1
-[   78.239995]  acpi_ps_parse_loop+0x519/0x57b
-[   78.239995]  acpi_ps_parse_aml+0x93/0x29c
-[   78.239995]  acpi_ps_execute_method+0x148/0x17f
-[   78.239995]  acpi_ns_evaluate+0x1c1/0x24d
-[   78.239995]  acpi_ut_evaluate_object+0x72/0x197
-[   78.239995]  acpi_rs_get_prt_method_data+0x21/0x45
-[   78.239995]  acpi_get_irq_routing_table+0x2c/0x30
-[   78.239995]  acpi_pci_irq_find_prt_entry+0x8e/0x2c0
-[   78.239995]  ? irq_get_irq_data+0x9/0x20
-[   78.239995]  ? mp_unmap_irq+0xf/0x70
-[   78.239995]  acpi_pci_irq_lookup+0x26/0x1a0
-[   78.239995]  acpi_pci_irq_enable+0x5b/0x1b0
-[   78.239995]  ? pci_read_config_word+0x22/0x30
-[   78.239995]  pcibios_enable_device+0x28/0x30
-[   78.239995]  do_pci_enable_device+0x5f/0xe0
-[   78.239995]  pci_enable_device_flags+0xc3/0x110
-[   78.239995]  pci_enable_device_mem+0xe/0x10
-[   78.239995]  nvme_reset_work+0x4c/0x1610
-[   78.239995]  ? sched_clock+0x9/0x10
-[   78.239995]  ? sched_clock_local+0x17/0x90
-[   78.239995]  ? _raw_spin_lock+0x9/0x10
-[   78.239995]  ? pick_next_task_fair+0x420/0x690
-[   78.239995]  ? _raw_spin_unlock_irq+0x9/0x20
-[   78.239995]  ? finish_task_switch+0x7b/0x1f0
-[   78.239995]  ? __schedule+0x2d7/0x800
-[   78.239995]  process_one_work+0x1db/0x3e0
-[   78.239995]  worker_thread+0x43/0x3f0
-[   78.239995]  kthread+0x103/0x140
-[   78.239995]  ? process_one_work+0x3e0/0x3e0
-[   78.239995]  ? kthread_create_on_node+0x40/0x40
-[   78.239995]  ret_from_fork+0x25/0x30
+> Thanks,
+> Rafael
+> 
+> .
+> 
