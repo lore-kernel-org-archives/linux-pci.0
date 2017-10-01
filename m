@@ -1,80 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59430 "EHLO mail.kernel.org"
+Received: from verein.lst.de ([213.95.11.211]:59410 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752274AbdJTSTU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Oct 2017 14:19:20 -0400
-Date: Fri, 20 Oct 2017 13:19:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Pankaj Dubey <pankaj.dubey@samsung.com>
-Cc: David Laight <David.Laight@ACULAB.COM>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH] PCI: dwc: designware: don't sleep in atomic context
-Message-ID: <20171020181917.GL6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
- <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
- <063D6719AE5E284EB5DD2968C1650D6DD00924BC@AcuExch.aculab.com>
- <70cd34bd-01db-cd93-ddf7-d82114ccc61a@samsung.com>
+        id S1750953AbdJAHzP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 1 Oct 2017 03:55:15 -0400
+Date: Sun, 1 Oct 2017 09:55:14 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Govindarajulu Varadarajan <gvaradar@cisco.com>
+Cc: benve@cisco.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
+        mingo@redhat.com, peterz@infradead.org, okaya@codeaurora.org
+Subject: Re: [PATCH V2] PCI: AER: fix deadlock in do_recovery
+Message-ID: <20171001075514.GA11554@lst.de>
+References: <20170930054938.43271-1-gvaradar@cisco.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <70cd34bd-01db-cd93-ddf7-d82114ccc61a@samsung.com>
+In-Reply-To: <20170930054938.43271-1-gvaradar@cisco.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 13, 2017 at 09:10:38AM +0530, Pankaj Dubey wrote:
-> 
-> 
-> On 10/12/2017 04:09 PM, David Laight wrote:
-> >From: Pankaj Dubey
-> >>Sent: 12 October 2017 08:55
-> >>In pcie-designware.c many places we are calling "usleep_range" which
-> >>are in atomic context. This patch fixes these potential BUGs and
-> >>replaces "usleep_range" with mdelay calls.
-> >>
-> >>Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> >>---
-> >>  drivers/pci/dwc/pcie-designware.c | 8 ++++----
-> >>  drivers/pci/dwc/pcie-designware.h | 3 +--
-> >>  2 files changed, 5 insertions(+), 6 deletions(-)
-> >>
-> >>diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> >>index 88abddd..35d19b9 100644
-> >>--- a/drivers/pci/dwc/pcie-designware.c
-> >>+++ b/drivers/pci/dwc/pcie-designware.c
-> >>@@ -138,7 +138,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
-> >>  		if (val & PCIE_ATU_ENABLE)
-> >>  			return;
-> >>
-> >>-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> >>+		mdelay(LINK_WAIT_IATU_MIN);
-> >>  	}
-> >Spinning for 9ms (possibly 10 times) isn't really a good idea.
-> 
-> Yes. It may not be a good idea, however in our experiment it never
-> hit maximum retry count.  I just converted usleep_range to mdelay
-> keeping min time limitation as it is, though I am not sure, how do
-> we arrived on these numbers in original code, may be Joao Pinto from
-> Synopsys have some idea, I will try to do few experiment and try to
-> find out what is sufficient minimum time in our hardware for these
-> mdelay.
+Can you please start with an explanation of the problem in text and
+cut down the cycle of involved functions to those actually relevant?
 
-Just based on the preceding comment, it looks like the wait is
-essential because subsequent config and I/O accesses won't work
-correctly until the ATU enable takes effect.
+That'll make reviewing the patch a bit easier..
 
-If we timeout here, I suspect it's because something is seriously
-wrong in the hardware, so I doubt there's any point in trying to
-minimize the timeout period.  If something is that broken, it doesn't
-matter whether we wait 9ms or 900ms.
+>  2 files changed, 48 insertions(+), 2 deletions(-)
 
-Maybe the message should be more strident or maybe we should even
-return failure so the caller can do something, e.g., fail an access,
-instead of just printing an error and continuing on.
+> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
+> index d51e4a57b190..f6d8761dc656 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.h
+> +++ b/drivers/pci/pcie/aer/aerdrv.h
+> @@ -105,6 +105,11 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
+>  	return orig;
+>  }
+>  
+> +struct aer_device_list {
+> +	struct device *dev;
+> +	struct hlist_node node;
+> +};
+> +
+>  extern struct bus_type pcie_port_bus_type;
+>  void aer_isr(struct work_struct *work);
+>  void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
+> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> index 890efcc574cb..d524f2c2c288 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> @@ -346,6 +346,47 @@ static int report_resume(struct pci_dev *dev, void *data)
+>  	return 0;
+>  }
+>  
+> +int aer_get_pci_dev(struct pci_dev *pdev, void *data)
+> +{
+> +	struct hlist_head *hhead = (struct hlist_head *)data;
+> +	struct device *dev = &pdev->dev;
+> +	struct aer_device_list *entry;
+> +
+> +	entry = kmalloc(sizeof(*entry), GFP_KERNEL);
+> +	if (!entry)
+> +		/* continue with other devices, lets not return error */
+> +		return 0;
+> +
+> +	entry->dev = get_device(dev);
+> +	hlist_add_head(&entry->node, hhead);
+> +
+> +	return 0;
 
-I'm also looking for an ack from Joao and/or Jingoo.
+Can we just embedded the list_head in the pci_dev?  Or is there a way
+we can have multiple chains like this pending at the same time?
 
-Bjorn
+> +static void aer_pci_walk_bus(struct pci_bus *top,
+> +			     int (*cb)(struct pci_dev *, void *),
+> +			     struct aer_broadcast_data *result)
+> +{
+> +	HLIST_HEAD(dev_hlist);
+> +	struct hlist_node *tmp;
+> +	struct aer_device_list *entry;
+
+Do we want to offer this as generic PCIe functionality?  If not we can
+probably hardcode the callback and callback data to simplify this a lot.
