@@ -1,98 +1,145 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1508229842.2146.4.camel@pengutronix.de>
-Subject: Re: [PATCH 2/2] PCI: imx6: Check for link training status in link
- up check
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Trent Piepho <tpiepho@impinj.com>, linux-arm-kernel
- <linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org
-Date: Tue, 17 Oct 2017 10:44:02 +0200
-In-Reply-To: <20171017001159.109152-2-tpiepho@impinj.com>
-References: <20171017001159.109152-1-tpiepho@impinj.com>
- <20171017001159.109152-2-tpiepho@impinj.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Matt Turner <mattst88@gmail.com>
+Subject: [PATCH v2] drivers/ide/pci: Fix legacy IRQ assignment
+Date: Mon,  2 Oct 2017 11:52:47 +0100
+Message-Id: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gTW9udGFnLCBkZW4gMTYuMTAuMjAxNywgMTc6MTEgLTA3MDAgc2NocmllYiBUcmVudCBQaWVw
-aG86Cj4gVGhpcyBmaXhlcyBhIHJlZ3Jlc3Npb24gaW50cm9kdWNlZCBpbiBtZXJnZSA1NjJkZjVj
-ODUyMWUuCj4gCj4gUHJpb3IgdG8gdGhpcyB0aGUgbGluayB1cCBjaGVjayBkb25lIGJ5IGlteDZf
-cGNpZV93YWl0X2Zvcl9saW5rKCkKPiBjb25zaXN0ZWQgb2YgYSBwb2xsaW5nIGxvb3Agb24gaW14
-Nl9wY2llX2xpbmtfdXAoKSAodmlhIHRoZSBmb3JtZXIKPiBjYWxsaW5nIGR3X3BjaWVfbGlua191
-cCgpIHdoaWNoIGNhbGxlZCB0aGUgbGF0dGVyIGFzIGNhbGxiYWNrKSwgYW5kCj4gaW14Nl9wY2ll
-X2xpbmtfdXAoKSBwb2xsZWQgdGhlIGxpbmsgc3RhdHVzIHJlZ2lzdGVyIGNoZWNraW5nIGZvciBs
-aW5rCj4gdXAgKmFuZCBsaW5rIG5vdCBzdGlsbCB0cmFpbmluZyouCj4gCj4gVGhpcyB3YXMgYSBw
-b2xsaW5nIGxvb3AgaW5zaWRlIGFub3RoZXIgcG9sbGluZyBsb29wLsKgwqBBbmQgdGhlIG91dGVy
-bW9zdAo+IGxvb3Agd2FzIGR1cGxpY2F0ZWQgd2l0aCBtaW5vciB2YXJpYXRpb25zIGluIGEgbnVt
-YmVyIG9mIG90aGVyIGR3YyBiYXNlZAo+IGhvc3QgZHJpdmVycy4KPiAKPiBUaGlzIHdhcyBhZGRy
-ZXNzZWQgaW4gdHdvIGNvbW1pdHMuwqDCoENvbW1pdCA0ZDEwN2QzYjVhNjggKCJQQ0k6IGlteDY6
-IE1vdmUKPiBsaW5rIHVwIGNoZWNrIGludG8gaW14Nl9wY2llX3dhaXRfZm9yX2xpbmsoKSIpLCBj
-aGFuZ2VkCj4gaW14Nl9wY2llX3dhaXRfZm9yX2xpbmsoKSB0byBwb2xsIHRoZSBsaW5rIHN0YXR1
-cyByZWdpc3RlciBkaXJlY3RseSwKPiBjaGVja2luZyBmb3IgbGluayB1cCBhbmQgbm90IHRyYWlu
-aW5nLCBhbmQgbWFkZSBpbXg2X3BjaWVfbGlua191cCgpIG9ubHkKPiBjaGVjayB0aGUgbGluayB1
-cCBiaXQgKG9uY2UsIG5vdCBhIHBvbGxpbmcgbG9vcCkuCj4gCj4gV2hpbGUgY29tbWl0IGNvbW1p
-dCA4ODZiYzVjZWI1Y2MgKCJQQ0k6IGRlc2lnbndhcmU6IEFkZCBnZW5lcmljCj4gZHdfcGNpZV93
-YWl0X2Zvcl9saW5rKCkiKSwgcmVwbGFjZWQgdGhlIGxvb3AgaW4gaW14Nl9wY2llX3dhaXRfZm9y
-X2xpbmsoKQo+IHdpdGggYSBjYWxsIHRvIGEgbmV3IGR3YyBjb3JlIGZ1bmN0aW9uLCB3aGljaCBw
-b2xsZWQgaW14Nl9wY2llX2xpbmtfdXAoKSwKPiB3aGljaCBzdGlsbCBjaGVja2VkIGJvdGggbGlu
-ayB1cCBhbmQgbm90IHRyYWluaW5nIGluIGEgbG9vcC4KPiAKPiBXaGVuIHRoZXNlIHR3byBjb21t
-aXRzIHdlcmUgbWVyZ2VkLCB0aGUgdmVyc2lvbiBvZgo+IGlteDZfcGNpZV93YWl0X2Zvcl9saW5r
-KCkgZnJvbSAnODg2IHdhcyBrZXB0LCB3aGljaCBlbGltaW5hdGVkIHRoZSBsaW5rCj4gdHJhaW5p
-bmcgY2hlY2sgcGxhY2VkIHRoZXJlIGJ5ICc0ZDEuwqDCoEJ1dCB0aGUgdmVyc2lvbiBvZgo+IGlt
-eDZfcGNpZV9saW5rX3VwKCkgZnJvbSAnNGQxIHdhcyBrZXB0LCB3aGljaCBlbGltaW5hdGVkIHRo
-ZSBsaW5rIHRyYWluaW5nCj4gY2hlY2sgdGhhdCBoYWQgYmVlbiB0aGVyZSBhbmQgd2FzIG1vdmVk
-IHRvIGlteDZfcGNpZV93YWl0X2Zvcl9saW5rKCkuCj4gCj4gVGhlcmUgcmVzdWx0IGlzIG5vIGxp
-bmsgdHJhaW5pbmcgY2hlY2suCj4gCj4gVGhlbiBjb21taXQgZGFjMjllNmM1NDYwICgiUENJOiBk
-ZXNpZ253YXJlOiBBZGQgZGVmYXVsdCBsaW5rIHVwIGNoZWNrIGlmCj4gc3ViLWRyaXZlciBkb2Vz
-bid0IG92ZXJyaWRlIikKCkkgdGhpbmsgeW91IG1lYW50IDAxYzA3NjczMmU4MiAoUENJOiBkZXNp
-Z253YXJlOiBDaGVjayBMVFNTTSB0cmFpbmluZwpiaXQgYmVmb3JlIGRlY2lkaW5nIGxpbmsgaXMg
-dXApIGhlcmUuCgo+ICBhZGRlZCBhIGxpbmsgdHJhaW5pbmcgY2hlY2sgdG8gdGhlIGRlZmF1bHQK
-PiB2ZXJzaW9uIG9mIGR3X3BjaWVfbGlua191cCgpLCBidXQgc2luY2UgaW14NiB1c2VzIGlteDZf
-cGNpZV9saW5rX3VwKCkgaXQKPiBkb2VzIG5vdCB1c2UgdGhlIGRlZmF1bHQgdmVyc2lvbiB3aXRo
-IHRoaXMgZml4Lgo+IAo+IFRoaXMgY29tbWl0IGVsaW1pbmF0ZXMgaW14Nl9wY2llX2xpbmtfdXAo
-KSBzbyB0aGF0IHRoZSBkZWZhdWx0Cj4gZHdfcGNpZV9saW5rX3VwKCkgaXMgdXNlZC7CoMKgVGhl
-IGRlZmF1bHQgaGFzIHRoZSBjb3JyZWN0IGNvZGUgYW5kIGlzIHdoYXQKPiB0aGUgaW14NiBkcml2
-ZXIgdXNlZCB0byBkby4KPiAKPiBGaXhlczogNTYyZGY1Yzg1MjFlMTM3MWYzY2JkMGI3Yjg2ODAz
-NGRhMzc2ZDcxNAo+ID4gQ2M6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+Cj4g
-PiBDYzogSm9hbyBQaW50byA8Sm9hby5QaW50b0BzeW5vcHN5cy5jb20+Cj4gPiBDYzogTHVjYXMg
-U3RhY2ggPGwuc3RhY2hAcGVuZ3V0cm9uaXguZGU+Cj4gU2lnbmVkLW9mZi1ieTogVHJlbnQgUGll
-cGhvIDx0cGllcGhvQGltcGluai5jb20+CgpXaXRoIHRoZSBjb21taXQgbWVzc2FnZSBmaXhlZDoK
-ClJldmlld2VkLWJ5OiBMdWNhcyBTdGFjaCA8bC5zdGFjaEBwZW5ndXRyb25peC5kZT4KCj4gLS0t
-Cj4gwqBkcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuYyB8IDEwICstLS0tLS0tLS0KPiDCoDEgZmls
-ZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgOSBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMgYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYu
-Ywo+IGluZGV4IGI3MzQ4MzUzNGE1Yi4uMWYxMDY5YjcwZTQ1IDEwMDY0NAo+IC0tLSBhL2RyaXZl
-cnMvcGNpL2R3Yy9wY2ktaW14Ni5jCj4gKysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMK
-PiBAQCAtODMsOCArODMsNiBAQCBzdHJ1Y3QgaW14Nl9wY2llIHsKPiA+IMKgI2RlZmluZSBQQ0lF
-X1BMX1BGTFJfRk9SQ0VfTElOSwkJCSgxIDw8IDE1KQo+IMKgI2RlZmluZSBQQ0lFX1BIWV9ERUJV
-R19SMCAoUExfT0ZGU0VUICsgMHgyOCkKPiDCoCNkZWZpbmUgUENJRV9QSFlfREVCVUdfUjEgKFBM
-X09GRlNFVCArIDB4MmMpCj4gPiAtI2RlZmluZSBQQ0lFX1BIWV9ERUJVR19SMV9YTUxIX0xJTktf
-SU5fVFJBSU5JTkcJKDEgPDwgMjkpCj4gPiAtI2RlZmluZSBQQ0lFX1BIWV9ERUJVR19SMV9YTUxI
-X0xJTktfVVAJCSgxIDw8IDQpCj4gwqAKPiDCoCNkZWZpbmUgUENJRV9QSFlfQ1RSTCAoUExfT0ZG
-U0VUICsgMHgxMTQpCj4gwqAjZGVmaW5lIFBDSUVfUEhZX0NUUkxfREFUQV9MT0MgMAo+IEBAIC02
-NTMsMTIgKzY1MSw2IEBAIHN0YXRpYyBpbnQgaW14Nl9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNp
-ZV9wb3J0ICpwcCkKPiA+IMKgCXJldHVybiAwOwo+IMKgfQo+IMKgCj4gLXN0YXRpYyBpbnQgaW14
-Nl9wY2llX2xpbmtfdXAoc3RydWN0IGR3X3BjaWUgKnBjaSkKPiAtewo+ID4gLQlyZXR1cm4gZHdf
-cGNpZV9yZWFkbF9kYmkocGNpLCBQQ0lFX1BIWV9ERUJVR19SMSkgJgo+ID4gLQkJCVBDSUVfUEhZ
-X0RFQlVHX1IxX1hNTEhfTElOS19VUDsKPiAtfQo+IC0KPiDCoHN0YXRpYyBjb25zdCBzdHJ1Y3Qg
-ZHdfcGNpZV9ob3N0X29wcyBpbXg2X3BjaWVfaG9zdF9vcHMgPSB7Cj4gPiDCoAkuaG9zdF9pbml0
-ID0gaW14Nl9wY2llX2hvc3RfaW5pdCwKPiDCoH07Cj4gQEAgLTcwMSw3ICs2OTMsNyBAQCBzdGF0
-aWMgaW50IGlteDZfYWRkX3BjaWVfcG9ydChzdHJ1Y3QgaW14Nl9wY2llICppbXg2X3BjaWUsCj4g
-wqB9Cj4gwqAKPiDCoHN0YXRpYyBjb25zdCBzdHJ1Y3QgZHdfcGNpZV9vcHMgZHdfcGNpZV9vcHMg
-PSB7Cj4gPiAtCS5saW5rX3VwID0gaW14Nl9wY2llX2xpbmtfdXAsCj4gPiArCS8qIE5vIHNwZWNp
-YWwgb3BzIG5lZWRlZCwgYnV0IHBjaWUtZGVzaWdud2FyZSBzdGlsbCBleHBlY3RzIHRoaXMgc3Ry
-dWN0ICovCj4gwqB9Owo+IMKgCj4gwqBzdGF0aWMgaW50IGlteDZfcGNpZV9wcm9iZShzdHJ1Y3Qg
-cGxhdGZvcm1fZGV2aWNlICpwZGV2KQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtl
-cm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxt
-YW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
+possible to define IRQ mapping functions on a per PCI host bridge basis.
+
+Actual IRQ allocation is carried out by the pci_assign_irq() function in
+pci_device_probe() - to make sure a device is assigned an IRQ only if it
+is probed (ie match a driver); it retrieves a struct pci_host_bridge*
+for a given PCI device and through {map/swizzle}_irq() it carries out
+the PCI IRQ allocation.
+
+The code conversion to struct pci_host_bridge {map/swizzle}_irq() hooks
+and pci_assign_irq() to deal with legacy IRQs in
+
+commit 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
+pci_device_probe()")
+
+did not take into account that the IDE subsystem relies on a special
+purpose IDE PCI layer, configured by CONFIG_IDEPCI_PCIBUS_ORDER to force
+devices probe ordering by sidestepping the core PCI bus layer entirely
+(and therefore pci_device_probe()) by executing the registered IDE PCI
+drivers probe routines (ie registered with ide_pci_register_driver())
+through ide_scan_pcidev().
+
+Since this IDE PCI specific probe mechanism bypasses the PCI core
+code generic probing (ie pci_device_probe()) it also misses the
+pci_assign_irq() call (among other PCI initialization functions);
+this triggers IDE PCI devices initialization failures caused
+by the missing IRQ allocation:
+
+ide0: disabled, no IRQ
+ide0: failed to initialize IDE interface
+ide0: disabling port
+cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
+CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
+cmd64x 0000:00:02.0: can't reserve resources
+CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
+ide_generic: please use "probe_mask=0x3f" module parameter for probing
+all legacy ISA IDE ports
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
+sysfs: cannot create duplicate filename '/class/ide_port/ide0'
+...
+
+Trace:
+[<fffffc00003308a0>] __warn+0x160/0x190
+[<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+[<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
+[<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+[<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
+[<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+[<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+[<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
+[<fffffc00005b9d64>] device_add+0x2a4/0x7c0
+[<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
+[<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
+[<fffffc00005ba690>] device_create+0x50/0x70
+[<fffffc00005df36c>] ide_host_register+0x48c/0xa00
+[<fffffc00005df330>] ide_host_register+0x450/0xa00
+[<fffffc00005ba2a0>] device_register+0x20/0x50
+[<fffffc00005df330>] ide_host_register+0x450/0xa00
+[<fffffc00005df944>] ide_host_add+0x64/0xe0
+[<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
+[<fffffc0000310288>] do_one_initcall+0x68/0x260
+[<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
+[<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+[<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
+[<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+
+---[ end trace 24a70433c3e4d374 ]---
+ide0: disabling port
+
+Fix the IRQ allocation issue by adding a pci_assign_irq() call in the
+ide_scan_pcidev() function before probing the IDE PCI drivers, so that
+IRQs for a given PCI device are allocated for the IDE PCI drivers to
+use them for device configuration.
+
+Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in pci_device_probe()")
+Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reported-by: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Henderson <rth@twiddle.net>
+Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Matt Turner <mattst88@gmail.com>
+---
+v1->v2
+
+- Moved fix from PCI core code to IDE subsystem following further
+  debugging and mailing list discussions
+- Rebased against v4.14-rc3
+
+ drivers/ide/ide-scan-pci.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
+index 86aa88a..acf8748 100644
+--- a/drivers/ide/ide-scan-pci.c
++++ b/drivers/ide/ide-scan-pci.c
+@@ -56,6 +56,7 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+ {
+ 	struct list_head *l;
+ 	struct pci_driver *d;
++	int ret;
+ 
+ 	list_for_each(l, &ide_pci_drivers) {
+ 		d = list_entry(l, struct pci_driver, node);
+@@ -63,10 +64,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+ 			const struct pci_device_id *id =
+ 				pci_match_id(d->id_table, dev);
+ 
+-			if (id != NULL && d->probe(dev, id) >= 0) {
+-				dev->driver = d;
+-				pci_dev_get(dev);
+-				return 1;
++			if (id != NULL) {
++				pci_assign_irq(dev);
++				ret = d->probe(dev, id);
++				if (ret >= 0) {
++					dev->driver = d;
++					pci_dev_get(dev);
++					return 1;
++				}
+ 			}
+ 		}
+ 	}
+-- 
+2.4.12
