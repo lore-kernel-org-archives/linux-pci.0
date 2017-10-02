@@ -1,63 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0074.outbound.protection.outlook.com ([104.47.34.74]:53536
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1761970AbdJQMsY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Oct 2017 08:48:24 -0400
-From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alex.williamson@redhat.com
-Cc: Wilson.Snyder@cavium.com, robert.richter@cavium.com,
-        david.daney@cavium.com, mjaggi@caviumnetworks.com,
-        Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-Subject: [PATCH v7 1/2] PCI: quirks: Set Cavium ACS capability quirk flags to assert RR/CR/SV/UF.
-Date: Tue, 17 Oct 2017 05:47:38 -0700
-Message-Id: <1508244459-2615-2-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-In-Reply-To: <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Received: from mail.kernel.org ([198.145.29.99]:42712 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751204AbdJBUic (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Oct 2017 16:38:32 -0400
+Date: Mon, 2 Oct 2017 15:38:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Zhou Wang <wangzhou1@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFC PATCH] PCI: Fix prefetchable range broken in
+ pci_bridge_check_ranges
+Message-ID: <20171002203830.GD5407@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
+ <20171002041700.GA3834@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171002041700.GA3834@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+[+cc Lorenzo]
 
-The Cavium ThunderX (CN8XXX) family PCIe Root Ports has limited PCI
-capabilities in terms of no ACS support advertisement. However,
-the RTL internally implements similar protection as if ACS had
-completion/request redirection, upstream forwarding and validation
-features enabled.
+On Sun, Oct 01, 2017 at 09:17:01PM -0700, Yinghai Lu wrote:
+> On Sat, Sep 23, 2017 at 03:24:42PM +0800, Zhou Wang wrote:
+> >                                         -> pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, 0xffffffff)
+> > 
+> > This will change the prefetch range of 00:00.0 in a time slot, so
+> > traffic of 01:00.0 or 01:00.1 may be broken.
+> > 
+> > In fact, we can get if one bridge supports 64bit range by the
+> > bottom 4bits of prefetchable memory base/limit. Honestly speaking,
+> > I don't know why 1f82de10d6b1 ("PCI/86: don't assume prefetchable
+> > ranges are 64bit") has added the double check code.
 
-This commit changes Cavium ACS capabilities quirk flags accordingly.
+I agree this is a problem.  We shouldn't be changing the window while
+devices below the bridge are active.
 
-Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
----
- drivers/pci/quirks.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+> some chip even that flags say that 64bit is support from that bits,
+> but its upper 32 bits actually can not be changed.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index a4d33619a7bb..5e0e83304fda 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4214,12 +4214,13 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
- static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- {
- 	/*
--	 * Cavium devices matching this quirk do not perform peer-to-peer
--	 * with other functions, allowing masking out these bits as if they
--	 * were unimplemented in the ACS capability.
-+	 * The Cavium downstream ports doesn't advertise their ACS capability
-+	 * registers. However, the RTL internally implements similar protection
-+	 * as if ACS had completion redirection, forwarding and validation
-+	 * features enabled. So by this flags we're asserting that the hardware
-+	 * implements and enables equivalent ACS functionality for these flags.
- 	 */
--	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
--		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-+	acs_flags &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF);
- 
- 	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
- 		return -ENOTTY;
--- 
-2.13.6
+We should figure this out at enumeration-time, before we enable any
+devices below the bridge.  Maybe it could be done in the
+pci_setup_device() path.
+
+This is sort of related to the pci_read_bridge_bases() path, which is
+currently done by the arch-specific pcibios_fixup_bus(), even though
+it really isn't arch-specific.  Somebody tried to fix that recently,
+but I don't remember the issues.
+
+I think it would be nice if pci_setup_device() could read bridge
+window info the same way it currently reads BAR info.  Maybe it would
+make dmesg more intelligible, too, e.g., we could print the bridge
+info before we print info about devices below the bridge.
+
+Bjorn
+
+> > So Can we remove the double checking of prefetchable range to
+> > avoid this problem?
+> > 
+> > Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> > ---
+> >  drivers/pci/setup-bus.c | 14 --------------
+> >  1 file changed, 14 deletions(-)
+> > 
+> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > index 958da7d..23010a9 100644
+> > --- a/drivers/pci/setup-bus.c
+> > +++ b/drivers/pci/setup-bus.c
+> > @@ -778,20 +778,6 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+> >  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
+> >  		}
+> >  	}
+> > -
+> > -	/* double check if bridge does support 64 bit pref */
+> > -	if (b_res[2].flags & IORESOURCE_MEM_64) {
+> > -		u32 mem_base_hi, tmp;
+> > -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> > -					 &mem_base_hi);
+> > -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> > -					       0xffffffff);
+> > -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
+> > -		if (!tmp)
+> > -			b_res[2].flags &= ~IORESOURCE_MEM_64;
+> > -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> > -				       mem_base_hi);
+> > -	}
+> >  }
+> >  
+> >  /* Helper function for sizing routines: find first available
+> 
+> Maybe we can try this: only touch upper 32bits after we touched low 32bits ?
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 958da7db9033..2ac4d20e5c11 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -744,6 +744,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+>  	u32 pmem;
+>  	struct pci_dev *bridge = bus->self;
+>  	struct resource *b_res;
+> +	int pref_memory_base_touched = 0;
+>  
+>  	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+>  	b_res[1].flags |= IORESOURCE_MEM;
+> @@ -769,6 +770,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+>  					       0xffe0fff0);
+>  		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
+>  		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
+> +		pref_memory_base_touched = 1;
+>  	}
+>  	if (pmem) {
+>  		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
+> @@ -780,7 +782,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+>  	}
+>  
+>  	/* double check if bridge does support 64 bit pref */
+> -	if (b_res[2].flags & IORESOURCE_MEM_64) {
+> +	if (pref_memory_base_touched && b_res[2].flags & IORESOURCE_MEM_64) {
+>  		u32 mem_base_hi, tmp;
+>  		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+>  					 &mem_base_hi);
+> 
+> 
+> 
