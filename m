@@ -1,226 +1,178 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-Date: Fri, 20 Oct 2017 03:19:09 +0200
-Message-ID: <4041983.hUlLtGrCgL@aspire.rjw.lan>
-In-Reply-To: <CAPDyKFqq9_ZbPFYn22s+6sxtxePWgnd0GJNodeqkCKF2+QkrNA@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <4337843.QuD5zygUhU@aspire.rjw.lan> <CAPDyKFqq9_ZbPFYn22s+6sxtxePWgnd0GJNodeqkCKF2+QkrNA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56118 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750846AbdJBXx0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Oct 2017 19:53:26 -0400
+Date: Mon, 2 Oct 2017 18:53:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Matt Turner <mattst88@gmail.com>
+Subject: Re: [PATCH v2] drivers/ide/pci: Fix legacy IRQ assignment
+Message-ID: <20171002235320.GA27400@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, October 19, 2017 2:21:07 PM CEST Ulf Hansson wrote:
-> On 19 October 2017 at 00:12, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Wednesday, October 18, 2017 4:11:33 PM CEST Ulf Hansson wrote:
-> >> [...]
-> >>
-> >> >>
-> >> >> The reason why pm_runtime_force_* needs to respects the hierarchy of
-> >> >> the RPM callbacks, is because otherwise it can't safely update the
-> >> >> runtime PM status of the device.
-> >> >
-> >> > I'm not sure I follow this requirement.  Why is that so?
-> >>
-> >> If the PM domain controls some resources for the device in its RPM
-> >> callbacks and the driver controls some other resources in its RPM
-> >> callbacks - then these resources needs to be managed together.
-> >
-> > Right, but that doesn't automatically make it necessary to use runtime PM
-> > callbacks in the middle layer.  Its system-wide PM callbacks may be
-> > suitable for that just fine.
-> >
-> > That is, at least in some cases, you can combine ->runtime_suspend from a
-> > driver and ->suspend_late from a middle layer with no problems, for example.
-> >
-> > That's why some middle layers allow drivers to point ->suspend_late and
-> > ->runtime_suspend to the same routine if they want to reuse that code.
-> >
-> >> This follows the behavior of when a regular call to
-> >> pm_runtime_get|put(), triggers the RPM callbacks to be invoked.
-> >
-> > But (a) it doesn't have to follow it and (b) in some cases it should not
-> > follow it.
+The patch below now only touches drivers/ide/ide-scan-pci.c.
+
+It fixes a problem introduced via the PCI tree, so I'd be happy to
+merge the fix as well, given an ack from you, Dave.  Or you can merge
+it yourself with my ack:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+It mentions that it fixes 30fdfb929e82 ("PCI: Add a call to
+pci_assign_irq() in pci_device_probe()"), which appeared in v4.13.
+
+But the problem wasn't actually exposed until 0e4c2eeb758a
+("alpha/PCI: Replace pci_fixup_irqs() call with host bridge IRQ
+mapping hooks"), which appeared in v4.14-rc1.
+
+So as long as we get this into v4.14, I don't think we need a stable
+backport to v4.13.
+
+Note that there are other potential problems with the
+ide_scan_pcidev() path.  For example, the normal PCI probe path in
+pci_device_probe() calls pcibios_alloc_irq(), which may do ACPI IRQ
+setup and potentially change dev->irq.  ide_scan_pcidev() does not do
+that, so there may be cases where the driver gets the wrong IRQ.
+
+On Mon, Oct 02, 2017 at 11:52:47AM +0100, Lorenzo Pieralisi wrote:
+> Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
+> possible to define IRQ mapping functions on a per PCI host bridge basis.
 > 
-> Of course you don't explicitly *have to* respect the hierarchy of the
-> RPM callbacks in pm_runtime_force_*.
+> Actual IRQ allocation is carried out by the pci_assign_irq() function in
+> pci_device_probe() - to make sure a device is assigned an IRQ only if it
+> is probed (ie match a driver); it retrieves a struct pci_host_bridge*
+> for a given PCI device and through {map/swizzle}_irq() it carries out
+> the PCI IRQ allocation.
 > 
-> However, changing that would require some additional information
-> exchange between the driver and the middle-layer/PM domain, as to
-> instruct the middle-layer/PM domain of what to do during system-wide
-> PM. Especially in cases when the driver deals with wakeup, as in those
-> cases the instructions may change dynamically.
-
-Well, if wakeup matters, drivers can't simply point their PM callbacks
-to pm_runtime_force_* anyway.
-
-If the driver itself deals with wakeups, it clearly needs different callback
-routines for system-wide PM and for runtime PM, so it can't reuse its runtime
-PM callbacks at all then.
-
-If the middle layer deals with wakeups, different callbacks are needed at
-that level and so pm_runtime_force_* are unsuitable too.
-
-Really, invoking runtime PM callbacks from the middle layer in
-pm_runtime_force_* is a not a idea at all and there's no general requirement
-for it whatever.
-
-> [...]
+> The code conversion to struct pci_host_bridge {map/swizzle}_irq() hooks
+> and pci_assign_irq() to deal with legacy IRQs in
 > 
-> >> > In general, not if the wakeup settings are adjusted by the middle layer.
-> >>
-> >> Correct!
-> >>
-> >> To use pm_runtime_force* for these cases, one would need some
-> >> additional information exchange between the driver and the
-> >> middle-layer.
-> >
-> > Which pretty much defeats the purpose of the wrappers, doesn't it?
+> commit 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
+> pci_device_probe()")
 > 
-> Well, no matter if the wrappers are used or not, we need some kind of
-> information exchange between the driver and the middle-layers/PM
-> domains.
-
-Right.
-
-But if that information is exchanged, then why use wrappers *in* *addition*
-to that?
-
-> Anyway, me personally think it's too early to conclude that using the
-> wrappers may not be useful going forward. At this point, they clearly
-> helps trivial cases to remain being trivial.
-
-I'm not sure about that really.  So far I've seen more complexity resulting
-from using them than being avoided by using them, but I guess the beauty is
-in the eye of the beholder. :-)
-
-> >
-> >> >
-> >> >> Regarding hibernation, honestly that's not really my area of
-> >> >> expertise. Although, I assume the middle-layer and driver can treat
-> >> >> that as a separate case, so if it's not suitable to use
-> >> >> pm_runtime_force* for that case, then they shouldn't do it.
-> >> >
-> >> > Well, agreed.
-> >> >
-> >> > In some simple cases, though, driver callbacks can be reused for hibernation
-> >> > too, so it would be good to have a common way to do that too, IMO.
-> >>
-> >> Okay, that makes sense!
-> >>
-> >> >
-> >> >> >
-> >> >> > Also, quite so often other middle layers interact with PCI directly or
-> >> >> > indirectly (eg. a platform device may be a child or a consumer of a PCI
-> >> >> > device) and some optimizations need to take that into account (eg. parents
-> >> >> > generally need to be accessible when their childres are resumed and so on).
-> >> >>
-> >> >> A device's parent becomes informed when changing the runtime PM status
-> >> >> of the device via pm_runtime_force_suspend|resume(), as those calls
-> >> >> pm_runtime_set_suspended|active().
-> >> >
-> >> > This requires the parent driver or middle layer to look at the reference
-> >> > counter and understand it the same way as pm_runtime_force_*.
-> >> >
-> >> >> In case that isn't that sufficient, what else is needed? Perhaps you can
-> >> >> point me to an example so I can understand better?
-> >> >
-> >> > Say you want to leave the parent suspended after system resume, but the
-> >> > child drivers use pm_runtime_force_suspend|resume().  The parent would then
-> >> > need to use pm_runtime_force_suspend|resume() too, no?
-> >>
-> >> Actually no.
-> >>
-> >> Currently the other options of "deferring resume" (not using
-> >> pm_runtime_force_*), is either using the "direct_complete" path or
-> >> similar to the approach you took for the i2c designware driver.
-> >>
-> >> Both cases should play nicely in combination of a child being managed
-> >> by pm_runtime_force_*. That's because only when the parent device is
-> >> kept runtime suspended during system suspend, resuming can be
-> >> deferred.
-> >
-> > And because the parent remains in runtime suspend late enough in the
-> > system suspend path, its children also are guaranteed to be suspended.
+> did not take into account that the IDE subsystem relies on a special
+> purpose IDE PCI layer, configured by CONFIG_IDEPCI_PCIBUS_ORDER to force
+> devices probe ordering by sidestepping the core PCI bus layer entirely
+> (and therefore pci_device_probe()) by executing the registered IDE PCI
+> drivers probe routines (ie registered with ide_pci_register_driver())
+> through ide_scan_pcidev().
 > 
-> Yes.
+> Since this IDE PCI specific probe mechanism bypasses the PCI core
+> code generic probing (ie pci_device_probe()) it also misses the
+> pci_assign_irq() call (among other PCI initialization functions);
+> this triggers IDE PCI devices initialization failures caused
+> by the missing IRQ allocation:
 > 
-> >
-> > But then all of them need to be left in runtime suspend during system
-> > resume too, which is somewhat restrictive, because some drivers may
-> > want their devices to be resumed then.
+> ide0: disabled, no IRQ
+> ide0: failed to initialize IDE interface
+> ide0: disabling port
+> cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
+> CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
+> cmd64x 0000:00:02.0: can't reserve resources
+> CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
+> ide_generic: please use "probe_mask=0x3f" module parameter for probing
+> all legacy ISA IDE ports
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
+> sysfs: cannot create duplicate filename '/class/ide_port/ide0'
+> ...
 > 
-> Actually, this scenario is also addressed when using the pm_runtime_force_*.
+> Trace:
+> [<fffffc00003308a0>] __warn+0x160/0x190
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
+> [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
+> [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
+> [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
+> [<fffffc00005ba690>] device_create+0x50/0x70
+> [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005ba2a0>] device_register+0x20/0x50
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005df944>] ide_host_add+0x64/0xe0
+> [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
+> [<fffffc0000310288>] do_one_initcall+0x68/0x260
+> [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
 > 
-> The driver for the child would only need to bump the runtime PM usage
-> count (pm_runtime_get_noresume()) before calling
-> pm_runtime_force_suspend() at system suspend. That then also
-> propagates to the parent, leading to that both the parent and the
-> child will be resumed when pm_runtime_force_resume() is called for
-> them.
+> ---[ end trace 24a70433c3e4d374 ]---
+> ide0: disabling port
 > 
-> Of course, if the driver of the parent isn't using pm_runtime_force_,
-> we would have to assume that it's always being resumed at system
-> resume.
-
-There may be other ways to avoid that, though.
-
-BTW, I don't quite like using the RPM usage counter this way either, if
-that hasn't been clear so far.
-
-> As at matter of fact, doesn't this scenario actually indicates that we
-> do need to involve the runtime PM core (updating RPM status according
-> to the HW state even during system-wide PM) to really get this right.
-> It's not enough to only use "driver PM flags"!?
-
-I'm not sure what you are talking about.
-
-For all devices with enabled runtime PM any state produced by system
-suspend/resume has to be labeled either as RPM_SUSPENDED or as RPM_ACTIVE.
-That has always been the case and hasn't involved any magic.
-
-However, while runtime PM is disabled, the state of the device doesn't
-need to be reflected by its RPM status and there's no need to track it then.
-Moreover, in some cases it cannot be tracked even, because of the firmare
-involvement (and we cannot track the firmware).
-
-Besides, please really look at what happens in the patches I posted and
-then we can talk.
-
-> Seems like we need to create a list of all requirements, pitfalls,
-> good things vs bad things etc. :-)
-
-We surely need to know what general cases need to be addressed.
-
-> >
-> > [BTW, our current documentation recommends resuming devices during
-> > system resume, actually, and gives a list of reasons why. :-)]
+> Fix the IRQ allocation issue by adding a pci_assign_irq() call in the
+> ide_scan_pcidev() function before probing the IDE PCI drivers, so that
+> IRQs for a given PCI device are allocated for the IDE PCI drivers to
+> use them for device configuration.
 > 
-> Yes, but that too easy and to me not good enough. :-)
-
-But the list of reasons why is kind of valid still.  There may be better
-reasons for not doing that, but it really is a tradeoff and drivers
-should be able to decide which way they want to go.
-
-IOW, the "leave the device in runtime suspend throughout system
-suspend" optimization doesn't have to be bundled with the "leave the
-device in suspend throughout and after system resume" one.
-
-Thanks,
-Rafael
-
+> Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in pci_device_probe()")
+> Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Richard Henderson <rth@twiddle.net>
+> Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+> Cc: David S. Miller <davem@davemloft.net>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Matt Turner <mattst88@gmail.com>
+> ---
+> v1->v2
+> 
+> - Moved fix from PCI core code to IDE subsystem following further
+>   debugging and mailing list discussions
+> - Rebased against v4.14-rc3
+> 
+>  drivers/ide/ide-scan-pci.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
+> index 86aa88a..acf8748 100644
+> --- a/drivers/ide/ide-scan-pci.c
+> +++ b/drivers/ide/ide-scan-pci.c
+> @@ -56,6 +56,7 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+>  {
+>  	struct list_head *l;
+>  	struct pci_driver *d;
+> +	int ret;
+>  
+>  	list_for_each(l, &ide_pci_drivers) {
+>  		d = list_entry(l, struct pci_driver, node);
+> @@ -63,10 +64,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+>  			const struct pci_device_id *id =
+>  				pci_match_id(d->id_table, dev);
+>  
+> -			if (id != NULL && d->probe(dev, id) >= 0) {
+> -				dev->driver = d;
+> -				pci_dev_get(dev);
+> -				return 1;
+> +			if (id != NULL) {
+> +				pci_assign_irq(dev);
+> +				ret = d->probe(dev, id);
+> +				if (ret >= 0) {
+> +					dev->driver = d;
+> +					pci_dev_get(dev);
+> +					return 1;
+> +				}
+>  			}
+>  		}
+>  	}
+> -- 
+> 2.4.12
+> 
