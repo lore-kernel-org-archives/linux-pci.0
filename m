@@ -1,67 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 4/9] arm64: dma-mapping: export symbol arch_setup_dma_ops
-To: Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-5-git-send-email-jim2101024@gmail.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <a8fa87e4-4d70-eb60-f1c5-94071d6394aa@arm.com>
-Date: Thu, 12 Oct 2017 18:06:48 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:32817 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751255AbdJBERD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Oct 2017 00:17:03 -0400
+Received: by mail-pf0-f193.google.com with SMTP id m28so4286497pfi.0
+        for <linux-pci@vger.kernel.org>; Sun, 01 Oct 2017 21:17:03 -0700 (PDT)
+Date: Sun, 1 Oct 2017 21:17:01 -0700
+From: Yinghai Lu <yinghai@kernel.org>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH] PCI: Fix prefetchable range broken in
+ pci_bridge_check_ranges
+Message-ID: <20171002041700.GA3834@localhost.localdomain>
+References: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <1507761269-7017-5-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
- Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, Ralf Baechle <ralf@linux-mips.org>,
- Rob Herring <robh+dt@kernel.org>, bcm-kernel-feedback-list@broadcom.com,
- Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/10/17 23:34, Jim Quinlan wrote:
-> The BrcmSTB driver needs to get ahold of a pointer to swiotlb_dma_ops.
-> However, that variable is defined as static.  Instead, we use
-> arch_setup_dma_ops() to get the pointer to swiotlb_dma_ops.  Since
-> we also want our driver to be a separate module, we need to
-> export this function.
+On Sat, Sep 23, 2017 at 03:24:42PM +0800, Zhou Wang wrote:
+>                                         -> pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, 0xffffffff)
+> 
+> This will change the prefetch range of 00:00.0 in a time slot, so traffic of
+> 01:00.0 or 01:00.1 may be broken.
+> 
+> In fact, we can get if one bridge supports 64bit range by the bottom 4bits of
+> prefetchable memory base/limit. Honestly speaking, I don't know why 1f82de10d6b1
+> ("PCI/86: don't assume prefetchable ranges are 64bit") has added the double
+> check code.
 
-NAK. Retrieve the platform-assigned ops from the device via
-get_dma_ops() and stash them in your drvdata or wherever before you
-replace them. Don't go poking around arch code internals directly from a
-driver.
+some chip even that flags say that 64bit is support from that bits, but its upper 32 bits
+actually can not be changed.
 
-Robin.
-
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> 
+> So Can we remove the double checking of prefetchable range to avoid this problem?
+> 
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 > ---
->  arch/arm64/mm/dma-mapping.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/pci/setup-bus.c | 14 --------------
+>  1 file changed, 14 deletions(-)
 > 
-> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-> index 614af88..dae572f 100644
-> --- a/arch/arm64/mm/dma-mapping.c
-> +++ b/arch/arm64/mm/dma-mapping.c
-> @@ -936,3 +936,4 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 958da7d..23010a9 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -778,20 +778,6 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+>  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
+>  		}
 >  	}
->  #endif
+> -
+> -	/* double check if bridge does support 64 bit pref */
+> -	if (b_res[2].flags & IORESOURCE_MEM_64) {
+> -		u32 mem_base_hi, tmp;
+> -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> -					 &mem_base_hi);
+> -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> -					       0xffffffff);
+> -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
+> -		if (!tmp)
+> -			b_res[2].flags &= ~IORESOURCE_MEM_64;
+> -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> -				       mem_base_hi);
+> -	}
 >  }
-> +EXPORT_SYMBOL(arch_setup_dma_ops);
-> 
+>  
+>  /* Helper function for sizing routines: find first available
 
+Maybe we can try this: only touch upper 32bits after we touched low 32bits ?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 958da7db9033..2ac4d20e5c11 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -744,6 +744,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 	u32 pmem;
+ 	struct pci_dev *bridge = bus->self;
+ 	struct resource *b_res;
++	int pref_memory_base_touched = 0;
+ 
+ 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+ 	b_res[1].flags |= IORESOURCE_MEM;
+@@ -769,6 +770,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 					       0xffe0fff0);
+ 		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
+ 		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
++		pref_memory_base_touched = 1;
+ 	}
+ 	if (pmem) {
+ 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
+@@ -780,7 +782,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 	}
+ 
+ 	/* double check if bridge does support 64 bit pref */
+-	if (b_res[2].flags & IORESOURCE_MEM_64) {
++	if (pref_memory_base_touched && b_res[2].flags & IORESOURCE_MEM_64) {
+ 		u32 mem_base_hi, tmp;
+ 		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+ 					 &mem_base_hi);
