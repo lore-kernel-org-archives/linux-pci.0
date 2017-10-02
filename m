@@ -1,86 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 11 Oct 2017 17:06:25 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:38458 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751609AbdJBTfe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Oct 2017 15:35:34 -0400
+Date: Mon, 2 Oct 2017 14:35:32 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH 4/5] PCI: wait device ready after pci_pm_reset()
-Message-ID: <20171011220625.GV25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
- <1506212218-29103-4-git-send-email-okaya@codeaurora.org>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Hari Vyas <hari.vyas@broadcom.com>,
+        Abhishek Shah <abhishek.shah@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Vikram Prakash <vikram.prakash@broadcom.com>
+Subject: Re: [RFC] PCIe bus address at 0x00000000
+Message-ID: <20171002193532.GA5407@bhelgaas-glaptop.roam.corp.google.com>
+References: <a9aba0db-4865-2a6b-b77c-9cb70a4eeab0@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1506212218-29103-4-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a9aba0db-4865-2a6b-b77c-9cb70a4eeab0@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 23, 2017 at 08:16:57PM -0400, Sinan Kaya wrote:
-> Rev 3.1 Sec 2.3.1 Request Handling Rules says a device can issue CRS
-> following a D3hot->D0 transition. Add pci_dev_wait() call with 1 second
-> timeout to see if device is available before returning.
+On Fri, Sep 29, 2017 at 05:47:23PM -0700, Ray Jui wrote:
+> Hi Bjorn and all,
 > 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pci.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
+> One of our ARM64 based processor (NS2) has our system address
+> reversed for PCIe outbound transaction in the range of 0x0000_0000
+> and 0x1fff_ffff. If we use 1:1 mapping between the system address
+> and PCIe address, we end up having the PCIe address in the same
+> range.
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index fd4a3b6..074adf9 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3963,6 +3963,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
->   */
->  static int pci_pm_reset(struct pci_dev *dev, int probe)
->  {
-> +	unsigned int delay = dev->d3_delay;
->  	u16 csr;
->  
->  	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
-> @@ -3988,7 +3989,10 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
->  	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
->  	pci_dev_d3_sleep(dev);
->  
-> -	return 0;
-> +	if (delay < pci_pm_d3_delay)
-> +		delay = pci_pm_d3_delay;
-> +
-> +	return pci_dev_wait(dev, "PM D3->D0", delay, 1000);
-
-1) Why do we wait up to 1 second here, when we wait up to 60 seconds
-for the other methods?  Can they all be the same?  Maybe a #define for
-it?
-
-2) I don't really like the fact that we do the initial sleep one place
-and then pass the length of that sleep here.  It's hard to verify
-they're the same and keep them in sync.  I think the only thing you
-use initial_wait for is to include that time in the dmesg messages.
-Maybe we should just omit that time from the message and drop the
-parameter?
-
->  }
->  
->  void pci_reset_secondary_bus(struct pci_dev *dev)
-> -- 
-> 1.9.1
+> In this case, we noticed that certain USB-PCI adapters will decline
+> access to BARs mapped in this address range with "Unsupported
+> Request". In this case, if we change the PCIe address range to
+> something else like 0x8000_0000, it would work without an issue.
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> This sounds like an issue with the USB PCI adapter that cannot allow
+> BARs to be used with specific PCIe address range. Is my
+> understanding correct?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I assume you're seeing "Unsupported Request" completions on the PCIe
+link?  Can you tell with an analyzer that the TLP actually appears on 
+the link and it's the device that is responding with UR?  I'm just
+wondering if there's something in the RC that could be
+short-circuiting this.  But I guess you mention "certain USB-PCI
+adapters", which implies that these BAR addresses work for *some*
+devices, just not these particular USB-PCI ones.
+
+AFAIK, there's no PCIe reason why the 0x0000_0000 - 0x1fff_ffff
+region shouldn't be used for BARs.
+
+It's surprising to me that a device would special-case addresses like
+that, but maybe it does.
+
+Bjorn
