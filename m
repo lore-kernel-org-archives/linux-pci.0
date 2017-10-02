@@ -1,123 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:52335 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932583AbdJaWks (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:40:48 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 12/17] PCI: dwc: artpec6: Split artpec6_pcie_establish_link to smaller functions
-Date: Tue, 31 Oct 2017 23:39:30 +0100
-Message-Id: <20171031223936.27549-13-niklas.cassel@axis.com>
-In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Received: from mail.kernel.org ([198.145.29.99]:41072 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751059AbdJBUI4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Oct 2017 16:08:56 -0400
+Date: Mon, 2 Oct 2017 15:08:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Hari Vyas <hari.vyas@broadcom.com>,
+        Abhishek Shah <abhishek.shah@broadcom.com>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Vikram Prakash <vikram.prakash@broadcom.com>
+Subject: Re: [RFC] PCIe bus address at 0x00000000
+Message-ID: <20171002200854.GB5407@bhelgaas-glaptop.roam.corp.google.com>
+References: <a9aba0db-4865-2a6b-b77c-9cb70a4eeab0@broadcom.com>
+ <20171002193532.GA5407@bhelgaas-glaptop.roam.corp.google.com>
+ <e0a89ffe-a936-9b41-c9c0-3616452376e2@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e0a89ffe-a936-9b41-c9c0-3616452376e2@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is done to better match other drivers such as dra7xx and imx6,
-but also to prepare for endpoint mode support.
+On Mon, Oct 02, 2017 at 12:47:16PM -0700, Ray Jui wrote:
+> Hi Bjorn,
+> 
+> On 10/2/2017 12:35 PM, Bjorn Helgaas wrote:
+> >On Fri, Sep 29, 2017 at 05:47:23PM -0700, Ray Jui wrote:
+> >>Hi Bjorn and all,
+> >>
+> >>One of our ARM64 based processor (NS2) has our system address
+> >>reversed for PCIe outbound transaction in the range of 0x0000_0000
+> >>and 0x1fff_ffff. If we use 1:1 mapping between the system address
+> >>and PCIe address, we end up having the PCIe address in the same
+> >>range.
+> >>
+> >>In this case, we noticed that certain USB-PCI adapters will decline
+> >>access to BARs mapped in this address range with "Unsupported
+> >>Request". In this case, if we change the PCIe address range to
+> >>something else like 0x8000_0000, it would work without an issue.
+> >>
+> >>This sounds like an issue with the USB PCI adapter that cannot allow
+> >>BARs to be used with specific PCIe address range. Is my
+> >>understanding correct?
+> >
+> >I assume you're seeing "Unsupported Request" completions on the PCIe
+> >link?  Can you tell with an analyzer that the TLP actually appears on
+> >the link and it's the device that is responding with UR?  I'm just
+> >wondering if there's something in the RC that could be
+> >short-circuiting this.  But I guess you mention "certain USB-PCI
+> >adapters", which implies that these BAR addresses work for *some*
+> >devices, just not these particular USB-PCI ones.
+> 
+> Yes, UR is observed with a PCIe analyzer. See attached two JPGs for
+> captures from PCIe analyzer (one uses PCIe address of 0x0000_0000
+> and the other uses 0x8000_0000).
+> 
+> And yes, this behavior is only seen with certain PCIe-USB adapters.
+> Most other PCIe endpoint devices (NVMe SSDs, Ethernet dongle, PCIe
+> switches, and etc) work fine with PICe address of 0x0000_0000.
+> 
+> >
+> >AFAIK, there's no PCIe reason why the 0x0000_0000 - 0x1fff_ffff
+> >region shouldn't be used for BARs.
+> >
+> 
+> Okay, thanks for helping to confirm that.
+> 
+> >It's surprising to me that a device would special-case addresses like
+> >that, but maybe it does.
+> 
+> If this is proven to be a shortcoming of some specific PCIe-USB
+> adapters (and in fact it seems to be the case so far based on all of
+> the data points). Does it make any sense to you to have a workaround
+> done by the root complex, i.e., to avoid using 0x0000_0000 outbound
+> region; instead, use something else, .e.g, 0x1000_0000
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V3:
-* No change.
+We could have a workaround, as long as it's done in a way that doesn't
+penalize all the correctly-working hardware.  I don't want to give up
+1/16 of the 32-bit address space for everybody just to accomodate some
+broken hardware.
 
- drivers/pci/dwc/pcie-artpec6.c | 53 +++++++++++++++++++++++-------------------
- 1 file changed, 29 insertions(+), 24 deletions(-)
+I'm not sure what form such a workaround would take.  A quirk could
+mark a zero-valued BAR as invalid and force reallocation, but I'm not
+sure how we'd force the allocator to avoid this region.  There might
+be some development required there.
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 18075e0fab80..3b635e745d25 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -80,18 +80,23 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
- 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
- }
- 
--static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
-+static int artpec6_pcie_establish_link(struct dw_pcie *pci)
- {
--	struct dw_pcie *pci = artpec6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 	u32 val;
--	unsigned int retries;
- 
--	/* Hold DW core in reset */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_CORE_RESET_REQ;
-+	val |= PCIECFG_LTSSM_ENABLE;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- 
-+	return 0;
-+}
-+
-+static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
-+	unsigned int retries;
-+
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
- 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
- 		PCIECFG_MODE_TX_DRV_EN |
-@@ -131,30 +136,25 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
- 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
- 		retries--;
- 	} while (retries && !(val & PHY_COSPLLLOCK));
-+}
-+
-+static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
- 
--	/* Take DW core out of reset */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val &= ~PCIECFG_CORE_RESET_REQ;
-+	val |= PCIECFG_CORE_RESET_REQ;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--	usleep_range(100, 200);
-+}
- 
--	/* setup root complex */
--	dw_pcie_setup_rc(pp);
-+static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
- 
--	/* assert LTSSM enable */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_LTSSM_ENABLE;
-+	val &= ~PCIECFG_CORE_RESET_REQ;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--
--	/* check if the link is up or not */
--	if (!dw_pcie_wait_for_link(pci))
--		return 0;
--
--	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
--
--	return -ETIMEDOUT;
-+	usleep_range(100, 200);
- }
- 
- static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
-@@ -171,7 +171,12 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 
--	artpec6_pcie_establish_link(artpec6_pcie);
-+	artpec6_pcie_assert_core_reset(artpec6_pcie);
-+	artpec6_pcie_init_phy(artpec6_pcie);
-+	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-+	dw_pcie_setup_rc(pp);
-+	artpec6_pcie_establish_link(pci);
-+	dw_pcie_wait_for_link(pci);
- 	artpec6_pcie_enable_interrupts(artpec6_pcie);
- 
- 	return 0;
--- 
-2.14.2
+Bjorn
