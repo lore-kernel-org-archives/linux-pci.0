@@ -1,112 +1,152 @@
-Return-Path: <SRS0=9BsA=BZ=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=9BsA=BZ=free.fr=slash.tmp@kernel.org>
-From: Mason <slash.tmp@free.fr>
-Subject: Re: [PATCH 4/5] PCI: tango: Fix platform_get_irq() error handling
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Fabio Estevam <festevam@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
- Linus Walleij <linus.walleij@linaro.org>,
- Linus Torvalds <torvalds@linux-foundation.org>,
- Mark Brown <broonie@kernel.org>
-References: <1508018851-9272-1-git-send-email-festevam@gmail.com>
- <1508018851-9272-4-git-send-email-festevam@gmail.com>
- <169eac7a-4dd1-f164-6342-9bac8b7dbf3a@sigmadesigns.com>
- <20171020223149.GU6332@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <29c830bb-6648-aaf5-08b9-cc22f94e2e93@free.fr>
-Date: Thu, 26 Oct 2017 08:37:19 +0200
-MIME-Version: 1.0
-In-Reply-To: <20171020223149.GU6332@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1506947750.18322.7.camel@infradead.org>
+Subject: Re: [PATCH] uio/uio_pci_generic: Add SR-IOV support
+From: David Woodhouse <dwmw2@infradead.org>
+To: Don Dutile <ddutile@redhat.com>,
+        Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
+In-Reply-To: <3ddc65bd-bf47-acb8-4cc5-db2531e1e864@redhat.com>
+References: <1506517162.30379.2.camel@infradead.org>
+         <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
+         <1506550852.7476.33.camel@infradead.org>
+         <CAKgT0UeAg01Yy189pyzo_wDGYOEX6mBgsr_M9Lsi3u0+a-cW2w@mail.gmail.com>
+         <bb77ab51-858b-df31-e672-7ccee964b269@redhat.com>
+         <1506606369.7476.96.camel@infradead.org>
+         <7bbb6cce-3462-fbb2-9ae4-5c08ab2b01b4@redhat.com>
+         <1506613946.7476.130.camel@infradead.org>
+         <3ddc65bd-bf47-acb8-4cc5-db2531e1e864@redhat.com>
+Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-Eaz4W2eiJV2yxB1OVvkM"
+Date: Mon, 02 Oct 2017 13:35:50 +0100
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+ linus t, mark b
 
-On 21/10/2017 00:31, Bjorn Helgaas wrote:
+--=-Eaz4W2eiJV2yxB1OVvkM
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> On Mon, Oct 16, 2017 at 11:09:15AM +0200, Marc Gonzalez wrote:
->
->> + gkh, maz, tglx, linus w
->>
->> On 15/10/2017 00:07, Fabio Estevam wrote:
->>
->>> When platform_get_irq() fails we should propagate the real error value
->>> instead of always returning -ENXIO.
->>>
->>> Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
->>> Signed-off-by: Fabio Estevam <festevam@gmail.com>
->>> ---
->>>  drivers/pci/host/pcie-tango.c | 4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
->>> index e23f738..5196583 100644
->>> --- a/drivers/pci/host/pcie-tango.c
->>> +++ b/drivers/pci/host/pcie-tango.c
->>> @@ -272,9 +272,9 @@ static int tango_pcie_probe(struct platform_device *pdev)
->>>  		writel_relaxed(0, pcie->base + SMP8759_ENABLE + offset);
->>>  
->>>  	virq = platform_get_irq(pdev, 1);
->>> -	if (virq <= 0) {
->>> +	if (virq < 0) {
->>>  		dev_err(dev, "Failed to map IRQ\n");
->>> -		return -ENXIO;
->>> +		return virq;
->>>  	}
->>>  
->>>  	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &dom_ops, pcie);
->>
->> Hello Fabio,
->>
->> I don't think this patch is correct.
->>
->> AFAIU, on all but legacy platforms, when platform_get_irq() returns 0,
->> it is to signal an error condition.
->>
->> Marc Z pointed out this discussion:
->> http://yarchive.net/comp/linux/zero.html
->>
->> Looking more closely at the platform_get_irq implementation, and ignoring
->> the CONFIG_SPARC special-case, the return value is either:
->>
->> * a valid virq > 0, or
->> * -EPROBE_DEFER, or
->> * some error code < 0, in the ACPI case, or
->> * -ENXIO, or
->> * res->start (an unsigned type, so >= 0)
->>
->>
->> I suppose it would be slightly nicer to write:
->>
->> 	virq = platform_get_irq(pdev, 1);
->> 	if (virq <= 0)
->> 		return virq ? virq : -ENODEV;
-> 
-> All these return values end up getting returned by the driver probe()
-> functions.  I don't think there's much value in returning the exact
-> error we got from platform_get_irq() vs a generic error like -ENXIO or
-> -ENODEV, so my $0.02 is that the above is more complicated than it's
-> worth.
-> 
-> I think existing code that looks like:
-> 
->   irq = platform_get_irq(pdev, 0);
->   if (irq <= 0)
->     return -ENODEV;
-> 
-> is fine and there's no reason to change it.  For code that doesn't
-> check the platform_get_irq() return value, I'd say it's worth adding a
-> check for "irq <= 0".  Maybe somebody will point out an arch that can
-> return 0 as a legitimate IRQ, and then we'll have to rethink.
+On Thu, 2017-09-28 at 12:56 -0400, Don Dutile wrote:
+> Well, my point is more like: why put it in uio?
+> why not make it available via pcie, setup while/if no driver attached?
+> i.e., other non-uio users can use the mechanism.... like libvirt? ...
+> if a PF driver isn't required.
 
-I agree with what Bjorn wrote, but there might be one exception
-to consider: mapping EPROBE_DEFER to something else will likely
-prevent the driver core from correctly handling deferred probes.
+This would allow you to enable SR-IOV on a PF before its driver is
+loaded, right? Even when that driver *is* going to need to perform
+resource management for those VFs?
 
-References for myself:
-https://lwn.net/Articles/485194/
-https://patchwork.kernel.org/patch/9558675/
+Would existing drivers cope with SR-IOV being enabled, and VFs being
+assigned to guests, before they're loaded? If so then sure, let's do it
+generically. But I'm not sure that's the case.
 
-Regards.
+As it is, the UIO driver is all about "userspace knows best". So if
+there's resource management to be done, then userspace needs to do that
+before enabling SR-IOV. And that's consistent with the current driver-
+based enabling model for SR-IOV.
+
+
+
+--=-Eaz4W2eiJV2yxB1OVvkM
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
+ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
+EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
+UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
+MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
+bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
+PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
+bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
+uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
+LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
+QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
+UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
+UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
+MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
+BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
+HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
+dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
+LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
+mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
+nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
+4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
+yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
++nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
+CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
+MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
+ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
+MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
+pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
+An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
+p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
+HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
+AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
+dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
+MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
+BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
+UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
+Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
+gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
+dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
+Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
+DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
+eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
+hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
+PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
+QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
+WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
+ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
+bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
+U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
+SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
+RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
+dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
+iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
+M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
+FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
+HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
+BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
+BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
+dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
+U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
+Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
+ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
+BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
+2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
+vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
+YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
+fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
+GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
+R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
+TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
+ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
+CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MTAwMjEyMzU1MFowLwYJ
+KoZIhvcNAQkEMSIEIA8RXYp59NyBVpuoyyAUBZqjorr3hohO4z//iuMSD0TGMIHBBgkrBgEEAYI3
+EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
+BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
+RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
+WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
+VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
+TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
+b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
+AQA7iRusE4so6/focFXa8l9gvA/GN3QmcCXdn02VUJPMevcfgfU8nVRzltxRCBxc5tuSPu4hUNsg
+Yg0vnoZQARyMN24vTXZLfhVd/9cGGaMa5PSjsinr297xR2cgXAEaqaR7MpkxIRzclZRrHzoPNuMk
+79IUz/2okG+/CDo6TobPIhKSJZNvKzQuOyz3bg2FGgx8Tyd8OHUW4ZU2laEhkUgfxLQtTx3VY96/
+Ce5x0njMa80xL8hdN8BMepD4bhVoMKvPA5IZL65QVClhVBEEZe5Rb2gezJh/8NT+jDDSy1vTErUT
+CxR5vHDOVD79DtXGQ+2O89dMIbUpDtAlykPvbjlaAAAAAAAA
+
+
+--=-Eaz4W2eiJV2yxB1OVvkM--
