@@ -1,63 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1508254397.16112.481.camel@linux.intel.com>
-Subject: Re: [PATCH 12/12] PM / core: Add AVOID_RPM driver flag
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Date: Tue, 17 Oct 2017 18:33:17 +0300
-In-Reply-To: <2517917.TZ0hdc7mRJ@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
-         <2517917.TZ0hdc7mRJ@aspire.rjw.lan>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:43988 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751106AbdJBOIt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Oct 2017 10:08:49 -0400
+Received: by mail-wm0-f49.google.com with SMTP id m72so7657856wmc.0
+        for <linux-pci@vger.kernel.org>; Mon, 02 Oct 2017 07:08:48 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: graeme.gregory@linaro.org, leif.lindholm@linaro.org,
+        daniel.thompson@Linaro.org,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH] PCI: aspm: deal with missing root ports in link state handling
+Date: Mon,  2 Oct 2017 15:08:40 +0100
+Message-Id: <20171002140840.7767-1-ard.biesheuvel@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2017-10-16 at 03:32 +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Define and document a new driver flag, DPM_FLAG_AVOID_RPM, to inform
-> the PM core and middle layer code that the driver has something
-> significant to do in its ->suspend and/or ->resume callbacks and
-> runtime PM should be disabled for the device when these callbacks
-> run.
-> 
-> Setting DPM_FLAG_AVOID_RPM (in addition to DPM_FLAG_SMART_SUSPEND)
-> causes runtime PM to be disabled for the device before invoking the
-> driver's ->suspend callback for it and to be enabled again for it
-> only after the driver's ->resume callback has returned.  In addition
-> to that, if the device is in runtime suspend right after disabling
-> runtime PM for it (which means that there was no reason to resume it
-> from runtime suspend beforehand), the invocation of the ->suspend
-> callback will be skipped for it and it will be left in runtime
-> suspend until the "noirq" phase of the subsequent system resume.
-> 
-> If DPM_FLAG_SMART_SUSPEND is not set, DPM_FLAG_AVOID_RPM has no
-> effect.
-> 
+Even though it is unconventional, some PCIe host implementations omit
+the root ports entirely, and simply consist of a host bridge (which
+is not modeled as a device in the PCI hierarchy) and a link.
 
-> +	if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
-> +	    dev_pm_test_driver_flags(dev, DPM_FLAG_AVOID_RPM)) {
+When the downstream device is an endpoint, our current code does not
+seem to mind this unusual configuration. However, when PCIe switches
+are involved, the ASPM code assumes that any downstream switch port
+has a parent, and blindly derefences the bus->parent->self field of
+the pci_dev struct to chain the downstream link state to the link
+state of the root port. Given that the root port is missing, the link
+is not modeled at all, and nor is the link state, and attempting to
+access it results in a NULL pointer dereference and a crash.
 
-Wasn't interface designed to allow something like:
-	if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND | DPM_FLAG_AVOID_RPM)) {
-instead?
+So let's avoid this by allowing the link state chain to terminate at
+the downstream port if no root port exists.
 
-Does it make sense to have a separate definition for
-DPM_FLAG_SMART_SUSPEND | DPM_FLAG_AVOID_RPM ?
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
+ drivers/pci/pcie/aspm.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 1dfa10cc566b..0bea8498b5a5 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -802,10 +802,14 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 
+ 	/*
+ 	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
+-	 * hierarchies.
++	 * hierarchies.  Note that some PCIe host implementations omit
++	 * the root ports entirely, in which case a downstream port on
++	 * a switch may become the root of the link state chain for all
++	 * its subordinate endpoints.
+ 	 */
+ 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
+-	    pci_pcie_type(pdev) == PCI_EXP_TYPE_PCIE_BRIDGE) {
++	    pci_pcie_type(pdev) == PCI_EXP_TYPE_PCIE_BRIDGE ||
++	    !pdev->bus->parent->self) {
+ 		link->root = link;
+ 	} else {
+ 		struct pcie_link_state *parent;
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+2.11.0
