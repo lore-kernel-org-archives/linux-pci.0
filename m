@@ -1,68 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 32/36] iommu/arm-smmu-v3: Hook ATC invalidation to process ops
-Date: Fri,  6 Oct 2017 14:31:59 +0100
-Message-Id: <20171006133203.22803-33-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 2 Oct 2017 11:21:29 -0600
+From: Keith Busch <keith.busch@intel.com>
+To: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] nvme-pci: Use PCI bus address for data/queues in CMB
+Message-ID: <20171002172128.GV8463@localhost.localdomain>
+References: <1506763722-10687-1-git-send-email-abhishek.shah@broadcom.com>
+ <20171001074203.GA11115@lst.de>
+MIME-Version: 1.0
+In-Reply-To: <20171001074203.GA11115@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sagi Grimberg <sagi@grimberg.me>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Jens Axboe <axboe@fb.com>, bcm-kernel-feedback-list@broadcom.com,
+ stable@vger.kernel.org, Abhishek Shah <abhishek.shah@broadcom.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The core calls us when a process is modified. Perform the required ATC
-invalidations.
+On Sun, Oct 01, 2017 at 09:42:03AM +0200, Christoph Hellwig wrote:
+> This looks very convoluted, mostly because the existing code is
+> doing weird things.  For one thing what is sq_dma_addr currently
+> is not a DMA adddress - we either need the resource address
+> for the ioremap, but we don't need to stash that away, and second
+> the one programmed into the controller should be a pci_bus_addr_t.
+> 
+> Second we already have a nice PCI-layer helper called pci_bus_address
+> to get the bus address for us and we should use it.
+> 
+> Something like the patch below should solve the issue:
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Yah, calling this a DMA address was a misnomer and confusing.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index d03bec4d4b82..f591f1974228 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2839,7 +2839,7 @@ static void arm_smmu_process_detach(struct iommu_domain *domain,
- 		arm_smmu_write_ctx_desc(smmu_domain, process->pasid, NULL);
- 	}
- 
--	/* TODO: Invalidate ATC. */
-+	arm_smmu_atc_inv_master_all(master, process->pasid);
- 	/* TODO: Invalidate all mappings if last and not DVM. */
- }
- 
-@@ -2847,8 +2847,9 @@ static void arm_smmu_process_invalidate(struct iommu_domain *domain,
- 					struct iommu_process *process,
- 					unsigned long iova, size_t size)
- {
-+	arm_smmu_atc_inv_domain(to_smmu_domain(domain), process->pasid,
-+				iova, size);
- 	/*
--	 * TODO: Invalidate ATC.
- 	 * TODO: Invalidate mapping if not DVM
- 	 */
- }
-@@ -2871,7 +2872,7 @@ static void arm_smmu_process_exit(struct iommu_domain *domain,
- 		domain->process_exit(domain, master->dev, process->pasid,
- 				     domain->process_exit_token);
- 
--		/* TODO: inval ATC */
-+		arm_smmu_atc_inv_master_all(master, process->pasid);
- 	}
- 	spin_unlock(&smmu_domain->devices_lock);
- 
--- 
-2.13.3
+> ---
+> From b78f4164881125c4fecfdb87878d0120b2177c53 Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Sun, 1 Oct 2017 09:37:35 +0200
+> Subject: nvme-pci: Use PCI bus address for data/queues in CMB
+> 
+> Currently, NVMe PCI host driver is programming CMB dma address as
+> I/O SQs addresses. This results in failures on systems where 1:1
+> outbound mapping is not used (example Broadcom iProc SOCs) because
+> CMB BAR will be progammed with PCI bus address but NVMe PCI EP will
+> try to access CMB using dma address.
+> 
+> To have CMB working on systems without 1:1 outbound mapping, we
+> program PCI bus address for I/O SQs instead of dma address. This
+> approach will work on systems with/without 1:1 outbound mapping.
+> 
+> Based on a report and previous patch from Abhishek Shah.
+> 
+> Fixes: 8ffaadf7 ("NVMe: Use CMB for the IO SQes if available")
+> Cc: stable@vger.kernel.org
+> Reported-by: Abhishek Shah <abhishek.shah@broadcom.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+This looks good.
+
+Reviewed-by: Keith Busch <keith.busch@intel.com>
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
