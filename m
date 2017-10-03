@@ -1,62 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:14060 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbdJ3EXN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:23:13 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 08/12] PCI: tegra: Wait for DLLP to finish before entering L1 or L2
-Date: Mon, 30 Oct 2017 09:48:59 +0530
-Message-ID: <1509337143-25963-9-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: "David S. Miller" <davem@davemloft.net>,
+        Guenter Roeck <linux@roeck-us.net>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>
+Subject: Re: [PATCH v2] drivers/ide/pci: Fix legacy IRQ assignment
+Date: Tue, 03 Oct 2017 14:10:11 +0200
+Message-id: <3245235.QGEOI6Flcd@amdc3058>
+In-reply-to: <4605844.iOhxHctWQT@amdc3058>
+MIME-version: 1.0
+Content-type: text/plain; charset="us-ascii"
+References: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
+        <4605844.iOhxHctWQT@amdc3058>
+        <CGME20171003121013epcas2p31c8ad6c89249a6e135c030e26f833496@epcas2p3.samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set required bit to have LTSSM wait for DLLP to finish before entering L1
-or L2. This avoids truncation of PM messages which results in receiver
-errors.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
+On Tuesday, October 03, 2017 11:39:55 AM Bartlomiej Zolnierkiewicz wrote:
+> On Monday, October 02, 2017 11:52:47 AM Lorenzo Pieralisi wrote:
+> > Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
+> > possible to define IRQ mapping functions on a per PCI host bridge basis.
+> > 
+> > Actual IRQ allocation is carried out by the pci_assign_irq() function in
+> > pci_device_probe() - to make sure a device is assigned an IRQ only if it
+> > is probed (ie match a driver); it retrieves a struct pci_host_bridge*
+> > for a given PCI device and through {map/swizzle}_irq() it carries out
+> > the PCI IRQ allocation.
+> > 
+> > The code conversion to struct pci_host_bridge {map/swizzle}_irq() hooks
+> > and pci_assign_irq() to deal with legacy IRQs in
+> > 
+> > commit 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
+> > pci_device_probe()")
+> > 
+> > did not take into account that the IDE subsystem relies on a special
+> > purpose IDE PCI layer, configured by CONFIG_IDEPCI_PCIBUS_ORDER to force
+> > devices probe ordering by sidestepping the core PCI bus layer entirely
+> > (and therefore pci_device_probe()) by executing the registered IDE PCI
+> > drivers probe routines (ie registered with ide_pci_register_driver())
+> > through ide_scan_pcidev().
+> > 
+> > Since this IDE PCI specific probe mechanism bypasses the PCI core
+> > code generic probing (ie pci_device_probe()) it also misses the
+> > pci_assign_irq() call (among other PCI initialization functions);
+> > this triggers IDE PCI devices initialization failures caused
+> > by the missing IRQ allocation:
+> > 
+> > ide0: disabled, no IRQ
+> > ide0: failed to initialize IDE interface
+> > ide0: disabling port
+> > cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
+> > CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
+> > cmd64x 0000:00:02.0: can't reserve resources
+> > CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
+> > ide_generic: please use "probe_mask=0x3f" module parameter for probing
+> > all legacy ISA IDE ports
+> > ------------[ cut here ]------------
+> > WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
+> > sysfs: cannot create duplicate filename '/class/ide_port/ide0'
+> > ...
+> > 
+> > Trace:
+> > [<fffffc00003308a0>] __warn+0x160/0x190
+> > [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> > [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
+> > [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> > [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
+> > [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> > [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> > [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
+> > [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
+> > [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
+> > [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
+> > [<fffffc00005ba690>] device_create+0x50/0x70
+> > [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
+> > [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> > [<fffffc00005ba2a0>] device_register+0x20/0x50
+> > [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> > [<fffffc00005df944>] ide_host_add+0x64/0xe0
+> > [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
+> > [<fffffc0000310288>] do_one_initcall+0x68/0x260
+> > [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
+> > [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> > [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
+> > [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> > 
+> > ---[ end trace 24a70433c3e4d374 ]---
+> > ide0: disabling port
+> > 
+> > Fix the IRQ allocation issue by adding a pci_assign_irq() call in the
+> > ide_scan_pcidev() function before probing the IDE PCI drivers, so that
+> > IRQs for a given PCI device are allocated for the IDE PCI drivers to
+> > use them for device configuration.
+> > 
+> > Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in pci_device_probe()")
+> > Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Reported-by: Guenter Roeck <linux@roeck-us.net>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Richard Henderson <rth@twiddle.net>
+> > Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+> > Cc: David S. Miller <davem@davemloft.net>
+> > Cc: Guenter Roeck <linux@roeck-us.net>
+> > Cc: Matt Turner <mattst88@gmail.com>
+> 
+> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
- drivers/pci/host/pci-tegra.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+IDE specific problems uncovered by pci_assign_irq() change have been
+addressed in separate patches, please see:
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 75b408b32b8b..7f1e34e670d7 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -217,6 +217,9 @@
- #define RP_VEND_CTL1	0xf48
- #define  RP_VEND_CTL1_ERPT	(1 << 13)
- 
-+#define RP_VEND_XP_BIST	0xf4c
-+#define  RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
-+
- #define RP_VEND_CTL2 0x00000fa8
- #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
- 
-@@ -2160,6 +2163,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
- 	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
- 	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
- 	writel(value, port->base + RP_VEND_XP);
-+
-+	/* LTSSM will wait for DLLP to finish before entering L1 or L2,
-+	 * to avoid truncation of PM messages which results in receiver errors
-+	 */
-+	value = readl(port->base + RP_VEND_XP_BIST);
-+	value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
-+	writel(value, port->base + RP_VEND_XP_BIST);
- }
- /*
-  * FIXME: If there are no PCIe cards attached, then calling this function
--- 
-2.1.4
+http://patchwork.ozlabs.org/patch/820859/
+http://patchwork.ozlabs.org/patch/820870/
+
+Guenter, could you please verify them (I have only compile tested
+them)? [ Just revert Lorenzo's fix and apply both my patches. ]
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
