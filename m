@@ -1,89 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:37773 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751284AbdJMHI0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Oct 2017 03:08:26 -0400
-Received: by mail-wm0-f66.google.com with SMTP id r68so5146892wmr.4
-        for <linux-pci@vger.kernel.org>; Fri, 13 Oct 2017 00:08:25 -0700 (PDT)
-Date: Fri, 13 Oct 2017 09:08:23 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Steve Lin <steven.lin1@broadcom.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-        David Miller <davem@davemloft.net>,
-        Roopa Prabhu <roopa@cumulusnetworks.com>,
-        netdev@vger.kernel.org, Jiri Pirko <jiri@mellanox.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        linux-pci@vger.kernel.org, John Linville <linville@tuxdriver.com>,
-        Andy Gospodarek <gospo@broadcom.com>
-Subject: Re: [RFC 0/3] Adding config get/set to devlink
-Message-ID: <20171013070823.GE1952@nanopsycho.orion>
-References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
- <20171012150419.GI14672@nanopsycho>
- <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
- <20171012.120650.1063812043202847517.davem@davemloft.net>
- <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
- <CA+Jmh7Em0ZjN0y3FSk1yBhOtPKvFBnJCVA97oZZb7cgXXF_aUA@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:55298 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750797AbdJCR5r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Oct 2017 13:57:47 -0400
+Date: Tue, 3 Oct 2017 12:57:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] ide: add missing hwif->portdev freeing on hwif_init()
+ failure
+Message-ID: <20171003175742.GC27400@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20171003111849epcas1p3335e2bc56e5aafdeadc340301284b2b8@epcas1p3.samsung.com>
+ <1640481.zjlggixLin@amdc3058>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+Jmh7Em0ZjN0y3FSk1yBhOtPKvFBnJCVA97oZZb7cgXXF_aUA@mail.gmail.com>
+In-Reply-To: <1640481.zjlggixLin@amdc3058>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thu, Oct 12, 2017 at 10:12:31PM CEST, steven.lin1@broadcom.com wrote:
->On Thu, Oct 12, 2017 at 3:20 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
->> On 10/12/2017 12:06 PM, David Miller wrote:
->>> From: Florian Fainelli <f.fainelli@gmail.com>
->>> Date: Thu, 12 Oct 2017 08:43:59 -0700
->>>
->>>> Once we move ethtool (or however we name its successor) over to
->>>> netlink there is an opportunity for accessing objects that do and do
->>>> not have a netdevice representor today (e.g: management ports on
->>>> switches) with the same interface, and devlink could be used for
->>>> that.
->>>
->>> That is an interesting angle for including this in devlink.
->>>
->>> I'm not so sure what to do about this.
->>>
->>> One suggestion is that devlink is used for getting ethtool stats for
->>> objects lacking netdev representor's, and a new genetlink family is
->>> used for netdev based ethtool.
->>
->> Right, I was also thinking along those lines that we we would have a new
->> generic netlink family for ethtool to support ethtool over netlink.
->>
->>>
->>> I think it's important that we don't expand the scope of devlink
->>> beyond what it was originally designed for.
->>
->> It seems to me like devlink is well defined in what it is not for: it is
->> not meant to be used for any object that is/has a net_device, but it is
->> not well defined for what it can offer to these non network devices. For
->> instance, we have a tremendous amount of operations that are extremely
->> specific to its single user(s) such as mlx5 and mlxsw.
->>
->> For instance, I am not sure how the buffer reservation scheme can be
->> generalized, and this is always the tricky part with a single user
->> facility in that you try to generalize the best you can based on the HW
->> you know. This is not a criticism or meant to be anything negative, this
->> just happens to be the case, and we did not have anything better.
->>
->> So maybe the first thing is to clarify what devlink operations can and
->> should be and what they are absolutely not allowed to cover. We should
->> also clarify whether a generic set/get that Steven is proposing is
->> something that we tolerate, or whether there should be specific function
->> pointers implemented for each attribute, which would be more in line
->> with what has been done thus far.
->
->Hi Florian,
->
->Some of this is subjective, of course, but just to clarify, it did
->seem like implementing a new devlink_op function pointer per attribute
->might be more consistent with what's been done so far.  But for code
->reuse purposes - i.e. to avoid replicating essentially the same
->function for each of the 30+ config attributes - I elected to just
->implement a single generic get and set devlink_op.
+[+cc linux-pci for real]
 
-Also, it this case, unlike any existing cmds, the config options are
-all permanent, written in hw. I think it is fine to have one set
-of get/set cmd to handle them all at once. Same family.
+My plan is to take these two additional fixes via the PCI tree, along
+with Lorenzo's patch to add a pci_assign_irq() call in
+ide_scan_pcidev(), since they're all related.
+
+On Tue, Oct 03, 2017 at 01:18:47PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> Recent pci_assign_irq() changes uncovered a problem with missing
+> freeing of ide_port class instance on hwif_init() failure in 
+> ide_host_register():
+> 
+> ide0: disabled, no IRQ
+> ide0: failed to initialize IDE interface
+> ide0: disabling port
+> cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
+> CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
+> cmd64x 0000:00:02.0: can't reserve resources
+> CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
+> ide_generic: please use "probe_mask=0x3f" module parameter for probing
+> all legacy ISA IDE ports
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
+> sysfs: cannot create duplicate filename '/class/ide_port/ide0'
+> ...
+> 
+> Trace:
+> [<fffffc00003308a0>] __warn+0x160/0x190
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
+> [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
+> [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
+> [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
+> [<fffffc00005ba690>] device_create+0x50/0x70
+> [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005ba2a0>] device_register+0x20/0x50
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005df944>] ide_host_add+0x64/0xe0
+> [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
+> [<fffffc0000310288>] do_one_initcall+0x68/0x260
+> [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> 
+> ---[ end trace 24a70433c3e4d374 ]---
+> ide0: disabling port
+> 
+> Fix the problem by adding missing code to ide_host_register().
+> 
+> Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Richard Henderson <rth@twiddle.net>
+> Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Matt Turner <mattst88@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> ---
+> This should fix sysfs warning and probing of ide_generic driver
+> driven ports in case of hwif_init() failure (i.e. no IRQ issue
+> when pci_assign_irq() fix is not present).
+> 
+> v2:
+> - Fixed typo in the patch description: pci_assing_irq() -> pci_assign_irq().
+> 
+>  drivers/ide/ide-probe.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> Index: b/drivers/ide/ide-probe.c
+> ===================================================================
+> --- a/drivers/ide/ide-probe.c	2017-10-02 15:08:16.658662459 +0200
+> +++ b/drivers/ide/ide-probe.c	2017-10-03 11:59:36.867189557 +0200
+> @@ -1451,6 +1451,7 @@ int ide_host_register(struct ide_host *h
+>  		if (hwif_init(hwif) == 0) {
+>  			printk(KERN_INFO "%s: failed to initialize IDE "
+>  					 "interface\n", hwif->name);
+> +			device_unregister(hwif->portdev);
+>  			device_unregister(&hwif->gendev);
+>  			ide_disable_port(hwif);
+>  			continue;
+> 
