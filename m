@@ -1,20 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 6/8] PCI: host: brcmstb: add MSI capability
-To: Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon
- <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
- Brian Norris <computersforpeace@gmail.com>,
- Russell King <rmk+kernel@armlinux.org.uk>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- Florian Fainelli <f.fainelli@gmail.com>
-References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
- <1508868949-16652-7-git-send-email-jim2101024@gmail.com>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <5406ab92-c1da-f6fa-083d-82d1027130ea@gmail.com>
-Date: Tue, 24 Oct 2017 11:57:03 -0700
+Date: Tue, 3 Oct 2017 17:53:01 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH v2] ACPI/IORT: Fix PCI ACS enablement
+Message-ID: <20171003165301.GC26028@red-moon>
+References: <1506965324-5818-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <116e7445-b2be-68fd-d707-ff2babd8d415@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1508868949-16652-7-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <116e7445-b2be-68fd-d707-ff2babd8d415@huawei.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -22,80 +16,153 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
- Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Cc: Catalin Marinas <catalin.marinas@arm.com>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Linuxarm <linuxarm@huawei.com>,
+ linux-acpi@vger.kernel.org, Zhou Wang <wangzhou1@hisilicon.com>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Sudeep Holla <sudeep.holla@arm.com>,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jim,
-
-On 10/24/2017 11:15 AM, Jim Quinlan wrote:
-> This commit adds MSI to the Broadcom STB PCIe host controller. It does
-> not add MSIX since that functionality is not in the HW.  The MSI
-> controller is physically located within the PCIe block, however, there
-> is no reason why the MSI controller could not be moved elsewhere in
-> the future.
+On Tue, Oct 03, 2017 at 03:45:38PM +0100, John Garry wrote:
+> On 02/10/2017 18:28, Lorenzo Pieralisi wrote:
+> >commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
+> >workarounds") removed kernel code that was allowing to initialize
+> >and probe the SMMU devices early (ie earlier than PCI devices, through
+> >linker script callback entries) in the boot process because it was not
+> >needed any longer in that the SMMU devices/drivers now support deferred
+> >probing.
+> >
+> >Since the SMMUs probe routines are also in charge of requesting global
+> >PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
+> >up early-probing workarounds") also postponed PCI ACS enablement to
+> >SMMUs devices probe time, which is too late given that PCI devices needs
+> >to detect if PCI ACS is enabled to init the respective capability
+> >through the following call path:
+> >
+> >pci_device_add()
+> > -> pci_init_capabilities()
+> >  -> pci_enable_acs()
+> >
+> >Add code in the ACPI IORT SMMU platform devices initialization path
+> >(that is called before ACPI PCI enumeration) to detect if there
+> >exists firmware mappings to map root complexes ids to SMMU ids
+> >and if so enable ACS for the system.
+> >
+> >Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
+> >Signed-workarounds")
+> >Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >Cc: Will Deacon <will.deacon@arm.com>
+> >Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> >Cc: Sudeep Holla <sudeep.holla@arm.com>
+> >Cc: Catalin Marinas <catalin.marinas@arm.com>
+> >Cc: Robin Murphy <robin.murphy@arm.com>
+> >Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> >Cc: Alex Williamson <alex.williamson@redhat.com>
+> >---
+> >v1 -> v2:
+> >
+> >- Reworked ACS enablement logic and based on root complex to SMMU
+> >  ids firmware mapping detection
+> >- Rebased against v4.14-rc3
+> >
+> >v1: https://marc.info/?l=linux-acpi&m=150584059818925&w=2
+> >
+> > drivers/acpi/arm64/iort.c | 35 +++++++++++++++++++++++++++++++++++
+> > 1 file changed, 35 insertions(+)
+> >
+> >diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> >index 9565d57..de56394 100644
+> >--- a/drivers/acpi/arm64/iort.c
+> >+++ b/drivers/acpi/arm64/iort.c
+> >@@ -1178,12 +1178,44 @@ static int __init iort_add_smmu_platform_device(struct acpi_iort_node *node)
+> > 	return ret;
+> > }
+> >
+> >+static bool __init iort_enable_acs(struct acpi_iort_node *iort_node)
+> >+{
+> >+	if (iort_node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
+> >+		struct acpi_iort_node *parent;
+> >+		struct acpi_iort_id_mapping *map;
+> >+		int i;
+> >+
+> >+		map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, iort_node,
+> >+				   iort_node->mapping_offset);
+> >+
+> >+		for (i = 0; i < iort_node->mapping_count; i++, map++) {
+> >+			if (!map->output_reference)
+> >+				continue;
+> >+
+> >+			parent = ACPI_ADD_PTR(struct acpi_iort_node,
+> >+					iort_table,  map->output_reference);
+> >+			/*
+> >+			 * If we detect a RC->SMMU mapping, make sure
+> >+			 * we enable ACS on the system.
+> >+			 */
+> >+			if ((parent->type == ACPI_IORT_NODE_SMMU) ||
+> >+				(parent->type == ACPI_IORT_NODE_SMMU_V3)) {
 > 
-> Since the internal Brcmstb MSI controller is intertwined with the PCIe
-> controller, it is not its own platform device but rather part of the
-> PCIe platform device.
+> Hi Lorenzo,
 > 
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> ---
->  drivers/pci/host/Kconfig           |  12 ++
->  drivers/pci/host/Makefile          |   1 +
->  drivers/pci/host/pci-brcmstb-msi.c | 318 +++++++++++++++++++++++++++++++++++++
->  drivers/pci/host/pci-brcmstb.c     |  72 +++++++--
->  drivers/pci/host/pci-brcmstb.h     |  26 +++
->  5 files changed, 419 insertions(+), 10 deletions(-)
->  create mode 100644 drivers/pci/host/pci-brcmstb-msi.c
+> There are a couple of places now which check for any SMMU type.
+> Should we have a helper function/macro to condense, like this:
+> IORT_TYPE_MASK(type) & IORT_IOMMU_TYPE
 > 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index b9b4f11..54aa5d2 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -228,4 +228,16 @@ config PCI_BRCMSTB
->  	default ARCH_BRCMSTB || BMIPS_GENERIC
->  	help
->  	  Adds support for Broadcom Settop Box PCIe host controller.
-> +	  To compile this driver as a module, choose m here.
-> +
-> +config PCI_BRCMSTB_MSI
-> +	bool "Broadcom Brcmstb PCIe MSI support"
-> +	depends on ARCH_BRCMSTB || BMIPS_GENERIC
+> Personal taste, I guess.
 
-This could probably be depends on PCI_BRCMSTB, which would imply these
-two conditions. PCI_BRCMSTB_MSI on its own is probably not very useful
-without the parent RC driver.
+I agree, I will add that macro for 4.15, I would like to merge this
+as a fix now.
 
-> +	depends on OF
-> +	depends on PCI_MSI
-> +	default PCI_BRCMSTB
-> +	help
-> +	  Say Y here if you want to enable MSI support for Broadcom's iProc
-> +	  PCIe controller
-> +
->  endmenu
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index c283321..1026d6f 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -23,6 +23,7 @@ obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
->  obj-$(CONFIG_VMD) += vmd.o
->  obj-$(CONFIG_PCI_BRCMSTB) += brcmstb-pci.o
->  brcmstb-pci-objs := pci-brcmstb.o pci-brcmstb-dma.o
-> +obj-$(CONFIG_PCI_BRCMSTB_MSI) += pci-brcmstb-msi.o
+> BTW, unfortunately we can't re-test this week due to Chinese holiday.
 
-Should we combine this file with the brcmstb-pci.o? There is probably no
-functional difference, except that pci-brcmstb-msi.ko needs to be loaded
-first, right?
--- 
-Florian
+Understood, I just would like to get some coverage before asking Will
+and Catalin to queue it as a fix.
+
+Cheers,
+Lorenzo
+
+> Cheers,
+> John
+> 
+> >+				pci_request_acs();
+> >+				return true;
+> >+			}
+> >+		}
+> >+	}
+> >+
+> >+	return false;
+> >+}
+> >+
+> > static void __init iort_init_platform_devices(void)
+> > {
+> > 	struct acpi_iort_node *iort_node, *iort_end;
+> > 	struct acpi_table_iort *iort;
+> > 	struct fwnode_handle *fwnode;
+> > 	int i, ret;
+> >+	bool acs_enabled = false;
+> >
+> > 	/*
+> > 	 * iort_table and iort both point to the start of IORT table, but
+> >@@ -1203,6 +1235,9 @@ static void __init iort_init_platform_devices(void)
+> > 			return;
+> > 		}
+> >
+> >+		if (!acs_enabled)
+> >+			acs_enabled = iort_enable_acs(iort_node);
+> >+
+> > 		if ((iort_node->type == ACPI_IORT_NODE_SMMU) ||
+> > 			(iort_node->type == ACPI_IORT_NODE_SMMU_V3)) {
+> >
+> >
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 linux-arm-kernel mailing list
