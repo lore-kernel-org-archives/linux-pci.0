@@ -1,110 +1,157 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 25 Oct 2017 14:37:30 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Meelis Roos <mroos@linux.ee>
-Cc: linux-alpha@vger.kernel.org,
-        Linux Kernel list <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: alpha boot hang - 4.14-rc* regression
-Message-ID: <20171025133730.GA5487@red-moon>
-References: <alpine.LRH.2.21.1710251043170.7098@math.ut.ee>
- <alpine.LRH.2.21.1710251109150.7098@math.ut.ee>
- <alpine.LRH.2.21.1710251129520.7098@math.ut.ee>
- <20171025092159.GA14222@red-moon>
- <alpine.LRH.2.21.1710251511090.10071@math.ut.ee>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2] ACPI/IORT: Fix PCI ACS enablement
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-acpi@vger.kernel.org, Zhou Wang <wangzhou1@hisilicon.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        Will Deacon <will.deacon@arm.com>,
+        Hanjun Guo <hanjun.guo@linaro.org>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <1506965324-5818-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20171003124843.GA16134@red-moon>
+From: Nate Watterson <nwatters@codeaurora.org>
+Message-ID: <5801e03f-2715-65b8-4fe4-cadae3ccf33a@codeaurora.org>
+Date: Tue, 3 Oct 2017 15:08:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.21.1710251511090.10071@math.ut.ee>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171003124843.GA16134@red-moon>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 25, 2017 at 03:21:21PM +0300, Meelis Roos wrote:
-> > > (Added linux-pci to CC)
-> > > 
-> > > > > I run Gentoo Linux on my alphas, with latest git kernels for test. 
-> > > > > 4.13.0 worked well on 3 alphas but 4.13.0-09217-g5969d1bb3082 hangs on 
-> > > > > boot on all 3 of them. Tried bisecting on PC164, got into unrelated 
-> > > > > stuff, so probably it does not trigger always. Retried bisecting on 
-> > > > > DS10L. On the first try I got that the same keel where I first saw bad 
-> > > > > was the culprit, another bisect led me to 
-> > > > > 0e4c2eeb758a91e68b9eaf7a4bee9bd5ed97ff2b which looks more related.
-> > > > > 
-> > > > > This is how the crash looks on console:
-> > > > > 
-> > > > >  * Starting udev ...
-> > > > > starting version 225
-> > > > >  [ ok ]
-> > > > >  * Generating a rule to create a /dev/root symlink ...
-> > > > >  [ ok ]
-> > > > >  * Populating /dev with existing devices through uevents ...
-> > > > >  [ ok ]
-> > > > > 
-> > > > > halted CPU 0
-> > > > > 
-> > > > > halt code = 5
-> > > > > HALT instruction executed
-> > > > > PC = fffffc00009bf914
-> > > > > boot failure
-> > > > > >>>
-> > > > > 
-> > > > > What else can I do to debug this?
-> > > > 
-> > > > Booting with debug ignore_loglevel I get also this:
-> > > [...]
-> > > > So maybe it is related pcspkr loading, or the just loaded libata or 
-> > > > floppy...
-> > > 
-> > > removing libata modules and rebooting fixes it - so it seems to be 
-> > > loading of libata.
-> > 
-> > Can you please cherry-pick:
-> > 
-> > commit b1f9e5e355e9 ("ide: fix IRQ assignment for PCI bus order probing")
-> > 
-> > from mainline and let us know if that solves the issue ?
+Hi Lorenzo,
+
+On 10/3/2017 8:48 AM, Lorenzo Pieralisi wrote:
+> [+Nate]
 > 
-> No, still breaks the same way (b1f9e5e355e9 patched on top of 
-> 0e4c2eeb758a).
+> Zhou, Nate,
 > 
-> 4.14.0-rc5-00095-g1c9fec470b81 was also still broken the same way (tried 
-> on Sunday).
+> On Mon, Oct 02, 2017 at 06:28:44PM +0100, Lorenzo Pieralisi wrote:
+>> commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
+>> workarounds") removed kernel code that was allowing to initialize
+>> and probe the SMMU devices early (ie earlier than PCI devices, through
+>> linker script callback entries) in the boot process because it was not
+>> needed any longer in that the SMMU devices/drivers now support deferred
+>> probing.
+>>
+>> Since the SMMUs probe routines are also in charge of requesting global
+>> PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
+>> up early-probing workarounds") also postponed PCI ACS enablement to
+>> SMMUs devices probe time, which is too late given that PCI devices needs
+>> to detect if PCI ACS is enabled to init the respective capability
+>> through the following call path:
+>>
+>> pci_device_add()
+>>   -> pci_init_capabilities()
+>>    -> pci_enable_acs()
+>>
+>> Add code in the ACPI IORT SMMU platform devices initialization path
+>> (that is called before ACPI PCI enumeration) to detect if there
+>> exists firmware mappings to map root complexes ids to SMMU ids
+>> and if so enable ACS for the system.
+>>
+>> Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
+>> Signed-workarounds")
+>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Will Deacon <will.deacon@arm.com>
+>> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+>> Cc: Sudeep Holla <sudeep.holla@arm.com>
+>> Cc: Catalin Marinas <catalin.marinas@arm.com>
+>> Cc: Robin Murphy <robin.murphy@arm.com>
+>> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+>> Cc: Alex Williamson <alex.williamson@redhat.com>
+>> ---
+>> v1 -> v2:
+>>
+>> - Reworked ACS enablement logic and based on root complex to SMMU
+>>    ids firmware mapping detection
+>> - Rebased against v4.14-rc3
+>>
+>> v1: https://marc.info/?l=linux-acpi&m=150584059818925&w=2
+>>
+>>   drivers/acpi/arm64/iort.c | 35 +++++++++++++++++++++++++++++++++++
+>>   1 file changed, 35 insertions(+)
+> 
+> I have reworked the enablement logic wrt v1, dou you mind testing it
+> please, I would like to get it merged since I have 4.15 patches depending
+> on it.
 
-I am not sure I patched the right sys file but if I did, does the patch
-below help ?
+I tested with and without RC->SMMU mappings defined in the IORT and
+observed the expected value for pci_acs_enable in both cases.
 
-I think that at sata driver binding time the kernel finds a freed
-pointer in the host bridge map_irq() hook and that's where things
-go wrong.
+Tested-by: Nate Watterson <nwatters@codeaurora.org>
 
-Please let me know if that's the right sys file, it is a mechanical
-change and making it for other sys file should be reasonably simple.
+Thanks,
+Nate
 
-Lorenzo
+> 
+> Thanks,
+> Lorenzo
+> 
+>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>> index 9565d57..de56394 100644
+>> --- a/drivers/acpi/arm64/iort.c
+>> +++ b/drivers/acpi/arm64/iort.c
+>> @@ -1178,12 +1178,44 @@ static int __init iort_add_smmu_platform_device(struct acpi_iort_node *node)
+>>   	return ret;
+>>   }
+>>   
+>> +static bool __init iort_enable_acs(struct acpi_iort_node *iort_node)
+>> +{
+>> +	if (iort_node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
+>> +		struct acpi_iort_node *parent;
+>> +		struct acpi_iort_id_mapping *map;
+>> +		int i;
+>> +
+>> +		map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, iort_node,
+>> +				   iort_node->mapping_offset);
+>> +
+>> +		for (i = 0; i < iort_node->mapping_count; i++, map++) {
+>> +			if (!map->output_reference)
+>> +				continue;
+>> +
+>> +			parent = ACPI_ADD_PTR(struct acpi_iort_node,
+>> +					iort_table,  map->output_reference);
+>> +			/*
+>> +			 * If we detect a RC->SMMU mapping, make sure
+>> +			 * we enable ACS on the system.
+>> +			 */
+>> +			if ((parent->type == ACPI_IORT_NODE_SMMU) ||
+>> +				(parent->type == ACPI_IORT_NODE_SMMU_V3)) {
+>> +				pci_request_acs();
+>> +				return true;
+>> +			}
+>> +		}
+>> +	}
+>> +
+>> +	return false;
+>> +}
+>> +
+>>   static void __init iort_init_platform_devices(void)
+>>   {
+>>   	struct acpi_iort_node *iort_node, *iort_end;
+>>   	struct acpi_table_iort *iort;
+>>   	struct fwnode_handle *fwnode;
+>>   	int i, ret;
+>> +	bool acs_enabled = false;
+>>   
+>>   	/*
+>>   	 * iort_table and iort both point to the start of IORT table, but
+>> @@ -1203,6 +1235,9 @@ static void __init iort_init_platform_devices(void)
+>>   			return;
+>>   		}
+>>   
+>> +		if (!acs_enabled)
+>> +			acs_enabled = iort_enable_acs(iort_node);
+>> +
+>>   		if ((iort_node->type == ACPI_IORT_NODE_SMMU) ||
+>>   			(iort_node->type == ACPI_IORT_NODE_SMMU_V3)) {
+>>   
+>> -- 
+>> 2.4.12
+>>
 
--- >8 --
-diff --git a/arch/alpha/kernel/sys_dp264.c b/arch/alpha/kernel/sys_dp264.c
-index 6c35159..88c72fe 100644
---- a/arch/alpha/kernel/sys_dp264.c
-+++ b/arch/alpha/kernel/sys_dp264.c
-@@ -356,7 +356,7 @@
-  *  10	 64 bit PCI option slot 3 (not bus 0)
-  */
- 
--static int __init
-+static int
- isa_irq_fixup(const struct pci_dev *dev, int irq)
- {
- 	u8 irq8;
-@@ -372,10 +372,10 @@
- 	return irq8 & 0xf;
- }
- 
--static int __init
-+static int
- dp264_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
--	static char irq_tab[6][5] __initdata = {
-+	static char irq_tab[6][5] = {
- 		/*INT    INTA   INTB   INTC   INTD */
- 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 5 ISA Bridge */
- 		{ 16+ 3, 16+ 3, 16+ 2, 16+ 2, 16+ 2}, /* IdSel 6 SCSI builtin*/
+-- 
+Qualcomm Datacenter Technologies as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
