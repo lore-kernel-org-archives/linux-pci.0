@@ -1,65 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:55429 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752610AbdJKWfC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2017 18:35:02 -0400
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: bcm-kernel-feedback-list@broadcom.com,
-        linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Gregory Fong <gregory.0xf0@gmail.com>,
-        Kevin Cernekee <cernekee@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Jim Quinlan <jim2101024@gmail.com>
-Subject: [PATCH 6/9] PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for MIPS
-Date: Wed, 11 Oct 2017 18:34:26 -0400
-Message-Id: <1507761269-7017-7-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 3 Oct 2017 23:07:58 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Daniel Drake <drake@endlessm.com>
+cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        x86@kernel.org, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, linux@endlessm.com
+Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
+ allocation
+In-Reply-To: <alpine.DEB.2.20.1710021817500.9529@nanos>
+Message-ID: <alpine.DEB.2.20.1710032306170.2278@nanos>
+References: <alpine.DEB.2.20.1709271555430.2027@nanos> <20171002085732.4039-1-drake@endlessm.com> <alpine.DEB.2.20.1710021540030.2185@nanos> <alpine.DEB.2.20.1710021817500.9529@nanos>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add MIPS as an arch that supports PCI_MSI_IRQ_DOMAIN and add
-generation of msi.h in the MIPS arch.
+On Mon, 2 Oct 2017, Thomas Gleixner wrote:
+> On Mon, 2 Oct 2017, Thomas Gleixner wrote:
+> > On Mon, 2 Oct 2017, Daniel Drake wrote:
+> >   2) The affinity setting of straight MSI interrupts (w/o remapping) on x86
+> >      requires to make the affinity change from the interrupt context of the
+> >      current active vector in order not to lose interrupts or worst case
+> >      getting into a stale state.
+> > 
+> >      That works for single vectors, but trying to move all vectors in one
+> >      go is more or less impossible, as there is no reliable way to
+> >      determine that none of the other vectors is on flight.
+> > 
+> >      There might be some 'workarounds' for that, but I rather avoid that
+> >      unless we get an official documented one from Intel/AMD.
+> 
+> Thinking more about it. That might be actually a non issue for MSI, but we
+> have that modus operandi in the current code and we need to address that
+> first before even thinking about multi MSI support.
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
----
- arch/mips/include/asm/Kbuild | 1 +
- drivers/pci/Kconfig          | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+But even if its possible, it's very debatable whether it's worth the effort
+when this driver just can use the legacy INTx.and be done with it.
 
-diff --git a/arch/mips/include/asm/Kbuild b/arch/mips/include/asm/Kbuild
-index 7c8aab2..8c78ba7 100644
---- a/arch/mips/include/asm/Kbuild
-+++ b/arch/mips/include/asm/Kbuild
-@@ -9,6 +9,7 @@ generic-y += irq_work.h
- generic-y += local64.h
- generic-y += mcs_spinlock.h
- generic-y += mm-arch-hooks.h
-+generic-y += msi.h
- generic-y += parport.h
- generic-y += percpu.h
- generic-y += preempt.h
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index c32a77f..927c335 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -25,7 +25,7 @@ config PCI_MSI
- 	   If you don't know what to do here, say Y.
- 
- config PCI_MSI_IRQ_DOMAIN
--	def_bool ARC || ARM || ARM64 || X86
-+	def_bool ARC || ARM || ARM64 || MIPS || X86
- 	depends on PCI_MSI
- 	select GENERIC_MSI_IRQ_DOMAIN
- 
--- 
-1.9.0.138.g2de3478
+Thanks,
+
+	tglx
