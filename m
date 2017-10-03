@@ -1,132 +1,55 @@
-Return-Path: <SRS0=FLlJ=BM=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=FLlJ=BM=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-Path: <SRS0=bx15=BC=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=bx15=BC=linutronix.de=tglx@kernel.org>
+Date: Tue, 3 Oct 2017 23:46:26 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>, linux-kernel@vger.kernel.org, bhelgaas@google.com, Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org, dianders@chromium.org, linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-pm@vger.kernel.org, Tony Lindgren <tony@atomide.com>
-Subject: Re: [PATCH v5 1/3] PCI: rockchip: Add support for pcie wake irq
-Date: Fri, 13 Oct 2017 15:21:41 +0200
-Message-ID: <2453698.N4jfPaHx71@aspire.rjw.lan>
-In-Reply-To: <20171013030441.GA25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170911151029.25185-1-jeffy.chen@rock-chips.com> <20170911151029.25185-2-jeffy.chen@rock-chips.com> <20171013030441.GA25517@bhelgaas-glaptop.roam.corp.google.com>
+cc: Daniel Drake <drake@endlessm.com>, linux-kernel@vger.kernel.org,
+    linux-pci@vger.kernel.org, x86@kernel.org, linux-wireless@vger.kernel.org,
+    ath9k-devel@qca.qualcomm.com, linux@endlessm.com
+Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
+ allocation
+In-Reply-To: <20171003213434.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.20.1710032344590.2278@nanos>
+References: <alpine.DEB.2.20.1709271555430.2027@nanos> <20171002085732.4039-1-drake@endlessm.com> <alpine.DEB.2.20.1710021540030.2185@nanos> <alpine.DEB.2.20.1710021817500.9529@nanos> <alpine.DEB.2.20.1710032306170.2278@nanos>
+ <20171003213434.GI25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Tony]
+On Tue, 3 Oct 2017, Bjorn Helgaas wrote:
+> On Tue, Oct 03, 2017 at 11:07:58PM +0200, Thomas Gleixner wrote:
+> > On Mon, 2 Oct 2017, Thomas Gleixner wrote:
+> > > On Mon, 2 Oct 2017, Thomas Gleixner wrote:
+> > > > On Mon, 2 Oct 2017, Daniel Drake wrote:
+> > > >   2) The affinity setting of straight MSI interrupts (w/o remapping) on x86
+> > > >      requires to make the affinity change from the interrupt context of the
+> > > >      current active vector in order not to lose interrupts or worst case
+> > > >      getting into a stale state.
+> > > > 
+> > > >      That works for single vectors, but trying to move all vectors in one
+> > > >      go is more or less impossible, as there is no reliable way to
+> > > >      determine that none of the other vectors is on flight.
+> > > > 
+> > > >      There might be some 'workarounds' for that, but I rather avoid that
+> > > >      unless we get an official documented one from Intel/AMD.
+> > > 
+> > > Thinking more about it. That might be actually a non issue for MSI, but we
+> > > have that modus operandi in the current code and we need to address that
+> > > first before even thinking about multi MSI support.
+> > 
+> > But even if its possible, it's very debatable whether it's worth the effort
+> > when this driver just can use the legacy INTx.and be done with it.
+> 
+> Daniel said "Legacy interrupts do not work on that module, so MSI
+> support is required," so I assume he means INTx doesn't work.  Maybe
 
-On Friday, October 13, 2017 5:04:41 AM CEST Bjorn Helgaas wrote:
-> [+cc Rafael, linux-pm]
-> 
-> On Mon, Sep 11, 2017 at 11:10:27PM +0800, Jeffy Chen wrote:
-> > Add support for PCIE_WAKE pin in rockchip pcie driver.
-> > 
-> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> > ---
-> > 
-> > Changes in v5:
-> > Rebase
-> > 
-> > Changes in v3:
-> > Fix error handling
-> > 
-> > Changes in v2:
-> > Use dev_pm_set_dedicated_wake_irq
-> >         -- Suggested by Brian Norris <briannorris@chromium.com>
-> > 
-> >  drivers/pci/host/pcie-rockchip.c | 19 +++++++++++++++++--
-> >  1 file changed, 17 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> > index 9051c6c8fea4..a8b7272597a7 100644
-> > --- a/drivers/pci/host/pcie-rockchip.c
-> > +++ b/drivers/pci/host/pcie-rockchip.c
-> > @@ -37,6 +37,7 @@
-> >  #include <linux/pci_ids.h>
-> >  #include <linux/phy/phy.h>
-> >  #include <linux/platform_device.h>
-> > +#include <linux/pm_wakeirq.h>
-> >  #include <linux/reset.h>
-> >  #include <linux/regmap.h>
-> >  
-> > @@ -995,6 +996,15 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
-> >  		return err;
-> >  	}
-> >  
-> > +	/* Must init wakeup before setting dedicated wakeup irq. */
-> > +	device_init_wakeup(dev, true);
-> > +	irq = platform_get_irq_byname(pdev, "wakeup");
-> > +	if (irq >= 0) {
-> > +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
-> 
-> I'm a little skeptical about dev_pm_set_dedicated_wake_irq(), not
-> because I know anything at all about it, but because there are only
-> five callers in the whole tree, three of which are in UART code, and
-> none in anything resembling PCI code.
-> 
-> Is Rockchip really that special, or are we going about this the wrong
-> way?
-> 
-> > +		if (err)
-> > +			dev_err(dev, "failed to setup PCIe wakeup IRQ\n");
-> > +	}
-> > +
-> >  	return 0;
-> 
-> The above could be structured as:
-> 
->   irq = platform_get_irq_byname(pdev, "wakeup");
->   if (irq < 0)
->     return 0;
-> 
->   device_init_wakeup(dev, true);
->   err = dev_pm_set_dedicated_wake_irq(dev, irq);
->   if (err) {
->     dev_pm_clear_wake_irq(dev);
->     device_init_wakeup(dev, false);
->   }
-> 
->   return 0;
-> 
-> to unindent the mainline non-error code.
-> 
-> >  }
-> >  
-> > @@ -1542,11 +1552,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
-> >  
-> >  	err = rockchip_pcie_parse_dt(rockchip);
-> >  	if (err)
-> > -		return err;
-> > +		goto err_disable_wake;
-> >  
-> >  	err = rockchip_pcie_enable_clocks(rockchip);
-> >  	if (err)
-> > -		return err;
-> > +		goto err_disable_wake;
-> >  
-> >  	err = rockchip_pcie_set_vpcie(rockchip);
-> >  	if (err) {
-> > @@ -1656,6 +1666,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
-> >  		regulator_disable(rockchip->vpcie0v9);
-> >  err_set_vpcie:
-> >  	rockchip_pcie_disable_clocks(rockchip);
-> > +err_disable_wake:
-> > +	dev_pm_clear_wake_irq(dev);
-> > +	device_init_wakeup(dev, false);
-> 
-> I think this error cleanup should be done in rockchip_pcie_setup_irq()
-> as shown above.  There's no real connection between
-> rockchip_pcie_probe() and the wake setup.
-> 
-> >  	return err;
-> >  }
-> >  
-> > @@ -1682,6 +1695,8 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
-> >  	if (!IS_ERR(rockchip->vpcie0v9))
-> >  		regulator_disable(rockchip->vpcie0v9);
-> >  
-> > +	dev_pm_clear_wake_irq(dev);
-> > +	device_init_wakeup(dev, false);
-> >  	return 0;
-> >  }
-> >  
-> 
+Hmm, I missed that detail obviously.
+
+> the driver could poll?  I don't know how much slower that would be,
+> but at least it would penalize the broken device, not everybody.
+
+That would definitely be prefered.
+
+Thanks,
+
+	tglx
