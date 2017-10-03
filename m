@@ -1,119 +1,49 @@
-Return-Path: <SRS0=leV3=BR=nvidia.com=mmaddireddy@kernel.org>
-Return-Path: <SRS0=leV3=BR=nvidia.com=mmaddireddy@kernel.org>
-Subject: Re: [PATCH V2 2/4] PCI: tegra: Add Tegra186 PCIe support
-To: Bjorn Helgaas <helgaas@kernel.org>, Thierry Reding
-	<thierry.reding@gmail.com>
-CC: <bhelgaas@google.com>, <jonathanh@nvidia.com>,
-	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<mperttunen@nvidia.com>
-References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
- <1506513517-25870-3-git-send-email-mmaddireddy@nvidia.com>
- <20171017173428.GE5641@bhelgaas-glaptop.roam.corp.google.com>
- <20171017202749.GB10482@ulmo>
- <20171018132752.GO5641@bhelgaas-glaptop.roam.corp.google.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <9ceb5f5c-7fcc-d729-e5d8-d13142bee8ed@nvidia.com>
-Date: Wed, 18 Oct 2017 19:44:12 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 3 Oct 2017 10:09:54 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Govindarajulu Varadarajan <gvaradar@cisco.com>
+Cc: Christoph Hellwig <hch@lst.de>, benve@cisco.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jlbec@evilplan.org, mingo@redhat.com,
+        peterz@infradead.org, okaya@codeaurora.org
+Subject: Re: [PATCH V2] PCI: AER: fix deadlock in do_recovery
+Message-ID: <20171003080954.GA19637@lst.de>
+References: <20170930054938.43271-1-gvaradar@cisco.com> <20171001075514.GA11554@lst.de> <alpine.LNX.2.20.1710021606440.30867@cae-iprp-alln-lb.cisco.com>
 MIME-Version: 1.0
-In-Reply-To: <20171018132752.GO5641@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.20.1710021606440.30867@cae-iprp-alln-lb.cisco.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Oct 02, 2017 at 05:14:09PM -0700, Govindarajulu Varadarajan wrote:
+>
+> I would avoid increasing the size of pci_dev. The list_head would be empty after
+> we call aer_pci_walk_bus(). We already have pci_bus *subordinate to link all the
+> 'device's. Making list_head available to others would require a lock. I would
+> avoid that.
 
+It does not require a new lock if you clearly document the concurrency
+semantics.  And I'd much rather add a hlist_node (which should be enough
+if we want to be small) to pci_dev than requiring these additional
+memory allocations and boiler plate code in an error recovery situation.
 
-On 18-Oct-17 6:57 PM, Bjorn Helgaas wrote:
-> On Tue, Oct 17, 2017 at 10:27:49PM +0200, Thierry Reding wrote:
->> On Tue, Oct 17, 2017 at 12:34:28PM -0500, Bjorn Helgaas wrote:
->>> On Wed, Sep 27, 2017 at 05:28:35PM +0530, Manikanta Maddireddy wrote:
->>>> UPHY programming is performed by BPMP, PHY enable calls are
->>>> not required for Tegra186 PCIe. Power partition ungate is
->>>> done by BPMP powergate driver.
->>>>
->>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->>>> Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
->>>> Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
->>>> ---
->>>> V2: Add soc->program_uphy check for phy_exit call
->>>>  drivers/pci/host/pci-tegra.c | 132 +++++++++++++++++++++++++++++++++++--------
->>>>  1 file changed, 108 insertions(+), 24 deletions(-)
->>>
->>>> @@ -1012,10 +1016,12 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->>>>  		afi_writel(pcie, value, AFI_FUSE);
->>>>  	}
->>>>  
->>>> -	err = tegra_pcie_phy_power_on(pcie);
->>>> -	if (err < 0) {
->>>> -		dev_err(dev, "failed to power on PHY(s): %d\n", err);
->>>> -		return err;
->>>> +	if (soc->program_uphy) {
->>>> +		err = tegra_pcie_phy_power_on(pcie);
->>>> +		if (err < 0) {
->>>> +			dev_err(dev, "failed to power on PHY(s): %d\n", err);
->>>> +			return err;
->>>> +		}
->>>
->>> This looks good: it's obvious that the previously-supported devices
->>> continue to work the same way because you set ".program_uphy = true"
->>> for them.  (It would be even more obvious if you changed the sense so
->>> that only the new device had to add this initializaer, but in general
->>> I prefer the positive logic as you have here, and I did verify that
->>> you added the initializer for all tegra_pcie_soc variants.)
->>>
->>>> @@ -1048,19 +1054,23 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->>>>  static void tegra_pcie_power_off(struct tegra_pcie *pcie)
->>>>  {
->>>>  	struct device *dev = pcie->dev;
->>>> +	const struct tegra_pcie_soc *soc = pcie->soc;
->>>>  	int err;
->>>>  
->>>>  	/* TODO: disable and unprepare clocks? */
->>>>  
->>>> -	err = tegra_pcie_phy_power_off(pcie);
->>>> -	if (err < 0)
->>>> -		dev_err(dev, "failed to power off PHY(s): %d\n", err);
->>>> +	if (soc->program_uphy) {
->>>> +		err = tegra_pcie_phy_power_off(pcie);
->>>> +		if (err < 0)
->>>> +			dev_err(dev, "failed to power off PHY(s): %d\n", err);
->>>> +	}
->>>>  
->>>>  	reset_control_assert(pcie->pcie_xrst);
->>>>  	reset_control_assert(pcie->afi_rst);
->>>>  	reset_control_assert(pcie->pex_rst);
->>>>  
->>>> -	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
->>>> +	if (!dev->pm_domain)
->>>> +		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
->>>
->>> But this one isn't obvious because nothing in your patch obviously
->>> affects dev->pm_domain, so I can't tell whether this is safe.  It's
->>> worth a changelog comment to help justify this.
+>
+>>> +static void aer_pci_walk_bus(struct pci_bus *top,
+>>> +			     int (*cb)(struct pci_dev *, void *),
+>>> +			     struct aer_broadcast_data *result)
+>>> +{
+>>> +	HLIST_HEAD(dev_hlist);
+>>> +	struct hlist_node *tmp;
+>>> +	struct aer_device_list *entry;
 >>
->> The last sentence in the commit message is what this is about. Maybe it
->> should be more verbose:
+>> Do we want to offer this as generic PCIe functionality?  If not we can
+>> probably hardcode the callback and callback data to simplify this a lot.
 >>
->> 	Since the BPMP controls the powergates on Tegra186, there is no
->> 	need to manually power on and off the PCIe power partition. The
->> 	BPMP generic power domain driver takes care of it instead.
-> 
-> If you know Tegra intimately, maybe that clarifies it.  I don't, so my
-> problem is that there's nothing in the patch that helps me verify
-> this.  I infer that maybe there's something different in the DT that
-> means dev->pm_domain will be set for Tegra186, but not for other
-> variants?
-> 
-> There should be something that helps the reader connect the dots.
-> 
-> Bjorn
-> 
-Hi Bjorn,
+>
+> I could not find any other code which aquires device_lock in pci_walk_bus cb
+> function. Can you tell me how we can hardcore callback and callback data here?
 
-Till tegra210 pmc driver provides direct powergate power ON/OFF functions.
-
-In tegra186.dtsi power-domains property is added in pcie@10003000 DT node. reference: https://patchwork.ozlabs.org/patch/819113/
-powergate-bpmp.c is the pm domain provider for pcie powergate. 
-Platform driver will look for pm domain provider of Tegra pcie host driver and sets dev->pm_domains.
-powergate-bpmp.c driver registers powergate power ON/OFF functions to generic PD power_on/powerr_off callback functions.
-Generic power domain will take care of calling power_on before Tegra PCIe probe.
-
-So in this patch I used dev->pm_domain to skip pmc driver calls.
+The word is hardcode.  If you follow the above suggestion we won't
+really need the aer_pci_walk_bus helper but could just open code most
+of the code.  Or maybe just keep passing the cb for simplicity - it
+was just extending on the above idea.
