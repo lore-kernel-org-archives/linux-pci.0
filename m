@@ -1,191 +1,175 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 17 Oct 2017 15:24:18 -0500
-From: Rob Herring <robh@kernel.org>
-To: Jim Quinlan <jim2101024@gmail.com>
-Subject: Re: [PATCH 2/9] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
- device
-Message-ID: <20171017202418.ykve2o4zvuwxjdgj@rob-hp-laptop>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-3-git-send-email-jim2101024@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 3 Oct 2017 14:17:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        "David S. Miller" <davem@davemloft.net>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Matt Turner <mattst88@gmail.com>
+Subject: Re: [PATCH v2] drivers/ide/pci: Fix legacy IRQ assignment
+Message-ID: <20171003191759.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1507761269-7017-3-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
- Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, bcm-kernel-feedback-list@broadcom.com,
- Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 06:34:22PM -0400, Jim Quinlan wrote:
-> The DT bindings description of the Brcmstb PCIe device is described.  This
-> node can be used by almost all Broadcom settop box chips, using
-> ARM, ARM64, or MIPS CPU architectures.
+On Mon, Oct 02, 2017 at 11:52:47AM +0100, Lorenzo Pieralisi wrote:
+> Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
+> possible to define IRQ mapping functions on a per PCI host bridge basis.
 > 
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> Actual IRQ allocation is carried out by the pci_assign_irq() function in
+> pci_device_probe() - to make sure a device is assigned an IRQ only if it
+> is probed (ie match a driver); it retrieves a struct pci_host_bridge*
+> for a given PCI device and through {map/swizzle}_irq() it carries out
+> the PCI IRQ allocation.
+> 
+> The code conversion to struct pci_host_bridge {map/swizzle}_irq() hooks
+> and pci_assign_irq() to deal with legacy IRQs in
+> 
+> commit 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
+> pci_device_probe()")
+> 
+> did not take into account that the IDE subsystem relies on a special
+> purpose IDE PCI layer, configured by CONFIG_IDEPCI_PCIBUS_ORDER to force
+> devices probe ordering by sidestepping the core PCI bus layer entirely
+> (and therefore pci_device_probe()) by executing the registered IDE PCI
+> drivers probe routines (ie registered with ide_pci_register_driver())
+> through ide_scan_pcidev().
+> 
+> Since this IDE PCI specific probe mechanism bypasses the PCI core
+> code generic probing (ie pci_device_probe()) it also misses the
+> pci_assign_irq() call (among other PCI initialization functions);
+> this triggers IDE PCI devices initialization failures caused
+> by the missing IRQ allocation:
+> 
+> ide0: disabled, no IRQ
+> ide0: failed to initialize IDE interface
+> ide0: disabling port
+> cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
+> CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
+> cmd64x 0000:00:02.0: can't reserve resources
+> CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
+> ide_generic: please use "probe_mask=0x3f" module parameter for probing
+> all legacy ISA IDE ports
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
+> sysfs: cannot create duplicate filename '/class/ide_port/ide0'
+> ...
+> 
+> Trace:
+> [<fffffc00003308a0>] __warn+0x160/0x190
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
+> [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
+> [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
+> [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
+> [<fffffc00005ba690>] device_create+0x50/0x70
+> [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005ba2a0>] device_register+0x20/0x50
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005df944>] ide_host_add+0x64/0xe0
+> [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
+> [<fffffc0000310288>] do_one_initcall+0x68/0x260
+> [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> 
+> ---[ end trace 24a70433c3e4d374 ]---
+> ide0: disabling port
+> 
+> Fix the IRQ allocation issue by adding a pci_assign_irq() call in the
+> ide_scan_pcidev() function before probing the IDE PCI drivers, so that
+> IRQs for a given PCI device are allocated for the IDE PCI drivers to
+> use them for device configuration.
+> 
+> Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in pci_device_probe()")
+> Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Richard Henderson <rth@twiddle.net>
+> Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+> Cc: David S. Miller <davem@davemloft.net>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Matt Turner <mattst88@gmail.com>
+
+Applied with Guenter's tested-by, Bartlomiej's reviewed-by, and
+David's ack to for-linus for v4.14, thanks!
+
+I edited the changelog as follows (so Google can find this
+discussion):
+
+  ide: fix IRQ assignment for PCI bus order probing
+  
+  We used to assign IRQs for all devices at boot-time, before any drivers
+  claimed devices.  The following commits:
+  
+    30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in pci_device_probe()")
+    0e4c2eeb758a ("alpha/PCI: Replace pci_fixup_irqs() call with host bridge IRQ mapping hooks")
+  
+  changed this so we now call pci_assign_irq() from pci_device_probe() when
+  we call a driver's probe method.
+  
+  The ide_scan_pcibus() path (enabled by CONFIG_IDEPCI_PCIBUS_ORDER) bypasses
+  pci_device_probe() so it can guarantee devices are claimed in order of PCI
+  bus address.  It calls the driver's probe method directly, so it misses the
+  pci_assign_irq() call (and other PCI initialization functions), which
+  causes failures like this:
+
+
 > ---
->  .../devicetree/bindings/pci/brcmstb-pci.txt        | 106 +++++++++++++++++++++
->  1 file changed, 106 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+> v1->v2
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> new file mode 100644
-> index 0000000..2f699da
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> @@ -0,0 +1,106 @@
-> +Brcmstb PCIe Host Controller Device Tree Bindings
-> +
-> +Introduction:
-> +  The brcmstb host controller closely follows the example set in
-> +
-> +	[1] http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
-> +
-> +  The rest of this document explains some added customizations and
-> +  offers an example Brcmstb PCIe host controller DT node.
-> +
-> +Required Properties:
-> +  reg -- the register start address and length for the PCIe block.
-> +      Additional start,length pairs may be specified for clock addresses.
-
-Kind of vague and why do you need clock addresses and the clock binding?
-
-Also, typically the config space is defined here? Is that missing or you 
-don't support memory mapped config space?
-
-> +  interrupts -- two interrupts are specified; the first interrupt is for
-> +      the PCI host controller and the second is for MSI if the built-in
-> +      MSI controller is to be used.
-> +  interrupt-names -- names of the interrupts (above): "pcie" and "msi".
-> +  compatible -- must be one of: "brcm,bcm7425-pcie", "brcm,bcm7435-pcie",
-> +      or "brcm,bcm7278-pcie".
-
-One compatible per line.
-
-> +  #address-cells -- the number of address cells for PCI-space.
-> +  #size-cells -- the number of size cells for PCI-space.
-> +  ranges -- See [1]; a specification of the outbound windows for the host
-> +      controller.  Each outbound window is described by a n-tuple:
-> +          (3 cells) -- PCIe space start address; one cell for attributes
-> +                       and two cells for the 64-bit PCIe address.
-> +          (x cells) -- CPU/System start address, number of cells is determined
-> +                       by the parent node's #address-cells.
-> +          (y cells) -- Size of region, number of cells determined by the
-> +                       parent node's #size-cells.
-> +      Due to hardware limitations, there may be a maximum of four
-> +      non-contiguous ranges specified.
-> +  #interrupt-cells -- number of cells used to describe the interrupt.
-
-How many cells?
-
-> +  interrupt-map-mask -- see [1]; four cells, the first three are zero
-> +      for our uses and the fourth cell is the mask (val = 0x7) for
-> +      the legacy interrupt number [1..4].
-> +  interrupt-map -- See [1]; there are four interrupts (INTA, INTB,
-> +      INTC, and INTD) to be mapped; each interrupt requires 5 cells
-> +      plus the size of the interrupt specifier.
-> +  linux,pci-domain -- the domain of the host controller.
-> +
-> +Optional Properties:
-> +  clocks -- list of clock phandles.  If specified, this should list one
-> +      clock.
-> +  clock-names -- the "local" names of the clocks specified in 'clocks'.  Note
-> +      that if the 'clocks' property is given, 'clock-names' is mandatory,
-> +      and the name of the clock is expected to be "sw_pcie".
-> +  dma-ranges -- Similar in structure to ranges, each dma region is
-> +      specified with a n-tuple.  Dma-regions describe the inbound
-> +      accesses from EP to RC; it translates the pci address that the
-> +      EP "sees" to the CPU address in memory.  This property is needed
-> +      because the design of the Brcmstb memory subsystem often precludes
-> +      idenity-mapping between CPU address space and PCIe address space.
-> +      Each range is described by a n-tuple:
-> +          (3 cells) -- PCIe space start address; one cell for attributes
-> +                       and two cells for the 64-bit PCIe address.
-> +          (x cells) -- CPU/System start address, number of cells is determined
-> +                       by the parent node's #address-cells.
-> +          (y cells) -- Size of region, number of cells determined by the
-> +                       parent node's #size-cells.
-
-There's no need to describe standard properties. Just put whatever is 
-specific to your platform. That applies throughout this doc.
-
-> +  msi-parent -- if MSI is to be used, this must be a phandle to the
-> +      msi-parent.  If this prop is set to the phandle of the PCIe
-> +      node, or if the msi-parent prop is missing, the PCIE controller
-> +      will attempt to use its built in MSI controller.
-> +  msi-controller -- this property should only be specified if the
-> +      PCIe controller is using its internal MSI controller.
-> +  brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
-> +  brcm,gen --  (integer) indicates desired generation of link:
-> +      1 => 2.5 Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps.
-
-We have a standard property for this IIRC.
-
-> +  supply-names -- the names of voltage regulators that the root
-> +      complex should turn off/on/on on suspend/resume/boot.  This
-> +      is a string list.
-> +  supplies -- A collection of phandles to a regulator nodes, see
-> +      Documentation/devicetree/bindings/regulator/ for specific
-> +      bindings. The number and order of phandles must match
-> +      exactly the number of strings in the "supply-names" property.
-
-This is not the regulator binding. Use the standard binding.
-
-> +
-> +Example Node:
-> +
-> +pcie0:	pcie@f0460000 {
-> +		reg = <0x0 0xf0460000 0x0 0x9310>;
-> +		interrupts = <0x0 0x0 0x4>;
-> +		compatible = "brcm,pci-plat-dev";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
-> +			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0 0 0 1 &intc 0 47 3
-> +				 0 0 0 2 &intc 0 48 3
-> +				 0 0 0 3 &intc 0 49 3
-> +				 0 0 0 4 &intc 0 50 3>;
-> +		interrupt-names = "pcie_0_inta",
-> +				  "pcie_0_intb",
-> +				  "pcie_0_intc",
-> +				  "pcie_0_intd";
-> +		clocks = <&sw_pcie0>;
-> +		clock-names = "sw_pcie";
-> +		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
-> +		msi-controller;         /* use PCIe's internal MSI controller */
-> +		brcm,ssc;
-> +		brcm,gen = <1>;
-> +		supply-names = "vreg-wifi-pwr";
-> +		supplies = <&vreg-wifi-pwr>;
-> +		linux,pci-domain = <0>;
-> +	};
+> - Moved fix from PCI core code to IDE subsystem following further
+>   debugging and mailing list discussions
+> - Rebased against v4.14-rc3
+> 
+>  drivers/ide/ide-scan-pci.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
+> index 86aa88a..acf8748 100644
+> --- a/drivers/ide/ide-scan-pci.c
+> +++ b/drivers/ide/ide-scan-pci.c
+> @@ -56,6 +56,7 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+>  {
+>  	struct list_head *l;
+>  	struct pci_driver *d;
+> +	int ret;
+>  
+>  	list_for_each(l, &ide_pci_drivers) {
+>  		d = list_entry(l, struct pci_driver, node);
+> @@ -63,10 +64,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+>  			const struct pci_device_id *id =
+>  				pci_match_id(d->id_table, dev);
+>  
+> -			if (id != NULL && d->probe(dev, id) >= 0) {
+> -				dev->driver = d;
+> -				pci_dev_get(dev);
+> -				return 1;
+> +			if (id != NULL) {
+> +				pci_assign_irq(dev);
+> +				ret = d->probe(dev, id);
+> +				if (ret >= 0) {
+> +					dev->driver = d;
+> +					pci_dev_get(dev);
+> +					return 1;
+> +				}
+>  			}
+>  		}
+>  	}
 > -- 
-> 1.9.0.138.g2de3478
+> 2.4.12
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
