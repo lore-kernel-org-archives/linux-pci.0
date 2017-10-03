@@ -1,179 +1,224 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 25 Oct 2017 15:16:19 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:32822 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750820AbdJCTOK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Oct 2017 15:14:10 -0400
+Date: Tue, 3 Oct 2017 14:13:59 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Scott Branden <scott.branden@broadcom.com>
-Subject: Re: [PATCH 6/8] PCI: host: brcmstb: add MSI capability
-Message-ID: <20171025201619.GO21840@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
- <1508868949-16652-7-git-send-email-jim2101024@gmail.com>
- <5406ab92-c1da-f6fa-083d-82d1027130ea@gmail.com>
- <CANCKTBvAqu-godc03BiAt+9hxAoWABLVCtBzaA9ZWLJgXnQ3Fg@mail.gmail.com>
- <20171025172310.GN21840@bhelgaas-glaptop.roam.corp.google.com>
- <3c0219a5-6b4d-b7e4-c2a4-83eba18ae06a@broadcom.com>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] ide: pci: free PCI BARs on initialization failure
+Message-ID: <20171003191359.GB25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20171003121716epcas2p293688077d6d66b6393f029981adb6108@epcas2p2.samsung.com>
+ <2124910.9XpgDMsQpd@amdc3058>
 MIME-Version: 1.0
-In-Reply-To: <3c0219a5-6b4d-b7e4-c2a4-83eba18ae06a@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Christoph Hellwig <hch@lst.de>, Florian Fainelli <f.fainelli@gmail.com>,
- Kevin Cernekee <cernekee@gmail.com>, Jim Quinlan <jim2101024@gmail.com>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- linux-pci <linux-pci@vger.kernel.org>, devicetree@vger.kernel.org,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- Russell King <rmk+kernel@armlinux.org.uk>, Rob Herring <robh+dt@kernel.org>,
- Gregory Fong <gregory.0xf0@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org, Scott Branden <sbranden@broadcom.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2124910.9XpgDMsQpd@amdc3058>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 25, 2017 at 11:40:47AM -0700, Scott Branden wrote:
-> Hi Bjorn,
+[+cc linux-pci]
+
+On Tue, Oct 03, 2017 at 02:17:13PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> Recent pci_assign_irq() changes uncovered a problem with missing
+> freeing of PCI BARs on PCI IDE host initialization failure:
 > 
+> ide0: disabled, no IRQ
+> ide0: failed to initialize IDE interface
+> ide0: disabling port
+> cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
+> CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
+> cmd64x 0000:00:02.0: can't reserve resources
+> CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
 > 
-> On 17-10-25 10:23 AM, Bjorn Helgaas wrote:
-> >[+cc Ray, Scott, Jon]
-> >
-> >On Wed, Oct 25, 2017 at 11:28:07AM -0400, Jim Quinlan wrote:
-> >>On Tue, Oct 24, 2017 at 2:57 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
-> >>>Hi Jim,
-> >>>
-> >>>On 10/24/2017 11:15 AM, Jim Quinlan wrote:
-> >>>>This commit adds MSI to the Broadcom STB PCIe host controller. It does
-> >>>>not add MSIX since that functionality is not in the HW.  The MSI
-> >>>>controller is physically located within the PCIe block, however, there
-> >>>>is no reason why the MSI controller could not be moved elsewhere in
-> >>>>the future.
-> >>>>
-> >>>>Since the internal Brcmstb MSI controller is intertwined with the PCIe
-> >>>>controller, it is not its own platform device but rather part of the
-> >>>>PCIe platform device.
-> >>>>
-> >>>>Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> >>>>---
-> >>>>  drivers/pci/host/Kconfig           |  12 ++
-> >>>>  drivers/pci/host/Makefile          |   1 +
-> >>>>  drivers/pci/host/pci-brcmstb-msi.c | 318 +++++++++++++++++++++++++++++++++++++
-> >>>>  drivers/pci/host/pci-brcmstb.c     |  72 +++++++--
-> >>>>  drivers/pci/host/pci-brcmstb.h     |  26 +++
-> >>>>  5 files changed, 419 insertions(+), 10 deletions(-)
-> >>>>  create mode 100644 drivers/pci/host/pci-brcmstb-msi.c
-> >>>>
-> >>>>diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> >>>>index b9b4f11..54aa5d2 100644
-> >>>>--- a/drivers/pci/host/Kconfig
-> >>>>+++ b/drivers/pci/host/Kconfig
-> >>>>@@ -228,4 +228,16 @@ config PCI_BRCMSTB
-> >>>>       default ARCH_BRCMSTB || BMIPS_GENERIC
-> >>>>       help
-> >>>>         Adds support for Broadcom Settop Box PCIe host controller.
-> >>>>+       To compile this driver as a module, choose m here.
-> >>>>+
-> >>>>+config PCI_BRCMSTB_MSI
-> >>>>+     bool "Broadcom Brcmstb PCIe MSI support"
-> >>>>+     depends on ARCH_BRCMSTB || BMIPS_GENERIC
-> >>>This could probably be depends on PCI_BRCMSTB, which would imply these
-> >>>two conditions. PCI_BRCMSTB_MSI on its own is probably not very useful
-> >>>without the parent RC driver.
-> >>>
-> >>>>+     depends on OF
-> >>>>+     depends on PCI_MSI
-> >>>>+     default PCI_BRCMSTB
-> >>>>+     help
-> >>>>+       Say Y here if you want to enable MSI support for Broadcom's iProc
-> >>>>+       PCIe controller
-> >>>>+
-> >>>>  endmenu
-> >>>>diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> >>>>index c283321..1026d6f 100644
-> >>>>--- a/drivers/pci/host/Makefile
-> >>>>+++ b/drivers/pci/host/Makefile
-> >>>>@@ -23,6 +23,7 @@ obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
-> >>>>  obj-$(CONFIG_VMD) += vmd.o
-> >>>>  obj-$(CONFIG_PCI_BRCMSTB) += brcmstb-pci.o
-> >>>>  brcmstb-pci-objs := pci-brcmstb.o pci-brcmstb-dma.o
-> >>>>+obj-$(CONFIG_PCI_BRCMSTB_MSI) += pci-brcmstb-msi.o
-> >>>Should we combine this file with the brcmstb-pci.o? There is probably no
-> >>>functional difference, except that pci-brcmstb-msi.ko needs to be loaded
-> >>>first, right?
-> >>>--
-> >>>Florian
-> >>If you look at the pci/host/Kconfig you will see that other drivers
-> >>also have a separate MSI config (eg iproc, altera, xgene) so there is
-> >>precedent.  The reason that pci-brcmstb-msi.c is its own file is
-> >>because it depends on an irq function that is not exported.  That is
-> >>why CONFIG_PCI_BRCMSTB_MSI is bool, and CONFIG_PCI_BRCMSTB is
-> >>tristate.  -- Jim
-> >There is precedent, but that doesn't mean I like it :)
-> >I would strongly prefer one file per driver when possible.
-> >
-> >Take iproc for example.  iproc-msi.c is enabled by a Kconfig bool.  It
-> >contains a bunch of code with the only external entry points being
-> >iproc_msi_init() and iproc_msi_exit().  These are only called via
-> >iproc_pcie_bcma_probe() or iproc_pcie_pltfm_probe(), both of which are
-> >tristate.  So iproc-msi.c is only compiled if CONFIG_IPROC_BCMA or
-> >CONFIG_IPROC_PLATFORM are enabled, but all that text is loaded even if
-> >neither module is loaded, which seems suboptimal.
-> >
-> >I don't care if you have several config options to enable the BCMA
-> >probe and the platform probe (although these could probably be
-> >replaced in the code by a simple "#ifdef CONFIG_BCMA" and "#ifdef
-> >CONFIG_OF"), and making CONFIG_PCIE_IPROC tristate so it can be a
-> >module makes sense.  But I think it would be better to put all the
-> >code in one file instead of five, and probably remove
-> >CONFIG_PCIE_IPROC_MSI.  Maybe this requires exporting some IRQ
-> >function that currently isn't exported.  But that seems like a simpler
-> >solution than what we currently have.
-> Placing pcie-iproc-bcma.c in its own file is useful in being able to
-> read the code that is actually used.  BCMA is really unnecessary if
-> a few platforms stopped using BCMA and declared everything via
-> devicetree or ACPI.  Same with pcie-iproc-platform.c.  Both keep the
-> mess out of pcie-iproc.c.
+> Fix the problem by adding missing freeing of PCI BARs to
+> ide_setup_pci_controller() and ide_pci_init_two().
+> 
+> Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Richard Henderson <rth@twiddle.net>
+> Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Matt Turner <mattst88@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Maybe.  Both pcie-iproc-bcma.c and pcie-iproc-platform.c are small
-(280 lines combined) relative to pcie-iproc.c + pcie-iproc-msi.c (2150
-lines combined), and keeping them separate requires pcie-iproc.h,
-which could otherwise be folded into pcie-iproc.c.  So I'm still a
-little skeptical.  You think of combining them as a mess, but I think
-of it as a big convenience because I could see all the iproc-related
-code in one place :)
+Applied with Guenter's tested-by to for-linus for v4.14, thanks!
 
-> It looks like pcie-iproc-msi.c followed existing pci drivers in
-> place.  So if msi was cleaned up through the entire pci drivers then
-> yes it would make sense to remove CONFIG_PCIE_IPROC_MSI and combine
-> code in pcie-iproc.c.  But I think leaving the bcma and platform
-> code in their own files makes it easier for us to work with the code
-> rather than placing unused code in ifdefs in the same file.
-
-But I do object *more* to putting MSI in a separate file, especially
-given the fact that all PCIe devices that generate interrupts must
-support MSI.  So any reasonable PCIe root complex must also support
-MSI, and I don't really see the benefit of configuring and building it
-separately.
-
-Anyway, iproc is already in the tree, and we *could* maybe change
-something eventually.
-
-The question we need to decide now is about how brcmstb should be
-structured.  Somebody mentioned an IRQ function that would have to be
-exported for the brcmstb main driver & MSI pieces to be combined.  I
-don't know what specifically that is, but I thought maybe iproc had
-the same issue.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+> This should fix problem with reserving PCI resources on a secondary
+> PCI device probe attempt (please test when pci_assign_irq() fix is
+> not present and "[PATCH] ide: add missing hwif->portdev freeing on
+> hwif_init() failure" is applied).
+> 
+> v2:
+> - Added missing 'goto out;' in ide_setup_pci_controller()
+> 
+>  drivers/ide/setup-pci.c |   63 ++++++++++++++++++++++++++++++------------------
+>  1 file changed, 40 insertions(+), 23 deletions(-)
+> 
+> Index: b/drivers/ide/setup-pci.c
+> ===================================================================
+> --- a/drivers/ide/setup-pci.c	2017-10-03 14:13:02.391779813 +0200
+> +++ b/drivers/ide/setup-pci.c	2017-10-03 14:13:59.051779867 +0200
+> @@ -179,6 +179,7 @@ EXPORT_SYMBOL_GPL(ide_setup_pci_noise);
+>  /**
+>   *	ide_pci_enable	-	do PCI enables
+>   *	@dev: PCI device
+> + *	@bars: PCI BARs mask
+>   *	@d: IDE port info
+>   *
+>   *	Enable the IDE PCI device. We attempt to enable the device in full
+> @@ -189,9 +190,10 @@ EXPORT_SYMBOL_GPL(ide_setup_pci_noise);
+>   *	Returns zero on success or an error code
+>   */
+>  
+> -static int ide_pci_enable(struct pci_dev *dev, const struct ide_port_info *d)
+> +static int ide_pci_enable(struct pci_dev *dev, int bars,
+> +			  const struct ide_port_info *d)
+>  {
+> -	int ret, bars;
+> +	int ret;
+>  
+>  	if (pci_enable_device(dev)) {
+>  		ret = pci_enable_device_io(dev);
+> @@ -216,18 +218,6 @@ static int ide_pci_enable(struct pci_dev
+>  		goto out;
+>  	}
+>  
+> -	if (d->host_flags & IDE_HFLAG_SINGLE)
+> -		bars = (1 << 2) - 1;
+> -	else
+> -		bars = (1 << 4) - 1;
+> -
+> -	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0) {
+> -		if (d->host_flags & IDE_HFLAG_CS5520)
+> -			bars |= (1 << 2);
+> -		else
+> -			bars |= (1 << 4);
+> -	}
+> -
+>  	ret = pci_request_selected_regions(dev, bars, d->name);
+>  	if (ret < 0)
+>  		printk(KERN_ERR "%s %s: can't reserve resources\n",
+> @@ -403,6 +393,7 @@ int ide_hwif_setup_dma(ide_hwif_t *hwif,
+>  /**
+>   *	ide_setup_pci_controller	-	set up IDE PCI
+>   *	@dev: PCI device
+> + *	@bars: PCI BARs mask
+>   *	@d: IDE port info
+>   *	@noisy: verbose flag
+>   *
+> @@ -411,7 +402,7 @@ int ide_hwif_setup_dma(ide_hwif_t *hwif,
+>   *	and enables it if need be
+>   */
+>  
+> -static int ide_setup_pci_controller(struct pci_dev *dev,
+> +static int ide_setup_pci_controller(struct pci_dev *dev, int bars,
+>  				    const struct ide_port_info *d, int noisy)
+>  {
+>  	int ret;
+> @@ -420,7 +411,7 @@ static int ide_setup_pci_controller(stru
+>  	if (noisy)
+>  		ide_setup_pci_noise(dev, d);
+>  
+> -	ret = ide_pci_enable(dev, d);
+> +	ret = ide_pci_enable(dev, bars, d);
+>  	if (ret < 0)
+>  		goto out;
+>  
+> @@ -428,16 +419,20 @@ static int ide_setup_pci_controller(stru
+>  	if (ret < 0) {
+>  		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
+>  			d->name, pci_name(dev));
+> -		goto out;
+> +		goto out_free_bars;
+>  	}
+>  	if (!(pcicmd & PCI_COMMAND_IO)) {	/* is device disabled? */
+>  		ret = ide_pci_configure(dev, d);
+>  		if (ret < 0)
+> -			goto out;
+> +			goto out_free_bars;
+>  		printk(KERN_INFO "%s %s: device enabled (Linux)\n",
+>  			d->name, pci_name(dev));
+>  	}
+>  
+> +	goto out;
+> +
+> +out_free_bars:
+> +	pci_release_selected_regions(dev, bars);
+>  out:
+>  	return ret;
+>  }
+> @@ -540,13 +535,28 @@ int ide_pci_init_two(struct pci_dev *dev
+>  {
+>  	struct pci_dev *pdev[] = { dev1, dev2 };
+>  	struct ide_host *host;
+> -	int ret, i, n_ports = dev2 ? 4 : 2;
+> +	int ret, i, n_ports = dev2 ? 4 : 2, bars;
+>  	struct ide_hw hw[4], *hws[] = { NULL, NULL, NULL, NULL };
+>  
+> +	if (d->host_flags & IDE_HFLAG_SINGLE)
+> +		bars = (1 << 2) - 1;
+> +	else
+> +		bars = (1 << 4) - 1;
+> +
+> +	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0) {
+> +		if (d->host_flags & IDE_HFLAG_CS5520)
+> +			bars |= (1 << 2);
+> +		else
+> +			bars |= (1 << 4);
+> +	}
+> +
+>  	for (i = 0; i < n_ports / 2; i++) {
+> -		ret = ide_setup_pci_controller(pdev[i], d, !i);
+> -		if (ret < 0)
+> +		ret = ide_setup_pci_controller(pdev[i], bars, d, !i);
+> +		if (ret < 0) {
+> +			if (i == 1)
+> +				pci_release_selected_regions(pdev[0], bars);
+>  			goto out;
+> +		}
+>  
+>  		ide_pci_setup_ports(pdev[i], d, &hw[i*2], &hws[i*2]);
+>  	}
+> @@ -554,7 +564,7 @@ int ide_pci_init_two(struct pci_dev *dev
+>  	host = ide_host_alloc(d, hws, n_ports);
+>  	if (host == NULL) {
+>  		ret = -ENOMEM;
+> -		goto out;
+> +		goto out_free_bars;
+>  	}
+>  
+>  	host->dev[0] = &dev1->dev;
+> @@ -576,7 +586,7 @@ int ide_pci_init_two(struct pci_dev *dev
+>  		 * do_ide_setup_pci_device() on the first device!
+>  		 */
+>  		if (ret < 0)
+> -			goto out;
+> +			goto out_free_bars;
+>  
+>  		/* fixup IRQ */
+>  		if (ide_pci_is_in_compatibility_mode(pdev[i])) {
+> @@ -589,6 +599,13 @@ int ide_pci_init_two(struct pci_dev *dev
+>  	ret = ide_host_register(host, d, hws);
+>  	if (ret)
+>  		ide_host_free(host);
+> +	else
+> +		goto out;
+> +
+> +out_free_bars:
+> +	i = n_ports / 2;
+> +	while (i--)
+> +		pci_release_selected_regions(pdev[i], bars);
+>  out:
+>  	return ret;
+>  }
+> 
