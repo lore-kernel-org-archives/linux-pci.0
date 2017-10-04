@@ -1,70 +1,119 @@
-Return-Path: <SRS0=o/WW=BI=free-electrons.com=thomas.petazzoni@kernel.org>
-Return-Path: <SRS0=o/WW=BI=free-electrons.com=thomas.petazzoni@kernel.org>
-Date: Mon, 9 Oct 2017 08:54:51 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Jason
- Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian
- Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement
- <gregory.clement@free-electrons.com>, Nadav Haklai <nadavh@marvell.com>,
- Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>,
- linux-arm-kernel@lists.infradead.org, Antoine Tenart
- <antoine.tenart@free-electrons.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
- <miquel.raynal@free-electrons.com>, Victor Gu <xigu@marvell.com>
-Subject: Re: [PATCH v2 5/7] PCI: aardvark: disable LOS state by default
-Message-ID: <20171009085451.5a6cfbcc@windsurf.lan>
-In-Reply-To: <20171005174607.GS25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-	<20170928125838.11887-6-thomas.petazzoni@free-electrons.com>
-	<20171005174607.GS25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:44676 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750951AbdJDXBS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Oct 2017 19:01:18 -0400
+Date: Wed, 4 Oct 2017 18:01:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tony Nguyen <anthony.l.nguyen@intel.com>
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        bhelgaas@google.com, Alexander Duyck <alexander.h.duyck@intel.com>,
+        Emil Tantilov <emil.s.tantilov@intel.com>
+Subject: Re: [PATCH] PCI: Check/Set ARI capability before setting numVFs
+Message-ID: <20171004230114.GO25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171004155258.35634-1-anthony.l.nguyen@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171004155258.35634-1-anthony.l.nguyen@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On Thu, 5 Oct 2017 12:46:07 -0500, Bjorn Helgaas wrote:
-
-> On Thu, Sep 28, 2017 at 02:58:36PM +0200, Thomas Petazzoni wrote:
-> > From: Victor Gu <xigu@marvell.com>
-> > 
-> > Some PCIe devices do not support LOS, and will cause timeouts if the
-> > root complex forces the LOS state. This patch disables the LOS state
-> > by default.  
+On Wed, Oct 04, 2017 at 08:52:58AM -0700, Tony Nguyen wrote:
+> This fixes a bug that can occur if an AER error is encountered while SRIOV
+> devices are present.
 > 
-> Per PCIe r3.1, sec 5.4.1.3, software should not enable L0s in either
-> direction unless both ends support L0s.
+> This issue was seen by doing the following. Inject an AER error to a device
+> that has SRIOV devices.  After the device has recovered, remove the driver.
+> Reload the driver and enable SRIOV which causes the following crash to
+> occur:
 > 
-> I'm unclear on what the bug is here.  Is the generic ASPM code
-> incorrectly enabling L0s when one end doesn't support it?  That seems
-> unlikely, but if so, it should be fixed in the generic ASPM code.
+> kernel BUG at drivers/pci/iov.c:157!
+> invalid opcode: 0000 [#1] SMP
+> CPU: 36 PID: 2295 Comm: bash Not tainted 4.14.0-rc1+ #74
+> Hardware name: Supermicro X9DAi/X9DAi, BIOS 3.0a 04/29/2014
+> task: ffff9fa41cd45a00 task.stack: ffffb4b2036e8000
+> RIP: 0010:pci_iov_add_virtfn+0x2eb/0x350
+> RSP: 0018:ffffb4b2036ebcb8 EFLAGS: 00010286
+> RAX: 00000000fffffff0 RBX: ffff9fa42c1c8800 RCX: ffff9fa421ce2388
+> RDX: 00000000df900000 RSI: ffff9fa8214fb388 RDI: 00000000df903fff
+> RBP: ffffb4b2036ebd18 R08: ffff9fa421ce23b8 R09: ffffb4b2036ebc2c
+> R10: ffff9fa42c1a5548 R11: 000000000000058e R12: ffff9fa8214fb000
+> R13: ffff9fa42c1a5000 R14: ffff9fa8214fb388 R15: 0000000000000000
+> FS:  00007f60724b6700(0000) GS:ffff9fa82f300000(0000)
+> knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000559eca8b0f40 CR3: 0000000864146000 CR4: 00000000001606e0
+> Call Trace:
+>  pci_enable_sriov+0x353/0x440
+>  ixgbe_pci_sriov_configure+0xd5/0x1f0 [ixgbe]
+>  sriov_numvfs_store+0xf7/0x170
+>  dev_attr_store+0x18/0x30
+>  sysfs_kf_write+0x37/0x40
+>  kernfs_fop_write+0x120/0x1b0
+>  __vfs_write+0x37/0x170
+>  ? __alloc_fd+0x3f/0x170
+>  ? set_close_on_exec+0x30/0x70
+>  vfs_write+0xb5/0x1a0
+>  SyS_write+0x55/0xc0
+>  entry_SYSCALL_64_fastpath+0x1a/0xa5
+> RIP: 0033:0x7f6071bafc20
+> RSP: 002b:00007ffe7d42ba48 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+> RAX: ffffffffffffffda RBX: 0000559eca8b0f30 RCX: 00007f6071bafc20
+> RDX: 0000000000000002 RSI: 0000559eca961f60 RDI: 0000000000000001
+> RBP: 00007f6071e78ae0 R08: 00007f6071e7a740 R09: 00007f60724b6700
+> R10: 0000000000000073 R11: 0000000000000246 R12: 0000000000000000
+> R13: 0000000000000000 R14: 0000000000000000 R15: 0000559eca892170
+> RIP: pci_iov_add_virtfn+0x2eb/0x350 RSP: ffffb4b2036ebcb8
 > 
-> Are both ends advertising L0s support, but there's a hardware erratum
-> on the Aardvark end that keeps it from working correctly?  If so, we
-> should say that explicitly and include a reference to a published
-> hardware erratum.
+> The occurs since during AER recovery the ARI Capable Hierarchy bit,
+> which can affect the values for First VF Offset and VF Stride, is not set
+> until after pci_iov_set_numvfs() is called.  
+
+Can you elaborate on where exactly this happens?  The only place we
+explicitly set PCI_SRIOV_CTRL_ARI is in sriov_init(), which is only
+called at enumeration-time.  So I'm guessing you're talking about this
+path:
+
+  ixgbe_io_slot_reset
+    pci_restore_state
+      pci_restore_iov_state
+	sriov_restore_state
+	  pci_iov_set_numvfs
+
+where we don't set PCI_SRIOV_CTRL_ARI at all.  The fact that you say
+PCI_SRIOV_CTRL_ARI isn't set until *after* pci_iov_set_numvfs() is
+called suggests that it is being set *somewhere*, but I don't know
+where.
+
+> This can cause the iov
+> structure to be populated with values that are incorrect if the bit is
+> later set.   Check and set this bit, if needed, before calling
+> pci_iov_set_numvfs() so that the values being populated properly take
+> the ARI bit into account.
 > 
-> Something else?
-
-I'll do some more research on this and get back to you.
-
-> > This is part of fixing bug
-> > https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
-> > reported as the user to be important to get a Intel 7260 mini-PCIe
-> > WiFi card working.  
+> CC: Alexander Duyck <alexander.h.duyck@intel.com>
+> CC: Emil Tantilov <emil.s.tantilov@intel.com>
+> Signed-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>
+> ---
+>  drivers/pci/iov.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> The bugzilla link is a good start, but "reported by the user to be
-> important" is meaningless by itself.  What we need here is the details
-> of what's broken and how this fixes it.  Unfortunately the bugzilla
-> doesn't have those details.
-
-Yes, the issue is that the bug report doesn't have much details, and I
-don't have the specific PCIe card that was used by the bug reporter.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 7492a65..a8896c7 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -497,6 +497,10 @@ static void sriov_restore_state(struct pci_dev *dev)
+>  	if (ctrl & PCI_SRIOV_CTRL_VFE)
+>  		return;
+>  
+> +	if ((iov->ctrl & PCI_SRIOV_CTRL_ARI) && !(ctrl & PCI_SRIOV_CTRL_ARI))
+> +		pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL,
+> +				      ctrl | PCI_SRIOV_CTRL_ARI);
+> +
+>  	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
+>  		pci_update_resource(dev, i);
+>  
+> -- 
+> 2.9.5
+> 
