@@ -1,151 +1,48 @@
-Return-Path: <SRS0=czIE=BR=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=czIE=BR=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
-To: Bjorn Helgaas <helgaas@kernel.org>, Niklas Cassel <niklas.cassel@axis.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-9-niklas.cassel@axis.com>
- <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
-CC: Niklas Cassel <niklass@axis.com>, Jesper Nilsson <jespern@axis.com>,
-        Bjorn
- Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland
-	<mark.rutland@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Xiaowei Song
-	<songxiaowei@hisilicon.com>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        Tomasz
- Nowicki <tn@semihalf.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Duc Dang <dhdang@apm.com>, <linux-arm-kernel@axis.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ebc64a29-4080-af88-c774-b3223115aef0@ti.com>
-Date: Wed, 18 Oct 2017 13:33:49 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:52586 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751135AbdJDQNX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 4 Oct 2017 12:13:23 -0400
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-pci@vger.kernel.org
+Cc: tglx@linutronix.de, Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>
+References: <20171004095007.19148-1-bigeasy@linutronix.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
+Date: Wed, 4 Oct 2017 10:13:15 -0600
 MIME-Version: 1.0
-In-Reply-To: <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20171004095007.19148-1-bigeasy@linutronix.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH] pci/switchtec: Don't use completion's wait queue
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
 
-On Tuesday 17 October 2017 05:13 AM, Bjorn Helgaas wrote:
-> On Fri, Oct 13, 2017 at 06:09:11PM +0200, Niklas Cassel wrote:
->> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->> ---
->>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
->>  drivers/pci/dwc/Kconfig                            |  41 +++--
->>  drivers/pci/dwc/Makefile                           |   4 +-
->>  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
->>  4 files changed, 233 insertions(+), 17 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->> index 4e4aee4439ea..33eef7ae5a23 100644
->> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
->>  and thus inherits all the common properties defined in designware-pcie.txt.
->>  
->>  Required properties:
->> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
->> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
->> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
->>  - reg: base addresses and lengths of the PCIe controller (DBI),
->>  	the PHY controller, and configuration address space.
->>  - reg-names: Must include the following entries:
->> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
->> index 22ec82fcdea2..e333283fb1ed 100644
->> --- a/drivers/pci/dwc/Kconfig
->> +++ b/drivers/pci/dwc/Kconfig
->> @@ -14,6 +14,36 @@ config PCIE_DW_EP
->>  	depends on PCI_ENDPOINT
->>  	select PCIE_DW
->>  
->> +config PCIE_ARTPEC6
->> +	bool "Axis ARTPEC-6 PCIe controller"
->> +	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
->> +	depends on MACH_ARTPEC6
->> +	help
->> +	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
->> +	  SoCs.  This PCIe controller uses the DesignWare core.
->> +
->> +if PCIE_ARTPEC6
->> +
->> +config PCIE_ARTPEC6_HOST
->> +	bool "Axis ARTPEC-6 Host Mode"
->> +	depends on PCI
->> +	depends on PCI_MSI_IRQ_DOMAIN
->> +	select PCIEPORTBUS
->> +	select PCIE_DW_HOST
->> +	help
->> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
->> +	  host mode.
->> +
->> +config PCIE_ARTPEC6_EP
->> +	bool "Axis ARTPEC-6 Endpoint Mode"
->> +	depends on PCI_ENDPOINT
->> +	select PCIE_DW_EP
->> +	help
->> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
->> +	  endpoint mode.
->> +
->> +endif
->> +
->>  config PCI_DRA7XX
->>  	bool "TI DRA7xx PCIe controller"
->>  	depends on SOC_DRA7XX || COMPILE_TEST
->> @@ -148,17 +178,6 @@ config PCIE_ARMADA_8K
->>  	  DesignWare hardware and therefore the driver re-uses the
->>  	  DesignWare core functions to implement the driver.
->>  
->> -config PCIE_ARTPEC6
->> -	bool "Axis ARTPEC-6 PCIe controller"
->> -	depends on PCI
->> -	depends on MACH_ARTPEC6
->> -	depends on PCI_MSI_IRQ_DOMAIN
->> -	select PCIEPORTBUS
->> -	select PCIE_DW_HOST
->> -	help
->> -	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
->> -	  SoCs.  This PCIe controller uses the DesignWare core.
->> -
->>  config PCIE_KIRIN
->>  	depends on OF && ARM64
->>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
-> 
->> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
->> index c61be9738cce..ac98242b83a9 100644
->> --- a/drivers/pci/dwc/Makefile
->> +++ b/drivers/pci/dwc/Makefile
->> @@ -2,6 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
->>  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
->>  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
->>  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
->> +ifneq ($(filter y,$(CONFIG_PCIE_ARTPEC6_HOST) $(CONFIG_PCIE_ARTPEC6_EP)),)
->> +        obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
->> +endif
-> 
-> I see you're copying the DRA7XX style here, but I don't really
-> understand it.  I guess the idea is to build pcie-artpec6.o if either
-> CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
-> 
-> Is this really the simplest way to express that in Kconfig?  Both the
-> "if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
-> unusual.
-> 
->>  ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
->>          obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
->>  endif
-> 
->> +static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-> 
-> Looks funny to have this dw_*() function in pcie-artpec6.c.  Intended?
-> Or is this something other endpoint drivers could/should share?
+On 04/10/17 03:50 AM, Sebastian Andrzej Siewior wrote:
+> The poll callback is using completion's wait_queue_head_t member and
+> puts it in poll_wait() so the poll() caller gets a wakeup after command
+> completed. This does not work on RT because we don't have a
+> wait_queue_head_t in our completion implementation. Nobody in tree does
+> like that in tree so this is the only driver that breaks.
 
-yeah, dw_pcie_ep_reset_bar is already present in pcie-designware-ep.c which
-should be made as library function to be used by other drivers. (pci-dra7xx.c
-has also added something like above which should also be fixed).
+I'm sorry but this seems a bit crazy to me. Driver's can't poll on 
+completions because an out of tree implementation changes them in a 
+weird way??! Just because no one in-tree does it now doesn't make it 
+invalid.
 
-Thanks
-Kishon
+But at the very least, if we _absolutely_ have to patch this out, you 
+shouldn't make it so convoluted. Just replace the struct completion with 
+a wait queue and a done flag (which is what a completion is). Don't move 
+the wait queue into switchtec_dev and don't use an unnecessary counter. 
+And certainly don't think about merging it with another wait queue that 
+has completely different wake events and waiters.
+
+In any case, I haven't tested the patch, but I'm pretty sure it's not 
+correct. There can be multiple switchtec_user's queued up and this patch 
+will essentially complete them all once any one of them finishes and 
+cmd_cnt increments.
+
+So this patch gets a NAK from me.
+
+Logan
