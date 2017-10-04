@@ -1,95 +1,42 @@
-Return-Path: <SRS0=ErCP=BM=rock-chips.com=jeffy.chen@kernel.org>
-Return-Path: <SRS0=ErCP=BM=rock-chips.com=jeffy.chen@kernel.org>
-Message-ID: <59E10709.4020300@rock-chips.com>
-Date: Sat, 14 Oct 2017 02:33:45 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-kernel@vger.kernel.org, bhelgaas@google.com,
- Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
- briannorris@chromium.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org, linux-pm@vger.kernel.org,
- Tony Lindgren <tony@atomide.com>
-Subject: Re: [PATCH v5 1/3] PCI: rockchip: Add support for pcie wake irq
-References: <20170911151029.25185-1-jeffy.chen@rock-chips.com> <20170911151029.25185-2-jeffy.chen@rock-chips.com> <20171013030441.GA25517@bhelgaas-glaptop.roam.corp.google.com> <2453698.N4jfPaHx71@aspire.rjw.lan>
-In-Reply-To: <2453698.N4jfPaHx71@aspire.rjw.lan>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20171004063027.GA20459@lst.de>
+References: <1506763722-10687-1-git-send-email-abhishek.shah@broadcom.com>
+ <20171001074203.GA11115@lst.de> <20171002172128.GV8463@localhost.localdomain>
+ <20171004063027.GA20459@lst.de>
+From: Abhishek Shah <abhishek.shah@broadcom.com>
+Date: Wed, 4 Oct 2017 15:07:17 +0530
+Message-ID: <CAKUFe6aqX5V10eszHMaD906+zhvk9iavOKSn0t0=XYM1rA9_3w@mail.gmail.com>
+Subject: Re: [PATCH v2] nvme-pci: Use PCI bus address for data/queues in CMB
+To: Christoph Hellwig <hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@fb.com>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ linux-nvme@lists.infradead.org, Keith Busch <keith.busch@intel.com>,
+ BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+ stable@vger.kernel.org,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+yes, this patch works for our platform.
 
-On 10/13/2017 09:21 PM, Rafael J. Wysocki wrote:
->>
->>I'm a little skeptical about dev_pm_set_dedicated_wake_irq(), not
->>because I know anything at all about it, but because there are only
->>five callers in the whole tree, three of which are in UART code, and
->>none in anything resembling PCI code.
->>
->>Is Rockchip really that special, or are we going about this the wrong
->>way?
+On Wed, Oct 4, 2017 at 12:00 PM, Christoph Hellwig <hch@lst.de> wrote:
+> On Mon, Oct 02, 2017 at 11:21:29AM -0600, Keith Busch wrote:
+>> Yah, calling this a DMA address was a misnomer and confusing.
+>
+> Abhishek, can you test if this works for you?
 
-we used to put these codes in the wifi driver, but another wifi vendor 
-suggests these should go into the pcie driver.
-
-and as tony said, it could go into pcie common code :)
->>
->> > >+		if (err)
->> > >+			dev_err(dev, "failed to setup PCIe wakeup IRQ\n");
->> > >+	}
->> > >+
->> > >  	return 0;
->>
->>The above could be structured as:
->>
->>   irq = platform_get_irq_byname(pdev, "wakeup");
->>   if (irq < 0)
->>     return 0;
->>
->>   device_init_wakeup(dev, true);
->>   err = dev_pm_set_dedicated_wake_irq(dev, irq);
->>   if (err) {
->>     dev_pm_clear_wake_irq(dev);
->>     device_init_wakeup(dev, false);
->>   }
->>
-there's no need to call dev_pm_clear_wake_irq when 
-dev_pm_set_dedicated_wake_irq failed...and i agree the 
-device_init_wakeup part, i'll add that in the next version(with brian's 
-comment too)
->>   return 0;
->>
->>to unindent the mainline non-error code.
->>
->> > >  }
->> > >
->> > >@@ -1542,11 +1552,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->> > >
->> > >  	err = rockchip_pcie_parse_dt(rockchip);
->> > >  	if (err)
->> > >-		return err;
->> > >+		goto err_disable_wake;
->> > >
->> > >  	err = rockchip_pcie_enable_clocks(rockchip);
->> > >  	if (err)
->> > >-		return err;
->> > >+		goto err_disable_wake;
->> > >
->> > >  	err = rockchip_pcie_set_vpcie(rockchip);
->> > >  	if (err) {
->> > >@@ -1656,6 +1666,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->> > >  		regulator_disable(rockchip->vpcie0v9);
->> > >  err_set_vpcie:
->> > >  	rockchip_pcie_disable_clocks(rockchip);
->> > >+err_disable_wake:
->> > >+	dev_pm_clear_wake_irq(dev);
->> > >+	device_init_wakeup(dev, false);
->>
->>I think this error cleanup should be done in rockchip_pcie_setup_irq()
->>as shown above.  There's no real connection between
->>rockchip_pcie_probe() and the wake setup.
-
-this error handling is like inline "rockchip_pcie_cleanup_irq()", and 
-they are harmless to be called even if we don't have the wakeup irq :)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
