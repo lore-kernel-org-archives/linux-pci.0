@@ -1,91 +1,214 @@
-Return-Path: <SRS0=0ccY=BY=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=0ccY=BY=redhat.com=alex.williamson@kernel.org>
-Date: Wed, 25 Oct 2017 23:28:05 +0200
-From: Alex Williamson <alex.williamson@redhat.com>
+Return-Path: <SRS0=V+Ja=BD=amazon.de=prvs=4434d25af=sironi@kernel.org>
+Return-Path: <SRS0=V+Ja=BD=amazon.de=prvs=4434d25af=sironi@kernel.org>
+From: "Sironi, Filippo" <sironi@amazon.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, linux-arm-msm@vger.kernel.org, Bjorn Helgaas
- <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: rework error checking in the reset path
-Message-ID: <20171025232805.163ccaad@t450s.home>
-In-Reply-To: <20171025134511.GL21840@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508794608-15310-1-git-send-email-okaya@codeaurora.org>
-	<20171025134511.GL21840@bhelgaas-glaptop.roam.corp.google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] pci: Expose offset, stride, and VF device ID via
+ sysfs
+Date: Wed, 4 Oct 2017 17:32:20 +0000
+Message-ID: <38998983-95AF-468B-885B-F56D63E57E54@amazon.de>
+References: <1503927530-26076-1-git-send-email-sironi@amazon.de>
+ <1503927530-26076-2-git-send-email-sironi@amazon.de>
+ <20170925185523.GF15970@bhelgaas-glaptop.roam.corp.google.com>
+ <922D0B9C-4900-4226-9FB3-1BF3EA103708@amazon.de>
+ <20171003193114.GE25517@bhelgaas-glaptop.roam.corp.google.com>
+ <20171003194855.GG25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171003194855.GG25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 25 Oct 2017 08:45:11 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-> [+cc Alex]
-> 
-> On Mon, Oct 23, 2017 at 05:36:48PM -0400, Sinan Kaya wrote:
-> > The return codes from various reset types are not consistent. The code is
-> > assuming that all reset types will return -ENOTTY when things go wrong.
-> > Instead of relying on negative error status, let's bail out if the
-> > operation is successful instead.  
-> 
-> I like this (no surprise since I suggested something similar at
-> http://lkml.kernel.org/r/20171011210057.GU25517@bhelgaas-glaptop.roam.corp.google.com),
-> but I'd like Alex's opinion before merging it.
-> 
-> Previously, we only tried the next reset method if one method failed
-> with -ENOTTY.  With this patch, we'll try the next reset method if one
-> method fails for any reason, not just -ENOTTY.
+> On 3. Oct 2017, at 21:48, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> =
 
-Hmm, I thought the return codes were pretty consistent.  -ENOTTY means
-that the reset callback doesn't handle the device, move on.  Many
-ioctls use the same return code to indicate an unknown ioctl.  This
-allows us to differentiate success vs error vs unhandled.  In the code
-below we lose the ability to, for instance, have a device specific
-reset that returns -EINVAL to prevent the PCI core for triggering
-further reset mechanisms which might be broken on the device.  So, I
-don't see that this patch specifically fixes anything, but it does
-remove what seems like useful functionality...  I'd veto it.  Thanks,
+> On Tue, Oct 03, 2017 at 02:31:14PM -0500, Bjorn Helgaas wrote:
+>> On Fri, Sep 29, 2017 at 07:53:31AM +0000, Sironi, Filippo wrote:
+>>> =
 
-Alex
- 
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > ---
-> >  drivers/pci/pci.c | 8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 6078dfc..a753e07 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -4200,20 +4200,20 @@ int __pci_reset_function_locked(struct pci_dev *dev)
-> >  	might_sleep();
-> >  
-> >  	rc = pci_dev_specific_reset(dev, 0);
-> > -	if (rc != -ENOTTY)
-> > +	if (!rc)
-> >  		return rc;
-> >  	if (pcie_has_flr(dev)) {
-> >  		pcie_flr(dev);
-> >  		return 0;
-> >  	}
-> >  	rc = pci_af_flr(dev, 0);
-> > -	if (rc != -ENOTTY)
-> > +	if (!rc)
-> >  		return rc;
-> >  	rc = pci_pm_reset(dev, 0);
-> > -	if (rc != -ENOTTY)
-> > +	if (!rc)
-> >  		return rc;
-> >  	rc = pci_dev_reset_slot_function(dev, 0);
-> > -	if (rc != -ENOTTY)
-> > +	if (!rc)
-> >  		return rc;
-> >  	return pci_parent_bus_reset(dev, 0);
-> >  }
-> > -- 
-> > 1.9.1
-> > 
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel  
+>>> Hi Bjorn,
+>>> =
+
+>>>> On 25. Sep 2017, at 20:55, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>> =
+
+>>>> Hi Filippo,
+>>>> =
+
+>>>> On Mon, Aug 28, 2017 at 03:38:50PM +0200, Filippo Sironi wrote:
+>>>>> +static ssize_t sriov_vf_did_show(struct device *dev,
+>>>>> +				 struct device_attribute *attr,
+>>>>> +				 char *buf)
+>>>>> +{
+>>>>> +	struct pci_dev *pdev =3D to_pci_dev(dev);
+>>>>> +
+>>>>> +	return sprintf(buf, "%x\n", pdev->sriov->vf_did);
+>>>>> +}
+>>>> =
+
+>>>> What does the vf_did part look like in sysfs?  Do we have a directory =
+with
+>>>> both "device" and "vf_did" in it?  If so, why do we have both and do we
+>>>> need both?  Could we put the vf_did in the "device" file?
+>>> =
+
+>>> On my machine:
+>>> =
+
+>>> /sys/bus/pci/devices/0000:03:00.0# ls -l  # this is the PF
+>>> total 0
+>>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 broken_parity_status
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 class
+>>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 config
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 consistent_dma_mask_bits
+>>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 d3cold_allowed
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 device
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 dma_mask_bits
+>>> lrwxrwxrwx 1 root root       0 Sep 28 19:41 driver -> ../../../../bus/p=
+ci/drivers/igb
+>>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 driver_override
+>>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 enable
+>>> lrwxrwxrwx 1 root root       0 Sep 28 19:41 firmware_node -> ../../../L=
+NXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:4b/device:4c
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 irq
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 local_cpulist
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 local_cpus
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 modalias
+>>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 msi_bus
+>>> drwxr-xr-x 2 root root       0 Sep 29 09:44 msi_irqs
+>>> drwxr-xr-x 3 root root       0 Sep 28 19:41 net
+>>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 numa_node
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 offset  # this is new
+>>> drwxr-xr-x 2 root root       0 Sep 28 19:41 power
+>>> drwxr-xr-x 3 root root       0 Sep 28 19:41 ptp
+>>> --w--w---- 1 root root    4096 Sep 28 19:41 remove
+>>> --w--w---- 1 root root    4096 Sep 28 19:41 rescan
+>>> --w------- 1 root root    4096 Sep 28 19:41 reset
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 resource
+>>> -rw------- 1 root root  131072 Sep 28 19:41 resource0
+>>> -rw------- 1 root root 4194304 Sep 28 19:41 resource1
+>>> -rw------- 1 root root      32 Sep 28 19:41 resource2
+>>> -rw------- 1 root root   16384 Sep 28 19:41 resource3
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 revision
+>>> -rw-rw-r-- 1 root root    4096 Sep 29 09:44 sriov_numvfs
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 sriov_totalvfs
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 stride  # this is new
+>>> lrwxrwxrwx 1 root root       0 Sep 28 19:41 subsystem -> ../../../../bu=
+s/pci
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 subsystem_device
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 subsystem_vendor
+>>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 uevent
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 vendor
+>>> -r--r--r-- 1 root root    4096 Sep 28 19:41 vf_did  # this is new
+>>> lrwxrwxrwx 1 root root       0 Sep 29 09:44 virtfn0 -> ../0000:03:10.0
+>>> =
+
+>>> nothing changes on for VFs.
+>>> Then:
+>>> =
+
+>>> /sys/bus/pci/devices/0000:03:00.0# cat device =
+
+>>> 0x10c9
+>>> =
+
+>>> /sys/bus/pci/devices/0000:03:00.0# cat vf_did
+>>> 0x10ca
+>>> =
+
+>>> Putting the VF device ID in the PF device file would be a change of
+>>> that we expose to userspace.  Something might break.
+>> =
+
+>> Oh, sorry, I misunderstood!  I was thinking that you were adding
+>> "vf_did" to the VF directory, not the PF directory.
+>> =
+
+>> Then I guess my only issue is that "vf_did" doesn't match the pattern
+>> of other names.  I think "virtfn_device" would give more of a hint and
+>> would match "device" and "subsystem_device".
+> =
+
+> I was going to just make this tweak myself, but realized I'd actually
+> propose these changes as well:
+> =
+
+>  offset -> sriov_offset
+>  stride -> sriov_stride
+>  vf_did -> virtfn_device (could be sriov_device as well)
+> =
+
+> and I can't really test it to make sure I get all the details right.
+> Can you update those and repost this?
+> =
+
+> Bjorn
+
+I'll give this a spin tomorrow.
+
+Thanks,
+Filippo
+
+
+>>> vf_did provides a easy way to retrieve the VF device ID without reading
+>>> the PF config (looking up the SR-IOV capability and reading it) or with=
+out
+>>> enabling SR-IOV to read for example virtfn0/device.
+>>> =
+
+>>> Similar considerations (ease of access) apply to offset and stride.
+>>> =
+
+>>> =
+
+>>>>> static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
+>>>>> 					    struct device_attribute *attr,
+>>>>> 					    char *buf)
+>>>>> @@ -676,6 +703,9 @@ static struct device_attribute sriov_totalvfs_att=
+r =3D __ATTR_RO(sriov_totalvfs);
+>>>>> static struct device_attribute sriov_numvfs_attr =3D
+>>>>> 		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+>>>>> 		       sriov_numvfs_show, sriov_numvfs_store);
+>>>>> +static struct device_attribute sriov_offset_attr =3D __ATTR_RO(sriov=
+_offset);
+>>>>> +static struct device_attribute sriov_stride_attr =3D __ATTR_RO(sriov=
+_stride);
+>>>>> +static struct device_attribute sriov_vf_did_attr =3D __ATTR_RO(sriov=
+_vf_did);
+>>>>> static struct device_attribute sriov_drivers_autoprobe_attr =3D
+>>>>> 		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
+>>>>> 		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
+>>>>> @@ -1744,6 +1774,9 @@ static struct attribute_group pci_dev_hp_attr_g=
+roup =3D {
+>>>>> static struct attribute *sriov_dev_attrs[] =3D {
+>>>>> 	&sriov_totalvfs_attr.attr,
+>>>>> 	&sriov_numvfs_attr.attr,
+>>>>> +	&sriov_offset_attr.attr,
+>>>>> +	&sriov_stride_attr.attr,
+>>>>> +	&sriov_vf_did_attr.attr,
+>>>>> 	&sriov_drivers_autoprobe_attr.attr,
+>>>>> 	NULL,
+>>>>> };
+>>>>> -- =
+
+>>>>> 2.7.4
+>>>>> =
+
+>>>> =
+
+>>> =
+
+>>> Amazon Development Center Germany GmbH
+>>> Berlin - Dresden - Aachen
+>>> main office: Krausenstr. 38, 10117 Berlin
+>>> Geschaeftsfuehrer: Dr. Ralf Herbrich, Christian Schlaeger
+>>> Ust-ID: DE289237879
+>>> Eingetragen am Amtsgericht Charlottenburg HRB 149173 B
+
+Amazon Development Center Germany GmbH
+Berlin - Dresden - Aachen
+main office: Krausenstr. 38, 10117 Berlin
+Geschaeftsfuehrer: Dr. Ralf Herbrich, Christian Schlaeger
+Ust-ID: DE289237879
+Eingetragen am Amtsgericht Charlottenburg HRB 149173 B
