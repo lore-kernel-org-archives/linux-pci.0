@@ -1,88 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:4884 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932400AbdJ3LG2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 07:06:28 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
-        <yinghai@kernel.org>, <david.daney@cavium.com>,
-        <Julia.Lawall@lip6.fr>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH 1/4] PCI/ASPM: Add API to supply LTR L1.2 threshold
-Date: Mon, 30 Oct 2017 16:33:02 +0530
-Message-ID: <1509361385-21224-2-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
-References: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:53004 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751369AbdJEVMM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Oct 2017 17:12:12 -0400
+Date: Thu, 5 Oct 2017 16:12:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH] pci/ehp_hpc: Convert timers to use timer_setup()
+Message-ID: <20171005211210.GY25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171005005348.GA23838@beast>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171005005348.GA23838@beast>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-adds API for host controller drivers to specify LTR L1.2
-threshold value if it is different from the default value.
-weak implementation of the API is added to supply default
-value
+On Wed, Oct 04, 2017 at 05:53:48PM -0700, Kees Cook wrote:
+> In preparation for unconditionally passing the struct timer_list pointer to
+> all timer callbacks, switch to using the new timer_setup() and from_timer()
+> to pass the timer pointer explicitly. This fixes what appears to be a bug
+> in passing the wrong pointer to the timer handler (address of ctrl pointer
+> instead of ctrl pointer).
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>
+> Cc: Keith Busch <keith.busch@intel.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
- drivers/pci/pcie/aspm.c  | 11 ++++++++---
- include/linux/pci-aspm.h |  6 ++++++
- 2 files changed, 14 insertions(+), 3 deletions(-)
+Applied to pci/hotplug for v4.15, thanks!
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 1dfa10cc566b..c6e8604796e5 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -436,6 +436,11 @@ static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
- 	return NULL;
- }
- 
-+u32 __weak pcie_aspm_get_ltr_l_1_2_threshold(void)
-+{
-+	return LTR_L1_2_THRESHOLD_BITS;
-+}
-+
- /* Calculate L1.2 PM substate timing parameters */
- static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 				struct aspm_register_info *upreg,
-@@ -458,10 +463,10 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 	else
- 		link->l1ss.ctl1 |= val2 << 8;
- 	/*
--	 * We currently use LTR L1.2 threshold to be fixed constant picked from
--	 * Intel's coreboot.
-+	 * Get LTR L1.2 threshold value specific to a platform if present
-+	 * Otherwise, get a constant value picked from Intel's coreboot.
- 	 */
--	link->l1ss.ctl1 |= LTR_L1_2_THRESHOLD_BITS;
-+	link->l1ss.ctl1 |= pcie_aspm_get_ltr_l_1_2_threshold();
- 
- 	/* Choose the greater of the two T_pwr_on */
- 	val1 = (upreg->l1ss_cap >> 19) & 0x1F;
-diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
-index 207c561fb40e..7ffde0f57688 100644
---- a/include/linux/pci-aspm.h
-+++ b/include/linux/pci-aspm.h
-@@ -30,6 +30,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
- void pci_disable_link_state(struct pci_dev *pdev, int state);
- void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
- void pcie_no_aspm(void);
-+u32 pcie_aspm_get_ltr_l_1_2_threshold(void);
- #else
- static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
- {
-@@ -49,6 +50,11 @@ static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
- static inline void pcie_no_aspm(void)
- {
- }
-+
-+static inline u32 pcie_aspm_get_ltr_l_1_2_threshold(void)
-+{
-+	return 0;
-+}
- #endif
- 
- #ifdef CONFIG_PCIEASPM_DEBUG /* this depends on CONFIG_PCIEASPM */
--- 
-2.7.4
+> ---
+> This requires commit 686fef928bba ("timer: Prepare to change timer
+> callback argument type") in v4.14-rc3, but should be otherwise
+> stand-alone.
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c | 12 ++++--------
+>  1 file changed, 4 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index e5d5ce9e3010..ba5055c5115c 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -50,14 +50,13 @@ static irqreturn_t pcie_isr(int irq, void *dev_id);
+>  static void start_int_poll_timer(struct controller *ctrl, int sec);
+>  
+>  /* This is the interrupt polling timeout function. */
+> -static void int_poll_timeout(unsigned long data)
+> +static void int_poll_timeout(struct timer_list *t)
+>  {
+> -	struct controller *ctrl = (struct controller *)data;
+> +	struct controller *ctrl = from_timer(ctrl, t, poll_timer);
+>  
+>  	/* Poll for interrupt events.  regs == NULL => polling */
+>  	pcie_isr(0, ctrl);
+>  
+> -	init_timer(&ctrl->poll_timer);
+>  	if (!pciehp_poll_time)
+>  		pciehp_poll_time = 2; /* default polling interval is 2 sec */
+>  
+> @@ -71,8 +70,6 @@ static void start_int_poll_timer(struct controller *ctrl, int sec)
+>  	if ((sec <= 0) || (sec > 60))
+>  		sec = 2;
+>  
+> -	ctrl->poll_timer.function = &int_poll_timeout;
+> -	ctrl->poll_timer.data = (unsigned long)ctrl;
+>  	ctrl->poll_timer.expires = jiffies + sec * HZ;
+>  	add_timer(&ctrl->poll_timer);
+>  }
+> @@ -83,7 +80,7 @@ static inline int pciehp_request_irq(struct controller *ctrl)
+>  
+>  	/* Install interrupt polling timer. Start with 10 sec delay */
+>  	if (pciehp_poll_mode) {
+> -		init_timer(&ctrl->poll_timer);
+> +		timer_setup(&ctrl->poll_timer, int_poll_timeout, 0);
+>  		start_int_poll_timer(ctrl, 10);
+>  		return 0;
+>  	}
+> @@ -764,8 +761,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+>  	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>  		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
+>  	if (pciehp_poll_mode)
+> -		int_poll_timeout(ctrl->poll_timer.data);
+> -
+> +		int_poll_timeout(&ctrl->poll_timer);
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.7.4
+> 
+> 
+> -- 
+> Kees Cook
+> Pixel Security
