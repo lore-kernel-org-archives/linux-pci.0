@@ -1,81 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45884 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S937589AbdJQTXF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Oct 2017 15:23:05 -0400
-Date: Tue, 17 Oct 2017 14:23:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        nsekhar@ti.com
-Subject: Re: [PATCH 3/4] PCI: dwc: dra7xx: Add support for SoC specific
- compatible strings
-Message-ID: <20171017192302.GK5641@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171010101606.15951-1-kishon@ti.com>
- <20171010101606.15951-4-kishon@ti.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:32814 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752261AbdJEKvE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2017 06:51:04 -0400
+Date: Thu, 5 Oct 2017 12:51:01 +0200
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Subject: [PATCH v2] pci/switchtec: Don't use completion's wait queue
+Message-ID: <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
+References: <20171004095007.19148-1-bigeasy@linutronix.de>
+ <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171010101606.15951-4-kishon@ti.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-s/PCI: dwc: dra7xx: Add support for SoC specific compatible strings/
-  PCI: dra7xx: Add dra726 and dra746 compatible strings/
-  
-I think including "dwc" makes sense for things that involve the DW
-core, but this is really dra7xx-specific.  And I think the *support*
-for SoC-specific strings was already there; it looks like this patch
-simply adds some of those strings.
+The poll callback is using completion's wait_queue_head_t member and
+puts it in poll_wait() so the poll() caller gets a wakeup after command
+completed. This does not work on RT because we don't have a
+wait_queue_head_t in our completion implementation. Nobody in tree does
+like that in tree so this is the only driver that breaks.
 
-On Tue, Oct 10, 2017 at 03:46:05PM +0530, Kishon Vijay Abraham I wrote:
-> dra74x/dra76x and dra72x has separate compatible strings. Add support
-> for these compatible strings in pci-dra7xx driver.
+Instead of using the completion here is waitqueue with a status flag as
+suggested by Logan.
 
-s/has separate/have separate/
+I don't have the HW so I have no idea if it works as expected, so please
+test it.
 
-> This is a preparatory patch for adding 2-lane mode support and
-> dra74/dra72 should add it's own driver data for 2-lane mode
-> configuration.
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+On 2017-10-04 10:13:15 [-0600], Logan Gunthorpe wrote:
 
-s/it's/its/
+> But at the very least, if we _absolutely_ have to patch this out, you
+> shouldn't make it so convoluted. Just replace the struct completion with a
+> wait queue and a done flag (which is what a completion is). Don't move the
+> wait queue into switchtec_dev and don't use an unnecessary counter. And
+> certainly don't think about merging it with another wait queue that has
+> completely different wake events and waiters.
 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 362607f727ee..78a87a8f1362 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -542,6 +542,22 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
->  		.compatible = "ti,dra7-pcie-ep",
->  		.data = &dra7xx_pcie_ep_of_data,
->  	},
-> +	{
-> +		.compatible = "ti,dra746-pcie-rc",
-> +		.data = &dra7xx_pcie_rc_of_data,
-> +	},
-> +	{
-> +		.compatible = "ti,dra746-pcie-ep",
-> +		.data = &dra7xx_pcie_ep_of_data,
-> +	},
-> +	{
-> +		.compatible = "ti,dra726-pcie-rc",
-> +		.data = &dra7xx_pcie_rc_of_data,
-> +	},
-> +	{
-> +		.compatible = "ti,dra726-pcie-ep",
-> +		.data = &dra7xx_pcie_ep_of_data,
-> +	},
->  	{},
->  };
->  
-> -- 
-> 2.11.0
-> 
+here it is.
+
+v1…v2: use a status flag and a wait_queue_head_t instead as suggested by
+       Logan.
+
+ drivers/pci/switch/switchtec.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index af81b2dec42e..4c843fca709a 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -306,10 +306,11 @@ struct switchtec_user {
+ 
+ 	enum mrpc_state state;
+ 
+-	struct completion comp;
++	wait_queue_head_t cmd_comp;
+ 	struct kref kref;
+ 	struct list_head list;
+ 
++	bool cmd_done;
+ 	u32 cmd;
+ 	u32 status;
+ 	u32 return_code;
+@@ -331,7 +332,7 @@ static struct switchtec_user *stuser_create(struct switchtec_dev *stdev)
+ 	stuser->stdev = stdev;
+ 	kref_init(&stuser->kref);
+ 	INIT_LIST_HEAD(&stuser->list);
+-	init_completion(&stuser->comp);
++	init_waitqueue_head(&stuser->cmd_comp);
+ 	stuser->event_cnt = atomic_read(&stdev->event_cnt);
+ 
+ 	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
+@@ -414,7 +415,7 @@ static int mrpc_queue_cmd(struct switchtec_user *stuser)
+ 	kref_get(&stuser->kref);
+ 	stuser->read_len = sizeof(stuser->data);
+ 	stuser_set_state(stuser, MRPC_QUEUED);
+-	init_completion(&stuser->comp);
++	stuser->cmd_done = false;
+ 	list_add_tail(&stuser->list, &stdev->mrpc_queue);
+ 
+ 	mrpc_cmd_submit(stdev);
+@@ -451,7 +452,7 @@ static void mrpc_complete_cmd(struct switchtec_dev *stdev)
+ 		      stuser->read_len);
+ 
+ out:
+-	complete_all(&stuser->comp);
++	wake_up_interruptible(&stuser->cmd_comp);
+ 	list_del_init(&stuser->list);
+ 	stuser_put(stuser);
+ 	stdev->mrpc_busy = 0;
+@@ -721,10 +722,11 @@ static ssize_t switchtec_dev_read(struct file *filp, char __user *data,
+ 	mutex_unlock(&stdev->mrpc_mutex);
+ 
+ 	if (filp->f_flags & O_NONBLOCK) {
+-		if (!try_wait_for_completion(&stuser->comp))
++		if (!stuser->cmd_done)
+ 			return -EAGAIN;
+ 	} else {
+-		rc = wait_for_completion_interruptible(&stuser->comp);
++		rc = wait_event_interruptible(stuser->cmd_comp,
++					      stuser->cmd_done);
+ 		if (rc < 0)
+ 			return rc;
+ 	}
+@@ -772,7 +774,7 @@ static unsigned int switchtec_dev_poll(struct file *filp, poll_table *wait)
+ 	struct switchtec_dev *stdev = stuser->stdev;
+ 	int ret = 0;
+ 
+-	poll_wait(filp, &stuser->comp.wait, wait);
++	poll_wait(filp, &stuser->cmd_comp, wait);
+ 	poll_wait(filp, &stdev->event_wq, wait);
+ 
+ 	if (lock_mutex_and_test_alive(stdev))
+@@ -780,7 +782,7 @@ static unsigned int switchtec_dev_poll(struct file *filp, poll_table *wait)
+ 
+ 	mutex_unlock(&stdev->mrpc_mutex);
+ 
+-	if (try_wait_for_completion(&stuser->comp))
++	if (stuser->cmd_done)
+ 		ret |= POLLIN | POLLRDNORM;
+ 
+ 	if (stuser->event_cnt != atomic_read(&stdev->event_cnt))
+@@ -1255,7 +1257,8 @@ static void stdev_kill(struct switchtec_dev *stdev)
+ 
+ 	/* Wake up and kill any users waiting on an MRPC request */
+ 	list_for_each_entry_safe(stuser, tmpuser, &stdev->mrpc_queue, list) {
+-		complete_all(&stuser->comp);
++		stuser->cmd_done = true;
++		wake_up_interruptible(&stuser->cmd_comp);
+ 		list_del_init(&stuser->list);
+ 		stuser_put(stuser);
+ 	}
+-- 
+2.14.2
