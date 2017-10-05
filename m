@@ -1,148 +1,90 @@
-Return-Path: <SRS0=t/IE=BL=arm.com=julien.thierry@kernel.org>
-Return-Path: <SRS0=t/IE=BL=arm.com=julien.thierry@kernel.org>
-Subject: Re: [PATCH 1/2] vgaarb: Select a default VGA device even if there's
- no legacy VGA
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Daniel Vetter <daniel.vetter@intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
- Xinliang Liu <z.liuxinliang@hisilicon.com>,
- Alex Williamson <alex.williamson@redhat.com>, Lukas Wunner
- <lukas@wunner.de>, Catalin Marinas <catalin.marinas@arm.com>,
- Rongrong Zou <zourongrong@gmail.com>, Dave Airlie <airlied@redhat.com>,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org,
- Daniel Axtens <dja@axtens.net>
-References: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171006222428.12211.3635.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Julien Thierry <julien.thierry@arm.com>
-Message-ID: <b5373cbb-7d0d-a626-159b-dee0b82d32d0@arm.com>
-Date: Thu, 12 Oct 2017 12:24:10 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:58500 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751286AbdJERqK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Oct 2017 13:46:10 -0400
+Date: Thu, 5 Oct 2017 12:46:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        Nadav Haklai <nadavh@marvell.com>,
+        Hanna Hawa <hannah@marvell.com>,
+        Yehuda Yitschak <yehuday@marvell.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Antoine Tenart <antoine.tenart@free-electrons.com>,
+        =?iso-8859-1?Q?Miqu=E8l?= Raynal
+        <miquel.raynal@free-electrons.com>, Victor Gu <xigu@marvell.com>
+Subject: Re: [PATCH v2 5/7] PCI: aardvark: disable LOS state by default
+Message-ID: <20171005174607.GS25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+ <20170928125838.11887-6-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <20171006222428.12211.3635.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170928125838.11887-6-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+I assume you mean "ASPM L0s"?
 
-On 06/10/17 23:24, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
+On Thu, Sep 28, 2017 at 02:58:36PM +0200, Thomas Petazzoni wrote:
+> From: Victor Gu <xigu@marvell.com>
 > 
-> Daniel Axtens reported that on the HiSilicon D05 board, the VGA device is
-> behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so the VGA arbiter
-> never selects it as the default, which means Xorg auto-detection doesn't
-> work.
-> 
-> VGA is a legacy PCI feature: a VGA device can respond to addresses, e.g.,
-> [mem 0xa0000-0xbffff], [io 0x3b0-0x3bb], [io 0x3c0-0x3df], etc., that are
-> not configurable by BARs.  Consequently, multiple VGA devices can conflict
-> with each other.  The VGA arbiter avoids conflicts by ensuring that those
-> legacy resources are only routed to one VGA device at a time.
-> 
-> The arbiter identifies the "default VGA" device, i.e., a legacy VGA device
-> that was used by boot firmware.  It selects the first device that:
-> 
->    - is of PCI_CLASS_DISPLAY_VGA,
->    - has both PCI_COMMAND_IO and PCI_COMMAND_MEMORY enabled, and
->    - has PCI_BRIDGE_CTL_VGA set in all upstream bridges.
-> 
-> Some systems don't have such a device.  For example, if a host bridge
-> doesn't support I/O space, PCI_COMMAND_IO probably won't be enabled for any
-> devices below it.  Or, as on the HiSilicon D05, the VGA device may be
-> behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so accesses to the
-> legacy VGA resources will never reach the device.
-> 
-> This patch extends the arbiter so that if it doesn't find a device that
-> meets all the above criteria, it selects the first device that:
-> 
->    - is of PCI_CLASS_DISPLAY_VGA and
->    - has PCI_COMMAND_IO or PCI_COMMAND_MEMORY enabled
-> 
-> If it doesn't find even that, it selects the first device that:
-> 
->    - is of class PCI_CLASS_DISPLAY_VGA.
-> 
-> Such a device may not be able to use the legacy VGA resources, but most
-> drivers can operate the device without those.  Setting it as the default
-> device means its "boot_vga" sysfs file will contain "1", which Xorg (via
-> libpciaccess) uses to help select its default output device.
-> 
-> This fixes Xorg auto-detection on some arm64 systems (HiSilicon D05 in
-> particular; see the link below).
-> 
-> It also replaces the powerpc fixup_vga() quirk, albeit with slightly
-> different semantics: the quirk selected the first VGA device we found, and
-> overrode that selection with any enabled VGA device we found.  If there
-> were several enabled VGA devices, the *last* one we found would become the
-> default.
-> 
-> The code here instead selects the *first* enabled VGA device we find, and
-> if none are enabled, the first VGA device we find.
-> 
-> Link: http://lkml.kernel.org/r/20170901072744.2409-1-dja@axtens.net
-> Tested-by: Daniel Axtens <dja@axtens.net>    # arm64, ppc64-qemu-tcg
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Some PCIe devices do not support LOS, and will cause timeouts if the
+> root complex forces the LOS state. This patch disables the LOS state
+> by default.
+
+Per PCIe r3.1, sec 5.4.1.3, software should not enable L0s in either
+direction unless both ends support L0s.
+
+I'm unclear on what the bug is here.  Is the generic ASPM code
+incorrectly enabling L0s when one end doesn't support it?  That seems
+unlikely, but if so, it should be fixed in the generic ASPM code.
+
+Are both ends advertising L0s support, but there's a hardware erratum
+on the Aardvark end that keeps it from working correctly?  If so, we
+should say that explicitly and include a reference to a published
+hardware erratum.
+
+Something else?
+
+> This is part of fixing bug
+> https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+> reported as the user to be important to get a Intel 7260 mini-PCIe
+> WiFi card working.
+
+The bugzilla link is a good start, but "reported by the user to be
+important" is meaningless by itself.  What we need here is the details
+of what's broken and how this fixes it.  Unfortunately the bugzilla
+doesn't have those details.
+
+> Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
+> Signed-off-by: Victor Gu <xigu@marvell.com>
+> Reviewed-by: Evan Wang <xswang@marvell.com>
+> Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+> [Thomas: tweak commit log.]
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 > ---
->   arch/powerpc/kernel/pci-common.c |   12 ------------
->   drivers/gpu/vga/vgaarb.c         |   25 +++++++++++++++++++++++++
->   2 files changed, 25 insertions(+), 12 deletions(-)
+>  drivers/pci/host/pci-aardvark.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 02831a396419..0ac7aa346c69 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
->   }
->   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
->   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
-> -
-> -static void fixup_vga(struct pci_dev *pdev)
-> -{
-> -	u16 cmd;
-> -
-> -	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> -	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-> -		vga_set_default_device(pdev);
-> -
-> -}
-> -DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-> -			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
-> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> index 76875f6299b8..aeb41f793ed4 100644
-> --- a/drivers/gpu/vga/vgaarb.c
-> +++ b/drivers/gpu/vga/vgaarb.c
-> @@ -1468,6 +1468,31 @@ static int __init vga_arb_device_init(void)
->   			vgaarb_info(dev, "no bridge control possible\n");
->   	}
->   
-> +	if (!vga_default_device()) {
-> +		list_for_each_entry(vgadev, &vga_list, list) {
-> +			struct device *dev = &vgadev->pdev->dev;
-> +			u16 cmd;
-> +
-> +			pdev = vgadev->pdev;
-> +			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> +			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-> +				vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
-> +				vga_set_default_device(pdev);
-> +				break;
-> +			}
-> +		}
-> +	}
-> +
-> +	if (!vga_default_device()) {
-> +		vgadev = list_first_entry_or_null(&vga_list,
-> +						  struct vga_device, list);
-> +		if (vgadev) {
-> +			struct device *dev = &vgadev->pdev->dev;
-> +			vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
-> +			vga_set_default_device(pdev);
-
-Isn't 'pdev' NULL here? shouldn't it be vgadev->pdev instead?
-
-Cheers,
-
--- 
-Julien Thierry
+> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+> index 23e243135ebe..a173f31853df 100644
+> --- a/drivers/pci/host/pci-aardvark.c
+> +++ b/drivers/pci/host/pci-aardvark.c
+> @@ -368,8 +368,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+>  
+>  	advk_pcie_wait_for_link(pcie);
+>  
+> -	reg = PCIE_CORE_LINK_L0S_ENTRY |
+> -		(1 << PCIE_CORE_LINK_WIDTH_SHIFT);
+> +	reg = (1 << PCIE_CORE_LINK_WIDTH_SHIFT);
+>  	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
+>  
+>  	reg = advk_readl(pcie, PCIE_CORE_CMD_STATUS_REG);
+> -- 
+> 2.13.5
+> 
