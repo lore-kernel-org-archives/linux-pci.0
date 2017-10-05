@@ -1,77 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 09/15] ACPI: configfs: make config_item_type const
-Date: Tue, 17 Oct 2017 02:10:57 +0200
-Message-ID: <3026721.pYNdH8r6C9@aspire.rjw.lan>
-In-Reply-To: <1508167134-6243-10-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1508167134-6243-10-git-send-email-bhumirks@gmail.com>
+Return-Path: <SRS0=IrRM=BE=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=IrRM=BE=linutronix.de=tglx@kernel.org>
+Date: Thu, 5 Oct 2017 22:57:53 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+    Rich Felker <dalias@libc.org>, linux-ia64@vger.kernel.org,
+    linux-sh@vger.kernel.org,
+    Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+    David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
+    Paul Mackerras <paulus@samba.org>, "H. Peter Anvin" <hpa@zytor.com>,
+    sparclinux@vger.kernel.org, Jesper Nilsson <jesper.nilsson@axis.com>,
+    linux-am33-list@redhat.com, Yoshinori Sato <ysato@users.sourceforge.jp>,
+    Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
+    x86@kernel.org, "James E.J. Bottomley" <jejb@parisc-linux.org>,
+    Ingo Molnar <mingo@redhat.com>, Matt Turner <mattst88@gmail.com>,
+    Fenghua Yu <fenghua.yu@intel.com>, linux-xtensa@linux-xtensa.org,
+    Mikael Starvik <starvik@axis.com>,
+    Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+    Richard Henderson <rth@twiddle.net>, Chris Zankel <chris@zankel.net>,
+    Tony Luck <tony.luck@intel.com>, linux-cris-kernel@axis.com,
+    linux-parisc@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+    linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+    "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 3/4] PCI: Remove unused declarations
+In-Reply-To: <20171005203856.18300.62381.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.20.1710052257350.2398@nanos>
+References: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com> <20171005203856.18300.62381.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, October 16, 2017 5:18:48 PM CEST Bhumika Goyal wrote:
-> Make these structures const as they are either passed to the functions
-> having the argument as const or stored as a reference in the "ci_type"
-> const field of a config_item structure.
-> 
-> Done using Coccienlle.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-> ---
-> * Changes in v2- Combine all the followup patches and the constification
-> patches into a series.
-> 
->  drivers/acpi/acpi_configfs.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/acpi/acpi_configfs.c b/drivers/acpi/acpi_configfs.c
-> index 853bc7f..b588503 100644
-> --- a/drivers/acpi/acpi_configfs.c
-> +++ b/drivers/acpi/acpi_configfs.c
-> @@ -204,7 +204,7 @@ struct configfs_attribute *acpi_table_attrs[] = {
->  	NULL,
->  };
->  
-> -static struct config_item_type acpi_table_type = {
-> +static const struct config_item_type acpi_table_type = {
->  	.ct_owner = THIS_MODULE,
->  	.ct_bin_attrs = acpi_table_bin_attrs,
->  	.ct_attrs = acpi_table_attrs,
-> @@ -237,12 +237,12 @@ struct configfs_group_operations acpi_table_group_ops = {
->  	.drop_item = acpi_table_drop_item,
->  };
->  
-> -static struct config_item_type acpi_tables_type = {
-> +static const struct config_item_type acpi_tables_type = {
->  	.ct_owner = THIS_MODULE,
->  	.ct_group_ops = &acpi_table_group_ops,
->  };
->  
-> -static struct config_item_type acpi_root_group_type = {
-> +static const struct config_item_type acpi_root_group_type = {
->  	.ct_owner = THIS_MODULE,
->  };
->  
-> 
+On Thu, 5 Oct 2017, Bjorn Helgaas wrote:
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Remove these unused declarations:
+> 
+>   pcibios_config_init()              # never defined anywhere
+>   pcibios_scan_root()                # only defined by x86
+>   pcibios_get_irq_routing_table()    # only defined by x86
+>   pcibios_set_irq_routing()          # only defined by x86
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-
+Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
