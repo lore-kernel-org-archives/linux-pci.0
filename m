@@ -1,75 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:58024 "EHLO smtp1.it.da.ut.ee"
+Received: from mail.kernel.org ([198.145.29.99]:49114 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750923AbdJYPyx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 25 Oct 2017 11:54:53 -0400
-Date: Wed, 25 Oct 2017 18:54:48 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-cc: linux-alpha@vger.kernel.org,
-        Linux Kernel list <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: alpha boot hang - 4.14-rc* regression
-In-Reply-To: <20171025151413.GA6499@red-moon>
-Message-ID: <alpine.LRH.2.21.1710251848050.16994@math.ut.ee>
-References: <alpine.LRH.2.21.1710251043170.7098@math.ut.ee> <alpine.LRH.2.21.1710251109150.7098@math.ut.ee> <alpine.LRH.2.21.1710251129520.7098@math.ut.ee> <20171025092159.GA14222@red-moon> <alpine.LRH.2.21.1710251511090.10071@math.ut.ee> <20171025133730.GA5487@red-moon>
- <alpine.LRH.2.21.1710251748170.10071@math.ut.ee> <20171025151413.GA6499@red-moon>
+        id S1751500AbdJEUjC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Oct 2017 16:39:02 -0400
+Subject: [PATCH 3/4] PCI: Remove unused declarations
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@linux-mips.org, Rich Felker <dalias@libc.org>,
+        linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        David Howells <dhowells@redhat.com>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Paul Mackerras <paulus@samba.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        linux-am33-list@redhat.com,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Helge Deller <deller@gmx.de>, x86@kernel.org,
+        "James E.J. Bottomley" <jejb@parisc-linux.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matt Turner <mattst88@gmail.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        linux-xtensa@linux-xtensa.org, Mikael Starvik <starvik@axis.com>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Richard Henderson <rth@twiddle.net>,
+        Chris Zankel <chris@zankel.net>,
+        Tony Luck <tony.luck@intel.com>, linux-cris-kernel@axis.com,
+        linux-parisc@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "David S. Miller" <davem@davemloft.net>
+Date: Thu, 05 Oct 2017 15:38:56 -0500
+Message-ID: <20171005203856.18300.62381.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > > > > > removing libata modules and rebooting fixes it - so it seems to be 
-> > > > > > loading of libata.
-> > > > > 
-> > > > > Can you please cherry-pick:
-> > > > > 
-> > > > > commit b1f9e5e355e9 ("ide: fix IRQ assignment for PCI bus order probing")
-> > > > > 
-> > > > > from mainline and let us know if that solves the issue ?
-> > > > 
-> > > > No, still breaks the same way (b1f9e5e355e9 patched on top of 
-> > > > 0e4c2eeb758a).
-> > > > 
-> > > > 4.14.0-rc5-00095-g1c9fec470b81 was also still broken the same way (tried 
-> > > > on Sunday).
-> > > 
-> > > I am not sure I patched the right sys file but if I did, does the patch
-> > > below help ?
-> > > 
-> > > I think that at sata driver binding time the kernel finds a freed
-> > > pointer in the host bridge map_irq() hook and that's where things
-> > > go wrong.
-> > > 
-> > > Please let me know if that's the right sys file, it is a mechanical
-> > > change and making it for other sys file should be reasonably simple.
-> > > 
-> > > Lorenzo
-> > > 
-> > > -- >8 --
-> > > diff --git a/arch/alpha/kernel/sys_dp264.c b/arch/alpha/kernel/sys_dp264.c
-> > 
-> > "Booting GENERIC on Tsunami variation Webbrick using machine vector 
-> > Webbrick from SRM"
-> > 
-> > Seems to be the correct file - tsunami is referenced from this file and 
-> > the IRQ-s are DP264.
-> > 
-> > But the patch does not make a difference :(
-> 
-> It is probably because I patched the wrong map_irq() function,
-> I am trying to detect which one you are _actually_ using, if
-> the patch below fails I will patch them all (which is what I
-> have to do anyway).
-> 
-> Please give this a go - this _has_ to make a difference, it is not
-> correct to leave map_irq() pointers as __init memory, IRQ routing
-> for modules can't work.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Yes, webrick entry seems to be the correct one fro DS10L. It works fine 
-on top of the cherry-picked ATA IRQ patch.
+Remove these unused declarations:
 
-Will try it on top of current mainline git.
+  pcibios_config_init()              # never defined anywhere
+  pcibios_scan_root()                # only defined by x86
+  pcibios_get_irq_routing_table()    # only defined by x86
+  pcibios_set_irq_routing()          # only defined by x86
 
--- 
-Meelis Roos (mroos@linux.ee)
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/cris/include/asm/pci.h             |    6 ------
+ arch/ia64/include/asm/pci.h             |    2 --
+ arch/mn10300/unit-asb2305/pci-asb2305.h |    3 ---
+ arch/x86/include/asm/pci.h              |    1 -
+ 4 files changed, 12 deletions(-)
+
+diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+index 8ea640560a46..141337bf16bc 100644
+--- a/arch/cris/include/asm/pci.h
++++ b/arch/cris/include/asm/pci.h
+@@ -16,12 +16,6 @@
+ 
+ #define PCIBIOS_MIN_CARDBUS_IO	0x4000
+ 
+-void pcibios_config_init(void);
+-struct pci_bus * pcibios_scan_root(int bus);
+-
+-struct irq_routing_table *pcibios_get_irq_routing_table(void);
+-int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+-
+ /* Dynamic DMA mapping stuff.
+  * i386 has everything mapped statically.
+  */
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 8c4b37f6be3d..915531ede6a5 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -29,8 +29,6 @@ struct pci_vector_struct {
+ #define PCIBIOS_MIN_IO		0x1000
+ #define PCIBIOS_MIN_MEM		0x10000000
+ 
+-void pcibios_config_init(void);
+-
+ /*
+  * PCI_DMA_BUS_IS_PHYS should be set to 1 if there is _necessarily_ a direct
+  * correspondence between device bus addresses and CPU physical addresses.
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
+index 96c484b12226..0667f613b023 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.h
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
+@@ -30,9 +30,6 @@ extern void pcibios_resource_survey(void);
+ 
+ extern struct pci_ops *pci_root_ops;
+ 
+-extern struct irq_routing_table *pcibios_get_irq_routing_table(void);
+-extern int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+-
+ /* pci-irq.c */
+ 
+ struct irq_info {
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 645019085bb8..53873a875c01 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -88,7 +88,6 @@ extern unsigned long pci_mem_start;
+ #define PCIBIOS_MIN_CARDBUS_IO	0x4000
+ 
+ extern int pcibios_enabled;
+-void pcibios_config_init(void);
+ void pcibios_scan_root(int bus);
+ 
+ struct irq_routing_table *pcibios_get_irq_routing_table(void);
