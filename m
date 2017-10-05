@@ -1,77 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Wolfram Sang <wsa@the-dreams.de>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 11/12] PM: i2c-designware-platdrv: Optimize power management
-Date: Thu, 26 Oct 2017 23:14:08 +0200
-Message-ID: <7872726.1UjM5oeC1r@aspire.rjw.lan>
-In-Reply-To: <20171026204140.wzrq4lronz4nu6la@ninjato>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2298462.BTY6P2Oy1l@aspire.rjw.lan> <20171026204140.wzrq4lronz4nu6la@ninjato>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48796 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751415AbdJEUih (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Oct 2017 16:38:37 -0400
+Subject: [PATCH 0/4] PCI: Cleanup unused stuff
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@linux-mips.org, Rich Felker <dalias@libc.org>,
+        linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        David Howells <dhowells@redhat.com>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Paul Mackerras <paulus@samba.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        linux-am33-list@redhat.com,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Helge Deller <deller@gmx.de>, x86@kernel.org,
+        "James E.J. Bottomley" <jejb@parisc-linux.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matt Turner <mattst88@gmail.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        linux-xtensa@linux-xtensa.org, Mikael Starvik <starvik@axis.com>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Richard Henderson <rth@twiddle.net>,
+        Chris Zankel <chris@zankel.net>,
+        Tony Luck <tony.luck@intel.com>, linux-cris-kernel@axis.com,
+        linux-parisc@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "David S. Miller" <davem@davemloft.net>
+Date: Thu, 05 Oct 2017 15:38:23 -0500
+Message-ID: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, October 26, 2017 10:41:40 PM CEST Wolfram Sang wrote:
-> On Mon, Oct 16, 2017 at 03:31:17AM +0200, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Optimize the power management in i2c-designware-platdrv by making it
-> > set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
-> > allows some code to be dropped from its PM callbacks.
-> > 
-> > First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
-> > to avoid resuming i2c-designware-platdrv devices in its ->prepare
-> > callback, so they can stay in runtime suspend after that point even
-> > if the direct-complete feature is not used for them.
-> > 
-> > It also causes the PM core to avoid invoking "late" and "noirq"
-> > suspend callbacks for these devices if they are in runtime suspend
-> > at the beginning of the "late" phase of device suspend during
-> > system suspend.  That guarantees dw_i2c_plat_suspend() to be
-> > called for a device only if it is not in runtime suspend.
-> > Moreover, it also causes the PM core to set the device's runtime
-> > PM status to "active" after calling dw_i2c_plat_resume() for
-> > it, so the driver doesn't need internal flags to avoid invoking
-> > either dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in
-> > a row.
-> > 
-> > Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
-> > allowing the device to stay suspended after system resume under
-> > suitable conditions, so again the driver doesn't need to take
-> > care of that by itself.
-> > 
-> > Accordingly, the internal "suspended" and "skip_resume" flags
-> > used by the driver are not necessary any more, so drop them and
-> > simplify the driver's PM callbacks.
-> > 
-> > Additionally, notice that dw_i2c_plat_complete() only needs
-> > to schedule runtime PM for the device if platform firmware
-> > has been involved in resuming the system, so make it call
-> > pm_resume_via_firmware() to check that.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> So, if the designware maintainers ack it, I will, too.
+Sorry for the long cc list.  These are pretty trivial; they just remove
+some unnecessary declarations across several arches.
 
-Thanks!
+---
 
-I need to post a new revision of the core patches, so I'll send this one
-again later.  Likely during the next cycle.
-
-Thanks,
-Rafael
+Bjorn Helgaas (4):
+      PCI: Remove redundant pcibios_set_master() declarations
+      PCI: Remove redundant pci_dev, pci_bus, resource declarations
+      PCI: Remove unused declarations
+      alpha/PCI: Make pdev_save_srm_config() static
 
 
+ arch/alpha/include/asm/pci.h            |    5 -----
+ arch/alpha/kernel/pci.c                 |   11 ++++++++++-
+ arch/alpha/kernel/pci_impl.h            |    8 --------
+ arch/cris/include/asm/pci.h             |    9 ---------
+ arch/frv/include/asm/pci.h              |    4 ----
+ arch/ia64/include/asm/pci.h             |    4 ----
+ arch/mips/include/asm/pci.h             |    4 ----
+ arch/mn10300/include/asm/pci.h          |    4 ----
+ arch/mn10300/unit-asb2305/pci-asb2305.h |    3 ---
+ arch/parisc/include/asm/pci.h           |    8 --------
+ arch/powerpc/include/asm/pci.h          |    2 --
+ arch/sh/include/asm/pci.h               |    4 ----
+ arch/sparc/include/asm/pci_32.h         |    2 --
+ arch/x86/include/asm/pci.h              |    2 --
+ arch/xtensa/include/asm/pci.h           |    2 --
+ 15 files changed, 10 insertions(+), 62 deletions(-)
