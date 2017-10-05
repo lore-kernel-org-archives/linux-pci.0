@@ -1,77 +1,74 @@
-Return-Path: <SRS0=7Ema=BW=ACULAB.COM=David.Laight@kernel.org>
-Return-Path: <SRS0=7Ema=BW=ACULAB.COM=David.Laight@kernel.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Bjorn Helgaas' <helgaas@kernel.org>, Pankaj Dubey
-	<pankaj.dubey@samsung.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Kishon Vijay
- Abraham I" <kishon@ti.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
-	<jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: RE: [PATCH] PCI: dwc: designware: don't sleep in atomic context
-Date: Mon, 23 Oct 2017 09:14:03 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD009F073@AcuExch.aculab.com>
-References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
- <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
- <063D6719AE5E284EB5DD2968C1650D6DD00924BC@AcuExch.aculab.com>
- <70cd34bd-01db-cd93-ddf7-d82114ccc61a@samsung.com>
- <20171020181917.GL6332@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171020181917.GL6332@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="Windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:60925 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751408AbdJEKN6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2017 06:13:58 -0400
+Date: Thu, 5 Oct 2017 12:13:49 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Daniel Drake <drake@endlessm.com>
+cc: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+        x86@kernel.org, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, linux@endlessm.com,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Andy Shevchenko <andy@infradead.org>
+Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
+ allocation
+In-Reply-To: <20171005042316.12261-1-drake@endlessm.com>
+Message-ID: <alpine.DEB.2.20.1710051046040.2083@nanos>
+References: <alpine.DEB.2.20.1710021540030.2185@nanos> <20171005042316.12261-1-drake@endlessm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas
-> Sent: 20 October 2017 19:19
-> On Fri, Oct 13, 2017 at 09:10:38AM +0530, Pankaj Dubey wrote:
-> >
-> >
-> > On 10/12/2017 04:09 PM, David Laight wrote:
-> > >From: Pankaj Dubey
-> > >>Sent: 12 October 2017 08:55
-> > >>In pcie-designware.c many places we are calling "usleep_range" which
-> > >>are in atomic context. This patch fixes these potential BUGs and
-> > >>replaces "usleep_range" with mdelay calls.
-> > >>
-> > >>Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> > >>---
-> > >>  drivers/pci/dwc/pcie-designware.c | 8 ++++----
-> > >>  drivers/pci/dwc/pcie-designware.h | 3 +--
-> > >>  2 files changed, 5 insertions(+), 6 deletions(-)
-> > >>
-> > >>diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie=
--designware.c
-> > >>index 88abddd..35d19b9 100644
-> > >>--- a/drivers/pci/dwc/pcie-designware.c
-> > >>+++ b/drivers/pci/dwc/pcie-designware.c
-> > >>@@ -138,7 +138,7 @@ static void dw_pcie_prog_outbound_atu_unroll(stru=
-ct dw_pcie *pci, int index,
-> > >>  		if (val & PCIE_ATU_ENABLE)
-> > >>  			return;
-> > >>
-> > >>-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> > >>+		mdelay(LINK_WAIT_IATU_MIN);
-> > >>  	}
-> > >Spinning for 9ms (possibly 10 times) isn't really a good idea.
-> >
-> > Yes. It may not be a good idea, however in our experiment it never
-> > hit maximum retry count.  I just converted usleep_range to mdelay
-> > keeping min time limitation as it is, though I am not sure, how do
-> > we arrived on these numbers in original code, may be Joao Pinto from
-> > Synopsys have some idea, I will try to do few experiment and try to
-> > find out what is sufficient minimum time in our hardware for these
-> > mdelay.
->=20
-> Just based on the preceding comment, it looks like the wait is
-> essential because subsequent config and I/O accesses won't work
-> correctly until the ATU enable takes effect.
->=20
-> If we timeout here, I suspect it's because something is seriously
-> wrong in the hardware, so I doubt there's any point in trying to
-> minimize the timeout period.  If something is that broken, it doesn't
-> matter whether we wait 9ms or 900ms.
+On Thu, 5 Oct 2017, Daniel Drake wrote:
+> On Mon, Oct 2, 2017 at 10:38 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> > What's wrong with just using the legacy INTx emulation if you cannot
+> > allocate 4 MSI vectors?
+> 
+> The Legacy interrupt simply doesn't work for the wifi on at least 8 new Acer
+> laptop products based on Intel Apollo Lake.
+> Plus 4 Dell systems included in the patches in this thread:
+> https://lkml.org/lkml/2017/9/26/55
+> (the 2 which I can find specs for are also Apollo Lake)
+>
+> We have tried taking the mini-PCIe wifi module out of one of the affected
+> Acer products and moved it to another computer, where it is working fine
+> with legacy interrupts. So this suggests that the wifi module itself is OK,
+> but we are facing a hardware limitation or BIOS limitation on the affected
+> products. In the Dell thread it says "Some platform(BIOS) blocks legacy
+> interrupts (INTx)".
+>
+> If you have any suggestions for how we might solve this without getting into
+> the MSI mess then that would be much appreciated. If the BIOS blocks the
+> interrupts, can Linux unblock them?
 
-Even one 9ms wait is extreme.
-How long does this usually take?
-...
+I'm pretty sure we can. Cc'ed Rafael and Andy. They might know, if not they
+certainly know whom to ask @Intel.
 
-	David
+> Just for reference I'm attaching my latest attempt at enabling MULTI_PCI_MSI.
+> It would definitely need further work if we proceed here - so far I've
+> ignored the affinity considerations that you explained, and it's not
+> particularly clean.
+
+Yeah, I know how that looks. When I rewrote the allocator I initialy had
+that multi-vector mode implemented and then ditched it due to the affinity
+setting mess and because its hard vs. the global best effort reservation
+mode, which is way more important to have than multi MSI.
+
+>  int irq_matrix_alloc(struct irq_matrix *m, const struct cpumask *msk,
+> -		     bool reserved, unsigned int *mapped_cpu);
+> +		     bool reserved, unsigned int *mapped_cpu, unsigned int num,
+> +		     unsigned int align_mask);
+
+That's not needed. We can assume that multivector allocations must be
+aligned in the following way:
+
+	count = __roundup_pow_of_two(count);
+	mask = ilog2(count);
+
+That's a sane assumption in general.
+
+Thanks,
+
+	tglx
