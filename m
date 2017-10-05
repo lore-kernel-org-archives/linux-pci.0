@@ -1,39 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 25 Oct 2017 00:06:54 +0200
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Wang, Liang-min" <liang-min.wang@intel.com>
-Cc: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>
-Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
-Message-ID: <20171025000654.7621b84e@t450s.home>
-In-Reply-To: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
-References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
-        <20171024234351.0af0ff4a@t450s.home>
-        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49258 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751449AbdJEUjR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Oct 2017 16:39:17 -0400
+Subject: [PATCH 4/4] alpha/PCI: Make pdev_save_srm_config() static
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@linux-mips.org, Rich Felker <dalias@libc.org>,
+        linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        David Howells <dhowells@redhat.com>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Paul Mackerras <paulus@samba.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        linux-am33-list@redhat.com,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Helge Deller <deller@gmx.de>, x86@kernel.org,
+        "James E.J. Bottomley" <jejb@parisc-linux.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matt Turner <mattst88@gmail.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        linux-xtensa@linux-xtensa.org, Mikael Starvik <starvik@axis.com>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Richard Henderson <rth@twiddle.net>,
+        Chris Zankel <chris@zankel.net>,
+        Tony Luck <tony.luck@intel.com>, linux-cris-kernel@axis.com,
+        linux-parisc@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "David S. Miller" <davem@davemloft.net>
+Date: Thu, 05 Oct 2017 15:39:06 -0500
+Message-ID: <20171005203906.18300.63272.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 24 Oct 2017 21:49:15 +0000
-"Wang, Liang-min" <liang-min.wang@intel.com> wrote:
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-> Just like any PCIe devices that supports SR-IOV. There are restrictions set for VF. Also, there is a concept of trust VF now available for PF to manage certain features that only selected VF could exercise. Are you saying all the devices supporting SR-IOV all have security issue?
+pdev_save_srm_config() and struct pdev_srm_saved_conf are only used in
+arch/alpha/kernel/pci.c, so make them static there.
 
-Here's a simple example, most SR-IOV capable NICs, including those from
-Intel, require the PF interface to be up in order to route traffic from
-the VF.  If the user controls the PF interface and VFs are used
-elsewhere in the host, the PF driver in userspace can induce a denial
-of service on the VFs.  That doesn't even take into account that VFs
-might be in separate IOMMU groups from the PF and therefore not
-isolated from the host like the PF and that the PF driver can
-potentially manipulate the VF, possibly performing DMA on behalf of the
-PF.  VFs are only considered secure today because the PF is managed by
-a driver in the host kernel.  Allowing simple enablement of VFs for a
-user owned PF seems inherently insecure to me.  Thanks,
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/alpha/kernel/pci.c      |   11 ++++++++++-
+ arch/alpha/kernel/pci_impl.h |    8 --------
+ 2 files changed, 10 insertions(+), 9 deletions(-)
 
-Alex
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 564114eb85e1..16b67621a0d5 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -196,9 +196,16 @@ pcibios_init(void)
+ subsys_initcall(pcibios_init);
+ 
+ #ifdef ALPHA_RESTORE_SRM_SETUP
++/* Store PCI device configuration left by SRM here. */
++struct pdev_srm_saved_conf
++{
++	struct pdev_srm_saved_conf *next;
++	struct pci_dev *dev;
++};
++
+ static struct pdev_srm_saved_conf *srm_saved_configs;
+ 
+-void pdev_save_srm_config(struct pci_dev *dev)
++static void pdev_save_srm_config(struct pci_dev *dev)
+ {
+ 	struct pdev_srm_saved_conf *tmp;
+ 	static int printed = 0;
+@@ -238,6 +245,8 @@ pci_restore_srm_config(void)
+ 		pci_restore_state(tmp->dev);
+ 	}
+ }
++#else
++#define pdev_save_srm_config(dev)	do {} while (0)
+ #endif
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus)
+diff --git a/arch/alpha/kernel/pci_impl.h b/arch/alpha/kernel/pci_impl.h
+index 2b0ac429f5eb..65adea0d3d78 100644
+--- a/arch/alpha/kernel/pci_impl.h
++++ b/arch/alpha/kernel/pci_impl.h
+@@ -156,16 +156,8 @@ struct pci_iommu_arena
+ #endif
+ 
+ #ifdef ALPHA_RESTORE_SRM_SETUP
+-/* Store PCI device configuration left by SRM here. */
+-struct pdev_srm_saved_conf
+-{
+-	struct pdev_srm_saved_conf *next;
+-	struct pci_dev *dev;
+-};
+-
+ extern void pci_restore_srm_config(void);
+ #else
+-#define pdev_save_srm_config(dev)	do {} while (0)
+ #define pci_restore_srm_config()	do {} while (0)
+ #endif
+ 
