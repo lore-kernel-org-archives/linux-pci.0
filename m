@@ -1,110 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37910 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:48902 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752959AbdJTXzm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Oct 2017 19:55:42 -0400
-Date: Fri, 20 Oct 2017 18:55:38 -0500
+        id S1751557AbdJEUio (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Oct 2017 16:38:44 -0400
+Subject: [PATCH 1/4] PCI: Remove redundant pcibios_set_master() declarations
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tyler Baicar <tbaicar@codeaurora.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: update AER status string print to match other
- AER logs
-Message-ID: <20171020235538.GA6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@linux-mips.org, Rich Felker <dalias@libc.org>,
+        linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        David Howells <dhowells@redhat.com>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Paul Mackerras <paulus@samba.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        linux-am33-list@redhat.com,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Helge Deller <deller@gmx.de>, x86@kernel.org,
+        "James E.J. Bottomley" <jejb@parisc-linux.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matt Turner <mattst88@gmail.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        linux-xtensa@linux-xtensa.org, Mikael Starvik <starvik@axis.com>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Richard Henderson <rth@twiddle.net>,
+        Chris Zankel <chris@zankel.net>,
+        Tony Luck <tony.luck@intel.com>, linux-cris-kernel@axis.com,
+        linux-parisc@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "David S. Miller" <davem@davemloft.net>
+Date: Thu, 05 Oct 2017 15:38:42 -0500
+Message-ID: <20171005203842.18300.67328.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 09:42:02AM -0600, Tyler Baicar wrote:
-> Currently the AER driver uses cper_print_bits() to print the AER status
-> string. This causes the status string to not include the proper PCI device
-> name prefix that the other AER prints include. Also, it has a different
-> print level than all the other AER prints.
-> 
-> Update the AER driver to print the AER status string with the proper string
-> prefix and proper print level.
-> 
-> Previous log example:
-> 
-> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
-> Receiver Error, Bad TLP
-> e1000e 0003:01:00.1: aer_layer=Physical Layer, aer_agent=Receiver ID
-> pcieport 0003:00:00.0: aer_status: 0x00001000, aer_mask: 0x0000e000
-> Replay Timer Timeout
-> pcieport 0003:00:00.0: aer_layer=Data Link Layer, aer_agent=Transmitter ID
-> 
-> New log:
-> 
-> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
-> e1000e 0003:01:00.1: Receiver Error
-> e1000e 0003:01:00.1: Bad TLP
-> e1000e 0003:01:00.1: aer_layer=Physical Layer, aer_agent=Receiver ID
-> pcieport 0003:00:00.0: aer_status: 0x00001000, aer_mask: 0x0000e000
-> pcieport 0003:00:00.0: Replay Timer Timeout
-> pcieport 0003:00:00.0: aer_layer=Data Link Layer, aer_agent=Transmitter ID
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I definitely think it's MUCH better to use dev_err() as you do.
+All users of pcibios_set_master() include <linux/pci.h>, which already has
+a declaration.  Remove the unnecessary declarations from the <asm/pci.h>
+files.
 
-I don't like the cper_print_bits() strategy of inserting line breaks
-to fit in 80 columns.  That leads to atomicity issues, e.g., other
-printk output getting inserted in the middle of a single AER log, and
-suggests an ordering ("Receiver Error" occurred before "Bad TLP") that
-isn't real.  It'd be ideal if everything fit on one line per event,
-but that might not be practical.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/alpha/include/asm/pci.h   |    2 --
+ arch/cris/include/asm/pci.h    |    1 -
+ arch/frv/include/asm/pci.h     |    2 --
+ arch/mips/include/asm/pci.h    |    2 --
+ arch/mn10300/include/asm/pci.h |    2 --
+ arch/parisc/include/asm/pci.h  |    1 -
+ arch/sh/include/asm/pci.h      |    2 --
+ arch/x86/include/asm/pci.h     |    1 -
+ 8 files changed, 13 deletions(-)
 
-I'm not necessarily attached to the actual strings.  These messages
-are for sophisticated users and maybe could be abbreviated as in lspci
-output.  It might actually be kind of neat if the output here matched
-up with the output of "lspci -vv" (lspci prints all the bits; here you
-probably want only the set bits).  Or maybe not.
-
-But even what you have here is a huge improvement.  I *hate*
-unattached things in dmesg like we currently get.  There's no reliable
-way to connect that "Receiver Error, Bad TLP" with the device.
-
-> Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
-> ---
->  drivers/pci/pcie/aer/aerdrv_errprint.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> index 54c4b69..b718daa 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
-> @@ -206,6 +206,19 @@ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
->  }
->  
->  #ifdef CONFIG_ACPI_APEI_PCIEAER
-> +void dev_print_bits(struct pci_dev *dev, unsigned int bits,
-> +		    const char * const strs[], unsigned int strs_size)
-> +{
-> +	unsigned int i;
-> +
-> +	for (i = 0; i < strs_size; i++) {
-> +		if (!(bits & (1U << i)))
-> +			continue;
-> +		if (strs[i])
-> +			dev_err(&dev->dev, "%s\n", strs[i]);
-> +	}
-> +}
-> +
->  int cper_severity_to_aer(int cper_severity)
->  {
->  	switch (cper_severity) {
-> @@ -243,7 +256,7 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
->  	agent = AER_GET_AGENT(aer_severity, status);
->  
->  	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
-> -	cper_print_bits("", status, status_strs, status_strs_size);
-> +	dev_print_bits(dev, status, status_strs, status_strs_size);
->  	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
->  		aer_error_layer[layer], aer_agent_string[agent]);
->  
-> -- 
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project.
-> 
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index a06c24b3a2e1..777be3114fda 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -56,8 +56,6 @@ struct pci_controller {
+ #define PCIBIOS_MIN_IO		alpha_mv.min_io_address
+ #define PCIBIOS_MIN_MEM		alpha_mv.min_mem_address
+ 
+-extern void pcibios_set_master(struct pci_dev *dev);
+-
+ /* IOMMU controls.  */
+ 
+ /* The PCI address space does not equal the physical memory address space.
+diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+index 6e505332b3e3..c6ac59d9f815 100644
+--- a/arch/cris/include/asm/pci.h
++++ b/arch/cris/include/asm/pci.h
+@@ -19,7 +19,6 @@
+ void pcibios_config_init(void);
+ struct pci_bus * pcibios_scan_root(int bus);
+ 
+-void pcibios_set_master(struct pci_dev *dev);
+ struct irq_routing_table *pcibios_get_irq_routing_table(void);
+ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+ 
+diff --git a/arch/frv/include/asm/pci.h b/arch/frv/include/asm/pci.h
+index 809cfc6707ab..a6957014e74e 100644
+--- a/arch/frv/include/asm/pci.h
++++ b/arch/frv/include/asm/pci.h
+@@ -21,8 +21,6 @@ struct pci_dev;
+ 
+ #define pcibios_assign_all_busses()	0
+ 
+-extern void pcibios_set_master(struct pci_dev *dev);
+-
+ #ifdef CONFIG_MMU
+ extern void *consistent_alloc(gfp_t gfp, size_t size, dma_addr_t *dma_handle);
+ extern void consistent_free(void *vaddr);
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 52f551ee492d..0f8528c34753 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -106,8 +106,6 @@ extern unsigned long PCIBIOS_MIN_MEM;
+ 
+ #define PCIBIOS_MIN_CARDBUS_IO	0x4000
+ 
+-extern void pcibios_set_master(struct pci_dev *dev);
+-
+ #define HAVE_PCI_MMAP
+ #define ARCH_GENERIC_PCI_MMAP_RESOURCE
+ #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+index d27654902f28..bdacb618d6af 100644
+--- a/arch/mn10300/include/asm/pci.h
++++ b/arch/mn10300/include/asm/pci.h
+@@ -47,8 +47,6 @@ extern void unit_pci_init(void);
+ #define PCIBIOS_MIN_IO		0xBE000004
+ #define PCIBIOS_MIN_MEM		0xB8000000
+ 
+-void pcibios_set_master(struct pci_dev *dev);
+-
+ /* Dynamic DMA mapping stuff.
+  * i386 has everything mapped statically.
+  */
+diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
+index 1de1a3f412ec..b5730f83b941 100644
+--- a/arch/parisc/include/asm/pci.h
++++ b/arch/parisc/include/asm/pci.h
+@@ -161,7 +161,6 @@ extern struct pci_bios_ops *pci_bios;
+ 
+ #ifdef CONFIG_PCI
+ extern void pcibios_register_hba(struct pci_hba_data *);
+-extern void pcibios_set_master(struct pci_dev *);
+ #else
+ static inline void pcibios_register_hba(struct pci_hba_data *x)
+ {
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index 17fa69bc814d..063c8003b169 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -68,8 +68,6 @@ struct pci_dev;
+ #define HAVE_PCI_MMAP
+ #define ARCH_GENERIC_PCI_MMAP_RESOURCE
+ 
+-extern void pcibios_set_master(struct pci_dev *dev);
+-
+ /* Dynamic DMA mapping stuff.
+  * SuperH has everything mapped statically like x86.
+  */
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 473a7295ab10..645019085bb8 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -91,7 +91,6 @@ extern int pcibios_enabled;
+ void pcibios_config_init(void);
+ void pcibios_scan_root(int bus);
+ 
+-void pcibios_set_master(struct pci_dev *dev);
+ struct irq_routing_table *pcibios_get_irq_routing_table(void);
+ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+ 
