@@ -1,14 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 6 Oct 2017 06:37:00 -0500
+Date: Thu, 5 Oct 2017 13:16:17 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Subject: Re: [PATCH v6 3/3] PCI: iproc: Implement PCI hotplug support
-Message-ID: <20171006113700.GA25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504155029-24729-1-git-send-email-oza.oza@broadcom.com>
- <1504155029-24729-4-git-send-email-oza.oza@broadcom.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 0/7] PCI: aardvark: improve compatibility with PCI
+ devices
+Message-ID: <20171005181615.GU25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+ <20171005175310.3c2dde95@windsurf.lan>
 MIME-Version: 1.0
-In-Reply-To: <1504155029-24729-4-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <20171005175310.3c2dde95@windsurf.lan>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,370 +17,75 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Scott Branden <sbranden@broadcom.com>, Oza Pawandeep <oza.pawandeep@gmail.com>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Andy Gospodarek <gospo@broadcom.com>,
- linux-arm-kernel@lists.infradead.org
+Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+ Hanna Hawa <hannah@marvell.com>, Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@free-electrons.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Antoine Tenart <antoine.tenart@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 31, 2017 at 10:20:29AM +0530, Oza Pawandeep wrote:
-> This patch implements PCI hotplug support for iproc family chipsets.
+[+cc Lorenzo]
+
+On Thu, Oct 05, 2017 at 05:53:10PM +0200, Thomas Petazzoni wrote:
+> Hello Bjorn,
 > 
-> iproc based SOC (e.g. Stingray) does not have hotplug controller
-> integrated.
-> Hence, standard PCI hotplug framework hooks can-not be used.
-> e.g. controlled power up/down of slot.
+> On Thu, 28 Sep 2017 14:58:31 +0200, Thomas Petazzoni wrote:
 > 
-> The mechanism, for e.g. Stingray has adopted for PCI hotplug is as follows:
-> PCI present lines are input to GPIOs depending on the type of
-> connector (x2, x4, x8).
+> > This patch series brings a number of fixes to the pci-aardvark driver
+> > that allows a much larger number of PCIe devices to be used.
 > 
-> GPIO array needs to be present if hotplug is supported.
-> HW implementation is SOC/Board specific, and also it depends on how
-> add-in card is designed
-> (e.g. how many present pins are implemented).
+> I sent the initial version of this patch series almost a month ago, and
+> it consists of fixes that I would like to have in 4.14.
+
+The general rule is that after the merge window, I merge fixes to
+things we put in during the merge window, as well as important
+regression fixes.  Most bug fixes will be queued for the next merge
+window.  I'll need some guidance on classifying these.
+
+I think the map_irq/swizzle_irq patch should definitely be in v4.14.
+(It looks a lot like these:
+
+  1ee4d93d5037 PCI: xilinx-nwl: Move to struct pci_host_bridge IRQ mapping functions
+  5a3dc3c1f694 PCI: rockchip: Move to struct pci_host_bridge IRQ mapping functions
+  c62e98bdaa70 PCI: xgene: Move to struct pci_host_bridge IRQ mapping functions
+  6ab380957838 PCI: altera: Drop pci_fixup_irqs()
+  cf60374de8f6 PCI: versatile: Drop pci_fixup_irqs()
+  6982a068aa5f PCI: generic: Drop pci_fixup_irqs()
+  f7c2e69b65fe PCI: faraday: Drop pci_fixup_irqs()
+  60eca198b1ea PCI: designware: Drop pci_fixup_irqs()
+  64bcd00a7ef5 PCI: iproc: Drop pci_fixup_irqs()
+  29db991902ec PCI: rcar: Drop pci_fixup_irqs()
+  cc2eaaef63df PCI: xilinx: Drop pci_fixup_irqs()
+  dd5fcce2a7f9 PCI: tegra: Drop pci_fixup_irqs()
+
+and I'm obsessive enough to use one of those subject lines to tie this
+patch together with those.)
+
+Most of the rest look like they've been there since the driver was
+first merged, so they would *probably* go in the v4.15 queue.
+
+> Is there a specific problem with those patches that explains why they
+> have been ignored? Or is it just lack of time?
 > 
-> If x8 card is connected, then it might be possible that all the
-> 3 present pins could go low, or at least one pin goes low.
-> If x4 card is connected, then it might be possible that 2 present
-> pins go low, or at least one pin goes low.
-> 
-> The implementation essentially takes care of following:
-> > Initializing hotplug irq thread.
-> > Detecting the endpoint device based on link state.
-> > Handling PERST and detecting the plugged devices.
-> > Ordered Hot plug-out, where User is expected
->   to write 1 to /sys/bus/pci/devices/<pci_dev>/remove
-> > Handling spurious interrupt
-> > Handling multiple interrupts and makes sure that card is
->   enumerated only once.
+> If there is any problem with the patches, please let me know, I am of
+> course perfectly fine with reworking them as needed.
 
-I haven't forgotten this, but I am dragging my feet a little bit.
-There is a standard way for hardware to support PCIe hotplug, and it's
-hard enough to get the software for that right.  I really, really
-don't want to see a bunch of one-off implementations that sort of look
-like standard hotplug but not really.
+Sorry for the delay; mostly just lack of time.  I used to work pretty
+strictly first-in, first-out, but the native host bridge drivers
+consume a disproportionate share of my time compared with the generic
+code that benefits everybody, so I'm trying to figure out how to
+prioritize generic changes.  Obviously I need a solution that gives
+*some* time to the native drivers.
 
-I have a few trivial comments below but haven't really reviewed the
-whole thing.
-
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-> 
-> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-> index a5073a9..6287a43 100644
-> --- a/drivers/pci/host/pcie-iproc-platform.c
-> +++ b/drivers/pci/host/pcie-iproc-platform.c
-> @@ -92,6 +92,9 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
->  		pcie->need_ob_cfg = true;
->  	}
->  
-> +	if (of_property_read_bool(np, "slot-pluggable"))
-> +		pcie->enable_hotplug = true;
-> +
->  	/* PHY use is optional */
->  	pcie->phy = devm_phy_get(dev, "pcie-phy");
->  	if (IS_ERR(pcie->phy)) {
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index 8bd5e54..2b4d830 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -28,6 +28,7 @@
->  #include <linux/of_irq.h>
->  #include <linux/of_platform.h>
->  #include <linux/phy/phy.h>
-> +#include <linux/gpio.h>
->  
->  #include "pcie-iproc.h"
->  
-> @@ -65,6 +66,17 @@
->  #define PCIE_DL_ACTIVE_SHIFT         2
->  #define PCIE_DL_ACTIVE               BIT(PCIE_DL_ACTIVE_SHIFT)
->  
-> +#define CFG_RC_LTSSM                 0x1cf8
-> +#define CFG_RC_PHY_CTL               0x1804
-> +#define CFG_RC_LTSSM_TIMEOUT         1000
-> +#define CFG_RC_LTSSM_STATE_MASK      0xff
-> +#define CFG_RC_LTSSM_STATE_L1        0x1
-> +
-> +#define CFG_RC_CLR_LTSSM_HIST_SHIFT  29
-> +#define CFG_RC_CLR_LTSSM_HIST_MASK   BIT(CFG_RC_CLR_LTSSM_HIST_SHIFT)
-> +#define CFG_RC_CLR_RECOV_HIST_SHIFT  31
-> +#define CFG_RC_CLR_RECOV_HIST_MASK   BIT(CFG_RC_CLR_RECOV_HIST_SHIFT)
-> +
->  #define APB_ERR_EN_SHIFT             0
->  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
->  
-> @@ -1354,13 +1366,107 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
->  	return 0;
->  }
->  
-> +static bool iproc_pci_hp_check_ltssm(struct iproc_pcie *pcie)
-
-*_check_*() is a terrible name for a function because it doesn't give
-any hint about what a "true" return value means.
-
-This looks sort of like dw_pcie_wait_for_link() and
-advk_pcie_wait_for_link().  Please use a name more like them and
-structure the code more like them.
-
-> +{
-> +	struct pci_bus *bus = pcie->root_bus;
-> +	u32 val, timeout = CFG_RC_LTSSM_TIMEOUT;
-> +
-> +	/* Clear LTSSM history. */
-> +	pci_bus_read_config_dword(pcie->root_bus, 0,
-> +				  CFG_RC_PHY_CTL, &val);
-> +	pci_bus_write_config_dword(bus, 0, CFG_RC_PHY_CTL,
-> +				   val | CFG_RC_CLR_RECOV_HIST_MASK |
-> +				   CFG_RC_CLR_LTSSM_HIST_MASK);
-> +	/* write back the origional value. */
-
-s/origional/original/
-
-> +	pci_bus_write_config_dword(bus, 0, CFG_RC_PHY_CTL, val);
-> +
-> +	do {
-> +		pci_bus_read_config_dword(pcie->root_bus, 0,
-> +					  CFG_RC_LTSSM, &val);
-> +		/* check link state to see if link moved to L1 state. */
-> +		if ((val & CFG_RC_LTSSM_STATE_MASK) ==
-> +		     CFG_RC_LTSSM_STATE_L1)
-> +			return true;
-> +		timeout--;
-> +		usleep_range(500, 1000);
-> +	} while (timeout);
-> +
-> +	return false;
-> +}
-> +
-> +static irqreturn_t iproc_pci_hotplug_thread(int irq, void *data)
-> +{
-> +	struct iproc_pcie *pcie = data;
-
-  struct device *dev = pcie->dev;
-
-Then you don't have to repeat "pcie->dev" below.
-
-> +	struct pci_bus *bus = pcie->root_bus, *child;
-> +	bool link_status;
-> +
-> +	iproc_pcie_perst_ctrl(pcie, true);
-> +	iproc_pcie_perst_ctrl(pcie, false);
-> +
-> +	link_status = iproc_pci_hp_check_ltssm(pcie);
-> +
-> +	if (link_status &&
-> +	    !iproc_pcie_check_link(pcie) &&
-
-iproc_pcie_check_link() already exists, but is still a poor name.
-
-Please add some preliminary patches to rename and restructure it along
-the lines of the other *_link_up() functions, e.g.,
-advk_pcie_link_up(), nwl_pcie_link_up(), spear13xx_pcie_link_up(),
-etc.
-
-iproc_pcie_check_link() does a bunch of other stuff that should be
-moved to other functions.  Some of it looks similar to the
-*_establish_link() functions in other drivers.
-
-> +	    !pcie->ep_is_present) {
-> +		pci_rescan_bus(bus);
-> +		list_for_each_entry(child, &bus->children, node)
-> +			pcie_bus_configure_settings(child);
-> +		pcie->ep_is_present = true;
-> +		dev_info(pcie->dev,
-> +			 "PCI Hotplug: <device detected and enumerated>\n");
-> +	} else if (link_status && pcie->ep_is_present)
-> +		/*
-> +		 * ep_is_present makes sure, enumuration done only once.
-
-s/enumuration/enumeration/
-
-> +		 * So it can handle spurious intrrupts, and also if we
-
-s/intrrupts/interrupts/
-
-> +		 * get multiple interrupts for all the implemented pins,
-> +		 * we handle it only once.
-> +		 */
-> +		dev_info(pcie->dev,
-> +			 "PCI Hotplug: <device already present>\n");
-> +	else {
-> +		iproc_pcie_perst_ctrl(pcie, true);
-> +		pcie->ep_is_present = false;
-> +		dev_info(pcie->dev,
-> +			 "PCI Hotplug: <device removed>\n");
-> +	}
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static int iproc_pci_hp_gpio_irq_get(struct iproc_pcie *pcie)
-> +{
-> +	struct gpio_descs *hp_gpiod;
-> +	struct device *dev = pcie->dev;
-> +	int i;
-> +
-> +	hp_gpiod = devm_gpiod_get_array(dev, "prsnt", GPIOD_IN);
-> +	if (PTR_ERR(hp_gpiod) == -EPROBE_DEFER)
-> +		return -EPROBE_DEFER;
-> +
-> +	if (!IS_ERR(hp_gpiod) && (hp_gpiod->ndescs > 0)) {
-> +		for (i = 0; i < hp_gpiod->ndescs; ++i) {
-> +			gpiod_direction_input(hp_gpiod->desc[i]);
-> +			if (request_threaded_irq(gpiod_to_irq
-> +						 (hp_gpiod->desc[i]),
-> +						 NULL, iproc_pci_hotplug_thread,
-> +						 IRQF_TRIGGER_FALLING,
-> +						 "PCI-hotplug", pcie))
-> +				dev_err(dev,
-> +					"PCI hotplug prsnt: request irq failed\n");
-> +			}
-> +	}
-> +	pcie->ep_is_present = false;
-> +
-> +	return 0;
-> +}
-> +
->  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  {
->  	struct device *dev;
->  	int ret;
->  	void *sysdata;
-> -	struct pci_bus *child;
-> +	struct pci_bus *bus, *child;
->  	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-> +	bool link_not_active;
->  
->  	dev = pcie->dev;
->  
-> @@ -1386,6 +1492,12 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  		goto err_exit_phy;
->  	}
->  
-> +	if (pcie->enable_hotplug) {
-> +		ret = iproc_pci_hp_gpio_irq_get(pcie);
-> +		if (ret < 0)
-> +			return ret;
-> +	}
-> +
->  	iproc_pcie_perst_ctrl(pcie, true);
->  	iproc_pcie_perst_ctrl(pcie, false);
->  
-> @@ -1408,8 +1520,16 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  	sysdata = pcie;
->  #endif
->  
-> -	ret = iproc_pcie_check_link(pcie);
-> -	if (ret) {
-> +	link_not_active = iproc_pcie_check_link(pcie);
-> +	if (link_not_active && pcie->enable_hotplug) {
-> +		/*
-> +		 * When link is not active and PCI hotplug
-> +		 * is supported, do not turn off phy, let probe
-> +		 * go ahead.
-> +		 */
-> +		dev_err(dev, "no PCIe EP device detected\n");
-> +		iproc_pcie_perst_ctrl(pcie, true);
-> +	} else if (link_not_active) {
->  		dev_err(dev, "no PCIe EP device detected\n");
->  		goto err_power_off_phy;
->  	}
-> @@ -1420,24 +1540,34 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  		if (iproc_pcie_msi_enable(pcie))
->  			dev_info(dev, "not using iProc MSI\n");
->  
-> -	list_splice_init(res, &host->windows);
-> -	host->busnr = 0;
-> -	host->dev.parent = dev;
-> -	host->ops = &iproc_pcie_ops;
-> -	host->sysdata = sysdata;
-> -	host->map_irq = pcie->map_irq;
-> -	host->swizzle_irq = pci_common_swizzle;
-> +	if (!link_not_active) {
-
-Double negation.  If you pick a better name, e.g., "link_active", this
-will read much better.  But I don't understand why you want to check
-whether the link is active here anyway.  pci_scan_root_bus_bridge()
-should work fine even if there's no device present below the bridge.
-Won't the root port be there always, even if there's no downstream
-device?
-
-> +		list_splice_init(res, &host->windows);
-> +		host->busnr = 0;
-> +		host->dev.parent = dev;
-> +		host->ops = &iproc_pcie_ops;
-> +		host->sysdata = sysdata;
-> +		host->map_irq = pcie->map_irq;
-> +		host->swizzle_irq = pci_common_swizzle;
-> +
-> +		ret = pci_scan_root_bus_bridge(host);
-> +		if (ret < 0) {
-> +			dev_err(dev, "failed to scan host: %d\n", ret);
-> +			goto err_power_off_phy;
-> +		}
->  
-> -	ret = pci_scan_root_bus_bridge(host);
-> -	if (ret < 0) {
-> -		dev_err(dev, "failed to scan host: %d\n", ret);
-> -		goto err_power_off_phy;
-> +		pci_assign_unassigned_bus_resources(host->bus);
-> +		pcie->root_bus = host->bus;
-> +	} else {
-> +		bus = pci_create_root_bus(dev, 0,
-> +					  &iproc_pcie_ops, sysdata, res);
-> +		if (!bus) {
-> +			dev_err(dev, "unable to create PCI root bus\n");
-> +			ret = -ENOMEM;
-> +			goto err_power_off_phy;
-> +		}
-> +		pcie->root_bus = bus;
->  	}
->  
-> -	pci_assign_unassigned_bus_resources(host->bus);
-> -
-> -	pcie->root_bus = host->bus;
-> -
->  	list_for_each_entry(child, &host->bus->children, node)
->  		pcie_bus_configure_settings(child);
->  
-> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-> index a6b55ce..e5d0cd4 100644
-> --- a/drivers/pci/host/pcie-iproc.h
-> +++ b/drivers/pci/host/pcie-iproc.h
-> @@ -77,6 +77,10 @@ struct iproc_pcie_ib {
->   * @ib: inbound mapping related parameters
->   * @ib_map: outbound mapping region related parameters
->   *
-> + * @enable_hotplug: indicates PCI hotplug feature is enabled
-> + * @ep_is_present: when PCIe hotplug is enabled, this flag is used to
-> + * indicate whether or not the endpoint device is present
-> + *
->   * @need_msi_steer: indicates additional configuration of the iProc PCIe
->   * controller is required to steer MSI writes to external interrupt controller
->   * @msi: MSI data
-> @@ -104,6 +108,9 @@ struct iproc_pcie {
->  	struct iproc_pcie_ib ib;
->  	const struct iproc_pcie_ib_map *ib_map;
->  
-> +	bool enable_hotplug;
-> +	bool ep_is_present;
-
-Are you suggesting that only an endpoint can be hotplugged?  You can't
-hotplug a switch?
-
->  	bool need_msi_steer;
->  	struct iproc_msi *msi;
->  };
-> -- 
-> 1.9.1
-> 
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
