@@ -1,61 +1,78 @@
-Return-Path: <SRS0=V0U7=BB=redhat.com=ddutile@kernel.org>
-Return-Path: <SRS0=V0U7=BB=redhat.com=ddutile@kernel.org>
-Subject: Re: [PATCH] uio/uio_pci_generic: Add SR-IOV support
-To: David Woodhouse <dwmw2@infradead.org>,
- Alexander Duyck <alexander.duyck@gmail.com>
-References: <1506517162.30379.2.camel@infradead.org>
- <20170927220005.GB23674@bhelgaas-glaptop.roam.corp.google.com>
- <1506550852.7476.33.camel@infradead.org>
- <CAKgT0UeAg01Yy189pyzo_wDGYOEX6mBgsr_M9Lsi3u0+a-cW2w@mail.gmail.com>
- <bb77ab51-858b-df31-e672-7ccee964b269@redhat.com>
- <1506606369.7476.96.camel@infradead.org>
- <7bbb6cce-3462-fbb2-9ae4-5c08ab2b01b4@redhat.com>
- <1506613946.7476.130.camel@infradead.org>
- <3ddc65bd-bf47-acb8-4cc5-db2531e1e864@redhat.com>
- <1506947750.18322.7.camel@infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- linux-pci <linux-pci@vger.kernel.org>,
- linux-kernel <linux-kernel@vger.kernel.org>,
- Alexander Duyck <alexander.h.duyck@intel.com>,
- "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
- Bodong Wang <bodong@mellanox.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- "Michael S. Tsirkin" <mst@redhat.com>, kvm@vger.kernel.org
-From: Don Dutile <ddutile@redhat.com>
-Message-ID: <5c744ed0-2937-4460-fb8a-6e92fe5bfffa@redhat.com>
-Date: Mon, 2 Oct 2017 14:52:31 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 5 Oct 2017 12:55:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v2 7/7] PCI: aardvark: define IRQ related hooks in
+ pci_host_bridge
+Message-ID: <20171005175547.GT25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+ <20170928125838.11887-8-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <1506947750.18322.7.camel@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20170928125838.11887-8-thomas.petazzoni@free-electrons.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
+ Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+ Hanna Hawa <hannah@marvell.com>, stable@vger.kernel.org,
+ Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@free-electrons.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Antoine Tenart <antoine.tenart@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/02/2017 08:35 AM, David Woodhouse wrote:
-> On Thu, 2017-09-28 at 12:56 -0400, Don Dutile wrote:
->> Well, my point is more like: why put it in uio?
->> why not make it available via pcie, setup while/if no driver attached?
->> i.e., other non-uio users can use the mechanism.... like libvirt? ...
->> if a PF driver isn't required.
->
-> This would allow you to enable SR-IOV on a PF before its driver is
-> loaded, right? Even when that driver *is* going to need to perform
-> resource management for those VFs?
->
-> Would existing drivers cope with SR-IOV being enabled, and VFs being
-> assigned to guests, before they're loaded? If so then sure, let's do it
-> generically. But I'm not sure that's the case.
->
-No better than a uio driver/mgmt api that may have to configure a PF
-before a VF is enabled.
-Q: So what is better: provide a common hook in sysfs for all to use,
-    potentially causing a kernel fault (during vf probe/config), or
-    a user-level program/mgmt-app that does the equivalent?
+[+cc Lorenzo]
 
-> As it is, the UIO driver is all about "userspace knows best". So if
-> there's resource management to be done, then userspace needs to do that
-> before enabling SR-IOV. And that's consistent with the current driver-
-> based enabling model for SR-IOV.
->
-I'm not seeing the UIO driver consistency here.  IMO, it's a similar
-problem, moved to a different place. i.e., slightly different attack vector,
-but same endpoint.
+On Thu, Sep 28, 2017 at 02:58:38PM +0200, Thomas Petazzoni wrote:
+> Commit 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from
+> pcibios_alloc_irq()") was assuming all PCI host controller drivers had
+> been converted to use ->map_irq(), but that wasn't the case:
+> pci-aardvark had not been converted. Due to this, it broke the support
+> for legacy PCI interrupts when using the pci-aardvark driver (used on
+> Marvell Armada 3720 platforms).
+
+Lorenzo is pretty thorough, but maybe pci-aardvark.c got overlooked.
+Cc'ing him just to make sure there's nothing deeper than that.
+
+> In order to fix this, we make sure the ->map_irq and ->swizzle_irq
+> fields of pci_host_bridge are properly filled in.
+> 
+> Fixes: 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()")
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: <stable@vger.kernel.org> # v4.13+
+> ---
+>  drivers/pci/host/pci-aardvark.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+> index c1093b023e48..249a088b463c 100644
+> --- a/drivers/pci/host/pci-aardvark.c
+> +++ b/drivers/pci/host/pci-aardvark.c
+> @@ -998,6 +998,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+>  	bridge->sysdata = pcie;
+>  	bridge->busnr = 0;
+>  	bridge->ops = &advk_pcie_ops;
+> +	bridge->map_irq = of_irq_parse_and_map_pci;
+> +	bridge->swizzle_irq = pci_common_swizzle;
+>  
+>  	ret = pci_scan_root_bus_bridge(bridge);
+>  	if (ret < 0) {
+> -- 
+> 2.13.5
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
