@@ -1,67 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44250 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:52858 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753427AbdJMDrR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Oct 2017 23:47:17 -0400
-Subject: [PATCH v2 0/2] vgaarb: Select fallback default VGA device
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-pci@vger.kernel.org,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        dri-devel@lists.freedesktop.org,
-        Xinliang Liu <z.liuxinliang@hisilicon.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Rongrong Zou <zourongrong@gmail.com>,
-        Dave Airlie <airlied@redhat.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org,
-        Daniel Axtens <dja@axtens.net>
-Date: Thu, 12 Oct 2017 22:47:14 -0500
-Message-ID: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        id S1751395AbdJEVJv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Oct 2017 17:09:51 -0400
+Date: Thu, 5 Oct 2017 16:09:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Colin King <colin.king@canonical.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] switchtec: make struct event_regs static
+Message-ID: <20171005210949.GX25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171005100145.29309-1-colin.king@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171005100145.29309-1-colin.king@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These patches are supposed to fix a problem Daniel Axtens found on the
-HiSilicon D05 board.  The VGA device there is behind a bridge that doesn't
-support PCI_BRIDGE_CTL_VGA, so the arbiter never selects the device as the
-default.
+On Thu, Oct 05, 2017 at 11:01:45AM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> The structure event_regs is local to the source and does not need to
+> be in global scope, so make it static.
+> 
+> Cleans up sparse warning:
+> symbol 'event_regs' was not declared. Should it be static
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-The first patch extends the arbiter so that if it can't find an enabled VGA
-device with legacy resources, it selects the first enabled device *without*
-legacy resources (this is what fixes the D05).  If that fails, it selects
-the first device that isn't enabled.  The combination of both changes
-should make the current powerpc fixup_vga() quirk unnecessary.
+Applied with Logan's ack to pci/switchtec for v4.15, thanks!
 
-N.B. It changes the powerpc behavior: if there are several enabled VGA
-devices, the current quirk selects the last one, while this patch selects
-the first one.  If this is a problem, I can drop that part of the patch and
-keep the quirk.
-
-The second patch pulls out this fallback device detection (and the EFI
-override) from vga_arb_device_init() to make it easier to read.
-
-Changes in v2:
-  - set default device to vgadev->pdev instead of the pdev left over from a
-    previous iteration through the list (thanks to Julien Thierry)
-
-  - added "Tested-by: Zhou Wang" (I'm pretty sure the change above doesn't
-    invalidate this testing)
-
----
-
-Bjorn Helgaas (2):
-      vgaarb: Select a default VGA device even if there's no legacy VGA
-      vgaarb: Factor out EFI and fallback default device selection
-
-
- arch/powerpc/kernel/pci-common.c |   12 ------
- drivers/gpu/vga/vgaarb.c         |   72 +++++++++++++++++++++++++++++---------
- 2 files changed, 55 insertions(+), 29 deletions(-)
+> ---
+>  drivers/pci/switch/switchtec.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+> index af81b2dec42e..da45dbea20ce 100644
+> --- a/drivers/pci/switch/switchtec.c
+> +++ b/drivers/pci/switch/switchtec.c
+> @@ -943,7 +943,7 @@ static u32 __iomem *pff_ev_reg(struct switchtec_dev *stdev,
+>  #define EV_PAR(i, r)[i] = {offsetof(struct part_cfg_regs, r), part_ev_reg}
+>  #define EV_PFF(i, r)[i] = {offsetof(struct pff_csr_regs, r), pff_ev_reg}
+>  
+> -const struct event_reg {
+> +static const struct event_reg {
+>  	size_t offset;
+>  	u32 __iomem *(*map_reg)(struct switchtec_dev *stdev,
+>  				size_t offset, int index);
+> -- 
+> 2.14.1
+> 
