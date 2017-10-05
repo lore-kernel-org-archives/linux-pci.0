@@ -1,101 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.141]:50981 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751263AbdJ0DGz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Oct 2017 23:06:55 -0400
-Message-ID: <59F2A2BA.5030307@rock-chips.com>
-Date: Fri, 27 Oct 2017 11:06:34 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 5 Oct 2017 16:16:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jan Luebbe <jlu@pengutronix.de>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        Gregory Clement <gregory.clement@free-electrons.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/2] PCI: mvebu: Check DRAM window size
+Message-ID: <20171005211650.GZ25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170828152517.24506-1-jlu@pengutronix.de>
+ <20170828152517.24506-3-jlu@pengutronix.de>
+ <20170925235658.GK15970@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Brian Norris <briannorris@chromium.org>
-CC: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, rjw@rjwysocki.net, dianders@chromium.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [RFC PATCH v8 1/7] dt-bindings: PCI: Add definition of PCIe WAKE#
- irq and PCI irq
-References: <20171026132840.20946-1-jeffy.chen@rock-chips.com> <20171026132840.20946-2-jeffy.chen@rock-chips.com> <20171027023331.GA11665@google.com>
-In-Reply-To: <20171027023331.GA11665@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170925235658.GK15970@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Brian,
+On Mon, Sep 25, 2017 at 06:56:58PM -0500, Bjorn Helgaas wrote:
+> On Mon, Aug 28, 2017 at 05:25:17PM +0200, Jan Luebbe wrote:
+> > The sum of the DRAM windows may exceed 4GB (at least on Armada XP).
+> > Return an error in that case.
+> > 
+> > Signed-off-by: Jan Luebbe <jlu@pengutronix.de>
+> 
+> Looking for an ack from Thomas or Jason before applying this...
 
-On 10/27/2017 10:33 AM, Brian Norris wrote:
-> On Thu, Oct 26, 2017 at 09:28:34PM +0800, Jeffy Chen wrote:
->> Add optional interrupts for PCIe WAKE# pin and PCI interrupt pin.
->>
->> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->> ---
->>
->> Changes in v8:
->> Add optional "pci", and rewrite commit message.
->>
->> Changes in v7: None
->> Changes in v6: None
->> Changes in v5:
->> Move to pci.txt
->>
->> Changes in v3: None
->> Changes in v2: None
->>
->>   Documentation/devicetree/bindings/pci/pci.txt | 3 +++
->>   1 file changed, 3 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
->> index c77981c5dd18..faed405811cd 100644
->> --- a/Documentation/devicetree/bindings/pci/pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/pci.txt
->> @@ -24,3 +24,6 @@ driver implementation may support the following properties:
->>      unsupported link speed, for instance, trying to do training for
->>      unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
->>      for gen2, and '1' for gen1. Any other values are invalid.
->> +- interrupts: Interrupt specifier for each name in interrupt-names.
->> +- interrupt-names: May contains "wakeup" for PCIe WAKE# interrupt and "pci"
->> +  for PCI interrupt.
->
-> Similar criticism to what Rob made on patch 4: this file already says "a
-> host bridge driver implementation may support the following properties",
-> so this property is clearly not for child devices. And so having the
-> "PCI interrupt" here doesn't make much sense.
->
-> Similarly, you're documenting "wakeup" here as a host bridge property,
-> but then patch 7 is adding per-device support it seems? That seems
-> wrong.
-oops...so there's no section for PCI device here, maybe i should add a 
-section about "PCI device have standardized Device Tree bindings:" to 
-place it? will do in next version.
+Ping, I think I'm stil waiting for an ack for this.  Or did I miss it?
 
-
->
-> In fact, I'm pretty sure this series fails to actually look in the host
-> bridge for the "wakeup" interrupt at all! Did you actually test this?
-actually it could...
-
-static void *of_pci_setup(struct device *dev)
-{
-...
-         device_init_wakeup(dev, false);
-
-         dev_info(dev, "Wakeup IRQ %d\n", irq);
-         return data;
-}
-
-[    1.546561] OF: PCI:   MEM 0xfa000000..0xfbdfffff -> 0xfa000000
-[    1.553154] OF: PCI:    IO 0xfbe00000..0xfbefffff -> 0xfbe00000
-[    1.560859] rockchip-pcie f8000000.pcie: Wakeup IRQ 64
-[    1.566555] rockchip-pcie f8000000.pcie: PCI host bridge to bus
-
->
-> And again, describing your intentions a little better in the commit
-> message would make this clearer. Then we could tell which way you
-> intended this to work...
-ok, will do in next version...
->
-> Brian
->
->
->
+> > ---
+> >  drivers/pci/host/pci-mvebu.c | 27 ++++++++++++++++++++++-----
+> >  1 file changed, 22 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> > index f353a6eb2f01..5d74af81d104 100644
+> > --- a/drivers/pci/host/pci-mvebu.c
+> > +++ b/drivers/pci/host/pci-mvebu.c
+> > @@ -206,10 +206,10 @@ static void mvebu_pcie_set_local_dev_nr(struct mvebu_pcie_port *port, int nr)
+> >   * BAR[0,2] -> disabled, BAR[1] -> covers all DRAM banks
+> >   * WIN[0-3] -> DRAM bank[0-3]
+> >   */
+> > -static void mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
+> > +static int mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
+> >  {
+> >  	const struct mbus_dram_target_info *dram;
+> > -	u32 size;
+> > +	u64 size;
+> >  	int i;
+> >  
+> >  	dram = mv_mbus_dram_info();
+> > @@ -252,19 +252,32 @@ static void mvebu_pcie_setup_wins(struct mvebu_pcie_port *port)
+> >  	if ((size & (size - 1)) != 0)
+> >  		size = 1 << fls(size);
+> >  
+> > +	if (size > 0x100000000) {
+> > +		dev_err(&port->pcie->pdev->dev,
+> > +			"Could not configure DRAM window (too large): 0x%llx\n",
+> > +			size);
+> > +
+> > +		return -EINVAL;
+> > +	}
+> > +
+> >  	/* Setup BAR[1] to all DRAM banks. */
+> >  	mvebu_writel(port, dram->cs[0].base, PCIE_BAR_LO_OFF(1));
+> >  	mvebu_writel(port, 0, PCIE_BAR_HI_OFF(1));
+> >  	mvebu_writel(port, ((size - 1) & 0xffff0000) | 1,
+> >  		     PCIE_BAR_CTRL_OFF(1));
+> > +
+> > +	return 0;
+> >  }
+> >  
+> > -static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
+> > +static int mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
+> >  {
+> >  	u32 cmd, mask;
+> > +	int ret;
+> >  
+> >  	/* Point PCIe unit MBUS decode windows to DRAM space. */
+> > -	mvebu_pcie_setup_wins(port);
+> > +	ret = mvebu_pcie_setup_wins(port);
+> > +	if (ret)
+> > +		return ret;
+> >  
+> >  	/* Master + slave enable. */
+> >  	cmd = mvebu_readl(port, PCIE_CMD_OFF);
+> > @@ -277,6 +290,8 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
+> >  	mask = mvebu_readl(port, PCIE_MASK_OFF);
+> >  	mask |= PCIE_MASK_ENABLE_INTS;
+> >  	mvebu_writel(port, mask, PCIE_MASK_OFF);
+> > +
+> > +	return 0;
+> >  }
+> >  
+> >  static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
+> > @@ -882,7 +897,9 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+> >  
+> >  		if (!port->base)
+> >  			continue;
+> > -		mvebu_pcie_setup_hw(port);
+> > +		err = mvebu_pcie_setup_hw(port);
+> > +		if (err)
+> > +			return 0;
+> >  	}
+> >  
+> >  	return 1;
+> > -- 
+> > 2.11.0
+> > 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
