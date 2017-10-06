@@ -1,89 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 1/9] SOC: brcmstb: add memory API
-To: Christoph Hellwig <hch@infradead.org>, Jim Quinlan <jim2101024@gmail.com>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
- <20171017082413.GA10574@infradead.org>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <abdb1e9d-f8c9-8066-48c5-37b4e2474952@gmail.com>
-Date: Tue, 17 Oct 2017 09:12:22 -0700
-MIME-Version: 1.0
-In-Reply-To: <20171017082413.GA10574@infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
- Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 25/36] iommu/arm-smmu-v3: Use shared ASID set
+Date: Fri,  6 Oct 2017 14:31:52 +0100
+Message-Id: <20171006133203.22803-26-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/17/2017 01:24 AM, Christoph Hellwig wrote:
->> +/* Macros to help extract property data */
->> +#define U8TOU32(b, offs) \
->> +	((((u32)b[0 + offs] << 0)  & 0x000000ff) | \
->> +	 (((u32)b[1 + offs] << 8)  & 0x0000ff00) | \
->> +	 (((u32)b[2 + offs] << 16) & 0x00ff0000) | \
->> +	 (((u32)b[3 + offs] << 24) & 0xff000000))
-> 
-> Please us helpers like get_unaligned_le32 instead opencoding them.
-> 
->> +#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(U8TOU32(b, offs)))
-> 
-> And together with this it looks really whacky.  So you're converting
-> from le to native first and then do another conversion from be to cpu?
-> 
-> Something doesn't work out here.
-> 
->> +/* -------------------- Functions -------------------- */
-> 
-> Please remove pointless comments like this one.
-> 
->> +
->> +/*
->> + * If the DT nodes are handy, determine which MEMC holds the specified
->> + * physical address.
->> + */
->> +#ifdef CONFIG_ARCH_BRCMSTB
->> +int __brcmstb_memory_phys_addr_to_memc(phys_addr_t pa, void __iomem *base)
-> 
-> Please move this into the arm arch code.
+We now have two exclusive sets of ASIDs: private and shared. SMMUv3 allows
+for contexts to take part in distributed TLB maintenance via the ASET bit.
+When this bit is 0 for a given context, TLB entries tagged with its ASID
+are invalidated by broadcast TLB maintenance. Set ASET=0 for process
+contexts.
 
-No, this needs to work on both ARM and ARM64, hence the reason why this
-is in a reasonably architecture neutral place.
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> 
->> +#elif defined(CONFIG_MIPS)
-> 
-> And this into the mips arch code.
-
-Same reason as above.
-
-> 
->> +EXPORT_SYMBOL(brcmstb_memory_phys_addr_to_memc);
-> 
->> +EXPORT_SYMBOL(brcmstb_memory_memc_size);
-> 
-> Why is this exported?
-
-Because the PCIE RC driver can be built as a module.
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index e89e6d1263d9..b7355630526a 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1240,7 +1240,8 @@ static void arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
+ 		      CTXDESC_CD_0_ENDI |
+ #endif
+ 		      CTXDESC_CD_0_R | CTXDESC_CD_0_A |
+-		      CTXDESC_CD_0_ASET_PRIVATE |
++		      (ssid ? CTXDESC_CD_0_ASET_SHARED :
++			      CTXDESC_CD_0_ASET_PRIVATE) |
+ 		      CTXDESC_CD_0_AA64 |
+ 		      (u64)cd->asid << CTXDESC_CD_0_ASID_SHIFT |
+ 		      CTXDESC_CD_0_V;
 -- 
-Florian
+2.13.3
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
