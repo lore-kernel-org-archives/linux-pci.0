@@ -1,49 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 3 Oct 2017 10:09:54 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Govindarajulu Varadarajan <gvaradar@cisco.com>
-Cc: Christoph Hellwig <hch@lst.de>, benve@cisco.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jlbec@evilplan.org, mingo@redhat.com,
-        peterz@infradead.org, okaya@codeaurora.org
-Subject: Re: [PATCH V2] PCI: AER: fix deadlock in do_recovery
-Message-ID: <20171003080954.GA19637@lst.de>
-References: <20170930054938.43271-1-gvaradar@cisco.com> <20171001075514.GA11554@lst.de> <alpine.LNX.2.20.1710021606440.30867@cae-iprp-alln-lb.cisco.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
+        <sudeep.holla@arm.com>, <will.deacon@arm.com>,
+        <robin.murphy@arm.com>, <joro@8bytes.org>, <bhelgaas@google.com>,
+        <gabriele.paoloni@huawei.com>
+CC: <john.garry@huawei.com>, <iommu@lists.linux-foundation.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devel@acpica.org>, <linuxarm@huawei.com>,
+        <wangzhou1@hisilicon.com>, <guohanjun@huawei.com>,
+        Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+Subject: [PATCH v9 4/4] PCI: hisi: blacklist hip06/hip07 controllers behind SMMUv3
+Date: Fri, 6 Oct 2017 15:04:50 +0100
+Message-ID: <20171006140450.89652-5-shameerali.kolothum.thodi@huawei.com>
+In-Reply-To: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
+References: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.20.1710021606440.30867@cae-iprp-alln-lb.cisco.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 02, 2017 at 05:14:09PM -0700, Govindarajulu Varadarajan wrote:
->
-> I would avoid increasing the size of pci_dev. The list_head would be empty after
-> we call aer_pci_walk_bus(). We already have pci_bus *subordinate to link all the
-> 'device's. Making list_head available to others would require a lock. I would
-> avoid that.
+The HiSilicon erratum 161010801 describes the limitation of
+HiSilicon platforms hip06/hip07 to support the SMMUv3 mappings
+for MSI transactions.
 
-It does not require a new lock if you clearly document the concurrency
-semantics.  And I'd much rather add a hlist_node (which should be enough
-if we want to be small) to pci_dev than requiring these additional
-memory allocations and boiler plate code in an error recovery situation.
+PCIe controller on these platforms has to differentiate the MSI
+payload against other DMA payload and has to modify the MSI
+payload. This basically makes it difficult for this platforms to
+have a SMMU translation for MSI. In order to workaround this, ARM
+SMMUv3 driver requires a quirk to treat the MSI regions separately.
+Such a quirk is currently missing for DT based systems and therefore
+we need to blacklist the hip06/hip07 PCIe controllers.
 
->
->>> +static void aer_pci_walk_bus(struct pci_bus *top,
->>> +			     int (*cb)(struct pci_dev *, void *),
->>> +			     struct aer_broadcast_data *result)
->>> +{
->>> +	HLIST_HEAD(dev_hlist);
->>> +	struct hlist_node *tmp;
->>> +	struct aer_device_list *entry;
->>
->> Do we want to offer this as generic PCIe functionality?  If not we can
->> probably hardcode the callback and callback data to simplify this a lot.
->>
->
-> I could not find any other code which aquires device_lock in pci_walk_bus cb
-> function. Can you tell me how we can hardcore callback and callback data here?
+Signed-off-by: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+---
+ drivers/pci/dwc/pcie-hisi.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-The word is hardcode.  If you follow the above suggestion we won't
-really need the aer_pci_walk_bus helper but could just open code most
-of the code.  Or maybe just keep passing the cb for simplicity - it
-was just extending on the above idea.
+diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+index a201791..6800747 100644
+--- a/drivers/pci/dwc/pcie-hisi.c
++++ b/drivers/pci/dwc/pcie-hisi.c
+@@ -270,6 +270,12 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	struct resource *reg;
+ 	int ret;
+ 
++	if ((IS_BUILTIN(CONFIG_ARM_SMMU_V3)) &&
++			of_property_read_bool(dev->of_node, "iommu-map")) {
++		dev_warn(dev, "HiSilicon erratum 161010801: blacklisting PCIe controllers behind SMMUv3\n");
++		return -ENODEV;
++	}
++
+ 	hisi_pcie = devm_kzalloc(dev, sizeof(*hisi_pcie), GFP_KERNEL);
+ 	if (!hisi_pcie)
+ 		return -ENOMEM;
+@@ -340,6 +346,12 @@ static int hisi_pcie_almost_ecam_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct pci_ecam_ops *ops;
+ 
++	if ((IS_BUILTIN(CONFIG_ARM_SMMU_V3)) &&
++			of_property_read_bool(dev->of_node, "iommu-map")) {
++		dev_warn(dev, "HiSilicon erratum 161010801: blacklisting PCIe controllers behind SMMUv3\n");
++		return -ENODEV;
++	}
++
+ 	ops = (struct pci_ecam_ops *)of_device_get_match_data(dev);
+ 	return pci_host_common_probe(pdev, ops);
+ }
+-- 
+1.9.1
+
+
