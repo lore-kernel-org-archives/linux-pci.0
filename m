@@ -1,94 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 19 Oct 2017 13:50:10 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60958 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752577AbdJFSuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Oct 2017 14:50:55 -0400
+Date: Fri, 6 Oct 2017 13:50:54 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
-        Wilson.Snyder@cavium.com, robert.richter@cavium.com,
-        david.daney@cavium.com, mjaggi@caviumnetworks.com,
-        Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-Subject: Re: [PATCH v7 0/2] PCI: quirks: Cavium ThunderX ACS quirk update
-Message-ID: <20171019185010.GE6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <20171019112645.GD6332@bhelgaas-glaptop.roam.corp.google.com>
- <20171019115921.GA6199@localhost.localdomain>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: [GIT PULL] PCI fixes for v4.14
+Message-ID: <20171006185054.GA23061@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171019115921.GA6199@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 19, 2017 at 04:59:21AM -0700, Vadim Lomovtsev wrote:
-> On Thu, Oct 19, 2017 at 06:26:45AM -0500, Bjorn Helgaas wrote:
-> > On Tue, Oct 17, 2017 at 05:47:37AM -0700, Vadim Lomovtsev wrote:
-> > > From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-> > > 
-> > > version 7:
-> > > - update patch description accordingly to review comments;
-> > > - split for two patches: for ACS mask change and device id match change;
-> > > - remove macro #define of ACS flags, put it back to quirk function;
-> > > - remove '__inline_' from device id matching function;
-> > > - wrap code comments to fit into 80 columns;
-> > > - comment fix: change 0xa00 to 0xf800 for matching function description;
-> > > 
-> > > version 6:
-> > > - comment typo fix: change 0xa00 to 0xa000;
-> > > 
-> > > version 5:
-> > > - update code comments accordingly to review comments;
-> > > 
-> > > version 4:
-> > > - update ACS mask (remove TB and TD bits), update commit message (remove
-> > >   ACS register printout);
-> > > 
-> > > version 3:
-> > > - update subject: remove CN8XXX from subject line, replace it with ThunderX;
-> > > 
-> > > version 2:
-> > > - update match function in order to filter only ThunderX devices by device
-> > >   ids to properly filter CN8XXX devices, update subject & description with
-> > >   ACS register info (v2 was rejected by maillist due to triple X in subject);
-> > >   
-> > > Vadim Lomovtsev (2):
-> > >   PCI: quirks: Set Cavium ACS capability quirk flags to assert
-> > >     RR/CR/SV/UF.
-> > >   PCI: quirks: Apply Cavium ThunderX ACS quirk only to Root Ports
-> > > 
-> > >  drivers/pci/quirks.c | 26 ++++++++++++++++++++------
-> > >  1 file changed, 20 insertions(+), 6 deletions(-)
-> > 
-> > If I'm reading this correctly, the first patch is basically fixing a bug in
-> > the original Cavium ACS quirk (b404bcfbf035 ("PCI: Add ACS quirk for all
-> > Cavium devices")).  Right?
-> 
-> Yes, first patch fixes improper ACS flags in the patch you mentioned.
-> 
-> The second one fixes devid check from another patch
-> (b77d537d00d0 PCI: Apply Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices).
-> 
-> > 
-> > I put them on pci/virtualization for v4.15 as follows (patches unchanged,
-> > changelogs wordsmithed).
-> >
-> 
-> Good, thank you.
-> 
-> > You mentioned stable backports.  b404bcfbf035 ("PCI: Add ACS quirk for all
-> > Cavium devices") appeared in v4.6.  b77d537d00d0 ("PCI: Apply Cavium ACS
-> > quirk only to CN81xx/CN83xx/CN88xx devices") appeared in v4.12.  I assume
-> > you would ideally want all this backported as far as v4.6?  We'd have to
-> > figure out how to express that in stable tags.
-> 
-> Ideally yes, I think we would need to have them backported onto stable(s),
-> but so far I didn't see any bug-reports which could require these fixes.
-> 
-> Anyway, in term of backporting them - are there anything I can help with ?
+PCI fixes:
 
-I added the following tags, which I *think* should be sufficient:
+  - fix legacy IDE probe issues exposed by recent PCI core IRQ mapping
+    changes (Bartlomiej Zolnierkiewicz, Lorenzo Pieralisi)
 
-  PCI: Set Cavium ACS capability quirk flags to assert RR/CR/SV/UF
-  Cc: stable@vger.kernel.org      # v4.6+: b77d537d00d0: PCI: Apply Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices
 
-  PCI: Apply Cavium ThunderX ACS quirk to more Root Ports
-  Cc: stable@vger.kernel.org      # v4.12+
+The following changes since commit 9561475db680f7144d2223a409dd3d7e322aca03:
+
+  PCI: Fix race condition with driver_override (2017-09-25 18:34:54 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.14-fixes-4
+
+for you to fetch changes up to b1f9e5e355e909000fcccfd2bc31f7c1ded358ab:
+
+  ide: fix IRQ assignment for PCI bus order probing (2017-10-03 14:03:31 -0500)
+
+----------------------------------------------------------------
+pci-v4.14-fixes-4
+
+----------------------------------------------------------------
+Bartlomiej Zolnierkiewicz (2):
+      ide: free hwif->portdev on hwif_init() failure
+      ide: pci: free PCI BARs on initialization failure
+
+Lorenzo Pieralisi (1):
+      ide: fix IRQ assignment for PCI bus order probing
+
+ drivers/ide/ide-probe.c    |  1 +
+ drivers/ide/ide-scan-pci.c | 13 +++++++---
+ drivers/ide/setup-pci.c    | 63 +++++++++++++++++++++++++++++-----------------
+ 3 files changed, 50 insertions(+), 27 deletions(-)
