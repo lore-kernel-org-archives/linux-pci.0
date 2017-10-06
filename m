@@ -1,155 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:52679 "EHLO
-        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754906AbdJJD7C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Oct 2017 23:59:02 -0400
-Received: by mail-oi0-f49.google.com with SMTP id p126so43087812oih.9
-        for <linux-pci@vger.kernel.org>; Mon, 09 Oct 2017 20:59:02 -0700 (PDT)
-To: bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Jon Mason <jon.mason@broadcom.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
-Message-ID: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
-Date: Mon, 9 Oct 2017 20:58:59 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 32/36] iommu/arm-smmu-v3: Hook ATC invalidation to process ops
+Date: Fri,  6 Oct 2017 14:31:59 +0100
+Message-Id: <20171006133203.22803-33-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
-warnings using pcie_iproc; is this something to be worried about?
-
-[    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
-
-
-
-[    2.632358] pci_bus 0000:00: root bus resource [mem
-0x08000000-0x0fffffff]
-
-
-[    2.639207] pci_bus 0000:00: No busn resource found for root bus,
-will use [bus 00-ff]
-
-
-[    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0x4 may corrupt adjacent RW1C bits
-
-
-[    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0x4 may corrupt adjacent RW1C bits
-
-
-[    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0x4c may corrupt adjacent RW1C bits
-
-
-[    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0x3e may corrupt adjacent RW1C bits
-
-
-[    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0x4 may corrupt adjacent RW1C bits
-
-
-[    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
-offset 0xc may corrupt adjacent RW1C bits
-
-
-[    2.705531] PCI: bus0: Fast back to back transfers disabled
-
-
-
-[    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
-00-00]), reconfiguring
-
-
-[    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0x3e may corrupt adjacent RW1C bits
-
-
-[    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0xc8 may corrupt adjacent RW1C bits
-
-
-[    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0x3e may corrupt adjacent RW1C bits
-
-
-[    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-offset 0x3e may corrupt adjacent RW1C bits
-
-
-[    2.758262] pci 0000:01:00.0: enabling Extended Tags
-
-
-
-[    2.763577] PCI: bus1: Fast back to back transfers disabled
-
-
-
-[    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
-0x08000000-0x080fffff]
-
-
-[    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
-0x08000000-0x08003fff 64bit]
-
-
-[    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
-
-
-
-[    2.788293] pci 0000:00:00.0:   bridge window [mem
-0x08000000-0x080fffff]
-
-
-[    2.911536] pcie_iproc_bcma bcma0:8: link: UP
-
-
-
-[    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
-
-
-
-[    2.922349] pci_bus 0001:00: root bus resource [mem
-0x40000000-0x47ffffff]
-
-
-[    2.929200] pci_bus 0001:00: No busn resource found for root bus,
-will use [bus 00-ff]
-
-
-[    2.937482] PCI: bus0: Fast back to back transfers disabled
-
-
-
-[    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
-00-00]), reconfiguring
-
-
-[    2.951713] PCI: bus1: Fast back to back transfers disabled
-
-
-
-[    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
-0x40000000-0x400fffff]
-
-
-[    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
-0x40000000-0x40007fff 64bit]
-
-
-[    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
-
-
-
-[    2.976434] pci 0001:00:00.0:   bridge window [mem
-0x40000000-0x400fffff]
+The core calls us when a process is modified. Perform the required ATC
+invalidations.
+
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index d03bec4d4b82..f591f1974228 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -2839,7 +2839,7 @@ static void arm_smmu_process_detach(struct iommu_domain *domain,
+ 		arm_smmu_write_ctx_desc(smmu_domain, process->pasid, NULL);
+ 	}
+ 
+-	/* TODO: Invalidate ATC. */
++	arm_smmu_atc_inv_master_all(master, process->pasid);
+ 	/* TODO: Invalidate all mappings if last and not DVM. */
+ }
+ 
+@@ -2847,8 +2847,9 @@ static void arm_smmu_process_invalidate(struct iommu_domain *domain,
+ 					struct iommu_process *process,
+ 					unsigned long iova, size_t size)
+ {
++	arm_smmu_atc_inv_domain(to_smmu_domain(domain), process->pasid,
++				iova, size);
+ 	/*
+-	 * TODO: Invalidate ATC.
+ 	 * TODO: Invalidate mapping if not DVM
+ 	 */
+ }
+@@ -2871,7 +2872,7 @@ static void arm_smmu_process_exit(struct iommu_domain *domain,
+ 		domain->process_exit(domain, master->dev, process->pasid,
+ 				     domain->process_exit_token);
+ 
+-		/* TODO: inval ATC */
++		arm_smmu_atc_inv_master_all(master, process->pasid);
+ 	}
+ 	spin_unlock(&smmu_domain->devices_lock);
+ 
 -- 
-Florian
+2.13.3
+
