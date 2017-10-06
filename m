@@ -1,302 +1,197 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:48078 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752454AbdJLOls (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Oct 2017 10:41:48 -0400
-Subject: Re: [PATCH 1/9] SOC: brcmstb: add memory API
-To: Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org
-Cc: bcm-kernel-feedback-list@broadcom.com,
-        linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Gregory Fong <gregory.0xf0@gmail.com>,
-        Kevin Cernekee <cernekee@gmail.com>,
-        Brian Norris <computersforpeace@gmail.com>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
-From: Julien Thierry <julien.thierry@arm.com>
-Message-ID: <b6be2073-7a90-f83f-4e25-79ef04827bd7@arm.com>
-Date: Thu, 12 Oct 2017 15:41:42 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 6 Oct 2017 18:21:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v4 1/2] PCI: pci-host-generic: add support for Synopsys
+ DesignWare RC in ECAM mode
+Message-ID: <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
+ <20171006163919.14898-2-ard.biesheuvel@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171006163919.14898-2-ard.biesheuvel@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Graeme Gregory <graeme.gregory@linaro.org>,
+ linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, Leif Lindholm <leif.lindholm@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jim,
-
-On 11/10/17 23:34, Jim Quinlan wrote:
-> From: Florian Fainelli <f.fainelli@gmail.com>
+On Fri, Oct 06, 2017 at 05:39:18PM +0100, Ard Biesheuvel wrote:
+> Some implementations of the Synopsys DesignWare PCIe controller implement
+> a so-called ECAM shift mode, which allows a static memory window to be
+> configured that covers the configuration space of the entire bus range.
 > 
-> This commit adds a memory API suitable for ascertaining the sizes of
-> each of the N memory controllers in a Broadcom STB chip.  Its first
-> user will be the Broadcom STB PCIe root complex driver, which needs
-> to know these sizes to properly set up DMA mappings for inbound
-> regions.
+> Usually, when the firmware performs all the low level configuration that
+> is required to expose this controller in a fully ECAM compatible manner,
+> we can simply describe it as "pci-host-ecam-generic" and be done with it.
+> However, in some cases (e.g., the Marvell Armada 80x0 as well as the
+> Socionext SynQuacer Soc), the IP was synthesized with an ATU window
+> granularity that does not allow the first bus to be mapped in a way that
+> prevents the device on the downstream port from appearing more than once,
+> and so we still need special handling in software to drive this static
+> almost-ECAM configuration.
 > 
-> We cannot use memblock here or anything like what Linux provides
-> because it collapses adjacent regions within a larger block, and here
-> we actually need per-memory controller addresses and sizes, which is
-> why we resort to manual DT parsing.
+> So extend the pci-host-generic driver so it can support these controllers
+> as well, by adding special config space accessors that take the above
+> quirk into account.
 > 
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> Note that, unlike most drivers for this IP, this driver does not expose
+> a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+> given that this is not a true bridge, and does not require any windows
+> to be configured in order for the downstream device to operate correctly.
+> Omitting it also prevents the PCI resource allocation routines from
+> handing out BAR space to it unnecessarily.
+> 
+> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 > ---
->   drivers/soc/bcm/brcmstb/Makefile |   2 +-
->   drivers/soc/bcm/brcmstb/memory.c | 183 +++++++++++++++++++++++++++++++++++++++
->   include/soc/brcmstb/memory_api.h |  25 ++++++
->   3 files changed, 209 insertions(+), 1 deletion(-)
->   create mode 100644 drivers/soc/bcm/brcmstb/memory.c
->   create mode 100644 include/soc/brcmstb/memory_api.h
+>  drivers/pci/host/pci-host-generic.c | 46 ++++++++++++++++++++
+>  1 file changed, 46 insertions(+)
 > 
-> diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmstb/Makefile
-> index 9120b27..4cea7b6 100644
-> --- a/drivers/soc/bcm/brcmstb/Makefile
-> +++ b/drivers/soc/bcm/brcmstb/Makefile
-> @@ -1 +1 @@
-> -obj-y				+= common.o biuctrl.o
-> +obj-y				+= common.o biuctrl.o memory.o
-> diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmstb/memory.c
-> new file mode 100644
-> index 0000000..cb6bf73
-> --- /dev/null
-> +++ b/drivers/soc/bcm/brcmstb/memory.c
-> @@ -0,0 +1,183 @@
-> +/*
-> + * Copyright © 2015-2017 Broadcom
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-> + * GNU General Public License for more details.
-> + *
-> + * A copy of the GPL is available at
-> + * http://www.broadcom.com/licenses/GPLv2.php or from the Free Software
-> + * Foundation at https://www.gnu.org/licenses/ .
-> + */
-> +
-> +#include <linux/device.h>
-> +#include <linux/io.h>
-> +#include <linux/libfdt.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_fdt.h>
-> +#include <linux/sizes.h>
-> +#include <soc/brcmstb/memory_api.h>
-> +
-> +/* -------------------- Constants -------------------- */
-> +
-> +/* Macros to help extract property data */
-> +#define U8TOU32(b, offs) \
-> +	((((u32)b[0 + offs] << 0)  & 0x000000ff) | \
-> +	 (((u32)b[1 + offs] << 8)  & 0x0000ff00) | \
-> +	 (((u32)b[2 + offs] << 16) & 0x00ff0000) | \
-> +	 (((u32)b[3 + offs] << 24) & 0xff000000))
-> +
-> +#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(U8TOU32(b, offs)))
-> +
-
-I fail to understand why this is not:
-
-#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(*(u32*)(b + offs)))
-
-
-If I understand correctly, fdt data is in big endian, the macro U8TOU32 
-reads it as little endian. My guess is that this won't work on big 
-endian kernels but should work on little endian since fdt32_to_cpu will 
-revert the bytes again.
-
-Am I missing something?
-
-Cheers,
-
-> +/* Constants used when retrieving memc info */
-> +#define NUM_BUS_RANGES 10
-> +#define BUS_RANGE_ULIMIT_SHIFT 4
-> +#define BUS_RANGE_LLIMIT_SHIFT 4
-> +#define BUS_RANGE_PA_SHIFT 12
-> +
-> +enum {
-> +	BUSNUM_MCP0 = 0x4,
-> +	BUSNUM_MCP1 = 0x5,
-> +	BUSNUM_MCP2 = 0x6,
-> +};
-> +
-> +/* -------------------- Functions -------------------- */
-> +
-> +/*
-> + * If the DT nodes are handy, determine which MEMC holds the specified
-> + * physical address.
-> + */
-> +#ifdef CONFIG_ARCH_BRCMSTB
-> +int __brcmstb_memory_phys_addr_to_memc(phys_addr_t pa, void __iomem *base)
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 7d709a7e0aa8..01e81a30e303 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -35,6 +35,43 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+>  	}
+>  };
+>  
+> +static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
+> +				   int size, u32 *val)
 > +{
-> +	int memc = -1;
-> +	int i;
+> +	struct pci_config_window *cfg = bus->sysdata;
 > +
-> +	for (i = 0; i < NUM_BUS_RANGES; i++, base += 8) {
-> +		const u64 ulimit_raw = readl(base);
-> +		const u64 llimit_raw = readl(base + 4);
-> +		const u64 ulimit =
-> +			((ulimit_raw >> BUS_RANGE_ULIMIT_SHIFT)
-> +			 << BUS_RANGE_PA_SHIFT) | 0xfff;
-> +		const u64 llimit = (llimit_raw >> BUS_RANGE_LLIMIT_SHIFT)
-> +				   << BUS_RANGE_PA_SHIFT;
-> +		const u32 busnum = (u32)(ulimit_raw & 0xf);
-> +
-> +		if (pa >= llimit && pa <= ulimit) {
-> +			if (busnum >= BUSNUM_MCP0 && busnum <= BUSNUM_MCP2) {
-> +				memc = busnum - BUSNUM_MCP0;
-> +				break;
-> +			}
-> +		}
-> +	}
-> +
-> +	return memc;
-> +}
-> +
-> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
-> +{
-> +	int memc = -1;
-> +	struct device_node *np;
-> +	void __iomem *cpubiuctrl;
-> +
-> +	np = of_find_compatible_node(NULL, NULL, "brcm,brcmstb-cpu-biu-ctrl");
-> +	if (!np)
-> +		return memc;
-> +
-> +	cpubiuctrl = of_iomap(np, 0);
-> +	if (!cpubiuctrl)
-> +		goto cleanup;
-> +
-> +	memc = __brcmstb_memory_phys_addr_to_memc(pa, cpubiuctrl);
-> +	iounmap(cpubiuctrl);
-> +
-> +cleanup:
-> +	of_node_put(np);
-> +
-> +	return memc;
-> +}
-> +
-> +#elif defined(CONFIG_MIPS)
-> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
-> +{
-> +	/* The logic here is fairly simple and hardcoded: if pa <= 0x5000_0000,
-> +	 * then this is MEMC0, else MEMC1.
-> +	 *
-> +	 * For systems with 2GB on MEMC0, MEMC1 starts at 9000_0000, with 1GB
-> +	 * on MEMC0, MEMC1 starts at 6000_0000.
+> +	/*
+> +	 * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
+> +	 * type 0 config TLPs sent to devices 1 and up on its downstream port,
+> +	 * resulting in devices appearing multiple times on bus 0 unless we
+> +	 * filter out those accesses here.
 > +	 */
-> +	if (pa >= 0x50000000ULL)
-> +		return 1;
-> +	else
-> +		return 0;
-> +}
-> +#endif
-> +EXPORT_SYMBOL(brcmstb_memory_phys_addr_to_memc);
-> +
-> +u64 brcmstb_memory_memc_size(int memc)
-> +{
-> +	const void *fdt = initial_boot_params;
-> +	const int mem_offset = fdt_path_offset(fdt, "/memory");
-> +	int addr_cells = 1, size_cells = 1;
-> +	const struct fdt_property *prop;
-> +	int proplen, cellslen;
-> +	u64 memc_size = 0;
-> +	int i;
-> +
-> +	/* Get root size and address cells if specified */
-> +	prop = fdt_get_property(fdt, 0, "#size-cells", &proplen);
-> +	if (prop)
-> +		size_cells = DT_PROP_DATA_TO_U32(prop->data, 0);
-> +
-> +	prop = fdt_get_property(fdt, 0, "#address-cells", &proplen);
-> +	if (prop)
-> +		addr_cells = DT_PROP_DATA_TO_U32(prop->data, 0);
-> +
-> +	if (mem_offset < 0)
-> +		return -1;
-> +
-> +	prop = fdt_get_property(fdt, mem_offset, "reg", &proplen);
-> +	cellslen = (int)sizeof(u32) * (addr_cells + size_cells);
-> +	if ((proplen % cellslen) != 0)
-> +		return -1;
-> +
-> +	for (i = 0; i < proplen / cellslen; ++i) {
-> +		u64 addr = 0;
-> +		u64 size = 0;
-> +		int memc_idx;
-> +		int j;
-> +
-> +		for (j = 0; j < addr_cells; ++j) {
-> +			int offset = (cellslen * i) + (sizeof(u32) * j);
-> +
-> +			addr |= (u64)DT_PROP_DATA_TO_U32(prop->data, offset) <<
-> +				((addr_cells - j - 1) * 32);
-> +		}
-> +		for (j = 0; j < size_cells; ++j) {
-> +			int offset = (cellslen * i) +
-> +				(sizeof(u32) * (j + addr_cells));
-> +
-> +			size |= (u64)DT_PROP_DATA_TO_U32(prop->data, offset) <<
-> +				((size_cells - j - 1) * 32);
-> +		}
-> +
-> +		if ((phys_addr_t)addr != addr) {
-> +			pr_err("phys_addr_t is smaller than provided address 0x%llx!\n",
-> +			       addr);
-> +			return -1;
-> +		}
-> +
-> +		memc_idx = brcmstb_memory_phys_addr_to_memc((phys_addr_t)addr);
-> +		if (memc_idx == memc)
-> +			memc_size += size;
-> +	}
-> +
-> +	return memc_size;
-> +}
-> +EXPORT_SYMBOL(brcmstb_memory_memc_size);
-> +
-> diff --git a/include/soc/brcmstb/memory_api.h b/include/soc/brcmstb/memory_api.h
-> new file mode 100644
-> index 0000000..d922906
-> --- /dev/null
-> +++ b/include/soc/brcmstb/memory_api.h
-> @@ -0,0 +1,25 @@
-> +#ifndef __MEMORY_API_H
-> +#define __MEMORY_API_H
-> +
-> +/*
-> + * Bus Interface Unit control register setup, must happen early during boot,
-> + * before SMP is brought up, called by machine entry point.
-> + */
-> +void brcmstb_biuctrl_init(void);
-> +
-> +#ifdef CONFIG_SOC_BRCMSTB
-> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa);
-> +u64 brcmstb_memory_memc_size(int memc);
-> +#else
-> +static inline int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
-> +{
-> +	return -EINVAL;
-> +}
-> +
-> +static inline u64 brcmstb_memory_memc_size(int memc)
-> +{
-> +	return -1;
-> +}
-> +#endif
-> +
-> +#endif /* __MEMORY_API_H */
-> 
+> +	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
 
--- 
-Julien Thierry
+I think we should return 0xffffffff data here, as we do in other
+similar accessors (dw_pcie_rd_conf(), altera_pcie_cfg_read(),
+rockchip_pcie_rd_conf()).
+
+Actually, xilinx-nwl has a nice trick: it implements
+nwl_pcie_map_bus(), which returns NULL for invalid devices.  Then it
+can use the generic accessors, and pci_generic_config_read() already
+fills in ~0 for this case. 
+
+What do you think of the following?  I put it on my pci/host-generic
+branch for now (pending your response and an ack from Will).
+
+
+
+commit 5aec78ea05fe23c7c17f8e6c757bc64fb9142728
+Author: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date:   Fri Oct 6 17:39:18 2017 +0100
+
+    PCI: generic: Add support for Synopsys DesignWare RC in ECAM mode
+    
+    Some implementations of the Synopsys DesignWare PCIe controller implement
+    a so-called ECAM shift mode, which allows a static memory window to be
+    configured that covers the configuration space of the entire bus range.
+    
+    Usually, when the firmware performs all the low level configuration that
+    is required to expose this controller in a fully ECAM compatible manner,
+    we can simply describe it as "pci-host-ecam-generic" and be done with it.
+    However, in some cases (e.g., the Marvell Armada 80x0 as well as the
+    Socionext SynQuacer Soc), the IP was synthesized with an ATU window
+    granularity that does not allow the first bus to be mapped in a way that
+    prevents the device on the downstream port from appearing more than once,
+    and so we still need special handling in software to drive this static
+    almost-ECAM configuration.
+    
+    So extend the pci-host-generic driver so it can support these controllers
+    as well, by adding special config space accessors that take the above quirk
+    into account.
+    
+    Note that, unlike most drivers for this IP, this driver does not expose a
+    fake bridge device at B/D/F 00:00.0. There is no point in doing so, given
+    that this is not a true bridge, and does not require any windows to be
+    configured in order for the downstream device to operate correctly.
+    Omitting it also prevents the PCI resource allocation routines from handing
+    out BAR space to it unnecessarily.
+    
+    Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+    [bhelgaas: factor out pci_dw_valid_device(), add pci_dw_ecam_map_bus() and
+    use generic read/write functions]
+    Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 7d709a7e0aa8..2f05511ce718 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -35,6 +35,40 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+ 	}
+ };
+ 
++static bool pci_dw_valid_device(struct pci_bus *bus, unsigned int devfn)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++
++	/*
++	 * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
++	 * type 0 config TLPs sent to devices 1 and up on its downstream port,
++	 * resulting in devices appearing multiple times on bus 0 unless we
++	 * filter out those accesses here.
++	 */
++	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
++		return false;
++
++	return true;
++}
++
++static void __iomem *pci_dw_ecam_map_bus(struct pci_bus *bus,
++					 unsigned int devfn, int where)
++{
++	if (!pci_dw_valid_device(bus, devfn))
++		return NULL;
++
++	return pci_ecam_map_bus(bus, devfn, where);
++}
++
++static struct pci_ecam_ops pci_dw_ecam_bus_ops = {
++	.bus_shift	= 20,
++	.pci_ops	= {
++		.map_bus	= pci_dw_ecam_map_bus,
++		.read		= pci_generic_config_read,
++		.write		= pci_generic_config_write,
++	}
++};
++
+ static const struct of_device_id gen_pci_of_match[] = {
+ 	{ .compatible = "pci-host-cam-generic",
+ 	  .data = &gen_pci_cfg_cam_bus_ops },
+@@ -42,6 +76,15 @@ static const struct of_device_id gen_pci_of_match[] = {
+ 	{ .compatible = "pci-host-ecam-generic",
+ 	  .data = &pci_generic_ecam_ops },
+ 
++	{ .compatible = "marvell,armada8k-pcie-ecam",
++	  .data = &pci_dw_ecam_bus_ops },
++
++	{ .compatible = "socionext,synquacer-pcie-ecam",
++	  .data = &pci_dw_ecam_bus_ops },
++
++	{ .compatible = "snps,dw-pcie-ecam",
++	  .data = &pci_dw_ecam_bus_ops },
++
+ 	{ },
+ };
+ 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
