@@ -1,50 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1508229310.2146.2.camel@pengutronix.de>
-Subject: Re: [PATCH 1/2] PCI: dwc: Adjust Kconfig to allow IMX6 PCIe host on
- IMX7
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Trent Piepho <tpiepho@impinj.com>, linux-arm-kernel
- <linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org
-Date: Tue, 17 Oct 2017 10:35:10 +0200
-In-Reply-To: <20171017001159.109152-1-tpiepho@impinj.com>
-References: <20171017001159.109152-1-tpiepho@impinj.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
- Richard Zhu <hongxing.zhu@nxp.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:58878 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751862AbdJFSRo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Oct 2017 14:17:44 -0400
+Date: Fri, 6 Oct 2017 13:17:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: John W Walthour <jwalthour@us.ibm.com>
+Cc: linux-pci@vger.kernel.org, mj@ucw.cz
+Subject: Re: [PATCH] pciutils: change vpd keyword MN to text
+Message-ID: <20171006181742.GE25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <OF11986481.9DE311D9-ON002581B1.005E606E-862581B1.005FAD2B@notes.na.collabserv.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <OF11986481.9DE311D9-ON002581B1.005E606E-862581B1.005FAD2B@notes.na.collabserv.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gTW9udGFnLCBkZW4gMTYuMTAuMjAxNywgMTc6MTEgLTA3MDAgc2NocmllYiBUcmVudCBQaWVw
-aG86Cj4gVGhlIElNWDYgUENJLWUgaG9zdCBkcml2ZXIgYWxzbyBzdXBwb3J0cyB0aGUgSU1YN2Qu
-wqDCoEhvd2V2ZXIsIHRoZQo+IEtjb25maWcgZGVwZW5kZW5jaWVzIG9mIHRoZSBkcml2ZXIgcHJl
-dmVudGVkIGl0IGZyb20gYmVpbmcgZW5hYmxlZAo+IHVubGVzcyB0aGUga2VybmVsIHdhcyBidWls
-dCB3aXRoIGJvdGggSU1YNiBhbmQgSU1YNyBzdXBwb3J0LsKgwqBJdAo+IHdvcmtzCj4gZmluZSB0
-byBidWlsZCB3aXRoIG9ubHkgSU1YNyBzdXBwb3J0IGVuYWJsZWQuCj4gCj4gQ2M6IEFuZHJleSBT
-bWlybm92IDxhbmRyZXcuc21pcm5vdkBnbWFpbC5jb20+Cj4gQ2M6IFJpY2hhcmQgWmh1IDxob25n
-eGluZy56aHVAbnhwLmNvbT4KPiBDQzogTHVjYXMgU3RhY2ggPGwuc3RhY2hAcGVuZ3V0cm9uaXgu
-ZGU+Cj4gU2lnbmVkLW9mZi1ieTogVHJlbnQgUGllcGhvIDx0cGllcGhvQGltcGluai5jb20+CgpS
-ZXZpZXdlZC1ieTogTHVjYXMgU3RhY2ggPGwuc3RhY2hAcGVuZ3V0cm9uaXguZGU+Cgo+IC0tLQo+
-IMKgZHJpdmVycy9wY2kvZHdjL0tjb25maWcgfCA0ICsrLS0KPiDCoDEgZmlsZSBjaGFuZ2VkLCAy
-IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-cGNpL2R3Yy9LY29uZmlnIGIvZHJpdmVycy9wY2kvZHdjL0tjb25maWcKPiBpbmRleCAyMmVjODJm
-Y2RlYTIuLjg1Y2YzOTI5MjFhOSAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvS2NvbmZp
-Zwo+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9LY29uZmlnCj4gQEAgLTcxLDkgKzcxLDkgQEAgY29u
-ZmlnIFBDSV9FWFlOT1MKPiDCoAlzZWxlY3QgUENJRV9EV19IT1NUCj4gwqAKPiDCoGNvbmZpZyBQ
-Q0lfSU1YNgo+IC0JYm9vbCAiRnJlZXNjYWxlIGkuTVg2IFBDSWUgY29udHJvbGxlciIKPiArCWJv
-b2wgIkZyZWVzY2FsZSBpLk1YNi83IFBDSWUgY29udHJvbGxlciIKPiDCoAlkZXBlbmRzIG9uIFBD
-SQo+IC0JZGVwZW5kcyBvbiBTT0NfSU1YNlEKPiArCWRlcGVuZHMgb24gU09DX0lNWDZRIHx8IFNP
-Q19JTVg3RAo+IMKgCWRlcGVuZHMgb24gUENJX01TSV9JUlFfRE9NQUlOCj4gwqAJc2VsZWN0IFBD
-SUVQT1JUQlVTCj4gwqAJc2VsZWN0IFBDSUVfRFdfSE9TVAoKX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QK
-bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRl
-YWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+On Fri, Oct 06, 2017 at 12:25:03PM -0500, John W Walthour wrote:
+> The PCI spec defines all keyword data fields as ASCII unless otherwise 
+> noted.
+> The MN keyword is not otherwise noted. To make this field human readable 
+> in
+> lspci verbose outputs, this patch changes the MN keyword definition from
+> F_BINARY to F_TEXT.
+
+I don't apply these (Martin, who's already cc'd) would do that, but
+can you please reformat the changelog so it doesn't have the unusual
+line breaks that make it hard to read?  I use a maximum text width of
+75, which means it fits in 80 columns even when "git log" indents it
+by 4 spaces.
+
+> Signed-off-by: John Walthour <return.0@me.com>
+> ---
+>  ls-vpd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/ls-vpd.c b/ls-vpd.c
+> index 35c2bfa..b79abfc 100644
+> --- a/ls-vpd.c
+> +++ b/ls-vpd.c
+> @@ -33,7 +33,7 @@ static const struct vpd_item {
+>  } vpd_items[] = {
+>    { 'C','P', F_BINARY, "Extended capability" },
+>    { 'E','C', F_TEXT,   "Engineering changes" },
+> -  { 'M','N', F_BINARY, "Manufacture ID" },
+> +  { 'M','N', F_TEXT,   "Manufacture ID" },
+>    { 'P','N', F_TEXT,   "Part number" },
+>    { 'R','V', F_RESVD,  "Reserved" },
+>    { 'R','W', F_RDWR,   "Read-write area" },
+> --
+> 2.11.0 (Apple Git-81)
+> 
+> 
