@@ -1,70 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0064.outbound.protection.outlook.com ([104.47.2.64]:63712
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752836AbdJLDSA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 23:18:00 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "Roy Zang" <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>
-Subject: RE: [PATCH 1/2] PCI: Disable MSI for Freescale PCIe RC mode
-Date: Thu, 12 Oct 2017 03:17:57 +0000
-Message-ID: <AM5PR0402MB2771384AB34878A38DD9ABD2844B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <20170922072522.36306-1-Zhiqiang.Hou@nxp.com>
- <20170922072522.36306-2-Zhiqiang.Hou@nxp.com>
- <20171011193737.GP25517@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171011193737.GP25517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 30/36] ACPI/IORT: Check ATS capability in root complex nodes
+Date: Fri,  6 Oct 2017 14:31:57 +0100
+Message-Id: <20171006133203.22803-31-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
-c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOoxMNTCMTLI1SAzOjM4DQo+IFRvOiBaLnEuIEhv
-dSA8emhpcWlhbmcuaG91QG54cC5jb20+DQo+IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
-b3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGxpbnV4LXBjaUB2
-Z2VyLmtlcm5lbC5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IFJveSBaYW5nDQo+IDxyb3kuemFu
-Z0BueHAuY29tPjsgTWluZ2thaSBIdSA8bWluZ2thaS5odUBueHAuY29tPjsgTS5oLiBMaWFuDQo+
-IDxtaW5naHVhbi5saWFuQG54cC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8yXSBQQ0k6
-IERpc2FibGUgTVNJIGZvciBGcmVlc2NhbGUgUENJZSBSQyBtb2RlDQo+IA0KPiBPbiBGcmksIFNl
-cCAyMiwgMjAxNyBhdCAwMzoyNToyMVBNICswODAwLCBaaGlxaWFuZyBIb3Ugd3JvdGU6DQo+ID4g
-RnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPg0KPiA+IFRoZSBG
-cmVlc2NhbGUgUENJZSBjb250cm9sbGVyIGFkdmVydGlzZXMgdGhlIE1TSS9NU0ktWCBjYXBhYmls
-aXR5IGluDQo+ID4gYm90aCBSQyBhbmQgRW5kcG9pbnQgbW9kZSwgYnV0IGluIFJDIG1vZGUgaXQg
-ZG9lc24ndCBzdXBwb3J0IE1TSS9NU0ktWA0KPiA+IGJ5IGl0IHNlbGYsIGl0IGNhbiBvbmx5IHRy
-YW5zZmVyIE1TSS9NU0ktWCBmcm9tIGRvd25zdHJlYW0NCj4gDQo+IHMvaXQgc2VsZiwvaXRzZWxm
-Oy8NCg0KSSdsbCBmaXggdGhpcyB0eXBvIGluIG5leHQgdmVyc2lvbi4NCg0KPiA+IGRldmljZXMu
-IFNvIGFkZCB0aGlzIHF1aXJrIHRvIHByZXZlbnQgdXNlIG9mIE1TSS9NU0ktWCBpbiBSQyBtb2Rl
-Lg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhw
-LmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9wY2kvcXVpcmtzLmMgfCA4ICsrKysrKysrDQo+
-ID4gIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQg
-YS9kcml2ZXJzL3BjaS9xdWlya3MuYyBiL2RyaXZlcnMvcGNpL3F1aXJrcy5jIGluZGV4DQo+ID4g
-YTRkMzM2MTlhN2JiLi5jMTA2M2E0MjBmMGMgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kv
-cXVpcmtzLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiA+IEBAIC00Nzk5LDMg
-KzQ3OTksMTEgQEAgc3RhdGljIHZvaWQgcXVpcmtfbm9fYXRzKHN0cnVjdCBwY2lfZGV2ICpwZGV2
-KQ0KPiA+ICAvKiBBTUQgU3RvbmV5IHBsYXRmb3JtIEdQVSAqLw0KPiA+ICBERUNMQVJFX1BDSV9G
-SVhVUF9GSU5BTChQQ0lfVkVORE9SX0lEX0FUSSwgMHg5OGU0LCBxdWlya19ub19hdHMpOw0KPiA+
-ICNlbmRpZiAvKiBDT05GSUdfUENJX0FUUyAqLw0KPiA+ICsNCj4gPiArLyogRnJlZXNjYWxlIFBD
-SWUgZG9lc24ndCBzdXBwb3J0IE1TSSBpbiBSQyBtb2RlICovIHN0YXRpYyB2b2lkDQo+ID4gK3F1
-aXJrX2ZzbF9ub19tc2koc3RydWN0IHBjaV9kZXYgKnBkZXYpIHsNCj4gPiArCWlmIChwY2lfcGNp
-ZV90eXBlKHBkZXYpID09IFBDSV9FWFBfVFlQRV9ST09UX1BPUlQpDQo+ID4gKwkJcGRldi0+bm9f
-bXNpID0gMTsNCj4gPiArfQ0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9GSU5BTChQQ0lfVkVORE9S
-X0lEX0ZSRUVTQ0FMRSwgUENJX0FOWV9JRCwNCj4gPiArcXVpcmtfZnNsX25vX21zaSk7DQo+IA0K
-PiBUaGlzIGRpc2FibGVzIE1TSSBmb3IgYWxsIEZyZWVzY2FsZSByb290IHBvcnRzLCBwYXN0LCBw
-cmVzZW50LCBhbmQgZnV0dXJlLiAgSXMNCj4gdGhhdCByZWFsbHkgd2hhdCB5b3Ugd2FudD8gIFRo
-aXMgaXMgYSBidWcgKHRoZSByb290IHBvcnQgc2hvdWxkbid0IGFkdmVydGlzZQ0KPiBNU0kgaWYg
-aXQgZG9lc24ndCBzdXBwb3J0IGl0KSwgYW5kIHByZXN1bWFibHkgaXQgbWlnaHQgYmUgZml4ZWQg
-aW4gc29tZSBmdXR1cmUNCj4gZGV2aWNlPw0KDQpGb3IgdGhlIHBhc3QgYW5kIHByZXNlbnQsIHRo
-ZXJlIGlzbid0IEZyZWVzY2FsZSByb290IHBvcnRzIHN1cHBvcnRpbmcgTVNJLiBJZiB0aGUgZnV0
-dXJlIEZyZWVzY2FsZSByb290IHBvcnQgc3VwcG9ydCBNU0ksIEknbGwgYWRkIGEgcGF0Y2ggZm9y
-IGl0IGNoZWNraW5nIHRoZSBQQ0kgZGV2aWNlIElEIHRvIGRldGVybWluZSBpZiBhcHBseSB0aGUg
-cXVpcmsuDQpBbmQgaXQgc2hvdWxkIGJlIG9rIGZvciB0aGUgcm9vdCBwb3J0cyB3aXRob3V0IHRo
-aXMgYnVnLg0KDQo+IA0KPiBUaGlzIG5lZWRzIGFuIGFjayBmcm9tIE1pbmdodWFuIG9yIE1pbmdr
-YWkgKGJhc2VkIG9uIE1BSU5UQUlORVJTKS4NCj4gDQoNClRoYW5rcywNClpoaXFpYW5nDQo=
+Root complex node in IORT has a bit telling whether it supports ATS or
+not. Store this bit in the IOMMU fwspec when setting up a device, so it
+can be accessed later by an IOMMU driver.
+
+Use the negative version at the moment because it's not clear if/how the
+bit needs to be integrated in other firmare descriptions. The SMMU has a
+feature bit telling if it supports ATS, which might be sufficient in most
+systems for deciding whether or not we should enable the ATS capability in
+endpoints.
+
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/acpi/arm64/iort.c | 11 +++++++++++
+ include/linux/iommu.h     |  4 ++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 9565d572f8dd..b94eac8ed21e 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -768,6 +768,14 @@ void iort_dma_setup(struct device *dev, u64 *dma_addr, u64 *dma_size)
+ 	dev_dbg(dev, "dma_pfn_offset(%#08llx)\n", offset);
+ }
+ 
++static bool iort_pci_rc_supports_ats(struct acpi_iort_node *node)
++{
++	struct acpi_iort_root_complex *pci_rc;
++
++	pci_rc = (struct acpi_iort_root_complex *)node->node_data;
++	return pci_rc->ats_attribute & ACPI_IORT_ATS_SUPPORTED;
++}
++
+ /**
+  * iort_iommu_configure - Set-up IOMMU configuration for a device.
+  *
+@@ -803,6 +811,9 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ 		info.node = node;
+ 		err = pci_for_each_dma_alias(to_pci_dev(dev),
+ 					     iort_pci_iommu_init, &info);
++
++		if (!err && !iort_pci_rc_supports_ats(node))
++			dev->iommu_fwspec->flags |= IOMMU_FWSPEC_PCI_NO_ATS;
+ 	} else {
+ 		int i = 0;
+ 
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 2eb65d4724bb..661031aed0c4 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -534,12 +534,16 @@ struct iommu_fwspec {
+ 	const struct iommu_ops	*ops;
+ 	struct fwnode_handle	*iommu_fwnode;
+ 	void			*iommu_priv;
++	u32			flags;
+ 	unsigned int		num_ids;
+ 	unsigned int		num_pasid_bits;
+ 	bool			can_stall;
+ 	u32			ids[1];
+ };
+ 
++/* Firmware disabled ATS in the root complex */
++#define IOMMU_FWSPEC_PCI_NO_ATS			(1 << 0)
++
+ int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
+ 		      const struct iommu_ops *ops);
+ void iommu_fwspec_free(struct device *dev);
+-- 
+2.13.3
+
