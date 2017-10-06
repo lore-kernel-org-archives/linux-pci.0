@@ -1,75 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:36003 "EHLO mail.kapsi.fi"
+Received: from foss.arm.com ([217.140.101.70]:60486 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751457AbdJ3JI1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Oct 2017 05:08:27 -0400
-Subject: Re: [PATCH V2 01/12] PCI: tegra: Start LTSSM after programming root
- port
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
- <1509337143-25963-2-git-send-email-mmaddireddy@nvidia.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <5911b4d5-cc54-9fed-f6be-5c9b7ca05c2e@kapsi.fi>
-Date: Mon, 30 Oct 2017 11:08:25 +0200
-MIME-Version: 1.0
-In-Reply-To: <1509337143-25963-2-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        id S1752404AbdJFN2t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Oct 2017 09:28:49 -0400
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 11/36] iommu/arm-smmu-v3: Link domains and devices
+Date: Fri,  6 Oct 2017 14:31:38 +0100
+Message-Id: <20171006133203.22803-12-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30.10.2017 06:18, Manikanta Maddireddy wrote:
-> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
-> after all the required root port register programming is completed.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
->
->  drivers/pci/host/pci-tegra.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 96e8038c3019..b41c60c7414c 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  		}
->  	}
->
-> -	/* take the PCIe interface module out of reset */
-> -	reset_control_deassert(pcie->pcie_xrst);
-> -
->  	/* finally enable PCIe */
->  	value = afi_readl(pcie, AFI_CONFIGURATION);
->  	value |= AFI_CONFIGURATION_EN_FPCI;
-> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
->  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
->  	}
->
-> -	reset_control_assert(pcie->pcie_xrst);
+When removing a mapping from a domain, we need to send an invalidation to
+all devices that might have stored it in their Address Translation Cache
+(ATC). In addition with SVM, we'll need to invalidate context descriptors
+of all devices attached to a live domain.
 
-Why is this change being made? Is there a reason we cannot leave this 
-reset asserted when the controller is powered off?
+Maintain a list of devices in each domain, protected by a spinlock. It is
+updated every time we attach or detach devices to and from domains.
 
->  	reset_control_assert(pcie->afi_rst);
->  	reset_control_assert(pcie->pex_rst);
->
-> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->  			 port->index, port->lanes);
->
->  		tegra_pcie_port_enable(port);
-> +	}
->
-> +	/* take the PCIe interface module out of reset */
-> +	reset_control_deassert(pcie->pcie_xrst);
-> +
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
->  		if (tegra_pcie_port_check_link(port))
->  			continue;
->
->
+It needs to be a spinlock because we'll invalidate ATC entries from
+within hardirq-safe contexts, but it may be possible to relax the read
+side with RCU later.
+
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 22a6b08ef014..ecc424b15749 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -644,6 +644,11 @@ struct arm_smmu_device {
+ struct arm_smmu_master_data {
+ 	struct arm_smmu_device		*smmu;
+ 	struct arm_smmu_strtab_ent	ste;
++
++	struct arm_smmu_domain		*domain;
++	struct list_head		list; /* domain->devices */
++
++	struct device			*dev;
+ };
+ 
+ /* SMMU private data for an IOMMU domain */
+@@ -667,6 +672,9 @@ struct arm_smmu_domain {
+ 	};
+ 
+ 	struct iommu_domain		domain;
++
++	struct list_head		devices;
++	spinlock_t			devices_lock;
+ };
+ 
+ struct arm_smmu_option_prop {
+@@ -1461,6 +1469,9 @@ static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
+ 	}
+ 
+ 	mutex_init(&smmu_domain->init_mutex);
++	INIT_LIST_HEAD(&smmu_domain->devices);
++	spin_lock_init(&smmu_domain->devices_lock);
++
+ 	return &smmu_domain->domain;
+ }
+ 
+@@ -1666,7 +1677,17 @@ static void arm_smmu_install_ste_for_dev(struct iommu_fwspec *fwspec)
+ 
+ static void arm_smmu_detach_dev(struct device *dev)
+ {
++	unsigned long flags;
+ 	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
++	struct arm_smmu_domain *smmu_domain = master->domain;
++
++	if (smmu_domain) {
++		spin_lock_irqsave(&smmu_domain->devices_lock, flags);
++		list_del(&master->list);
++		spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
++
++		master->domain = NULL;
++	}
+ 
+ 	master->ste.assigned = false;
+ 	arm_smmu_install_ste_for_dev(dev->iommu_fwspec);
+@@ -1675,6 +1696,7 @@ static void arm_smmu_detach_dev(struct device *dev)
+ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
+ {
+ 	int ret = 0;
++	unsigned long flags;
+ 	struct arm_smmu_device *smmu;
+ 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
+ 	struct arm_smmu_master_data *master;
+@@ -1710,6 +1732,11 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
+ 	}
+ 
+ 	ste->assigned = true;
++	master->domain = smmu_domain;
++
++	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
++	list_add(&master->list, &smmu_domain->devices);
++	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
+ 
+ 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_BYPASS) {
+ 		ste->s1_cfg = NULL;
+@@ -1820,6 +1847,7 @@ static int arm_smmu_add_device(struct device *dev)
+ 			return -ENOMEM;
+ 
+ 		master->smmu = smmu;
++		master->dev = dev;
+ 		fwspec->iommu_priv = master;
+ 	}
+ 
+-- 
+2.13.3
