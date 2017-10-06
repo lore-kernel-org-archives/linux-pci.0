@@ -1,102 +1,262 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Duyck, Alexander H" <alexander.h.duyck@intel.com>
-To: "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
-Date: Fri, 27 Oct 2017 23:20:41 +0000
-Message-ID: <1509146439.11655.60.camel@intel.com>
-References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
-         <20171024234351.0af0ff4a@t450s.home>
-         <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
-         <20171025000654.7621b84e@t450s.home>
-         <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
-         <20171028001907.7b8fa60d@t450s.home>
-In-Reply-To: <20171028001907.7b8fa60d@t450s.home>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=su7V=BF=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=su7V=BF=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAKv+Gu8CCcm_R3S1PbXZFqzvjAJVfU_bKpimVxbeQ78ciAgJyA@mail.gmail.com>
+References: <20170828180437.2646-1-ard.biesheuvel@linaro.org>
+ <20170828180437.2646-2-ard.biesheuvel@linaro.org> <20170926173200.GL15970@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu8CCcm_R3S1PbXZFqzvjAJVfU_bKpimVxbeQ78ciAgJyA@mail.gmail.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Fri, 6 Oct 2017 15:52:03 +0100
+Message-ID: <CAKv+Gu_MM--uHwQk_brJh1bPOdsUTH4j+aJUDyS1um3mHDdsEA@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] pci: designware: add driver for DWC controller in
+ ECAM shift mode
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Marcin Wojtas <mw@semihalf.com>,
+	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>, Rob Herring <robh@kernel.org>,
+	Will Deacon <will.deacon@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gU2F0LCAyMDE3LTEwLTI4IGF0IDAwOjE5ICswMjAwLCBBbGV4IFdpbGxpYW1zb24gd3JvdGU6
-DQo+IE9uIEZyaSwgMjcgT2N0IDIwMTcgMjE6NTA6NDMgKzAwMDANCj4gIldhbmcsIExpYW5nLW1p
-biIgPGxpYW5nLW1pbi53YW5nQGludGVsLmNvbT4gd3JvdGU6DQo+IA0KPiA+ID4gLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEFsZXggV2lsbGlhbXNvbiBbbWFpbHRvOmFs
-ZXgud2lsbGlhbXNvbkByZWRoYXQuY29tXQ0KPiA+ID4gU2VudDogVHVlc2RheSwgT2N0b2JlciAy
-NCwgMjAxNyA2OjA3IFBNDQo+ID4gPiBUbzogV2FuZywgTGlhbmctbWluIDxsaWFuZy1taW4ud2Fu
-Z0BpbnRlbC5jb20+DQo+ID4gPiBDYzogS2lyc2hlciwgSmVmZnJleSBUIDxqZWZmcmV5LnQua2ly
-c2hlckBpbnRlbC5jb20+OyBrdm1Admdlci5rZXJuZWwub3JnOw0KPiA+ID4gbGludXgtcGNpQHZn
-ZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+IGJoZWxn
-YWFzQGdvb2dsZS5jb207IER1eWNrLCBBbGV4YW5kZXIgSCA8YWxleGFuZGVyLmguZHV5Y2tAaW50
-ZWwuY29tPg0KPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSF0gRW5hYmxlIFNSLUlPViBpbnN0YW50
-aWF0aW9uIHRocm91Z2ggL3N5cyBmaWxlDQo+ID4gPiANCj4gPiA+IE9uIFR1ZSwgMjQgT2N0IDIw
-MTcgMjE6NDk6MTUgKzAwMDANCj4gPiA+ICJXYW5nLCBMaWFuZy1taW4iIDxsaWFuZy1taW4ud2Fu
-Z0BpbnRlbC5jb20+IHdyb3RlOg0KPiA+ID4gICANCj4gPiA+ID4gSnVzdCBsaWtlIGFueSBQQ0ll
-IGRldmljZXMgdGhhdCBzdXBwb3J0cyBTUi1JT1YuIFRoZXJlIGFyZSByZXN0cmljdGlvbnMgc2V0
-IGZvciAgDQo+ID4gPiANCj4gPiA+IFZGLiBBbHNvLCB0aGVyZSBpcyBhIGNvbmNlcHQgb2YgdHJ1
-c3QgVkYgbm93IGF2YWlsYWJsZSBmb3IgUEYgdG8gbWFuYWdlIGNlcnRhaW4NCj4gPiA+IGZlYXR1
-cmVzIHRoYXQgb25seSBzZWxlY3RlZCBWRiBjb3VsZCBleGVyY2lzZS4gQXJlIHlvdSBzYXlpbmcg
-YWxsIHRoZSBkZXZpY2VzDQo+ID4gPiBzdXBwb3J0aW5nIFNSLUlPViBhbGwgaGF2ZSBzZWN1cml0
-eSBpc3N1ZT8NCj4gPiA+IA0KPiA+ID4gSGVyZSdzIGEgc2ltcGxlIGV4YW1wbGUsIG1vc3QgU1It
-SU9WIGNhcGFibGUgTklDcywgaW5jbHVkaW5nIHRob3NlIGZyb20NCj4gPiA+IEludGVsLCByZXF1
-aXJlIHRoZSBQRiBpbnRlcmZhY2UgdG8gYmUgdXAgaW4gb3JkZXIgdG8gcm91dGUgdHJhZmZpYyBm
-cm9tDQo+ID4gPiB0aGUgVkYuICBJZiB0aGUgdXNlciBjb250cm9scyB0aGUgUEYgaW50ZXJmYWNl
-IGFuZCBWRnMgYXJlIHVzZWQNCj4gPiA+IGVsc2V3aGVyZSBpbiB0aGUgaG9zdCwgdGhlIFBGIGRy
-aXZlciBpbiB1c2Vyc3BhY2UgY2FuIGluZHVjZSBhIGRlbmlhbA0KPiA+ID4gb2Ygc2VydmljZSBv
-biB0aGUgVkZzLiAgVGhhdCBkb2Vzbid0IGV2ZW4gdGFrZSBpbnRvIGFjY291bnQgdGhhdCBWRnMN
-Cj4gPiA+IG1pZ2h0IGJlIGluIHNlcGFyYXRlIElPTU1VIGdyb3VwcyBmcm9tIHRoZSBQRiBhbmQg
-dGhlcmVmb3JlIG5vdA0KPiA+ID4gaXNvbGF0ZWQgZnJvbSB0aGUgaG9zdCBsaWtlIHRoZSBQRiBh
-bmQgdGhhdCB0aGUgUEYgZHJpdmVyIGNhbg0KPiA+ID4gcG90ZW50aWFsbHkgbWFuaXB1bGF0ZSB0
-aGUgVkYsIHBvc3NpYmx5IHBlcmZvcm1pbmcgRE1BIG9uIGJlaGFsZiBvZiB0aGUNCj4gPiA+IFBG
-LiAgVkZzIGFyZSBvbmx5IGNvbnNpZGVyZWQgc2VjdXJlIHRvZGF5IGJlY2F1c2UgdGhlIFBGIGlz
-IG1hbmFnZWQgYnkNCj4gPiA+IGEgZHJpdmVyIGluIHRoZSBob3N0IGtlcm5lbC4gIEFsbG93aW5n
-IHNpbXBsZSBlbmFibGVtZW50IG9mIFZGcyBmb3IgYQ0KPiA+ID4gdXNlciBvd25lZCBQRiBzZWVt
-cyBpbmhlcmVudGx5IGluc2VjdXJlIHRvIG1lLiAgVGhhbmtzLA0KPiA+ID4gDQo+ID4gPiBBbGV4
-ICANCj4gPiANCj4gPiBGaXJzdGx5LCB0aGUgY29uY2VybiBpcyBvbiB1c2VyLXNwYWNlIFBGIGRy
-aXZlciBiYXNlZCB1cG9uIHZmaW8tcGNpLCB0aGlzIHBhdGNoIGRvZXNuJ3QNCj4gPiBjaGFuZ2Ug
-UEYgYmVoYXZpb3Igc28gd2l0aC93aXRob3V0IHRoaXMgcGF0Y2gsIHRoZSBjb25jZXJuIHJlbWFp
-bnMgdGhlIHNhbWUuDQo+IA0KPiBUaGlzIHBhdGNoIGVuYWJsZXMgU1ItSU9WIHRvIGJlIGVuYWJs
-ZWQgdmlhIHRoZSBob3N0IG9uIGEgdXNlci1vd25lZA0KPiBQRiwgaG93IGlzIHRoaXMgbm90IGEg
-Y2hhbmdlIGluIGJlaGF2aW9yPw0KPiANCj4gPiBTZWNvbmRseSwgdGhlIHNlY3VyaXR5IGNvbmNl
-cm4gKGluY2x1ZGluZyBkZW5pYWwgb2Ygc2VydmljZSkgaW4gZ2VuZXJhbCBpcyB0byBlbnN1cmUg
-dHJ1c3QNCj4gPiBlbnRpdHkgdG8gYmUgdHJ1c3Qtd29ydGh5LiBObyBtYXR0ZXIgdGhlIFBGIGRy
-aXZlciBpcyBpbiBrZXJuZWwtc3BhY2Ugb3IgaW4gdXNlci0gc3BhY2UsDQo+ID4gbmVjZXNzYXJ5
-IG1lY2hhbmlzbSBuZWVkcyB0byBiZSBlbmZvcmNlZCBvbiB0aGUgZGV2aWNlIGRyaXZlciB0byBl
-bnN1cmUgaXQncw0KPiA+IHRydXN0ZWQgd29ydGh5LiBGb3IgZXhhbXBsZSwgaXhnYmUga2VybmVs
-IGRyaXZlciBpbnRyb2R1Y2VzIGEgVHggaGFuZyBkZXRlY3Rpb24NCj4gPiB0byBhdm9pZCBkcml2
-ZXIgc3RheXMgaW4gYSBiYWQgc3RhdGUuIFRoZXJlZm9yZSwgaXQncyB0aGUgcmVzcG9uc2liaWxp
-dHkgb2YgdXNlci1zcGFjZQ0KPiA+IGRyaXZlciBmdW5jdGlvbiwgd2hpY2ggYmFzZWQgdXBvbiB2
-ZmlvLXBjaSwgdG8gZW5mb3JjZSBuZWNlc3NhcnkgbWVjaGFuaXNtIHRvIGVuc3VyZQ0KPiA+IGl0
-cyB0cnVzdC1uZXNzLiBUaGF0J3MgYSBnaXZlbi4NCj4gDQo+IFVzZXJzcGFjZSBpcyBub3QgdHJ1
-c3R3b3J0aHksIHRoZXJlZm9yZSB0aGUgaG9zdCBrZXJuZWwgY2Fubm90IHBsYWNlDQo+IHJlc3Bv
-bnNpYmlsaXR5IG9uIGEgdXNlcnNwYWNlIGRyaXZlciBmb3IgYW55dGhpbmcsIGluY2x1ZGluZyB0
-aGUNCj4gYmVoYXZpb3Igb2YgVkZzLiAgSSdtIHNvcnJ5LCBidXQgaXQncyBhIE5BSyB1bmxlc3Mg
-eW91IGludGVuZCB0bw0KPiBmb2xsb3ctdXAgd2l0aCBzb21lIHByb3Bvc2FsIHRvIHF1YXJhbnRp
-bmUgdGhlIFZGcyBlbmFibGVkIGJ5IHRoZQ0KPiB1c2Vyc3BhY2UgUEYgZHJpdmVyLiAgVGhhbmtz
-LA0KPiANCj4gQWxleA0KDQpJIGRvbid0IHNlZSB0aGlzIHNvIG11Y2ggYXMgYSBzZWN1cml0eSBw
-cm9ibGVtIHBlci1zZS4gSXQgYWxsIGRlcGVuZHMNCm9uIHRoZSBoYXJkd2FyZSBzZXR1cC4gSWYg
-SSByZWNhbGwgY29ycmVjdGx5LCB0aGVyZSBhcmUgZGV2aWNlcyB3aGVyZQ0KdGhlIFBGIGZ1bmN0
-aW9uIGRvZXNuJ3QgcmVhbGx5IGRvIG11Y2ggb3RoZXIgdGhhbiBhY3QgYXMgYSBiaXQgbW9yZQ0K
-aGVhdnktd2VpZ2h0IFZGLCBhbmQgdGhlIGFjdHVhbCBsb2dpYyBpcyBoYW5kbGVkIGJ5IGEgZmly
-bXdhcmUgZW5naW5lDQpvbiB0aGUgZGV2aWNlLiBUaGUgb25seSByZWFsIGlzc3VlIGlzIHRoYXQg
-Zm9yIGRldmljZXMgbGlrZSB0aGUgSW50ZWwNCk5JQ3MgaW5zdGVhZCBvZiB0cnVzdGluZyBhIGZp
-cm13YXJlIGVuZ2luZSB3ZSBoYXZlIGhpc3RvcmljYWxseSB1c2VkIGENCmtlcm5lbCBkcml2ZXIg
-YW5kIG5vdyB3ZSBhcmUgd2FudGluZyB0byB0cnVzdCBhIHVzZXItc3BhY2UgYWdlbnQNCmluc3Rl
-YWQuDQoNCkkgZG8gdGhpbmsgdGhhdCB3ZSBwcm9iYWJseSBuZWVkIHRvIGhhdmUgc29tZSBzb3J0
-IG9mIHNpZ25hbGluZyBiZXR3ZWVuDQp1c2VyLXNwYWNlIGFuZCB2ZmlvLXBjaSB0aGF0IHdvdWxk
-IGFsbG93IGZvciBub3RpZnlpbmcgdGhlIHVzZXItc3BhY2UNCm9mIHRoZSBjaGFuZ2UgYW5kIGZv
-ciB1c2VyLXNwYWNlIHRvIG5vdGlmeSB2ZmlvLXBjaSB0aGF0IGl0IGlzIGNhcGFibGUNCm9mIGhh
-bmRsaW5nIHRoZSBub3RpZmljYXRpb24uIFRoaXMgaXMgc29tZXRoaW5nIHRoYXQgY2FuIGJlIHRv
-Z2dsZWQgYXQNCmFueSB0aW1lIGFmdGVyIGFsbCBhbmQgbm90IGFsbCBkZXZpY2VzIGhhdmUgYSBt
-ZWFucyBvZiBub3RpZnlpbmcgdGhlIFBGDQp0aGF0IHRoaXMgaGFzIGJlZW4gY2hhbmdlZC4NCg0K
-QmV5b25kIHRoYXQgb25jZSB0aGUgcm9vdCB1c2VyIGVuYWJsZXMgdGhlIFZGcyBJIHdvdWxkIGtp
-bmQgb2YgdGhpbmsNCnRoZXkga25vdyB3aGF0IGRyaXZlciB0aGV5IGhhdmUgcnVubmluZyB0aGVt
-LiBFbmFibGluZyBWRnMgaW1wbGllcyB0aGUNCnJvb3QgdXNlciB0cnVzdHMgdGhlIGFwcGxpY2F0
-aW9uIHJ1bm5pbmcgb24gdG9wIG9mIHZmaW8tcGNpIHRvIGhhbmRsZQ0KdGhlIFBGIHJlc3BvbnNp
-Ymx5LiBBdCBsZWFzdCB0aGF0IGlzIGhvdyBpdCB3b3JrcyBpbiBteSBtaW5kLg0KDQpUaGFua3Mu
-DQoNCi0gQWxleGFuZGVyDQogICh1c2luZyBmdWxsIG5hbWUgc2luY2UgMiBBbGV4cyBpbiBvbmUg
-dGhyZWFkIGNhbiBiZSBjb25mdXNpbmcpDQoNCg==
+On 28 September 2017 at 16:51, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
+> On 26 September 2017 at 10:32, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> [+cc Will]
+>>
+>> On Mon, Aug 28, 2017 at 07:04:36PM +0100, Ard Biesheuvel wrote:
+>>> Some implementations of the Synopsys Designware PCIe controller implement
+>>> a so-called ECAM shift mode, which allows a static memory window to be
+>>> configured that covers the configuration space of the entire bus range.
+>>>
+>>> If the firmware performs all the low level configuration that is required
+>>> to expose this controller in a fully ECAM compatible manner, we can
+>>> simply describe it as "pci-host-ecam-generic" and be done with it.
+>>> However, it appears that in some cases (one of which is the Armada 80x0),
+>>> the IP is synthesized with an ATU window size that does not allow the
+>>> first bus to be mapped in a way that prevents the device on the
+>>> downstream port from appearing more than once.
+>>>
+>>> So implement a driver that relies on the firmware to perform all low
+>>> level initialization, and drives the controller in ECAM mode, but
+>>> overrides the config space accessors to take the above quirk into
+>>> account.
+>>>
+>>> Note that, unlike most drivers for this IP, this driver does not expose
+>>> a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+>>> given that this is not a true bridge, and does not require any windows
+>>> to be configured in order for the downstream device to operate correctly.
+>>> Omitting it also prevents the PCI resource allocation routines from
+>>> handing out BAR space to it unnecessarily.
+>>
+>> This is a tangent, but does this mean the other drivers do not need to
+>> expose a fake 00:00.0 device either?
+>>
+>
+> To be honest, I am not so sure anymore. I am seeing some issues in
+> ASPM code making the assumption that any device which is not a root
+> port has a parent. If this is mandated by the spec, I guess there
+> isn't a whole lot we can do except expose a fake root port on b/d/f
+> 0/0/0. This used to work fine, though, and I have to confirm whether
+> the issues I am seeing currently are due to different hardware or
+> changes in the software.
+>
+
+OK, so the issue was new because I hadn't tried using a PCIe switch
+before, and you have already queued the fix to make the ASPM code deal
+with that.
+
+So I think it /would/ be better for the other drivers to not bother
+mocking up the root port, and simply expose the downstream device as
+B/D/F 0/0/0 (assuming the bus range starts at 0).
+
+It really looks like Altera, Aardvark, Sigma, etc are all in the same
+boat here, and need to
+a) filter type 0 config TLPs to avoid the downstream device to appear
+32 times, and
+b) mangle config space accesses to the 'root port' to hide BARs that
+have different meanings in this context (the size of the inbound
+window), in order to prevent the PCI resource allocation routines to
+waste huge amounts of BAR space on them.
+
+>> s/Designware/DesignWare/ in comments, changelogs, Kconfig text, etc.
+>>
+>
+> OK
+>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: Jingoo Han <jingoohan1@gmail.com>
+>>> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+>>> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>>> ---
+>>>  drivers/pci/dwc/Kconfig                | 11 +++
+>>>  drivers/pci/dwc/Makefile               |  1 +
+>>>  drivers/pci/dwc/pcie-designware-ecam.c | 77 ++++++++++++++++++++
+>>
+>> This really doesn't have any DesignWare specifics in it, and it seems
+>> more related to drivers/pci/host/pci-host-generic.c than to anything
+>> in drivers/pci/dwc.  Maybe it should be
+>> drivers/pci/host/pci-host-generic-quirks.c or something?  That's
+>> unwieldy, I admit.
+>>
+>
+> I don't care where we put it, and I am fine with owning it if you prefer.
+>
+>> Putting it in pci/dwc would make Jingoo and Joao the default
+>> maintainers; I don't know how they feel about that.  We would probably
+>> have to tweak MAINTAINERS if we *didn't* put it in pci/dwc.
+>>
+>> Any thoughts on this, Will?
+>>
+>>>  3 files changed, 89 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+>>> index d275aadc47ee..477576d07911 100644
+>>> --- a/drivers/pci/dwc/Kconfig
+>>> +++ b/drivers/pci/dwc/Kconfig
+>>> @@ -169,4 +169,15 @@ config PCIE_KIRIN
+>>>         Say Y here if you want PCIe controller support
+>>>         on HiSilicon Kirin series SoCs.
+>>>
+>>> +config PCIE_DW_HOST_ECAM
+>>> +     bool "Synopsys DesignWare PCIe controller in ECAM mode"
+>>> +     depends on OF && PCI
+>>> +     select PCI_HOST_COMMON
+>>> +     select IRQ_DOMAIN
+>>> +     help
+>>> +       Add support for Synopsys DesignWare PCIe controllers configured
+>>> +       by the firmware into ECAM shift mode. In some cases, these are
+>>> +       fully ECAM compliant, in which case the pci-host-generic driver
+>>> +       may be used instead.
+>>
+>> This doesn't quite read right.  It sounds like a controller in ECAM
+>> shift mode might be fully ECAM compliant, but I don't think that's
+>> what you intended.
+>>
+>
+> Yes, that is what I mean. ECAM shift mode results in a fully compliant
+> ECAM config space iff the IP was synthesized with a 32 KB granularity
+> for the iATU windows. The default is 64 KB, though, in which case you
+> need this driver.
+>
+>> IIUC, the controller can be in either "ECAM shift mode" (where we need
+>> this new driver) or in a "fully ECAM compliant mode" (where we can use
+>> pci-host-generic).
+>>
+>
+> No, this is not the case
+>
+>>>  endmenu
+>>> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+>>> index c61be9738cce..7d5a23e5b767 100644
+>>> --- a/drivers/pci/dwc/Makefile
+>>> +++ b/drivers/pci/dwc/Makefile
+>>> @@ -1,5 +1,6 @@
+>>>  obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+>>>  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+>>> +obj-$(CONFIG_PCIE_DW_HOST_ECAM) += pcie-designware-ecam.o
+>>>  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+>>>  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+>>>  ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+>>> diff --git a/drivers/pci/dwc/pcie-designware-ecam.c b/drivers/pci/dwc/pcie-designware-ecam.c
+>>> new file mode 100644
+>>> index 000000000000..ede627d7d08b
+>>> --- /dev/null
+>>> +++ b/drivers/pci/dwc/pcie-designware-ecam.c
+>>> @@ -0,0 +1,77 @@
+>>> +/*
+>>> + * Driver for mostly ECAM compatible Synopsys dw PCIe controllers
+>>> + * configured by the firmware into RC mode
+>>> + *
+>>> + * This program is free software; you can redistribute it and/or modify
+>>> + * it under the terms of the GNU General Public License version 2 as
+>>> + * published by the Free Software Foundation.
+>>> + *
+>>> + * Copyright (C) 2014 ARM Limited
+>>> + * Copyright (C) 2017 Linaro Limited
+>>> + *
+>>> + * Authors: Will Deacon <will.deacon@arm.com>
+>>> + *          Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>>> + */
+>>> +
+>>> +#include <linux/kernel.h>
+>>> +#include <linux/init.h>
+>>> +#include <linux/of_address.h>
+>>> +#include <linux/of_pci.h>
+>>> +#include <linux/pci-ecam.h>
+>>> +#include <linux/platform_device.h>
+>>> +
+>>> +static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
+>>> +                                int size, u32 *val)
+>>> +{
+>>> +     struct pci_config_window *cfg = bus->sysdata;
+>>> +
+>>> +     /*
+>>> +      * The Synopsys dw PCIe controller in RC mode will not filter type 0
+>>> +      * config TLPs sent to devices 1 and up on its downstream port,
+>>> +      * resulting in devices appearing multiple times on bus 0 unless we
+>>> +      * filter them here.
+>>> +      */
+>>> +     if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0) {
+>>
+>> Trivial, but maybe you could factor out this test?  We already have
+>> these functions that do basically the same thing and it'd be nice to
+>> use a similar pattern (altera and dw also check for the link being up,
+>> which seems racy and possibly bogus to me):
+>>
+>>   altera_pcie_valid_device()
+>>   dw_pcie_valid_device()
+>>   rockchip_pcie_valid_device()
+>>
+
+This is rather difficult to factor out, I'm afraid:
+
+static bool altera_pcie_valid_device(struct altera_pcie *pcie,
+                                     struct pci_bus *bus, int dev)
+
+static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
+                                int dev)
+
+static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+                                      struct pci_bus *bus, int dev)
+
+They all use different struct types to describe the RC, and the fact
+that they model a root port means the type0 TLP filter should be
+applied to bus 1 not bus 0.
+So I agree there is some similarity between these, but not as much
+with the driver I am proposing.
+
+
+>> The fact that altera and rockchip do essentially the same thing as dw
+>> here suggests that this pattern is not limited to DesignWare.
+>>
+
+No.
+>> These other functions also do something similar, though not structured
+>> the same way:
+>>
+>>   hisi_pcie_rd_conf()
+>>   advk_pcie_rd_conf()
+>>   thunder_pem_bridge_read()
+>>   rcar_pcie_config_access()
+>>   gapspci_config_access()
+>>
+>
+> I can look into that.
+>
+
+I think only hisi_pcie_rd_conf() comes close to what I need to do in
+this driver, and this is not surprising given that it uses Synopsys IP
+as well. I would like to replace that entirely with this driver at
+some point, but for now I'd like to proceed with Marvell Armada 8k and
+Socionext Synquacer only, given that those are the only ones I can
+actually test myself.
+
+
+So what I will do is respin the patch as an extension to
+pci-host-generic, so we'll have something to poke at, and perhaps you
+could give some more detailed guidance as to how to refactor these
+existing routines.
+
+Thanks,
+Ard.
