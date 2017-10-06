@@ -1,179 +1,192 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFCv2 PATCH 00/36] Process management for IOMMU + SVM for SMMUv3
-To: Yisheng Xie <xieyisheng1@huawei.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        Sudeep Holla <Sudeep.Holla@arm.com>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <0c6778d8-741f-0db7-fe3c-df88a75ebbb2@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <0fecd29e-eaf7-9503-b087-7bfbc251da88@arm.com>
-Date: Mon, 9 Oct 2017 12:36:22 +0100
+Return-Path: <SRS0=su7V=BF=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=su7V=BF=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <0c6778d8-741f-0db7-fe3c-df88a75ebbb2@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
+ <20171006163919.14898-2-ard.biesheuvel@linaro.org> <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Sat, 7 Oct 2017 00:41:22 +0100
+Message-ID: <CAKv+Gu-PDDpNkSCiEPhY5reOkOkANEmuPg0u+Nicv37c=d38dg@mail.gmail.com>
+Subject: Re: [PATCH v4 1/2] PCI: pci-host-generic: add support for Synopsys
+ DesignWare RC in ECAM mode
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, Will Deacon <will.deacon@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 7 October 2017 at 00:21, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Oct 06, 2017 at 05:39:18PM +0100, Ard Biesheuvel wrote:
+>> Some implementations of the Synopsys DesignWare PCIe controller implement
+>> a so-called ECAM shift mode, which allows a static memory window to be
+>> configured that covers the configuration space of the entire bus range.
+>>
+>> Usually, when the firmware performs all the low level configuration that
+>> is required to expose this controller in a fully ECAM compatible manner,
+>> we can simply describe it as "pci-host-ecam-generic" and be done with it.
+>> However, in some cases (e.g., the Marvell Armada 80x0 as well as the
+>> Socionext SynQuacer Soc), the IP was synthesized with an ATU window
+>> granularity that does not allow the first bus to be mapped in a way that
+>> prevents the device on the downstream port from appearing more than once,
+>> and so we still need special handling in software to drive this static
+>> almost-ECAM configuration.
+>>
+>> So extend the pci-host-generic driver so it can support these controllers
+>> as well, by adding special config space accessors that take the above
+>> quirk into account.
+>>
+>> Note that, unlike most drivers for this IP, this driver does not expose
+>> a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+>> given that this is not a true bridge, and does not require any windows
+>> to be configured in order for the downstream device to operate correctly.
+>> Omitting it also prevents the PCI resource allocation routines from
+>> handing out BAR space to it unnecessarily.
+>>
+>> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>> ---
+>>  drivers/pci/host/pci-host-generic.c | 46 ++++++++++++++++++++
+>>  1 file changed, 46 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+>> index 7d709a7e0aa8..01e81a30e303 100644
+>> --- a/drivers/pci/host/pci-host-generic.c
+>> +++ b/drivers/pci/host/pci-host-generic.c
+>> @@ -35,6 +35,43 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+>>       }
+>>  };
+>>
+>> +static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
+>> +                                int size, u32 *val)
+>> +{
+>> +     struct pci_config_window *cfg = bus->sysdata;
+>> +
+>> +     /*
+>> +      * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
+>> +      * type 0 config TLPs sent to devices 1 and up on its downstream port,
+>> +      * resulting in devices appearing multiple times on bus 0 unless we
+>> +      * filter out those accesses here.
+>> +      */
+>> +     if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
+>> +             return PCIBIOS_DEVICE_NOT_FOUND;
+>
+> I think we should return 0xffffffff data here, as we do in other
+> similar accessors (dw_pcie_rd_conf(), altera_pcie_cfg_read(),
+> rockchip_pcie_rd_conf()).
+>
+> Actually, xilinx-nwl has a nice trick: it implements
+> nwl_pcie_map_bus(), which returns NULL for invalid devices.  Then it
+> can use the generic accessors, and pci_generic_config_read() already
+> fills in ~0 for this case.
+>
+> What do you think of the following?  I put it on my pci/host-generic
+> branch for now (pending your response and an ack from Will).
+>
 
-On 09/10/17 10:49, Yisheng Xie wrote:
-> Hi Jean,
-> 
-> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
->> Following discussions at plumbers and elsewhere, it seems like we need to
->> unify some of the Shared Virtual Memory (SVM) code, in order to define
->> clear semantics for the SVM API.
->>
->> My previous RFC [1] was centered on the SMMUv3, but some of this code will
->> need to be reused by the SMMUv2 and virtio-iommu drivers. This second
->> proposal focuses on abstracting a little more into the core IOMMU API, and
->> also trying to find common ground for all SVM-capable IOMMUs.
->>
->> SVM is, in the context of the IOMMU, sharing page tables between a process
->> and a device. Traditionally it requires IO Page Fault and Process Address
->> Space ID capabilities in device and IOMMU.
->>
->> * A device driver can bind a process to a device, with iommu_process_bind.
->>   Internally we hold on to the mm and get notified of its activity with an
->>   mmu_notifier. The bond is removed by exit_mm, by a call to
->>   iommu_process_unbind or iommu_detach_device.
->>
->> * iommu_process_bind returns a 20-bit PASID (PCI terminology) to the
->>   device driver, which programs it into the device to access the process
->>   address space.
->>
->> * The device and the IOMMU support recoverable page faults. This can be
->>   either ATS+PRI for PCI, or platform-specific mechanisms such as Stall
->>   for SMMU.
->>
->> Ideally systems wanting to use SVM have to support these three features,
->> but in practice we'll see implementations supporting just a subset of
->> them, especially in validation environments. So even if this particular
->> patchset assumes all three capabilities, it should also be possible to
->> support PASID without IOPF (by pinning everything, see non-system SVM in
->> OpenCL)
-> How to pin everything? If user malloc anything we should pin it. It should
-> from user or driver?
+Thanks Bjorn, that does look better, and it works fine on my system.
 
-For userspace drivers, I guess it would be via a VFIO ioctl, that does the
-same preparatory work as VFIO_IOMMU_MAP_DMA, but doesn't call iommu_map.
-For things like OpenCL SVM buffers, it's the kernel driver that does the
-pinning, just like VFIO does it, before launching the work on a SVM buffer.
+Regards,
+Ard.
 
->> , or IOPF without PASID (sharing the single device address space
->> with a process, could be useful for DPDK+VFIO).
->>
->> Implementing both these cases would enable PT sharing alone. Some people
->> would also like IOPF alone without SVM (covered by this series) or process
->> management without shared PT (not covered). Using these features
->> individually is also important for testing, as SVM is in its infancy and
->> providing easy ways to test is essential to reduce the number of quirks
->> down the line.
->>
->>   Process management
->>   ==================
->>
->> The first part of this series introduces boilerplate code for managing
->> PASIDs and processes bound to devices. It's something any IOMMU driver
->> that wants to support bind/unbind will have to do, and it is difficult to
->> get right.
->>
->> Patches
->> 1: iommu_process and PASID allocation, attach and release
->> 2: process_exit callback for device drivers
->> 3: iommu_process search by PASID
->> 4: track process changes with an MMU notifiers
->> 5: bind and unbind operations
->>
->> My proposal uses the following model:
->>
->> * The PASID space is system-wide. This means that a Linux process will
->>   have a single PASID. I introduce the iommu_process structure and a
->>   global IDR to manage this.
->>
->> * An iommu_process can be bound to multiple domains, and a domain can have
->>   multiple iommu_process.
-> when bind a task to device, can we create a single domain for it? I am thinking
-> about process management without shared PT(for some device only support PASID
-> without pri ability), it seems hard to expand if a domain have multiple iommu_process?
-> Do you have any idea about this?
 
-A device always has to be in a domain, as far as I know. Not supporting
-PRI forces you to pin down all user mappings (or just the ones you use for
-DMA) but you should sill be able to share PT. Now if you don't support
-shared PT either, but only PASID, then you'll have to use io-pgtable and a
-new map/unmap API on an iommu_process. I don't understand your concern
-though, how would the link between process and domains prevent this use-case?
-
->> * IOMMU groups share same PASID table. IOMMU groups are a convenient way
->>   to cover various hardware weaknesses that prevent a group of device to
->>   be isolated by the IOMMU (untrusted bridge, for instance). It's foolish
->>   to assume that all PASID implementations will perfectly isolate devices
->>   within a bus and functions within a device, so let's assume all devices
->>   within an IOMMU group have to share PASID traffic as well. In general
->>   there will be a single device per group.
->>
->> * It's up to the driver implementation to decide where to implement the
->>   PASID tables. For SMMU it's more convenient to have a single PASID table
->>   per domain. And I think the model fits better with the existing IOMMU
->>   API: IOVA traffic is shared by all devices in a domain, so should PASID
->>   traffic.
-> What's the meaning of "share PASID traffic"? PASID space is system-wide,
-> and a domain can have multiple iommu_process , so a domain can have multiple
-> PASIDs , one PASID for a iommu_process, right?
-
-Yes, I meant that if a device can access mappings for a specific PASID,
-then other devices in that same domain are also able to access them.
-
-A few reasons for this choice in the SMMU:
-* As all devices in an IOMMU group will be in the same domain and share
-the same PASID traffic, it encompasses that case. Groups are the smallest
-isolation granularity, then users are free to choose to put different
-IOMMU groups in different domains.
-* For architectures that can have both non-PASID and PASID traffic
-simultaneously, like the SMMU, it is simpler to reason about PASID tables
-being a domain, rather than sharing PASID0 within the domain and handling
-all others per device.
-* It's the same principle as non-PASID mappings (iommu_map/unmap is on a
-domain).
-* It implement the classic example of IOMMU architectures where multiple
-device descriptors point to the same PASID tables.
-* It may be desirable for drivers to share PASIDs within a domain, if they
-are actually using domains for conveniently sharing address spaces between
-devices. I'm not sure how much this is used as a feature. It does model a
-shared bus where each device can snoop DMA, so it may be useful.
-
-bind/unbind operations are done on devices and not domains, though,
-because it allows users to know which device supports PASID, PRI, etc.
-
-Thanks,
-Jean
+>
+>
+> commit 5aec78ea05fe23c7c17f8e6c757bc64fb9142728
+> Author: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+> Date:   Fri Oct 6 17:39:18 2017 +0100
+>
+>     PCI: generic: Add support for Synopsys DesignWare RC in ECAM mode
+>
+>     Some implementations of the Synopsys DesignWare PCIe controller implement
+>     a so-called ECAM shift mode, which allows a static memory window to be
+>     configured that covers the configuration space of the entire bus range.
+>
+>     Usually, when the firmware performs all the low level configuration that
+>     is required to expose this controller in a fully ECAM compatible manner,
+>     we can simply describe it as "pci-host-ecam-generic" and be done with it.
+>     However, in some cases (e.g., the Marvell Armada 80x0 as well as the
+>     Socionext SynQuacer Soc), the IP was synthesized with an ATU window
+>     granularity that does not allow the first bus to be mapped in a way that
+>     prevents the device on the downstream port from appearing more than once,
+>     and so we still need special handling in software to drive this static
+>     almost-ECAM configuration.
+>
+>     So extend the pci-host-generic driver so it can support these controllers
+>     as well, by adding special config space accessors that take the above quirk
+>     into account.
+>
+>     Note that, unlike most drivers for this IP, this driver does not expose a
+>     fake bridge device at B/D/F 00:00.0. There is no point in doing so, given
+>     that this is not a true bridge, and does not require any windows to be
+>     configured in order for the downstream device to operate correctly.
+>     Omitting it also prevents the PCI resource allocation routines from handing
+>     out BAR space to it unnecessarily.
+>
+>     Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>     [bhelgaas: factor out pci_dw_valid_device(), add pci_dw_ecam_map_bus() and
+>     use generic read/write functions]
+>     Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+>
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 7d709a7e0aa8..2f05511ce718 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -35,6 +35,40 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+>         }
+>  };
+>
+> +static bool pci_dw_valid_device(struct pci_bus *bus, unsigned int devfn)
+> +{
+> +       struct pci_config_window *cfg = bus->sysdata;
+> +
+> +       /*
+> +        * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
+> +        * type 0 config TLPs sent to devices 1 and up on its downstream port,
+> +        * resulting in devices appearing multiple times on bus 0 unless we
+> +        * filter out those accesses here.
+> +        */
+> +       if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
+> +               return false;
+> +
+> +       return true;
+> +}
+> +
+> +static void __iomem *pci_dw_ecam_map_bus(struct pci_bus *bus,
+> +                                        unsigned int devfn, int where)
+> +{
+> +       if (!pci_dw_valid_device(bus, devfn))
+> +               return NULL;
+> +
+> +       return pci_ecam_map_bus(bus, devfn, where);
+> +}
+> +
+> +static struct pci_ecam_ops pci_dw_ecam_bus_ops = {
+> +       .bus_shift      = 20,
+> +       .pci_ops        = {
+> +               .map_bus        = pci_dw_ecam_map_bus,
+> +               .read           = pci_generic_config_read,
+> +               .write          = pci_generic_config_write,
+> +       }
+> +};
+> +
+>  static const struct of_device_id gen_pci_of_match[] = {
+>         { .compatible = "pci-host-cam-generic",
+>           .data = &gen_pci_cfg_cam_bus_ops },
+> @@ -42,6 +76,15 @@ static const struct of_device_id gen_pci_of_match[] = {
+>         { .compatible = "pci-host-ecam-generic",
+>           .data = &pci_generic_ecam_ops },
+>
+> +       { .compatible = "marvell,armada8k-pcie-ecam",
+> +         .data = &pci_dw_ecam_bus_ops },
+> +
+> +       { .compatible = "socionext,synquacer-pcie-ecam",
+> +         .data = &pci_dw_ecam_bus_ops },
+> +
+> +       { .compatible = "snps,dw-pcie-ecam",
+> +         .data = &pci_dw_ecam_bus_ops },
+> +
+>         { },
+>  };
+>
