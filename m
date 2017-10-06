@@ -1,98 +1,143 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 1/9] SOC: brcmstb: add memory API
-To: Julien Thierry <julien.thierry@arm.com>,
- Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
- <b6be2073-7a90-f83f-4e25-79ef04827bd7@arm.com>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <425b3363-1977-87e1-644e-68a28f648fb0@gmail.com>
-Date: Thu, 12 Oct 2017 09:53:36 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45850 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751418AbdJFWYi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Oct 2017 18:24:38 -0400
+Subject: [PATCH 2/2] vgaarb: Factor out EFI and fallback default device
+ selection
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Daniel Vetter <daniel.vetter@intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        linux-pci@vger.kernel.org,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        dri-devel@lists.freedesktop.org,
+        Xinliang Liu <z.liuxinliang@hisilicon.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Rongrong Zou <zourongrong@gmail.com>,
+        Dave Airlie <airlied@redhat.com>,
+        linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org,
+        Daniel Axtens <dja@axtens.net>
+Date: Fri, 06 Oct 2017 17:24:35 -0500
+Message-ID: <20171006222435.12211.54547.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <b6be2073-7a90-f83f-4e25-79ef04827bd7@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
- devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
- Kevin Cernekee <cernekee@gmail.com>, Will Deacon <will.deacon@arm.com>,
- Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gMTAvMTIvMjAxNyAwNzo0MSBBTSwgSnVsaWVuIFRoaWVycnkgd3JvdGU6Cj4gSGkgSmltLAo+
-IAo+IE9uIDExLzEwLzE3IDIzOjM0LCBKaW0gUXVpbmxhbiB3cm90ZToKPj4gRnJvbTogRmxvcmlh
-biBGYWluZWxsaSA8Zi5mYWluZWxsaUBnbWFpbC5jb20+Cj4+Cj4+IFRoaXMgY29tbWl0IGFkZHMg
-YSBtZW1vcnkgQVBJIHN1aXRhYmxlIGZvciBhc2NlcnRhaW5pbmcgdGhlIHNpemVzIG9mCj4+IGVh
-Y2ggb2YgdGhlIE4gbWVtb3J5IGNvbnRyb2xsZXJzIGluIGEgQnJvYWRjb20gU1RCIGNoaXAuICBJ
-dHMgZmlyc3QKPj4gdXNlciB3aWxsIGJlIHRoZSBCcm9hZGNvbSBTVEIgUENJZSByb290IGNvbXBs
-ZXggZHJpdmVyLCB3aGljaCBuZWVkcwo+PiB0byBrbm93IHRoZXNlIHNpemVzIHRvIHByb3Blcmx5
-IHNldCB1cCBETUEgbWFwcGluZ3MgZm9yIGluYm91bmQKPj4gcmVnaW9ucy4KPj4KPj4gV2UgY2Fu
-bm90IHVzZSBtZW1ibG9jayBoZXJlIG9yIGFueXRoaW5nIGxpa2Ugd2hhdCBMaW51eCBwcm92aWRl
-cwo+PiBiZWNhdXNlIGl0IGNvbGxhcHNlcyBhZGphY2VudCByZWdpb25zIHdpdGhpbiBhIGxhcmdl
-ciBibG9jaywgYW5kIGhlcmUKPj4gd2UgYWN0dWFsbHkgbmVlZCBwZXItbWVtb3J5IGNvbnRyb2xs
-ZXIgYWRkcmVzc2VzIGFuZCBzaXplcywgd2hpY2ggaXMKPj4gd2h5IHdlIHJlc29ydCB0byBtYW51
-YWwgRFQgcGFyc2luZy4KPj4KPj4gU2lnbmVkLW9mZi1ieTogSmltIFF1aW5sYW4gPGppbTIxMDEw
-MjRAZ21haWwuY29tPgo+PiAtLS0KPj4gICBkcml2ZXJzL3NvYy9iY20vYnJjbXN0Yi9NYWtlZmls
-ZSB8ICAgMiArLQo+PiAgIGRyaXZlcnMvc29jL2JjbS9icmNtc3RiL21lbW9yeS5jIHwgMTgzCj4+
-ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwo+PiAgIGluY2x1ZGUvc29j
-L2JyY21zdGIvbWVtb3J5X2FwaS5oIHwgIDI1ICsrKysrKwo+PiAgIDMgZmlsZXMgY2hhbmdlZCwg
-MjA5IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkKPj4gICBjcmVhdGUgbW9kZSAxMDA2NDQg
-ZHJpdmVycy9zb2MvYmNtL2JyY21zdGIvbWVtb3J5LmMKPj4gICBjcmVhdGUgbW9kZSAxMDA2NDQg
-aW5jbHVkZS9zb2MvYnJjbXN0Yi9tZW1vcnlfYXBpLmgKPj4KPj4gZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvc29jL2JjbS9icmNtc3RiL01ha2VmaWxlCj4+IGIvZHJpdmVycy9zb2MvYmNtL2JyY21zdGIv
-TWFrZWZpbGUKPj4gaW5kZXggOTEyMGIyNy4uNGNlYTdiNiAxMDA2NDQKPj4gLS0tIGEvZHJpdmVy
-cy9zb2MvYmNtL2JyY21zdGIvTWFrZWZpbGUKPj4gKysrIGIvZHJpdmVycy9zb2MvYmNtL2JyY21z
-dGIvTWFrZWZpbGUKPj4gQEAgLTEgKzEgQEAKPj4gLW9iai15ICAgICAgICAgICAgICAgICs9IGNv
-bW1vbi5vIGJpdWN0cmwubwo+PiArb2JqLXkgICAgICAgICAgICAgICAgKz0gY29tbW9uLm8gYml1
-Y3RybC5vIG1lbW9yeS5vCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3NvYy9iY20vYnJjbXN0Yi9t
-ZW1vcnkuYwo+PiBiL2RyaXZlcnMvc29jL2JjbS9icmNtc3RiL21lbW9yeS5jCj4+IG5ldyBmaWxl
-IG1vZGUgMTAwNjQ0Cj4+IGluZGV4IDAwMDAwMDAuLmNiNmJmNzMKPj4gLS0tIC9kZXYvbnVsbAo+
-PiArKysgYi9kcml2ZXJzL3NvYy9iY20vYnJjbXN0Yi9tZW1vcnkuYwo+PiBAQCAtMCwwICsxLDE4
-MyBAQAo+PiArLyoKPj4gKyAqIENvcHlyaWdodCDCqSAyMDE1LTIwMTcgQnJvYWRjb20KPj4gKyAq
-Cj4+ICsgKiBUaGlzIHByb2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiByZWRpc3RyaWJ1
-dGUgaXQgYW5kL29yIG1vZGlmeQo+PiArICogaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUg
-R2VuZXJhbCBQdWJsaWMgTGljZW5zZSB2ZXJzaW9uIDIgYXMKPj4gKyAqIHB1Ymxpc2hlZCBieSB0
-aGUgRnJlZSBTb2Z0d2FyZSBGb3VuZGF0aW9uLgo+PiArICoKPj4gKyAqIFRoaXMgcHJvZ3JhbSBp
-cyBkaXN0cmlidXRlZCBpbiB0aGUgaG9wZSB0aGF0IGl0IHdpbGwgYmUgdXNlZnVsLAo+PiArICog
-YnV0IFdJVEhPVVQgQU5ZIFdBUlJBTlRZOyB3aXRob3V0IGV2ZW4gdGhlIGltcGxpZWQgd2FycmFu
-dHkgb2YKPj4gKyAqIE1FUkNIQU5UQUJJTElUWSBvciBGSVRORVNTIEZPUiBBIFBBUlRJQ1VMQVIg
-UFVSUE9TRS4gU2VlIHRoZQo+PiArICogR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1v
-cmUgZGV0YWlscy4KPj4gKyAqCj4+ICsgKiBBIGNvcHkgb2YgdGhlIEdQTCBpcyBhdmFpbGFibGUg
-YXQKPj4gKyAqIGh0dHA6Ly93d3cuYnJvYWRjb20uY29tL2xpY2Vuc2VzL0dQTHYyLnBocCBvciBm
-cm9tIHRoZSBGcmVlIFNvZnR3YXJlCj4+ICsgKiBGb3VuZGF0aW9uIGF0IGh0dHBzOi8vd3d3Lmdu
-dS5vcmcvbGljZW5zZXMvIC4KPj4gKyAqLwo+PiArCj4+ICsjaW5jbHVkZSA8bGludXgvZGV2aWNl
-Lmg+Cj4+ICsjaW5jbHVkZSA8bGludXgvaW8uaD4KPj4gKyNpbmNsdWRlIDxsaW51eC9saWJmZHQu
-aD4KPj4gKyNpbmNsdWRlIDxsaW51eC9vZl9hZGRyZXNzLmg+Cj4+ICsjaW5jbHVkZSA8bGludXgv
-b2ZfZmR0Lmg+Cj4+ICsjaW5jbHVkZSA8bGludXgvc2l6ZXMuaD4KPj4gKyNpbmNsdWRlIDxzb2Mv
-YnJjbXN0Yi9tZW1vcnlfYXBpLmg+Cj4+ICsKPj4gKy8qIC0tLS0tLS0tLS0tLS0tLS0tLS0tIENv
-bnN0YW50cyAtLS0tLS0tLS0tLS0tLS0tLS0tLSAqLwo+PiArCj4+ICsvKiBNYWNyb3MgdG8gaGVs
-cCBleHRyYWN0IHByb3BlcnR5IGRhdGEgKi8KPj4gKyNkZWZpbmUgVThUT1UzMihiLCBvZmZzKSBc
-Cj4+ICsgICAgKCgoKHUzMiliWzAgKyBvZmZzXSA8PCAwKSAgJiAweDAwMDAwMGZmKSB8IFwKPj4g
-KyAgICAgKCgodTMyKWJbMSArIG9mZnNdIDw8IDgpICAmIDB4MDAwMGZmMDApIHwgXAo+PiArICAg
-ICAoKCh1MzIpYlsyICsgb2Zmc10gPDwgMTYpICYgMHgwMGZmMDAwMCkgfCBcCj4+ICsgICAgICgo
-KHUzMiliWzMgKyBvZmZzXSA8PCAyNCkgJiAweGZmMDAwMDAwKSkKPj4gKwo+PiArI2RlZmluZSBE
-VF9QUk9QX0RBVEFfVE9fVTMyKGIsIG9mZnMpIChmZHQzMl90b19jcHUoVThUT1UzMihiLCBvZmZz
-KSkpCj4+ICsKPiAKPiBJIGZhaWwgdG8gdW5kZXJzdGFuZCB3aHkgdGhpcyBpcyBub3Q6Cj4gCj4g
-I2RlZmluZSBEVF9QUk9QX0RBVEFfVE9fVTMyKGIsIG9mZnMpIChmZHQzMl90b19jcHUoKih1MzIq
-KShiICsgb2ZmcykpKQo+IAo+IAo+IElmIEkgdW5kZXJzdGFuZCBjb3JyZWN0bHksIGZkdCBkYXRh
-IGlzIGluIGJpZyBlbmRpYW4sIHRoZSBtYWNybyBVOFRPVTMyCj4gcmVhZHMgaXQgYXMgbGl0dGxl
-IGVuZGlhbi4gTXkgZ3Vlc3MgaXMgdGhhdCB0aGlzIHdvbid0IHdvcmsgb24gYmlnCj4gZW5kaWFu
-IGtlcm5lbHMgYnV0IHNob3VsZCB3b3JrIG9uIGxpdHRsZSBlbmRpYW4gc2luY2UgZmR0MzJfdG9f
-Y3B1IHdpbGwKPiByZXZlcnQgdGhlIGJ5dGVzIGFnYWluLgo+IAo+IEFtIEkgbWlzc2luZyBzb21l
-dGhpbmc/CgpObywgeW91ciBwb2ludCBpcyB2YWxpZCwgdGhlcmUgaXMgbm8gcmVhc29uIHdoeSB0
-aGlzIGNhbm5vdCBiZQpmZHQzMl90b19jcHUoKSBoZXJlLgotLSAKRmxvcmlhbgoKX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBt
-YWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9s
-aXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+The default VGA device is normally set in vga_arbiter_add_pci_device() when
+we call it for the first enabled device that can be accessed with the
+legacy VGA resources ([mem 0xa0000-0xbffff], etc.)
+
+That default device can be overridden by an EFI device that owns the boot
+framebuffer.  As a fallback, we can also select a VGA device that can't be
+accessed via legacy VGA resources, or a VGA device that isn't even enabled.
+
+Factor out this EFI and fallback selection from vga_arb_device_init() into
+a separate vga_arb_select_default_device() function.  This doesn't change
+any behavior, but it untangles the "bridge control possible" checking and
+messages from the default device selection.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/gpu/vga/vgaarb.c |   57 ++++++++++++++++++++++++++++------------------
+ 1 file changed, 35 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index aeb41f793ed4..7803e35a3702 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -1402,29 +1402,14 @@ static struct miscdevice vga_arb_device = {
+ 	MISC_DYNAMIC_MINOR, "vga_arbiter", &vga_arb_device_fops
+ };
+ 
+-static int __init vga_arb_device_init(void)
++static void __init vga_arb_select_default_device(void)
+ {
+-	int rc;
+ 	struct pci_dev *pdev;
+ 	struct vga_device *vgadev;
+ 
+-	rc = misc_register(&vga_arb_device);
+-	if (rc < 0)
+-		pr_err("error %d registering device\n", rc);
+-
+-	bus_register_notifier(&pci_bus_type, &pci_notifier);
+-
+-	/* We add all pci devices satisfying vga class in the arbiter by
+-	 * default */
+-	pdev = NULL;
+-	while ((pdev =
+-		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-			       PCI_ANY_ID, pdev)) != NULL)
+-		vga_arbiter_add_pci_device(pdev);
+-
++#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+ 	list_for_each_entry(vgadev, &vga_list, list) {
+ 		struct device *dev = &vgadev->pdev->dev;
+-#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+ 		/*
+ 		 * Override vga_arbiter_add_pci_device()'s I/O based detection
+ 		 * as it may take the wrong device (e.g. on Apple system under
+@@ -1461,12 +1446,8 @@ static int __init vga_arb_device_init(void)
+ 				vgaarb_info(dev, "overriding boot device\n");
+ 			vga_set_default_device(vgadev->pdev);
+ 		}
+-#endif
+-		if (vgadev->bridge_has_one_vga)
+-			vgaarb_info(dev, "bridge control possible\n");
+-		else
+-			vgaarb_info(dev, "no bridge control possible\n");
+ 	}
++#endif
+ 
+ 	if (!vga_default_device()) {
+ 		list_for_each_entry(vgadev, &vga_list, list) {
+@@ -1492,6 +1473,38 @@ static int __init vga_arb_device_init(void)
+ 			vga_set_default_device(pdev);
+ 		}
+ 	}
++}
++
++static int __init vga_arb_device_init(void)
++{
++	int rc;
++	struct pci_dev *pdev;
++	struct vga_device *vgadev;
++
++	rc = misc_register(&vga_arb_device);
++	if (rc < 0)
++		pr_err("error %d registering device\n", rc);
++
++	bus_register_notifier(&pci_bus_type, &pci_notifier);
++
++	/* We add all PCI devices satisfying VGA class in the arbiter by
++	 * default */
++	pdev = NULL;
++	while ((pdev =
++		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
++			       PCI_ANY_ID, pdev)) != NULL)
++		vga_arbiter_add_pci_device(pdev);
++
++	list_for_each_entry(vgadev, &vga_list, list) {
++		struct device *dev = &vgadev->pdev->dev;
++
++		if (vgadev->bridge_has_one_vga)
++			vgaarb_info(dev, "bridge control possible\n");
++		else
++			vgaarb_info(dev, "no bridge control possible\n");
++	}
++
++	vga_arb_select_default_device();
+ 
+ 	pr_info("loaded\n");
+ 	return rc;
