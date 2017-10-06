@@ -1,61 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:12766 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755159AbdJRMMJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2017 08:12:09 -0400
-Subject: Re: [PATCH 1/2] PCI: dwc: dra7xx: Create functional dependency
- between PCIe and PHY
-To: Roger Quadros <rogerq@ti.com>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20171009090338.26033-1-kishon@ti.com>
- <20171009090338.26033-2-kishon@ti.com>
- <f258c2f0-11a2-60ac-3919-dcc0badfa870@ti.com>
- <ac5b3f42-19a1-3f8d-3bb6-37d63c3574de@ti.com>
- <9dce2e30-a245-460d-a808-a733eaf7ffec@ti.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <2375dfac-b68c-4a94-89ed-fb850ba5579f@ti.com>
-Date: Wed, 18 Oct 2017 17:42:05 +0530
-MIME-Version: 1.0
-In-Reply-To: <9dce2e30-a245-460d-a808-a733eaf7ffec@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 08/36] iommu/fault: Handle mm faults
+Date: Fri,  6 Oct 2017 14:31:35 +0100
+Message-Id: <20171006133203.22803-9-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+When a recoverable page fault is handled by the fault workqueue, find the
+associated process and call handle_mm_fault.
 
-On Tuesday 10 October 2017 01:29 PM, Roger Quadros wrote:
-> On 10/10/17 10:42, Kishon Vijay Abraham I wrote:
->> Roger,
->>
->> On Tuesday 10 October 2017 12:49 PM, Roger Quadros wrote:
->>> On 09/10/17 12:03, Kishon Vijay Abraham I wrote:
->>>> PCI core access configuration space registers in resume_noirq callbacks.
->>>> In the case of dra7xx, PIPE3 PHY connected to PCIe controller has to be
->>>> enabled before accessing configuration space registers. Since
->>>> PIPE3 PHY is enabled by only configuring control module registers, no
->>>> aborts has been observed so far (though during noirq stage, interface
->>>> clock of PIPE3 PHY is not enabled).
->>>>
->>>> With new TRM updates, PIPE3 PHY has to be initialized (PIPE3 PHY
->>>> registers has to be accessed) as well which requires the interface
->>>> clock of PIPE3 PHY to be enabled. The interface clock of PIPE3 PHY is
->>>> derived from OCP2SCP and hence PCIe PHY is modeled as a child of
->>>> OCP2SCP. Since pm_runtime is not enabled during noirq stage,
->>>> pm_runtime_get_sync done in phy_init doesn't enable
->>>> OCP2SCP clocks resulting in abort when PIPE3 PHY registers are
->>>> accessed.
->>>
->>> This could be the case not only with PCIe but even with USB and SATA?
->>
->> right, if USB/SATA driver has no_irq callbacks then the same issue might occur.
-> 
-> OK. Is this something that we should document in Documentation/phy.txt?
+In theory, we don't even need to take a reference to the iommu_process,
+because any release of the structure is preceded by a flush of the queue.
+I don't feel comfortable removing the pinning at the moment, though.
 
-Yeah it could be but the dependency is not required for a lot of phy consumer
-drivers.
-Do you think it makes sense to create functional dependency between phy and
-it's consumers in phy_get?
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/io-pgfault.c | 83 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 81 insertions(+), 2 deletions(-)
 
-Thanks
-Kishon
+diff --git a/drivers/iommu/io-pgfault.c b/drivers/iommu/io-pgfault.c
+index f31bc24534b0..532bdb9ce519 100644
+--- a/drivers/iommu/io-pgfault.c
++++ b/drivers/iommu/io-pgfault.c
+@@ -21,6 +21,7 @@
+ 
+ #include <linux/iommu.h>
+ #include <linux/list.h>
++#include <linux/sched/mm.h>
+ #include <linux/slab.h>
+ #include <linux/workqueue.h>
+ 
+@@ -83,8 +84,86 @@ static int iommu_fault_finish(struct iommu_domain *domain, struct device *dev,
+ 
+ static int iommu_fault_handle_single(struct iommu_fault_context *fault)
+ {
+-	/* TODO */
+-	return -ENODEV;
++	struct mm_struct *mm;
++	struct vm_area_struct *vma;
++	struct iommu_process *process;
++	int ret = IOMMU_FAULT_STATUS_INVALID;
++	unsigned int access_flags = 0;
++	unsigned int fault_flags = FAULT_FLAG_REMOTE;
++	struct iommu_fault *params = &fault->params;
++
++	if (!(params->flags & IOMMU_FAULT_PASID))
++		return ret;
++
++	process = iommu_process_find(params->pasid);
++	if (!process)
++		return ret;
++
++	if ((params->flags & (IOMMU_FAULT_LAST | IOMMU_FAULT_READ |
++			      IOMMU_FAULT_WRITE)) == IOMMU_FAULT_LAST) {
++		/* Special case: PASID Stop Marker doesn't require a response */
++		ret = IOMMU_FAULT_STATUS_IGNORE;
++		goto out_put_process;
++	}
++
++	mm = process->mm;
++	if (!mmget_not_zero(mm)) {
++		/* Process is dead */
++		goto out_put_process;
++	}
++
++	down_read(&mm->mmap_sem);
++
++	vma = find_extend_vma(mm, params->address);
++	if (!vma)
++		/* Unmapped area */
++		goto out_put_mm;
++
++	if (params->flags & IOMMU_FAULT_READ)
++		access_flags |= VM_READ;
++
++	if (params->flags & IOMMU_FAULT_WRITE) {
++		access_flags |= VM_WRITE;
++		fault_flags |= FAULT_FLAG_WRITE;
++	}
++
++	if (params->flags & IOMMU_FAULT_EXEC) {
++		access_flags |= VM_EXEC;
++		fault_flags |= FAULT_FLAG_INSTRUCTION;
++	}
++
++	if (!(params->flags & IOMMU_FAULT_PRIV))
++		fault_flags |= FAULT_FLAG_USER;
++
++	if (access_flags & ~vma->vm_flags)
++		/* Access fault */
++		goto out_put_mm;
++
++	ret = handle_mm_fault(vma, params->address, fault_flags);
++	ret = ret & VM_FAULT_ERROR ? IOMMU_FAULT_STATUS_INVALID :
++		IOMMU_FAULT_STATUS_HANDLED;
++
++out_put_mm:
++	up_read(&mm->mmap_sem);
++
++	/*
++	 * Here's a fun scenario: the process exits while we're handling the
++	 * fault on its mm. Since we're the last mm_user, mmput will call
++	 * mm_exit immediately. exit_mm releases the mmu notifier, which calls
++	 * iommu_notifier_release, which has to flush the fault queue that we're
++	 * executing on... It's actually easy to reproduce with a DMA engine,
++	 * and I did observe a lockdep splat. Therefore move the release of the
++	 * mm to another thread, if we're the last user.
++	 *
++	 * mmput_async was removed in 4.14, and added back in 4.15(?)
++	 * https://patchwork.kernel.org/patch/9952257/
++	 */
++	mmput_async(mm);
++
++out_put_process:
++	iommu_process_put(process);
++
++	return ret;
+ }
+ 
+ static void iommu_fault_handle_group(struct work_struct *work)
+-- 
+2.13.3
+
