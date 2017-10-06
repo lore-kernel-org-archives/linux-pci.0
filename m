@@ -1,96 +1,136 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-To: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@lists.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Cc: "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Bridgman, John" <John.Bridgman@amd.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
-From: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
-Message-ID: <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
-Date: Fri, 20 Oct 2017 14:36:07 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:36551 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751395AbdJFBtw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2017 21:49:52 -0400
+Received: by mail-pg0-f66.google.com with SMTP id i195so8567348pgd.3
+        for <linux-pci@vger.kernel.org>; Thu, 05 Oct 2017 18:49:52 -0700 (PDT)
+Subject: Re: [PATCH kernel v2] powerpc/powernv: Reserve a hole which appears
+ after enabling IOV
+To: linuxppc-dev@lists.ozlabs.org
+Cc: David Gibson <david@gibson.dropbear.id.au>,
+        kvm-ppc@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Russell Currey <ruscur@russell.cc>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20170927065231.20382-1-aik@ozlabs.ru>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5a9210f0-eaf5-856a-583c-482486e26d03@ozlabs.ru>
+Date: Fri, 6 Oct 2017 12:49:44 +1100
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170927065231.20382-1-aik@ozlabs.ru>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Linux kernel group
-
-my name is Ludwig Petrosyan I am working in DESY (Germany)
-
-we are responsible for the control system of  all accelerators in DESY.
-
-For a 7-8 years we have switched to MTCA.4 systems and using PCIe as a 
-central Bus.
-
-I am mostly responsible for the Linux drivers of the AMC Cards (PCIe 
-endpoints).
-
-The idea is start to use peer to peer transaction for PCIe endpoint (DMA 
-and/or usual Read/Write)
-
-Could You please advise me where to start, is there some Documentation 
-how to do it.
+On 27/09/17 16:52, Alexey Kardashevskiy wrote:
+> In order to make generic IOV code work, the physical function IOV BAR
+> should start from offset of the first VF. Since M64 segments share
+> PE number space across PHB, and some PEs may be in use at the time
+> when IOV is enabled, the existing code shifts the IOV BAR to the index
+> of the first PE/VF. This creates a hole in IOMEM space which can be
+> potentially taken by some other device.
+> 
+> This reserves a temporary hole on a parent and releases it when IOV is
+> disabled; the temporary resources are stored in pci_dn to avoid
+> kmalloc/free.
+> 
+> Cc: linux-pci@vger.kernel.org
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
 
 
-with best regards
+Ben, Bjorn, ping?
 
 
-Ludwig
+
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> ---
+> 
+> I assume this goes to powerpc next branch but before this I'd like to
+> get Bjorn's opinion as he continously commented on this bit.
+> 
+> This is the diff in /proc/iomem:
+> 
+> @@ -11,6 +11,7 @@
+>          200800000000-200bffffffff : 0000:04:00.0
+>  210000000000-21fdffffffff : /pciex@3fffe40100000
+>    210000000000-21fdfff0ffff : PCI Bus 0001:01
+> +    210000000000-210009ffffff : pnv_iov_reserved
+>      21000a000000-2101ffffffff : 0001:01:00.0
+>        21000a000000-21000bffffff : 0001:01:00.2
+>          21000a000000-21000bffffff : mlx5_core
+> 
+> ---
+> Changes:
+> v2:
+> * changed order - now devm_release_resource() is called before
+> pci_update_resource(). Strangely the opposite did not produce a warning
+> but still
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h     |  1 +
+>  arch/powerpc/platforms/powernv/pci-ioda.c | 24 +++++++++++++++++++++---
+>  2 files changed, 22 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 0b8aa1fe2d5f..62ed83db04ae 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -218,6 +218,7 @@ struct pci_dn {
+>  #endif
+>  	struct list_head child_list;
+>  	struct list_head list;
+> +	struct resource holes[PCI_SRIOV_NUM_BARS];
+>  };
+>  
+>  /* Get the pointer to a device_node's pci_dn */
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 57f9e55f4352..d66a758b8efb 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -1002,9 +1002,12 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>  	}
+>  
+>  	/*
+> -	 * After doing so, there would be a "hole" in the /proc/iomem when
+> -	 * offset is a positive value. It looks like the device return some
+> -	 * mmio back to the system, which actually no one could use it.
+> +	 * Since M64 BAR shares segments among all possible 256 PEs,
+> +	 * we have to shift the beginning of PF IOV BAR to make it start from
+> +	 * the segment which belongs to the PE number assigned to the first VF.
+> +	 * This creates a "hole" in the /proc/iomem which could be used for
+> +	 * allocating other resources so we reserve this area below and
+> +	 * release when IOV is released.
+>  	 */
+>  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>  		res = &dev->resource[i + PCI_IOV_RESOURCES];
+> @@ -1018,7 +1021,22 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>  		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
+>  			 i, &res2, res, (offset > 0) ? "En" : "Dis",
+>  			 num_vfs, offset);
+> +
+> +		if (offset < 0) {
+> +			devm_release_resource(&dev->dev, &pdn->holes[i]);
+> +			memset(&pdn->holes[i], 0, sizeof(pdn->holes[i]));
+> +		}
+> +
+>  		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
+> +
+> +		if (offset > 0) {
+> +			pdn->holes[i].start = res2.start;
+> +			pdn->holes[i].end = res2.start + size * offset - 1;
+> +			pdn->holes[i].flags = IORESOURCE_BUS;
+> +			pdn->holes[i].name = "pnv_iov_reserved";
+> +			devm_request_resource(&dev->dev, res->parent,
+> +					&pdn->holes[i]);
+> +		}
+>  	}
+>  	return 0;
+>  }
+> 
 
 
-On 11/21/2016 09:36 PM, Deucher, Alexander wrote:
-> This is certainly not the first time this has been brought up, but I'd like to try and get some consensus on the best way to move this forward.  Allowing devices to talk directly improves performance and reduces latency by avoiding the use of staging buffers in system memory.  Also in cases where both devices are behind a switch, it avoids the CPU entirely.  Most current APIs (DirectGMA, PeerDirect, CUDA, HSA) that deal with this are pointer based.  Ideally we'd be able to take a CPU virtual address and be able to get to a physical address taking into account IOMMUs, etc.  Having struct pages for the memory would allow it to work more generally and wouldn't require as much explicit support in drivers that wanted to use it.
->   
-> Some use cases:
-> 1. Storage devices streaming directly to GPU device memory
-> 2. GPU device memory to GPU device memory streaming
-> 3. DVB/V4L/SDI devices streaming directly to GPU device memory
-> 4. DVB/V4L/SDI devices streaming directly to storage devices
->   
-> Here is a relatively simple example of how this could work for testing.  This is obviously not a complete solution.
-> - Device memory will be registered with Linux memory sub-system by created corresponding struct page structures for device memory
-> - get_user_pages_fast() will  return corresponding struct pages when CPU address points to the device memory
-> - put_page() will deal with struct pages for device memory
->   
-> Previously proposed solutions and related proposals:
-> 1.P2P DMA
-> DMA-API/PCI map_peer_resource support for peer-to-peer (http://www.spinics.net/lists/linux-pci/msg44560.html)
-> Pros: Low impact, already largely reviewed.
-> Cons: requires explicit support in all drivers that want to support it, doesn't handle S/G in device memory.
->   
-> 2. ZONE_DEVICE IO
-> Direct I/O and DMA for persistent memory (https://lwn.net/Articles/672457/)
-> Add support for ZONE_DEVICE IO memory with struct pages. (https://patchwork.kernel.org/patch/8583221/)
-> Pro: Doesn't waste system memory for ZONE metadata
-> Cons: CPU access to ZONE metadata slow, may be lost, corrupted on device reset.
->   
-> 3. DMA-BUF
-> RDMA subsystem DMA-BUF support (http://www.spinics.net/lists/linux-rdma/msg38748.html)
-> Pros: uses existing dma-buf interface
-> Cons: dma-buf is handle based, requires explicit dma-buf support in drivers.
->
-> 4. iopmem
-> iopmem : A block device for PCIe memory (https://lwn.net/Articles/703895/)
->   
-> 5. HMM
-> Heterogeneous Memory Management (http://lkml.iu.edu/hypermail/linux/kernel/1611.2/02473.html)
->
-> 6. Some new mmap-like interface that takes a userptr and a length and returns a dma-buf and offset?
->   
-> Alex
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Alexey
