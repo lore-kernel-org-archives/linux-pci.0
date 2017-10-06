@@ -1,58 +1,154 @@
-Return-Path: <shawnguo@kernel.org>
-Return-Path: <shawnguo@kernel.org>
-Date: Mon, 23 Oct 2017 11:04:38 +0800
-From: Shawn Guo <shawnguo@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jianguo Sun <sunjianguo1@huawei.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Jiancheng Xue <xuejiancheng@hisilicon.com>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: hisi: add PCIe driver support for HiSilicon STB SoCs
-Message-ID: <20171023030437.GH8700@dragon>
-References: <1508043971-23216-1-git-send-email-shawnguo@kernel.org>
- <20171020225248.GV6332@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171020225248.GV6332@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 20/36] iommu/arm-smmu-v3: Track ASID state
+Date: Fri,  6 Oct 2017 14:31:47 +0100
+Message-Id: <20171006133203.22803-21-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+At the moment each SMMU has a 8- or 16-bit ASID set and allocates one ASID
+per device via a bitmap. ASIDs are used to differentiate address spaces in
+SMMU TLB entries. With SVM, sharing process address spaces with the SMMU,
+we need to use CPU ASIDs in SMMU contexts, to ensure that broadcast TLB
+invalidations reach the right IOTLB entries.
 
-Thanks for taking time to look at the patch.
+When binding a process address space to a device, we become slaves to the
+arch ASID allocator. We have to use whatever ASID they give us. If a
+domain is currently using it, then we'll either abort or steal that ASID.
 
-On Fri, Oct 20, 2017 at 05:52:48PM -0500, Bjorn Helgaas wrote:
-> On Sun, Oct 15, 2017 at 01:06:11PM +0800, Shawn Guo wrote:
-> > From: Jianguo Sun <sunjianguo1@huawei.com>
-> > 
-> > Add PCIe controller driver for HiSilicon STB SoCs,
-> > the controller is based on the DesignWare's PCIe core.
-> 
-> s/DesignWare's/DesignWare/
-> 
-> > Signed-off-by: Jianguo Sun <sunjianguo1@huawei.com>
-> > Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-> > ---
-> >  .../bindings/pci/hisilicon-histb-pcie.txt          |  66 +++
-> >  drivers/pci/dwc/Kconfig                            |  10 +
-> >  drivers/pci/dwc/Makefile                           |   1 +
-> >  drivers/pci/dwc/pcie-histb.c                       | 469 +++++++++++++++++++++
-> >  4 files changed, 546 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-> >  create mode 100644 drivers/pci/dwc/pcie-histb.c
-> 
-> Looks beautiful overall!
-> 
-> This needs a MAINTAINERS update so "./scripts/get_maintainer.pl -f" prints
-> something useful.
+To make matters worse, tasks are global, while domains are per-SMMU. SMMU
+ASIDs can be aliased across different SMMUs, but the CPU ASID space is
+unique across the whole system.
 
-Okay, I will add a MAINTAINERS entry for this driver.
+Introduce an IDR for SMMU ASID allocation. It allows to keep information
+about an ASID, for instance which domain it is assigned to or how many
+devices are using it.
 
-> A few minor nits below that I would fix myself, but since you need to
-> supply the MAINTAINERS update anyway, I'll let you do it :)
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 53 +++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 44 insertions(+), 9 deletions(-)
 
-Thanks for all the suggestions.  We fixed them all, and the code does
-look nicer.
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 96347aad605f..71fc3a2c8a95 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -640,6 +640,10 @@ struct arm_smmu_strtab_cfg {
+ 	u32				strtab_base_cfg;
+ };
+ 
++struct arm_smmu_asid_state {
++	struct arm_smmu_domain		*domain;
++};
++
+ /* An SMMUv3 instance */
+ struct arm_smmu_device {
+ 	struct device			*dev;
+@@ -681,7 +685,8 @@ struct arm_smmu_device {
+ 
+ #define ARM_SMMU_MAX_ASIDS		(1 << 16)
+ 	unsigned int			asid_bits;
+-	DECLARE_BITMAP(asid_map, ARM_SMMU_MAX_ASIDS);
++	struct idr			asid_idr;
++	spinlock_t			asid_lock;
+ 
+ #define ARM_SMMU_MAX_VMIDS		(1 << 16)
+ 	unsigned int			vmid_bits;
+@@ -1828,7 +1833,11 @@ static void arm_smmu_domain_free(struct iommu_domain *domain)
+ 		struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
+ 		if (cfg->num_contexts) {
+ 			arm_smmu_free_cd_tables(smmu_domain);
+-			arm_smmu_bitmap_free(smmu->asid_map, cfg->cd.asid);
++
++			spin_lock(&smmu->asid_lock);
++			kfree(idr_find(&smmu->asid_idr, cfg->cd.asid));
++			idr_remove(&smmu->asid_idr, cfg->cd.asid);
++			spin_unlock(&smmu->asid_lock);
+ 		}
+ 	} else {
+ 		struct arm_smmu_s2_cfg *cfg = &smmu_domain->s2_cfg;
+@@ -1844,25 +1853,48 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
+ {
+ 	int ret;
+ 	int asid;
++	struct arm_smmu_asid_state *asid_state;
+ 	struct arm_smmu_device *smmu = smmu_domain->smmu;
+ 	struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
+ 
+-	asid = arm_smmu_bitmap_alloc(smmu->asid_map, smmu->asid_bits);
+-	if (asid < 0)
+-		return asid;
+-
+ 	ret = arm_smmu_alloc_cd_tables(smmu_domain);
+ 	if (ret)
+-		goto out_free_asid;
++		return ret;
++
++	asid_state = kzalloc(sizeof(*asid_state), GFP_KERNEL);
++	if (!asid_state) {
++		ret = -ENOMEM;
++		goto out_free_tables;
++	}
++
++	asid_state->domain = smmu_domain;
++
++	idr_preload(GFP_KERNEL);
++	spin_lock(&smmu->asid_lock);
++	asid = idr_alloc_cyclic(&smmu->asid_idr, asid_state, 0,
++				1 << smmu->asid_bits, GFP_ATOMIC);
+ 
+ 	cfg->cd.asid	= (u16)asid;
+ 	cfg->cd.ttbr	= pgtbl_cfg->arm_lpae_s1_cfg.ttbr[0];
+ 	cfg->cd.tcr	= pgtbl_cfg->arm_lpae_s1_cfg.tcr;
+ 	cfg->cd.mair	= pgtbl_cfg->arm_lpae_s1_cfg.mair[0];
++
++	spin_unlock(&smmu->asid_lock);
++	idr_preload_end();
++
++	if (asid < 0) {
++		ret = asid;
++		goto out_free_asid_state;
++	}
++
+ 	return 0;
+ 
+-out_free_asid:
+-	arm_smmu_bitmap_free(smmu->asid_map, asid);
++out_free_asid_state:
++	kfree(asid_state);
++
++out_free_tables:
++	arm_smmu_free_cd_tables(smmu_domain);
++
+ 	return ret;
+ }
+ 
+@@ -2506,6 +2538,9 @@ static int arm_smmu_init_structures(struct arm_smmu_device *smmu)
+ {
+ 	int ret;
+ 
++	spin_lock_init(&smmu->asid_lock);
++	idr_init(&smmu->asid_idr);
++
+ 	ret = arm_smmu_init_queues(smmu);
+ 	if (ret)
+ 		return ret;
+-- 
+2.13.3
 
-Shawn
