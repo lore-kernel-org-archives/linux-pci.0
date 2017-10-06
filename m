@@ -1,106 +1,182 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:19638 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932176AbdJ0Taz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 15:30:55 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 03/12] PCI: tegra: Retrain link for Gen2 speed
-Date: Sat, 28 Oct 2017 00:59:20 +0530
-Message-ID: <1509132569-9398-4-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 06/36] iommu: Extend fault reporting
+Date: Fri,  6 Oct 2017 14:31:33 +0100
+Message-Id: <20171006133203.22803-7-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra124, 132, 210 and 186 supports Gen2 link speed. After the link is up
-in Gen1, set target link speed as Gen2 and retrain link. Link switches to
-Gen2 speed if Gen2 capable end point is connected, else link stays in Gen1.
+A number of new users will need additional information in the IOMMU fault
+report, such as PASID and/or PRI group. Pass a new iommu_fault structure
+to the driver callbacks.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+For the moment add the new API in parallel, with an "ext" prefix, to let
+users move to the new API at their pace. I think it would be nice to use a
+single API though. There are only 4 device drivers using it, and receiving
+an iommu_fault instead of iova/flags wouldn't hurt them much.
+
+For the same reason as the process_exit handler, set_fault_handler is done
+on a device rather than a domain (although for the moment stored in the
+domain). Even when multiple heterogenous devices are in the same IOMMU
+group, each of their driver might want to register a fault handler. At the
+moment they'll race to set the handler, and the winning driver will
+receive fault reports from other devices.
+
+The new registering function also takes flags as arguments, giving future
+users a way to specify at which point of the fault process they want to be
+called.
+
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
- drivers/pci/host/pci-tegra.c | 42 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+ drivers/iommu/iommu.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iommu.h | 18 ++++++++++++++++++
+ 2 files changed, 60 insertions(+)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 2c64eb6cc3cc..15df60e13a14 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -232,6 +232,8 @@
- #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
- #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index f9cb89dd28f5..ee956b5fc301 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -1234,6 +1234,8 @@ EXPORT_SYMBOL_GPL(iommu_capable);
+  * This function should be used by IOMMU users which want to be notified
+  * whenever an IOMMU fault happens.
+  *
++ * Note that new users should use iommu_set_ext_fault_handler instead.
++ *
+  * The fault handler itself should return 0 on success, and an appropriate
+  * error code otherwise.
+  */
+@@ -1243,11 +1245,44 @@ void iommu_set_fault_handler(struct iommu_domain *domain,
+ {
+ 	BUG_ON(!domain);
  
-+#define LINK_RETRAIN_TIMEOUT HZ
-+
- struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -2133,6 +2135,42 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 	}
- }
- 
-+static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
-+		struct pci_dev *pci_dev)
-+{
-+	struct device *dev = pcie->dev;
-+	unsigned long start_jiffies;
-+	unsigned short val;
-+
-+	/* Skip if the current device is not a root port */
-+	if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
++	if (WARN_ON(domain->ext_handler))
 +		return;
 +
-+	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
-+	val &= ~PCI_EXP_LNKSTA_CLS;
-+	val |= PCI_EXP_LNKSTA_CLS_5_0GB;
-+	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
+ 	domain->handler = handler;
+ 	domain->handler_token = token;
+ }
+ EXPORT_SYMBOL_GPL(iommu_set_fault_handler);
+ 
++/**
++ * iommu_set_ext_fault_handler() - set a fault handler for a device
++ * @dev: the device
++ * @handler: fault handler
++ * @token: user data, will be passed back to the fault handler
++ * @flags: IOMMU_FAULT_HANDLER_* parameters.
++ *
++ * This function should be used by IOMMU users which want to be notified
++ * whenever an IOMMU fault happens.
++ *
++ * The fault handler itself should return 0 on success, and an appropriate
++ * error code otherwise.
++ */
++void iommu_set_ext_fault_handler(struct device *dev,
++				 iommu_ext_fault_handler_t handler,
++				 void *token, int flags)
++{
++	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
 +
-+	/* Retrain the link */
-+	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
-+	val |= PCI_EXP_LNKCTL_RL;
-+	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
++	if (WARN_ON(!domain))
++		return;
 +
-+	start_jiffies = jiffies;
-+	for (;;) {
-+		pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
-+		if (!(val & PCI_EXP_LNKSTA_LT))
-+			break;
-+		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
-+			break;
-+		usleep_range(2000, 3000);
-+	}
++	if (WARN_ON(domain->handler || domain->ext_handler))
++		return;
 +
-+	if (val & PCI_EXP_LNKSTA_LT)
-+		dev_err(dev, "link retrain of PCIe slot %u failed\n",
-+				PCI_SLOT(pci_dev->devfn));
++	domain->ext_handler = handler;
++	domain->handler_token = token;
++}
++EXPORT_SYMBOL_GPL(iommu_set_ext_fault_handler);
++
+ static struct iommu_domain *__iommu_domain_alloc(struct bus_type *bus,
+ 						 unsigned type)
+ {
+@@ -1787,6 +1822,10 @@ int report_iommu_fault(struct iommu_domain *domain, struct device *dev,
+ 		       unsigned long iova, int flags)
+ {
+ 	int ret = -ENOSYS;
++	struct iommu_fault fault = {
++		.address	= iova,
++		.flags		= flags,
++	};
+ 
+ 	/*
+ 	 * if upper layers showed interest and installed a fault handler,
+@@ -1795,6 +1834,9 @@ int report_iommu_fault(struct iommu_domain *domain, struct device *dev,
+ 	if (domain->handler)
+ 		ret = domain->handler(domain, dev, iova, flags,
+ 						domain->handler_token);
++	else if (domain->ext_handler)
++		ret = domain->ext_handler(domain, dev, &fault,
++					  domain->handler_token);
+ 
+ 	trace_io_page_fault(dev, iova, flags);
+ 	return ret;
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index e64c2711ea8d..ea4eaf585eb4 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -57,6 +57,14 @@ struct notifier_block;
+ typedef int (*iommu_fault_handler_t)(struct iommu_domain *,
+ 			struct device *, unsigned long, int, void *);
+ 
++struct iommu_fault {
++	unsigned long		address;
++	unsigned int		flags;
++};
++
++typedef int (*iommu_ext_fault_handler_t)(struct iommu_domain *, struct device *,
++					 struct iommu_fault *, void *);
++
+ /* All process are being detached from this device */
+ #define IOMMU_PROCESS_EXIT_ALL			(-1)
+ typedef int (*iommu_process_exit_handler_t)(struct iommu_domain *, struct device *dev,
+@@ -97,6 +105,7 @@ struct iommu_domain {
+ 	const struct iommu_ops *ops;
+ 	unsigned long pgsize_bitmap;	/* Bitmap of page sizes in use */
+ 	iommu_fault_handler_t handler;
++	iommu_ext_fault_handler_t ext_handler;
+ 	void *handler_token;
+ 	iommu_process_exit_handler_t process_exit;
+ 	void *process_exit_token;
+@@ -352,6 +361,9 @@ extern size_t default_iommu_map_sg(struct iommu_domain *domain, unsigned long io
+ extern phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain, dma_addr_t iova);
+ extern void iommu_set_fault_handler(struct iommu_domain *domain,
+ 			iommu_fault_handler_t handler, void *token);
++extern void iommu_set_ext_fault_handler(struct device *dev,
++					iommu_ext_fault_handler_t handler,
++					void *token, int flags);
+ 
+ extern void iommu_get_resv_regions(struct device *dev, struct list_head *list);
+ extern void iommu_put_resv_regions(struct device *dev, struct list_head *list);
+@@ -566,6 +578,12 @@ static inline void iommu_set_fault_handler(struct iommu_domain *domain,
+ {
+ }
+ 
++static inline void iommu_set_ext_fault_handler(struct device *dev,
++				 iommu_ext_fault_handler_t handler, void *token,
++				 int flags)
++{
 +}
 +
- static const struct tegra_pcie_soc tegra20_pcie = {
- 	.num_ports = 2,
- 	.msi_base_shift = 0,
-@@ -2334,6 +2372,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	struct pci_host_bridge *host;
- 	struct tegra_pcie *pcie;
- 	struct pci_bus *child;
-+	struct pci_dev *pci_dev = NULL;
- 	int err;
- 
- 	host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-@@ -2399,6 +2438,9 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	pci_bus_add_devices(host->bus);
- 
-+	for_each_pci_dev(pci_dev)
-+		tegra_pcie_change_link_speed(pcie, pci_dev);
-+
- 	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
- 		err = tegra_pcie_debugfs_init(pcie);
- 		if (err < 0)
+ static inline void iommu_get_resv_regions(struct device *dev,
+ 					struct list_head *list)
+ {
 -- 
-2.1.4
+2.13.3
+
