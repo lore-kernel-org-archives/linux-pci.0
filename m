@@ -1,72 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 09/15] ACPI: configfs: make config_item_type const
-Date: Mon, 16 Oct 2017 17:18:48 +0200
-Message-Id: <1508167134-6243-10-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:53908 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750868AbdJFH1S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Oct 2017 03:27:18 -0400
+Date: Fri, 6 Oct 2017 09:27:13 +0200
+From: Jesper Nilsson <jesper.nilsson@axis.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+        Rich Felker <dalias@libc.org>, linux-ia64@vger.kernel.org,
+        linux-sh@vger.kernel.org,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        David Howells <dhowells@redhat.com>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Paul Mackerras <paulus@samba.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org,
+        Jesper Nilsson <jespern@axis.com>, linux-am33-list@redhat.com,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Helge Deller <deller@gmx.de>, x86@kernel.org,
+        "James E.J. Bottomley" <jejb@parisc-linux.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Matt Turner <mattst88@gmail.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        linux-xtensa@linux-xtensa.org, Mikael Starvik <starvik@axis.com>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Richard Henderson <rth@twiddle.net>,
+        Chris Zankel <chris@zankel.net>,
+        Tony Luck <tony.luck@intel.com>, linux-cris-kernel@axis.com,
+        linux-parisc@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 2/4] PCI: Remove redundant pci_dev, pci_bus, resource
+ declarations
+Message-ID: <20171006072713.GP17578@axis.com>
+References: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171005203849.18300.20999.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171005203849.18300.20999.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make these structures const as they are either passed to the functions
-having the argument as const or stored as a reference in the "ci_type"
-const field of a config_item structure.
+On Thu, Oct 05, 2017 at 03:38:49PM -0500, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> <linux/pci.h> defines struct pci_bus and struct pci_dev and includes the
+> struct resource definition before including <asm/pci.h>.  Nobody includes
+> <asm/pci.h> directly, so they don't need their own declarations.
+> 
+> Remove the redundant struct pci_dev, pci_bus, resource declarations.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  arch/alpha/include/asm/pci.h    |    3 ---
+>  arch/cris/include/asm/pci.h     |    2 --
 
-Done using Coccienlle.
+For what it's worth, for the cris changes:
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
+Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
 
- drivers/acpi/acpi_configfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+>  arch/frv/include/asm/pci.h      |    2 --
+>  arch/ia64/include/asm/pci.h     |    2 --
+>  arch/mips/include/asm/pci.h     |    2 --
+>  arch/mn10300/include/asm/pci.h  |    2 --
+>  arch/parisc/include/asm/pci.h   |    7 -------
+>  arch/powerpc/include/asm/pci.h  |    2 --
+>  arch/sh/include/asm/pci.h       |    2 --
+>  arch/sparc/include/asm/pci_32.h |    2 --
+>  arch/xtensa/include/asm/pci.h   |    2 --
+>  11 files changed, 28 deletions(-)
 
-diff --git a/drivers/acpi/acpi_configfs.c b/drivers/acpi/acpi_configfs.c
-index 853bc7f..b588503 100644
---- a/drivers/acpi/acpi_configfs.c
-+++ b/drivers/acpi/acpi_configfs.c
-@@ -204,7 +204,7 @@ struct configfs_attribute *acpi_table_attrs[] = {
- 	NULL,
- };
- 
--static struct config_item_type acpi_table_type = {
-+static const struct config_item_type acpi_table_type = {
- 	.ct_owner = THIS_MODULE,
- 	.ct_bin_attrs = acpi_table_bin_attrs,
- 	.ct_attrs = acpi_table_attrs,
-@@ -237,12 +237,12 @@ struct configfs_group_operations acpi_table_group_ops = {
- 	.drop_item = acpi_table_drop_item,
- };
- 
--static struct config_item_type acpi_tables_type = {
-+static const struct config_item_type acpi_tables_type = {
- 	.ct_owner = THIS_MODULE,
- 	.ct_group_ops = &acpi_table_group_ops,
- };
- 
--static struct config_item_type acpi_root_group_type = {
-+static const struct config_item_type acpi_root_group_type = {
- 	.ct_owner = THIS_MODULE,
- };
- 
+/^JN - Jesper Nilsson
 -- 
-1.9.1
-
+               Jesper Nilsson -- jesper.nilsson@axis.com
