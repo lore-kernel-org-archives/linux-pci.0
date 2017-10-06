@@ -1,72 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:56600 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752309AbdJLPEV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 11:04:21 -0400
-Received: by mail-wm0-f67.google.com with SMTP id l68so14186809wmd.5
-        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 08:04:20 -0700 (PDT)
-Date: Thu, 12 Oct 2017 17:04:19 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Roopa Prabhu <roopa@cumulusnetworks.com>
-Cc: Steve Lin <steven.lin1@broadcom.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Jiri Pirko <jiri@mellanox.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        michael.chan@broadcom.com, linux-pci@vger.kernel.org,
-        "John W. Linville" <linville@tuxdriver.com>, gospo@broadcom.com
-Subject: Re: [RFC 0/3] Adding config get/set to devlink
-Message-ID: <20171012150419.GI14672@nanopsycho>
-References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
- <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com>
- <20171012144032.GG14672@nanopsycho>
- <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:58986 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752292AbdJFSTY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Oct 2017 14:19:24 -0400
+Date: Fri, 6 Oct 2017 13:19:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Tony Nguyen <anthony.l.nguyen@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        intel-wired-lan <intel-wired-lan@lists.osuosl.org>,
+        Netdev <netdev@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [Intel-wired-lan] [PATCH] PCI: Check/Set ARI capability before
+ setting numVFs
+Message-ID: <20171006181922.GF25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171004155258.35634-1-anthony.l.nguyen@intel.com>
+ <20171004230114.GO25517@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKgT0UfL6sASMFfUbN7qkJxAMEU9BwJgMJeFmHRZsk1fhVYzZQ@mail.gmail.com>
+ <20171005195959.GW25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+In-Reply-To: <20171005195959.GW25517@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thu, Oct 12, 2017 at 04:46:24PM CEST, roopa@cumulusnetworks.com wrote:
->On Thu, Oct 12, 2017 at 7:40 AM, Jiri Pirko <jiri@resnulli.us> wrote:
->> Thu, Oct 12, 2017 at 04:35:10PM CEST, roopa@cumulusnetworks.com wrote:
->>>On Thu, Oct 12, 2017 at 6:34 AM, Steve Lin <steven.lin1@broadcom.com> wrote:
->>>> Adds a devlink command for getting & setting device configuration
->>>> parameters, and enumerates a bunch of those parameters as devlink
->>>> attributes.  Also introduces an attribute that can be set by a
->>>> driver to indicate that the config change doesn't take effect
->>>> until the next restart (as in the case of the bnxt driver changes
->>>> in this patchset, for which all the configuration changes affect NVM
->>>> only, and aren't loaded until the next restart.)
->>>>
->>>> bnxt driver patches make use of these new devlink cmds/attributes.
->>>>
->>>> Steve Lin (3):
->>>>   devlink: Add config parameter get/set operations
->>>>   bnxt: Move generic devlink code to new file
->>>>   bnxt: Add devlink support for config get/set
->>>>
->>>
->>>Is the goal here to move all ethtool operations to devlink (I saw some
->>>attrs related to speed etc). ?.
->>>We do need to move ethtool attrs to netlink and devlink is a good
->>>place (and of-course leave the current ethtool api around for backward
->>>compatibility).
->>
->> We need to make sure we are not moving things to devlink which don't
->> belong there. All options that use "netdev" as a handle should go into
->> rtnetlink instead.
->>
->
->Any reason you want to keep that restriction ?.
->FWIS, devlink is a driver api just like ethtool is.
->and ethtool needs to move to netlink soon...and It would be better to
->not put the rtnl_lock burden on ethtool driver operations. Instead of
->adding yet another driver api, extending devlink seems like a great
->fit to me.
+On Thu, Oct 05, 2017 at 04:07:41PM -0500, Bjorn Helgaas wrote:
+> On Wed, Oct 04, 2017 at 04:29:14PM -0700, Alexander Duyck wrote:
+> > On Wed, Oct 4, 2017 at 4:01 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > On Wed, Oct 04, 2017 at 08:52:58AM -0700, Tony Nguyen wrote:
+> > >> This fixes a bug that can occur if an AER error is encountered while SRIOV
+> > >> devices are present.
 
-Hmm, the original purpose of devlink was to obtain iface for things that
-could not use "netdev" as a handle. I try to stick with it as we already
-have iface for things that could use "netdev" as a handle - rtnetlink.
+I applied the patch below with Alex's ack to pci/virtualization for v4.15.
 
-Not sure we want to go this way and add "netdev"-handle things into
-devlink. Thoughts?
+> commit 95594dedd443e42ab0c16b9fba0109e955e7be13
+> Author: Tony Nguyen <anthony.l.nguyen@intel.com>
+> Date:   Wed Oct 4 08:52:58 2017 -0700
+> 
+>     PCI: Restore "ARI Capable Hierarchy" before setting numVFs
+>     
+>     In the restore path, we previously read PCI_SRIOV_VF_OFFSET and
+>     PCI_SRIOV_VF_STRIDE before restoring PCI_SRIOV_CTRL_ARI, which
+>     affects the offset and stride:
+>     
+>       pci_restore_state
+>         pci_restore_iov_state
+>           sriov_restore_state
+>             pci_iov_set_numvfs
+>               pci_read_config_word(... PCI_SRIOV_VF_OFFSET, &iov->offset)
+>             pci_write_config_word(... PCI_SRIOV_CTRL, iov->ctrl)
+>     
+>     The effect is that suspend/resume and AER recovery, which use
+>     pci_restore_state(), may corrupt iov->offset and iov->stride.  The iov
+>     state is associated with the device, not the driver, so if we reload the
+>     driver, it will use the the corrupted data, which may cause crashes like
+>     this:
+>     
+>       kernel BUG at drivers/pci/iov.c:157!
+>       RIP: 0010:pci_iov_add_virtfn+0x2eb/0x350
+>       Call Trace:
+>        pci_enable_sriov+0x353/0x440
+>        ixgbe_pci_sriov_configure+0xd5/0x1f0 [ixgbe]
+>        sriov_numvfs_store+0xf7/0x170
+>        dev_attr_store+0x18/0x30
+>        sysfs_kf_write+0x37/0x40
+>        kernfs_fop_write+0x120/0x1b0
+>        vfs_write+0xb5/0x1a0
+>        SyS_write+0x55/0xc0
+>     
+>     The occurs since during AER recovery the ARI Capable Hierarchy bit, which
+>     can affect the values for First VF Offset and VF Stride, is not set until
+>     after pci_iov_set_numvfs() is called.  This can cause the iov structure to
+>     be populated with values that are incorrect if the bit is later set.
+>     Check and set this bit, if needed, before calling pci_iov_set_numvfs() so
+>     that the values being populated properly take the ARI bit into account.
+>     
+>     Signed-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>
+>     [bhelgaas: changelog, add comment, also clear ARI if necessary]
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: Alexander Duyck <alexander.h.duyck@intel.com>
+>     CC: Emil Tantilov <emil.s.tantilov@intel.com>
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ce24cf235f01..6bacb8995e96 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -498,6 +498,14 @@ static void sriov_restore_state(struct pci_dev *dev)
+>  	if (ctrl & PCI_SRIOV_CTRL_VFE)
+>  		return;
+>  
+> +	/*
+> +	 * Restore PCI_SRIOV_CTRL_ARI before pci_iov_set_numvfs() because
+> +	 * it reads offset & stride, which depend on PCI_SRIOV_CTRL_ARI.
+> +	 */
+> +	ctrl &= ~PCI_SRIOV_CTRL_ARI;
+> +	ctrl |= iov->ctrl & PCI_SRIOV_CTRL_ARI;
+> +	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, ctrl);
+> +
+>  	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
+>  		pci_update_resource(dev, i);
+>  
