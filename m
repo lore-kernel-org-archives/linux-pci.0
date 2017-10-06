@@ -1,69 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:17930 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932244AbdJ0TbM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 15:31:12 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 07/12] PCI: tegra: Disable AFI dynamic clock gating
-Date: Sat, 28 Oct 2017 00:59:24 +0530
-Message-ID: <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 12/36] dt-bindings: document stall and PASID properties for IOMMU masters
+Date: Fri,  6 Oct 2017 14:31:39 +0100
+Message-Id: <20171006133203.22803-13-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When there are 32 outstanding writes from AFI to memory, the outstanding
-write counter overflows and indicates that there are "0" outstanding write
-transactions. This outstanding write counter is used to generate IDLE
-signal to dynamically gate the AFI clock.
+On ARM systems, some platform devices behind an IOMMU may support stall
+and PASID features. Stall is the ability to recover from page faults and
+PASID offers multiple process address spaces to the device. Together they
+allow to do paging with a device. Let the firmware tell us when a device
+supports stall and PASID.
 
-When memory controller is under heavy load, its possible that write
-completions will come back to AFI after long delay and AFI write counter
-overflows. AFI clock gets gated even when there are outstanding
-transactions towards memory controller resutling in system hang.
-
-Disable dynamic clock gating of AFI clock to avoid system hang.
-
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
- drivers/pci/host/pci-tegra.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ Documentation/devicetree/bindings/iommu/iommu.txt | 24 +++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 27a8211c48b2..b8cac871712b 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -103,8 +103,9 @@
- #define AFI_MSI_EN_VEC6		0xa4
- #define AFI_MSI_EN_VEC7		0xa8
+diff --git a/Documentation/devicetree/bindings/iommu/iommu.txt b/Documentation/devicetree/bindings/iommu/iommu.txt
+index 5a8b4624defc..c589b75f7277 100644
+--- a/Documentation/devicetree/bindings/iommu/iommu.txt
++++ b/Documentation/devicetree/bindings/iommu/iommu.txt
+@@ -86,6 +86,30 @@ have a means to turn off translation. But it is invalid in such cases to
+ disable the IOMMU's device tree node in the first place because it would
+ prevent any driver from properly setting up the translations.
  
--#define AFI_CONFIGURATION		0xac
--#define  AFI_CONFIGURATION_EN_FPCI	(1 << 0)
-+#define AFI_CONFIGURATION			0xac
-+#define  AFI_CONFIGURATION_EN_FPCI		(1 << 0)
-+#define  AFI_CONFIGURATION_CLKEN_OVERRIDE	(1 << 31)
++Optional properties:
++--------------------
++- dma-can-stall: When present, the master can wait for a transaction to
++  complete for an indefinite amount of time. Upon translation fault some
++  IOMMUs, instead of aborting the translation immediately, may first
++  notify the driver and keep the transaction in flight. This allows the OS
++  to inspect the fault and, for example, make physical pages resident
++  before updating the mappings and completing the transaction. Such IOMMU
++  accepts a limited number of simultaneous stalled transactions before
++  having to either put back-pressure on the master, or abort new faulting
++  transactions.
++
++  Firmware has to opt-in stalling, because most buses and masters don't
++  support it. In particular it isn't compatible with PCI, where
++  transactions have to complete before a time limit. More generally it
++  won't work in systems and masters that haven't been designed for
++  stalling. For example the OS, in order to handle a stalled transaction,
++  may attempt to retrieve pages from secondary storage in a stalled
++  domain, leading to a deadlock.
++
++- pasid-bits: Some masters support multiple address spaces for DMA. By
++  tagging DMA transactions with an address space identifier. By default,
++  this is 0, which means that the device only has one address space.
++
  
- #define AFI_FPCI_ERROR_MASKS	0xb0
- 
-@@ -1057,9 +1058,10 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 		}
- 	}
- 
--	/* finally enable PCIe */
-+	/* Disable AFI dynamic clock gating and enable PCIe */
- 	value = afi_readl(pcie, AFI_CONFIGURATION);
--	value |= AFI_CONFIGURATION_EN_FPCI;
-+	value |= (AFI_CONFIGURATION_EN_FPCI |
-+			AFI_CONFIGURATION_CLKEN_OVERRIDE);
- 	afi_writel(pcie, value, AFI_CONFIGURATION);
- 
- 	value = AFI_INTR_EN_INI_SLVERR | AFI_INTR_EN_INI_DECERR |
+ Notes:
+ ======
 -- 
-2.1.4
+2.13.3
+
