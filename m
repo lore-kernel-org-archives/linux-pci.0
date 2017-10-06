@@ -1,129 +1,89 @@
-Return-Path: <SRS0=3bnr=BX=gmail.com=dubepankaj1980@kernel.org>
-Return-Path: <SRS0=3bnr=BX=gmail.com=dubepankaj1980@kernel.org>
-MIME-Version: 1.0
-Sender: dubepankaj1980@gmail.com
-In-Reply-To: <20171020174108.GK6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20171012044055epcas1p44b2e6b7cc21d42319529a518197aca9f@epcas1p4.samsung.com>
- <1507783268-9022-1-git-send-email-pankaj.dubey@samsung.com> <20171020174108.GK6332@bhelgaas-glaptop.roam.corp.google.com>
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-Date: Tue, 24 Oct 2017 19:10:55 +0530
-Message-ID: <CAGcde9GiL2U45xRyFnKo=u8RbiMNYNyNJsv3dEkbVum38t1dRg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: designware: move dw_pcie_iatu_unroll_enabled to pcie-designware.c
+Return-Path: <SRS0=6ey0=BF=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=6ey0=BF=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 6 Oct 2017 09:47:05 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Content-Type: text/plain; charset="UTF-8"
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>, Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Antoine Tenart <antoine.tenart@free-electrons.com>,
+	=?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@free-electrons.com>
+Subject: Re: [PATCH v2 0/7] PCI: aardvark: improve compatibility with PCI
+ devices
+Message-ID: <20171006084705.GA8754@red-moon>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+ <20171005175310.3c2dde95@windsurf.lan>
+ <20171005181615.GU25517@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171005181615.GU25517@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20 October 2017 at 23:11, Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Thu, Oct 12, 2017 at 10:11:08AM +0530, Pankaj Dubey wrote:
-> > IATU unroll feature can be enabled in EP mode as well, so we need to
-> > have this check in pcie-designware-ep.c, so instead of making this
-> > function as static in pcie-desigware-host.c, let's move this in
-> > pcie-designware.c so that both pcie-designware-host.c and
-> > pcie-designware-ep.c can use it.
-> >
-> > Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
->
-> This is fine with me but I'm looking for an ack from Jingoo and/or Joao.
->
+On Thu, Oct 05, 2017 at 01:16:17PM -0500, Bjorn Helgaas wrote:
+> [+cc Lorenzo]
+> 
+> On Thu, Oct 05, 2017 at 05:53:10PM +0200, Thomas Petazzoni wrote:
+> > Hello Bjorn,
+> > 
+> > On Thu, 28 Sep 2017 14:58:31 +0200, Thomas Petazzoni wrote:
+> > 
+> > > This patch series brings a number of fixes to the pci-aardvark driver
+> > > that allows a much larger number of PCIe devices to be used.
+> > 
+> > I sent the initial version of this patch series almost a month ago, and
+> > it consists of fixes that I would like to have in 4.14.
+> 
+> The general rule is that after the merge window, I merge fixes to
+> things we put in during the merge window, as well as important
+> regression fixes.  Most bug fixes will be queued for the next merge
+> window.  I'll need some guidance on classifying these.
+> 
+> I think the map_irq/swizzle_irq patch should definitely be in v4.14.
 
-Jingoo / Joao any comments on this?
-
->
-> > ---
-> >  drivers/pci/dwc/pcie-designware-ep.c   |  4 ++++
-> >  drivers/pci/dwc/pcie-designware-host.c | 11 -----------
-> >  drivers/pci/dwc/pcie-designware.c      | 11 +++++++++++
-> >  drivers/pci/dwc/pcie-designware.h      |  1 +
-> >  4 files changed, 16 insertions(+), 11 deletions(-)
-> >
-> > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> > index d53d5f1..64803a9 100644
-> > --- a/drivers/pci/dwc/pcie-designware-ep.c
-> > +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> > @@ -314,6 +314,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
-> >       if (ep->ops->ep_init)
-> >               ep->ops->ep_init(ep);
-> >
-> > +     pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
-> > +     dev_dbg(dev, "iATU unroll: %s\n",
-> > +             pci->iatu_unroll_enabled ? "enabled" : "disabled");
-> > +
-> >       epc = devm_pci_epc_create(dev, &epc_ops);
-> >       if (IS_ERR(epc)) {
-> >               dev_err(dev, "failed to create epc device\n");
-> > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> > index 81e2157..d3f579e 100644
-> > --- a/drivers/pci/dwc/pcie-designware-host.c
-> > +++ b/drivers/pci/dwc/pcie-designware-host.c
-> > @@ -574,17 +574,6 @@ static struct pci_ops dw_pcie_ops = {
-> >       .write = dw_pcie_wr_conf,
-> >  };
-> >
-> > -static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
-> > -{
-> > -     u32 val;
-> > -
-> > -     val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
-> > -     if (val == 0xffffffff)
-> > -             return 1;
-> > -
-> > -     return 0;
-> > -}
-> > -
-> >  void dw_pcie_setup_rc(struct pcie_port *pp)
-> >  {
-> >       u32 val;
-> > diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> > index 88abddd..f15da90 100644
-> > --- a/drivers/pci/dwc/pcie-designware.c
-> > +++ b/drivers/pci/dwc/pcie-designware.c
-> > @@ -92,6 +92,17 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
-> >               dev_err(pci->dev, "write DBI address failed\n");
-> >  }
-> >
-> > +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
->
-> I know this is just moved verbatim, but it's more conventional to simply
-> return an int (or possibly bool) for a predicate like this.  There's really
-> no point in going out of your way to specify "u8" for the return type.
->
-
-Ok, it can be done, will wait for comments from Jingoo and or Joao and
-then update.
+Yes it is v4.14 (actually v4.13 - Fixes: tag will cover that) material,
+I missed updating this host bridge while patching all ARM host controller
+bridges, apologies.
 
 Thanks,
-Pankaj
+Lorenzo
 
-
-> > +{
-> > +     u32 val;
-> > +
-> > +     val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
-> > +     if (val == 0xffffffff)
-> > +             return 1;
-> > +
-> > +     return 0;
-> > +}
-> > +
-> >  static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
-> >  {
-> >       u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
-> > diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> > index e5d9d77..8d6829c 100644
-> > --- a/drivers/pci/dwc/pcie-designware.h
-> > +++ b/drivers/pci/dwc/pcie-designware.h
-> > @@ -242,6 +242,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
-> >  void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
-> >                        enum dw_pcie_region_type type);
-> >  void dw_pcie_setup(struct dw_pcie *pci);
-> > +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci);
-> >
-> >  static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
-> >  {
-> > --
-> > 2.7.4
-> >
+> (It looks a lot like these:
+> 
+>   1ee4d93d5037 PCI: xilinx-nwl: Move to struct pci_host_bridge IRQ mapping functions
+>   5a3dc3c1f694 PCI: rockchip: Move to struct pci_host_bridge IRQ mapping functions
+>   c62e98bdaa70 PCI: xgene: Move to struct pci_host_bridge IRQ mapping functions
+>   6ab380957838 PCI: altera: Drop pci_fixup_irqs()
+>   cf60374de8f6 PCI: versatile: Drop pci_fixup_irqs()
+>   6982a068aa5f PCI: generic: Drop pci_fixup_irqs()
+>   f7c2e69b65fe PCI: faraday: Drop pci_fixup_irqs()
+>   60eca198b1ea PCI: designware: Drop pci_fixup_irqs()
+>   64bcd00a7ef5 PCI: iproc: Drop pci_fixup_irqs()
+>   29db991902ec PCI: rcar: Drop pci_fixup_irqs()
+>   cc2eaaef63df PCI: xilinx: Drop pci_fixup_irqs()
+>   dd5fcce2a7f9 PCI: tegra: Drop pci_fixup_irqs()
+> 
+> and I'm obsessive enough to use one of those subject lines to tie this
+> patch together with those.)
+> 
+> Most of the rest look like they've been there since the driver was
+> first merged, so they would *probably* go in the v4.15 queue.
+> 
+> > Is there a specific problem with those patches that explains why they
+> > have been ignored? Or is it just lack of time?
+> > 
+> > If there is any problem with the patches, please let me know, I am of
+> > course perfectly fine with reworking them as needed.
+> 
+> Sorry for the delay; mostly just lack of time.  I used to work pretty
+> strictly first-in, first-out, but the native host bridge drivers
+> consume a disproportionate share of my time compared with the generic
+> code that benefits everybody, so I'm trying to figure out how to
+> prioritize generic changes.  Obviously I need a solution that gives
+> *some* time to the native drivers.
+> 
+> Bjorn
