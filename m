@@ -1,18 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
- Brian Norris <computersforpeace@gmail.com>,
- Russell King <rmk+kernel@armlinux.org.uk>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 1/8] SOC: brcmstb: add memory API
-Date: Tue, 24 Oct 2017 14:15:42 -0400
-Message-Id: <1508868949-16652-2-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
-References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
+Date: Fri, 6 Oct 2017 14:51:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH v3 0/3] Split default display handling out from VGA arbiter
+Message-ID: <20171006195118.GG25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170901072744.2409-1-dja@axtens.net>
+ <20170925163948.GD15970@bhelgaas-glaptop.roam.corp.google.com>
+ <87k20kyezs.fsf@linkitivity.dja.id.au>
 MIME-Version: 1.0
+In-Reply-To: <87k20kyezs.fsf@linkitivity.dja.id.au>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,135 +17,139 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
- Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
- Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
- Gregory Fong <gregory.0xf0@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+Cc: lorenzo.pieralisi@arm.com, catalin.marinas@arm.com,
+ gabriele.paoloni@huawei.com, ard.biesheuvel@linaro.org, airlied@linux.ie,
+ linux-pci@vger.kernel.org, will.deacon@arm.com,
+ dri-devel@lists.freedesktop.org, z.liuxinliang@hisilicon.com,
+ alex.williamson@redhat.com, lukas@wunner.de, benh@kernel.crashing.org,
+ zourongrong@gmail.com, daniel.vetter@intel.com, linuxppc-dev@lists.ozlabs.org,
  linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogRmxvcmlhbiBGYWluZWxsaSA8Zi5mYWluZWxsaUBnbWFpbC5jb20+CgpUaGlzIGNvbW1p
-dCBhZGRzIGEgbWVtb3J5IEFQSSBzdWl0YWJsZSBmb3IgYXNjZXJ0YWluaW5nIHRoZSBzaXplcyBv
-ZgplYWNoIG9mIHRoZSBOIG1lbW9yeSBjb250cm9sbGVycyBpbiBhIEJyb2FkY29tIFNUQiBjaGlw
-LiAgSXRzIGZpcnN0CnVzZXIgd2lsbCBiZSB0aGUgQnJvYWRjb20gU1RCIFBDSWUgcm9vdCBjb21w
-bGV4IGRyaXZlciwgd2hpY2ggbmVlZHMKdG8ga25vdyB0aGVzZSBzaXplcyB0byBwcm9wZXJseSBz
-ZXQgdXAgRE1BIG1hcHBpbmdzIGZvciBpbmJvdW5kCnJlZ2lvbnMuCgpXZSBjYW5ub3QgdXNlIG1l
-bWJsb2NrIGhlcmUgb3IgYW55dGhpbmcgbGlrZSB3aGF0IExpbnV4IHByb3ZpZGVzCmJlY2F1c2Ug
-aXQgY29sbGFwc2VzIGFkamFjZW50IHJlZ2lvbnMgd2l0aGluIGEgbGFyZ2VyIGJsb2NrLCBhbmQg
-aGVyZQp3ZSBhY3R1YWxseSBuZWVkIHBlci1tZW1vcnkgY29udHJvbGxlciBhZGRyZXNzZXMgYW5k
-IHNpemVzLCB3aGljaCBpcwp3aHkgd2UgcmVzb3J0IHRvIG1hbnVhbCBEVCBwYXJzaW5nLgoKU2ln
-bmVkLW9mZi1ieTogSmltIFF1aW5sYW4gPGppbTIxMDEwMjRAZ21haWwuY29tPgotLS0KIGRyaXZl
-cnMvc29jL2JjbS9icmNtc3RiL01ha2VmaWxlIHwgICAyICstCiBkcml2ZXJzL3NvYy9iY20vYnJj
-bXN0Yi9tZW1vcnkuYyB8IDE3MiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysKIGluY2x1ZGUvc29jL2JyY21zdGIvbWVtb3J5X2FwaS5oIHwgIDI1ICsrKysrKwogMyBmaWxl
-cyBjaGFuZ2VkLCAxOTggaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQogY3JlYXRlIG1vZGUg
-MTAwNjQ0IGRyaXZlcnMvc29jL2JjbS9icmNtc3RiL21lbW9yeS5jCiBjcmVhdGUgbW9kZSAxMDA2
-NDQgaW5jbHVkZS9zb2MvYnJjbXN0Yi9tZW1vcnlfYXBpLmgKCmRpZmYgLS1naXQgYS9kcml2ZXJz
-L3NvYy9iY20vYnJjbXN0Yi9NYWtlZmlsZSBiL2RyaXZlcnMvc29jL2JjbS9icmNtc3RiL01ha2Vm
-aWxlCmluZGV4IDkxMjBiMjcuLjRjZWE3YjYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc29jL2JjbS9i
-cmNtc3RiL01ha2VmaWxlCisrKyBiL2RyaXZlcnMvc29jL2JjbS9icmNtc3RiL01ha2VmaWxlCkBA
-IC0xICsxIEBACi1vYmoteQkJCQkrPSBjb21tb24ubyBiaXVjdHJsLm8KK29iai15CQkJCSs9IGNv
-bW1vbi5vIGJpdWN0cmwubyBtZW1vcnkubwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zb2MvYmNtL2Jy
-Y21zdGIvbWVtb3J5LmMgYi9kcml2ZXJzL3NvYy9iY20vYnJjbXN0Yi9tZW1vcnkuYwpuZXcgZmls
-ZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwLi5lYjY0N2FkOQotLS0gL2Rldi9udWxsCisrKyBi
-L2RyaXZlcnMvc29jL2JjbS9icmNtc3RiL21lbW9yeS5jCkBAIC0wLDAgKzEsMTcyIEBACisvKgor
-ICogQ29weXJpZ2h0IMKpIDIwMTUtMjAxNyBCcm9hZGNvbQorICoKKyAqIFRoaXMgcHJvZ3JhbSBp
-cyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJpYnV0ZSBpdCBhbmQvb3IgbW9kaWZ5Cisg
-KiBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlIHZl
-cnNpb24gMiBhcworICogcHVibGlzaGVkIGJ5IHRoZSBGcmVlIFNvZnR3YXJlIEZvdW5kYXRpb24u
-CisgKgorICogVGhpcyBwcm9ncmFtIGlzIGRpc3RyaWJ1dGVkIGluIHRoZSBob3BlIHRoYXQgaXQg
-d2lsbCBiZSB1c2VmdWwsCisgKiBidXQgV0lUSE9VVCBBTlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZl
-biB0aGUgaW1wbGllZCB3YXJyYW50eSBvZgorICogTUVSQ0hBTlRBQklMSVRZIG9yIEZJVE5FU1Mg
-Rk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFLiBTZWUgdGhlCisgKiBHTlUgR2VuZXJhbCBQdWJsaWMg
-TGljZW5zZSBmb3IgbW9yZSBkZXRhaWxzLgorICoKKyAqIEEgY29weSBvZiB0aGUgR1BMIGlzIGF2
-YWlsYWJsZSBhdAorICogaHR0cDovL3d3dy5icm9hZGNvbS5jb20vbGljZW5zZXMvR1BMdjIucGhw
-IG9yIGZyb20gdGhlIEZyZWUgU29mdHdhcmUKKyAqIEZvdW5kYXRpb24gYXQgaHR0cHM6Ly93d3cu
-Z251Lm9yZy9saWNlbnNlcy8gLgorICovCisKKyNpbmNsdWRlIDxsaW51eC9kZXZpY2UuaD4KKyNp
-bmNsdWRlIDxsaW51eC9pby5oPgorI2luY2x1ZGUgPGxpbnV4L2xpYmZkdC5oPgorI2luY2x1ZGUg
-PGxpbnV4L29mX2FkZHJlc3MuaD4KKyNpbmNsdWRlIDxsaW51eC9vZl9mZHQuaD4KKyNpbmNsdWRl
-IDxsaW51eC9zaXplcy5oPgorI2luY2x1ZGUgPHNvYy9icmNtc3RiL21lbW9yeV9hcGkuaD4KKwor
-LyogTWFjcm8gdG8gaGVscCBleHRyYWN0IHByb3BlcnR5IGRhdGEgKi8KKyNkZWZpbmUgRFRfUFJP
-UF9EQVRBX1RPX1UzMihiLCBvZmZzKSAoZmR0MzJfdG9fY3B1KCoodTMyKikoYiArIG9mZnMpKSkK
-KworLyogQ29uc3RhbnRzIHVzZWQgd2hlbiByZXRyaWV2aW5nIG1lbWMgaW5mbyAqLworI2RlZmlu
-ZSBOVU1fQlVTX1JBTkdFUyAxMAorI2RlZmluZSBCVVNfUkFOR0VfVUxJTUlUX1NISUZUIDQKKyNk
-ZWZpbmUgQlVTX1JBTkdFX0xMSU1JVF9TSElGVCA0CisjZGVmaW5lIEJVU19SQU5HRV9QQV9TSElG
-VCAxMgorCitlbnVtIHsKKwlCVVNOVU1fTUNQMCA9IDB4NCwKKwlCVVNOVU1fTUNQMSA9IDB4NSwK
-KwlCVVNOVU1fTUNQMiA9IDB4NiwKK307CisKKy8qCisgKiBJZiB0aGUgRFQgbm9kZXMgYXJlIGhh
-bmR5LCBkZXRlcm1pbmUgd2hpY2ggTUVNQyBob2xkcyB0aGUgc3BlY2lmaWVkCisgKiBwaHlzaWNh
-bCBhZGRyZXNzLgorICovCisjaWZkZWYgQ09ORklHX0FSQ0hfQlJDTVNUQgoraW50IF9fYnJjbXN0
-Yl9tZW1vcnlfcGh5c19hZGRyX3RvX21lbWMocGh5c19hZGRyX3QgcGEsIHZvaWQgX19pb21lbSAq
-YmFzZSkKK3sKKwlpbnQgbWVtYyA9IC0xOworCWludCBpOworCisJZm9yIChpID0gMDsgaSA8IE5V
-TV9CVVNfUkFOR0VTOyBpKyssIGJhc2UgKz0gOCkgeworCQljb25zdCB1NjQgdWxpbWl0X3JhdyA9
-IHJlYWRsKGJhc2UpOworCQljb25zdCB1NjQgbGxpbWl0X3JhdyA9IHJlYWRsKGJhc2UgKyA0KTsK
-KwkJY29uc3QgdTY0IHVsaW1pdCA9CisJCQkoKHVsaW1pdF9yYXcgPj4gQlVTX1JBTkdFX1VMSU1J
-VF9TSElGVCkKKwkJCSA8PCBCVVNfUkFOR0VfUEFfU0hJRlQpIHwgMHhmZmY7CisJCWNvbnN0IHU2
-NCBsbGltaXQgPSAobGxpbWl0X3JhdyA+PiBCVVNfUkFOR0VfTExJTUlUX1NISUZUKQorCQkJCSAg
-IDw8IEJVU19SQU5HRV9QQV9TSElGVDsKKwkJY29uc3QgdTMyIGJ1c251bSA9ICh1MzIpKHVsaW1p
-dF9yYXcgJiAweGYpOworCisJCWlmIChwYSA+PSBsbGltaXQgJiYgcGEgPD0gdWxpbWl0KSB7CisJ
-CQlpZiAoYnVzbnVtID49IEJVU05VTV9NQ1AwICYmIGJ1c251bSA8PSBCVVNOVU1fTUNQMikgewor
-CQkJCW1lbWMgPSBidXNudW0gLSBCVVNOVU1fTUNQMDsKKwkJCQlicmVhazsKKwkJCX0KKwkJfQor
-CX0KKworCXJldHVybiBtZW1jOworfQorCitpbnQgYnJjbXN0Yl9tZW1vcnlfcGh5c19hZGRyX3Rv
-X21lbWMocGh5c19hZGRyX3QgcGEpCit7CisJaW50IG1lbWMgPSAtMTsKKwlzdHJ1Y3QgZGV2aWNl
-X25vZGUgKm5wOworCXZvaWQgX19pb21lbSAqY3B1Yml1Y3RybDsKKworCW5wID0gb2ZfZmluZF9j
-b21wYXRpYmxlX25vZGUoTlVMTCwgTlVMTCwgImJyY20sYnJjbXN0Yi1jcHUtYml1LWN0cmwiKTsK
-KwlpZiAoIW5wKQorCQlyZXR1cm4gbWVtYzsKKworCWNwdWJpdWN0cmwgPSBvZl9pb21hcChucCwg
-MCk7CisJaWYgKCFjcHViaXVjdHJsKQorCQlnb3RvIGNsZWFudXA7CisKKwltZW1jID0gX19icmNt
-c3RiX21lbW9yeV9waHlzX2FkZHJfdG9fbWVtYyhwYSwgY3B1Yml1Y3RybCk7CisJaW91bm1hcChj
-cHViaXVjdHJsKTsKKworY2xlYW51cDoKKwlvZl9ub2RlX3B1dChucCk7CisKKwlyZXR1cm4gbWVt
-YzsKK30KKworI2VsaWYgZGVmaW5lZChDT05GSUdfTUlQUykKK2ludCBicmNtc3RiX21lbW9yeV9w
-aHlzX2FkZHJfdG9fbWVtYyhwaHlzX2FkZHJfdCBwYSkKK3sKKwkvKiBUaGUgbG9naWMgaGVyZSBp
-cyBmYWlybHkgc2ltcGxlIGFuZCBoYXJkY29kZWQ6IGlmIHBhIDw9IDB4NTAwMF8wMDAwLAorCSAq
-IHRoZW4gdGhpcyBpcyBNRU1DMCwgZWxzZSBNRU1DMS4KKwkgKgorCSAqIEZvciBzeXN0ZW1zIHdp
-dGggMkdCIG9uIE1FTUMwLCBNRU1DMSBzdGFydHMgYXQgOTAwMF8wMDAwLCB3aXRoIDFHQgorCSAq
-IG9uIE1FTUMwLCBNRU1DMSBzdGFydHMgYXQgNjAwMF8wMDAwLgorCSAqLworCWlmIChwYSA+PSAw
-eDUwMDAwMDAwVUxMKQorCQlyZXR1cm4gMTsKKwllbHNlCisJCXJldHVybiAwOworfQorI2VuZGlm
-CisKK3U2NCBicmNtc3RiX21lbW9yeV9tZW1jX3NpemUoaW50IG1lbWMpCit7CisJY29uc3Qgdm9p
-ZCAqZmR0ID0gaW5pdGlhbF9ib290X3BhcmFtczsKKwljb25zdCBpbnQgbWVtX29mZnNldCA9IGZk
-dF9wYXRoX29mZnNldChmZHQsICIvbWVtb3J5Iik7CisJaW50IGFkZHJfY2VsbHMgPSAxLCBzaXpl
-X2NlbGxzID0gMTsKKwljb25zdCBzdHJ1Y3QgZmR0X3Byb3BlcnR5ICpwcm9wOworCWludCBwcm9w
-bGVuLCBjZWxsc2xlbjsKKwl1NjQgbWVtY19zaXplID0gMDsKKwlpbnQgaTsKKworCS8qIEdldCBy
-b290IHNpemUgYW5kIGFkZHJlc3MgY2VsbHMgaWYgc3BlY2lmaWVkICovCisJcHJvcCA9IGZkdF9n
-ZXRfcHJvcGVydHkoZmR0LCAwLCAiI3NpemUtY2VsbHMiLCAmcHJvcGxlbik7CisJaWYgKHByb3Ap
-CisJCXNpemVfY2VsbHMgPSBEVF9QUk9QX0RBVEFfVE9fVTMyKHByb3AtPmRhdGEsIDApOworCisJ
-cHJvcCA9IGZkdF9nZXRfcHJvcGVydHkoZmR0LCAwLCAiI2FkZHJlc3MtY2VsbHMiLCAmcHJvcGxl
-bik7CisJaWYgKHByb3ApCisJCWFkZHJfY2VsbHMgPSBEVF9QUk9QX0RBVEFfVE9fVTMyKHByb3At
-PmRhdGEsIDApOworCisJaWYgKG1lbV9vZmZzZXQgPCAwKQorCQlyZXR1cm4gLTE7CisKKwlwcm9w
-ID0gZmR0X2dldF9wcm9wZXJ0eShmZHQsIG1lbV9vZmZzZXQsICJyZWciLCAmcHJvcGxlbik7CisJ
-Y2VsbHNsZW4gPSAoaW50KXNpemVvZih1MzIpICogKGFkZHJfY2VsbHMgKyBzaXplX2NlbGxzKTsK
-KwlpZiAoKHByb3BsZW4gJSBjZWxsc2xlbikgIT0gMCkKKwkJcmV0dXJuIC0xOworCisJZm9yIChp
-ID0gMDsgaSA8IHByb3BsZW4gLyBjZWxsc2xlbjsgKytpKSB7CisJCXU2NCBhZGRyID0gMDsKKwkJ
-dTY0IHNpemUgPSAwOworCQlpbnQgbWVtY19pZHg7CisJCWludCBqOworCisJCWZvciAoaiA9IDA7
-IGogPCBhZGRyX2NlbGxzOyArK2opIHsKKwkJCWludCBvZmZzZXQgPSAoY2VsbHNsZW4gKiBpKSAr
-IChzaXplb2YodTMyKSAqIGopOworCisJCQlhZGRyIHw9ICh1NjQpRFRfUFJPUF9EQVRBX1RPX1Uz
-Mihwcm9wLT5kYXRhLCBvZmZzZXQpIDw8CisJCQkJKChhZGRyX2NlbGxzIC0gaiAtIDEpICogMzIp
-OworCQl9CisJCWZvciAoaiA9IDA7IGogPCBzaXplX2NlbGxzOyArK2opIHsKKwkJCWludCBvZmZz
-ZXQgPSAoY2VsbHNsZW4gKiBpKSArCisJCQkJKHNpemVvZih1MzIpICogKGogKyBhZGRyX2NlbGxz
-KSk7CisKKwkJCXNpemUgfD0gKHU2NClEVF9QUk9QX0RBVEFfVE9fVTMyKHByb3AtPmRhdGEsIG9m
-ZnNldCkgPDwKKwkJCQkoKHNpemVfY2VsbHMgLSBqIC0gMSkgKiAzMik7CisJCX0KKworCQlpZiAo
-KHBoeXNfYWRkcl90KWFkZHIgIT0gYWRkcikgeworCQkJcHJfZXJyKCJwaHlzX2FkZHJfdCBpcyBz
-bWFsbGVyIHRoYW4gcHJvdmlkZWQgYWRkcmVzcyAweCVsbHghXG4iLAorCQkJICAgICAgIGFkZHIp
-OworCQkJcmV0dXJuIC0xOworCQl9CisKKwkJbWVtY19pZHggPSBicmNtc3RiX21lbW9yeV9waHlz
-X2FkZHJfdG9fbWVtYygocGh5c19hZGRyX3QpYWRkcik7CisJCWlmIChtZW1jX2lkeCA9PSBtZW1j
-KQorCQkJbWVtY19zaXplICs9IHNpemU7CisJfQorCisJcmV0dXJuIG1lbWNfc2l6ZTsKK30KK0VY
-UE9SVF9TWU1CT0xfR1BMKGJyY21zdGJfbWVtb3J5X21lbWNfc2l6ZSk7CisKZGlmZiAtLWdpdCBh
-L2luY2x1ZGUvc29jL2JyY21zdGIvbWVtb3J5X2FwaS5oIGIvaW5jbHVkZS9zb2MvYnJjbXN0Yi9t
-ZW1vcnlfYXBpLmgKbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMC4uZDkyMjkwNgot
-LS0gL2Rldi9udWxsCisrKyBiL2luY2x1ZGUvc29jL2JyY21zdGIvbWVtb3J5X2FwaS5oCkBAIC0w
-LDAgKzEsMjUgQEAKKyNpZm5kZWYgX19NRU1PUllfQVBJX0gKKyNkZWZpbmUgX19NRU1PUllfQVBJ
-X0gKKworLyoKKyAqIEJ1cyBJbnRlcmZhY2UgVW5pdCBjb250cm9sIHJlZ2lzdGVyIHNldHVwLCBt
-dXN0IGhhcHBlbiBlYXJseSBkdXJpbmcgYm9vdCwKKyAqIGJlZm9yZSBTTVAgaXMgYnJvdWdodCB1
-cCwgY2FsbGVkIGJ5IG1hY2hpbmUgZW50cnkgcG9pbnQuCisgKi8KK3ZvaWQgYnJjbXN0Yl9iaXVj
-dHJsX2luaXQodm9pZCk7CisKKyNpZmRlZiBDT05GSUdfU09DX0JSQ01TVEIKK2ludCBicmNtc3Ri
-X21lbW9yeV9waHlzX2FkZHJfdG9fbWVtYyhwaHlzX2FkZHJfdCBwYSk7Cit1NjQgYnJjbXN0Yl9t
-ZW1vcnlfbWVtY19zaXplKGludCBtZW1jKTsKKyNlbHNlCitzdGF0aWMgaW5saW5lIGludCBicmNt
-c3RiX21lbW9yeV9waHlzX2FkZHJfdG9fbWVtYyhwaHlzX2FkZHJfdCBwYSkKK3sKKwlyZXR1cm4g
-LUVJTlZBTDsKK30KKworc3RhdGljIGlubGluZSB1NjQgYnJjbXN0Yl9tZW1vcnlfbWVtY19zaXpl
-KGludCBtZW1jKQoreworCXJldHVybiAtMTsKK30KKyNlbmRpZgorCisjZW5kaWYgLyogX19NRU1P
-UllfQVBJX0ggKi8KLS0gCjEuOS4wLjEzOC5nMmRlMzQ3OAoKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0
-CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFk
-ZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On Wed, Sep 27, 2017 at 01:52:55PM +1000, Daniel Axtens wrote:
+> Hi Bjorn,
+> 
+> Yes, this works:
+> 
+> Tested-by: Daniel Axtens <dja@axtens.net> # arm64, ppc64-qemu-tcg
+
+I guess I was assuming you'd pick this up, but that doesn't really
+make sense because I didn't give you a signed-off-by or anything.
+I'll post this with a changelog and signed-off-by so it doesn't get
+lost.
+
+I also noticed that I didn't correctly handle the powerpc quirk case
+where it doesn't require the device to be enabled at all.  I'll try to
+fix that up, too.
+
+Bjorn
+
+> > On Fri, Sep 01, 2017 at 05:27:41PM +1000, Daniel Axtens wrote:
+> >> This patch set:
+> >> 
+> >>  - splits the default display handling out from VGA arbiter, into its
+> >>    own file and behind its own Kconfig option (and gives the functions
+> >>    better names).
+> >> 
+> >>  - adds extra detection of default devices. To be nominated, the vga
+> >>    arbiter and platform hooks must not have nominated a default. A
+> >>    card will then only be nominated if it has a driver attached and
+> >>    has IO or memory decoding enabled.
+> >> 
+> >>  - adds relevant documentation.
+> >> 
+> >> The practical impact of this is improved X autoconfiguration on some
+> >> arm64 systems.
+> >
+> > I think I gave you bad advice about trying to separate the "default
+> > device" idea from the VGA arbiter.
+> >
+> > It is true that the "VGA arbiter" per se is related to routing the
+> > legacy VGA resources, and the arbiter currently only selects a default
+> > device if it finds a device to which those resources are routed.
+> >
+> > We have some cases where we want to select a default device that may
+> > not support the legacy VGA resources, or where they might not be
+> > routed to the device:
+> >
+> >   - systems where we match the EFI framebuffer address with a BAR, and
+> >     select that device as default,
+> >
+> >   - powerpc systems where there may be no host bridge window that maps
+> >     to the legacy VGA resources,
+> >
+> >   - your ARM64 systems where the default device may be behind a bridge
+> >     that doesn't support legacy VGA routing (PCI_BRIDGE_CTL_VGA)
+> >
+> > But I think trying to split the "default device" part out from the VGA
+> > arbiter ends up being overkill and making things more complicated
+> > instead of simpler.
+> >
+> > Would something like the following work for you as well as the powerpc
+> > case?  On powerpc, we already use vga_set_default_device() to select a
+> > device that doesn't use legacy VGA resources, so maybe we can just do
+> > the same on ARM64?
+> >
+> > I suppose there might be wrinkles in how the arbiter deals with
+> > multiple graphics devices on those systems, since I don't think it
+> > identifies these devices that don't use the legacy resources, but it
+> > seems like we live with whatever those on are powerpc and probably can
+> > on ARM64 as well.
+> >
+> >
+> > diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> > index 02831a396419..0ac7aa346c69 100644
+> > --- a/arch/powerpc/kernel/pci-common.c
+> > +++ b/arch/powerpc/kernel/pci-common.c
+> > @@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
+> >  }
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+> > -
+> > -static void fixup_vga(struct pci_dev *pdev)
+> > -{
+> > -	u16 cmd;
+> > -
+> > -	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> > -	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+> > -		vga_set_default_device(pdev);
+> > -
+> > -}
+> > -DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+> > -			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
+> > diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> > index 76875f6299b8..9df4802c5f04 100644
+> > --- a/drivers/gpu/vga/vgaarb.c
+> > +++ b/drivers/gpu/vga/vgaarb.c
+> > @@ -1468,6 +1468,21 @@ static int __init vga_arb_device_init(void)
+> >  			vgaarb_info(dev, "no bridge control possible\n");
+> >  	}
+> >  
+> > +	if (!vga_default_device()) {
+> > +		list_for_each_entry(vgadev, &vga_list, list) {
+> > +			struct device *dev = &vgadev->pdev->dev;
+> > +			u16 cmd;
+> > +
+> > +			pdev = vgadev->pdev;
+> > +			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> > +			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+> > +				vgaarb_info(dev, "setting as boot device\n");
+> > +				vga_set_default_device(pdev);
+> > +				break;
+> > +			}
+> > +		}
+> > +	}
+> > +
+> >  	pr_info("loaded\n");
+> >  	return rc;
+> >  }
+> 
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
