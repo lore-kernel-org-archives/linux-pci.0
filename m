@@ -1,169 +1,114 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 16 Oct 2017 18:43:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Leif Lindholm <leif.lindholm@linaro.org>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Duc Dang <dhdang@apm.com>, linux-arm-kernel@axis.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
-Message-ID: <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-9-niklas.cassel@axis.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171013160914.3220-9-niklas.cassel@axis.com>
+        Rob Herring <robh@kernel.org>,
+        Will Deacon <will.deacon@arm.com>
+Subject: [PATCH v4 1/2] PCI: pci-host-generic: add support for Synopsys DesignWare RC in ECAM mode
+Date: Fri,  6 Oct 2017 17:39:18 +0100
+Message-Id: <20171006163919.14898-2-ard.biesheuvel@linaro.org>
+In-Reply-To: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
+References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 13, 2017 at 06:09:11PM +0200, Niklas Cassel wrote:
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
->  drivers/pci/dwc/Kconfig                            |  41 +++--
->  drivers/pci/dwc/Makefile                           |   4 +-
->  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
->  4 files changed, 233 insertions(+), 17 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> index 4e4aee4439ea..33eef7ae5a23 100644
-> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
->  and thus inherits all the common properties defined in designware-pcie.txt.
->  
->  Required properties:
-> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
-> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
-> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
->  - reg: base addresses and lengths of the PCIe controller (DBI),
->  	the PHY controller, and configuration address space.
->  - reg-names: Must include the following entries:
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index 22ec82fcdea2..e333283fb1ed 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -14,6 +14,36 @@ config PCIE_DW_EP
->  	depends on PCI_ENDPOINT
->  	select PCIE_DW
->  
-> +config PCIE_ARTPEC6
-> +	bool "Axis ARTPEC-6 PCIe controller"
-> +	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
-> +	depends on MACH_ARTPEC6
-> +	help
-> +	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
-> +	  SoCs.  This PCIe controller uses the DesignWare core.
-> +
-> +if PCIE_ARTPEC6
-> +
-> +config PCIE_ARTPEC6_HOST
-> +	bool "Axis ARTPEC-6 Host Mode"
-> +	depends on PCI
-> +	depends on PCI_MSI_IRQ_DOMAIN
-> +	select PCIEPORTBUS
-> +	select PCIE_DW_HOST
-> +	help
-> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
-> +	  host mode.
-> +
-> +config PCIE_ARTPEC6_EP
-> +	bool "Axis ARTPEC-6 Endpoint Mode"
-> +	depends on PCI_ENDPOINT
-> +	select PCIE_DW_EP
-> +	help
-> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
-> +	  endpoint mode.
-> +
-> +endif
-> +
->  config PCI_DRA7XX
->  	bool "TI DRA7xx PCIe controller"
->  	depends on SOC_DRA7XX || COMPILE_TEST
-> @@ -148,17 +178,6 @@ config PCIE_ARMADA_8K
->  	  DesignWare hardware and therefore the driver re-uses the
->  	  DesignWare core functions to implement the driver.
->  
-> -config PCIE_ARTPEC6
-> -	bool "Axis ARTPEC-6 PCIe controller"
-> -	depends on PCI
-> -	depends on MACH_ARTPEC6
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> -	select PCIEPORTBUS
-> -	select PCIE_DW_HOST
-> -	help
-> -	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
-> -	  SoCs.  This PCIe controller uses the DesignWare core.
-> -
->  config PCIE_KIRIN
->  	depends on OF && ARM64
->  	bool "HiSilicon Kirin series SoCs PCIe controllers"
+Some implementations of the Synopsys DesignWare PCIe controller implement
+a so-called ECAM shift mode, which allows a static memory window to be
+configured that covers the configuration space of the entire bus range.
 
-> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-> index c61be9738cce..ac98242b83a9 100644
-> --- a/drivers/pci/dwc/Makefile
-> +++ b/drivers/pci/dwc/Makefile
-> @@ -2,6 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
->  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
->  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
->  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
-> +ifneq ($(filter y,$(CONFIG_PCIE_ARTPEC6_HOST) $(CONFIG_PCIE_ARTPEC6_EP)),)
-> +        obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-> +endif
+Usually, when the firmware performs all the low level configuration that
+is required to expose this controller in a fully ECAM compatible manner,
+we can simply describe it as "pci-host-ecam-generic" and be done with it.
+However, in some cases (e.g., the Marvell Armada 80x0 as well as the
+Socionext SynQuacer Soc), the IP was synthesized with an ATU window
+granularity that does not allow the first bus to be mapped in a way that
+prevents the device on the downstream port from appearing more than once,
+and so we still need special handling in software to drive this static
+almost-ECAM configuration.
 
-I see you're copying the DRA7XX style here, but I don't really
-understand it.  I guess the idea is to build pcie-artpec6.o if either
-CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
+So extend the pci-host-generic driver so it can support these controllers
+as well, by adding special config space accessors that take the above
+quirk into account.
 
-Is this really the simplest way to express that in Kconfig?  Both the
-"if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
-unusual.
+Note that, unlike most drivers for this IP, this driver does not expose
+a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+given that this is not a true bridge, and does not require any windows
+to be configured in order for the downstream device to operate correctly.
+Omitting it also prevents the PCI resource allocation routines from
+handing out BAR space to it unnecessarily.
 
->  ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
->          obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
->  endif
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
+ drivers/pci/host/pci-host-generic.c | 46 ++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-> +static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-
-Looks funny to have this dw_*() function in pcie-artpec6.c.  Intended?
-Or is this something other endpoint drivers could/should share?
-
-> +{
-> +	u32 reg;
-> +
-> +	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +	dw_pcie_writel_dbi2(pci, reg, 0x0);
-> +	dw_pcie_writel_dbi(pci, reg, 0x0);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +}
-> +
-> +static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-> +	enum pci_barno bar;
-> +
-> +	artpec6_pcie_assert_core_reset(artpec6_pcie);
-> +	artpec6_pcie_init_phy(artpec6_pcie);
-> +	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-> +
-> +	for (bar = BAR_0; bar <= BAR_5; bar++)
-> +		dw_pcie_ep_reset_bar(pci, bar);
-> +}
-
-I naively expected some of this new code to be #ifdef PCIE_ARTPEC6_EP.
-But I haven't really internalized the endpoint support, so maybe that
-doesn't make sense?
-
-Bjorn
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 7d709a7e0aa8..01e81a30e303 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -35,6 +35,43 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+ 	}
+ };
+ 
++static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
++				   int size, u32 *val)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++
++	/*
++	 * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
++	 * type 0 config TLPs sent to devices 1 and up on its downstream port,
++	 * resulting in devices appearing multiple times on bus 0 unless we
++	 * filter out those accesses here.
++	 */
++	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	return pci_generic_config_read(bus, devfn, where, size, val);
++}
++
++static int pci_dw_ecam_config_write(struct pci_bus *bus, u32 devfn, int where,
++				    int size, u32 val)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++
++	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	return pci_generic_config_write(bus, devfn, where, size, val);
++}
++
++static struct pci_ecam_ops pci_dw_ecam_bus_ops = {
++	.bus_shift	= 20,
++	.pci_ops	= {
++		.map_bus	= pci_ecam_map_bus,
++		.read		= pci_dw_ecam_config_read,
++		.write		= pci_dw_ecam_config_write,
++	}
++};
++
+ static const struct of_device_id gen_pci_of_match[] = {
+ 	{ .compatible = "pci-host-cam-generic",
+ 	  .data = &gen_pci_cfg_cam_bus_ops },
+@@ -42,6 +79,15 @@ static const struct of_device_id gen_pci_of_match[] = {
+ 	{ .compatible = "pci-host-ecam-generic",
+ 	  .data = &pci_generic_ecam_ops },
+ 
++	{ .compatible = "marvell,armada8k-pcie-ecam",
++	  .data = &pci_dw_ecam_bus_ops },
++
++	{ .compatible = "socionext,synquacer-pcie-ecam",
++	  .data = &pci_dw_ecam_bus_ops },
++
++	{ .compatible = "snps,dw-pcie-ecam",
++	  .data = &pci_dw_ecam_bus_ops },
++
+ 	{ },
+ };
+ 
+-- 
+2.11.0
