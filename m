@@ -1,305 +1,396 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 02/15] usb: gadget: make config_item_type structures const
-Date: Wed, 18 Oct 2017 19:05:11 +0300
-Message-ID: <1985905.z83BJQzMUS@avalon>
-In-Reply-To: <1508167134-6243-3-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1508167134-6243-3-git-send-email-bhumirks@gmail.com>
+Return-Path: <SRS0=ojRx=BF=gmail.com=oza.pawandeep@kernel.org>
+Return-Path: <SRS0=ojRx=BF=gmail.com=oza.pawandeep@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171006113700.GA25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1504155029-24729-1-git-send-email-oza.oza@broadcom.com>
+ <1504155029-24729-4-git-send-email-oza.oza@broadcom.com> <20171006113700.GA25517@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Pawandeep <oza.pawandeep@gmail.com>
+Date: Fri, 6 Oct 2017 20:03:52 +0530
+Message-ID: <CAK1A=4z6T9MLmCBBCmr5jVkVOySpw6fMTiTPqb=Nr-pjxhuARw@mail.gmail.com>
+Subject: Re: [PATCH v6 3/3] PCI: iproc: Implement PCI hotplug support
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Oza Pawandeep <oza.oza@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com, Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Vikram Prakash <vikram.prakash@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bhumika,
+On Fri, Oct 6, 2017 at 5:07 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Aug 31, 2017 at 10:20:29AM +0530, Oza Pawandeep wrote:
+>> This patch implements PCI hotplug support for iproc family chipsets.
+>>
+>> iproc based SOC (e.g. Stingray) does not have hotplug controller
+>> integrated.
+>> Hence, standard PCI hotplug framework hooks can-not be used.
+>> e.g. controlled power up/down of slot.
+>>
+>> The mechanism, for e.g. Stingray has adopted for PCI hotplug is as follows:
+>> PCI present lines are input to GPIOs depending on the type of
+>> connector (x2, x4, x8).
+>>
+>> GPIO array needs to be present if hotplug is supported.
+>> HW implementation is SOC/Board specific, and also it depends on how
+>> add-in card is designed
+>> (e.g. how many present pins are implemented).
+>>
+>> If x8 card is connected, then it might be possible that all the
+>> 3 present pins could go low, or at least one pin goes low.
+>> If x4 card is connected, then it might be possible that 2 present
+>> pins go low, or at least one pin goes low.
+>>
+>> The implementation essentially takes care of following:
+>> > Initializing hotplug irq thread.
+>> > Detecting the endpoint device based on link state.
+>> > Handling PERST and detecting the plugged devices.
+>> > Ordered Hot plug-out, where User is expected
+>>   to write 1 to /sys/bus/pci/devices/<pci_dev>/remove
+>> > Handling spurious interrupt
+>> > Handling multiple interrupts and makes sure that card is
+>>   enumerated only once.
+>
+> I haven't forgotten this, but I am dragging my feet a little bit.
+> There is a standard way for hardware to support PCIe hotplug, and it's
+> hard enough to get the software for that right.  I really, really
+> don't want to see a bunch of one-off implementations that sort of look
+> like standard hotplug but not really.
+>
+> I have a few trivial comments below but haven't really reviewed the
+> whole thing.
+>
+>> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+>> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+>>
+>> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+>> index a5073a9..6287a43 100644
+>> --- a/drivers/pci/host/pcie-iproc-platform.c
+>> +++ b/drivers/pci/host/pcie-iproc-platform.c
+>> @@ -92,6 +92,9 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+>>               pcie->need_ob_cfg = true;
+>>       }
+>>
+>> +     if (of_property_read_bool(np, "slot-pluggable"))
+>> +             pcie->enable_hotplug = true;
+>> +
+>>       /* PHY use is optional */
+>>       pcie->phy = devm_phy_get(dev, "pcie-phy");
+>>       if (IS_ERR(pcie->phy)) {
+>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>> index 8bd5e54..2b4d830 100644
+>> --- a/drivers/pci/host/pcie-iproc.c
+>> +++ b/drivers/pci/host/pcie-iproc.c
+>> @@ -28,6 +28,7 @@
+>>  #include <linux/of_irq.h>
+>>  #include <linux/of_platform.h>
+>>  #include <linux/phy/phy.h>
+>> +#include <linux/gpio.h>
+>>
+>>  #include "pcie-iproc.h"
+>>
+>> @@ -65,6 +66,17 @@
+>>  #define PCIE_DL_ACTIVE_SHIFT         2
+>>  #define PCIE_DL_ACTIVE               BIT(PCIE_DL_ACTIVE_SHIFT)
+>>
+>> +#define CFG_RC_LTSSM                 0x1cf8
+>> +#define CFG_RC_PHY_CTL               0x1804
+>> +#define CFG_RC_LTSSM_TIMEOUT         1000
+>> +#define CFG_RC_LTSSM_STATE_MASK      0xff
+>> +#define CFG_RC_LTSSM_STATE_L1        0x1
+>> +
+>> +#define CFG_RC_CLR_LTSSM_HIST_SHIFT  29
+>> +#define CFG_RC_CLR_LTSSM_HIST_MASK   BIT(CFG_RC_CLR_LTSSM_HIST_SHIFT)
+>> +#define CFG_RC_CLR_RECOV_HIST_SHIFT  31
+>> +#define CFG_RC_CLR_RECOV_HIST_MASK   BIT(CFG_RC_CLR_RECOV_HIST_SHIFT)
+>> +
+>>  #define APB_ERR_EN_SHIFT             0
+>>  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+>>
+>> @@ -1354,13 +1366,107 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+>>       return 0;
+>>  }
+>>
+>> +static bool iproc_pci_hp_check_ltssm(struct iproc_pcie *pcie)
+>
+> *_check_*() is a terrible name for a function because it doesn't give
+> any hint about what a "true" return value means.
+>
+> This looks sort of like dw_pcie_wait_for_link() and
+> advk_pcie_wait_for_link().  Please use a name more like them and
+> structure the code more like them.
+>
+>> +{
+>> +     struct pci_bus *bus = pcie->root_bus;
+>> +     u32 val, timeout = CFG_RC_LTSSM_TIMEOUT;
+>> +
+>> +     /* Clear LTSSM history. */
+>> +     pci_bus_read_config_dword(pcie->root_bus, 0,
+>> +                               CFG_RC_PHY_CTL, &val);
+>> +     pci_bus_write_config_dword(bus, 0, CFG_RC_PHY_CTL,
+>> +                                val | CFG_RC_CLR_RECOV_HIST_MASK |
+>> +                                CFG_RC_CLR_LTSSM_HIST_MASK);
+>> +     /* write back the origional value. */
+>
+> s/origional/original/
+>
+>> +     pci_bus_write_config_dword(bus, 0, CFG_RC_PHY_CTL, val);
+>> +
+>> +     do {
+>> +             pci_bus_read_config_dword(pcie->root_bus, 0,
+>> +                                       CFG_RC_LTSSM, &val);
+>> +             /* check link state to see if link moved to L1 state. */
+>> +             if ((val & CFG_RC_LTSSM_STATE_MASK) ==
+>> +                  CFG_RC_LTSSM_STATE_L1)
+>> +                     return true;
+>> +             timeout--;
+>> +             usleep_range(500, 1000);
+>> +     } while (timeout);
+>> +
+>> +     return false;
+>> +}
+>> +
+>> +static irqreturn_t iproc_pci_hotplug_thread(int irq, void *data)
+>> +{
+>> +     struct iproc_pcie *pcie = data;
+>
+>   struct device *dev = pcie->dev;
+>
+> Then you don't have to repeat "pcie->dev" below.
+>
+>> +     struct pci_bus *bus = pcie->root_bus, *child;
+>> +     bool link_status;
+>> +
+>> +     iproc_pcie_perst_ctrl(pcie, true);
+>> +     iproc_pcie_perst_ctrl(pcie, false);
+>> +
+>> +     link_status = iproc_pci_hp_check_ltssm(pcie);
+>> +
+>> +     if (link_status &&
+>> +         !iproc_pcie_check_link(pcie) &&
+>
+> iproc_pcie_check_link() already exists, but is still a poor name.
+>
+> Please add some preliminary patches to rename and restructure it along
+> the lines of the other *_link_up() functions, e.g.,
+> advk_pcie_link_up(), nwl_pcie_link_up(), spear13xx_pcie_link_up(),
+> etc.
+>
+> iproc_pcie_check_link() does a bunch of other stuff that should be
+> moved to other functions.  Some of it looks similar to the
+> *_establish_link() functions in other drivers.
+>
+>> +         !pcie->ep_is_present) {
+>> +             pci_rescan_bus(bus);
+>> +             list_for_each_entry(child, &bus->children, node)
+>> +                     pcie_bus_configure_settings(child);
+>> +             pcie->ep_is_present = true;
+>> +             dev_info(pcie->dev,
+>> +                      "PCI Hotplug: <device detected and enumerated>\n");
+>> +     } else if (link_status && pcie->ep_is_present)
+>> +             /*
+>> +              * ep_is_present makes sure, enumuration done only once.
+>
+> s/enumuration/enumeration/
+>
+>> +              * So it can handle spurious intrrupts, and also if we
+>
+> s/intrrupts/interrupts/
+>
+>> +              * get multiple interrupts for all the implemented pins,
+>> +              * we handle it only once.
+>> +              */
+>> +             dev_info(pcie->dev,
+>> +                      "PCI Hotplug: <device already present>\n");
+>> +     else {
+>> +             iproc_pcie_perst_ctrl(pcie, true);
+>> +             pcie->ep_is_present = false;
+>> +             dev_info(pcie->dev,
+>> +                      "PCI Hotplug: <device removed>\n");
+>> +     }
+>> +     return IRQ_HANDLED;
+>> +}
+>> +
+>> +static int iproc_pci_hp_gpio_irq_get(struct iproc_pcie *pcie)
+>> +{
+>> +     struct gpio_descs *hp_gpiod;
+>> +     struct device *dev = pcie->dev;
+>> +     int i;
+>> +
+>> +     hp_gpiod = devm_gpiod_get_array(dev, "prsnt", GPIOD_IN);
+>> +     if (PTR_ERR(hp_gpiod) == -EPROBE_DEFER)
+>> +             return -EPROBE_DEFER;
+>> +
+>> +     if (!IS_ERR(hp_gpiod) && (hp_gpiod->ndescs > 0)) {
+>> +             for (i = 0; i < hp_gpiod->ndescs; ++i) {
+>> +                     gpiod_direction_input(hp_gpiod->desc[i]);
+>> +                     if (request_threaded_irq(gpiod_to_irq
+>> +                                              (hp_gpiod->desc[i]),
+>> +                                              NULL, iproc_pci_hotplug_thread,
+>> +                                              IRQF_TRIGGER_FALLING,
+>> +                                              "PCI-hotplug", pcie))
+>> +                             dev_err(dev,
+>> +                                     "PCI hotplug prsnt: request irq failed\n");
+>> +                     }
+>> +     }
+>> +     pcie->ep_is_present = false;
+>> +
+>> +     return 0;
+>> +}
+>> +
+>>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>>  {
+>>       struct device *dev;
+>>       int ret;
+>>       void *sysdata;
+>> -     struct pci_bus *child;
+>> +     struct pci_bus *bus, *child;
+>>       struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+>> +     bool link_not_active;
+>>
+>>       dev = pcie->dev;
+>>
+>> @@ -1386,6 +1492,12 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>>               goto err_exit_phy;
+>>       }
+>>
+>> +     if (pcie->enable_hotplug) {
+>> +             ret = iproc_pci_hp_gpio_irq_get(pcie);
+>> +             if (ret < 0)
+>> +                     return ret;
+>> +     }
+>> +
+>>       iproc_pcie_perst_ctrl(pcie, true);
+>>       iproc_pcie_perst_ctrl(pcie, false);
+>>
+>> @@ -1408,8 +1520,16 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>>       sysdata = pcie;
+>>  #endif
+>>
+>> -     ret = iproc_pcie_check_link(pcie);
+>> -     if (ret) {
+>> +     link_not_active = iproc_pcie_check_link(pcie);
+>> +     if (link_not_active && pcie->enable_hotplug) {
+>> +             /*
+>> +              * When link is not active and PCI hotplug
+>> +              * is supported, do not turn off phy, let probe
+>> +              * go ahead.
+>> +              */
+>> +             dev_err(dev, "no PCIe EP device detected\n");
+>> +             iproc_pcie_perst_ctrl(pcie, true);
+>> +     } else if (link_not_active) {
+>>               dev_err(dev, "no PCIe EP device detected\n");
+>>               goto err_power_off_phy;
+>>       }
+>> @@ -1420,24 +1540,34 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>>               if (iproc_pcie_msi_enable(pcie))
+>>                       dev_info(dev, "not using iProc MSI\n");
+>>
+>> -     list_splice_init(res, &host->windows);
+>> -     host->busnr = 0;
+>> -     host->dev.parent = dev;
+>> -     host->ops = &iproc_pcie_ops;
+>> -     host->sysdata = sysdata;
+>> -     host->map_irq = pcie->map_irq;
+>> -     host->swizzle_irq = pci_common_swizzle;
+>> +     if (!link_not_active) {
+>
+> Double negation.  If you pick a better name, e.g., "link_active", this
+> will read much better.  But I don't understand why you want to check
+> whether the link is active here anyway.  pci_scan_root_bus_bridge()
+> should work fine even if there's no device present below the bridge.
+> Won't the root port be there always, even if there's no downstream
+> device?
+>
 
-Thank you for the patch.
+will change all the names and spellings as you are suggesting.
 
-On Monday, 16 October 2017 18:18:41 EEST Bhumika Goyal wrote:
-> Make these structures const as they are only passed to the const
-> argument of the functions config_{group/item}_init_type_name.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-> ---
-> * Changes in v2- Combine all the followup patches and the constification
-> patches into a series.
-> 
->  drivers/usb/gadget/function/f_acm.c          |  2 +-
->  drivers/usb/gadget/function/f_ecm.c          |  2 +-
->  drivers/usb/gadget/function/f_eem.c          |  2 +-
->  drivers/usb/gadget/function/f_fs.c           |  2 +-
->  drivers/usb/gadget/function/f_hid.c          |  2 +-
->  drivers/usb/gadget/function/f_loopback.c     |  2 +-
->  drivers/usb/gadget/function/f_mass_storage.c |  4 +--
->  drivers/usb/gadget/function/f_midi.c         |  2 +-
->  drivers/usb/gadget/function/f_ncm.c          |  2 +-
->  drivers/usb/gadget/function/f_obex.c         |  2 +-
->  drivers/usb/gadget/function/f_phonet.c       |  2 +-
->  drivers/usb/gadget/function/f_printer.c      |  2 +-
->  drivers/usb/gadget/function/f_rndis.c        |  2 +-
->  drivers/usb/gadget/function/f_serial.c       |  2 +-
->  drivers/usb/gadget/function/f_sourcesink.c   |  2 +-
->  drivers/usb/gadget/function/f_subset.c       |  2 +-
->  drivers/usb/gadget/function/f_tcm.c          |  2 +-
->  drivers/usb/gadget/function/f_uac1.c         |  2 +-
->  drivers/usb/gadget/function/f_uac1_legacy.c  |  2 +-
->  drivers/usb/gadget/function/f_uac2.c         |  2 +-
->  drivers/usb/gadget/function/uvc_configfs.c   | 50 ++++++++++++------------
->  21 files changed, 46 insertions(+), 46 deletions(-)
+pci_scan_root_bus_bridge crashes when link is not active. when I last
+tested, that is what I observed.
 
-[snip]
+because in previous code when we dont support hotplug, we just got to
+err, and remove root-bus in case link is not active.
+we dont do scan bus.
 
-> diff --git a/drivers/usb/gadget/function/uvc_configfs.c
-> b/drivers/usb/gadget/function/uvc_configfs.c index 844cb73..f76619f 100644
-> --- a/drivers/usb/gadget/function/uvc_configfs.c
-> +++ b/drivers/usb/gadget/function/uvc_configfs.c
-> @@ -127,7 +127,7 @@ static struct uvcg_control_header
-> *to_uvcg_control_header(struct config_item *it NULL,
->  };
-> 
-> -static struct config_item_type uvcg_control_header_type = {
-> +static const struct config_item_type uvcg_control_header_type = {
->  	.ct_attrs	= uvcg_control_header_attrs,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -170,7 +170,7 @@ static void uvcg_control_header_drop(struct config_group
-> *group, .drop_item		= uvcg_control_header_drop,
->  };
-> 
-> -static struct config_item_type uvcg_control_header_grp_type = {
-> +static const struct config_item_type uvcg_control_header_grp_type = {
->  	.ct_group_ops	= &uvcg_control_header_grp_ops,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -265,7 +265,7 @@ static ssize_t uvcg_default_processing_bm_controls_show(
-> NULL,
->  };
-> 
-> -static struct config_item_type uvcg_default_processing_type = {
-> +static const struct config_item_type uvcg_default_processing_type = {
->  	.ct_attrs	= uvcg_default_processing_attrs,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -277,7 +277,7 @@ static ssize_t uvcg_default_processing_bm_controls_show(
-> struct config_group	group;
->  } uvcg_processing_grp;
-> 
-> -static struct config_item_type uvcg_processing_grp_type = {
-> +static const struct config_item_type uvcg_processing_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
-> 
-> @@ -382,7 +382,7 @@ static ssize_t uvcg_default_camera_bm_controls_show(
->  	NULL,
->  };
-> 
-> -static struct config_item_type uvcg_default_camera_type = {
-> +static const struct config_item_type uvcg_default_camera_type = {
->  	.ct_attrs	= uvcg_default_camera_attrs,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -394,7 +394,7 @@ static ssize_t uvcg_default_camera_bm_controls_show(
->  	struct config_group	group;
->  } uvcg_camera_grp;
-> 
-> -static struct config_item_type uvcg_camera_grp_type = {
-> +static const struct config_item_type uvcg_camera_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
-> 
-> @@ -460,7 +460,7 @@ static ssize_t uvcg_default_camera_bm_controls_show(
->  	NULL,
->  };
-> 
-> -static struct config_item_type uvcg_default_output_type = {
-> +static const struct config_item_type uvcg_default_output_type = {
->  	.ct_attrs	= uvcg_default_output_attrs,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -472,7 +472,7 @@ static ssize_t uvcg_default_camera_bm_controls_show(
->  	struct config_group	group;
->  } uvcg_output_grp;
-> 
-> -static struct config_item_type uvcg_output_grp_type = {
-> +static const struct config_item_type uvcg_output_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
-> 
-> @@ -481,7 +481,7 @@ static ssize_t uvcg_default_camera_bm_controls_show(
->  	struct config_group	group;
->  } uvcg_terminal_grp;
-> 
-> -static struct config_item_type uvcg_terminal_grp_type = {
-> +static const struct config_item_type uvcg_terminal_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
-> 
-> @@ -586,7 +586,7 @@ static void uvcg_control_class_drop_link(struct
-> config_item *src, .drop_link	= uvcg_control_class_drop_link,
->  };
-> 
-> -static struct config_item_type uvcg_control_class_type = {
-> +static const struct config_item_type uvcg_control_class_type = {
->  	.ct_item_ops	= &uvcg_control_class_item_ops,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -596,7 +596,7 @@ static void uvcg_control_class_drop_link(struct
-> config_item *src, struct config_group	group;
->  } uvcg_control_class_grp;
-> 
-> -static struct config_item_type uvcg_control_class_grp_type = {
-> +static const struct config_item_type uvcg_control_class_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
-> 
-> @@ -605,7 +605,7 @@ static void uvcg_control_class_drop_link(struct
-> config_item *src, struct config_group	group;
->  } uvcg_control_grp;
-> 
-> -static struct config_item_type uvcg_control_grp_type = {
-> +static const struct config_item_type uvcg_control_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
-> 
-> @@ -857,7 +857,7 @@ static void uvcg_streaming_header_drop_link(struct
-> config_item *src, NULL,
->  };
-> 
-> -static struct config_item_type uvcg_streaming_header_type = {
-> +static const struct config_item_type uvcg_streaming_header_type = {
->  	.ct_item_ops	= &uvcg_streaming_header_item_ops,
->  	.ct_attrs	= uvcg_streaming_header_attrs,
->  	.ct_owner	= THIS_MODULE,
-> @@ -901,7 +901,7 @@ static void uvcg_streaming_header_drop(struct
-> config_group *group, .drop_item		= uvcg_streaming_header_drop,
->  };
-> 
-> -static struct config_item_type uvcg_streaming_header_grp_type = {
-> +static const struct config_item_type uvcg_streaming_header_grp_type = {
->  	.ct_group_ops	= &uvcg_streaming_header_grp_ops,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -1150,7 +1150,7 @@ static ssize_t
-> uvcg_frame_dw_frame_interval_store(struct config_item *item, NULL,
->  };
-> 
-> -static struct config_item_type uvcg_frame_type = {
-> +static const struct config_item_type uvcg_frame_type = {
->  	.ct_attrs	= uvcg_frame_attrs,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -1419,7 +1419,7 @@ static ssize_t
-> uvcg_uncompressed_guid_format_store(struct config_item *item, NULL,
->  };
-> 
-> -static struct config_item_type uvcg_uncompressed_type = {
-> +static const struct config_item_type uvcg_uncompressed_type = {
->  	.ct_group_ops	= &uvcg_uncompressed_group_ops,
->  	.ct_attrs	= uvcg_uncompressed_attrs,
->  	.ct_owner	= THIS_MODULE,
-> @@ -1469,7 +1469,7 @@ static void uvcg_uncompressed_drop(struct config_group
-> *group, .drop_item		= uvcg_uncompressed_drop,
->  };
-> 
-> -static struct config_item_type uvcg_uncompressed_grp_type = {
-> +static const struct config_item_type uvcg_uncompressed_grp_type = {
->  	.ct_group_ops	= &uvcg_uncompressed_grp_ops,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -1619,7 +1619,7 @@ static struct uvcg_mjpeg *to_uvcg_mjpeg(struct
-> config_item *item) NULL,
->  };
-> 
-> -static struct config_item_type uvcg_mjpeg_type = {
-> +static const struct config_item_type uvcg_mjpeg_type = {
->  	.ct_group_ops	= &uvcg_mjpeg_group_ops,
->  	.ct_attrs	= uvcg_mjpeg_attrs,
->  	.ct_owner	= THIS_MODULE,
-> @@ -1663,7 +1663,7 @@ static void uvcg_mjpeg_drop(struct config_group
-> *group, .drop_item		= uvcg_mjpeg_drop,
->  };
-> 
-> -static struct config_item_type uvcg_mjpeg_grp_type = {
-> +static const struct config_item_type uvcg_mjpeg_grp_type = {
->  	.ct_group_ops	= &uvcg_mjpeg_grp_ops,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -1728,7 +1728,7 @@ static void uvcg_mjpeg_drop(struct config_group
-> *group, NULL,
->  };
-> 
-> -static struct config_item_type uvcg_default_color_matching_type = {
-> +static const struct config_item_type uvcg_default_color_matching_type = {
->  	.ct_attrs	= uvcg_default_color_matching_attrs,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -1740,7 +1740,7 @@ static void uvcg_mjpeg_drop(struct config_group
-> *group, struct config_group	group;
->  } uvcg_color_matching_grp;
-> 
-> -static struct config_item_type uvcg_color_matching_grp_type = {
-> +static const struct config_item_type uvcg_color_matching_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
-> 
-> @@ -2085,7 +2085,7 @@ static void uvcg_streaming_class_drop_link(struct
-> config_item *src, .drop_link	= uvcg_streaming_class_drop_link,
->  };
-> 
-> -static struct config_item_type uvcg_streaming_class_type = {
-> +static const struct config_item_type uvcg_streaming_class_type = {
->  	.ct_item_ops	= &uvcg_streaming_class_item_ops,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -2095,7 +2095,7 @@ static void uvcg_streaming_class_drop_link(struct
-> config_item *src, struct config_group	group;
->  } uvcg_streaming_class_grp;
-> 
-> -static struct config_item_type uvcg_streaming_class_grp_type = {
-> +static const struct config_item_type uvcg_streaming_class_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
-> 
-> @@ -2104,7 +2104,7 @@ static void uvcg_streaming_class_drop_link(struct
-> config_item *src, struct config_group	group;
->  } uvcg_streaming_grp;
-> 
-> -static struct config_item_type uvcg_streaming_grp_type = {
-> +static const struct config_item_type uvcg_streaming_grp_type = {
->  	.ct_owner = THIS_MODULE,
->  };
+if fact so far none of the RC driver implements hotplug so this might
+not have been exercised.
 
-Now we have 9 const instances of the config_item_type structure that are 
-identical, with only the .ct_owner field set. Should they be all merged into a 
-single structure ?
-
-> @@ -2190,7 +2190,7 @@ static void uvc_attr_release(struct config_item *item)
-> NULL,
->  };
-> 
-> -static struct config_item_type uvc_func_type = {
-> +static const struct config_item_type uvc_func_type = {
->  	.ct_item_ops	= &uvc_item_ops,
->  	.ct_attrs	= uvc_attrs,
->  	.ct_owner	= THIS_MODULE,
+Ray and Vikram: please help to see these comments implemented.
 
 
--- 
+>> +             list_splice_init(res, &host->windows);
+>> +             host->busnr = 0;
+>> +             host->dev.parent = dev;
+>> +             host->ops = &iproc_pcie_ops;
+>> +             host->sysdata = sysdata;
+>> +             host->map_irq = pcie->map_irq;
+>> +             host->swizzle_irq = pci_common_swizzle;
+>> +
+>> +             ret = pci_scan_root_bus_bridge(host);
+>> +             if (ret < 0) {
+>> +                     dev_err(dev, "failed to scan host: %d\n", ret);
+>> +                     goto err_power_off_phy;
+>> +             }
+>>
+>> -     ret = pci_scan_root_bus_bridge(host);
+>> -     if (ret < 0) {
+>> -             dev_err(dev, "failed to scan host: %d\n", ret);
+>> -             goto err_power_off_phy;
+>> +             pci_assign_unassigned_bus_resources(host->bus);
+>> +             pcie->root_bus = host->bus;
+>> +     } else {
+>> +             bus = pci_create_root_bus(dev, 0,
+>> +                                       &iproc_pcie_ops, sysdata, res);
+>> +             if (!bus) {
+>> +                     dev_err(dev, "unable to create PCI root bus\n");
+>> +                     ret = -ENOMEM;
+>> +                     goto err_power_off_phy;
+>> +             }
+>> +             pcie->root_bus = bus;
+>>       }
+>>
+>> -     pci_assign_unassigned_bus_resources(host->bus);
+>> -
+>> -     pcie->root_bus = host->bus;
+>> -
+>>       list_for_each_entry(child, &host->bus->children, node)
+>>               pcie_bus_configure_settings(child);
+>>
+>> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+>> index a6b55ce..e5d0cd4 100644
+>> --- a/drivers/pci/host/pcie-iproc.h
+>> +++ b/drivers/pci/host/pcie-iproc.h
+>> @@ -77,6 +77,10 @@ struct iproc_pcie_ib {
+>>   * @ib: inbound mapping related parameters
+>>   * @ib_map: outbound mapping region related parameters
+>>   *
+>> + * @enable_hotplug: indicates PCI hotplug feature is enabled
+>> + * @ep_is_present: when PCIe hotplug is enabled, this flag is used to
+>> + * indicate whether or not the endpoint device is present
+>> + *
+>>   * @need_msi_steer: indicates additional configuration of the iProc PCIe
+>>   * controller is required to steer MSI writes to external interrupt controller
+>>   * @msi: MSI data
+>> @@ -104,6 +108,9 @@ struct iproc_pcie {
+>>       struct iproc_pcie_ib ib;
+>>       const struct iproc_pcie_ib_map *ib_map;
+>>
+>> +     bool enable_hotplug;
+>> +     bool ep_is_present;
+>
+> Are you suggesting that only an endpoint can be hotplugged?  You can't
+> hotplug a switch?
+>
+
+ok, we can change the name, PCI switch also can be hot-plugged.
+
+>>       bool need_msi_steer;
+>>       struct iproc_msi *msi;
+>>  };
+>> --
+>> 1.9.1
+>>
+
 Regards,
-
-Laurent Pinchart
+Oza.
