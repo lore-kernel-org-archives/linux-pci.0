@@ -1,220 +1,404 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0085.outbound.protection.outlook.com ([104.47.42.85]:24064
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932458AbdJXItM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Oct 2017 04:49:12 -0400
-From: Bao Xiaowei <xiaowei.bao@nxp.com>
-To: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <bhelgaas@google.com>, <shawnguo@kernel.org>,
-        <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
-        <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>,
-        <leoyang.li@nxp.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <pbrobinson@gmail.com>, <songxiaowei@hisilicon.com>,
-        <devicetree@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <Zhiqiang.Hou@nxp.com>,
-        <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
-CC: Bao Xiaowei <xiaowei.bao@nxp.com>
-Subject: [PATCH 2/3] ARMv8: layerscape: add the pcie ep function support
-Date: Tue, 24 Oct 2017 16:30:44 +0800
-Message-ID: <20171024083045.31135-3-xiaowei.bao@nxp.com>
-In-Reply-To: <20171024083045.31135-1-xiaowei.bao@nxp.com>
-References: <20171024083045.31135-1-xiaowei.bao@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:60072 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750950AbdJFN16 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Oct 2017 09:27:58 -0400
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 01/36] iommu: Keep track of processes and PASIDs
+Date: Fri,  6 Oct 2017 14:31:28 +0100
+Message-Id: <20171006133203.22803-2-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the pcie controller ep function support of layerscape base on
-pcie ep framework.
+IOMMU drivers need a way to bind Linux processes to devices. This is used
+for Shared Virtual Memory (SVM), where devices support paging. In that
+mode, DMA can directly target virtual addresses of a process.
 
-Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
+Introduce boilerplate code for allocating process structures and binding
+them to devices. Four operations are added to IOMMU drivers:
+
+* process_alloc, process_free: to create an iommu_process structure and
+  perform architecture-specific operations required to grab the process
+  (for instance on ARM SMMU, pin down the CPU ASID). There is a single
+  iommu_process structure per Linux process.
+
+* process_attach: attach a process to a device. The IOMMU driver checks
+  that the device is capable of sharing an address space with this
+  process, and writes the PASID table entry to install the process page
+  directory.
+
+  Some IOMMU drivers (e.g. ARM SMMU and virtio-iommu) will have a single
+  PASID table per domain, for convenience. Other can implement it
+  differently but to help these drivers, process_attach and process_detach
+  take a 'first' or 'last' parameter telling whether they need to
+  install/remove the PASID entry or only send the required TLB
+  invalidations.
+
+* process_detach: detach a process from a device. The IOMMU driver removes
+  the PASID table entry and invalidates the IOTLBs.
+
+process_attach and process_detach operations are serialized with a
+spinlock. At the moment it is global, but if we try to optimize it, the
+core should at least prevent concurrent attach/detach on the same domain.
+(so multi-level PASID table code can allocate tables lazily without having
+to go through the io-pgtable concurrency nightmare). process_alloc can
+sleep, but process_free must not (because we'll have to call it from
+call_srcu.)
+
+At the moment we use an IDR for allocating PASIDs and retrieving contexts.
+We also use a single spinlock. These can be refined and optimized later (a
+custom allocator will be needed for top-down PASID allocation).
+
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
- drivers/pci/dwc/pci-layerscape.c | 137 +++++++++++++++++++++++++++++++++++++--
- 1 file changed, 131 insertions(+), 6 deletions(-)
+ drivers/iommu/Kconfig         |  10 ++
+ drivers/iommu/Makefile        |   1 +
+ drivers/iommu/iommu-process.c | 225 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/iommu/iommu.c         |   1 +
+ include/linux/iommu.h         |  24 +++++
+ 5 files changed, 261 insertions(+)
+ create mode 100644 drivers/iommu/iommu-process.c
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 87fa486bee2c..5c6fa7534a8e 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -34,7 +34,12 @@
- /* PEX Internal Configuration Registers */
- #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
+index f3a21343e636..1ea5c90e37be 100644
+--- a/drivers/iommu/Kconfig
++++ b/drivers/iommu/Kconfig
+@@ -74,6 +74,16 @@ config IOMMU_DMA
+ 	select IOMMU_IOVA
+ 	select NEED_SG_DMA_LENGTH
  
-+#define PCIE_DBI2_BASE		0x1000	/* DBI2 base address*/
-+#define PCIE_MSI_MSG_DATA_OFF	0x5c	/* MSI Data register address*/
-+#define PCIE_MSI_OB_SIZE	4096
-+#define PCIE_MSI_ADDR_OFFSET	(1024 * 1024)
- #define PCIE_IATU_NUM		6
-+#define PCIE_EP_ADDR_SPACE_SIZE 0x100000000
- 
- struct ls_pcie_drvdata {
- 	u32 lut_offset;
-@@ -44,12 +49,20 @@ struct ls_pcie_drvdata {
- 	const struct dw_pcie_ops *dw_pcie_ops;
- };
- 
-+struct ls_pcie_ep {
-+	dma_addr_t msi_phys_addr;
-+	void __iomem *msi_virt_addr;
-+	u64 msi_msg_addr;
-+	u16 msi_msg_data;
++config IOMMU_PROCESS
++	bool "Process management API for the IOMMU"
++	select IOMMU_API
++	help
++	  Enable process management for the IOMMU API. In systems that support
++	  it, device drivers can bind processes to devices and share their page
++	  tables using this API.
++
++	  If unsure, say N here.
++
+ config FSL_PAMU
+ 	bool "Freescale IOMMU support"
+ 	depends on PCI
+diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
+index b910aea813a1..a2832edbfaa2 100644
+--- a/drivers/iommu/Makefile
++++ b/drivers/iommu/Makefile
+@@ -1,6 +1,7 @@
+ obj-$(CONFIG_IOMMU_API) += iommu.o
+ obj-$(CONFIG_IOMMU_API) += iommu-traces.o
+ obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
++obj-$(CONFIG_IOMMU_PROCESS) += iommu-process.o
+ obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
+ obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
+ obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
+diff --git a/drivers/iommu/iommu-process.c b/drivers/iommu/iommu-process.c
+new file mode 100644
+index 000000000000..a7e5a1c94305
+--- /dev/null
++++ b/drivers/iommu/iommu-process.c
+@@ -0,0 +1,225 @@
++/*
++ * Track processes bound to devices
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 as published
++ * by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++ *
++ * Copyright (C) 2017 ARM Ltd.
++ *
++ * Author: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
++ */
++
++#include <linux/idr.h>
++#include <linux/iommu.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++
++/* Link between a domain and a process */
++struct iommu_context {
++	struct iommu_process	*process;
++	struct iommu_domain	*domain;
++
++	struct list_head	process_head;
++	struct list_head	domain_head;
++
++	/* Number of devices that use this context */
++	refcount_t		ref;
 +};
 +
- struct ls_pcie {
- 	struct dw_pcie *pci;
- 	void __iomem *lut;
- 	struct regmap *scfg;
- 	const struct ls_pcie_drvdata *drvdata;
- 	int index;
-+	struct ls_pcie_ep *pcie_ep;
- };
- 
- #define to_ls_pcie(x)	dev_get_drvdata((x)->dev)
-@@ -263,6 +276,113 @@ static const struct of_device_id ls_pcie_of_match[] = {
- 	{ },
- };
- 
-+static void ls_pcie_raise_msi_irq(struct ls_pcie_ep *pcie_ep)
++/*
++ * Because we're using an IDR, PASIDs are limited to 31 bits (the sign bit is
++ * used for returning errors). In practice implementations will use at most 20
++ * bits, which is the PCI limit.
++ */
++static DEFINE_IDR(iommu_process_idr);
++
++/*
++ * For the moment this is an all-purpose lock. It serializes
++ * access/modifications to contexts (process-domain links), access/modifications
++ * to the PASID IDR, and changes to process refcount as well.
++ */
++static DEFINE_SPINLOCK(iommu_process_lock);
++
++/*
++ * Allocate a iommu_process structure for the given task.
++ *
++ * Ideally we shouldn't need the domain parameter, since iommu_process is
++ * system-wide, but we use it to retrieve the driver's allocation ops and a
++ * PASID range.
++ */
++static struct iommu_process *
++iommu_process_alloc(struct iommu_domain *domain, struct task_struct *task)
 +{
-+	iowrite32(pcie_ep->msi_msg_data, pcie_ep->msi_virt_addr);
-+}
++	int err;
++	int pasid;
++	struct iommu_process *process;
 +
-+static void ls_pcie_ep_msi_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct ls_pcie *pcie = to_ls_pcie(pci);
-+	struct ls_pcie_ep *pcie_ep = pcie->pcie_ep;
-+	struct device *dev = pci->dev;
-+	u32 free_win;
++	if (WARN_ON(!domain->ops->process_alloc || !domain->ops->process_free))
++		return ERR_PTR(-ENODEV);
 +
-+	pcie_ep->msi_phys_addr = ep->phys_base + PCIE_MSI_ADDR_OFFSET;
++	process = domain->ops->process_alloc(task);
++	if (IS_ERR(process))
++		return process;
++	if (!process)
++		return ERR_PTR(-ENOMEM);
 +
-+	pcie_ep->msi_virt_addr = ioremap(pcie_ep->msi_phys_addr,
-+						PCIE_MSI_OB_SIZE);
-+	if (!pcie_ep->msi_virt_addr)
-+		dev_err(dev, "failed to map MSI outbound region\n");
++	process->pid		= get_task_pid(task, PIDTYPE_PID);
++	process->release	= domain->ops->process_free;
++	INIT_LIST_HEAD(&process->domains);
++	kref_init(&process->kref);
 +
-+	pcie_ep->msi_msg_addr = ioread32(pci->dbi_base + MSI_MESSAGE_ADDR_L32) |
-+		(((u64)ioread32(pci->dbi_base + MSI_MESSAGE_ADDR_U32)) << 32);
-+	pcie_ep->msi_msg_data = ioread16(pci->dbi_base + PCIE_MSI_MSG_DATA_OFF);
-+
-+	/* outbound iATU for MSI */
-+	free_win = find_first_zero_bit(&ep->ob_window_map,
-+					sizeof(ep->ob_window_map));
-+	if (free_win >= ep->num_ob_windows)
-+		dev_err(pci->dev, "no free outbound window\n");
-+
-+	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
-+					pcie_ep->msi_phys_addr,
-+					pcie_ep->msi_msg_addr,
-+					PCIE_MSI_OB_SIZE);
-+
-+	set_bit(free_win, &ep->ob_window_map);
-+	ep->outbound_addr[free_win] = pcie_ep->msi_phys_addr;
-+}
-+
-+static int ls_pcie_raise_irq(struct dw_pcie_ep *ep,
-+		enum pci_epc_irq_type type, u8 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct ls_pcie *pcie = to_ls_pcie(pci);
-+	struct ls_pcie_ep *pcie_ep = pcie->pcie_ep;
-+	u32 index;
-+
-+	ls_pcie_ep_msi_init(ep);
-+
-+	ls_pcie_raise_msi_irq(pcie_ep);
-+
-+	for (index = 0; index < ep->num_ob_windows; index++) {
-+		if (ep->outbound_addr[index] == pcie_ep->msi_phys_addr)
-+			break;
++	if (!process->pid) {
++		err = -EINVAL;
++		goto err_free_process;
 +	}
 +
-+	if (index >= ep->num_ob_windows)
-+		return -1;
++	idr_preload(GFP_KERNEL);
++	spin_lock(&iommu_process_lock);
++	pasid = idr_alloc_cyclic(&iommu_process_idr, process, domain->min_pasid,
++				 domain->max_pasid + 1, GFP_ATOMIC);
++	process->pasid = pasid;
++	spin_unlock(&iommu_process_lock);
++	idr_preload_end();
 +
-+	dw_pcie_disable_atu(pci, index, DW_PCIE_REGION_OUTBOUND);
-+	clear_bit(index, &ep->ob_window_map);
++	if (pasid < 0) {
++		err = pasid;
++		goto err_put_pid;
++	}
++
++	return process;
++
++err_put_pid:
++	put_pid(process->pid);
++
++err_free_process:
++	domain->ops->process_free(process);
++
++	return ERR_PTR(err);
++}
++
++static void iommu_process_release(struct kref *kref)
++{
++	struct iommu_process *process;
++	void (*release)(struct iommu_process *);
++
++	assert_spin_locked(&iommu_process_lock);
++
++	process = container_of(kref, struct iommu_process, kref);
++	release = process->release;
++
++	WARN_ON(!list_empty(&process->domains));
++
++	idr_remove(&iommu_process_idr, process->pasid);
++	put_pid(process->pid);
++	release(process);
++}
++
++/*
++ * Returns non-zero if a reference to the process was successfully taken.
++ * Returns zero if the process is being freed and should not be used.
++ */
++static int iommu_process_get_locked(struct iommu_process *process)
++{
++	assert_spin_locked(&iommu_process_lock);
++
++	if (process)
++		return kref_get_unless_zero(&process->kref);
 +
 +	return 0;
 +}
 +
-+static struct dw_pcie_ep_ops pcie_ep_ops = {
-+	.raise_irq = ls_pcie_raise_irq,
-+};
-+
-+static int __init ls_add_pcie_ep(struct ls_pcie *pcie,
-+					struct platform_device *pdev)
++static void iommu_process_put_locked(struct iommu_process *process)
 +{
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	struct dw_pcie_ep *ep;
-+	struct ls_pcie_ep *pcie_ep;
-+	struct resource *cfg_res;
-+	int ret;
++	assert_spin_locked(&iommu_process_lock);
 +
-+	ep = &pci->ep;
-+	ep->ops = &pcie_ep_ops;
++	kref_put(&process->kref, iommu_process_release);
++}
 +
-+	pcie_ep = devm_kzalloc(dev, sizeof(*pcie_ep), GFP_KERNEL);
-+	if (!pcie_ep)
++static int iommu_process_attach(struct iommu_domain *domain, struct device *dev,
++				struct iommu_process *process)
++{
++	int err;
++	int pasid = process->pasid;
++	struct iommu_context *context;
++
++	if (WARN_ON(!domain->ops->process_attach || !domain->ops->process_detach))
++		return -ENODEV;
++
++	if (pasid > domain->max_pasid || pasid < domain->min_pasid)
++		return -ENOSPC;
++
++	context = kzalloc(sizeof(*context), GFP_KERNEL);
++	if (!context)
 +		return -ENOMEM;
 +
-+	pcie->pcie_ep = pcie_ep;
++	context->process	= process;
++	context->domain		= domain;
++	refcount_set(&context->ref, 1);
 +
-+	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-+	if (cfg_res) {
-+		ep->phys_base = cfg_res->start;
-+		ep->addr_size = PCIE_EP_ADDR_SPACE_SIZE;
-+	} else {
-+		dev_err(dev, "missing *config* space\n");
-+		return -ENODEV;
++	spin_lock(&iommu_process_lock);
++	err = domain->ops->process_attach(domain, dev, process, true);
++	if (err) {
++		kfree(context);
++		spin_unlock(&iommu_process_lock);
++		return err;
 +	}
 +
-+	ret = dw_pcie_ep_init(ep);
-+	if (ret) {
-+		dev_err(dev, "failed to initialize endpoint\n");
-+		return ret;
-+	}
++	list_add(&context->process_head, &process->domains);
++	list_add(&context->domain_head, &domain->processes);
++	spin_unlock(&iommu_process_lock);
 +
 +	return 0;
-+
 +}
 +
- static int __init ls_add_pcie_port(struct ls_pcie *pcie)
- {
- 	struct dw_pcie *pci = pcie->pci;
-@@ -309,16 +429,21 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(pci->dbi_base))
- 		return PTR_ERR(pci->dbi_base);
++static void iommu_context_free(struct iommu_context *context)
++{
++	assert_spin_locked(&iommu_process_lock);
++
++	if (WARN_ON(!context->process || !context->domain))
++		return;
++
++	list_del(&context->process_head);
++	list_del(&context->domain_head);
++	iommu_process_put_locked(context->process);
++
++	kfree(context);
++}
++
++/* Attach an existing context to the device */
++static int iommu_process_attach_locked(struct iommu_context *context,
++				       struct device *dev)
++{
++	assert_spin_locked(&iommu_process_lock);
++
++	refcount_inc(&context->ref);
++	return context->domain->ops->process_attach(context->domain, dev,
++						    context->process, false);
++}
++
++/* Detach device from context and release it if necessary */
++static void iommu_process_detach_locked(struct iommu_context *context,
++					struct device *dev)
++{
++	bool last = false;
++	struct iommu_domain *domain = context->domain;
++
++	assert_spin_locked(&iommu_process_lock);
++
++	if (refcount_dec_and_test(&context->ref))
++		last = true;
++
++	domain->ops->process_detach(domain, dev, context->process, last);
++
++	if (last)
++		iommu_context_free(context);
++}
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 3de5c0bcb5cc..b2b34cf7c978 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -1264,6 +1264,7 @@ static struct iommu_domain *__iommu_domain_alloc(struct bus_type *bus,
+ 	domain->type = type;
+ 	/* Assume all sizes by default; the driver may override this later */
+ 	domain->pgsize_bitmap  = bus->iommu_ops->pgsize_bitmap;
++	INIT_LIST_HEAD(&domain->processes);
  
--	pcie->lut = pci->dbi_base + pcie->drvdata->lut_offset;
-+	pci->dbi_base2 = pci->dbi_base + PCIE_DBI2_BASE;
- 
--	if (!ls_pcie_is_bridge(pcie))
--		return -ENODEV;
-+	pcie->lut = pci->dbi_base + pcie->drvdata->lut_offset;
- 
- 	platform_set_drvdata(pdev, pcie);
- 
--	ret = ls_add_pcie_port(pcie);
--	if (ret < 0)
--		return ret;
-+	if (!ls_pcie_is_bridge(pcie)) {
-+		ret = ls_add_pcie_ep(pcie, pdev);
-+		if (ret < 0)
-+			return ret;
-+	} else {
-+		ret = ls_add_pcie_port(pcie);
-+		if (ret < 0)
-+			return ret;
-+	}
- 
- 	return 0;
+ 	return domain;
  }
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 41b8c5757859..3978dc094706 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -94,6 +94,19 @@ struct iommu_domain {
+ 	void *handler_token;
+ 	struct iommu_domain_geometry geometry;
+ 	void *iova_cookie;
++
++	unsigned int min_pasid, max_pasid;
++	struct list_head processes;
++};
++
++struct iommu_process {
++	struct pid		*pid;
++	int			pasid;
++	struct list_head	domains;
++	struct kref		kref;
++
++	/* Release callback for this process */
++	void (*release)(struct iommu_process *process);
+ };
+ 
+ enum iommu_cap {
+@@ -164,6 +177,11 @@ struct iommu_resv_region {
+  * @domain_free: free iommu domain
+  * @attach_dev: attach device to an iommu domain
+  * @detach_dev: detach device from an iommu domain
++ * @process_alloc: allocate iommu process
++ * @process_free: free iommu process
++ * @process_attach: attach iommu process to a domain
++ * @process_detach: detach iommu process from a domain. Remove PASID entry and
++ *                  flush associated TLB entries.
+  * @map: map a physically contiguous memory region to an iommu domain
+  * @unmap: unmap a physically contiguous memory region from an iommu domain
+  * @map_sg: map a scatter-gather list of physically contiguous memory chunks
+@@ -197,6 +215,12 @@ struct iommu_ops {
+ 
+ 	int (*attach_dev)(struct iommu_domain *domain, struct device *dev);
+ 	void (*detach_dev)(struct iommu_domain *domain, struct device *dev);
++	struct iommu_process *(*process_alloc)(struct task_struct *task);
++	void (*process_free)(struct iommu_process *process);
++	int (*process_attach)(struct iommu_domain *domain, struct device *dev,
++			      struct iommu_process *process, bool first);
++	void (*process_detach)(struct iommu_domain *domain, struct device *dev,
++			       struct iommu_process *process, bool last);
+ 	int (*map)(struct iommu_domain *domain, unsigned long iova,
+ 		   phys_addr_t paddr, size_t size, int prot);
+ 	size_t (*unmap)(struct iommu_domain *domain, unsigned long iova,
 -- 
-2.14.1
+2.13.3
