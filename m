@@ -1,59 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 11 Oct 2017 13:32:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan Glauber <jglauber@cavium.com>
-Subject: Re: [PATCH v4 0/3] Workaround for bus/slot reset on Cavium cn8xxx
- root ports
-Message-ID: <20171011183201.GK25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170908081033.3025-1-jglauber@cavium.com>
-MIME-Version: 1.0
-In-Reply-To: <20170908081033.3025-1-jglauber@cavium.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Alex Williamson <alex.williamson@redhat.com>, kvm@vger.kernel.org,
- david.daney@cavium.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
- Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 33/36] iommu/arm-smmu-v3: Disable tagged pointers
+Date: Fri,  6 Oct 2017 14:32:00 +0100
+Message-Id: <20171006133203.22803-34-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 08, 2017 at 10:10:30AM +0200, Jan Glauber wrote:
-> Using vfio-pci on a combination of cn8xxx and some PCI devices results in
-> a kernel panic. This is triggered by issuing a bus or a slot reset
-> on the PCI device.
-> 
-> With this series both checks indicate that the reset is not possible
-> preventing the kernel panic.
-> 
-> David Daney (2):
->   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device
->   PCI: Avoid bus reset for Cavium cn8xxx root ports
-> 
-> Jan Glauber (1):
->   PCI: Avoid slot reset if bus reset is not possible
-> 
->  drivers/pci/pci.c    | 8 ++++++++
->  drivers/pci/quirks.c | 8 ++++++++
->  2 files changed, 16 insertions(+)
+The ARM architecture has a "Top Byte Ignore" (TBI) option that makes the
+MMU mask out bits [63:56] of an address, allowing a userspace application
+to store data in its pointers. This option is incompatible with PCI ATS.
 
-Applied to pci/host-thunder for v4.15, thanks.
+If TBI is enabled in the SMMU and userspace triggers DMA transactions on
+tagged pointers, the endpoint might create ATC entries for addresses that
+include a tag. Software would then have to send ATC invalidation packets
+for each 255 possible alias of an address, or just wipe the whole address
+space. This is not a viable option, so disable TBI.
 
-I reordered and renamed them like this:
+The impact of this change is unclear, since there are very few users of
+tagged pointers, much less SVM. But the requirement introduced by this
+patch doesn't seem excessive: a userspace application using both tagged
+pointers and SVM should now sanitize addresses (clear the tag) before
+using them for device DMA.
 
-  PCI: Mark Cavium CN8xxx to avoid bus reset
-  PCI: Avoid bus reset if bridge itself is broken
-  PCI: Avoid slot reset if bridge itself is broken
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index f591f1974228..f008b4617cd4 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1332,7 +1332,6 @@ static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_device *smmu, u64 tcr)
+ 	val |= ARM_SMMU_TCR2CD(tcr, EPD0);
+ 	val |= ARM_SMMU_TCR2CD(tcr, EPD1);
+ 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
+-	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
+ 
+ 	if (smmu->features & ARM_SMMU_FEAT_HA)
+ 		val |= ARM_SMMU_TCR2CD(tcr, HA);
+-- 
+2.13.3
+
