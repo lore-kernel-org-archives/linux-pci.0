@@ -1,116 +1,132 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: exynos: remove redundant code in
- exynos_pcie_establish_link
-To: Jingoo Han <jingoohan1@gmail.com>, 'Krzysztof Kozlowski' <krzk@kernel.org>
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-Message-ID: <b81a09be-1873-ab81-dcb2-c3b29ff7e430@samsung.com>
-Date: Tue, 10 Oct 2017 19:16:23 +0530
-MIME-Version: 1.0
-In-Reply-To: <000a01d3411a$82eea770$88cbf650$@gmail.com>
-References: <CGME20171009141438epcas2p4ead7e2f2d1af7e0950f2c026e3a9943b@epcas2p4.samsung.com>
- <1507558478-3218-1-git-send-email-pankaj.dubey@samsung.com>
- <CAJKOXPeC=cS2cvAXHrKuK5F4tEqH6PppwYkxC+Z8+5D--48CAg@mail.gmail.com>
- <000a01d3411a$82eea770$88cbf650$@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
- 'linux-pci' <linux-pci@vger.kernel.org>, linux-samsung-soc@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, 'Anvesh Salveru' <anvesh.s@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:32922 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752376AbdJFNaF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 6 Oct 2017 09:30:05 -0400
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+Subject: [RFCv2 PATCH 26/36] iommu/arm-smmu-v3: Add support for Hardware Translation Table Update
+Date: Fri,  6 Oct 2017 14:31:53 +0100
+Message-Id: <20171006133203.22803-27-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+If the SMMU supports it and the kernel was built with HTTU support, enable
+hardware update of access and dirty flags. This is essential for shared
+page tables, to reduce the number of access faults on the fault queue.
 
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 32 ++++++++++++++++++++++++++++----
+ 1 file changed, 28 insertions(+), 4 deletions(-)
 
-On 10/09/2017 09:50 PM, Jingoo Han wrote:
-> On Monday, October 9, 2017 10:44 AM, Krzysztof Kozlowski wrote:
->> On Mon, Oct 9, 2017 at 4:14 PM, Pankaj Dubey <pankaj.dubey@samsung.com>
->> wrote:
->>> From: Anvesh Salveru <anvesh.s@samsung.com>
->>>
->>> In exynos_pcie_establish_link if driver is not using generic phy,
->>> we are resetting PHY twice, which is redundant, so this patch removes
->> Hi Pankaj,
->>
->> This lacks the information why it is redundant.
-> (I resend this mail, because email address of pci list was corrupted.)
-Thanks, somehow I typed wrong email id.
-> I think so, too.
->
-> Did you test this code on some boards with Exynos PCIe?
-> Or did hardware engineers confirm this?
-> Please add more information on this patch.
-I have replied reason behind this patch in reply to Krzysztof, hope I am 
-able to
-explain logic behind this change.
-
-I do not have access to Exynos5440 PCIe, and this PHY_COMMON_RESET is not
-applicable to other Exynos SoC which I have with me, so I can't test 
-this change,
-but if you see the change it is an obvious change, before introducing 
-generic phy
-support to this driver PHY_COMMON_RESET was programmed only once, then
-in case platform is not using PHY it suppose to be done only once during 
-linkup.
-I am not sure when Jaehoon introduced this patch, he verified this on 
-Exynos5440 or
-not. We are just trying to make the logic as it was before without 
-affecting anything.
-
-Thanks,
-Pankaj Dubey
-> Best regards,
-> Jingoo Han
->
->>> repeated lines of code for PHY reset.
->>>
->>> Signed-off-by: Anvesh Salveru <anvesh.s@samsung.com>
->> Your Signed-off-by is needed here.
->>
->> Best regards,
->> Krzysztof
->>
->>> ---
->>>   drivers/pci/dwc/pci-exynos.c | 7 -------
->>>   1 file changed, 7 deletions(-)
->>>
->>> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
->>> index 5596fde..85d2f4b 100644
->>> --- a/drivers/pci/dwc/pci-exynos.c
->>> +++ b/drivers/pci/dwc/pci-exynos.c
->>> @@ -423,13 +423,6 @@ static int exynos_pcie_establish_link(struct
->> exynos_pcie *ep)
->>>                  exynos_pcie_deassert_phy_reset(ep);
->>>                  exynos_pcie_power_on_phy(ep);
->>>                  exynos_pcie_init_phy(ep);
->>> -
->>> -               /* pulse for common reset */
->>> -               exynos_pcie_writel(ep->mem_res->block_base, 1,
->>> -                                       PCIE_PHY_COMMON_RESET);
->>> -               udelay(500);
->>> -               exynos_pcie_writel(ep->mem_res->block_base, 0,
->>> -                                       PCIE_PHY_COMMON_RESET);
->>>          }
->>>
->>>          /* pulse for common reset */
->>> --
->>> 2.7.4
->>>
->
->
->
->
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index b7355630526a..2b2e2be03de7 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -67,6 +67,8 @@
+ #define IDR0_ASID16			(1 << 12)
+ #define IDR0_ATS			(1 << 10)
+ #define IDR0_HYP			(1 << 9)
++#define IDR0_HD				(1 << 7)
++#define IDR0_HA				(1 << 6)
+ #define IDR0_BTM			(1 << 5)
+ #define IDR0_COHACC			(1 << 4)
+ #define IDR0_TTF_SHIFT			2
+@@ -342,7 +344,16 @@
+ #define ARM64_TCR_TBI0_SHIFT		37
+ #define ARM64_TCR_TBI0_MASK		0x1UL
+ 
++#define ARM64_TCR_HA_SHIFT		39
++#define ARM64_TCR_HA_MASK		0x1UL
++#define ARM64_TCR_HD_SHIFT		40
++#define ARM64_TCR_HD_MASK		0x1UL
++
+ #define CTXDESC_CD_0_AA64		(1UL << 41)
++#define CTXDESC_CD_0_TCR_HD_SHIFT	42
++#define CTXDESC_CD_0_TCR_HA_SHIFT	43
++#define CTXDESC_CD_0_HD			(1UL << CTXDESC_CD_0_TCR_HD_SHIFT)
++#define CTXDESC_CD_0_HA			(1UL << CTXDESC_CD_0_TCR_HA_SHIFT)
+ #define CTXDESC_CD_0_S			(1UL << 44)
+ #define CTXDESC_CD_0_R			(1UL << 45)
+ #define CTXDESC_CD_0_A			(1UL << 46)
+@@ -670,6 +681,8 @@ struct arm_smmu_device {
+ #define ARM_SMMU_FEAT_E2H		(1 << 14)
+ #define ARM_SMMU_FEAT_BTM		(1 << 15)
+ #define ARM_SMMU_FEAT_SVM		(1 << 16)
++#define ARM_SMMU_FEAT_HA		(1 << 17)
++#define ARM_SMMU_FEAT_HD		(1 << 18)
+ 	u32				features;
+ 
+ #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
+@@ -1157,7 +1170,7 @@ static __u64 *arm_smmu_get_cd_ptr(struct arm_smmu_domain *smmu_domain, u32 ssid)
+ 	return l1_desc->cdptr + idx * CTXDESC_CD_DWORDS;
+ }
+ 
+-static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
++static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_device *smmu, u64 tcr)
+ {
+ 	u64 val = 0;
+ 
+@@ -1172,6 +1185,12 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
+ 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
+ 	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
+ 
++	if (smmu->features & ARM_SMMU_FEAT_HA)
++		val |= ARM_SMMU_TCR2CD(tcr, HA);
++
++	if (smmu->features & ARM_SMMU_FEAT_HD)
++		val |= ARM_SMMU_TCR2CD(tcr, HD);
++
+ 	return val;
+ }
+ 
+@@ -1235,7 +1254,7 @@ static void arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
+ 			 */
+ 			arm_smmu_sync_cd(smmu_domain, ssid, true);
+ 
+-		val = arm_smmu_cpu_tcr_to_cd(cd->tcr) |
++		val = arm_smmu_cpu_tcr_to_cd(smmu_domain->smmu, cd->tcr) |
+ #ifdef __BIG_ENDIAN
+ 		      CTXDESC_CD_0_ENDI |
+ #endif
+@@ -2203,8 +2222,7 @@ static int arm_smmu_process_init_pgtable(struct arm_smmu_process *smmu_process,
+ 	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
+ 	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
+ 	tcr |= par << ARM_LPAE_TCR_IPS_SHIFT;
+-
+-	tcr |= TCR_TBI0;
++	tcr |= TCR_TBI0 | TCR_HA | TCR_HD;
+ 
+ 	cfg->asid       = asid;
+ 	cfg->ttbr       = virt_to_phys(mm->pgd);
+@@ -3275,6 +3293,12 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ 			smmu->features |= ARM_SMMU_FEAT_E2H;
+ 	}
+ 
++	if (IS_ENABLED(CONFIG_ARM64_HW_AFDBM) && (reg & (IDR0_HA | IDR0_HD))) {
++		smmu->features |= ARM_SMMU_FEAT_HA;
++		if (reg & IDR0_HD)
++			smmu->features |= ARM_SMMU_FEAT_HD;
++	}
++
+ 	/*
+ 	 * If the CPU is using VHE, but the SMMU doesn't support it, the SMMU
+ 	 * will create TLB entries for NH-EL1 world and will miss the
+-- 
+2.13.3
