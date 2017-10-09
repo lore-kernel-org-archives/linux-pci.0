@@ -1,70 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1508222128.6530.22.camel@perches.com>
-Subject: Re: [PATCH] PCI: dwc: dra7xx: Print link state to console for debug
-From: Joe Perches <joe@perches.com>
-To: Faiz Abbas <faiz_abbas@ti.com>, kishon@ti.com
-Cc: bhelgaas@google.com, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 16 Oct 2017 23:35:28 -0700
-In-Reply-To: <1508219031-25592-1-git-send-email-faiz_abbas@ti.com>
-References: <1508219031-25592-1-git-send-email-faiz_abbas@ti.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from m12-18.163.com ([220.181.12.18]:46738 "EHLO m12-18.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753968AbdJIH5N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Oct 2017 03:57:13 -0400
+Subject: Re: [BUG] vt6655: A possible sleep-in-atomic bug in vt6655_suspend
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: forest@alittletooquiet.net, simon@nikanor.nu, tvboxspy@gmail.com,
+        scott@matheina.com, dan.a.cashman@gmail.com,
+        golubev.mikhail@gmail.com, bhelgaas@google.com,
+        devel@driverdev.osuosl.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+References: <f3f4b129-471e-6ccd-a2fa-6ffd915bcb7f@163.com>
+ <20171009054327.GA12559@kroah.com>
+From: Jia-Ju Bai <baijiaju1990@163.com>
+Message-ID: <b96d4517-8484-892b-43b8-107067c7f78c@163.com>
+Date: Mon, 9 Oct 2017 15:56:49 +0800
+MIME-Version: 1.0
+In-Reply-To: <20171009054327.GA12559@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-10-17 at 11:13 +0530, Faiz Abbas wrote:
-> Enable support for printing the LTSSM link state for debugging PCI
-> when link is down.
-[]
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 34427a6..7b150b0 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -98,6 +98,18 @@ struct dra7xx_pcie_of_data {
->  
->  #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
->  
-> +static char state[][20] = {
-> +	"DETECT_QUIET", "DETECT_ACT", "POLL_ACTIVE", "POLL_COMPLIANCE",
-> +	"POLL_CONFIG", "PRE_DETECT_QUIET", "DETECT_WAIT", "CFG_LINKWD_START",
-> +	"CFG_LINKWD_ACEPT", "CFG_LANENUM_WAIT", "CFG_LANENUM_ACEPT",
-> +	"CFG_COMPLETE", "CFG_IDLE", "RCVRY_LOCK", "RCVRY_SPEED",
-> +	"RCVRY_RCVRCFG", "RCVRY_IDLE", "L0", "L0S", "L123_SEND_EIDLE",
-> +	"L1_IDLE", "L2_IDLE", "L2_WAKE", "DISABLED_ENTRY", "DISABLED_IDLE",
-> +	"DISABLED", "LPBK_ENTRY", "LPBK_ACTIVE", "LPBK_EXIT",
-> +	"LPBK_EXIT_TIMEOUT", "HOT_RESET_ENTRY", "HOT_RESET", "RCVRY_EQ0",
-> +	"RCVRY_EQ1", "RCVRY_EQ2", "RCVRY_EQ3"
+Okay, I will send a patch :)
 
-what's wrong with using the far more typical
 
-static const char *link_state[] = {
-	"DETECT_QUIET",
-	...
-};
+Thanks,
+Jia-Ju Bai
 
-> +};
-> +
->  static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
->  {
->  	return readl(pcie->base + offset);
-> @@ -118,6 +130,15 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
->  {
->  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
->  	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
-> +	u32 cmd_reg;
-> +	u32 ltssm_state;
-> +
-> +	if (!(reg & LINK_UP)) {
-> +		cmd_reg = dra7xx_pcie_readl(dra7xx,
-> +					    PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-> +		ltssm_state = (cmd_reg & GENMASK(7, 2)) >> 2;
-> +		dev_err(pci->dev, "Link state:%s\n", state[ltssm_state]);
-
-and why is this a dev_err and not dev_info?
-and if it's really for debugging, why not dev_dbg?
-
-> +	}
->  
->  	return !!(reg & LINK_UP);
->  }
+On 2017/10/9 13:43, Greg KH wrote:
+> On Mon, Oct 09, 2017 at 09:10:28AM +0800, Jia-Ju Bai wrote:
+>> According to device_main.c, the driver may sleep under a spinlock,
+>> and the function call path is:
+>> vt6655_suspend (acquire the spinlock)
+>>    pci_set_power_state
+>>      __pci_start_power_transition (drivers/pci/pci.c)
+>>        msleep --> may sleep
+>>
+>> A possible fix is to replace msleep with mdelay in
+>> __pci_start_power_transition in drivers/pci/pci.c.
+> Patches are usually best to send in for things that you find like this.
+>
+> thanks,
+>
+> greg k-h
