@@ -1,111 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:18606 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752053AbdJ3OBE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 10:01:04 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
-        <mperttunen@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V3 12/12] PCI: tegra: Update flow control threshold in Tegra210
-Date: Mon, 30 Oct 2017 19:27:23 +0530
-Message-ID: <1509371843-22931-13-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:49234 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754163AbdJIRBM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Oct 2017 13:01:12 -0400
+Date: Mon, 9 Oct 2017 12:01:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas <niklas@vividvisions.se>
+Cc: linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+        Mason <slash.tmp@free.fr>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Felipe Balbi <felipe.balbi@linux.intel.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: [bugzilla-daemon@bugzilla.kernel.org: [Bug 197159] New: Xhci host
+ controller not responding starting kernel 4.13]
+Message-ID: <20171009170108.GK25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Recommended update FC threshold in Tegra210 is 0x60 for best performance
-of x1 link. Setting this to 0x60 provides the best balance between number
-of UpdateFC and read data sent over the link.
+[+cc linux-pci, linux-usb, Mason, Mathias, Lukas, Greg, Felipe, Alan]
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V3:
-* changed soc parameter name
-V2:
-* no change in this patch
+----- Forwarded message from bugzilla-daemon@bugzilla.kernel.org -----
+> 
+> Date: Sun, 08 Oct 2017 13:28:13 +0000
+> From: bugzilla-daemon@bugzilla.kernel.org
+> To: bugzilla.pci@gmail.com
+> Subject: [Bug 197159] New: Xhci host controller not responding starting kernel
+> 	4.13
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=197159
+> 
+>             Bug ID: 197159
+>            Summary: Xhci host controller not responding starting kernel
+>                     4.13
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: 4.13
+>           Hardware: Intel
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: blocking
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: niklas@vividvisions.se
+>         Regression: No
+> 
+> When booting with a Expresscard USB 3.0 adapter (NEC UPD720202 Chip), the
+> following error is generated:
+> 
+> "xhci_hcd 0000:05:00.0: xHCI host controller not responding, assumed dead"
+> 
+> This card still works fine with kernel 4.9.
 
- drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Thanks very much for the bug report, and sorry for the regression.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index b29329226e3d..812d32cfdd0e 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -223,6 +223,7 @@
- #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
- #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
- #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
-+#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
- 
- #define RP_VEND_CTL0	0xf44
- #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
-@@ -323,6 +324,7 @@ struct tegra_pcie_soc {
- 	bool update_clamp_threshold;
- 	bool raw_violation_fixup;
- 	bool program_deskew_time;
-+	bool update_fc_threshold;
- };
- 
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -2231,6 +2233,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
- 		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
- 		writel(value, port->base + RP_VEND_CTL0);
- 	}
-+
-+	if (soc->update_fc_threshold) {
-+		value = readl(port->base + RP_VEND_XP);
-+		value &= ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
-+		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
-+		writel(value, port->base + RP_VEND_XP);
-+	}
- }
- /*
-  * FIXME: If there are no PCIe cards attached, then calling this function
-@@ -2371,6 +2380,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.update_clamp_threshold = false,
- 	.raw_violation_fixup = false,
- 	.program_deskew_time = false,
-+	.update_fc_threshold = false,
- };
- 
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2391,6 +2401,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.update_clamp_threshold = false,
- 	.raw_violation_fixup = false,
- 	.program_deskew_time = false,
-+	.update_fc_threshold = false,
- };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2410,6 +2421,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.update_clamp_threshold = true,
- 	.raw_violation_fixup = true,
- 	.program_deskew_time = false,
-+	.update_fc_threshold = false,
- };
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
-@@ -2437,6 +2449,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.update_clamp_threshold = true,
- 	.raw_violation_fixup = false,
- 	.program_deskew_time = true,
-+	.update_fc_threshold = true,
- };
- 
- static const struct tegra_pcie_soc tegra186_pcie = {
-@@ -2457,6 +2470,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.update_clamp_threshold = false,
- 	.raw_violation_fixup = false,
- 	.program_deskew_time = false,
-+	.update_fc_threshold = false,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
--- 
-2.1.4
+Can you please collect the complete dmesg log and "lspci -vv" output
+and attach them to the bugzilla?
+
+> Additionally, for some reason this also interferes with LUKS on an LVM
+> partition; password does not work and computer becomes stuck at this point.
+> This works as normal if card is removed and computer is rebooted.
+> 
+> Can we please have Expresscard USB 3.0 functionality back in the kernel?
+> 
+> This problem has been described elsewhere, but couldn't find any kernel bug
+> report for it. See this link for further information:
+> 
+> http://patchwork.ozlabs.org/patch/804867/
+
+In that thread, Mason reported a regression that looks similar, but as
+far as I can tell, we never identified a root cause.
+
+  1) The problem Mason reported was on a Tango platform, which has a
+     known hardware issue that corrupts data when simultaneous config
+     and MMIO accesses occur.  You're seeing the problem on a
+     different platform, which is very helpful.
+
+  2) Mathias suggested d9f11ba9f107 ("xhci: Rework how we handle
+     unresponsive or hoptlug removed hosts"), which appeared in
+     v4.12-rc1, as a possible culprit, but I don't see a bisection
+     that definitively identifies this commit.
+
+     Is it possible for you to test both fe190ed0d602 ("xhci: Do not
+     halt the host until both HCD have disconnected their devices.")
+     and d9f11ba9f107 ("xhci: Rework how we handle unresponsive or
+     hoptlug removed hosts") so we can tell for sure whether
+     d9f11ba9f107 broke it?
+
+  3) Mason did report:
+       v4.11.12 OK
+       v4.12-rc1 KO
+     I assume "KO" means broken (unless that's a typo for "OK"?).  If
+     it means "broken", he did at least confirm that the problem first
+     appeared in v4.12-rc1.
+
+Bjorn
+
+> Tested with Antergos (Arch) on a Thinkpad T420. The card works with the LTS
+> kernel which is at 4.9.52-1 but not the latest which is 4.13.3-1.
