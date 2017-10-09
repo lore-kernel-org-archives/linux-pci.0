@@ -1,76 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44158 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750729AbdJKWIW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 18:08:22 -0400
-Date: Wed, 11 Oct 2017 17:08:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/5] PCI: protect restore with device lock to be
- consistent
-Message-ID: <20171011220819.GW25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59216 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751752AbdJIIRj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Oct 2017 04:17:39 -0400
+Date: Mon, 9 Oct 2017 10:17:47 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie,
+        bhelgaas@google.com, forest@alittletooquiet.net, simon@nikanor.nu,
+        scott@matheina.com, tvboxspy@gmail.com, dan.a.cashman@gmail.com,
+        golubev.mikhail@gmail.com, devel@driverdev.osuosl.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH] pci: Fix a possible sleep-in-atomic bug in
+ pci_set_power_state
+Message-ID: <20171009081747.GA23371@kroah.com>
+References: <1507536980-9345-1-git-send-email-baijiaju1990@163.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1507536980-9345-1-git-send-email-baijiaju1990@163.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I think this series makes a lot of sense overall; thanks for doing
-this work!  I had a few comments on the individual patches.
+On Mon, Oct 09, 2017 at 04:16:20PM +0800, Jia-Ju Bai wrote:
+> The drivers vt6655 and gma500 call pci_set_power_state under a spinlock, which may sleep.
+> The function call paths are:
+> gma_power_begin (acquire the spinlock) (drivers/gpu/drm/gma500/power.c)
+>   gma_resume_pci
+>     pci_set_power_state
+>       __pci_start_power_transition (drivers/pci/pci.c)
+>         msleep --> may sleep
+> 
+> gma_power_begin (acquire the spinlock) (drivers/gpu/drm/gma500/power.c)
+>   gma_resume_pci
+>     pci_enable_device
+>       pci_enable_device_flags (drivers/pci/pci.c)
+>         do_pci_enable_device
+>           pci_set_power_state
+>             __pci_start_power_transition
+>               msleep --> may sleep
+> 
+> vt6655_suspend (acquire the spinlock) (drivers/staging/vt6655/device_main.c)
+>   pci_set_power_state
+>     __pci_start_power_transition (drivers/pci/pci.c)
+>       msleep --> may sleep
+> 
+> To fix these bugs, msleep is replaced with mdelay in __pci_start_power_transition
+> 
+> These bugs are found by my static analysis tool and my code review.
 
-(This response would ordinarily be to the cover letter, but there
-isn't one, so I'm just responding to the first patch.)
+Wait, no, why not fix the callers to not have a spinlock.  Those are the
+only users of these calls that are doing so incorrectly, don't change
+the PCI core for the fault of 2 broken drivers.
 
-On Sat, Sep 23, 2017 at 08:16:54PM -0400, Sinan Kaya wrote:
-> Commit b014e96d1abb ("PCI: Protect pci_error_handlers->reset_notify() usage
-> with device_lock()") added protection around pci_dev_restore() function so
-> that device specific remove callback does not cause a race condition
-> against hotplug.
-> 
-> pci_dev_lock() usage has been forgotten in two different places in the
-> code. Adding locks for pci_slot_restore() and moving pci_dev_restore()
-> inside the locks for pci_try_reset_function().
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pci.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 6078dfc..23681f4 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4344,9 +4344,9 @@ int pci_try_reset_function(struct pci_dev *dev)
->  
->  	pci_dev_save_and_disable(dev);
->  	rc = __pci_reset_function_locked(dev);
-> +	pci_dev_restore(dev);
->  	pci_dev_unlock(dev);
->  
-> -	pci_dev_restore(dev);
->  	return rc;
->  }
->  EXPORT_SYMBOL_GPL(pci_try_reset_function);
-> @@ -4546,7 +4546,9 @@ static void pci_slot_restore(struct pci_slot *slot)
->  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
->  		if (!dev->slot || dev->slot != slot)
->  			continue;
-> +		pci_dev_lock(dev);
->  		pci_dev_restore(dev);
-> +		pci_dev_unlock(dev);
->  		if (dev->subordinate)
->  			pci_bus_restore(dev->subordinate);
->  	}
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+thanks,
+
+greg k-h
