@@ -1,114 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:52287 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753619AbdJaWkL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:40:11 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 06/17] PCI: designware-ep: Add generic function for raising MSI irq
-Date: Tue, 31 Oct 2017 23:39:24 +0100
-Message-Id: <20171031223936.27549-7-niklas.cassel@axis.com>
-In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=pqNZ=BI=arm.com=will.deacon@kernel.org>
+Return-Path: <SRS0=pqNZ=BI=arm.com=will.deacon@kernel.org>
+Date: Mon, 9 Oct 2017 17:46:07 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Leif Lindholm <leif.lindholm@linaro.org>,
+	Graeme Gregory <graeme.gregory@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v4 1/2] PCI: pci-host-generic: add support for Synopsys
+ DesignWare RC in ECAM mode
+Message-ID: <20171009164607.GD30085@arm.com>
+References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
+ <20171006163919.14898-2-ard.biesheuvel@linaro.org>
+ <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This function can be used by all DWC based controllers to raise a MSI
-irq. However, certain controllers, like DRA7xx, has a special
-convenience register for raising MSI irqs that doesn't require you to
-explicitly map the MSI address.
+On Fri, Oct 06, 2017 at 06:21:59PM -0500, Bjorn Helgaas wrote:
+> On Fri, Oct 06, 2017 at 05:39:18PM +0100, Ard Biesheuvel wrote:
+> > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> > index 7d709a7e0aa8..01e81a30e303 100644
+> > --- a/drivers/pci/host/pci-host-generic.c
+> > +++ b/drivers/pci/host/pci-host-generic.c
+> > @@ -35,6 +35,43 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+> >  	}
+> >  };
+> >  
+> > +static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
+> > +				   int size, u32 *val)
+> > +{
+> > +	struct pci_config_window *cfg = bus->sysdata;
+> > +
+> > +	/*
+> > +	 * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
+> > +	 * type 0 config TLPs sent to devices 1 and up on its downstream port,
+> > +	 * resulting in devices appearing multiple times on bus 0 unless we
+> > +	 * filter out those accesses here.
+> > +	 */
+> > +	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
+> > +		return PCIBIOS_DEVICE_NOT_FOUND;
+> 
+> I think we should return 0xffffffff data here, as we do in other
+> similar accessors (dw_pcie_rd_conf(), altera_pcie_cfg_read(),
+> rockchip_pcie_rd_conf()).
+> 
+> Actually, xilinx-nwl has a nice trick: it implements
+> nwl_pcie_map_bus(), which returns NULL for invalid devices.  Then it
+> can use the generic accessors, and pci_generic_config_read() already
+> fills in ~0 for this case. 
+> 
+> What do you think of the following?  I put it on my pci/host-generic
+> branch for now (pending your response and an ack from Will).
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V3:
-* No change.
+I'd probably just inline the device check in pci_dw_ecam_map_bus directly,
+but either way:
 
- drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++++++++++
- drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
- 2 files changed, 43 insertions(+)
+Acked-by: Will Deacon <will.deacon@arm.com>
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 9c3820ca6358..be874df8003d 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -282,6 +282,40 @@ static const struct pci_epc_ops epc_ops = {
- 	.stop			= dw_pcie_ep_stop,
- };
- 
-+int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
-+			     u8 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct pci_epc *epc = ep->epc;
-+	u16 msg_ctrl, msg_data;
-+	u32 msg_addr_lower, msg_addr_upper;
-+	u64 msg_addr;
-+	bool has_upper;
-+	int ret;
-+
-+	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
-+	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
-+	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-+	if (has_upper) {
-+		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
-+		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-+	} else {
-+		msg_addr_upper = 0;
-+		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-+	}
-+	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-+	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr, PAGE_SIZE);
-+	if (ret)
-+		return ret;
-+
-+	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
-+
-+	dw_pcie_ep_unmap_addr(epc, ep->msi_mem_phys);
-+
-+	return 0;
-+}
-+
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- 	struct pci_epc *epc = ep->epc;
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 37dfad8d003f..24edac035160 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -106,6 +106,8 @@
- #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
- #define MSI_MESSAGE_ADDR_L32		0x54
- #define MSI_MESSAGE_ADDR_U32		0x58
-+#define MSI_MESSAGE_DATA_32		0x58
-+#define MSI_MESSAGE_DATA_64		0x5C
- 
- /*
-  * Maximum number of MSI IRQs can be 256 per controller. But keep
-@@ -338,6 +340,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 interrupt_num);
- void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
- #else
- static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
-@@ -353,6 +356,12 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
- 
-+static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
-+					   u8 interrupt_num)
-+{
-+	return 0;
-+}
-+
- static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- {
- }
--- 
-2.14.2
+I'm assuming this is so small that there's no point in having a Kconfig
+option for these guys that depends on the generic host driver?
+
+Will
