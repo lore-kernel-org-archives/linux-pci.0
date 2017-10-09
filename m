@@ -1,193 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-o-3.desy.de ([131.169.56.156]:53271 "EHLO smtp-o-3.desy.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751120AbdJVGNv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 22 Oct 2017 02:13:51 -0400
-Received: from smtp-map-3.desy.de (smtp-map-3.desy.de [131.169.56.68])
-        by smtp-o-3.desy.de (DESY-O-3) with ESMTP id 805242805E9
-        for <linux-pci@vger.kernel.org>; Sun, 22 Oct 2017 08:13:49 +0200 (CEST)
-Date: Sun, 22 Oct 2017 08:13:45 +0200 (CEST)
-From: "Petrosyan, Ludwig" <ludwig.petrosyan@desy.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>
-Message-ID: <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
-In-Reply-To: <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com> <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de> <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 9 Oct 2017 15:25:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Hunter, Adrian" <adrian.hunter@intel.com>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-acpi <linux-acpi@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Alan Cox <alan@linux.intel.com>
+Subject: Re: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-related
+ host controllers
+Message-ID: <20171009202502.GN25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1507294259-20438-1-git-send-email-adrian.hunter@intel.com>
+ <20171006162048.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+ <ada41e9b-6fb3-82ab-e458-af4942adba2d@intel.com>
+ <20171009134154.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
+ <363DA0ED52042842948283D2FC38E4649BF3590E@IRSMSX106.ger.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <363DA0ED52042842948283D2FC38E4649BF3590E@IRSMSX106.ger.corp.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Logan
+On Mon, Oct 09, 2017 at 08:01:06PM +0000, Hunter, Adrian wrote:
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Monday, October 9, 2017 4:42 PM
+> > To: Hunter, Adrian <adrian.hunter@intel.com>
+> > Cc: Ulf Hansson <ulf.hansson@linaro.org>; linux-mmc <linux-
+> > mmc@vger.kernel.org>; linux-pci <linux-pci@vger.kernel.org>; Bjorn Helgaas
+> > <bhelgaas@google.com>; linux-acpi <linux-acpi@vger.kernel.org>; Rafael J.
+> > Wysocki <rjw@rjwysocki.net>; Alan Cox <alan@linux.intel.com>
+> > Subject: Re: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-related
+> > host controllers
+> > 
+> > [+cc Alan]
+> > 
+> > On Mon, Oct 09, 2017 at 11:56:43AM +0300, Adrian Hunter wrote:
+> > > On 06/10/17 19:20, Bjorn Helgaas wrote:
+> > > > On Fri, Oct 06, 2017 at 03:50:59PM +0300, Adrian Hunter wrote:
+> > > >> The default D3 cold delay of 100 ms can cause pauses when streaming
+> > > >> audio from eMMC.
+> > > >>
+> > > >> Intel BYT-related host controllers do not need PCI D3 delays.
+> > > >> Although the delays can be set to zero via an ACPI _DSM,
+> > > >> unfortunately that is not being used in all cases. So just set the delays to
+> > zero in the driver.
+> > > >>
+> > > >> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+> > > >> ---
+> > > >>  drivers/mmc/host/sdhci-pci-core.c | 17 +++++++++++++----
+> > > >>  1 file changed, 13 insertions(+), 4 deletions(-)
+> > > >>
+> > > >> diff --git a/drivers/mmc/host/sdhci-pci-core.c
+> > > >> b/drivers/mmc/host/sdhci-pci-core.c
+> > > >> index 5f3f7b51299f..14ef99b6e5b7 100644
+> > > >> --- a/drivers/mmc/host/sdhci-pci-core.c
+> > > >> +++ b/drivers/mmc/host/sdhci-pci-core.c
+> > > >> @@ -592,9 +592,18 @@ static void byt_read_dsm(struct sdhci_pci_slot
+> > *slot)
+> > > >>  	slot->chip->rpm_retune = intel_host->d3_retune;  }
+> > > >>
+> > > >> -static int byt_emmc_probe_slot(struct sdhci_pci_slot *slot)
+> > > >> +static void byt_common_setup(struct sdhci_pci_slot *slot)
+> > > >>  {
+> > > >>  	byt_read_dsm(slot);
+> > > >> +
+> > > >> +	/* PCI D3 delays are not needed */
+> > > >> +	slot->chip->pdev->d3_delay = 0;
+> > > >> +	slot->chip->pdev->d3cold_delay = 0;
+> > > >
+> > > > The fact that it doesn't need D3 delays sounds like a property of
+> > > > the device itself, regardless of which (if any) driver claims it.
+> > > >
+> > > > Can this be done as a quirk instead, maybe something in
+> > > > arch/x86/pci/fixup.c?  Maybe quirk_remove_d3_delay() could be used
+> > > > directly, or something like pci_d3_delay_fixup()?
+> > >
+> > > A quirk would work, but that would mean setting the quirk for each
+> > > device
+> > > (28 so far) and then, when we have new ids, adding them there and to
+> > > the driver, so it is more convenient just to do it in the driver.
+> > > Certainly, this is the only driver we have for these Intel SDHCI PCI host
+> > controllers.
+> > 
+> > pci_d3_delay_fixup() has code that mitigates the problem of adding new IDs.
+> > Maybe that quirk should simply be moved to arch/x86/pci/fixup.c?
+> 
+> pci_d3_delay_fixup() is not setting zero.  quirk_remove_d3_delay() and creating
+> a quirk_remove_d3cold_delay() would work.
 
-Thank You very much for respond.
-Could be I have done is stupid...
-But at first sight it has to be simple:
-The PCIe Write transactions are address routed, so if in the packet header =
-the other endpoint address is written the TLP has to be routed (by PCIe Swi=
-tch to the endpoint), the DMA reading from the end point is really write tr=
-ansactions from the endpoint, usually (Xilinx core) to start DMA one has to=
- write to the DMA control register of the endpoint the destination address.=
- So I have change the device driver to set in this register the physical ad=
-dress of the other endpoint (get_resource start called to other endpoint, a=
-nd it is the same address which I could see in lspci -vvvv -s bus-address o=
-f the switch port, memories behind bridge), so now the endpoint has to star=
-t send writes TLP with the other endpoint address in the TLP header.
-But this is not working (I want to understand why ...), but I could see the=
- first address of the destination endpoint is changed (with the wrong value=
- 0xFF),
-now I want to try prepare in the driver of one endpoint the DMA buffer , bu=
-t using physical address of the other endpoint,
-Could be it will never work, but I want to understand why, there is my erro=
-r ...
+Your concern was that a quirk would require a long list of device IDs
+and we'd have to add new ones.  I share that concern, and my point was
+that pci_d3_delay_fixup() checks for the platform type and sets the
+delay based on that, so it doesn't have a long list of device IDs.  
 
-with best regards
+Whether the appropriate delay is zero or 3 is a question for you Intel
+guys to sort out.  We already have:
 
-Ludwig
+  pci_d3delay_fixup()     # arch/x86/pci/intel_mid_pci.c
+  pci_d3_delay_fixup()    # drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
+  atomisp_pci_probe()     # drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c
 
------ Original Message -----
-From: "Logan Gunthorpe" <logang@deltatee.com>
-To: "Ludwig Petrosyan" <ludwig.petrosyan@desy.de>, "Deucher, Alexander" <Al=
-exander.Deucher@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger=
-.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "l=
-inux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "Linux-media@vger.ke=
-rnel.org" <Linux-media@vger.kernel.org>, "dri-devel@lists.freedesktop.org" =
-<dri-devel@lists.freedesktop.org>, "linux-pci@vger.kernel.org" <linux-pci@v=
-ger.kernel.org>
-Cc: "Bridgman, John" <John.Bridgman@amd.com>, "Kuehling, Felix" <Felix.Kueh=
-ling@amd.com>, "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>, "Blinz=
-er, Paul" <Paul.Blinzer@amd.com>, "Koenig, Christian" <Christian.Koenig@amd=
-.com>, "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>, "Sander, B=
-en" <ben.sander@amd.com>
-Sent: Friday, 20 October, 2017 17:48:58
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
+and you're proposing to add a fourth one.  I think there's a lot of
+overlap there, and it'd be nice to clean that up.
 
-Hi Ludwig,
+> > If we put this in the driver, won't we have the unnecessary delays on
+> > systems where the driver isn't in use?
+> 
+> The issue is unacceptable I/O latency (streaming audio through the device
+> was the example) which means you have to have a driver.
 
-P2P transactions are still *very* experimental at the moment and take a=20
-lot of expertise to get working in a general setup. It will definitely=20
-require changes to the kernel, including the drivers of all the devices=20
-you are trying to make talk to eachother. If you're up for it you can=20
-take a look at:
+If I don't use audio, I don't need the driver.  My concern is that
+even without the driver, there may be paths that use
+pci_dev_d3_sleep() for this device, e.g., suspend/resume of the whole
+system.  If that's the case, we should avoid the default 10ms delay
+even if there's no driver loaded.
 
-https://github.com/sbates130272/linux-p2pmem/
+Maybe we never use pci_dev_d3_sleep() if there's no driver, but I
+haven't been able to convince myself of that yet.
 
-Which has our current rough work making NVMe fabrics use p2p transactions.
-
-Logan
-
-On 10/20/2017 6:36 AM, Ludwig Petrosyan wrote:
-> Dear Linux kernel group
->=20
-> my name is Ludwig Petrosyan I am working in DESY (Germany)
->=20
-> we are responsible for the control system of=C2=A0 all accelerators in DE=
-SY.
->=20
-> For a 7-8 years we have switched to MTCA.4 systems and using PCIe as a=20
-> central Bus.
->=20
-> I am mostly responsible for the Linux drivers of the AMC Cards (PCIe=20
-> endpoints).
->=20
-> The idea is start to use peer to peer transaction for PCIe endpoint (DMA=
-=20
-> and/or usual Read/Write)
->=20
-> Could You please advise me where to start, is there some Documentation=20
-> how to do it.
->=20
->=20
-> with best regards
->=20
->=20
-> Ludwig
->=20
->=20
-> On 11/21/2016 09:36 PM, Deucher, Alexander wrote:
->> This is certainly not the first time this has been brought up, but I'd=
-=20
->> like to try and get some consensus on the best way to move this=20
->> forward.=C2=A0 Allowing devices to talk directly improves performance an=
-d=20
->> reduces latency by avoiding the use of staging buffers in system=20
->> memory.=C2=A0 Also in cases where both devices are behind a switch, it=
-=20
->> avoids the CPU entirely.=C2=A0 Most current APIs (DirectGMA, PeerDirect,=
-=20
->> CUDA, HSA) that deal with this are pointer based.=C2=A0 Ideally we'd be=
-=20
->> able to take a CPU virtual address and be able to get to a physical=20
->> address taking into account IOMMUs, etc.=C2=A0 Having struct pages for t=
-he=20
->> memory would allow it to work more generally and wouldn't require as=20
->> much explicit support in drivers that wanted to use it.
->> Some use cases:
->> 1. Storage devices streaming directly to GPU device memory
->> 2. GPU device memory to GPU device memory streaming
->> 3. DVB/V4L/SDI devices streaming directly to GPU device memory
->> 4. DVB/V4L/SDI devices streaming directly to storage devices
->> Here is a relatively simple example of how this could work for=20
->> testing.=C2=A0 This is obviously not a complete solution.
->> - Device memory will be registered with Linux memory sub-system by=20
->> created corresponding struct page structures for device memory
->> - get_user_pages_fast() will=C2=A0 return corresponding struct pages whe=
-n=20
->> CPU address points to the device memory
->> - put_page() will deal with struct pages for device memory
->> Previously proposed solutions and related proposals:
->> 1.P2P DMA
->> DMA-API/PCI map_peer_resource support for peer-to-peer=20
->> (http://www.spinics.net/lists/linux-pci/msg44560.html)
->> Pros: Low impact, already largely reviewed.
->> Cons: requires explicit support in all drivers that want to support=20
->> it, doesn't handle S/G in device memory.
->> 2. ZONE_DEVICE IO
->> Direct I/O and DMA for persistent memory=20
->> (https://lwn.net/Articles/672457/)
->> Add support for ZONE_DEVICE IO memory with struct pages.=20
->> (https://patchwork.kernel.org/patch/8583221/)
->> Pro: Doesn't waste system memory for ZONE metadata
->> Cons: CPU access to ZONE metadata slow, may be lost, corrupted on=20
->> device reset.
->> 3. DMA-BUF
->> RDMA subsystem DMA-BUF support=20
->> (http://www.spinics.net/lists/linux-rdma/msg38748.html)
->> Pros: uses existing dma-buf interface
->> Cons: dma-buf is handle based, requires explicit dma-buf support in=20
->> drivers.
->>
->> 4. iopmem
->> iopmem : A block device for PCIe memory=20
->> (https://lwn.net/Articles/703895/)
->> 5. HMM
->> Heterogeneous Memory Management=20
->> (http://lkml.iu.edu/hypermail/linux/kernel/1611.2/02473.html)
->>
->> 6. Some new mmap-like interface that takes a userptr and a length and=20
->> returns a dma-buf and offset?
->> Alex
->>
->> --=20
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at=C2=A0 http://vger.kernel.org/majordomo-info.html
->=20
-> _______________________________________________
-> Linux-nvdimm mailing list
-> Linux-nvdimm@lists.01.org
-> https://lists.01.org/mailman/listinfo/linux-nvdimm
+Bjorn
