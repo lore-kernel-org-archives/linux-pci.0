@@ -1,151 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 20 Oct 2017 10:27:01 -0700
-From: Brian Norris <computersforpeace@gmail.com>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH 2/9] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
- device
-Message-ID: <20171020172701.GA105780@google.com>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-3-git-send-email-jim2101024@gmail.com>
- <20171017202418.ykve2o4zvuwxjdgj@rob-hp-laptop>
- <CANCKTBt_gUF8qAEuhS1336Uce+WdP_98ApZhv1sxZgJsWGoiGQ@mail.gmail.com>
- <CAL_JsqLoqB0GF201ofJrjdYH8B-Ca=hGBtE4=VcrBxS7M52mVQ@mail.gmail.com>
- <9fae640f-a9da-90bf-01d2-c62131611ef9@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out6.electric.net ([192.162.217.182]:64358 "EHLO
+        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754085AbdJIPXo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Oct 2017 11:23:44 -0400
+Received: from 1e1ZjX-00023e-VO by out6a.electric.net with emc1-ok (Exim 4.87)
+        (envelope-from <David.Laight@ACULAB.COM>)
+        id 1e1ZjY-00025D-TI
+        for linux-pci@vger.kernel.org; Mon, 09 Oct 2017 08:12:44 -0700
+Received: from [156.67.243.126] (helo=AcuExch.aculab.com)
+        by out6a.electric.net with esmtps (TLSv1:AES128-SHA:128)
+        (Exim 4.87)
+        (envelope-from <David.Laight@ACULAB.COM>)
+        id 1e1ZjX-00023e-VO
+        for linux-pci@vger.kernel.org; Mon, 09 Oct 2017 08:12:43 -0700
+From: David Laight <David.Laight@ACULAB.COM>
+To: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Subject: PCIe error reporting
+Date: Mon, 9 Oct 2017 15:12:45 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD008D9F2@AcuExch.aculab.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <9fae640f-a9da-90bf-01d2-c62131611ef9@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Rob Herring <robh@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Ralf Baechle <ralf@linux-mips.org>, Jim Quinlan <jim2101024@gmail.com>,
- Linux-MIPS <linux-mips@linux-mips.org>, Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Matthias Kaehlcke <mka@chromium.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+I'm trying to determine how a PCIe card we are building handles (and
+hopefully recovers from) PCIe link errors.
+However I'm not at all sure what I should expect the x86 Linux host to do.
 
-On Thu, Oct 19, 2017 at 02:58:55PM -0700, Florian Fainelli wrote:
-> On 10/19/2017 02:49 PM, Rob Herring wrote:
-> > On Tue, Oct 17, 2017 at 5:42 PM, Jim Quinlan <jim2101024@gmail.com> wrote:
-> >> On Tue, Oct 17, 2017 at 4:24 PM, Rob Herring <robh@kernel.org> wrote:
-> >>> This is not the regulator binding. Use the standard binding.
-> >>>
-> >> The reason we do it this way is because the PCIe controller does not
-> >> know or care what the names of the supplies are, or how many there
-> >> will be.  The list of regulators can be different for each board we
-> >> support, as these regulators turn on/off the downstream EP device.
-> >> All the PCIe controller does is turn on/off this list of regulators
-> >> when booting,resuming/suspending.
-> >>
-> >> An alternative would have the node specifying the standard properties
-> >>
-> >> xyz-supply = <&xyz_reg>;
-> >> abc-supply = <&abc_reg>;
-> >> pdq-supply = <&pdq_reg>;
-> >> ...
-> >>
-> >> and then have this driver search all of the properties in the PCIe
-> >> node for names matching /-supply$/, and then create a list of phandles
-> >> from that.  Is that what you would like?
-> > 
-> > Really, you should have child nodes of the PCIe devices and have the
-> > supplies in there.
-> 
-> While that would be technically more correct this poses a number of issues:
-> 
-> - there is precedence in that area, and you already Acked binding
-> documents proposing the same thing:
-> 	* Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt (commit
-> c26ebe98a103479dae9284fe0a86a95af4a5cd46)
-> 	* Documentation/devicetree/bindings/pci/rockchip-pcie.txt (commit
-> 828bdcfbdb98eeb97facb05fe6c96ba0aed65c4a and before)
+The card has an Altera FPGA and I can monitor things like changes to
+it's LTSSM state engine, but not quite the full operation of the PCIe logic.
 
-I can actually speak to the Rockchip binding a bit :)
+I've enabled AER and lspci seems to decode most of the bits but
+it looks as though something needs to detect error bits being set
+log the error and then clear them.
 
-It actually has a mixture of true controller regulators (e.g., the 1.8V
-and 0.9V regulators power analog portions of the SoC's PCIe logic) and
-controls for the PCIe endpoints (e.g., 12V). Additionally, some of these
-have been misused to represent a little of both, since the regulator
-framework is actually quite flexible ;)
+I did a rather brutal test - shorted the TX lines after the caps.
+The card's PCIe logic issued a reset to the internal logic before
+bringing the PCIe link back up.
+I could then read config space - but the BARs were all zero
+(I think lspci reported the old values, but the -x data showed zeros).
+Nothing seemed to indicate the Linux thought anything was wrong.
+Not surprisingly reads returned ~0u.
 
-That may or may not help, but they are at least partially correct.
+I should really try a much shorter error.
 
-The Freescale one does look like it's plainly *not* about the root
-controller.
+On that system (XEON E5-2600) dmesg contains (retyped):
+  acpi: PNP0A08:00: _OSC: platform does not support [AER]
 
-Also, those rails *are* all fairly well defined by the various PCIe
-electromechanical specifications, so isn't it reasonable to expect that
-a controller can optionally control power for 1 of each of the standard
-power types? Or do we really want to represent the flexibility that
-there can be up to N of each type for N endpoints?
+Another system is even more 'useless', it reports "AER handled
+by the firmware".
+If we take the PCIe link down (even after echo 1 >sys/devices/.../remove)
+something generates an NMI!
 
-As a side note: it's also been pretty tough to get the power sequencing
-requirements represented correctly for some PCIe endpoints. I've tried
-to make use of this previously, but the series took so long (>1 year and
-counting!) my team lost interest:
+Is this all 'expected' behaviour?
+Anything else I should/could be looking at?
+Is there anything that will poll the AER bits for me?
 
-[PATCH v16 2/7] power: add power sequence library
-https://www.spinics.net/lists/linux-usb/msg158452.html
-
-It doesn't really solve all of this problem, but it could be worth
-looking at.
-
-> (which may indicate those should also be corrected, at the possible
-> expense of creating incompatibilities)
-
-If a better way is developed, we can always augment the bindings. The
-current bindings aren't that hard to maintain as "deprecated backups."
-
-> - there is a chicken and egg problem, you can't detect the EP without
-> turning its regulator on, and if you can't create a pci_device, you
-> certainly won't be able to associate it with an device_node counterpart
-
-That's definitely a major problem driving some of the current bindings.
-We're just not set up to walk the child devices if we can't probe them.
-
-> - PCIe being dynamic by nature, can you have "wildcard" PCIE EP DT node
-> that would be guaranteed to match any physically attached PCIE EP which
-> is discovered by the PCI bus layer (and then back to issue #2)
-
-Technically, you *can* walk the DT (i.e., 'device_node's) without having
-pci_dev's for each yet. Something like of_pci_find_child_device() would
-do it. But that still seems kind of wonky, and it's currently neither
-precise enough nor flexible enough for this, I don't think.
-
-Brian
-
-> If we can solve #2 and #3, it would be reasonable to move the regulator
-> to a PCIE EP node. Ideally, we may want the generic PCI layer to be
-> responsible for managing regulators within pci_enable_device() and
-> pci_disable_device() for instance?
-> 
-> > 
-> > The driver could do what you describe, but you've still got to define
-> > the names here.
-> > 
-> > Rob
-> > 
-> 
-> 
-> -- 
-> Florian
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	David
