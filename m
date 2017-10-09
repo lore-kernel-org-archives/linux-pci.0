@@ -1,91 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 11 Oct 2017 13:33:48 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
-        mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to
- and from devices
-Message-ID: <20171011113348.GE30803@8bytes.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-6-jean-philippe.brucker@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:14289 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751834AbdJII41 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Oct 2017 04:56:27 -0400
+Date: Mon, 9 Oct 2017 11:47:39 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/7] PCI: Improvements for native PCIe hotplug
+Message-ID: <20171009084739.GK2761@lahna.fi.intel.com>
+References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171006133203.22803-6-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean-Philipe,
+On Tue, Sep 26, 2017 at 05:17:13PM +0300, Mika Westerberg wrote:
+> Hi,
+> 
+> Currently when plugging PCIe device using native PCIe hotplug Linux PCI
+> core tries to allocate bus space and resources so that the newly enumerated
+> topology barely fits there. Now, if the PCIe topology that was just plugged
+> in has more PCIe hotplug ports we will run out of bus space and resources
+> pretty quickly. There is a workaround for this by passing pci=hpbussize=N
+> in the kernel command line but it runs to the same situation after next
+> hotplug.
 
-Thanks for your patches, this is definitly a step in the right direction
-to get generic support for IO virtual memory into the IOMMU core code.
+Hi Bjorn,
 
-But I see an issue with the design around task_struct, please see
-below.
+Do you have any comments regarding this series? I think I need to respin
+this on top of Andy's for_each_pci_bridge() patch but if there are other
+comments I can address them at the same time.
 
-On Fri, Oct 06, 2017 at 02:31:32PM +0100, Jean-Philippe Brucker wrote:
-> +int iommu_process_bind_device(struct device *dev, struct task_struct *task,
-> +			      int *pasid, int flags)
-
-I just took this patch as an example, it is in the other patches as
-well. The code is designed around 'struct task_struct' while it should
-really be designed around 'struct mm_struct'. You are not attaching a
-specific process to a device, but the address-space of one or more
-processes. And that should be reflected in the design.
-
-There are several bad implications of building it around task_struct,
-one is the life-time of the binding. If the address space is detached
-from the device when the process exits, only the thread that did the
-setup can can safely make use of the device, because if the device is
-accessed from another thread it will crash when the setup-thread exits.
-
-There are other benefits of using mm_struct, for example that you can
-use mmu_notifiers to exit-handling.
-
-Here is how I think the base API should look like:
-
-	* iommu_iovm_device_init(struct device *dev);
-	  iommu_iovm_device_shutdown(struct device *dev);
-
-	  These two functions do the device specific setup/shutdown. For
-	  PCI this would include enabling the PRI, PASID, and ATS
-	  capabilities and setting up a PASID table for the device.
-
-	* iommu_iovm_bind_mm(struct device *dev, struct mm_struct *mm,
-			     iovm_shutdown_cb *cb);
-	  iommu_iovm_unbind_mm(struct device *dev, struct mm_struct *mm);
-
-	  These functions add and delete the entries in the PASID table
-	  for the device and setup mmu_notifiers for the mm_struct to
-	  keep IOMMU TLBs in sync with the CPU TLBs.
-
-	  The shutdown_cb is invoked by the IOMMU core code when the
-	  mm_struct goes away, for example because the process
-	  segfaults.
-
-	The PASID handling is best done these functions as well, unless
-	there is a strong reason to allow device drivers to do the
-	handling themselves.
-
-The context data can be stored directly in mm_struct, including the
-PASID for that mm.
-
-There is of course more functionality needed, the above only outlines
-the very basic needs.
-
-
-Regards,
-
-	Joerg
-
+Thanks!
