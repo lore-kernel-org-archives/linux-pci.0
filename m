@@ -1,80 +1,62 @@
-Return-Path: <SRS0=nFXY=BJ=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=nFXY=BJ=linaro.org=ard.biesheuvel@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20171010001351.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
- <20171006163919.14898-2-ard.biesheuvel@linaro.org> <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
- <20171009164607.GD30085@arm.com> <20171010001351.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Tue, 10 Oct 2017 10:04:03 +0100
-Message-ID: <CAKv+Gu_Sqkiz8kZC0ab09kS9+ifBYK9gJObTVC81ts8k+JuNKQ@mail.gmail.com>
-Subject: Re: [PATCH v4 1/2] PCI: pci-host-generic: add support for Synopsys
- DesignWare RC in ECAM mode
+Return-Path: <SRS0=ASJs=BI=intel.com=adrian.hunter@kernel.org>
+Return-Path: <SRS0=ASJs=BI=intel.com=adrian.hunter@kernel.org>
+Subject: Re: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-related
+ host controllers
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Will Deacon <will.deacon@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc: Ulf Hansson <ulf.hansson@linaro.org>,
+ linux-mmc <linux-mmc@vger.kernel.org>, linux-pci
+ <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-acpi <linux-acpi@vger.kernel.org>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <1507294259-20438-1-git-send-email-adrian.hunter@intel.com>
+ <20171006162048.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+From: Adrian Hunter <adrian.hunter@intel.com>
+Message-ID: <ada41e9b-6fb3-82ab-e458-af4942adba2d@intel.com>
+Date: Mon, 9 Oct 2017 11:56:43 +0300
+MIME-Version: 1.0
+In-Reply-To: <20171006162048.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10 October 2017 at 01:13, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Oct 09, 2017 at 05:46:07PM +0100, Will Deacon wrote:
->> On Fri, Oct 06, 2017 at 06:21:59PM -0500, Bjorn Helgaas wrote:
->> > On Fri, Oct 06, 2017 at 05:39:18PM +0100, Ard Biesheuvel wrote:
->> > > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
->> > > index 7d709a7e0aa8..01e81a30e303 100644
->> > > --- a/drivers/pci/host/pci-host-generic.c
->> > > +++ b/drivers/pci/host/pci-host-generic.c
->> > > @@ -35,6 +35,43 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
->> > >   }
->> > >  };
->> > >
->> > > +static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
->> > > +                            int size, u32 *val)
->> > > +{
->> > > + struct pci_config_window *cfg = bus->sysdata;
->> > > +
->> > > + /*
->> > > +  * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
->> > > +  * type 0 config TLPs sent to devices 1 and up on its downstream port,
->> > > +  * resulting in devices appearing multiple times on bus 0 unless we
->> > > +  * filter out those accesses here.
->> > > +  */
->> > > + if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
->> > > +         return PCIBIOS_DEVICE_NOT_FOUND;
->> >
->> > I think we should return 0xffffffff data here, as we do in other
->> > similar accessors (dw_pcie_rd_conf(), altera_pcie_cfg_read(),
->> > rockchip_pcie_rd_conf()).
->> >
->> > Actually, xilinx-nwl has a nice trick: it implements
->> > nwl_pcie_map_bus(), which returns NULL for invalid devices.  Then it
->> > can use the generic accessors, and pci_generic_config_read() already
->> > fills in ~0 for this case.
->> >
->> > What do you think of the following?  I put it on my pci/host-generic
->> > branch for now (pending your response and an ack from Will).
+On 06/10/17 19:20, Bjorn Helgaas wrote:
+> On Fri, Oct 06, 2017 at 03:50:59PM +0300, Adrian Hunter wrote:
+>> The default D3 cold delay of 100 ms can cause pauses when streaming audio
+>> from eMMC.
 >>
->> I'd probably just inline the device check in pci_dw_ecam_map_bus directly,
->> but either way:
+>> Intel BYT-related host controllers do not need PCI D3 delays. Although the
+>> delays can be set to zero via an ACPI _DSM, unfortunately that is not being
+>> used in all cases. So just set the delays to zero in the driver.
 >>
->> Acked-by: Will Deacon <will.deacon@arm.com>
->
-> Thanks.  The reason I split out pci_dw_valid_device() is because there are
-> several other *_valid_device() functions in other drivers that do basically
-> the same thing, and I think it's useful to be able to see that they're all
-> similar, as opposed to being buried in the config accessor or map
-> functions, which vary a little more.
->
->> I'm assuming this is so small that there's no point in having a Kconfig
->> option for these guys that depends on the generic host driver?
->
-> Good question; I don't care either way.
+>> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+>> ---
+>>  drivers/mmc/host/sdhci-pci-core.c | 17 +++++++++++++----
+>>  1 file changed, 13 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/mmc/host/sdhci-pci-core.c b/drivers/mmc/host/sdhci-pci-core.c
+>> index 5f3f7b51299f..14ef99b6e5b7 100644
+>> --- a/drivers/mmc/host/sdhci-pci-core.c
+>> +++ b/drivers/mmc/host/sdhci-pci-core.c
+>> @@ -592,9 +592,18 @@ static void byt_read_dsm(struct sdhci_pci_slot *slot)
+>>  	slot->chip->rpm_retune = intel_host->d3_retune;
+>>  }
+>>  
+>> -static int byt_emmc_probe_slot(struct sdhci_pci_slot *slot)
+>> +static void byt_common_setup(struct sdhci_pci_slot *slot)
+>>  {
+>>  	byt_read_dsm(slot);
+>> +
+>> +	/* PCI D3 delays are not needed */
+>> +	slot->chip->pdev->d3_delay = 0;
+>> +	slot->chip->pdev->d3cold_delay = 0;
+> 
+> The fact that it doesn't need D3 delays sounds like a property of the
+> device itself, regardless of which (if any) driver claims it.
+> 
+> Can this be done as a quirk instead, maybe something in
+> arch/x86/pci/fixup.c?  Maybe quirk_remove_d3_delay() could be used
+> directly, or something like pci_d3_delay_fixup()?
 
-In this case, may I suggest we leave the patch as is? Neither of you
-seem to mind, and it will make /my/ life much easier, given that I
-don't have to chase distros to get this driver enabled in their kernel
-configs (unless we make if 'def_bool y', in which case it makes even
-less sense to add the Kconfig option in the first place).
+A quirk would work, but that would mean setting the quirk for each device
+(28 so far) and then, when we have new ids, adding them there and to the
+driver, so it is more convenient just to do it in the driver.  Certainly,
+this is the only driver we have for these Intel SDHCI PCI host controllers.
