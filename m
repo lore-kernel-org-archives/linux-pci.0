@@ -1,85 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:56130 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751632AbdJLHyl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 03:54:41 -0400
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Pankaj Dubey <pankaj.dubey@samsung.com>
-Subject: [PATCH] PCI: dwc: designware: don't sleep in atomic context
-Date: Thu, 12 Oct 2017 13:24:49 +0530
-Message-id: <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
-References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=o/WW=BI=free-electrons.com=thomas.petazzoni@kernel.org>
+Return-Path: <SRS0=o/WW=BI=free-electrons.com=thomas.petazzoni@kernel.org>
+Date: Mon, 9 Oct 2017 08:54:51 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Jason
+ Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian
+ Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement
+ <gregory.clement@free-electrons.com>, Nadav Haklai <nadavh@marvell.com>,
+ Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>,
+ linux-arm-kernel@lists.infradead.org, Antoine Tenart
+ <antoine.tenart@free-electrons.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
+ <miquel.raynal@free-electrons.com>, Victor Gu <xigu@marvell.com>
+Subject: Re: [PATCH v2 5/7] PCI: aardvark: disable LOS state by default
+Message-ID: <20171009085451.5a6cfbcc@windsurf.lan>
+In-Reply-To: <20171005174607.GS25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
+	<20170928125838.11887-6-thomas.petazzoni@free-electrons.com>
+	<20171005174607.GS25517@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-In pcie-designware.c many places we are calling "usleep_range" which
-are in atomic context. This patch fixes these potential BUGs and
-replaces "usleep_range" with mdelay calls.
+Hello,
 
-Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
----
- drivers/pci/dwc/pcie-designware.c | 8 ++++----
- drivers/pci/dwc/pcie-designware.h | 3 +--
- 2 files changed, 5 insertions(+), 6 deletions(-)
+On Thu, 5 Oct 2017 12:46:07 -0500, Bjorn Helgaas wrote:
 
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 88abddd..35d19b9 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -138,7 +138,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
- 		if (val & PCIE_ATU_ENABLE)
- 			return;
- 
--		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+		mdelay(LINK_WAIT_IATU_MIN);
- 	}
- 	dev_err(pci->dev, "outbound iATU is not being enabled\n");
- }
-@@ -181,7 +181,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 		if (val & PCIE_ATU_ENABLE)
- 			return;
- 
--		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+		mdelay(LINK_WAIT_IATU_MIN);
- 	}
- 	dev_err(pci->dev, "outbound iATU is not being enabled\n");
- }
-@@ -239,7 +239,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
- 		if (val & PCIE_ATU_ENABLE)
- 			return 0;
- 
--		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+		mdelay(LINK_WAIT_IATU_MIN);
- 	}
- 	dev_err(pci->dev, "inbound iATU is not being enabled\n");
- 
-@@ -285,7 +285,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
- 		if (val & PCIE_ATU_ENABLE)
- 			return 0;
- 
--		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+		mdelay(LINK_WAIT_IATU_MIN);
- 	}
- 	dev_err(pci->dev, "inbound iATU is not being enabled\n");
- 
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index e5d9d77..13c17c9 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -28,8 +28,7 @@
- 
- /* Parameters for the waiting for iATU enabled routine */
- #define LINK_WAIT_MAX_IATU_RETRIES	5
--#define LINK_WAIT_IATU_MIN		9000
--#define LINK_WAIT_IATU_MAX		10000
-+#define LINK_WAIT_IATU_MIN		9
- 
- /* Synopsys-specific PCIe configuration registers */
- #define PCIE_PORT_LINK_CONTROL		0x710
+> On Thu, Sep 28, 2017 at 02:58:36PM +0200, Thomas Petazzoni wrote:
+> > From: Victor Gu <xigu@marvell.com>
+> > 
+> > Some PCIe devices do not support LOS, and will cause timeouts if the
+> > root complex forces the LOS state. This patch disables the LOS state
+> > by default.  
+> 
+> Per PCIe r3.1, sec 5.4.1.3, software should not enable L0s in either
+> direction unless both ends support L0s.
+> 
+> I'm unclear on what the bug is here.  Is the generic ASPM code
+> incorrectly enabling L0s when one end doesn't support it?  That seems
+> unlikely, but if so, it should be fixed in the generic ASPM code.
+> 
+> Are both ends advertising L0s support, but there's a hardware erratum
+> on the Aardvark end that keeps it from working correctly?  If so, we
+> should say that explicitly and include a reference to a published
+> hardware erratum.
+> 
+> Something else?
+
+I'll do some more research on this and get back to you.
+
+> > This is part of fixing bug
+> > https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
+> > reported as the user to be important to get a Intel 7260 mini-PCIe
+> > WiFi card working.  
+> 
+> The bugzilla link is a good start, but "reported by the user to be
+> important" is meaningless by itself.  What we need here is the details
+> of what's broken and how this fixes it.  Unfortunately the bugzilla
+> doesn't have those details.
+
+Yes, the issue is that the bug report doesn't have much details, and I
+don't have the specific PCIe card that was used by the bug reporter.
+
+Best regards,
+
+Thomas
 -- 
-2.7.4
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
