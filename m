@@ -1,15 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
- iommu@lists.linux-foundation.org
-Subject: [RFCv2 PATCH 02/36] iommu: Add a process_exit callback for device
- drivers
-Date: Fri,  6 Oct 2017 14:31:29 +0100
-Message-Id: <20171006133203.22803-3-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Message-ID: <1507551771.2745.2.camel@pengutronix.de>
+Subject: Re: [PATCH 0/3] DWC host without MSI controller
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Fabio Estevam <festevam@gmail.com>, Tim Harvey <tharvey@gateworks.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 09 Oct 2017 14:22:51 +0200
+In-Reply-To: <CAOMZO5CLqYx-OyxqrqGjGgRNGoGETM=nt5FF_wQ2bye=nXkFPQ@mail.gmail.com>
+References: <20170828142307.30061-1-l.stach@pengutronix.de>
+ <CAJ+vNU1GZMpptQ2oCE-cOzX+G=cj248bVGXhC_vSqD_4d7D7+Q@mail.gmail.com>
+ <CAOMZO5CLqYx-OyxqrqGjGgRNGoGETM=nt5FF_wQ2bye=nXkFPQ@mail.gmail.com>
+Mime-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,124 +18,61 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, gabriele.paoloni@huawei.com,
- catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- yi.l.liu@intel.com, lorenzo.pieralisi@arm.com, ashok.raj@intel.com,
- tn@semihalf.com, joro@8bytes.org, rfranz@cavium.com, lenb@kernel.org,
- jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, robh+dt@kernel.org,
- thunder.leizhen@huawei.com, bhelgaas@google.com, dwmw2@infradead.org,
- liubo95@huawei.com, rjw@rjwysocki.net, robdclark@gmail.com,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com,
- nwatters@codeaurora.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
+ patchwork-lst@pengutronix.de, Sascha Hauer <kernel@pengutronix.de>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Shawn Guo <shawnguo@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a process exits, we need to ensure that devices attached to it stop
-issuing transactions with its PASID. Let device drivers register a
-callback to be notified on process exit.
-
-At the moment the callback is set on the domain like the fault handler,
-because we don't have a structure available for IOMMU masters. This can
-become problematic if different devices in a domain are managed by
-distinct device drivers (for example multiple devices in the same group).
-The problem is the same for the fault handler, so we'll probably fix them
-all at once.
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/iommu-process.c | 31 +++++++++++++++++++++++++++++++
- include/linux/iommu.h         | 19 +++++++++++++++++++
- 2 files changed, 50 insertions(+)
-
-diff --git a/drivers/iommu/iommu-process.c b/drivers/iommu/iommu-process.c
-index a7e5a1c94305..61ca0bd707c0 100644
---- a/drivers/iommu/iommu-process.c
-+++ b/drivers/iommu/iommu-process.c
-@@ -223,3 +223,34 @@ static void iommu_process_detach_locked(struct iommu_context *context,
- 	if (last)
- 		iommu_context_free(context);
- }
-+
-+/**
-+ * iommu_set_process_exit_handler() - set a callback for stopping the use of
-+ * PASID in a device.
-+ * @dev: the device
-+ * @handler: exit handler
-+ * @token: user data, will be passed back to the exit handler
-+ *
-+ * Users of the bind/unbind API should call this function to set a
-+ * device-specific callback telling them when a process is exiting.
-+ *
-+ * After the callback returns, the device must not issue any more transaction
-+ * with the PASIDs given as argument to the handler. It can be a single PASID
-+ * value or the special IOMMU_PROCESS_EXIT_ALL.
-+ *
-+ * The handler itself should return 0 on success, and an appropriate error code
-+ * otherwise.
-+ */
-+void iommu_set_process_exit_handler(struct device *dev,
-+				    iommu_process_exit_handler_t handler,
-+				    void *token)
-+{
-+	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-+
-+	if (WARN_ON(!domain))
-+		return;
-+
-+	domain->process_exit = handler;
-+	domain->process_exit_token = token;
-+}
-+EXPORT_SYMBOL_GPL(iommu_set_process_exit_handler);
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 3978dc094706..8d74f9058f30 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -56,6 +56,11 @@ struct notifier_block;
- typedef int (*iommu_fault_handler_t)(struct iommu_domain *,
- 			struct device *, unsigned long, int, void *);
- 
-+/* All process are being detached from this device */
-+#define IOMMU_PROCESS_EXIT_ALL			(-1)
-+typedef int (*iommu_process_exit_handler_t)(struct iommu_domain *, struct device *dev,
-+					    int pasid, void *);
-+
- struct iommu_domain_geometry {
- 	dma_addr_t aperture_start; /* First address that can be mapped    */
- 	dma_addr_t aperture_end;   /* Last address that can be mapped     */
-@@ -92,6 +97,8 @@ struct iommu_domain {
- 	unsigned long pgsize_bitmap;	/* Bitmap of page sizes in use */
- 	iommu_fault_handler_t handler;
- 	void *handler_token;
-+	iommu_process_exit_handler_t process_exit;
-+	void *process_exit_token;
- 	struct iommu_domain_geometry geometry;
- 	void *iova_cookie;
- 
-@@ -722,4 +729,16 @@ const struct iommu_ops *iommu_ops_from_fwnode(struct fwnode_handle *fwnode)
- 
- #endif /* CONFIG_IOMMU_API */
- 
-+#ifdef CONFIG_IOMMU_PROCESS
-+extern void iommu_set_process_exit_handler(struct device *dev,
-+					   iommu_process_exit_handler_t cb,
-+					   void *token);
-+#else /* CONFIG_IOMMU_PROCESS */
-+static inline void iommu_set_process_exit_handler(struct device *dev,
-+						  iommu_process_exit_handler_t cb,
-+						  void *token)
-+{
-+}
-+#endif /* CONFIG_IOMMU_PROCESS */
-+
- #endif /* __LINUX_IOMMU_H */
--- 
-2.13.3
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGkgRmFiaW8sCgpBbSBNb250YWcsIGRlbiAwOS4xMC4yMDE3LCAwOToxNCAtMDMwMCBzY2hyaWVi
+IEZhYmlvIEVzdGV2YW06Cj4gSGkgQmpvcm4sCj4gCj4gT24gTW9uLCBBdWcgMjgsIDIwMTcgYXQg
+MTo1OSBQTSwgVGltIEhhcnZleSA8dGhhcnZleUBnYXRld29ya3MuY29tPgo+IHdyb3RlOgo+ID4g
+T24gTW9uLCBBdWcgMjgsIDIwMTcgYXQgNzoyMyBBTSwgTHVjYXMgU3RhY2ggPGwuc3RhY2hAcGVu
+Z3V0cm9uaXguZAo+ID4gZT4gd3JvdGU6Cj4gPiA+IEhpIGFsbCwKPiA+ID4gCj4gPiA+IHRoaXMg
+c21hbGwgc2VyaWVzIHRyaWVzIHRvIGZpeC93b3JrYXJvdW5kIGEgc2VyaW91cyBkZXNpZ24gZmxh
+dwo+ID4gPiBvZiB0aGUgRFdDIFBDSWUKPiA+ID4gaG9zdCBjb250cm9sbGVyOiBpdCBpcyB1bmFi
+bGUgdG8gd29yayB3aXRoIGJvdGggbGVnYWN5IGFuZCBNU0kKPiA+ID4gSVJRcyBlbmFibGVkIGF0
+Cj4gPiA+IHRoZSBzYW1lIHRpbWUuIEFzIHNvb24gYXMgdGhlIGZpcnN0IE1TSSBpcyBlbmFibGVk
+IGluIHRoZSBEV0MgTVNJCj4gPiA+IGNvbnRyb2xsZXIsCj4gPiA+IHRoZSBob3N0IHN0b3BzIGZv
+cndhcmRpbmcgbGVnYWN5IElSUXMuCj4gPiA+IAo+ID4gPiBJZiB0aGUgTVNJIGNvbnRyb2xsZXIg
+aXMgcHJlc2VudCwgTVNJcyB3aWxsIGJlIHVzZWQgZm9yIHRoZSBQQ0llCj4gPiA+IHBvcnQgc2Vy
+dmljZXMKPiA+ID4gSVJRcywgbGVhdmluZyBlbmRwb2ludCBkZXZpY2VzIHdoaWNoIGRvbid0IHN1
+cHBvcnQgTVNJcyB1bmFibGUgdG8KPiA+ID4gcmFpc2UgSVJRcy4KPiA+ID4gSXQgaXMgb25seSBz
+YWZlIHRvIGVuYWJsZSB0aGUgTVNJIGNvbnRyb2xsZXIgaWYgaXQgaXMgdmFsaWRhdGVkCj4gPiA+
+IHRoYXQgYWxsIFBDSWUKPiA+ID4gZGV2aWNlcyBhbmQgZHJpdmVycyBpbiB0aGUgc3lzdGVtIHN1
+cHBvcnQgd29ya2luZyBNU0lzLiBBcyBtb3N0Cj4gPiA+IGRldmljZXMKPiA+ID4gc3VwcG9ydCBm
+YWxsaW5nIGJhY2sgdG8gdXNpbmcgbGVnYWN5IFBDSWUgSVJRcyBpZiBNU0kgc3VwcG9ydCBpcwo+
+ID4gPiBtaXNzaW5nIGl0IGlzCj4gPiA+IG11Y2ggc2FmZXIgdG8gZGlzYWJsZSB0aGUgTVNJIGJ5
+IGRlZmF1bHQgYW5kIG9ubHkgZW5hYmxlIGl0IG9uCj4gPiA+IHZhbGlkYXRlZAo+ID4gPiBzeXN0
+ZW1zLgo+ID4gPiAKPiA+ID4gRmVlZGJhY2sgd2VsY29tZS4KPiA+ID4gCj4gPiA+IFJlZ2FyZHMs
+Cj4gPiA+IEx1Y2FzCj4gPiA+IAo+ID4gPiBMdWNhcyBTdGFjaCAoMyk6Cj4gPiA+IMKgIFBDSTog
+ZGVzaWdud2FyZTogb25seSByZWdpc3RlciBNU0kgY29udHJvbGxlciB3aGVuIE1TSSBpcnEgbGlu
+ZQo+ID4gPiBpcwo+ID4gPiDCoMKgwqDCoHZhbGlkCj4gPiA+IMKgIFBDSTogaW14NjogYWxsb3cg
+TVNJIGlycSB0byBiZSBhYnNlbnQKPiA+ID4gwqAgQVJNOiBkdHM6IGlteDZxZGw6IHJlbW92ZSBN
+U0kgaXJxIGxpbmUKPiA+ID4gCj4gPiA+IMKgLi4uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2Zz
+bCxpbXg2cS1wY2llLnR4dMKgwqDCoMKgwqB8wqDCoDggKysrKy0tLS0KPiA+ID4gwqBhcmNoL2Fy
+bS9ib290L2R0cy9pbXg2cWRsLmR0c2nCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqB8wqDCoDIgLS0KPiA+ID4gwqBkcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuY8KgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfCAyMwo+ID4gPiAr
+KysrKysrKysrKy0tLS0tLS0tLS0tCj4gPiA+IMKgZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdu
+d2FyZS1ob3N0LmPCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHzCoMKgNCArKy0tCj4gPiA+IMKg
+NCBmaWxlcyBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCspLCAyMCBkZWxldGlvbnMoLSkKPiA+ID4g
+Cj4gPiAKPiA+IEx1Y2FzLAo+ID4gCj4gPiBUaGFuayB5b3UgZm9yIGZvbGxvd2luZyB1cCBvbiB0
+aGlzIQo+ID4gCj4gPiBJIHRlc3RlZCBpdCB3aXRoIGFuZCB3aXRob3V0IHRoZSB0aGlyZCBwYXRj
+aCB0aGF0IHJlbW92ZXMgbXNpIGZyb20KPiA+IHRoZQo+ID4gZHQgdGh1cyB3aXRoIGJvdGggYW4g
+YXRoOWsgODAyLjExIGRldmljZSB3aGljaCBvbmx5IHN1cHBvcnRzIGxlZ2FjeQo+ID4gaW50ZXJy
+dXB0cyBhbmQgYSBNYXJ2ZWxsIHNreTIgZGV2aWNlIHdoaWNoIHN1cHBvcnRzIG1zaSBhcyB3ZWxs
+IGFzCj4gPiBsZWdhY3kgaW50ZXJydXB0cyBhbmQgaXQgd29ya3MgYXMgZXhwZWN0ZWQ6Cj4gPiDC
+oC0gd2l0aG91dCBtc2kgZW5hYmxlZCBpbiBkdHMgKGRlZmF1bHQpOiBib3RoIHNreTIgYW5kIGF0
+aDlrIHdvcmsKPiA+IMKgLSB3aXRoIG1zaSBlbmFibGVkIGluIGR0OiBza3kyIHdvcmtzIGF0aDlr
+IGRvZXMgbm90Cj4gPiAKPiA+IFRlc3RlZC1ieTogVGltIEhhcnZleSA8dGhhcnZleUBnYXRld29y
+a3MuY29tPgo+IAo+IEFueSBjb21tZW50cyBhYm91dCB0aGlzIHNlcmllcz8KCkJqb3JuIGFscmVh
+ZHkgY29tbWVudGVkIG9uIHRoZSBzZXJpZXMgYW5kIEknbSB0cnlpbmcgZnJlZSB1cCBhIHNsb3Qg
+dG8KYWRkcmVzcyB0aGUgZmVlZGJhY2suCgpSZWdhcmRzLApMdWNhcwoKX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5n
+IGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5p
+bmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
