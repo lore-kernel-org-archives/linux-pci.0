@@ -1,105 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0080.outbound.protection.outlook.com ([104.47.34.80]:12983
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752688AbdJTKog (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Oct 2017 06:44:36 -0400
-Date: Fri, 20 Oct 2017 03:44:29 -0700
-From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
-        Wilson.Snyder@cavium.com, robert.richter@cavium.com,
-        david.daney@cavium.com, mjaggi@caviumnetworks.com,
-        Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-Subject: Re: [PATCH v7 0/2] PCI: quirks: Cavium ThunderX ACS quirk update
-Message-ID: <20171020104429.GA7898@localhost.localdomain>
-References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <20171019112645.GD6332@bhelgaas-glaptop.roam.corp.google.com>
- <20171019115921.GA6199@localhost.localdomain>
- <20171019185010.GE6332@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFCv2 PATCH 00/36] Process management for IOMMU + SVM for SMMUv3
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <iommu@lists.linux-foundation.org>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <0c6778d8-741f-0db7-fe3c-df88a75ebbb2@huawei.com>
+Date: Mon, 9 Oct 2017 17:49:52 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171019185010.GE6332@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, catalin.marinas@arm.com,
+ will.deacon@arm.com, okaya@codeaurora.org, yi.l.liu@intel.com,
+ lorenzo.pieralisi@arm.com, ashok.raj@intel.com, tn@semihalf.com,
+ joro@8bytes.org, rfranz@cavium.com, lenb@kernel.org,
+ jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, robh+dt@kernel.org,
+ thunder.leizhen@huawei.com, bhelgaas@google.com, dwmw2@infradead.org,
+ liubo95@huawei.com, rjw@rjwysocki.net, robdclark@gmail.com,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com,
+ nwatters@codeaurora.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 19, 2017 at 01:50:10PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 19, 2017 at 04:59:21AM -0700, Vadim Lomovtsev wrote:
-> > On Thu, Oct 19, 2017 at 06:26:45AM -0500, Bjorn Helgaas wrote:
-> > > On Tue, Oct 17, 2017 at 05:47:37AM -0700, Vadim Lomovtsev wrote:
-> > > > From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-> > > > 
-> > > > version 7:
-> > > > - update patch description accordingly to review comments;
-> > > > - split for two patches: for ACS mask change and device id match change;
-> > > > - remove macro #define of ACS flags, put it back to quirk function;
-> > > > - remove '__inline_' from device id matching function;
-> > > > - wrap code comments to fit into 80 columns;
-> > > > - comment fix: change 0xa00 to 0xf800 for matching function description;
-> > > > 
-> > > > version 6:
-> > > > - comment typo fix: change 0xa00 to 0xa000;
-> > > > 
-> > > > version 5:
-> > > > - update code comments accordingly to review comments;
-> > > > 
-> > > > version 4:
-> > > > - update ACS mask (remove TB and TD bits), update commit message (remove
-> > > >   ACS register printout);
-> > > > 
-> > > > version 3:
-> > > > - update subject: remove CN8XXX from subject line, replace it with ThunderX;
-> > > > 
-> > > > version 2:
-> > > > - update match function in order to filter only ThunderX devices by device
-> > > >   ids to properly filter CN8XXX devices, update subject & description with
-> > > >   ACS register info (v2 was rejected by maillist due to triple X in subject);
-> > > >   
-> > > > Vadim Lomovtsev (2):
-> > > >   PCI: quirks: Set Cavium ACS capability quirk flags to assert
-> > > >     RR/CR/SV/UF.
-> > > >   PCI: quirks: Apply Cavium ThunderX ACS quirk only to Root Ports
-> > > > 
-> > > >  drivers/pci/quirks.c | 26 ++++++++++++++++++++------
-> > > >  1 file changed, 20 insertions(+), 6 deletions(-)
-> > > 
-> > > If I'm reading this correctly, the first patch is basically fixing a bug in
-> > > the original Cavium ACS quirk (b404bcfbf035 ("PCI: Add ACS quirk for all
-> > > Cavium devices")).  Right?
-> > 
-> > Yes, first patch fixes improper ACS flags in the patch you mentioned.
-> > 
-> > The second one fixes devid check from another patch
-> > (b77d537d00d0 PCI: Apply Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices).
-> > 
-> > > 
-> > > I put them on pci/virtualization for v4.15 as follows (patches unchanged,
-> > > changelogs wordsmithed).
-> > >
-> > 
-> > Good, thank you.
-> > 
-> > > You mentioned stable backports.  b404bcfbf035 ("PCI: Add ACS quirk for all
-> > > Cavium devices") appeared in v4.6.  b77d537d00d0 ("PCI: Apply Cavium ACS
-> > > quirk only to CN81xx/CN83xx/CN88xx devices") appeared in v4.12.  I assume
-> > > you would ideally want all this backported as far as v4.6?  We'd have to
-> > > figure out how to express that in stable tags.
-> > 
-> > Ideally yes, I think we would need to have them backported onto stable(s),
-> > but so far I didn't see any bug-reports which could require these fixes.
-> > 
-> > Anyway, in term of backporting them - are there anything I can help with ?
-> 
-> I added the following tags, which I *think* should be sufficient:
-> 
->   PCI: Set Cavium ACS capability quirk flags to assert RR/CR/SV/UF
->   Cc: stable@vger.kernel.org      # v4.6+: b77d537d00d0: PCI: Apply Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices
-> 
->   PCI: Apply Cavium ThunderX ACS quirk to more Root Ports
->   Cc: stable@vger.kernel.org      # v4.12+
+Hi Jean,
 
-Looks good. Thank you.
+On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
+> Following discussions at plumbers and elsewhere, it seems like we need to
+> unify some of the Shared Virtual Memory (SVM) code, in order to define
+> clear semantics for the SVM API.
+> 
+> My previous RFC [1] was centered on the SMMUv3, but some of this code will
+> need to be reused by the SMMUv2 and virtio-iommu drivers. This second
+> proposal focuses on abstracting a little more into the core IOMMU API, and
+> also trying to find common ground for all SVM-capable IOMMUs.
+> 
+> SVM is, in the context of the IOMMU, sharing page tables between a process
+> and a device. Traditionally it requires IO Page Fault and Process Address
+> Space ID capabilities in device and IOMMU.
+> 
+> * A device driver can bind a process to a device, with iommu_process_bind.
+>   Internally we hold on to the mm and get notified of its activity with an
+>   mmu_notifier. The bond is removed by exit_mm, by a call to
+>   iommu_process_unbind or iommu_detach_device.
+> 
+> * iommu_process_bind returns a 20-bit PASID (PCI terminology) to the
+>   device driver, which programs it into the device to access the process
+>   address space.
+> 
+> * The device and the IOMMU support recoverable page faults. This can be
+>   either ATS+PRI for PCI, or platform-specific mechanisms such as Stall
+>   for SMMU.
+> 
+> Ideally systems wanting to use SVM have to support these three features,
+> but in practice we'll see implementations supporting just a subset of
+> them, especially in validation environments. So even if this particular
+> patchset assumes all three capabilities, it should also be possible to
+> support PASID without IOPF (by pinning everything, see non-system SVM in
+> OpenCL)
+How to pin everything? If user malloc anything we should pin it. It should
+from user or driver?
 
--Vadim
+> , or IOPF without PASID (sharing the single device address space
+> with a process, could be useful for DPDK+VFIO).
+> 
+> Implementing both these cases would enable PT sharing alone. Some people
+> would also like IOPF alone without SVM (covered by this series) or process
+> management without shared PT (not covered). Using these features
+> individually is also important for testing, as SVM is in its infancy and
+> providing easy ways to test is essential to reduce the number of quirks
+> down the line.
+> 
+>   Process management
+>   ==================
+> 
+> The first part of this series introduces boilerplate code for managing
+> PASIDs and processes bound to devices. It's something any IOMMU driver
+> that wants to support bind/unbind will have to do, and it is difficult to
+> get right.
+> 
+> Patches
+> 1: iommu_process and PASID allocation, attach and release
+> 2: process_exit callback for device drivers
+> 3: iommu_process search by PASID
+> 4: track process changes with an MMU notifiers
+> 5: bind and unbind operations
+> 
+> My proposal uses the following model:
+> 
+> * The PASID space is system-wide. This means that a Linux process will
+>   have a single PASID. I introduce the iommu_process structure and a
+>   global IDR to manage this.
+> 
+> * An iommu_process can be bound to multiple domains, and a domain can have
+>   multiple iommu_process.
+when bind a task to device, can we create a single domain for it? I am thinking
+about process management without shared PT(for some device only support PASID
+without pri ability), it seems hard to expand if a domain have multiple iommu_process?
+Do you have any idea about this?
+
+> 
+> * IOMMU groups share same PASID table. IOMMU groups are a convenient way
+>   to cover various hardware weaknesses that prevent a group of device to
+>   be isolated by the IOMMU (untrusted bridge, for instance). It's foolish
+>   to assume that all PASID implementations will perfectly isolate devices
+>   within a bus and functions within a device, so let's assume all devices
+>   within an IOMMU group have to share PASID traffic as well. In general
+>   there will be a single device per group.
+> 
+> * It's up to the driver implementation to decide where to implement the
+>   PASID tables. For SMMU it's more convenient to have a single PASID table
+>   per domain. And I think the model fits better with the existing IOMMU
+>   API: IOVA traffic is shared by all devices in a domain, so should PASID
+>   traffic.
+What's the meaning of "share PASID traffic"? PASID space is system-wide,
+and a domain can have multiple iommu_process , so a domain can have multiple
+PASIDs , one PASID for a iommu_process, right?
+
+Yisheng Xie
+Thanks
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
