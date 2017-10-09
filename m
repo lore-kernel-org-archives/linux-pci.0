@@ -1,78 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:42958 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751772AbdJ3Mmq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:42:46 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 04/17] PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
-Date: Mon, 30 Oct 2017 13:42:07 +0100
-Message-Id: <20171030124221.20690-5-niklas.cassel@axis.com>
-In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 9 Oct 2017 12:15:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie,
+        bhelgaas@google.com, forest@alittletooquiet.net,
+        gregkh@linuxfoundation.org, simon@nikanor.nu, scott@matheina.com,
+        tvboxspy@gmail.com, dan.a.cashman@gmail.com,
+        golubev.mikhail@gmail.com, devel@driverdev.osuosl.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH] pci: Fix a possible sleep-in-atomic bug in
+ pci_set_power_state
+Message-ID: <20171009171517.GL25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1507536980-9345-1-git-send-email-baijiaju1990@163.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1507536980-9345-1-git-send-email-baijiaju1990@163.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain SoCs need to map the MSI address in raise_irq.
-To map an address, you first need to call pci_epc_mem_alloc_addr,
-however, pci_epc_mem_alloc_addr calls ioremap (which can sleep).
+[+cc Rafael, linux-pm]
 
-Since raise_irq is only called from atomic context, we can't call
-pci_epc_mem_alloc_addr from raise_irq, instead we pre-allocate
-a page in dw_pcie_ep_init, so this page can later be used to map/unmap
-the MSI address in raise_irq.
+Hi Jia-Ju,
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V2:
-* No change.
+On Mon, Oct 09, 2017 at 04:16:20PM +0800, Jia-Ju Bai wrote:
+> The drivers vt6655 and gma500 call pci_set_power_state under a spinlock, which may sleep.
+> The function call paths are:
+> gma_power_begin (acquire the spinlock) (drivers/gpu/drm/gma500/power.c)
+>   gma_resume_pci
+>     pci_set_power_state
+>       __pci_start_power_transition (drivers/pci/pci.c)
+>         msleep --> may sleep
+> 
+> gma_power_begin (acquire the spinlock) (drivers/gpu/drm/gma500/power.c)
+>   gma_resume_pci
+>     pci_enable_device
+>       pci_enable_device_flags (drivers/pci/pci.c)
+>         do_pci_enable_device
+>           pci_set_power_state
+>             __pci_start_power_transition
+>               msleep --> may sleep
+> 
+> vt6655_suspend (acquire the spinlock) (drivers/staging/vt6655/device_main.c)
+>   pci_set_power_state
+>     __pci_start_power_transition (drivers/pci/pci.c)
+>       msleep --> may sleep
+> 
+> To fix these bugs, msleep is replaced with mdelay in __pci_start_power_transition
+> 
+> These bugs are found by my static analysis tool and my code review.
 
- drivers/pci/dwc/pcie-designware-ep.c | 8 ++++++++
- drivers/pci/dwc/pcie-designware.h    | 2 ++
- 2 files changed, 10 insertions(+)
+We can either
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 3fb34be99715..c291da2a10ba 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -286,6 +286,8 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- 	struct pci_epc *epc = ep->epc;
- 
-+	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem, PAGE_SIZE);
-+
- 	pci_epc_mem_exit(epc);
- }
- 
-@@ -341,6 +343,12 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		return ret;
- 	}
- 
-+	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys, PAGE_SIZE);
-+	if (!ep->msi_mem) {
-+		dev_err(dev, "Failed to reserve memory for MSI\n");
-+		return -ENOMEM;
-+	}
-+
- 	ep->epc = epc;
- 	epc_set_drvdata(epc, ep);
- 	dw_pcie_setup(pci);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 9aaf0cd04dd6..5a1da459eda5 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -198,6 +198,8 @@ struct dw_pcie_ep {
- 	unsigned long		ob_window_map;
- 	u32			num_ib_windows;
- 	u32			num_ob_windows;
-+	void __iomem		*msi_mem;
-+	phys_addr_t		msi_mem_phys;
- };
- 
- struct dw_pcie_ops {
--- 
-2.14.2
+  - change pci_set_power_state() so it can be called while holding a
+    spinlock (as this patch does), or
+    
+  - change the drivers so they don't hold the spinlock while calling 
+    pci_set_power_state().
+
+I think the latter is better because d3cold_delay is typically 100ms,
+and that's a long time to spin with interrupts disabled.
+
+I assume it's easy to produce an actual failure here?  Why haven't we
+seen bug reports about this?
+
+Bjorn
+
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+> ---
+>  drivers/pci/pci.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6078dfc..7b763a3 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -823,7 +823,7 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
+>  		 */
+>  		if (dev->runtime_d3cold) {
+>  			if (dev->d3cold_delay)
+> -				msleep(dev->d3cold_delay);
+> +				mdelay(dev->d3cold_delay);
+>  			/*
+>  			 * When powering on a bridge from D3cold, the
+>  			 * whole hierarchy may be powered on into
+> -- 
+> 1.7.9.5
+> 
+> 
