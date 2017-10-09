@@ -1,49 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 17 Oct 2017 15:26:41 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 01/12] PM / core: Add NEVER_SKIP and SMART_PREPARE driver
- flags
-Message-ID: <20171017132641.GD25683@kroah.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
- <1998650.Q52BuGQTI4@aspire.rjw.lan>
- <20171016063122.GB28732@kroah.com>
- <1545766.cfb3OTroPT@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0060.outbound.protection.outlook.com ([104.47.34.60]:31451
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754942AbdJIQPA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 9 Oct 2017 12:15:00 -0400
+Date: Mon, 9 Oct 2017 09:14:54 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Wilson.Snyder@cavium.com, vadim.lomovtsev@cavium.com,
+        jcm@redhat.com, alex.williamson@redhat.com
+Subject: Re: [PATCH v6] PCI: quirks: update Cavium ThunderX ACS quirk
+ implementation
+Message-ID: <20171009161454.GA20316@localhost.localdomain>
+References: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170927141854.2ff65c73@w520.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1545766.cfb3OTroPT@aspire.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170927141854.2ff65c73@w520.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 12:07:37AM +0200, Rafael J. Wysocki wrote:
-> On Monday, October 16, 2017 8:31:22 AM CEST Greg Kroah-Hartman wrote:
-> > On Mon, Oct 16, 2017 at 03:29:02AM +0200, Rafael J. Wysocki wrote:
-> > > +static inline void dev_pm_set_driver_flags(struct device *dev, unsigned int flags)
-> > > +{
-> > > +	dev->power.driver_flags = flags;
-> > > +}
-> > 
-> > Should this function just set the specific bit?  Or is it going to be ok
-> > to set the whole value, meaning you aren't going to care about turning
-> > on and off specific flags over the lifetime of the driver/device, you
-> > are just going to set them once and then just test them as needed?
-> 
-> The idea is to set them once and they should not be touched again until
-> the driver (or device) goes away, so that would be the whole value at once
-> (and one of the i2c-designware-platdrv patches actually sets multiple flags
-> in one go).
+Hi Bjorn,
 
-Ok, thanks.
+Would you please consider to take this patch ?
+It is required to provide correct ACS mask for CN8xxx PCI root ports.
+
+WBR,
+Vadim
+
+On Wed, Sep 27, 2017 at 02:18:54PM -0600, Alex Williamson wrote:
+> On Wed, 27 Sep 2017 11:20:39 -0700
+> Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com> wrote:
+> 
+> > This commit makes Cavium PCI ACS quirk applicable only to Cavium
+> > ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
+> > in terms of no ACS support advertisement. However, the RTL internally
+> > implements similar protection as if ACS had completion/request redirection,
+> > upstream forwarding and validation features enabled.
+> > 
+> > Current quirk implementation doesn't take into account PCIERCs which
+> > also needs to be quirked. So the pci device id check mask is updated
+> > and check of device ID moved into separate function.
+> > 
+> > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> > ---
+> > 	v5 -> v6: comment typo fix: change 0xa00 to 0xa000
+> 
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+> 
+>  
+> >  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
+> >  1 file changed, 21 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index a4d3361..ed6c76d 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+> >  #endif
+> >  }
+> >  
+> > -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +/*
+> > + * The Cavium downstream ports doesn't advertise their ACS capability registers.
+> > + * However, the RTL internally implements similar protection as if
+> > + * ACS had completion redirection, forwarding and validation features enabled.
+> > + * So by this flags we're asserting that the hardware implements and
+> > + * enables equivalent ACS functionality for these flags.
+> > + */
+> > +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
+> > +
+> > +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+> >  {
+> >  	/*
+> > -	 * Cavium devices matching this quirk do not perform peer-to-peer
+> > -	 * with other functions, allowing masking out these bits as if they
+> > -	 * were unimplemented in the ACS capability.
+> > +	 * Effectively selects all downstream ports for whole ThunderX 1 family
+> > +	 * by 0xa000 mask (which represents 8 SoCs), while the lower bits of device ID
+> > +	 * are used to indicate which subdevice is used within the SoC.
+> >  	 */
+> > -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> > -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> > +	return (pci_is_pcie(dev) &&
+> > +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
+> > +		((dev->device & 0xf800) == 0xa000));
+> > +}
+> >  
+> > -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+> > +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +{
+> > +	if (!pci_quirk_cavium_acs_match(dev))
+> >  		return -ENOTTY;
+> >  
+> > -	return acs_flags ? 0 : 1;
+> > +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+> >  }
+> >  
+> >  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+> 
