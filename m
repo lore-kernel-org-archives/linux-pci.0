@@ -1,72 +1,39 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 12/12] PM / core: Add AVOID_RPM driver flag
-Date: Tue, 17 Oct 2017 17:59:23 +0200
-Message-ID: <2493317.bKYzDQ0iOo@aspire.rjw.lan>
-In-Reply-To: <1508254397.16112.481.camel@linux.intel.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2517917.TZ0hdc7mRJ@aspire.rjw.lan> <1508254397.16112.481.camel@linux.intel.com>
+Return-Path: <SRS0=tsZr=BI=gmail.com=ibmirkin@kernel.org>
+Return-Path: <SRS0=tsZr=BI=gmail.com=ibmirkin@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: ibmirkin@gmail.com
+From: Ilia Mirkin <imirkin@alum.mit.edu>
+Date: Mon, 9 Oct 2017 10:41:38 -0400
+Message-ID: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
+Subject: Dynamically adding a PCI subfunction
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Ben Skeggs <bskeggs@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 17, 2017 5:33:17 PM CEST Andy Shevchenko wrote:
-> On Mon, 2017-10-16 at 03:32 +0200, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Define and document a new driver flag, DPM_FLAG_AVOID_RPM, to inform
-> > the PM core and middle layer code that the driver has something
-> > significant to do in its ->suspend and/or ->resume callbacks and
-> > runtime PM should be disabled for the device when these callbacks
-> > run.
-> > 
-> > Setting DPM_FLAG_AVOID_RPM (in addition to DPM_FLAG_SMART_SUSPEND)
-> > causes runtime PM to be disabled for the device before invoking the
-> > driver's ->suspend callback for it and to be enabled again for it
-> > only after the driver's ->resume callback has returned.  In addition
-> > to that, if the device is in runtime suspend right after disabling
-> > runtime PM for it (which means that there was no reason to resume it
-> > from runtime suspend beforehand), the invocation of the ->suspend
-> > callback will be skipped for it and it will be left in runtime
-> > suspend until the "noirq" phase of the subsequent system resume.
-> > 
-> > If DPM_FLAG_SMART_SUSPEND is not set, DPM_FLAG_AVOID_RPM has no
-> > effect.
-> > 
-> 
-> > +	if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
-> > +	    dev_pm_test_driver_flags(dev, DPM_FLAG_AVOID_RPM)) {
-> 
-> Wasn't interface designed to allow something like:
-> 	if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND | DPM_FLAG_AVOID_RPM)) {
-> instead?
+Hello,
 
-That would return true if any of them was set and both are needed here.
+As a bit of background, all NVIDIA GPUs since GT215 have an audio
+subfunction for HDMI(/DP) audio to be sent to the sink. This generally
+works.
 
-> Does it make sense to have a separate definition for
-> DPM_FLAG_SMART_SUSPEND | DPM_FLAG_AVOID_RPM ?
+However some, especially laptop, devices come up with that function
+disabled. We have a quirk to enable it when coming back from runpm,
+but that doesn't help the init case. Basically we have to write a bit
+to the PCI config space:
 
-Yes, it does IMO, because if you don't provide ->suspend and ->resume
-callbacks, it is sufficient if runtime PM is disabled for the device
-in __device_suspend_late() which happens anyway.
+https://github.com/torvalds/linux/blob/v4.12/drivers/gpu/drm/nouveau/nouveau_drm.c#L783
 
-DPM_FLAG_AVOID_RPM is about disabling it earlier.
+(MMIO 0x88000 is an alias for the PCI config space)
+
+This works for runtime pm resume, since the device was originally
+there and we just have to make sure the underlying device agrees with
+it, but when it's missing on boot, we have to convince linux that it
+exists, bind a driver, etc.
+
+What's the best way of going about doing that?
 
 Thanks,
-Rafael
 
-
+  -ilia
