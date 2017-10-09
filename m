@@ -1,43 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [PATCH v6 2/3] dt-bindings: PCI: Add definition of pcie wake irq
-Date: Sat, 14 Oct 2017 03:50:57 +0800
-Message-Id: <20171013195059.23865-3-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171013195059.23865-1-jeffy.chen@rock-chips.com>
-References: <20171013195059.23865-1-jeffy.chen@rock-chips.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:36561 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754200AbdJIQU0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Oct 2017 12:20:26 -0400
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Krzysztof Kozlowski'" <krzk@kernel.org>,
+        "'Pankaj Dubey'" <pankaj.dubey@samsung.com>
+Cc: "'linux-pci'" <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'Anvesh Salveru'" <anvesh.s@samsung.com>
+References: <CGME20171009141438epcas2p4ead7e2f2d1af7e0950f2c026e3a9943b@epcas2p4.samsung.com> <1507558478-3218-1-git-send-email-pankaj.dubey@samsung.com> <CAJKOXPeC=cS2cvAXHrKuK5F4tEqH6PppwYkxC+Z8+5D--48CAg@mail.gmail.com>
+In-Reply-To: <CAJKOXPeC=cS2cvAXHrKuK5F4tEqH6PppwYkxC+Z8+5D--48CAg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: exynos: remove redundant code in exynos_pcie_establish_link
+Date: Mon, 9 Oct 2017 12:20:23 -0400
+Message-ID: <000a01d3411a$82eea770$88cbf650$@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add an optional interrupt for PCIE_WAKE pin.
+On Monday, October 9, 2017 10:44 AM, Krzysztof Kozlowski wrote:
+> 
+> On Mon, Oct 9, 2017 at 4:14 PM, Pankaj Dubey <pankaj.dubey@samsung.com>
+> wrote:
+> > From: Anvesh Salveru <anvesh.s@samsung.com>
+> >
+> > In exynos_pcie_establish_link if driver is not using generic phy,
+> > we are resetting PHY twice, which is redundant, so this patch removes
+> 
+> Hi Pankaj,
+> 
+> This lacks the information why it is redundant.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+(I resend this mail, because email address of pci list was corrupted.)
 
-Changes in v6: None
-Changes in v5:
-Move to pci.txt
+I think so, too.
 
-Changes in v3: None
-Changes in v2: None
+Did you test this code on some boards with Exynos PCIe?
+Or did hardware engineers confirm this?
+Please add more information on this patch.
 
- Documentation/devicetree/bindings/pci/pci.txt | 2 ++
- 1 file changed, 2 insertions(+)
+Best regards,
+Jingoo Han
 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index c77981c5dd18..5ae3a9e0134d 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,3 +24,5 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
-+- interrupts: Interrupt specifier for each name in interrupt-names.
-+- interrupt-names: May contains "wakeup" for PCI WAKE# interrupt.
--- 
-2.11.0
+> 
+> > repeated lines of code for PHY reset.
+> >
+> > Signed-off-by: Anvesh Salveru <anvesh.s@samsung.com>
+> 
+> Your Signed-off-by is needed here.
+> 
+> Best regards,
+> Krzysztof
+> 
+> > ---
+> >  drivers/pci/dwc/pci-exynos.c | 7 -------
+> >  1 file changed, 7 deletions(-)
+> >
+> > diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+> > index 5596fde..85d2f4b 100644
+> > --- a/drivers/pci/dwc/pci-exynos.c
+> > +++ b/drivers/pci/dwc/pci-exynos.c
+> > @@ -423,13 +423,6 @@ static int exynos_pcie_establish_link(struct
+> exynos_pcie *ep)
+> >                 exynos_pcie_deassert_phy_reset(ep);
+> >                 exynos_pcie_power_on_phy(ep);
+> >                 exynos_pcie_init_phy(ep);
+> > -
+> > -               /* pulse for common reset */
+> > -               exynos_pcie_writel(ep->mem_res->block_base, 1,
+> > -                                       PCIE_PHY_COMMON_RESET);
+> > -               udelay(500);
+> > -               exynos_pcie_writel(ep->mem_res->block_base, 0,
+> > -                                       PCIE_PHY_COMMON_RESET);
+> >         }
+> >
+> >         /* pulse for common reset */
+> > --
+> > 2.7.4
+> >
