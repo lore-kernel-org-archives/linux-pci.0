@@ -1,59 +1,73 @@
-Return-Path: <SRS0=wdCK=BI=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Return-Path: <SRS0=wdCK=BI=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Reply-To: christian.koenig@amd.com
-Subject: Re: Dynamically adding a PCI subfunction
-To: Ilia Mirkin <imirkin@alum.mit.edu>, Linux PCI <linux-pci@vger.kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Ben Skeggs <bskeggs@redhat.com>,
- "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
-References: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
-Message-ID: <246df1d8-cb6c-518d-7ca1-7a389ca8ef21@gmail.com>
-Date: Mon, 9 Oct 2017 17:45:32 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:31210 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751352AbdJJH7X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2017 03:59:23 -0400
+Subject: Re: [PATCH 1/2] PCI: dwc: dra7xx: Create functional dependency
+ between PCIe and PHY
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
+References: <20171009090338.26033-1-kishon@ti.com>
+ <20171009090338.26033-2-kishon@ti.com>
+ <f258c2f0-11a2-60ac-3919-dcc0badfa870@ti.com>
+ <ac5b3f42-19a1-3f8d-3bb6-37d63c3574de@ti.com>
+From: Roger Quadros <rogerq@ti.com>
+Message-ID: <9dce2e30-a245-460d-a808-a733eaf7ffec@ti.com>
+Date: Tue, 10 Oct 2017 10:59:18 +0300
 MIME-Version: 1.0
-In-Reply-To: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <ac5b3f42-19a1-3f8d-3bb6-37d63c3574de@ti.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 09.10.2017 um 16:41 schrieb Ilia Mirkin:
-> Hello,
->
-> As a bit of background, all NVIDIA GPUs since GT215 have an audio
-> subfunction for HDMI(/DP) audio to be sent to the sink. This generally
-> works.
->
-> However some, especially laptop, devices come up with that function
-> disabled. We have a quirk to enable it when coming back from runpm,
-> but that doesn't help the init case. Basically we have to write a bit
-> to the PCI config space:
->
-> https://github.com/torvalds/linux/blob/v4.12/drivers/gpu/drm/nouveau/nouveau_drm.c#L783
->
-> (MMIO 0x88000 is an alias for the PCI config space)
->
-> This works for runtime pm resume, since the device was originally
-> there and we just have to make sure the underlying device agrees with
-> it, but when it's missing on boot, we have to convince linux that it
-> exists, bind a driver, etc.
->
-> What's the best way of going about doing that?
+=EF=BB=BF
+Texas Instruments Finland Oy, Porkkalankatu 22, 00180 Helsinki. Y-tunnus/Bu=
+siness ID: 0615521-4. Kotipaikka/Domicile: Helsinki
 
-Sounds similar to my work about resizing BARs.
+On 10/10/17 10:42, Kishon Vijay Abraham I wrote:
+> Roger,
+>=20
+> On Tuesday 10 October 2017 12:49 PM, Roger Quadros wrote:
+>> On 09/10/17 12:03, Kishon Vijay Abraham I wrote:
+>>> PCI core access configuration space registers in resume_noirq callbacks=
+.
+>>> In the case of dra7xx, PIPE3 PHY connected to PCIe controller has to be
+>>> enabled before accessing configuration space registers. Since
+>>> PIPE3 PHY is enabled by only configuring control module registers, no
+>>> aborts has been observed so far (though during noirq stage, interface
+>>> clock of PIPE3 PHY is not enabled).
+>>>
+>>> With new TRM updates, PIPE3 PHY has to be initialized (PIPE3 PHY
+>>> registers has to be accessed) as well which requires the interface
+>>> clock of PIPE3 PHY to be enabled. The interface clock of PIPE3 PHY is
+>>> derived from OCP2SCP and hence PCIe PHY is modeled as a child of
+>>> OCP2SCP. Since pm_runtime is not enabled during noirq stage,
+>>> pm_runtime_get_sync done in phy_init doesn't enable
+>>> OCP2SCP clocks resulting in abort when PIPE3 PHY registers are
+>>> accessed.
+>>
+>> This could be the case not only with PCIe but even with USB and SATA?
+>=20
+> right, if USB/SATA driver has no_irq callbacks then the same issue might =
+occur.
 
-I would just try to enable the device and then trigger a rescan of the 
-BUS where it is attached (similar to echo 1 > 
-/sys/bus/pci/devices/$pci_id_of_your_bus/rescan).
+OK. Is this something that we should document in Documentation/phy.txt?
 
-There is certainly a function in the PCI subsystem you just need to call 
-for that.
+> But looks like none of them uses no_irq callbacks.
 
-Regards,
-Christian.
+>> Maybe today it doesn't complain because USB/SATA is being resumed (by ch=
+ance) after PHY?
+>=20
+> But once pm_runtime is enabled, USB/SATA can enable PHY which in turn wil=
+l
+> enable OCP2SCP and PHY can be accessed without any issues.
+>=20
+> Thanks
+> Kishon
+>=20
 
->
-> Thanks,
->
->    -ilia
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+--=20
+cheers,
+-roger
