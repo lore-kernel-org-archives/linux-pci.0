@@ -1,81 +1,172 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/8] PCI: Do not allocate more buses than available in parent
-Date: Fri, 13 Oct 2017 21:35:43 +0300
-Message-Id: <20171013183548.68283-4-mika.westerberg@linux.intel.com>
-In-Reply-To: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:36070 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751398AbdJJKQ3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2017 06:16:29 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nsekhar@ti.com>
+Subject: [PATCH 4/4] PCI: dwc: pci-dra7xx: Enable x2 mode support
+Date: Tue, 10 Oct 2017 15:46:06 +0530
+Message-ID: <20171010101606.15951-5-kishon@ti.com>
+In-Reply-To: <20171010101606.15951-1-kishon@ti.com>
+References: <20171010101606.15951-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-One can ask more buses to be reserved for hotplug bridges by passing
-pci=hpbussize=N in the kernel command line. However, if the parent bus
-does not have enough bus space available we still create child bus with
-the requested number of subordinate buses.
+Perform syscon configurations to get x2 mode to working in dra74x
+(and dra76x).
 
-In the example below hpbussize is set to one more than we have available
-buses in the root port:
-
-  pci 0000:07:00.0: [8086:1578] type 01 class 0x060400
-  pci 0000:07:00.0: calling pci_fixup_transparent_bridge+0x0/0x20
-  pci 0000:07:00.0: supports D1 D2
-  pci 0000:07:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-  pci 0000:07:00.0: PME# disabled
-  pci 0000:07:00.0: scanning [bus 00-00] behind bridge, pass 0
-  pci 0000:07:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-  pci 0000:07:00.0: scanning [bus 00-00] behind bridge, pass 1
-  pci_bus 0000:08: busn_res: can not insert [bus 08-ff] under [bus 07-3f] (conflicts with (null) [bus 07-3f])
-  pci_bus 0000:08: scanning bus
-  ...
-  pci_bus 0000:0a: bus scan returning with max=40
-  pci_bus 0000:0a: busn_res: [bus 0a-ff] end is updated to 40
-  pci_bus 0000:0a: [bus 0a-40] partially hidden behind bridge 0000:07 [bus 07-3f]
-  pci_bus 0000:08: bus scan returning with max=40
-  pci_bus 0000:08: busn_res: [bus 08-ff] end is updated to 40
-
-Instead of allowing this we limit the subordinate number to be less than
-or equal the maximum subordinate number allocated for the parent bus (if
-it has any).
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
 ---
- drivers/pci/probe.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/dwc/pci-dra7xx.c | 68 ++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 66 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 107052f1dad9..32921f6f21b6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1076,7 +1076,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			child = pci_add_new_bus(bus, dev, max+1);
- 			if (!child)
- 				goto out;
--			pci_bus_insert_busn_res(child, max+1, 0xff);
-+			pci_bus_insert_busn_res(child, max+1,
-+						bus->busn_res.end);
- 		}
- 		max++;
- 		buses = (buses & 0xff000000)
-@@ -2439,6 +2440,10 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
- 	if (bus->self && bus->self->is_hotplug_bridge && pci_hotplug_bus_size) {
- 		if (max - bus->busn_res.start < pci_hotplug_bus_size - 1)
- 			max = bus->busn_res.start + pci_hotplug_bus_size - 1;
-+
-+		/* Do not allocate more buses than we have room left */
-+		if (max > bus->busn_res.end)
-+			max = bus->busn_res.end;
- 	}
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 78a87a8f1362..a43c904310f3 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -21,6 +21,7 @@
+ #include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_pci.h>
++#include <linux/of_platform.h>
+ #include <linux/pci.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+@@ -83,6 +84,9 @@
+ #define MSI_REQ_GRANT					BIT(0)
+ #define MSI_VECTOR_SHIFT				7
  
- 	/*
++#define PCIE_1LANE_2LANE_SELECTION			BIT(13)
++#define PCIE_B1C0_MODE_SEL				BIT(2)
++
+ struct dra7xx_pcie {
+ 	struct dw_pcie		*pci;
+ 	void __iomem		*base;		/* DT ti_conf */
+@@ -95,6 +99,10 @@ struct dra7xx_pcie {
+ 
+ struct dra7xx_pcie_of_data {
+ 	enum dw_pcie_device_mode mode;
++	u32 b1co_mode_sel_mask;
++};
++
++struct dra7xx_pcie_data {
+ };
+ 
+ #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
+@@ -533,6 +541,16 @@ static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
+ 	.mode = DW_PCIE_EP_TYPE,
+ };
+ 
++static const struct dra7xx_pcie_of_data dra746_pcie_rc_of_data = {
++	.b1co_mode_sel_mask = BIT(2),
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static const struct dra7xx_pcie_of_data dra746_pcie_ep_of_data = {
++	.b1co_mode_sel_mask = BIT(2),
++	.mode = DW_PCIE_EP_TYPE,
++};
++
+ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ 	{
+ 		.compatible = "ti,dra7-pcie",
+@@ -544,11 +562,11 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ 	},
+ 	{
+ 		.compatible = "ti,dra746-pcie-rc",
+-		.data = &dra7xx_pcie_rc_of_data,
++		.data = &dra746_pcie_rc_of_data,
+ 	},
+ 	{
+ 		.compatible = "ti,dra746-pcie-ep",
+-		.data = &dra7xx_pcie_ep_of_data,
++		.data = &dra746_pcie_ep_of_data,
+ 	},
+ 	{
+ 		.compatible = "ti,dra726-pcie-rc",
+@@ -603,6 +621,44 @@ static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+ 	return ret;
+ }
+ 
++static int dra7xx_pcie_configure_two_lane(struct device *dev,
++					  u32 b1co_mode_sel_mask)
++{
++	struct device_node *np = dev->of_node;
++	struct regmap *pcie_syscon;
++	unsigned int pcie_reg;
++
++	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-conf");
++	if (IS_ERR(pcie_syscon)) {
++		dev_err(dev, "unable to get syscon-lane-conf\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u32_index(np, "syscon-lane-conf", 1, &pcie_reg)) {
++		dev_err(dev, "couldn't get lane configuration reg offset\n");
++		return -EINVAL;
++	}
++
++	regmap_update_bits(pcie_syscon, pcie_reg, PCIE_1LANE_2LANE_SELECTION,
++			   PCIE_1LANE_2LANE_SELECTION);
++
++	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-sel");
++	if (IS_ERR(pcie_syscon)) {
++		dev_err(dev, "unable to get syscon-lane-sel\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u32_index(np, "syscon-lane-sel", 1, &pcie_reg)) {
++		dev_err(dev, "couldn't get lane selection reg offset\n");
++		return -EINVAL;
++	}
++
++	regmap_update_bits(pcie_syscon, pcie_reg, b1co_mode_sel_mask,
++			   PCIE_B1C0_MODE_SEL);
++
++	return 0;
++}
++
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+@@ -624,6 +680,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	const struct of_device_id *match;
+ 	const struct dra7xx_pcie_of_data *data;
+ 	enum dw_pcie_device_mode mode;
++	u32 b1co_mode_sel_mask;
+ 
+ 	match = of_match_device(of_match_ptr(of_dra7xx_pcie_match), dev);
+ 	if (!match)
+@@ -631,6 +688,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 
+ 	data = (struct dra7xx_pcie_of_data *)match->data;
+ 	mode = (enum dw_pcie_device_mode)data->mode;
++	b1co_mode_sel_mask = data->b1co_mode_sel_mask;
+ 
+ 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
+ 	if (!dra7xx)
+@@ -689,6 +747,12 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	dra7xx->pci = pci;
+ 	dra7xx->phy_count = phy_count;
+ 
++	if (phy_count == 2) {
++		ret = dra7xx_pcie_configure_two_lane(dev, b1co_mode_sel_mask);
++		if (ret < 0)
++			goto err_link;
++	}
++
+ 	ret = dra7xx_pcie_enable_phy(dra7xx);
+ 	if (ret) {
+ 		dev_err(dev, "failed to enable phy\n");
 -- 
-2.14.2
+2.11.0
