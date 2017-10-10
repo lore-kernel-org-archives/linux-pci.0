@@ -1,387 +1,199 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.138]:47962 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932545AbdJXNNr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 09:13:47 -0400
-Message-ID: <59EF3C75.2070107@rock-chips.com>
-Date: Tue, 24 Oct 2017 21:13:25 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Return-Path: <SRS0=9KjW=BJ=gmail.com=jim2101024@kernel.org>
+Return-Path: <SRS0=9KjW=BJ=gmail.com=jim2101024@kernel.org>
 MIME-Version: 1.0
-To: Brian Norris <briannorris@chromium.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, shawn.lin@rock-chips.com,
-        dianders@chromium.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v7 1/3] PCI: Add support for wake irq
-References: <20171019111007.25234-1-jeffy.chen@rock-chips.com> <20171019111007.25234-2-jeffy.chen@rock-chips.com> <20171023230252.GA53058@google.com> <59EEBC3E.4030804@rock-chips.com>
-In-Reply-To: <59EEBC3E.4030804@rock-chips.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
+ <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com> <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Tue, 10 Oct 2017 10:56:16 -0400
+Message-ID: <CANCKTBsDm-urkcMoef7-G_F3zhn-EXHMo4G649MV6fQJ6JcW7A@mail.gmail.com>
+Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ray Jui <ray.jui@broadcom.com>, Florian Fainelli <f.fainelli@gmail.com>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+	Jon Mason <jon.mason@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Brian,
+Hi, we get about 9 of those messages on the Broadcom Settop box boot.
+I think there's more but it is rate limited.  We could do individual
+8-bit/16-bit/32-bit writes for the RC itself (we don't currently) but
+not for the downstream devices without changes to the HW.  --Jim
 
-checking the pci-acpi code, it has:
-1/ pci_acpi_setup() and pci_acpi_cleanup() to setup/cleanup the 
-wakeup(and other stuff) for pci devices
-
-we may need it too(for per-device wake) to parse wake irq and init 
-wakeup(false) and maybe setup dedicated wakeirq.
-
-2/ acpi_pci_wakeup(), which would do:
-find a parent or root bus or pci dev itself, which can do wakeup, and 
-update it's wakeup ability(with a enable_count).
-
-we may need to do something like that, but the can_wakeup() would be 
-check if wake irq avaliable, and set_device/bridge_wakeup() would be 
-setup/clear dedicated wakeirq, or just call device_set_wakeup_enable()
-
-
-
-so maybe we can:
-1/ add a setup_root_bus() platform ops callback to parse/setup root 
-bus's wakeirq in pci_register_host_bridge(),and clean it in 
-pci_stop_bus_device()
-
-2/ add a device_setup() and device_cleanup() callbacks to setup/clean 
-pci device's wake irq, and maybe call it in pci_device_probe() or 
-pci_setup_device()?
-
-3/ add a can_wakeup() and set_device_wakeup() and set_bridge_wakeup() 
-callbacks, and move acpi_pci_wakeup() and acpi_pci_propagate_wakeup()'s 
-code and the enable_count code into common platform_pci_set_wakeup().
-
-
-does this make sense?
-
-
-On 10/24/2017 12:06 PM, jeffy wrote:
-> Hi Brian,
+On Tue, Oct 10, 2017 at 7:10 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Mon, Oct 09, 2017 at 10:33:01PM -0700, Ray Jui wrote:
+>> Hi Florian,
+>>
+>> This is from the following commit:
+>>
+>> commit fb26592301200dbbe4a9943fe188b57a46716900
+>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>> Date:   Mon Oct 31 16:00:01 2016 -0500
+>>
+>>     PCI: Warn on possible RW1C corruption for sub-32 bit config writes
+>>
+>>     Hardware that supports only 32-bit config writes is not spec-compliant.
+>>     For example, if software performs a 16-bit write, we must do a 32-bit read,
+>>     merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+>>     the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+>>     to-clear) bits set, we just inadvertently cleared something we shouldn't
+>>     have.
+>>
+>>     Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+>>     similar probe-time warnings from some of the affected host bridge drivers.
+>>
+>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>     Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+>>     Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
+>>     Acked-by: Thierry Reding <treding@nvidia.com>
+>>
+>> This warning message will show up on every root complex that can only
+>> support 32-bit config register write (instead of 8-bit, 16-bit writes)
+>> and iProc based host controller happens to be one of them.
+>>
+>> This limitation violates the PCIe spec as the 32-bit write may clear
+>> RW1C bits of a config register. But I believe those registers are
+>> usually used in AER which we do not currently support in the iProc
+>> based hos controllers.
 >
-> On 10/24/2017 07:02 AM, Brian Norris wrote:
->> + PM folks
->>
->> Hi Jeffy,
->>
->> It's probably good if you send the whole thing to linux-pm@ in the
->> future, if you're really trying to implement generic PCI/PM for device
->> tree systems.
-> ok
->>
->> On Thu, Oct 19, 2017 at 07:10:05PM +0800, Jeffy Chen wrote:
->>> Add support for PCIE_WAKE pin.
->>
->> This is kind of an important change, so it feels like you should
->> document it a little more thoroughly than this. Particularly, I have a
->> few questions below, and it seems like some of these questions should be
->> acknowledged up front. e.g., why does this look so different than the
->> ACPI hooks?
-> sure, will do in next version.
->>
->>>
->>> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->>> ---
->>>
->>> Changes in v7:
->>> Move PCIE_WAKE handling into pci core.
->>>
->>> Changes in v6:
->>> Fix device_init_wake error handling, and add some comments.
->>>
->>> Changes in v5:
->>> Rebase
->>>
->>> Changes in v3:
->>> Fix error handling
->>>
->>> Changes in v2:
->>> Use dev_pm_set_dedicated_wake_irq
->>>          -- Suggested by Brian Norris <briannorris@chromium.com>
->>>
->>>   drivers/pci/pci.c    | 34 ++++++++++++++++++++++++++++++++--
->>>   drivers/pci/probe.c  | 32 ++++++++++++++++++++++++++++----
->>>   drivers/pci/remove.c |  9 +++++++++
->>>   3 files changed, 69 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>> index f0d68066c726..49080a10bdf0 100644
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -603,10 +603,40 @@ static inline pci_power_t
->>> platform_pci_choose_state(struct pci_dev *dev)
->>>               pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
->>>   }
->>>
->>> +static int pci_dev_check_wakeup(struct pci_dev *dev, void *data)
->>> +{
->>> +    bool *wakeup = data;
->>> +
->>> +    if (device_may_wakeup(&dev->dev))
->>> +        *wakeup = true;
->>> +
->>> +    return *wakeup;
->>> +}
->>> +
->>>   static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool
->>> enable)
->>>   {
->>> -    return pci_platform_pm ?
->>> -            pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
->>> +    struct pci_dev *parent = dev;
->>> +    struct pci_bus *bus;
->>> +    bool wakeup = false;
->>
->> It feels like you're implementing a set of pci_platform_pm_ops, except
->> you're not actually implementing them. It almost seems like we should
->> have a drivers/pci/pci-of.c to do this. But that brings up a few
->> questions....
-> i saw the drivers might call set_wakeup() in suspend/resume/shutdown to
-> configure the wakeup ability, maybe we can call
-> device_set_wakeup_enable() here as a common part of set_wakeup()?
+> This warning is ratelimited, but maybe even that is overkill.  It
+> looks like we currently warn on every config write of less than 32
+> bits.  How many of those do you see?  Once per boot might be enough,
+> or maybe once per device (so we get a hint when loading a new driver).
 >
-> static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool
-> enable) {
->      device_set_wakeup_enable()
-> ...
->      return pci_platform_pm ? pci_platform_pm->set_wakeup(dev, enable) :
-> -ENODEV;
->
->>
->>> +
->>> +    if (pci_platform_pm)
->>
->> So, if somebody already registered ops, then you won't follow the "OF"
->> route? That means this all breaks as soon as a kernel has both
->> CONFIG_ACPI and CONFIG_OF enabled. This is possible on at least ARM64,
->> which 'select's OF and may also be built/run with CONFIG_ACPI.
->>
->> And that conflict is the same if we try to register pci_platform_pm_ops
->> for OF systems -- it'll be a race over who sets them up first (or
->> rather, last).
->>
->> Also, what happens on !ACPI && !OF? Or if the device tree did not
->> contain a "wakeup" definition? You're now implementing a default path
->> that doesn't make much sense IMO; you may claim wakeup capability
->> without actually having set it up somewhere.
-> maybe we can use device_set_wakeup_enable(), which will check the setup
-> before setting?
->>
->> I think you could use some more comments, and (again) a real commit
->> message.
-> ok, will do.
->>
->>> +        return pci_platform_pm->set_wakeup(dev, enable);
->>> +
->>> +    device_set_wakeup_capable(&dev->dev, enable);
->>
->> Why are you setting that here? This function should just be telling the
->> lower layers to enable the physical WAKE# ability. In our case, it just
->> means configuring the WAKE# interrupt for wakeup -- or, since you've
->> used dev_pm_set_dedicated_wake_irq() which handles most of this
->> automatically...do you need this at all? It seems like you should
->> *either* implement these callbacks to manually manage the wakeup IRQ or
->> else use the dedicated wakeirq infrastructure -- not both.
->>
->> And even if you need this, I don't think you need to do this many times;
->> you should only need to set up the capabilities once, when you first set
->> up the device.
->>
->> And BTW, the description for the set_wakeup() callback says:
->>
->>   * @set_wakeup: enables/disables wakeup capability for the device
->>
->> I *don't* think that means "capability" as in the device framework's
->> view of "wakeup capable"; I think it means capability as in the physical
->> ability (a la, enable_irq_wake() or similar).
-> i was thinking maybe we should disable the wakeup if all children
-> request set_wakeup(false)?
->
-> and it seems like the dedicated wakeirq can be disabled by:
-> 1/ dev_pm_clear_wake_irq(), then we may need to store the irq somewhere
-> to set it up again in the future?
->
-> 2/ let device_may_wakeup return false:
-> void dev_pm_arm_wake_irq(struct wake_irq *wirq)
-> {
->          if (!wirq)
->                  return;
->
->          if (device_may_wakeup(wirq->dev)) {
->                  if (wirq->status & WAKE_IRQ_DEDICATED_ALLOCATED)
->                          enable_irq(wirq->irq);
->
->                  enable_irq_wake(wirq->irq);
->          }
->
->>
->>> +
->>> +    while ((parent = pci_upstream_bridge(parent)))
->>> +        bus = parent->bus;
->>> +
->>> +    if (!bus || !pci_is_root_bus(bus) || !bus->bridge->parent)
->>> +        return -ENODEV;
->>> +
->>> +    pci_walk_bus(bus, pci_dev_check_wakeup, &wakeup);
->>> +    device_set_wakeup_capable(bus->bridge->parent, wakeup);
->>
->> What happens to any intermediate buses? You haven't marked them as
->> wakeup-capable. Should you?
->>
->> And the more fundamental question here is: is this a per-device
->> configuration or a per-root-port configuration? The APIs here are
->> modeled after ACPI, where I guess this is a per-device thing. The PCIe
->> spec doesn't exactly specify how many WAKE# pins you need, though it
->> seems to say
->>
->> (a) it's all-or-nothing (if one device uses it, all wakeup-capable EPs
->>      should be wired up to it)
->> (b) it *can* be done as a single input to the system controller, since
->>      it's an open drain signal
->> (c) ...but I also see now in the PCIe Card Electromechanical
->>      specification:
->>
->>      "WAKE# may be bused to multiple PCI Express add-in card connectors,
->>      forming a single input connection at the PM controller, or
->>      individual connectors can have individual connections to the PM
->>      controller."
->>
->> So I think you're kind of going along the lines of (b) (as I suggested
->> to you previously), and that matches the current hardware (we only have
->> a single WAKE#) and proposed DT binding. But should this be set up in a
->> way that suits (c) too? It's hard to tell exactly what ACPI-based
->> systems do, since they have this abstracted behind ACPI interfaces that
->> seem like they *could* support per-device or per-bridge type of hookups.
-> maybe we can try to setup wake irq for each pci devices which have it in
-> the dts, then in the set_wakeup(), try to find the parents(or itself)
-> who has wake irq, and enable/disable them(maybe also need a refcount)?
->>
->> Bjorn, any thoughts? This seems like a halfway attempt in between two
->> different designs, and I'm not really sure which one makes more sense.
->>
->> Brian
->>
->>> +
->>> +    dev_dbg(bus->bridge->parent,
->>> +        "Wakeup %s\n", wakeup ? "enabled" : "disabled");
->>> +
->>> +    return 0;
->>>   }
->>>
->>>   static inline bool platform_pci_need_resume(struct pci_dev *dev)
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index cdc2f83c11c5..fd43ca832665 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -7,6 +7,7 @@
->>>   #include <linux/init.h>
->>>   #include <linux/pci.h>
->>>   #include <linux/of_device.h>
->>> +#include <linux/of_irq.h>
->>>   #include <linux/of_pci.h>
->>>   #include <linux/pci_hotplug.h>
->>>   #include <linux/slab.h>
->>> @@ -17,6 +18,7 @@
->>>   #include <linux/acpi.h>
->>>   #include <linux/irqdomain.h>
->>>   #include <linux/pm_runtime.h>
->>> +#include <linux/pm_wakeirq.h>
->>>   #include "pci.h"
->>>
->>>   #define CARDBUS_LATENCY_TIMER    176    /* secondary latency timer */
->>> @@ -756,11 +758,28 @@ static int pci_register_host_bridge(struct
->>> pci_host_bridge *bridge)
->>>       struct resource *res;
->>>       char addr[64], *fmt;
->>>       const char *name;
->>> -    int err;
->>> +    int err, irq;
->>> +
->>> +    if (IS_ENABLED(CONFIG_OF) && parent && parent->of_node) {
->>> +        irq = of_irq_get_byname(parent->of_node, "wakeup");
->>> +        if (irq == -EPROBE_DEFER)
->>> +            return irq;
->>> +        if (irq > 0) {
->>> +            device_init_wakeup(parent, true);
->>> +            err = dev_pm_set_dedicated_wake_irq(parent, irq);
->>> +            if (err) {
->>> +                dev_err(parent, "Failed to setup wakeup IRQ\n");
->>> +                goto deinit_wakeup;
->>> +            }
->>> +            dev_info(parent, "Wakeup enabled with IRQ %d\n", irq);
->>> +        }
->>> +    }
->>>
->>>       bus = pci_alloc_bus(NULL);
->>> -    if (!bus)
->>> -        return -ENOMEM;
->>> +    if (!bus) {
->>> +        err = -ENOMEM;
->>> +        goto clear_wake_irq;
->>> +    }
->>>
->>>       bridge->bus = bus;
->>>
->>> @@ -856,9 +875,14 @@ static int pci_register_host_bridge(struct
->>> pci_host_bridge *bridge)
->>>   unregister:
->>>       put_device(&bridge->dev);
->>>       device_unregister(&bridge->dev);
->>> -
->>>   free:
->>>       kfree(bus);
->>> +clear_wake_irq:
->>> +    if (parent)
->>> +        dev_pm_clear_wake_irq(parent);
->>> +deinit_wakeup:
->>> +    if (parent)
->>> +        device_init_wakeup(parent, false);
->>>       return err;
->>>   }
->>>
->>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
->>> index 73a03d382590..cb7a326429e1 100644
->>> --- a/drivers/pci/remove.c
->>> +++ b/drivers/pci/remove.c
->>> @@ -1,6 +1,7 @@
->>>   #include <linux/pci.h>
->>>   #include <linux/module.h>
->>>   #include <linux/pci-aspm.h>
->>> +#include <linux/pm_wakeirq.h>
->>>   #include "pci.h"
->>>
->>>   static void pci_free_resources(struct pci_dev *dev)
->>> @@ -131,17 +132,25 @@ void pci_stop_root_bus(struct pci_bus *bus)
->>>   {
->>>       struct pci_dev *child, *tmp;
->>>       struct pci_host_bridge *host_bridge;
->>> +    struct device *parent;
->>>
->>>       if (!pci_is_root_bus(bus))
->>>           return;
->>>
->>>       host_bridge = to_pci_host_bridge(bus->bridge);
->>> +    parent = host_bridge->dev.parent;
->>> +
->>>       list_for_each_entry_safe_reverse(child, tmp,
->>>                        &bus->devices, bus_list)
->>>           pci_stop_bus_device(child);
->>>
->>>       /* stop the host bridge */
->>>       device_release_driver(&host_bridge->dev);
->>> +
->>> +    if (parent) {
->>> +        dev_pm_clear_wake_irq(parent);
->>> +        device_init_wakeup(parent, false);
->>> +    }
->>>   }
->>>   EXPORT_SYMBOL_GPL(pci_stop_root_bus);
->>>
->>> --
->>> 2.11.0
->>>
->>>
->>
->>
->>
->
+>> On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+>> > Hi,
+>> >
+>> > With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
+>> > warnings using pcie_iproc; is this something to be worried about?
+>> >
+>> > [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
+>> >
+>> >
+>> >
+>> > [    2.632358] pci_bus 0000:00: root bus resource [mem
+>> > 0x08000000-0x0fffffff]
+>> >
+>> >
+>> > [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
+>> > will use [bus 00-ff]
+>> >
+>> >
+>> > [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0x4 may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0x4 may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0x4c may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0x3e may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0x4 may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
+>> > offset 0xc may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.705531] PCI: bus0: Fast back to back transfers disabled
+>> >
+>> >
+>> >
+>> > [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
+>> > 00-00]), reconfiguring
+>> >
+>> >
+>> > [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0x3e may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0xc8 may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0x3e may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>> > offset 0x3e may corrupt adjacent RW1C bits
+>> >
+>> >
+>> > [    2.758262] pci 0000:01:00.0: enabling Extended Tags
+>> >
+>> >
+>> >
+>> > [    2.763577] PCI: bus1: Fast back to back transfers disabled
+>> >
+>> >
+>> >
+>> > [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
+>> > 0x08000000-0x080fffff]
+>> >
+>> >
+>> > [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
+>> > 0x08000000-0x08003fff 64bit]
+>> >
+>> >
+>> > [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
+>> >
+>> >
+>> >
+>> > [    2.788293] pci 0000:00:00.0:   bridge window [mem
+>> > 0x08000000-0x080fffff]
+>> >
+>> >
+>> > [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
+>> >
+>> >
+>> >
+>> > [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
+>> >
+>> >
+>> >
+>> > [    2.922349] pci_bus 0001:00: root bus resource [mem
+>> > 0x40000000-0x47ffffff]
+>> >
+>> >
+>> > [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
+>> > will use [bus 00-ff]
+>> >
+>> >
+>> > [    2.937482] PCI: bus0: Fast back to back transfers disabled
+>> >
+>> >
+>> >
+>> > [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
+>> > 00-00]), reconfiguring
+>> >
+>> >
+>> > [    2.951713] PCI: bus1: Fast back to back transfers disabled
+>> >
+>> >
+>> >
+>> > [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
+>> > 0x40000000-0x400fffff]
+>> >
+>> >
+>> > [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
+>> > 0x40000000-0x40007fff 64bit]
+>> >
+>> >
+>> > [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
+>> >
+>> >
+>> >
+>> > [    2.976434] pci 0001:00:00.0:   bridge window [mem
+>> > 0x40000000-0x400fffff]
+>> > --
+>> > Florian
