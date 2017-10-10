@@ -1,73 +1,211 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Felipe Balbi <balbi@kernel.org>
-To: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr,
-        rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        gregkh@linuxfoundation.org, laurent.pinchart@ideasonboard.com,
-        jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com,
-        mfasheh@versity.com, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-usb@vger.kernel.org, cluster-devel@redhat.com,
-        ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: Re: [PATCH v2 02/15] usb: gadget: make config_item_type structures const
-In-Reply-To: <1508167134-6243-3-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1508167134-6243-3-git-send-email-bhumirks@gmail.com>
-Date: Tue, 17 Oct 2017 11:30:34 +0300
-Message-ID: <87r2u2jhw5.fsf@linux.intel.com>
+Return-Path: <SRS0=b5oG=BJ=gmail.com=f.fainelli@kernel.org>
+Return-Path: <SRS0=b5oG=BJ=gmail.com=f.fainelli@kernel.org>
+Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
+To: Bjorn Helgaas <helgaas@kernel.org>, Ray Jui <ray.jui@broadcom.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, Jon Mason <jon.mason@broadcom.com>,
+ Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?=
+ <rafal@milecki.pl>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci <linux-pci@vger.kernel.org>
+References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
+ <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
+ <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <893450c0-f6a3-6016-b141-fe62c1be16e6@gmail.com>
+Date: Tue, 10 Oct 2017 13:01:29 -0700
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-        micalg=pgp-sha512; protocol="application/pgp-signature"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+On 10/10/2017 04:10 AM, Bjorn Helgaas wrote:
+> On Mon, Oct 09, 2017 at 10:33:01PM -0700, Ray Jui wrote:
+>> Hi Florian,
+>>
+>> This is from the following commit:
+>>
+>> commit fb26592301200dbbe4a9943fe188b57a46716900
+>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>> Date:   Mon Oct 31 16:00:01 2016 -0500
+>>
+>>     PCI: Warn on possible RW1C corruption for sub-32 bit config writes
+>>
+>>     Hardware that supports only 32-bit config writes is not spec-compliant.
+>>     For example, if software performs a 16-bit write, we must do a 32-bit read,
+>>     merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+>>     the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+>>     to-clear) bits set, we just inadvertently cleared something we shouldn't
+>>     have.
+>>
+>>     Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+>>     similar probe-time warnings from some of the affected host bridge drivers.
+>>
+>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>     Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+>>     Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
+>>     Acked-by: Thierry Reding <treding@nvidia.com>
+>>
+>> This warning message will show up on every root complex that can only
+>> support 32-bit config register write (instead of 8-bit, 16-bit writes)
+>> and iProc based host controller happens to be one of them.
+>>
+>> This limitation violates the PCIe spec as the 32-bit write may clear
+>> RW1C bits of a config register. But I believe those registers are
+>> usually used in AER which we do not currently support in the iProc
+>> based hos controllers.
+> 
+> This warning is ratelimited, but maybe even that is overkill.  It
+> looks like we currently warn on every config write of less than 32
+> bits.  How many of those do you see?  Once per boot might be enough,
+> or maybe once per device (so we get a hint when loading a new driver). 
+
+These were the exact number that I saw but I did not bind the Wi-Fi
+driver to the WLAN card, so there could have been more once the Wi-Fi
+driver attempted to initialize the device.
+
+Would it be helpful to differentiate e.g: new drivers being submitted
+that may support 8/16/32 bit accesses from drivers like iProc PCIe which
+works with silicon that does not support that?
+
+Either way is fine with me really.
+
+> 
+>> On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+>>> Hi,
+>>>
+>>> With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
+>>> warnings using pcie_iproc; is this something to be worried about?
+>>>
+>>> [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
+>>>
+>>>
+>>>
+>>> [    2.632358] pci_bus 0000:00: root bus resource [mem
+>>> 0x08000000-0x0fffffff]
+>>>
+>>>
+>>> [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
+>>> will use [bus 00-ff]
+>>>
+>>>
+>>> [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0x4 may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0x4 may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0x4c may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0x3e may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0x4 may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
+>>> offset 0xc may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.705531] PCI: bus0: Fast back to back transfers disabled
+>>>
+>>>
+>>>
+>>> [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
+>>> 00-00]), reconfiguring
+>>>
+>>>
+>>> [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0x3e may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0xc8 may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0x3e may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+>>> offset 0x3e may corrupt adjacent RW1C bits
+>>>
+>>>
+>>> [    2.758262] pci 0000:01:00.0: enabling Extended Tags
+>>>
+>>>
+>>>
+>>> [    2.763577] PCI: bus1: Fast back to back transfers disabled
+>>>
+>>>
+>>>
+>>> [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
+>>> 0x08000000-0x080fffff]
+>>>
+>>>
+>>> [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
+>>> 0x08000000-0x08003fff 64bit]
+>>>
+>>>
+>>> [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
+>>>
+>>>
+>>>
+>>> [    2.788293] pci 0000:00:00.0:   bridge window [mem
+>>> 0x08000000-0x080fffff]
+>>>
+>>>
+>>> [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
+>>>
+>>>
+>>>
+>>> [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
+>>>
+>>>
+>>>
+>>> [    2.922349] pci_bus 0001:00: root bus resource [mem
+>>> 0x40000000-0x47ffffff]
+>>>
+>>>
+>>> [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
+>>> will use [bus 00-ff]
+>>>
+>>>
+>>> [    2.937482] PCI: bus0: Fast back to back transfers disabled
+>>>
+>>>
+>>>
+>>> [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
+>>> 00-00]), reconfiguring
+>>>
+>>>
+>>> [    2.951713] PCI: bus1: Fast back to back transfers disabled
+>>>
+>>>
+>>>
+>>> [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
+>>> 0x40000000-0x400fffff]
+>>>
+>>>
+>>> [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
+>>> 0x40000000-0x40007fff 64bit]
+>>>
+>>>
+>>> [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
+>>>
+>>>
+>>>
+>>> [    2.976434] pci 0001:00:00.0:   bridge window [mem
+>>> 0x40000000-0x400fffff]
+>>> --
+>>> Florian
 
 
-Hi,
-
-Bhumika Goyal <bhumirks@gmail.com> writes:
-> Make these structures const as they are only passed to the const
-> argument of the functions config_{group/item}_init_type_name.
->
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-> ---
-> * Changes in v2- Combine all the followup patches and the constification
-> patches into a series.
-
-I'm assuming this depends on patch 1 of the series. In that case:
-
-Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
-
-=2D-=20
-balbi
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCgAdFiEElLzh7wn96CXwjh2IzL64meEamQYFAlnlv6oACgkQzL64meEa
-mQZAHBAAzevMuWnGzq3NbozQhxU/Ze7hjSKUUwpDeh5lig3COHhuUW8dbW95O5wr
-pEcJCpPztIvXkmT6umC0Z+L3+ylkvRKpBRUimhe212PG7LWY4XKlQF4Jjscvs0Fg
-84GPDsoYiGMrsfrZ1TLUj70y6gl4W/ft3c9FiVkxCN4F0w/a7lGYykKMBSX6WGVe
-Zu7YEnSWom4D9irkkCl4gUCA31IKsCzz6JnR+S0nN7tQiKDzXIuhmCjE9UimABsm
-L1nJ6fv/t5D+1SWmJg6IV3/HsoXFahjgdX0OevIZNCyVRHjSmjjOC9DNl8FU9K49
-UEnm/lMrL8pEHbuGeahmKG/iuFxG3COxtY4kzHH2vJ22su/nHk8qDkBzB+cItxO0
-iZ5tQhr555dQxfICJuTvg9UKcsj/oNyYuXDTUZbgX4+dKYxCJrfc8jt33gnz9z6O
-1KTL6iQlhXEHS4fNgaSVktpyMzDJd3aws3i9ota2bp+zr8PSmcrXgLP20WOEKs/W
-TsmCN+RCfgw9rdVro1D7cEOvMwBBoDxGzjA1MX1q61J/BVzgAd5pqE6ILQgQtmFh
-6gBh0y1Pde6xDWU6J+rNXFOru21gK9iiTUA3/M2Kfci9DBk+GWtPGGV8R9ovnTzC
-R6p5tT+Rtm0ns7aHybs0HsX4Zh0HsZAF/z3sps1IiMUeBdq25QI=
-=q5aO
------END PGP SIGNATURE-----
---=-=-=--
+-- 
+Florian
