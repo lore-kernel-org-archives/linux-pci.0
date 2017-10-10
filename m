@@ -1,166 +1,229 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43436 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756728AbdJJVA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Oct 2017 17:00:26 -0400
+Date: Tue, 10 Oct 2017 16:00:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Mason <jon.mason@broadcom.com>
+Cc: Ray Jui <ray.jui@broadcom.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
-Subject: [PATCH 09/10] PCI: dwc: make cpu_addr_fixup take struct dw_pcie as argument
-Date: Fri, 13 Oct 2017 18:09:12 +0200
-Message-Id: <20171013160914.3220-10-niklas.cassel@axis.com>
-In-Reply-To: <20171013160914.3220-1-niklas.cassel@axis.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
+Message-ID: <20171010210016.GX25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
+ <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
+ <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+ <CAC3K-4qy09zdRuCw+OO1XsBha4LagXDVe_yp9SOY-0ZpaiNKUQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAC3K-4qy09zdRuCw+OO1XsBha4LagXDVe_yp9SOY-0ZpaiNKUQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to hard code the cpu to bus fixup address.
-By calculating the sum of sizes of config, io and mem,
-from device tree, we know how big the PCIe window is.
+On Tue, Oct 10, 2017 at 10:59:53AM -0400, Jon Mason wrote:
+> On Tue, Oct 10, 2017 at 7:10 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Mon, Oct 09, 2017 at 10:33:01PM -0700, Ray Jui wrote:
+> >> Hi Florian,
+> >>
+> >> This is from the following commit:
+> >>
+> >> commit fb26592301200dbbe4a9943fe188b57a46716900
+> >> Author: Bjorn Helgaas <bhelgaas@google.com>
+> >> Date:   Mon Oct 31 16:00:01 2016 -0500
+> >>
+> >>     PCI: Warn on possible RW1C corruption for sub-32 bit config writes
+> >>
+> >>     Hardware that supports only 32-bit config writes is not spec-compliant.
+> >>     For example, if software performs a 16-bit write, we must do a 32-bit read,
+> >>     merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+> >>     the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+> >>     to-clear) bits set, we just inadvertently cleared something we shouldn't
+> >>     have.
+> >>
+> >>     Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+> >>     similar probe-time warnings from some of the affected host bridge drivers.
+> >>
+> >>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >>     Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+> >>     Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
+> >>     Acked-by: Thierry Reding <treding@nvidia.com>
+> >>
+> >> This warning message will show up on every root complex that can only
+> >> support 32-bit config register write (instead of 8-bit, 16-bit writes)
+> >> and iProc based host controller happens to be one of them.
+> >>
+> >> This limitation violates the PCIe spec as the 32-bit write may clear
+> >> RW1C bits of a config register. But I believe those registers are
+> >> usually used in AER which we do not currently support in the iProc
+> >> based hos controllers.
+> >
+> > This warning is ratelimited, but maybe even that is overkill.  It
+> > looks like we currently warn on every config write of less than 32
+> > bits.  How many of those do you see?  Once per boot might be enough,
+> > or maybe once per device (so we get a hint when loading a new driver).
+> 
+> It's fairly trivial to change the warning in question to
+> dev_warn_once().  If this is acceptable, I can crank it out.
 
-The bus address has to be inside of this range, so all bits in
-the cpu address that are higher than this range, are the ones
-that we need to clear to get the local bus address.
+I think my rationale was to make dmesg greppable for the device, e.g.,
+if we had a problem with device 0000:00:00.0, "dmesg | grep
+0000:00:00.0" would show this warning.
 
-Also for ARTPEC-7, hard coding the cpu fixup address is
-not possible, since it uses a High Address Bits Look Up Table,
-which means that it can, at runtime, map the PCIe window
-to an arbitrary address in the 32-bit address space.
+If we do a dev_warn_once(), we'll only see the warning once per
+system, so we may see the warning for "pci_bus 0000:00", but we could
+have an RW1C problem with a device on a different bus.  So I'm a
+little hesitant to do that.
 
-This also fixes a bug for ARTPEC-6, where the cpu_fixup_address
-previously masked one bit too many. (Another reason why
-it should be calculated from device tree.)
+I'd really like it if we had the pci_dev; then we could add a bit in
+the pci_dev and print the warning once for each device that's
+vulnerable.  But we don't.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pci-dra7xx.c      |  2 +-
- drivers/pci/dwc/pcie-artpec6.c    | 42 +++++++++++++++++++++++++++++++++++----
- drivers/pci/dwc/pcie-designware.c |  2 +-
- drivers/pci/dwc/pcie-designware.h |  2 +-
- 4 files changed, 41 insertions(+), 7 deletions(-)
+We used to have the host bridge driver emit one warning, but that was
+unreliable because several drivers with this hardware limitation
+didn't emit a warning.  fb2659230120 only removed the warning from
+hisi and rockchip.  At least mach-ks8695, mach-sa1100, tegra, xgene,
+hisi, iproc, and qcom also have the limitation but didn't emit a
+warning.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 34427a6a15af..a93bafc72fa0 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -109,7 +109,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
- 
--static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-+static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
- {
- 	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
- }
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 21ea9ffef784..1e113dbea1da 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -32,6 +32,7 @@ struct artpec6_pcie {
- 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
- 	void __iomem		*phy_base;	/* DT phy */
- 	enum dw_pcie_device_mode mode;
-+	u64 cpu_fixup_mask;
- };
- 
- struct artpec_pcie_of_data {
-@@ -69,8 +70,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define PHY_STATUS			0x118
- #define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
--
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
- 	u32 val;
-@@ -84,9 +83,42 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
- 	regmap_write(artpec6_pcie->regmap, offset, val);
- }
- 
--static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
-+static void artpec6_pcie_calc_cpu_fixup_mask(struct artpec6_pcie *artpec6_pcie)
- {
--	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	struct pcie_port *pp = &pci->pp;
-+	struct dw_pcie_ep *ep = &pci->ep;
-+	u64 size;
-+	u64 mask;
-+	int msb;
-+
-+	switch (artpec6_pcie->mode) {
-+	case DW_PCIE_RC_TYPE:
-+		size = pp->cfg0_size + pp->cfg1_size + pp->io_size +
-+			pp->mem_size;
-+		break;
-+	case DW_PCIE_EP_TYPE:
-+		size = ep->addr_size;
-+		break;
-+	default:
-+		dev_err(pci->dev, "UNKNOWN device type\n");
-+		return;
-+	}
-+	/* Calculate the mask (which can have potential holes). */
-+	mask = size - 1;
-+	/* Find the mask's msb. */
-+	msb = fls64(mask);
-+	/* Use the msb to generate a new mask without any holes. */
-+	mask = (1ULL << msb) - 1;
-+	artpec6_pcie->cpu_fixup_mask = mask;
-+	dev_dbg(pci->dev, "Using cpu fixup mask: 0x%llx\n", mask);
-+}
-+
-+static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
-+{
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-+
-+	return pci_addr & artpec6_pcie->cpu_fixup_mask;
- }
- 
- static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-@@ -190,6 +222,7 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 
-+	artpec6_pcie_calc_cpu_fixup_mask(artpec6_pcie);
- 	artpec6_pcie_assert_core_reset(artpec6_pcie);
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-@@ -231,6 +264,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 	enum pci_barno bar;
- 
-+	artpec6_pcie_calc_cpu_fixup_mask(artpec6_pcie);
- 	artpec6_pcie_assert_core_reset(artpec6_pcie);
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 88abdddee2ad..800be7a4f087 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 	u32 retries, val;
- 
- 	if (pci->ops->cpu_addr_fixup)
--		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
-+		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
- 
- 	if (pci->iatu_unroll_enabled) {
- 		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index f56d040afde4..897e190f8e24 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -203,7 +203,7 @@ struct dw_pcie_ep {
- };
- 
- struct dw_pcie_ops {
--	u64	(*cpu_addr_fixup)(u64 cpu_addr);
-+	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
- 	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
- 			    size_t size);
- 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
--- 
-2.11.0
+Ironically, rockchip still has the hardware limitation but doesn't
+emit a warning because it doesn't use pci_generic_config_write32().
+
+> >> On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+> >> > Hi,
+> >> >
+> >> > With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
+> >> > warnings using pcie_iproc; is this something to be worried about?
+> >> >
+> >> > [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
+> >> >
+> >> >
+> >> >
+> >> > [    2.632358] pci_bus 0000:00: root bus resource [mem
+> >> > 0x08000000-0x0fffffff]
+> >> >
+> >> >
+> >> > [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
+> >> > will use [bus 00-ff]
+> >> >
+> >> >
+> >> > [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0x4 may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0x4 may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0x4c may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0x3e may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0x4 may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
+> >> > offset 0xc may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.705531] PCI: bus0: Fast back to back transfers disabled
+> >> >
+> >> >
+> >> >
+> >> > [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
+> >> > 00-00]), reconfiguring
+> >> >
+> >> >
+> >> > [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0x3e may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0xc8 may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0x3e may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >> > offset 0x3e may corrupt adjacent RW1C bits
+> >> >
+> >> >
+> >> > [    2.758262] pci 0000:01:00.0: enabling Extended Tags
+> >> >
+> >> >
+> >> >
+> >> > [    2.763577] PCI: bus1: Fast back to back transfers disabled
+> >> >
+> >> >
+> >> >
+> >> > [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
+> >> > 0x08000000-0x080fffff]
+> >> >
+> >> >
+> >> > [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
+> >> > 0x08000000-0x08003fff 64bit]
+> >> >
+> >> >
+> >> > [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
+> >> >
+> >> >
+> >> >
+> >> > [    2.788293] pci 0000:00:00.0:   bridge window [mem
+> >> > 0x08000000-0x080fffff]
+> >> >
+> >> >
+> >> > [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
+> >> >
+> >> >
+> >> >
+> >> > [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
+> >> >
+> >> >
+> >> >
+> >> > [    2.922349] pci_bus 0001:00: root bus resource [mem
+> >> > 0x40000000-0x47ffffff]
+> >> >
+> >> >
+> >> > [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
+> >> > will use [bus 00-ff]
+> >> >
+> >> >
+> >> > [    2.937482] PCI: bus0: Fast back to back transfers disabled
+> >> >
+> >> >
+> >> >
+> >> > [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
+> >> > 00-00]), reconfiguring
+> >> >
+> >> >
+> >> > [    2.951713] PCI: bus1: Fast back to back transfers disabled
+> >> >
+> >> >
+> >> >
+> >> > [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
+> >> > 0x40000000-0x400fffff]
+> >> >
+> >> >
+> >> > [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
+> >> > 0x40000000-0x40007fff 64bit]
+> >> >
+> >> >
+> >> > [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
+> >> >
+> >> >
+> >> >
+> >> > [    2.976434] pci 0001:00:00.0:   bridge window [mem
+> >> > 0x40000000-0x400fffff]
+> >> > --
+> >> > Florian
