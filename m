@@ -1,125 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59710 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:37454 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752540AbdJPVXW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Oct 2017 17:23:22 -0400
-Date: Mon, 16 Oct 2017 16:23:20 -0500
+        id S932313AbdJJUJ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Oct 2017 16:09:56 -0400
+Date: Tue, 10 Oct 2017 15:09:45 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Wilson.Snyder@cavium.com,
-        alex.williamson@redhat.com, David Daney <david.daney@cavium.com>,
-        Manish Jaggi <mjaggi@caviumnetworks.com>
-Subject: Re: [PATCH v6] PCI: quirks: update Cavium ThunderX ACS quirk
- implementation
-Message-ID: <20171016212320.GI25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+To: Jim Quinlan <jim2101024@gmail.com>
+Cc: Jon Mason <jon.mason@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
+Message-ID: <20171010200945.GW25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
+ <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
+ <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+ <CAC3K-4qy09zdRuCw+OO1XsBha4LagXDVe_yp9SOY-0ZpaiNKUQ@mail.gmail.com>
+ <CANCKTBtbGgyy-=gYA90WdJAzzTa8k9MS4=adhSsMk+DfiSk9dQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+In-Reply-To: <CANCKTBtbGgyy-=gYA90WdJAzzTa8k9MS4=adhSsMk+DfiSk9dQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc David, Manish]
+On Tue, Oct 10, 2017 at 12:18:58PM -0400, Jim Quinlan wrote:
+> BTW, can someone point out to me what precise provision in the PCI
+> spec says that 8/16/32 bit config space writes must be provided?
 
-Please use a subject line that tells more about what's going on.
-"Update quirk" doesn't really convey any useful information.
-Something like "Apply Cavium ThunderX ACS quirk only to Root Ports".
+PCI r3.0, sec 3.2.2.3.2 ("Software Generation of Configuration
+Transactions") says
 
-On Wed, Sep 27, 2017 at 11:20:39AM -0700, Vadim Lomovtsev wrote:
-> This commit makes Cavium PCI ACS quirk applicable only to Cavium
-> ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
-> in terms of no ACS support advertisement. However, the RTL internally
-> implements similar protection as if ACS had completion/request redirection,
-> upstream forwarding and validation features enabled.
-> 
-> Current quirk implementation doesn't take into account PCIERCs which
-> also needs to be quirked. So the pci device id check mask is updated
-> and check of device ID moved into separate function.
+  In both Type 0 and Type 1 translations, byte enables for the data
+  transfers must be directly copied from the processor bus.
 
-s/PCIE/PCIe/ above
+Maybe I should have mentioned that in the changelog; I guess I thought
+it was obvious from the example in the changelog that we can't handle
+RW1C bits in 8- and 16-bit registers correctly unless the hardware can
+perform 8- and 16-bit config writes.
 
-s/PCIERCs/PCIe Root Ports/ (I assume, since usually a Root Complex
-itself doesn't appear as a pci_dev)
-
-> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-> ---
-> 	v5 -> v6: comment typo fix: change 0xa00 to 0xa000
-> 
->  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
->  1 file changed, 21 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index a4d3361..ed6c76d 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
->  #endif
->  }
->  
-> -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> +/*
-> + * The Cavium downstream ports doesn't advertise their ACS capability registers.
-> + * However, the RTL internally implements similar protection as if
-> + * ACS had completion redirection, forwarding and validation features enabled.
-> + * So by this flags we're asserting that the hardware implements and
-> + * enables equivalent ACS functionality for these flags.
-> + */
-> +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
-
-You are changing the set of flags, which isn't mentioned in the changelog.
-I think the best thing would be to have two patches: one that changes the
-set of flags and a second that changes the set of affected devices.
-
-This set of flags was used twice in the original patch, so a #define made
-sense.  But now you only use it once, so there's no benefit in adding the
-#define, and adding it makes the change in the set of flags harder to see.
-
-> +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
-
-No need to use "__inline__" here.  This isn't performance critical,
-and the compiler will probably inline it anyway because there's only
-one use.
-
->  {
->  	/*
-> -	 * Cavium devices matching this quirk do not perform peer-to-peer
-> -	 * with other functions, allowing masking out these bits as if they
-> -	 * were unimplemented in the ACS capability.
-> +	 * Effectively selects all downstream ports for whole ThunderX 1 family
-> +	 * by 0xa000 mask (which represents 8 SoCs), while the lower bits of device ID
-> +	 * are used to indicate which subdevice is used within the SoC.
-
-Please wrap your comments so they fit in 80 columns.
-
->  	 */
-> -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> +	return (pci_is_pcie(dev) &&
-> +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
-> +		((dev->device & 0xf800) == 0xa000));
-
-I'm just a little confused by the 0xa000 mask you refer to in the
-comment, because the mask in the code is 0xf800.
-
-Previously the quirk applied to all Cavium device IDs in the range
-0xa000-0xa0ff.  Now it applies to device IDs in the range
-0xa000-0xa7ff, but only if they are PCIe Root Ports.  Right?
-
-> +}
->  
-> -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
-> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> +{
-> +	if (!pci_quirk_cavium_acs_match(dev))
->  		return -ENOTTY;
->  
-> -	return acs_flags ? 0 : 1;
-> +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
->  }
->  
->  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
-> -- 
-> 2.4.11
-> 
+> On Tue, Oct 10, 2017 at 10:59 AM, Jon Mason <jon.mason@broadcom.com> wrote:
+> > On Tue, Oct 10, 2017 at 7:10 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >> On Mon, Oct 09, 2017 at 10:33:01PM -0700, Ray Jui wrote:
+> >>> Hi Florian,
+> >>>
+> >>> This is from the following commit:
+> >>>
+> >>> commit fb26592301200dbbe4a9943fe188b57a46716900
+> >>> Author: Bjorn Helgaas <bhelgaas@google.com>
+> >>> Date:   Mon Oct 31 16:00:01 2016 -0500
+> >>>
+> >>>     PCI: Warn on possible RW1C corruption for sub-32 bit config writes
+> >>>
+> >>>     Hardware that supports only 32-bit config writes is not spec-compliant.
+> >>>     For example, if software performs a 16-bit write, we must do a 32-bit read,
+> >>>     merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+> >>>     the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+> >>>     to-clear) bits set, we just inadvertently cleared something we shouldn't
+> >>>     have.
+> >>>
+> >>>     Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+> >>>     similar probe-time warnings from some of the affected host bridge drivers.
+> >>>
+> >>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >>>     Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+> >>>     Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
+> >>>     Acked-by: Thierry Reding <treding@nvidia.com>
+> >>>
+> >>> This warning message will show up on every root complex that can only
+> >>> support 32-bit config register write (instead of 8-bit, 16-bit writes)
+> >>> and iProc based host controller happens to be one of them.
+> >>>
+> >>> This limitation violates the PCIe spec as the 32-bit write may clear
+> >>> RW1C bits of a config register. But I believe those registers are
+> >>> usually used in AER which we do not currently support in the iProc
+> >>> based hos controllers.
+> >>
+> >> This warning is ratelimited, but maybe even that is overkill.  It
+> >> looks like we currently warn on every config write of less than 32
+> >> bits.  How many of those do you see?  Once per boot might be enough,
+> >> or maybe once per device (so we get a hint when loading a new driver).
+> >
+> > It's fairly trivial to change the warning in question to
+> > dev_warn_once().  If this is acceptable, I can crank it out.
+> >
+> > Thanks,
+> > Jon
+> >
+> >>> On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+> >>> > Hi,
+> >>> >
+> >>> > With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
+> >>> > warnings using pcie_iproc; is this something to be worried about?
+> >>> >
+> >>> > [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.632358] pci_bus 0000:00: root bus resource [mem
+> >>> > 0x08000000-0x0fffffff]
+> >>> >
+> >>> >
+> >>> > [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
+> >>> > will use [bus 00-ff]
+> >>> >
+> >>> >
+> >>> > [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0x4 may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0x4 may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0x4c may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0x3e may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0x4 may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
+> >>> > offset 0xc may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.705531] PCI: bus0: Fast back to back transfers disabled
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
+> >>> > 00-00]), reconfiguring
+> >>> >
+> >>> >
+> >>> > [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0x3e may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0xc8 may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0x3e may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> >>> > offset 0x3e may corrupt adjacent RW1C bits
+> >>> >
+> >>> >
+> >>> > [    2.758262] pci 0000:01:00.0: enabling Extended Tags
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.763577] PCI: bus1: Fast back to back transfers disabled
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
+> >>> > 0x08000000-0x080fffff]
+> >>> >
+> >>> >
+> >>> > [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
+> >>> > 0x08000000-0x08003fff 64bit]
+> >>> >
+> >>> >
+> >>> > [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.788293] pci 0000:00:00.0:   bridge window [mem
+> >>> > 0x08000000-0x080fffff]
+> >>> >
+> >>> >
+> >>> > [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.922349] pci_bus 0001:00: root bus resource [mem
+> >>> > 0x40000000-0x47ffffff]
+> >>> >
+> >>> >
+> >>> > [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
+> >>> > will use [bus 00-ff]
+> >>> >
+> >>> >
+> >>> > [    2.937482] PCI: bus0: Fast back to back transfers disabled
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
+> >>> > 00-00]), reconfiguring
+> >>> >
+> >>> >
+> >>> > [    2.951713] PCI: bus1: Fast back to back transfers disabled
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
+> >>> > 0x40000000-0x400fffff]
+> >>> >
+> >>> >
+> >>> > [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
+> >>> > 0x40000000-0x40007fff 64bit]
+> >>> >
+> >>> >
+> >>> > [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
+> >>> >
+> >>> >
+> >>> >
+> >>> > [    2.976434] pci 0001:00:00.0:   bridge window [mem
+> >>> > 0x40000000-0x400fffff]
+> >>> > --
+> >>> > Florian
