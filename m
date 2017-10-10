@@ -1,75 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:46061 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750722AbdJMHLW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Oct 2017 03:11:22 -0400
-Received: by mail-wm0-f65.google.com with SMTP id q124so18796025wmb.0
-        for <linux-pci@vger.kernel.org>; Fri, 13 Oct 2017 00:11:22 -0700 (PDT)
-Date: Fri, 13 Oct 2017 09:11:21 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Roopa Prabhu <roopa@cumulusnetworks.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-        David Miller <davem@davemloft.net>,
-        Steve Lin <steven.lin1@broadcom.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Jiri Pirko <jiri@mellanox.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        "John W. Linville" <linville@tuxdriver.com>,
-        Andy Gospodarek <gospo@broadcom.com>
-Subject: Re: [RFC 0/3] Adding config get/set to devlink
-Message-ID: <20171013071121.GF1952@nanopsycho.orion>
-References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
- <20171012150419.GI14672@nanopsycho>
- <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
- <20171012.120650.1063812043202847517.davem@davemloft.net>
- <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
- <CAJieiUjK4CsBGT5_YidnEGk7mCVYYO_8S0xcsv+XfaW=amGCaQ@mail.gmail.com>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:19720 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932143AbdJJHTc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2017 03:19:32 -0400
+Subject: Re: [PATCH 1/2] PCI: dwc: dra7xx: Create functional dependency
+ between PCIe and PHY
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
+References: <20171009090338.26033-1-kishon@ti.com>
+ <20171009090338.26033-2-kishon@ti.com>
+From: Roger Quadros <rogerq@ti.com>
+Message-ID: <f258c2f0-11a2-60ac-3919-dcc0badfa870@ti.com>
+Date: Tue, 10 Oct 2017 10:19:28 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJieiUjK4CsBGT5_YidnEGk7mCVYYO_8S0xcsv+XfaW=amGCaQ@mail.gmail.com>
+In-Reply-To: <20171009090338.26033-2-kishon@ti.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thu, Oct 12, 2017 at 11:53:56PM CEST, roopa@cumulusnetworks.com wrote:
->On Thu, Oct 12, 2017 at 12:20 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
->> On 10/12/2017 12:06 PM, David Miller wrote:
->>> From: Florian Fainelli <f.fainelli@gmail.com>
->>> Date: Thu, 12 Oct 2017 08:43:59 -0700
->>>
->>>> Once we move ethtool (or however we name its successor) over to
->>>> netlink there is an opportunity for accessing objects that do and do
->>>> not have a netdevice representor today (e.g: management ports on
->>>> switches) with the same interface, and devlink could be used for
->>>> that.
->>>
->>> That is an interesting angle for including this in devlink.
->>>
->>> I'm not so sure what to do about this.
->>>
->>> One suggestion is that devlink is used for getting ethtool stats for
->>> objects lacking netdev representor's, and a new genetlink family is
->>> used for netdev based ethtool.
->>
->> Right, I was also thinking along those lines that we we would have a new
->> generic netlink family for ethtool to support ethtool over netlink.
->
->new api is fine by me. The reason for suggesting devlink was because
->some of the devlink
->port_* ops are close to ethtool ops that can operate on a port/netdev.
->eg split_port could be a netdev operation
->unless you want to split before the netdev is created.
+=EF=BB=BF
+Texas Instruments Finland Oy, Porkkalankatu 22, 00180 Helsinki. Y-tunnus/Bu=
+siness ID: 0615521-4. Kotipaikka/Domicile: Helsinki
 
-Let me correct you. The split is always devlink_port operation. In some
-cases however when there is a mapping between devlink_port and netdev,
-userspace part could translate netdev->devlink_port.
+On 09/10/17 12:03, Kishon Vijay Abraham I wrote:
+> PCI core access configuration space registers in resume_noirq callbacks.
+> In the case of dra7xx, PIPE3 PHY connected to PCIe controller has to be
+> enabled before accessing configuration space registers. Since
+> PIPE3 PHY is enabled by only configuring control module registers, no
+> aborts has been observed so far (though during noirq stage, interface
+> clock of PIPE3 PHY is not enabled).
+>=20
+> With new TRM updates, PIPE3 PHY has to be initialized (PIPE3 PHY
+> registers has to be accessed) as well which requires the interface
+> clock of PIPE3 PHY to be enabled. The interface clock of PIPE3 PHY is
+> derived from OCP2SCP and hence PCIe PHY is modeled as a child of
+> OCP2SCP. Since pm_runtime is not enabled during noirq stage,
+> pm_runtime_get_sync done in phy_init doesn't enable
+> OCP2SCP clocks resulting in abort when PIPE3 PHY registers are
+> accessed.
 
+This could be the case not only with PCIe but even with USB and SATA?
+Maybe today it doesn't complain because USB/SATA is being resumed (by chanc=
+e) after PHY?
 
->
->There are some ops in devlink which are global hw parameters and not
->specific to a port, those fit perfectly with
->devlinks original goal.
+>=20
+> Create a function dependency between PCIe and PHY here to make
+> sure PCIe is suspended before PCIe PHY/OCP2SCP and resumed after
+> PCIe PHY/OCP2SCP.
+>=20
+> Suggested-by: Grygorii Strashko <grygorii.strashko@ti.com>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+>=20
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 34427a6a15af..362607f727ee 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -11,6 +11,7 @@
+>   */
+> =20
+>  #include <linux/delay.h>
+> +#include <linux/device.h>
+>  #include <linux/err.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/irq.h>
+> @@ -594,6 +595,7 @@ static int __init dra7xx_pcie_probe(struct platform_d=
+evice *pdev)
+>  	int i;
+>  	int phy_count;
+>  	struct phy **phy;
+> +	struct device_link **link;
+>  	void __iomem *base;
+>  	struct resource *res;
+>  	struct dw_pcie *pci;
+> @@ -649,11 +651,21 @@ static int __init dra7xx_pcie_probe(struct platform=
+_device *pdev)
+>  	if (!phy)
+>  		return -ENOMEM;
+> =20
+> +	link =3D devm_kzalloc(dev, sizeof(*link) * phy_count, GFP_KERNEL);
+> +	if (!link)
+> +		return -ENOMEM;
+> +
+>  	for (i =3D 0; i < phy_count; i++) {
+>  		snprintf(name, sizeof(name), "pcie-phy%d", i);
+>  		phy[i] =3D devm_phy_get(dev, name);
+>  		if (IS_ERR(phy[i]))
+>  			return PTR_ERR(phy[i]);
+> +
+> +		link[i] =3D device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
+> +		if (!link[i]) {
+> +			ret =3D -EINVAL;
+> +			goto err_link;
+> +		}
+>  	}
+> =20
+>  	dra7xx->base =3D base;
+> @@ -732,6 +744,10 @@ static int __init dra7xx_pcie_probe(struct platform_=
+device *pdev)
+>  	pm_runtime_disable(dev);
+>  	dra7xx_pcie_disable_phy(dra7xx);
+> =20
+> +err_link:
+> +	while (--i >=3D 0)
+> +		device_link_del(link[i]);
+> +
+>  	return ret;
+>  }
+> =20
+>=20
 
-There are 2 handles from the very beginning:
-1) devlink - asic-wide handle
-2) devlink_port - port handle
+--=20
+cheers,
+-roger
