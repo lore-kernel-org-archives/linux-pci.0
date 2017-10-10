@@ -1,34 +1,198 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Jon Mason <jdmason@kudzu.us>, D Meyer <dmeyer@gigaio.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        stephen.bates@microsemi.com, Dave Jiang <dave.jiang@intel.com>,
-        "Hubbe, Allen" <Allen.Hubbe@emc.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        linux-ntb@googlegroups.com,
-        linux-kernel <linux-kernel@vger.kernel.org>
-References: <1508271773-17827-1-git-send-email-dmeyer@gigaio.com>
- <CAPoiz9y-6kyjF1ypt7p+7K6E-m55_Fra5hgFYy--5YXz7V2PdQ@mail.gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <03a7e0e1-6863-e1ae-122f-ec630f4209dd@deltatee.com>
-Date: Tue, 17 Oct 2017 14:57:53 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:56627 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbdJJFdD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2017 01:33:03 -0400
+Received: by mail-wm0-f52.google.com with SMTP id l68so1724869wmd.5
+        for <linux-pci@vger.kernel.org>; Mon, 09 Oct 2017 22:33:02 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAPoiz9y-6kyjF1ypt7p+7K6E-m55_Fra5hgFYy--5YXz7V2PdQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH] NTB: ntb_hw_switchtec: Fix peer BAR bug in
- switchtec_ntb_init_shared_mw
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
+References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Date: Mon, 9 Oct 2017 22:33:01 -0700
+Message-ID: <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
+Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Jon Mason <jon.mason@broadcom.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Florian,
 
+This is from the following commit:
 
-On 17/10/17 02:25 PM, Jon Mason wrote:
->> Signed-off-by: Doug Meyer <dmeyer@gigaio.com>
+commit fb26592301200dbbe4a9943fe188b57a46716900
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Mon Oct 31 16:00:01 2016 -0500
 
-Thanks Doug! This looks good to me.
+    PCI: Warn on possible RW1C corruption for sub-32 bit config writes
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-Fixes: 678784a44ae8 ("NTB: switchtec_ntb: Initialize hardware for memory 
-windows")
+    Hardware that supports only 32-bit config writes is not spec-compliant.
+    For example, if software performs a 16-bit write, we must do a 32-bit read,
+    merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+    the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+    to-clear) bits set, we just inadvertently cleared something we shouldn't
+    have.
 
+    Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+    similar probe-time warnings from some of the affected host bridge drivers.
 
-Logan
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+    Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
+    Acked-by: Thierry Reding <treding@nvidia.com>
+
+This warning message will show up on every root complex that can only
+support 32-bit config register write (instead of 8-bit, 16-bit writes)
+and iProc based host controller happens to be one of them.
+
+This limitation violates the PCIe spec as the 32-bit write may clear
+RW1C bits of a config register. But I believe those registers are
+usually used in AER which we do not currently support in the iProc
+based hos controllers.
+
+Regards,
+
+Ray
+
+On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+> Hi,
+>
+> With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
+> warnings using pcie_iproc; is this something to be worried about?
+>
+> [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
+>
+>
+>
+> [    2.632358] pci_bus 0000:00: root bus resource [mem
+> 0x08000000-0x0fffffff]
+>
+>
+> [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
+> will use [bus 00-ff]
+>
+>
+> [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0x4 may corrupt adjacent RW1C bits
+>
+>
+> [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0x4 may corrupt adjacent RW1C bits
+>
+>
+> [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0x4c may corrupt adjacent RW1C bits
+>
+>
+> [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0x3e may corrupt adjacent RW1C bits
+>
+>
+> [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0x4 may corrupt adjacent RW1C bits
+>
+>
+> [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
+> offset 0xc may corrupt adjacent RW1C bits
+>
+>
+> [    2.705531] PCI: bus0: Fast back to back transfers disabled
+>
+>
+>
+> [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
+> 00-00]), reconfiguring
+>
+>
+> [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0x3e may corrupt adjacent RW1C bits
+>
+>
+> [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0xc8 may corrupt adjacent RW1C bits
+>
+>
+> [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0x3e may corrupt adjacent RW1C bits
+>
+>
+> [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> offset 0x3e may corrupt adjacent RW1C bits
+>
+>
+> [    2.758262] pci 0000:01:00.0: enabling Extended Tags
+>
+>
+>
+> [    2.763577] PCI: bus1: Fast back to back transfers disabled
+>
+>
+>
+> [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
+> 0x08000000-0x080fffff]
+>
+>
+> [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
+> 0x08000000-0x08003fff 64bit]
+>
+>
+> [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
+>
+>
+>
+> [    2.788293] pci 0000:00:00.0:   bridge window [mem
+> 0x08000000-0x080fffff]
+>
+>
+> [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
+>
+>
+>
+> [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
+>
+>
+>
+> [    2.922349] pci_bus 0001:00: root bus resource [mem
+> 0x40000000-0x47ffffff]
+>
+>
+> [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
+> will use [bus 00-ff]
+>
+>
+> [    2.937482] PCI: bus0: Fast back to back transfers disabled
+>
+>
+>
+> [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
+> 00-00]), reconfiguring
+>
+>
+> [    2.951713] PCI: bus1: Fast back to back transfers disabled
+>
+>
+>
+> [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
+> 0x40000000-0x400fffff]
+>
+>
+> [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
+> 0x40000000-0x40007fff 64bit]
+>
+>
+> [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
+>
+>
+>
+> [    2.976434] pci 0001:00:00.0:   bridge window [mem
+> 0x40000000-0x400fffff]
+> --
+> Florian
