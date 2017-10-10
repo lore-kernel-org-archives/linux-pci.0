@@ -1,145 +1,80 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 13 Oct 2017 14:19:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: jeffy <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v5 1/3] PCI: rockchip: Add support for pcie wake irq
-Message-ID: <20171013191906.GF25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
- <20170911151029.25185-2-jeffy.chen@rock-chips.com>
- <20171013030441.GA25517@bhelgaas-glaptop.roam.corp.google.com>
- <2453698.N4jfPaHx71@aspire.rjw.lan>
- <59E10709.4020300@rock-chips.com>
+Return-Path: <SRS0=nFXY=BJ=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=nFXY=BJ=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <59E10709.4020300@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pm@vger.kernel.org,
- Tony Lindgren <tony@atomide.com>, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, briannorris@chromium.org,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
- dianders@chromium.org, linux-rockchip@lists.infradead.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171010001351.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
+ <20171006163919.14898-2-ard.biesheuvel@linaro.org> <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+ <20171009164607.GD30085@arm.com> <20171010001351.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Tue, 10 Oct 2017 10:04:03 +0100
+Message-ID: <CAKv+Gu_Sqkiz8kZC0ab09kS9+ifBYK9gJObTVC81ts8k+JuNKQ@mail.gmail.com>
+Subject: Re: [PATCH v4 1/2] PCI: pci-host-generic: add support for Synopsys
+ DesignWare RC in ECAM mode
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 14, 2017 at 02:33:45AM +0800, jeffy wrote:
-> Hi Rafael,
-> 
-> On 10/13/2017 09:21 PM, Rafael J. Wysocki wrote:
-> >>
-> >>I'm a little skeptical about dev_pm_set_dedicated_wake_irq(), not
-> >>because I know anything at all about it, but because there are only
-> >>five callers in the whole tree, three of which are in UART code, and
-> >>none in anything resembling PCI code.
-> >>
-> >>Is Rockchip really that special, or are we going about this the wrong
-> >>way?
-> 
-> we used to put these codes in the wifi driver, but another wifi
-> vendor suggests these should go into the pcie driver.
-> 
-> and as tony said, it could go into pcie common code :)
+On 10 October 2017 at 01:13, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Mon, Oct 09, 2017 at 05:46:07PM +0100, Will Deacon wrote:
+>> On Fri, Oct 06, 2017 at 06:21:59PM -0500, Bjorn Helgaas wrote:
+>> > On Fri, Oct 06, 2017 at 05:39:18PM +0100, Ard Biesheuvel wrote:
+>> > > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+>> > > index 7d709a7e0aa8..01e81a30e303 100644
+>> > > --- a/drivers/pci/host/pci-host-generic.c
+>> > > +++ b/drivers/pci/host/pci-host-generic.c
+>> > > @@ -35,6 +35,43 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+>> > >   }
+>> > >  };
+>> > >
+>> > > +static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
+>> > > +                            int size, u32 *val)
+>> > > +{
+>> > > + struct pci_config_window *cfg = bus->sysdata;
+>> > > +
+>> > > + /*
+>> > > +  * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
+>> > > +  * type 0 config TLPs sent to devices 1 and up on its downstream port,
+>> > > +  * resulting in devices appearing multiple times on bus 0 unless we
+>> > > +  * filter out those accesses here.
+>> > > +  */
+>> > > + if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
+>> > > +         return PCIBIOS_DEVICE_NOT_FOUND;
+>> >
+>> > I think we should return 0xffffffff data here, as we do in other
+>> > similar accessors (dw_pcie_rd_conf(), altera_pcie_cfg_read(),
+>> > rockchip_pcie_rd_conf()).
+>> >
+>> > Actually, xilinx-nwl has a nice trick: it implements
+>> > nwl_pcie_map_bus(), which returns NULL for invalid devices.  Then it
+>> > can use the generic accessors, and pci_generic_config_read() already
+>> > fills in ~0 for this case.
+>> >
+>> > What do you think of the following?  I put it on my pci/host-generic
+>> > branch for now (pending your response and an ack from Will).
+>>
+>> I'd probably just inline the device check in pci_dw_ecam_map_bus directly,
+>> but either way:
+>>
+>> Acked-by: Will Deacon <will.deacon@arm.com>
+>
+> Thanks.  The reason I split out pci_dw_valid_device() is because there are
+> several other *_valid_device() functions in other drivers that do basically
+> the same thing, and I think it's useful to be able to see that they're all
+> similar, as opposed to being buried in the config accessor or map
+> functions, which vary a little more.
+>
+>> I'm assuming this is so small that there's no point in having a Kconfig
+>> option for these guys that depends on the generic host driver?
+>
+> Good question; I don't care either way.
 
-I guess the implication (I'm speculating here) is that in most
-existing cases, the WAKE# signal is fielded by an ACPI BIOS, which
-knows how it's connected.  I suppose that would end up being turned
-into an SCI that Linux already knows how to handle generically.
-
-And further, that the non-ACPI drivers are relatively new and you're
-the first attempt to use WAKE# with a non-ACPI PCI host driver?
-
-If this setup could be done somewhere in PCIe common code, that would
-be great.  We have so much copy and pasted code already, it'd be nice
-to avoid adding more.  I don't know if this would fit in
-pci_scan_root_bus_bridge(), doing something like dma_configure() does
-to get hold of a struct platform_device * or a struct device * so you
-could lookup the IRQ?
-
-> >>> >+		if (err)
-> >>> >+			dev_err(dev, "failed to setup PCIe wakeup IRQ\n");
-> >>> >+	}
-> >>> >+
-> >>> >  	return 0;
-> >>
-> >>The above could be structured as:
-> >>
-> >>  irq = platform_get_irq_byname(pdev, "wakeup");
-> >>  if (irq < 0)
-> >>    return 0;
-> >>
-> >>  device_init_wakeup(dev, true);
-> >>  err = dev_pm_set_dedicated_wake_irq(dev, irq);
-> >>  if (err) {
-> >>    dev_pm_clear_wake_irq(dev);
-> >>    device_init_wakeup(dev, false);
-> >>  }
-> >>
-> there's no need to call dev_pm_clear_wake_irq when
-> dev_pm_set_dedicated_wake_irq failed...and i agree the
-> device_init_wakeup part, i'll add that in the next version(with
-> brian's comment too)
-> >>  return 0;
-> >>
-> >>to unindent the mainline non-error code.
-> >>
-> >>> >  }
-> >>> >
-> >>> >@@ -1542,11 +1552,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
-> >>> >
-> >>> >  	err = rockchip_pcie_parse_dt(rockchip);
-> >>> >  	if (err)
-> >>> >-		return err;
-> >>> >+		goto err_disable_wake;
-> >>> >
-> >>> >  	err = rockchip_pcie_enable_clocks(rockchip);
-> >>> >  	if (err)
-> >>> >-		return err;
-> >>> >+		goto err_disable_wake;
-> >>> >
-> >>> >  	err = rockchip_pcie_set_vpcie(rockchip);
-> >>> >  	if (err) {
-> >>> >@@ -1656,6 +1666,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
-> >>> >  		regulator_disable(rockchip->vpcie0v9);
-> >>> >  err_set_vpcie:
-> >>> >  	rockchip_pcie_disable_clocks(rockchip);
-> >>> >+err_disable_wake:
-> >>> >+	dev_pm_clear_wake_irq(dev);
-> >>> >+	device_init_wakeup(dev, false);
-> >>
-> >>I think this error cleanup should be done in rockchip_pcie_setup_irq()
-> >>as shown above.  There's no real connection between
-> >>rockchip_pcie_probe() and the wake setup.
-> 
-> this error handling is like inline "rockchip_pcie_cleanup_irq()",
-> and they are harmless to be called even if we don't have the wakeup
-> irq :)
-
-I'm sure they're harmless.  The point is that the cleanup should be
-done near the failure, not in the caller of the caller of the function
-where the failure was detected.  You have:
-
-  rockchip_pcie_probe
-    rockchip_pcie_parse_dt
-      rockchip_pcie_setup_irq
-        err = dev_pm_set_dedicated_wake_irq
-        if (err)
-          dev_err(...)
-
-So you detect the error in rockchip_pcie_setup_irq(), but you clean up
-from it in rockchip_pcie_probe(), which doesn't make sense because
-rockchip_pcie_probe() doesn't do anything related to wakeup interupts.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+In this case, may I suggest we leave the patch as is? Neither of you
+seem to mind, and it will make /my/ life much easier, given that I
+don't have to chase distros to get this driver enabled in their kernel
+configs (unless we make if 'def_bool y', in which case it makes even
+less sense to add the Kconfig option in the first place).
