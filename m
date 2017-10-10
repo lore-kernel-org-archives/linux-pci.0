@@ -1,64 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:15599 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751282AbdJ2Jne (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 05:43:34 -0400
-Subject: Re: [PATCH 08/12] PCI: tegra: Wait for DLLP to finish before entering
- L1 or L2
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
- <1509132569-9398-9-git-send-email-mmaddireddy@nvidia.com>
-From: Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <76a66fde-077b-7ced-7a4b-70d68451295d@nvidia.com>
-Date: Sun, 29 Oct 2017 15:12:48 +0530
+Received: from mail.kernel.org ([198.145.29.99]:56186 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756135AbdJJLK1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Oct 2017 07:10:27 -0400
+Date: Tue, 10 Oct 2017 06:10:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <ray.jui@broadcom.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Jon Mason <jon.mason@broadcom.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
+Message-ID: <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
+ <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1509132569-9398-9-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Oct 09, 2017 at 10:33:01PM -0700, Ray Jui wrote:
+> Hi Florian,
+> 
+> This is from the following commit:
+> 
+> commit fb26592301200dbbe4a9943fe188b57a46716900
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Mon Oct 31 16:00:01 2016 -0500
+> 
+>     PCI: Warn on possible RW1C corruption for sub-32 bit config writes
+> 
+>     Hardware that supports only 32-bit config writes is not spec-compliant.
+>     For example, if software performs a 16-bit write, we must do a 32-bit read,
+>     merge in the 16 bits we intend to write, followed by a 32-bit write.  If
+>     the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
+>     to-clear) bits set, we just inadvertently cleared something we shouldn't
+>     have.
+> 
+>     Add a rate-limited warning when we do sub-32 bit config writes.  Remove
+>     similar probe-time warnings from some of the affected host bridge drivers.
+> 
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+>     Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
+>     Acked-by: Thierry Reding <treding@nvidia.com>
+> 
+> This warning message will show up on every root complex that can only
+> support 32-bit config register write (instead of 8-bit, 16-bit writes)
+> and iProc based host controller happens to be one of them.
+> 
+> This limitation violates the PCIe spec as the 32-bit write may clear
+> RW1C bits of a config register. But I believe those registers are
+> usually used in AER which we do not currently support in the iProc
+> based hos controllers.
 
+This warning is ratelimited, but maybe even that is overkill.  It
+looks like we currently warn on every config write of less than 32
+bits.  How many of those do you see?  Once per boot might be enough,
+or maybe once per device (so we get a hint when loading a new driver).  
 
-On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
-> Set required bit to have LTSSM wait for DLLP to finish before entering L1
-> or L2. This avoids truncation of PM messages which results in receiver
-> errors.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
->   drivers/pci/host/pci-tegra.c | 10 ++++++++++
->   1 file changed, 10 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index b8cac871712b..6028d5f3d5bb 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -217,6 +217,9 @@
->   #define RP_VEND_CTL1	0xf48
->   #define  RP_VEND_CTL1_ERPT	(1 << 13)
->   
-> +#define RP_VEND_XP_BIST	0xf4c
-> +#define  RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
-> +
-BIT macro is preferred here.
->   #define RP_VEND_CTL2 0x00000fa8
->   #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
->   
-> @@ -2160,6 +2163,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
->   	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
->   	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
->   	writel(value, port->base + RP_VEND_XP);
-> +
-> +	/* LTSSM will wait for DLLP to finish before entering L1 or L2,
-> +	 * to avoid truncation of PM messages which results in receiver errors
-> +	 */
-> +	value = readl(port->base + RP_VEND_XP_BIST);
-> +	value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
-> +	writel(value, port->base + RP_VEND_XP_BIST);
->   }
->   /*
->    * FIXME: If there are no PCIe cards attached, then calling this function
+> On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+> > Hi,
+> >
+> > With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
+> > warnings using pcie_iproc; is this something to be worried about?
+> >
+> > [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
+> >
+> >
+> >
+> > [    2.632358] pci_bus 0000:00: root bus resource [mem
+> > 0x08000000-0x0fffffff]
+> >
+> >
+> > [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
+> > will use [bus 00-ff]
+> >
+> >
+> > [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0x4 may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0x4 may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0x4c may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0x3e may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0x4 may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
+> > offset 0xc may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.705531] PCI: bus0: Fast back to back transfers disabled
+> >
+> >
+> >
+> > [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
+> > 00-00]), reconfiguring
+> >
+> >
+> > [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0x3e may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0xc8 may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0x3e may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
+> > offset 0x3e may corrupt adjacent RW1C bits
+> >
+> >
+> > [    2.758262] pci 0000:01:00.0: enabling Extended Tags
+> >
+> >
+> >
+> > [    2.763577] PCI: bus1: Fast back to back transfers disabled
+> >
+> >
+> >
+> > [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
+> > 0x08000000-0x080fffff]
+> >
+> >
+> > [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
+> > 0x08000000-0x08003fff 64bit]
+> >
+> >
+> > [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
+> >
+> >
+> >
+> > [    2.788293] pci 0000:00:00.0:   bridge window [mem
+> > 0x08000000-0x080fffff]
+> >
+> >
+> > [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
+> >
+> >
+> >
+> > [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
+> >
+> >
+> >
+> > [    2.922349] pci_bus 0001:00: root bus resource [mem
+> > 0x40000000-0x47ffffff]
+> >
+> >
+> > [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
+> > will use [bus 00-ff]
+> >
+> >
+> > [    2.937482] PCI: bus0: Fast back to back transfers disabled
+> >
+> >
+> >
+> > [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
+> > 00-00]), reconfiguring
+> >
+> >
+> > [    2.951713] PCI: bus1: Fast back to back transfers disabled
+> >
+> >
+> >
+> > [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
+> > 0x40000000-0x400fffff]
+> >
+> >
+> > [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
+> > 0x40000000-0x40007fff 64bit]
+> >
+> >
+> > [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
+> >
+> >
+> >
+> > [    2.976434] pci 0001:00:00.0:   bridge window [mem
+> > 0x40000000-0x400fffff]
+> > --
+> > Florian
