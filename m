@@ -1,198 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:56627 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750950AbdJJFdD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2017 01:33:03 -0400
-Received: by mail-wm0-f52.google.com with SMTP id l68so1724869wmd.5
-        for <linux-pci@vger.kernel.org>; Mon, 09 Oct 2017 22:33:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
-References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
-From: Ray Jui <ray.jui@broadcom.com>
-Date: Mon, 9 Oct 2017 22:33:01 -0700
-Message-ID: <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
-Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Jon Mason <jon.mason@broadcom.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+Received: from mail.kernel.org ([198.145.29.99]:55230 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755907AbdJJLD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Oct 2017 07:03:56 -0400
+Date: Tue, 10 Oct 2017 06:03:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alan Cox <alan@linux.intel.com>
+Cc: "Hunter, Adrian" <adrian.hunter@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        linux-acpi <linux-acpi@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-related
+ host controllers
+Message-ID: <20171010110351.GU25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1507294259-20438-1-git-send-email-adrian.hunter@intel.com>
+ <20171006162048.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+ <ada41e9b-6fb3-82ab-e458-af4942adba2d@intel.com>
+ <20171009134154.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
+ <363DA0ED52042842948283D2FC38E4649BF3590E@IRSMSX106.ger.corp.intel.com>
+ <20171009202502.GN25517@bhelgaas-glaptop.roam.corp.google.com>
+ <1507626095.26339.5.camel@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1507626095.26339.5.camel@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Florian,
+On Tue, Oct 10, 2017 at 10:01:35AM +0100, Alan Cox wrote:
+> > Your concern was that a quirk would require a long list of device IDs
+> > and we'd have to add new ones.  I share that concern,
+> 
+> I'm not sure I do. The bus topology tells you what is on die, and the
+> id of the root bridge tells you if it's one of the parts you can do
+> this.
 
-This is from the following commit:
+Your a49d25364dfb ("staging/atomisp: Add support for the Intel IPU
+v2") added the most generic version (pci_d3_delay_fixup() uses
 
-commit fb26592301200dbbe4a9943fe188b57a46716900
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Oct 31 16:00:01 2016 -0500
+  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_d3_delay_fixup);
 
-    PCI: Warn on possible RW1C corruption for sub-32 bit config writes
+so there's no list of device IDs.  If this is really a property of the
+family (BYT/CHT/etc), it makes sense to me to do it that way, but if
+you think it's better to have a list, that's OK too.
 
-    Hardware that supports only 32-bit config writes is not spec-compliant.
-    For example, if software performs a 16-bit write, we must do a 32-bit read,
-    merge in the 16 bits we intend to write, followed by a 32-bit write.  If
-    the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
-    to-clear) bits set, we just inadvertently cleared something we shouldn't
-    have.
+The more interesting question to me is whether the quirk should be in
+an optional driver or in the always-present arch code.  My assumption
+is that putting it in the driver means that if the driver isn't
+enabled, we're doing unnecessary delays.
 
-    Add a rate-limited warning when we do sub-32 bit config writes.  Remove
-    similar probe-time warnings from some of the affected host bridge drivers.
-
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
-    Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
-    Acked-by: Thierry Reding <treding@nvidia.com>
-
-This warning message will show up on every root complex that can only
-support 32-bit config register write (instead of 8-bit, 16-bit writes)
-and iProc based host controller happens to be one of them.
-
-This limitation violates the PCIe spec as the 32-bit write may clear
-RW1C bits of a config register. But I believe those registers are
-usually used in AER which we do not currently support in the iProc
-based hos controllers.
-
-Regards,
-
-Ray
-
-On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
-> Hi,
->
-> With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
-> warnings using pcie_iproc; is this something to be worried about?
->
-> [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
->
->
->
-> [    2.632358] pci_bus 0000:00: root bus resource [mem
-> 0x08000000-0x0fffffff]
->
->
-> [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
-> will use [bus 00-ff]
->
->
-> [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0x4 may corrupt adjacent RW1C bits
->
->
-> [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0x4 may corrupt adjacent RW1C bits
->
->
-> [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0x4c may corrupt adjacent RW1C bits
->
->
-> [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0x3e may corrupt adjacent RW1C bits
->
->
-> [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0x4 may corrupt adjacent RW1C bits
->
->
-> [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
-> offset 0xc may corrupt adjacent RW1C bits
->
->
-> [    2.705531] PCI: bus0: Fast back to back transfers disabled
->
->
->
-> [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
-> 00-00]), reconfiguring
->
->
-> [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0x3e may corrupt adjacent RW1C bits
->
->
-> [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0xc8 may corrupt adjacent RW1C bits
->
->
-> [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0x3e may corrupt adjacent RW1C bits
->
->
-> [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> offset 0x3e may corrupt adjacent RW1C bits
->
->
-> [    2.758262] pci 0000:01:00.0: enabling Extended Tags
->
->
->
-> [    2.763577] PCI: bus1: Fast back to back transfers disabled
->
->
->
-> [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
-> 0x08000000-0x080fffff]
->
->
-> [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
-> 0x08000000-0x08003fff 64bit]
->
->
-> [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
->
->
->
-> [    2.788293] pci 0000:00:00.0:   bridge window [mem
-> 0x08000000-0x080fffff]
->
->
-> [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
->
->
->
-> [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
->
->
->
-> [    2.922349] pci_bus 0001:00: root bus resource [mem
-> 0x40000000-0x47ffffff]
->
->
-> [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
-> will use [bus 00-ff]
->
->
-> [    2.937482] PCI: bus0: Fast back to back transfers disabled
->
->
->
-> [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
-> 00-00]), reconfiguring
->
->
-> [    2.951713] PCI: bus1: Fast back to back transfers disabled
->
->
->
-> [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
-> 0x40000000-0x400fffff]
->
->
-> [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
-> 0x40000000-0x40007fff 64bit]
->
->
-> [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
->
->
->
-> [    2.976434] pci 0001:00:00.0:   bridge window [mem
-> 0x40000000-0x400fffff]
-> --
-> Florian
+Bjorn
