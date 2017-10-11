@@ -1,74 +1,49 @@
-Return-Path: <SRS0=Ab4q=BR=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=Ab4q=BR=chromium.org=briannorris@kernel.org>
-Date: Tue, 17 Oct 2017 18:03:14 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, shawn.lin@rock-chips.com,
-	dianders@chromium.org, Heiko Stuebner <heiko@sntech.de>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v6 1/3] PCI: rockchip: Add support for pcie wake irq
-Message-ID: <20171018010312.GB65743@google.com>
-References: <20171013195059.23865-1-jeffy.chen@rock-chips.com>
- <20171013195059.23865-2-jeffy.chen@rock-chips.com>
- <20171016200350.GH25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:50052 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752580AbdJKUHL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Oct 2017 16:07:11 -0400
+Date: Wed, 11 Oct 2017 15:07:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au, seroyer@linux.vnet.ibm.com,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v3 0/2] Prepartion for SR-IOV PowerVM Enablement
+Message-ID: <20171011200709.GS25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171016200350.GH25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 16, 2017 at 03:03:50PM -0500, Bjorn Helgaas wrote:
-> On Sat, Oct 14, 2017 at 03:50:56AM +0800, Jeffy Chen wrote:
-> > Add support for PCIE_WAKE pin in rockchip pcie driver.
-> > 
-> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> > ---
-> > 
-> > Changes in v6:
-> > Fix device_init_wake error handling, and add some comments.
-> > 
-> > Changes in v5:
-> > Rebase
-> > 
-> > Changes in v3:
-> > Fix error handling
-> > 
-> > Changes in v2:
-> > Use dev_pm_set_dedicated_wake_irq
-> >         -- Suggested by Brian Norris <briannorris@chromium.com>
-> > 
-> >  drivers/pci/host/pcie-rockchip.c | 27 +++++++++++++++++++++------
-> >  1 file changed, 21 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> > index 9051c6c8fea4..268513b6c9c4 100644
-> > --- a/drivers/pci/host/pcie-rockchip.c
-> > +++ b/drivers/pci/host/pcie-rockchip.c
-...
-> > @@ -995,6 +996,17 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
-> >  		return err;
-> >  	}
-> >  
-> > +	irq = platform_get_irq_byname(pdev, "wakeup");
-> > +	if (irq >= 0) {
-> > +		/* Must init wakeup before setting dedicated wakeup irq. */
-> > +		device_init_wakeup(dev, true);
-> > +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
-> > +		if (err) {
-> > +			dev_err(dev, "failed to setup PCIe wakeup IRQ\n");
-> > +			device_init_wakeup(dev, false);
-> > +		}
-> > +	}
+On Fri, Sep 22, 2017 at 09:19:26AM -0500, Bryant G. Ly wrote:
+> This patch series is to prepare for enabling SR-IOV
+> on pseries. It separates the calls to be machine dependent
+> and does not change any current functionality.
 > 
-> There's nothing Rockchip-specific here, so I'm hoping you can explore
-> putting this support in the PCI core, so any system that describes the
-> WAKE# connection in the DT can benefit.
+> The patch linked below which is currently in review is a dependency:
+> https://patchwork.kernel.org/patch/9882915/
+> 
+> v1 - Initial patch
+> v2 - Addressed Bjorn's comment on creating a highly platform
+>      dependent global exported symbol.
+> v3 - Based patch off linux-ppc/master
+> 
+> Bryant G. Ly (2):
+>   powerpc/kernel: Separate SR-IOV Calls
+>   pseries/eeh: Add Pseries pcibios_bus_add_device
+> 
+>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
+>  8 files changed, 78 insertions(+), 29 deletions(-)
 
-I guess it could work to look into pci_create_root_bus(), and
-do something like the following?
-
-	if (IS_ENABLED(CONFIG_OF) && parent && parent->of_node)
-		... do OF parsing for generic features like WAKE# ...
-
-Brian
+I assume this will go via a powerpc tree, since it doesn't touch
+anything in drivers/pci or any PCI core interfaces.
