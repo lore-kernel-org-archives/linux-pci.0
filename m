@@ -1,63 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:55825 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751115AbdJ0Fkc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 01:40:32 -0400
-Received: by mail-io0-f195.google.com with SMTP id p186so10256086ioe.12
-        for <linux-pci@vger.kernel.org>; Thu, 26 Oct 2017 22:40:32 -0700 (PDT)
-Date: Thu, 26 Oct 2017 22:40:28 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: jeffy <jeffy.chen@rock-chips.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, rjw@rjwysocki.net, dianders@chromium.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [RFC PATCH v8 1/7] dt-bindings: PCI: Add definition of PCIe
- WAKE# irq and PCI irq
-Message-ID: <20171027054025.GA85582@google.com>
-References: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
- <20171026132840.20946-2-jeffy.chen@rock-chips.com>
- <20171027023331.GA11665@google.com>
- <59F2A2BA.5030307@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:52638 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752229AbdJKNqy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Oct 2017 09:46:54 -0400
+Date: Wed, 11 Oct 2017 08:46:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ilia Mirkin <imirkin@alum.mit.edu>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Ben Skeggs <bskeggs@redhat.com>
+Subject: Re: Dynamically adding a PCI subfunction
+Message-ID: <20171011134652.GH25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
+ <20171011114735.GE25517@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKb7Uvid3024Ja=YEzcSmjgnXp5Ti19i07yD7EZz3+POkkjq-A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <59F2A2BA.5030307@rock-chips.com>
+In-Reply-To: <CAKb7Uvid3024Ja=YEzcSmjgnXp5Ti19i07yD7EZz3+POkkjq-A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jeffy,
-
-On Fri, Oct 27, 2017 at 11:06:34AM +0800, Jeffy Chen wrote:
-> On 10/27/2017 10:33 AM, Brian Norris wrote:
-> >In fact, I'm pretty sure this series fails to actually look in the host
-> >bridge for the "wakeup" interrupt at all! Did you actually test this?
-> actually it could...
+On Wed, Oct 11, 2017 at 08:54:05AM -0400, Ilia Mirkin wrote:
+> On Wed, Oct 11, 2017 at 7:47 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Mon, Oct 09, 2017 at 10:41:38AM -0400, Ilia Mirkin wrote:
+> >> Hello,
+> >>
+> >> As a bit of background, all NVIDIA GPUs since GT215 have an audio
+> >> subfunction for HDMI(/DP) audio to be sent to the sink. This generally
+> >> works.
+> >>
+> >> However some, especially laptop, devices come up with that function
+> >> disabled. We have a quirk to enable it when coming back from runpm,
+> >> but that doesn't help the init case. Basically we have to write a bit
+> >> to the PCI config space:
+> >>
+> >> https://github.com/torvalds/linux/blob/v4.12/drivers/gpu/drm/nouveau/nouveau_drm.c#L783
+> >>
+> >> (MMIO 0x88000 is an alias for the PCI config space)
+> >
+> >   /* do magic */
+> >   nvif_mask(&device->object, 0x088488, (1 << 25), (1 << 25));
+> >
+> > Wow, that *is* inscrutable magic.  I gave up trying to convince myself
+> > that this turns into pci_write_config_word() eventually.
+> >
+> > 0x88000 is way too big for an offset into PCI config space (it's only
+> > 4096 bytes per device at most), so I don't know what sort of alias it
+> > could be.  It doesn't look like a MMCONFIG address (which the driver
+> > shouldn't be using directly anyway).
 > 
-> static void *of_pci_setup(struct device *dev)
-> {
-> ...
->         device_init_wakeup(dev, false);
+> 0x88000 is an offset into one of the BARs. At this offset is a mirror
+> of the PCI config space (or you could say that the PCI config space is
+> a mirror of these registers... we'll never know). The "magic" comment
+> probably refers to flipping the bit though, since it's the "make it
+> work" bit.
+
+OK, that makes sense.  If you made a quirk, you might want to use a
+config access, since using MMIO means you depend on the BAR having
+been assigned space.  Often the BIOS will have assigned the BAR, but
+there's no requirement for it to do so.
+
+> >> This works for runtime pm resume, since the device was originally
+> >> there and we just have to make sure the underlying device agrees with
+> >> it, but when it's missing on boot, we have to convince linux that it
+> >> exists, bind a driver, etc.
+> >>
+> >> What's the best way of going about doing that?
+> >
+> > If you make an early quirk for the GPU device, we'll run the quirk
+> > while enumerating it.  If it can enable the audio device, and if the
+> > audio device is at a higher device number, the PCI core should try to
+> > enumerate it later.  But there might be wrinkles if setting the bit
+> > turns a single-function device into a multi-function one, because the
+> > core might have already decided it didn't need to scan for more
+> > functions.  DECLARE_PCI_FIXUP_CLASS_EARLY() is the place to start.
 > 
->         dev_info(dev, "Wakeup IRQ %d\n", irq);
->         return data;
-> }
-> 
-> [    1.546561] OF: PCI:   MEM 0xfa000000..0xfbdfffff -> 0xfa000000
-> [    1.553154] OF: PCI:    IO 0xfbe00000..0xfbefffff -> 0xfbe00000
-> [    1.560859] rockchip-pcie f8000000.pcie: Wakeup IRQ 64
-> [    1.566555] rockchip-pcie f8000000.pcie: PCI host bridge to bus
+> I thought about this type of approach but I have two concerns:
+>  - We can't just do this willy-nilly on *any* NVIDIA GPU, only on
+> "new" ones. The definition of "new" here, of course, is like 2010, and
+> there have been a lot of chips released since then. Each chip is
+> allocated a group of 0x20 or 0x40 PCI device ids, but it'll still be a
+> lot of code. Do you really want this in drivers/pci/quirks.c?
 
-Hmm, I think I missed the .setup_host_bridge() stuff. So you do handle
-both. I'll have to take a little closer look tomorrow. But you
-definitely at least need to improve the documentation as mentioned.
+It sounds like this is basically a workaround for a BIOS bug -- it
+forgot to enable the audio device.  If you complain to the vendor,
+they might eventually fix it and you won't need to add new devices.
 
-Another odd thing about this series is that the interrupt doesn't
-actually show up in /proc/interrupts, /sys/kernel/debug/gpio, or
-similar, seemingly because the wakeirq is requested/released every time
-we suspend/resume. So it's really not that obvious that the interrupt is
-being configured properly. That's not really a functional problem,
-necessarily, but it doesn't quite seem ideal.
+>  - This fixup will be applied no matter what. I wonder if that's an OK
+> thing to do -- feels like this sort of thing should be scoped to the
+> driver. I was assuming there'd be some magic hotplug function that
+> could be called. I suppose we could condition the quirk on
+> CONFIG_NOUVEAU being built (into the kernel or otherwise), but that's
+> still a coarse tool given that distros enable everything.
 
-Brian
+You can have conditions in your fixup -- only certain devices, certain
+platforms, etc.
+
+> How would I find out about the single-function vs multi-function
+> issue? Is there a separate bit in the pci config that indicates a
+> multi-function device, or do you just mean it's an implementation
+> issue in the pci core which might not handle a quirk that adds a
+> second device?
+
+There's a bit in the header that tells us whether it's a multifunction
+device.  See pci_setup_device(), where it sets dev->multifunction.
+That happens before we run early quirks, so if enabling the audio
+device in the quirk changed the bit, we'd have a problem.  But you'll
+have to experiment.  It could be that the GPU identifies as a
+multifunction device even if the audio device is disabled.
+
+Bjorn
