@@ -1,81 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bao Xiaowei <xiaowei.bao@nxp.com>
-To: <robh+dt@kernel.org>, <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <bhelgaas@google.com>, <shawnguo@kernel.org>,
- <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
- <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>, <leoyang.li@nxp.com>,
- <kishon@ti.com>, <jingoohan1@gmail.com>, <pbrobinson@gmail.com>,
- <songxiaowei@hisilicon.com>, <devicetree@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
- <Zhiqiang.Hou@nxp.com>, <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
-Subject: [PATCH 1/3] ARMv8: dts: ls1046a: add the property of IB and OB
-Date: Tue, 24 Oct 2017 16:30:43 +0800
-Message-ID: <20171024083045.31135-2-xiaowei.bao@nxp.com>
-In-Reply-To: <20171024083045.31135-1-xiaowei.bao@nxp.com>
-References: <20171024083045.31135-1-xiaowei.bao@nxp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51772 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752130AbdJKNex (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Oct 2017 09:34:53 -0400
+Date: Wed, 11 Oct 2017 08:34:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: 'Dongdong Liu' <liudongdong3@huawei.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>,
+        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+        "charles.chenxin@huawei.com" <charles.chenxin@huawei.com>,
+        "linuxarm@huawei.com" <linuxarm@huawei.com>
+Subject: Re: [PATCH V4 2/2] PCI/portdrv: Add #defines for the AER and DPC
+ Interrupt Message Number masks
+Message-ID: <20171011133451.GG25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
+ <1507719178-112556-3-git-send-email-liudongdong3@huawei.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD0091277@AcuExch.aculab.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bao Xiaowei <xiaowei.bao@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD0091277@AcuExch.aculab.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the property of inbind and outbind windows number for ep
-driver.
+On Wed, Oct 11, 2017 at 01:01:26PM +0000, David Laight wrote:
+> From: Dongdong Liu
+> > Sent: 11 October 2017 11:53
+> > In the AER case, the mask isn't strictly necessary because there are no
+> > higher-order bits above the Interrupt Message Number, but using a #define
+> > will make it possible to grep for it.
+> > 
+> > Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> > ---
+> >  drivers/pci/pcie/portdrv_core.c | 4 ++--
+> >  include/uapi/linux/pci_regs.h   | 2 ++
+> >  2 files changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> > index 9692379..2b48297 100644
+> > --- a/drivers/pci/pcie/portdrv_core.c
+> > +++ b/drivers/pci/pcie/portdrv_core.c
+> > @@ -116,7 +116,7 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+> >  		 */
+> >  		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> >  		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+> > -		entry = reg32 >> 27;
+> > +		entry = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
+> 
+> You've still got the hard coded 27 - which is almost more important than the mask.
+> Perhaps define things so this is:
+> 		entry = PCI_ERR_ROOT_AER_IRQ(reg32);
+> 
+> Think I'd shift then mask with 0x1f.
 
-add the inband or outband window entry for pcie controller
-ep driver used in dts.
+Personally, I prefer to have the mask unshifted so it's easy to see
+where the fields are in the register and to compare them with the
+spec, e.g.,
 
-Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi | 6 ++++++
- 1 file changed, 6 insertions(+)
+  #define  PCI_EXP_DEVCAP_PAYLOAD 0x00000007 /* Max_Payload_Size */
+  #define  PCI_EXP_DEVCAP_PHANTOM 0x00000018 /* Phantom functions */
+  #define  PCI_EXP_DEVCAP_EXT_TAG 0x00000020 /* Extended tags */
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-index 06b5e12d04d8..f8332669663c 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-@@ -674,6 +674,8 @@
- 			device_type = "pci";
- 			dma-coherent;
- 			num-lanes = <4>;
-+			num-ib-windows = <6>;
-+			num-ob-windows = <6>;
- 			bus-range = <0x0 0xff>;
- 			ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
- 				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-@@ -699,6 +701,8 @@
- 			device_type = "pci";
- 			dma-coherent;
- 			num-lanes = <2>;
-+			num-ib-windows = <6>;
-+			num-ob-windows = <6>;
- 			bus-range = <0x0 0xff>;
- 			ranges = <0x81000000 0x0 0x00000000 0x48 0x00010000 0x0 0x00010000   /* downstream I/O */
- 				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-@@ -724,6 +728,8 @@
- 			device_type = "pci";
- 			dma-coherent;
- 			num-lanes = <2>;
-+			num-ib-windows = <6>;
-+			num-ob-windows = <6>;
- 			bus-range = <0x0 0xff>;
- 			ranges = <0x81000000 0x0 0x00000000 0x50 0x00010000 0x0 0x00010000   /* downstream I/O */
- 				  0x82000000 0x0 0x40000000 0x50 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
--- 
-2.14.1
+Should there be a #define for the shift?  Maybe.  It doesn't bother me
+unless it's used in many places.  Here I think there'd only be one
+use, so having it hard-coded along with the symbolic mask is enough
+for me.  Sometimes too many #defines clutter up the include file.
 
+Just my personal preferences.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
