@@ -1,49 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42792 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:49252 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751691AbdJaImp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Oct 2017 04:42:45 -0400
-Subject: Cleaning up non-standard PCIe ECAM on Arm servers
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-pci@vger.kernel.org
-References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
- <20171006163919.14898-2-ard.biesheuvel@linaro.org>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Leif Lindholm <leif.lindholm@linaro.org>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        Will Deacon <will.deacon@arm.com>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <2621d6ac-3b5c-7191-02eb-2f4980890d03@redhat.com>
-Date: Tue, 31 Oct 2017 04:42:38 -0400
+        id S1752275AbdJKUF1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Oct 2017 16:05:27 -0400
+Date: Wed, 11 Oct 2017 15:05:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au, seroyer@linux.vnet.ibm.com,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+Message-ID: <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
+ <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20171006163919.14898-2-ard.biesheuvel@linaro.org>
-Content-Type: text/plain; charset=gbk
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/06/2017 12:39 PM, Ard Biesheuvel wrote:
-> Some implementations of the Synopsys DesignWare PCIe controller implement
-> a so-called ECAM shift mode, which allows a static memory window to be
-> configured that covers the configuration space of the entire bus range.
+On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:
+> This patch adds the machine dependent call for
+> pcibios_bus_add_device, since the previous patch
+> separated the calls out between the PowerNV and PowerVM.
+> 
+> The difference here is that for the PowerVM environment
+> we do not want match_driver set because in this environment
+> we do not want the VF device drivers to load immediately, due to
+> firmware loading the device node when VF device is assigned to the
+> logical partition.
+> 
+> This patch will depend on the patch linked below, which is under
+> review.
+> 
+> https://patchwork.kernel.org/patch/9882915/
+> 
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+> ---
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+> 
+> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> index 6b812ad990e4..45946ee90985 100644
+> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
+> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> @@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
+>  static DEFINE_SPINLOCK(slot_errbuf_lock);
+>  static int eeh_error_buf_size;
+>  
+> +void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+> +{
+> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +
+> +	if (!pdev->is_virtfn)
+> +		return;
+> +
+> +	pdn->device_id  =  pdev->device;
+> +	pdn->vendor_id  =  pdev->vendor;
+> +	pdn->class_code =  pdev->class;
+> +
+> +	/*
+> +	 * The following operations will fail if VF's sysfs files
+> +	 * aren't created or its resources aren't finalized.
+> +	 */
+> +	eeh_add_device_early(pdn);
+> +	eeh_add_device_late(pdev);
+> +	eeh_sysfs_add_device(pdev);
+> +	pdev->match_driver = -1;
 
-Side note that we gave a presentation at Arm TechCon last week with
-Cadence about a new program they're offering to perform verification of
-PCIe pre-silicon using Palladium with speedbridges and running full
-server Operating Systems booting using UEFI/ACPI under emulation. We've
-been able to boot RHEL for Arm on these Palladium based platforms for a
-while and are collaborating to turn this into a comprehensive program.
+match_driver is a bool, which should be assigned "true" or "false".
 
-Once that was Cadence effort was announced, I pinged Synopsys to ask
-them to go clean things up properly for their IP as well. Ultimately
-we'll get to all the major IP vendors, and a number of PCIe specific
-vendors have already had prodding from me directly over the years. So if
-folks see this thread, are in the business of selling PCIe RC IP for Arm
-server designs, and we haven't spoken yet, you should ping me. And you
-should also talk with smart folks like Ard on how to do this right.
-
-Jon.
-
--- 
-Computer Architect | Sent from my Fedora powered laptop
+> +}
+> +
+>  /**
+>   * pseries_eeh_init - EEH platform dependent initialization
+>   *
+> @@ -120,6 +141,9 @@ static int pseries_eeh_init(void)
+>  	/* Set EEH probe mode */
+>  	eeh_add_flag(EEH_PROBE_MODE_DEVTREE | EEH_ENABLE_IO_FOR_LOG);
+>  
+> +	/* Set EEH machine dependent code */
+> +	ppc_md.pcibios_bus_add_device = pseries_pcibios_bus_add_device;
+> +
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.11.0 (Apple Git-81)
+> 
