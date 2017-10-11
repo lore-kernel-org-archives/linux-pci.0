@@ -1,118 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.185]:63602 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751586AbdJMQms (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Oct 2017 12:42:48 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Niklas Cassel' <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Niklas Cassel <niklass@axis.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 01/10] PCI: dwc: use DMA-API for allocating MSI data
-Date: Fri, 13 Oct 2017 16:42:46 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD009511B@AcuExch.aculab.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-2-niklas.cassel@axis.com>
-In-Reply-To: <20171013160914.3220-2-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mail.kernel.org ([198.145.29.99]:44158 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750729AbdJKWIW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Oct 2017 18:08:22 -0400
+Date: Wed, 11 Oct 2017 17:08:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/5] PCI: protect restore with device lock to be
+ consistent
+Message-ID: <20171011220819.GW25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Behalf Of Niklas Cassel
-> Sent: 13 October 2017 17:09
-> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
-> to write to this location, the proper way to get the address to this this
-> location is really to use the DMA API, rather than virt_to_phys.
+I think this series makes a lot of sense overall; thanks for doing
+this work!  I had a few comments on the individual patches.
+
+(This response would ordinarily be to the cover letter, but there
+isn't one, so I'm just responding to the first patch.)
+
+On Sat, Sep 23, 2017 at 08:16:54PM -0400, Sinan Kaya wrote:
+> Commit b014e96d1abb ("PCI: Protect pci_error_handlers->reset_notify() usage
+> with device_lock()") added protection around pci_dev_restore() function so
+> that device specific remove callback does not cause a race condition
+> against hotplug.
 > 
-> Using virt_to_phys might work on some systems, but by using the DMA API,
-> we know that it will work on all systems.
+> pci_dev_lock() usage has been forgotten in two different places in the
+> code. Adding locks for pci_slot_restore() and moving pci_dev_restore()
+> inside the locks for pci_try_reset_function().
 > 
-> This is essentially the same thing as allocating a buffer in a driver,
-> to which the endpoint will write to. To do this, we use the DMA API.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 > ---
->  drivers/pci/dwc/pcie-designware-host.c | 23 ++++++++++++++++-------
->  drivers/pci/dwc/pcie-designware.h      |  3 ++-
->  2 files changed, 18 insertions(+), 8 deletions(-)
+>  drivers/pci/pci.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 81e2157a7cfb..f6d152ea2a03 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -83,16 +83,25 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
-> 
->  void dw_pcie_msi_init(struct pcie_port *pp)
->  {
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct device *dev = pci->dev;
-> +	struct page *page;
->  	u64 msi_target;
-> 
-> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
-> -	msi_target = virt_to_phys((void *)pp->msi_data);
-> +	page = alloc_page(GFP_KERNEL | GFP_DMA32);
-> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
-
-Where are the matching frees?
-
-	David
-
-> +	if (dma_mapping_error(dev, pp->msi_data)) {
-> +		dev_err(dev, "failed to map msi data\n");
-> +		__free_page(page);
-> +		return;
-> +	}
-> +	msi_target = (u64)pp->msi_data;
-> 
->  	/* program the msi_data */
->  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> -			    (u32)(msi_target & 0xffffffff));
-> +			    lower_32_bits(msi_target));
->  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
-> -			    (u32)(msi_target >> 32 & 0xffffffff));
-> +			    upper_32_bits(msi_target));
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6078dfc..23681f4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4344,9 +4344,9 @@ int pci_try_reset_function(struct pci_dev *dev)
+>  
+>  	pci_dev_save_and_disable(dev);
+>  	rc = __pci_reset_function_locked(dev);
+> +	pci_dev_restore(dev);
+>  	pci_dev_unlock(dev);
+>  
+> -	pci_dev_restore(dev);
+>  	return rc;
 >  }
+>  EXPORT_SYMBOL_GPL(pci_try_reset_function);
+> @@ -4546,7 +4546,9 @@ static void pci_slot_restore(struct pci_slot *slot)
+>  	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+>  		if (!dev->slot || dev->slot != slot)
+>  			continue;
+> +		pci_dev_lock(dev);
+>  		pci_dev_restore(dev);
+> +		pci_dev_unlock(dev);
+>  		if (dev->subordinate)
+>  			pci_bus_restore(dev->subordinate);
+>  	}
+> -- 
+> 1.9.1
 > 
->  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-> @@ -187,10 +196,10 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
->  	if (pp->ops->get_msi_addr)
->  		msi_target = pp->ops->get_msi_addr(pp);
->  	else
-> -		msi_target = virt_to_phys((void *)pp->msi_data);
-> +		msi_target = (u64)pp->msi_data;
 > 
-> -	msg.address_lo = (u32)(msi_target & 0xffffffff);
-> -	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
-> +	msg.address_lo = lower_32_bits(msi_target);
-> +	msg.address_hi = upper_32_bits(msi_target);
-> 
->  	if (pp->ops->get_msi_data)
->  		msg.data = pp->ops->get_msi_data(pp, pos);
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index e5d9d77b778e..547352a317f8 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -17,6 +17,7 @@
->  #include <linux/irq.h>
->  #include <linux/msi.h>
->  #include <linux/pci.h>
-> +#include <linux/dma-mapping.h>
-> 
->  #include <linux/pci-epc.h>
->  #include <linux/pci-epf.h>
-> @@ -168,7 +169,7 @@ struct pcie_port {
->  	const struct dw_pcie_host_ops *ops;
->  	int			msi_irq;
->  	struct irq_domain	*irq_domain;
-> -	unsigned long		msi_data;
-> +	dma_addr_t		msi_data;
->  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  };
-> 
-> --
-> 2.11.0
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
