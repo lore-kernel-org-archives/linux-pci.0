@@ -1,78 +1,90 @@
-Return-Path: <SRS0=5j1G=BL=gmail.com=wangzhou.bry@kernel.org>
-Return-Path: <SRS0=5j1G=BL=gmail.com=wangzhou.bry@kernel.org>
-Date: Thu, 12 Oct 2017 18:35:29 +0800
-From: Sherlock Wang <wangzhou.bry@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Daniel Vetter <daniel.vetter@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	linux-pci@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
-	Xinliang Liu <z.liuxinliang@hisilicon.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rongrong Zou <zourongrong@gmail.com>,
-	Dave Airlie <airlied@redhat.com>, linuxppc-dev@lists.ozlabs.org,
-	linux-arm-kernel@lists.infradead.org,
-	Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH 0/2] vgaarb: Select fallback default VGA device
-Message-ID: <20171012103529.GA5378@T440>
-References: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 10 Oct 2017 21:18:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH] PCI: aardvark: Move to struct pci_host_bridge IRQ
+ mapping functions
+Message-ID: <20171011021815.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171009070049.2684-1-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171009070049.2684-1-thomas.petazzoni@free-electrons.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
+ Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+ Hanna Hawa <hannah@marvell.com>, stable@vger.kernel.org,
+ Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Victor Gu <xigu@marvell.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 06, 2017 at 05:24:20PM -0500, Bjorn Helgaas wrote:
-> These patches are supposed to fix a problem Daniel Axtens found on the
-> HiSilicon D05 board.  The VGA device there is behind a bridge that doesn't
-> support PCI_BRIDGE_CTL_VGA, so the arbiter never selects the device as the
-> default.
+On Mon, Oct 09, 2017 at 09:00:49AM +0200, Thomas Petazzoni wrote:
+> struct pci_host_bridge gained hooks to map/swizzle IRQs, so that the
+> IRQ mapping can be done automatically by PCI core code through the
+> pci_assign_irq() function instead of resorting to arch-specific
+> implementation callbacks to carry out the same task which force PCI
+> host bridge drivers implementation to implement per-arch kludges to
+> carry out a task that is inherently architecture agnostic.
 > 
-> The first patch extends the arbiter so that if it can't find an enabled VGA
-> device with legacy resources, it selects the first enabled device *without*
-> legacy resources (this is what fixes the D05).  If that fails, it selects
-> the first device that isn't enabled.  The combination of both changes
-> should make the current powerpc fixup_vga() quirk unnecessary.
+> Commit 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from
+> pcibios_alloc_irq()") was assuming all PCI host controller drivers had
+> been converted to use ->map_irq(), but that wasn't the case:
+> pci-aardvark had not been converted. Due to this, it broke the support
+> for legacy PCI interrupts when using the pci-aardvark driver (used on
+> Marvell Armada 3720 platforms).
 > 
-> N.B. It changes the powerpc behavior: if there are several enabled VGA
-> devices, the current quirk selects the last one, while this patch selects
-> the first one.  If this is a problem, I can drop that part of the patch and
-> keep the quirk.
+> In order to fix this, we make sure the ->map_irq and ->swizzle_irq
+> fields of pci_host_bridge are properly filled in.
 > 
-> The second patch pulls out this fallback device detection (and the EFI
-> override) from vga_arb_device_init() to make it easier to read.
+> Fixes: 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()")
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: <stable@vger.kernel.org> # v4.13+
 
-Hi Bjorn,
+Applied to for-linus for v4.14, thanks!
 
-I tested this series in:
-
-        D05 board based on HiSilicon SoC Hip07.
-        And HiSilicon SoC Hip08 based board.
-
-Both of these two SoCs' PCIe host bridge don't support PCI_BRIDGE_CTL_VGA. One
-VGA device which does not support legacy resources has been connected to these
-two PCIe host bridges to test. Default VGA device can be selected in above two
-systems.
-
-Tested-by: Zhou Wang <wangzhou1@hisilicon.com>
-(sorry for my HiSilicon E-mail box miss this serias, so here I have to use my
-gmail box)
-
-Thanks,
-Zhou
-
-> 
 > ---
+> Changes since v2:
+>  - Adjust commit title to match other commits doing the same change in
+>    other drivers
+>  - Improve commit log.
+> ---
+>  drivers/pci/host/pci-aardvark.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> Bjorn Helgaas (2):
->       vgaarb: Select a default VGA device even if there's no legacy VGA
->       vgaarb: Factor out EFI and fallback default device selection
+> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+> index 89f4e3d072d7..26ed0c08f209 100644
+> --- a/drivers/pci/host/pci-aardvark.c
+> +++ b/drivers/pci/host/pci-aardvark.c
+> @@ -935,6 +935,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+>  	bridge->sysdata = pcie;
+>  	bridge->busnr = 0;
+>  	bridge->ops = &advk_pcie_ops;
+> +	bridge->map_irq = of_irq_parse_and_map_pci;
+> +	bridge->swizzle_irq = pci_common_swizzle;
+>  
+>  	ret = pci_scan_root_bus_bridge(bridge);
+>  	if (ret < 0) {
+> -- 
+> 2.13.6
 > 
 > 
->  arch/powerpc/kernel/pci-common.c |   12 ------
->  drivers/gpu/vga/vgaarb.c         |   72 +++++++++++++++++++++++++++++---------
->  2 files changed, 55 insertions(+), 29 deletions(-)
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
