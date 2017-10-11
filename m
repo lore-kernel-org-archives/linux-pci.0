@@ -1,41 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:54570 "EHLO
-        mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751988AbdJKQNX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2017 12:13:23 -0400
-Received: by mail-lf0-f41.google.com with SMTP id d10so2667935lfg.11
-        for <linux-pci@vger.kernel.org>; Wed, 11 Oct 2017 09:13:22 -0700 (PDT)
-Subject: Re: [PATCH] dt-bindings: PCI: rcar: Correct example to match reality
-To: Geert Uytterhoeven <geert+renesas@glider.be>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-References: <1507729813-21501-1-git-send-email-geert+renesas@glider.be>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <850057d8-19dd-6eb8-7f0d-2a147196feaa@cogentembedded.com>
-Date: Wed, 11 Oct 2017 19:13:19 +0300
+Return-Path: <SRS0=aHpY=BK=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=aHpY=BK=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <hch@lst.de>
+CC: <linux-pci@vger.kernel.org>, <stable@vger.kernel.org>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
+Subject: [PATCH V4 0/2] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port service drivers
+Date: Wed, 11 Oct 2017 18:52:56 +0800
+Message-ID: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1507729813-21501-1-git-send-email-geert+renesas@glider.be>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/11/2017 04:50 PM, Geert Uytterhoeven wrote:
+This patchset is to optimize the interrupt vector allocation strategy
+in pcie_port_enable_irq_vec() and add #defines for the AER and DPC
+Interrupt Message Number masks.
 
-> Correct the USB subnodes in the example, cfr. commit f7d569c1e6a6fa73
-> ("ARM: dts: r8a779x: Fix PCI bus dtc warnings"):
->    1. Drop the bogus 'device_type = "pci"' properties,
->    2. Correct the unit addresses.
-> 
-> Update other bits in the example to match real use:
->    1. Rename the USB subnodes from "pci" to "usb",
->    2. Update the "phys" property.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+v3->v4: 
+- Optimize the interrupt vector allocation strategy in
+pcie_port_enable_irq_vec().
+- add #defines for the AER and DPC Interrupt Message Number masks.
+v2->v3:
+- Use a 12-character SHA1 commit id.
+- Rebase on v4.14-rc4.
+v1->v2:
+- Fix comments on PATCH v1.
+- Simplify implementation.
 
-Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Dongdong Liu (2):
+  PCI/portdrv: Fix MSI/MSI-X bug for PCIe port service drivers
+  PCI/portdrv: Add #defines for the AER and DPC Interrupt Message Number
+    masks
 
-MBR, Sergei
+ drivers/pci/pcie/portdrv_core.c | 49 ++++++++++++++---------------------------
+ include/uapi/linux/pci_regs.h   |  2 ++
+ 2 files changed, 18 insertions(+), 33 deletions(-)
+
+-- 
+1.9.1
