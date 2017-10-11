@@ -1,15 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 11 Oct 2017 14:37:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+Subject: Re: [PATCH 1/2] PCI: Disable MSI for Freescale PCIe RC mode
+Message-ID: <20171011193737.GP25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170922072522.36306-1-Zhiqiang.Hou@nxp.com>
+ <20170922072522.36306-2-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <a83617d0-8506-7fe4-2870-d9dbd9ffdb3f@gmail.com>
-References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
- <1508868949-16652-2-git-send-email-jim2101024@gmail.com>
- <a83617d0-8506-7fe4-2870-d9dbd9ffdb3f@gmail.com>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Wed, 25 Oct 2017 11:00:32 -0400
-Message-ID: <CANCKTBtLxAv9tmfi+92n+bYVq6x_ts0YzhH2YZ_jLnc+Dadc7g@mail.gmail.com>
-Subject: Re: [PATCH 1/8] SOC: brcmstb: add memory API
-To: Florian Fainelli <f.fainelli@gmail.com>
+In-Reply-To: <20170922072522.36306-2-Zhiqiang.Hou@nxp.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,57 +16,55 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Linux-MIPS <linux-mips@linux-mips.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>, linux-pci <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
+Cc: roy.zang@nxp.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ minghuan.lian@nxp.com, linux-arm-kernel@lists.infradead.org,
+ bhelgaas@google.com, mingkai.hu@nxp.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 24, 2017 at 8:23 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
-> Hi Jim,
->
-> On 10/24/2017 11:15 AM, Jim Quinlan wrote:
->> +#elif defined(CONFIG_MIPS)
->> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
->> +{
->> +     /* The logic here is fairly simple and hardcoded: if pa <= 0x5000_0000,
->> +      * then this is MEMC0, else MEMC1.
->> +      *
->> +      * For systems with 2GB on MEMC0, MEMC1 starts at 9000_0000, with 1GB
->> +      * on MEMC0, MEMC1 starts at 6000_0000.
->> +      */
->> +     if (pa >= 0x50000000ULL)
->> +             return 1;
->> +     else
->> +             return 0;
->> +}
->> +#endif
->
-> We may be missing an EXPORT_SYMBOL_GPL(brcmstb_memory_phys_to_addr_memc)
-> here?
->
-> Thanks!
-> --
-> Florian
+On Fri, Sep 22, 2017 at 03:25:21PM +0800, Zhiqiang Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> 
+> The Freescale PCIe controller advertises the MSI/MSI-X capability
+> in both RC and Endpoint mode, but in RC mode it doesn't support
+> MSI/MSI-X by it self, it can only transfer MSI/MSI-X from downstream
 
-Hi Florian,
+s/it self,/itself;/
 
-I removed that EXPORT_SYMBOL_GPL() because this particular call is not
-directly invoked PCIe RC driver.  It is indirectly invoked by
-brcmstb_memory_memc_size(), which is exported.
+> devices. So add this quirk to prevent use of MSI/MSI-X in RC mode.
+> 
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> ---
+>  drivers/pci/quirks.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index a4d33619a7bb..c1063a420f0c 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4799,3 +4799,11 @@ static void quirk_no_ats(struct pci_dev *pdev)
+>  /* AMD Stoney platform GPU */
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_no_ats);
+>  #endif /* CONFIG_PCI_ATS */
+> +
+> +/* Freescale PCIe doesn't support MSI in RC mode */
+> +static void quirk_fsl_no_msi(struct pci_dev *pdev)
+> +{
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
+> +		pdev->no_msi = 1;
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, quirk_fsl_no_msi);
 
-Thanks, Jim
+This disables MSI for all Freescale root ports, past, present, and
+future.  Is that really what you want?  This is a bug (the root port
+shouldn't advertise MSI if it doesn't support it), and presumably it
+might be fixed in some future device?
+
+This needs an ack from Minghuan or Mingkai (based on MAINTAINERS).
+
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
