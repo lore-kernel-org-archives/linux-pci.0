@@ -1,82 +1,98 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-Date: Wed, 18 Oct 2017 23:54:28 +0200
-Message-ID: <20665978.JlZ4Hgb5rF@aspire.rjw.lan>
-In-Reply-To: <CAPDyKFpNHL=tZYbQduDJqypz7rbwPwvW7sOymm-djbRSFgZ00g@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2745759.OYb9FSKnNE@aspire.rjw.lan> <CAPDyKFpNHL=tZYbQduDJqypz7rbwPwvW7sOymm-djbRSFgZ00g@mail.gmail.com>
-MIME-Version: 1.0
+From: "Zheng, Lv" <lv.zheng@intel.com>
+To: 'Christoph Hellwig' <hch@infradead.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        "'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>
+CC: "'linux-nvme@lists.infradead.org'" <linux-nvme@lists.infradead.org>
+Subject: RE: ACPI object counter overrun on frequent nvme resets
+Date: Wed, 11 Oct 2017 06:16:10 +0000
+Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF7A228@SHSMSX101.ccr.corp.intel.com>
+References: <20170925130729.GA14151@infradead.org>
+ <1AE640813FDE7649BE1B193DEA596E886CF6F735@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886CF6F735@SHSMSX101.ccr.corp.intel.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 18, 2017 2:34:10 PM CEST Ulf Hansson wrote:
-> [...]
+> From: Zheng, Lv
+> Subject: RE: ACPI object counter overrun on frequent nvme resets
 > 
-> >> Are there any major reasons why the appended patch (obviously untested) won't
-> >> work, then?
-> >
-> > OK, there is a reason, which is the optimizations bundled into
-> > pm_runtime_force_*, because (a) the device may be left in runtime suspend
-> > by them (in which case amba_pm_suspend_early() in my patch should not run)
-> > and (b) pm_runtime_force_resume() may decide to leave it suspended (in which
-> > case amba_pm_suspend_late() in my patch should not run).
+> Hi
 > 
-> Exactly.
-> 
-> >
-> > [BTW, the "leave the device suspended" optimization in pm_runtime_force_*
-> > is potentially problematic too, because it requires the children to do
-> > the right thing, which effectively means that their drivers need to use
-> > pm_runtime_force_* too, but what if they don't want to reuse their
-> > runtime PM callbacks for system-wide PM?]
-> 
-> Deployment of pm_runtime_force_suspend() should generally be done for
-> children devices first.
-> 
-> If some reason that isn't the case, it's expected that the call to
-> pm_runtime_set_suspended() invoked from pm_runtime_force_suspend(),
-> for the parent, should fail and thus abort system suspend.
+> I've converted this bug into a Bugzilla entry here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=197071
 
-Well, generally what about drivers that need to do something significantly
-different for system suspend and runtime PM?  The whole picture seems to be
-falling apart if one of these is involved.
+Christoph, could you help to provide the detailed debugging information there.
+We need dmesg output and acpidump output.
 
-> >
-> > Honestly, I don't like the way this is designed.  IMO, it would be better
-> > to do the optimizations and all in the bus type middle-layer code instead
-> > of expecting drivers to use pm_runtime_force_* as their system-wide PM
-> > callbacks (and that expectation should at least be documented, which I'm
-> > not sure is the case now).  But whatever.
-> >
-> > It all should work the way it does now without pm_runtime_force_* if (a) the
-> > bus type's PM callbacks are changed like in the last patch and the drivers
-> > (b) point their system suspend callbacks to the runtime PM callback routines
-> > and (c) set DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED for the
-> > devices (if they need to do the PM in ->suspend and ->resume, they may set
-> > DPM_FLAG_AVOID_RPM too).
-> >
-> > And if you see a reason why that won't work, please let me know.
+Thanks in advance.
+
 > 
-> I will have look and try out the series by using my local "runtime PM
-> test driver".
+> Thanks
+> Lv
 > 
-> I get back to you with an update on this.
-
-OK, thanks!
-
+> > From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-owner@vger.kernel.org] On Behalf Of
+> > Subject: ACPI object counter overrun on frequent nvme resets
+> >
+> > Hi all,
+> >
+> > when doing an error injection test with the nvme-pci driver on Linux 4.14
+> > almost rc2 (820bf5c419e4b85298e5c3001bd1b5be46d60765 plus a few nvme
+> > patches) that does a lot of nvme resets which shut down and re-enable the
+> > PCI device I see a flood of warnings like:
+> >
+> > [   78.237286] ACPI Warning: Large Reference Count (0x1001) in object ffff88007d702c68, Type=0x1D
+> > (20170728/utdelete-473)
+> >
+> > Throwing in a dump_stack into the path it comes from:
+> >
+> > [   78.238387] CPU: 0 PID: 286 Comm: kworker/u8:3 Not tainted 4.14.0-rc1+ #134
+> > [   78.238998] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1 04/01/2014
+> > [   78.239720] Workqueue: nvme-wq nvme_reset_work
+> > [   78.239995] Call Trace:
+> > [   78.239995]  dump_stack+0x63/0x83
+> > [   78.239995]  acpi_ut_update_ref_count+0x2f7/0x2fe
+> > [   78.239995]  acpi_ut_update_object_reference+0x114/0x182
+> > [   78.239995]  acpi_ut_add_reference+0x1b/0x1e
+> > [   78.239995]  acpi_ds_init_package_element+0x149/0x16e
+> > [   78.239995]  ? acpi_ds_build_internal_object+0xca/0x12c
+> > [   78.239995]  acpi_ds_build_internal_package_obj+0x1b2/0x258
+> > [   78.239995]  ? acpi_ds_build_internal_package_obj+0x1b2/0x258
+> > [   78.239995]  acpi_ds_eval_data_object_operands+0xd3/0x123
+> > [   78.239995]  acpi_ds_exec_end_op+0x288/0x3e1
+> > [   78.239995]  acpi_ps_parse_loop+0x519/0x57b
+> > [   78.239995]  acpi_ps_parse_aml+0x93/0x29c
+> > [   78.239995]  acpi_ps_execute_method+0x148/0x17f
+> > [   78.239995]  acpi_ns_evaluate+0x1c1/0x24d
+> > [   78.239995]  acpi_ut_evaluate_object+0x72/0x197
+> > [   78.239995]  acpi_rs_get_prt_method_data+0x21/0x45
+> > [   78.239995]  acpi_get_irq_routing_table+0x2c/0x30
+> > [   78.239995]  acpi_pci_irq_find_prt_entry+0x8e/0x2c0
+> > [   78.239995]  ? irq_get_irq_data+0x9/0x20
+> > [   78.239995]  ? mp_unmap_irq+0xf/0x70
+> > [   78.239995]  acpi_pci_irq_lookup+0x26/0x1a0
+> > [   78.239995]  acpi_pci_irq_enable+0x5b/0x1b0
+> > [   78.239995]  ? pci_read_config_word+0x22/0x30
+> > [   78.239995]  pcibios_enable_device+0x28/0x30
+> > [   78.239995]  do_pci_enable_device+0x5f/0xe0
+> > [   78.239995]  pci_enable_device_flags+0xc3/0x110
+> > [   78.239995]  pci_enable_device_mem+0xe/0x10
+> > [   78.239995]  nvme_reset_work+0x4c/0x1610
+> > [   78.239995]  ? sched_clock+0x9/0x10
+> > [   78.239995]  ? sched_clock_local+0x17/0x90
+> > [   78.239995]  ? _raw_spin_lock+0x9/0x10
+> > [   78.239995]  ? pick_next_task_fair+0x420/0x690
+> > [   78.239995]  ? _raw_spin_unlock_irq+0x9/0x20
+> > [   78.239995]  ? finish_task_switch+0x7b/0x1f0
+> > [   78.239995]  ? __schedule+0x2d7/0x800
+> > [   78.239995]  process_one_work+0x1db/0x3e0
+> > [   78.239995]  worker_thread+0x43/0x3f0
+> > [   78.239995]  kthread+0x103/0x140
+> > [   78.239995]  ? process_one_work+0x3e0/0x3e0
+> > [   78.239995]  ? kthread_create_on_node+0x40/0x40
+> > [   78.239995]  ret_from_fork+0x25/0x30
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
