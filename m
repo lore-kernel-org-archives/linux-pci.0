@@ -1,107 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:50595 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932143AbdJWSAS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 14:00:18 -0400
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH v14 0/5] Replace PCI pool by DMA pool API
-Date: Mon, 23 Oct 2017 19:59:53 +0200
-Message-Id: <20171023175958.8327-1-romain.perier@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Bqkc=BK=gmail.com=karolherbst@kernel.org>
+Return-Path: <SRS0=Bqkc=BK=gmail.com=karolherbst@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAKb7Uvg34QsDGNfG8qDhnJX8rjaQhJp4ri2vrUyfgpy=0nS7LQ@mail.gmail.com>
+References: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
+ <20171011114735.GE25517@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKb7Uvid3024Ja=YEzcSmjgnXp5Ti19i07yD7EZz3+POkkjq-A@mail.gmail.com>
+ <20171011134652.GH25517@bhelgaas-glaptop.roam.corp.google.com> <CAKb7Uvg34QsDGNfG8qDhnJX8rjaQhJp4ri2vrUyfgpy=0nS7LQ@mail.gmail.com>
+From: Karol Herbst <karolherbst@gmail.com>
+Date: Wed, 11 Oct 2017 16:53:31 +0200
+Message-ID: <CAEXux-anyoug=FniWgEh-1naMoTQKS57mwny-puAsxSyg75NKw@mail.gmail.com>
+Subject: Re: Dynamically adding a PCI subfunction
+To: Ilia Mirkin <imirkin@alum.mit.edu>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+	Ben Skeggs <bskeggs@redhat.com>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-The current PCI pool API are simple macro functions direct expanded to
-the appropriate dma pool functions. The prototypes are almost the same
-and semantically, they are very similar. I propose to use the DMA pool
-API directly and get rid of the old API.
+On Wed, Oct 11, 2017 at 4:18 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
+> On Wed, Oct 11, 2017 at 9:46 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Wed, Oct 11, 2017 at 08:54:05AM -0400, Ilia Mirkin wrote:
+>>> On Wed, Oct 11, 2017 at 7:47 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> >   /* do magic */
+>>> >   nvif_mask(&device->object, 0x088488, (1 << 25), (1 << 25));
+>>> >
+>>> > Wow, that *is* inscrutable magic.  I gave up trying to convince myself
+>>> > that this turns into pci_write_config_word() eventually.
+>>> >
+>>> > 0x88000 is way too big for an offset into PCI config space (it's only
+>>> > 4096 bytes per device at most), so I don't know what sort of alias it
+>>> > could be.  It doesn't look like a MMCONFIG address (which the driver
+>>> > shouldn't be using directly anyway).
+>>>
+>>> 0x88000 is an offset into one of the BARs. At this offset is a mirror
+>>> of the PCI config space (or you could say that the PCI config space is
+>>> a mirror of these registers... we'll never know). The "magic" comment
+>>> probably refers to flipping the bit though, since it's the "make it
+>>> work" bit.
+>>
+>> OK, that makes sense.  If you made a quirk, you might want to use a
+>> config access, since using MMIO means you depend on the BAR having
+>> been assigned space.  Often the BIOS will have assigned the BAR, but
+>> there's no requirement for it to do so.
+>
+> Oh yeah, we'd definitely do it via the PCI config space. Mapping the
+> bar in early pci setup doesn't seem like the wise move. I was just
+> mentioning the 88000 thing so that the code made sense. I guess that
+> didn't go to plan...
+>
+>>> >> This works for runtime pm resume, since the device was originally
+>>> >> there and we just have to make sure the underlying device agrees with
+>>> >> it, but when it's missing on boot, we have to convince linux that it
+>>> >> exists, bind a driver, etc.
+>>> >>
+>>> >> What's the best way of going about doing that?
+>>> >
+>>> > If you make an early quirk for the GPU device, we'll run the quirk
+>>> > while enumerating it.  If it can enable the audio device, and if the
+>>> > audio device is at a higher device number, the PCI core should try to
+>>> > enumerate it later.  But there might be wrinkles if setting the bit
+>>> > turns a single-function device into a multi-function one, because the
+>>> > core might have already decided it didn't need to scan for more
+>>> > functions.  DECLARE_PCI_FIXUP_CLASS_EARLY() is the place to start.
+>>>
+>>> I thought about this type of approach but I have two concerns:
+>>>  - We can't just do this willy-nilly on *any* NVIDIA GPU, only on
+>>> "new" ones. The definition of "new" here, of course, is like 2010, and
+>>> there have been a lot of chips released since then. Each chip is
+>>> allocated a group of 0x20 or 0x40 PCI device ids, but it'll still be a
+>>> lot of code. Do you really want this in drivers/pci/quirks.c?
+>>
+>> It sounds like this is basically a workaround for a BIOS bug -- it
+>> forgot to enable the audio device.  If you complain to the vendor,
+>> they might eventually fix it and you won't need to add new devices.
+>
+> I was thinking of just blanket applying it to all GT215+ chips after
+> we do some spot checks for safety -- the chip can be determined based
+> on PCI id (http://envytools.readthedocs.io/en/latest/hw/pciid.html).
+> There are more GPU pci ids than there are users of nouveau... and the
+> failure has nothing to do with the pci id but rather with the platform
+> and/or vbios author. It's a somewhat widespread problem among laptops
+> and still happens with new ones.
+>
+> I suspect it was treated as a BIOS feature rather than a bug -- you
+> get a second audio device and confuse the user about which one is the
+> "real audio". There are even some laptops which make the audio
+> function appear based on HDMI cable presence at boot (and I think make
+> it appear/disappear dynamically in Windows).
+>
+>>
+>>>  - This fixup will be applied no matter what. I wonder if that's an OK
+>>> thing to do -- feels like this sort of thing should be scoped to the
+>>> driver. I was assuming there'd be some magic hotplug function that
+>>> could be called. I suppose we could condition the quirk on
+>>> CONFIG_NOUVEAU being built (into the kernel or otherwise), but that's
+>>> still a coarse tool given that distros enable everything.
+>>
+>> You can have conditions in your fixup -- only certain devices, certain
+>> platforms, etc.
+>>
+>>> How would I find out about the single-function vs multi-function
+>>> issue? Is there a separate bit in the pci config that indicates a
+>>> multi-function device, or do you just mean it's an implementation
+>>> issue in the pci core which might not handle a quirk that adds a
+>>> second device?
+>>
+>> There's a bit in the header that tells us whether it's a multifunction
+>> device.  See pci_setup_device(), where it sets dev->multifunction.
+>> That happens before we run early quirks, so if enabling the audio
+>> device in the quirk changed the bit, we'd have a problem.  But you'll
+>> have to experiment.  It could be that the GPU identifies as a
+>> multifunction device even if the audio device is disabled.
+>
+> OK, thanks for all the info! I'll try to work something up and get it
+> tested by affected users.
+>
 
-This set of patches, replaces the old API by the dma pool API
-and remove the defines.
+With the bit 25 in 0x488, we can disable/enable the Multifunction
+reporting bit 23 in 0xc, which means if we disable the multifunction
+bit in 0x488, the GPU itself doesn't tell the system it is one either.
+So the write to 0x488 is actually required to get the GPU into a
+state, where it actually reports to be a multifunction device.
 
-Changes in v14:
-- Rebased series onto next-20171018
-- Rebased patch 03/05 on latest driver
-
-Changes in v13:
-- Rebased series onto next-20170906
-- Added a new commit for the hinic ethernet driver
-- Remove previously merged patches
-
-Changes in v12:
-- Rebased series onto next-20170822
-
-Changes in v11:
-- Rebased series onto next-20170809
-- Removed patches 08-14, these have been merged.
-
-Changes in v10:
-- Rebased series onto next-20170706
-- I have fixed and improved patch "scsi: megaraid: Replace PCI pool old API"
-
-Changes in v9:
-- Rebased series onto next-20170522
-- I have fixed and improved the patch for lpfc driver
-
-Changes in v8:
-- Rebased series onto next-20170428
-
-Changes in v7:
-- Rebased series onto next-20170416
-- Added Acked-by, Tested-by and Reviwed-by tags
-
-Changes in v6:
-- Fixed an issue reported by kbuild test robot about changes in DAC960
-- Removed patches 15/19,16/19,17/19,18/19. They have been merged by Greg
-- Added Acked-by Tags
-
-Changes in v5:
-- Re-worded the cover letter (remove sentence about checkpatch.pl)
-- Rebased series onto next-20170308
-- Fix typos in commit message
-- Added Acked-by Tags
-
-Changes in v4:
-- Rebased series onto next-20170301
-- Removed patch 20/20: checks done by checkpath.pl, no longer required.
-  Thanks to Peter and Joe for their feedbacks.
-- Added Reviewed-by tags
-
-Changes in v3:
-- Rebased series onto next-20170224
-- Fix checkpath.pl reports for patch 11/20 and patch 12/20
-- Remove prefix RFC
-Changes in v2:
-- Introduced patch 18/20
-- Fixed cosmetic changes: spaces before brace, live over 80 characters
-- Removed some of the check for NULL pointers before calling dma_pool_destroy
-- Improved the regexp in checkpatch for pci_pool, thanks to Joe Perches
-- Added Tested-by and Acked-by tags
-
-Romain Perier (5):
-  block: DAC960: Replace PCI pool old API
-  dmaengine: pch_dma: Replace PCI pool old API
-  net: e100: Replace PCI pool old API
-  hinic: Replace PCI pool old API
-  PCI: Remove PCI pool macro functions
-
- drivers/block/DAC960.c                            | 38 +++++++++++------------
- drivers/block/DAC960.h                            |  4 +--
- drivers/dma/pch_dma.c                             | 12 +++----
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
- drivers/net/ethernet/intel/e100.c                 | 12 +++----
- include/linux/pci.h                               |  9 ------
- 7 files changed, 38 insertions(+), 49 deletions(-)
-
--- 
-2.14.1
+> Cheers,
+>
+>   -ilia
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
