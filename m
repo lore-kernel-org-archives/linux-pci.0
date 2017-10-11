@@ -1,95 +1,28 @@
-Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v4 3/3] pci/iov: Expose VF drivers Auto Probe Globally
-Date: Tue, 31 Oct 2017 09:47:24 -0500
-In-Reply-To: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
-References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20171031144724.27808-4-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CACRpkdbv1ok6U-xOtH0t5esJ_SD0Sn_JDpxmZg6XViargOM99g@mail.gmail.com>
+References: <20171011140224.3770968-1-arnd@arndb.de> <CACRpkdbv1ok6U-xOtH0t5esJ_SD0Sn_JDpxmZg6XViargOM99g@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 11 Oct 2017 21:08:57 +0200
+Message-ID: <CAK8P3a2w-tgwvr-HcPiMN9hBwOvXJsbUM+iYtkpU1Zu_vhOeCg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: v3-semi: print resources using %pR format string
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When SR-IOV is supported in pci_dev struct the
-member variable drivers_autoprobe controls the
-VF drivers auto probe functionality. This
-patch exposes a gloabal function to be used
-if needed when configuring the pci_dev sriov object.
+On Wed, Oct 11, 2017 at 9:04 PM, Linus Walleij <linus.walleij@linaro.org> wrote:
+> On Wed, Oct 11, 2017 at 4:02 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> Ah this again.
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+>
+> Sorry about it, is it that checkpatch doesn't warn for this?
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/pseries/pci.c |  2 ++
- drivers/pci/iov.c                    | 12 ++++++++++++
- include/linux/pci.h                  |  2 ++
- 3 files changed, 16 insertions(+)
+I only find this during randconfig builds, I don't think there is an easy way
+for checkpatch to find it.
 
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index 14a90cf471cc..48d3af026f90 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -63,6 +63,7 @@ int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- {
- 	/* Allocate PCI data */
- 	add_dev_pci_data(pdev);
-+	pci_vf_drivers_autoprobe(pdev, false);
- 	return 0;
- }
- 
-@@ -70,6 +71,7 @@ int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
- {
- 	/* Release PCI data */
- 	remove_dev_pci_data(pdev);
-+	pci_vf_drivers_autoprobe(pdev, true);
- 	return 0;
- }
- #endif
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ac41c8be9200..41465c06975c 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -634,6 +634,18 @@ void pci_restore_iov_state(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_vf_drivers_autoprobe - set pf property drivers_autoprobe for vfs
-+ * @dev: the PCI device
-+ * @auto_probe: set vf drivers auto probe flag
-+ */
-+void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool auto_probe)
-+{
-+	if (dev->is_physfn)
-+		dev->sriov->drivers_autoprobe = auto_probe;
-+}
-+EXPORT_SYMBOL_GPL(pci_vf_drivers_autoprobe);
-+
-+/**
-  * pci_iov_bus_range - find bus range used by Virtual Function
-  * @bus: the PCI bus
-  *
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f4f8ee5a7362..17a08554baa2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1965,6 +1965,7 @@ int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
- int pci_sriov_get_totalvfs(struct pci_dev *dev);
- resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
-+void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
- #else
- static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
- {
-@@ -1992,6 +1993,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
- { return 0; }
- static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- { return 0; }
-+static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
- #endif
- 
- #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
--- 
-2.13.5 (Apple Git-94)
+       Arnd
