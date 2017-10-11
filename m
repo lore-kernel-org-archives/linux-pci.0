@@ -1,114 +1,71 @@
-Return-Path: <SRS0=v811=BL=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=v811=BL=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-To: Bjorn Helgaas <helgaas@kernel.org>, Michael Ellerman <mpe@ellerman.id.au>
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        seroyer@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>
-References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
- <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
- <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
- <87efq92ei6.fsf@concordia.ellerman.id.au>
- <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Thu, 12 Oct 2017 14:59:23 -0500
+Return-Path: <SRS0=aHpY=BK=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=aHpY=BK=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <hch@lst.de>
+CC: <linux-pci@vger.kernel.org>, <stable@vger.kernel.org>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
+Subject: [PATCH V4 2/2] PCI/portdrv: Add #defines for the AER and DPC Interrupt Message Number masks
+Date: Wed, 11 Oct 2017 18:52:58 +0800
+Message-ID: <1507719178-112556-3-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
+References: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Message-Id: <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
+In the AER case, the mask isn't strictly necessary because there are no
+higher-order bits above the Interrupt Message Number, but using a #define
+will make it possible to grep for it.
 
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ drivers/pci/pcie/portdrv_core.c | 4 ++--
+ include/uapi/linux/pci_regs.h   | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-On 10/12/17 1:29 PM, Bjorn Helgaas wrote:
-> On Thu, Oct 12, 2017 at 03:09:53PM +1100, Michael Ellerman wrote:
->> Bjorn Helgaas <helgaas@kernel.org> writes:
->>
->>> On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:
->>>> This patch adds the machine dependent call for
->>>> pcibios_bus_add_device, since the previous patch
->>>> separated the calls out between the PowerNV and PowerVM.
->>>>
->>>> The difference here is that for the PowerVM environment
->>>> we do not want match_driver set because in this environment
->>>> we do not want the VF device drivers to load immediately, due to
->>>> firmware loading the device node when VF device is assigned to the
->>>> logical partition.
->>>>
->>>> This patch will depend on the patch linked below, which is under
->>>> review.
->>>>
->>>> https://patchwork.kernel.org/patch/9882915/
->>>>
->>>> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
->>>> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
->>>> ---
->>>>   arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
->>>>   1 file changed, 24 insertions(+)
->>>>
->>>> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
->>>> index 6b812ad990e4..45946ee90985 100644
->>>> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
->>>> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
->>>> @@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
->>>>   static DEFINE_SPINLOCK(slot_errbuf_lock);
->>>>   static int eeh_error_buf_size;
->>>>   
->>>> +void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
->>>> +{
->>>> +	struct pci_dn *pdn = pci_get_pdn(pdev);
->>>> +
->>>> +	if (!pdev->is_virtfn)
->>>> +		return;
->>>> +
->>>> +	pdn->device_id  =  pdev->device;
->>>> +	pdn->vendor_id  =  pdev->vendor;
->>>> +	pdn->class_code =  pdev->class;
->>>> +
->>>> +	/*
->>>> +	 * The following operations will fail if VF's sysfs files
->>>> +	 * aren't created or its resources aren't finalized.
->>>> +	 */
->>>> +	eeh_add_device_early(pdn);
->>>> +	eeh_add_device_late(pdev);
->>>> +	eeh_sysfs_add_device(pdev);
->>>> +	pdev->match_driver = -1;
->>> match_driver is a bool, which should be assigned "true" or "false".
->> Above he mentioned a dependency on:
->>
->>    [04/10] PCI: extend pci device match_driver state
->>    https://patchwork.kernel.org/patch/9882915/
->>
->>
->> Which makes it an int.
-> Oh, right, I missed that, thanks.
->
->> Or has that patch been rejected or something?
-> I haven't *rejected* it, but it's low on my priority list, so you
-> shouldn't depend on it unless it adds functionality you really need.
-> If I did apply that particular patch, I would want some rework because
-> it currently obfuscates the match_driver logic.  There's no clue when
-> reading the code what -1/0/1 mean.
-So do you prefer enum's? - If so I can make a change for that.
-> Apparently here you *do* want the "-1 means the PCI core will never
-> set match_driver to 1" functionality, so maybe you do depend on it.
-We depend on the patch because we want that ability to never set 
-match_driver,
-for SRIOV on PowerVM.
->
-> If that's the case, how to you ever bind a driver to these VFs?  The
-> changelog says you don't want VF drivers to load *immediately*, so I
-> assume you do want them to load eventually.
->
-The VF's that get dynamically created within the configure SR-IOV call, 
-on the
-Pseries Platform, wont be matched with a driver. - We do not want it to 
-match.
-
-The Power Hypervisor will load the VFs. The VF's will get assigned(by 
-the user)
-via the HMC or Novalink in this environment which will then trigger PHYP
-to load the VF device node to the device tree.
-
--Bryant
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 9692379..2b48297 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -116,7 +116,7 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+-		entry = reg32 >> 27;
++		entry = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
+ 		if (entry >= nr_entries)
+ 			goto out_free_irqs;
+ 
+@@ -142,7 +142,7 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
+ 		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
+-		entry = reg16 & 0x1f;
++		entry = reg16 & PCI_EXP_DPC_IRQ;
+ 		if (entry >= nr_entries)
+ 			goto out_free_irqs;
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f8d5804..756e704 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -746,6 +746,7 @@
+ #define PCI_ERR_ROOT_FIRST_FATAL	0x00000010 /* First UNC is Fatal */
+ #define PCI_ERR_ROOT_NONFATAL_RCV	0x00000020 /* Non-Fatal Received */
+ #define PCI_ERR_ROOT_FATAL_RCV		0x00000040 /* Fatal Received */
++#define PCI_ERR_ROOT_AER_IRQ		0xf8000000 /* Advanced Error Interrupt Message Number */
+ #define PCI_ERR_ROOT_ERR_SRC	52	/* Error Source Identification */
+ 
+ /* Virtual Channel */
+@@ -960,6 +961,7 @@
+ 
+ /* Downstream Port Containment */
+ #define PCI_EXP_DPC_CAP			4	/* DPC Capability */
++#define PCI_EXP_DPC_IRQ			0x1f	/* DPC Interrupt message number */
+ #define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
+ #define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
+ #define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
+-- 
+1.9.1
