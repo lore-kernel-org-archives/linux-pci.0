@@ -1,47 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:11719 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932284AbdJWOhc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 10:37:32 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH V2 3/7] ARM: tegra: limit PCIe config space mapping to 4K for T30
-Date: Mon, 23 Oct 2017 20:05:08 +0530
-Message-ID: <1508769312-12465-4-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
-References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2] nvme-pci: Use PCI bus address for data/queues in CMB
+To: Christoph Hellwig <hch@lst.de>, Abhishek Shah <abhishek.shah@broadcom.com>
+References: <1506763722-10687-1-git-send-email-abhishek.shah@broadcom.com>
+ <20171001074203.GA11115@lst.de>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <d2d574a7-3639-0917-3051-3ea4669de892@grimberg.me>
+Date: Wed, 11 Oct 2017 13:00:18 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171001074203.GA11115@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jens Axboe <axboe@fb.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@intel.com>, bcm-kernel-feedback-list@broadcom.com,
+ stable@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-reduces PCIe config space mapping size from its current
-256MB to 4K to have only 4K of virtual memory mapping and to be
-in line with driver implementation
+> ---
+>  From b78f4164881125c4fecfdb87878d0120b2177c53 Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Sun, 1 Oct 2017 09:37:35 +0200
+> Subject: nvme-pci: Use PCI bus address for data/queues in CMB
+> 
+> Currently, NVMe PCI host driver is programming CMB dma address as
+> I/O SQs addresses. This results in failures on systems where 1:1
+> outbound mapping is not used (example Broadcom iProc SOCs) because
+> CMB BAR will be progammed with PCI bus address but NVMe PCI EP will
+> try to access CMB using dma address.
+> 
+> To have CMB working on systems without 1:1 outbound mapping, we
+> program PCI bus address for I/O SQs instead of dma address. This
+> approach will work on systems with/without 1:1 outbound mapping.
+> 
+> Based on a report and previous patch from Abhishek Shah.
+> 
+> Fixes: 8ffaadf7 ("NVMe: Use CMB for the IO SQes if available")
+> Cc: stable@vger.kernel.org
+> Reported-by: Abhishek Shah <abhishek.shah@broadcom.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V2:
-* no changes in this patch
+This looks good,
 
- arch/arm/boot/dts/tegra30.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
 
-diff --git a/arch/arm/boot/dts/tegra30.dtsi b/arch/arm/boot/dts/tegra30.dtsi
-index 13960fda7471..b23171f2b86f 100644
---- a/arch/arm/boot/dts/tegra30.dtsi
-+++ b/arch/arm/boot/dts/tegra30.dtsi
-@@ -15,7 +15,7 @@
- 		device_type = "pci";
- 		reg = <0x00003000 0x00000800   /* PADS registers */
- 		       0x00003800 0x00000200   /* AFI registers */
--		       0x10000000 0x10000000>; /* configuration space */
-+		       0x1FFFF000 0x00001000>; /* configuration space */
- 		reg-names = "pads", "afi", "cs";
- 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH   /* controller interrupt */
- 			      GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
