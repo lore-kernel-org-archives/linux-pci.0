@@ -1,48 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:52319 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932583AbdJaWkd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:40:33 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 10/17] PCI: dwc: artpec6: Remove unused defines
-Date: Tue, 31 Oct 2017 23:39:28 +0100
-Message-Id: <20171031223936.27549-11-niklas.cassel@axis.com>
-In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:28480 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756569AbdJKIou (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2017 04:44:50 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+CC: <linux-pci@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
+Subject: [PATCH 0/3] pci_endpoint_test: Fix module removal/insertion cycle
+Date: Wed, 11 Oct 2017 14:14:35 +0530
+Message-ID: <20171011084438.8296-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit b015b37e6693 ("PCI: artpec6: Stop enabling writes to
-DBI read-only registers") removed the only write using these
-defines, but it did not remove the defines.
-Remove the defines since they are now unused.
+This series fixes module removal/insertion cycle of pci_endpoint_test.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V3:
-* No change.
+Without this series, when trying to modprobe pci_endpoint_test after
+rmmod pci_endpoint_test results in the following errors.
 
- drivers/pci/dwc/pcie-artpec6.c | 3 ---
- 1 file changed, 3 deletions(-)
+pci-endpoint-test 0000:01:00.0: BAR 0: can't reserve [mem 0x20204600-0x202046ff]
+pci-endpoint-test 0000:01:00.0: Cannot obtain PCI resources
+pci-endpoint-test: probe of 0000:01:00.0 failed with error -16
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 6653619db6a1..4b8ef266dc2f 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -37,9 +37,6 @@ struct artpec6_pcie {
- #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
- 
--#define MISC_CONTROL_1_OFF		(PL_OFFSET + 0x1bc)
--#define  DBI_RO_WR_EN			1
--
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
- #define  PCIECFG_DBG_OEN		(1 << 24)
+Kishon Vijay Abraham I (3):
+  misc: pci_endpoint_test: Fix failure path return values in probe
+  misc: pci_endpoint_test: Fix pci_endpoint_test not releasing resources
+    on remove
+  misc: pci_endpoint_test: Fix BUG_ON error during pci_disable_msi
+
+ drivers/misc/pci_endpoint_test.c | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
+
 -- 
-2.14.2
+2.11.0
