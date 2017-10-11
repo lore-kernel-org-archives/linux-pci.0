@@ -1,217 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:5555 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbdJ3EWn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:22:43 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 05/12] PCI: tegra: Program UPHY electrical settings in Tegra210
-Date: Mon, 30 Oct 2017 09:48:56 +0530
-Message-ID: <1509337143-25963-6-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 11 Oct 2017 16:00:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH 2/5] PCI: handle FLR failure and allow other reset types
+Message-ID: <20171011210057.GU25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+ <1506212218-29103-2-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1506212218-29103-2-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-UPHY electrical programming guidelines are documented in Tegra210 TRM.
-Program these electrical settings for proper eye diagram in all link
-speeds.
+On Sat, Sep 23, 2017 at 08:16:55PM -0400, Sinan Kaya wrote:
+> pci_flr_wait() and pci_af_flr() functions assume graceful return even
+> though the device is inaccessible under error conditions.
+> 
+> Return -ENOTTY in error cases so that __pci_reset_function_locked() can
+> try other reset types if AF_FLR/FLR reset fails.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
+This makes sense to me, but I think the error handling in
+__pci_reset_function_locked() is confusing.  It currently is:
 
- drivers/pci/host/pci-tegra.c | 95 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 95 insertions(+)
+  rc = pci_dev_specific_reset(dev, 0);
+  if (rc != -ENOTTY)
+    return rc;
+  if (pcie_has_flr(dev)) {
+    pcie_flr(dev);
+    return 0;
+  }
+  rc = pci_af_flr(dev, 0);
+  if (rc != -ENOTTY)
+    return rc;
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 2a7665a9ce5b..51b7821646eb 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -184,6 +184,30 @@
- 
- #define AFI_PEXBIAS_CTRL_0		0x168
- 
-+#define RP_ECTL_2_R1	0xe84
-+#define  RP_ECTL_2_R1_RX_CTLE_1C_MASK		0xffff
-+
-+#define RP_ECTL_4_R1	0xe8c
-+#define  RP_ECTL_4_R1_RX_CDR_CTRL_1C_MASK	(0xffff << 16)
-+
-+#define RP_ECTL_5_R1	0xe90
-+#define  RP_ECTL_5_R1_RX_EQ_CTRL_L_1C_MASK	0xffffffff
-+
-+#define RP_ECTL_6_R1	0xe94
-+#define  RP_ECTL_6_R1_RX_EQ_CTRL_H_1C_MASK	0xffffffff
-+
-+#define RP_ECTL_2_R2	0xea4
-+#define  RP_ECTL_2_R2_RX_CTLE_1C_MASK		0xffff
-+
-+#define RP_ECTL_4_R2	0xeac
-+#define  RP_ECTL_4_R2_RX_CDR_CTRL_1C_MASK	(0xffff << 16)
-+
-+#define RP_ECTL_5_R2	0xeb0
-+#define  RP_ECTL_5_R2_RX_EQ_CTRL_L_1C_MASK	0xffffffff
-+
-+#define RP_ECTL_6_R2	0xeb4
-+#define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
-+
- #define RP_VEND_XP	0x00000f00
- #define  RP_VEND_XP_DL_UP	(1 << 30)
- 
-@@ -254,6 +278,14 @@ struct tegra_pcie_soc {
- 	u32 tx_ref_sel;
- 	u32 pads_refclk_cfg0;
- 	u32 pads_refclk_cfg1;
-+	u32 rp_ectl_2_r1;
-+	u32 rp_ectl_4_r1;
-+	u32 rp_ectl_5_r1;
-+	u32 rp_ectl_6_r1;
-+	u32 rp_ectl_2_r2;
-+	u32 rp_ectl_4_r2;
-+	u32 rp_ectl_5_r2;
-+	u32 rp_ectl_6_r2;
- 	bool has_pex_clkreq_en;
- 	bool has_pex_bias_ctrl;
- 	bool has_intr_prsnt_sense;
-@@ -261,6 +293,7 @@ struct tegra_pcie_soc {
- 	bool has_gen2;
- 	bool force_pca_enable;
- 	bool program_uphy;
-+	bool program_ectl_settings;
- };
- 
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -2058,6 +2091,52 @@ static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
- 		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
- }
- 
-+static void tegra_pcie_program_ectl_settings(struct tegra_pcie_port *port)
-+{
-+	unsigned long value;
-+	const struct tegra_pcie_soc *soc = port->pcie->soc;
-+
-+	value = readl(port->base + RP_ECTL_2_R1);
-+	value &= ~RP_ECTL_2_R1_RX_CTLE_1C_MASK;
-+	value |= soc->rp_ectl_2_r1;
-+	writel(value, port->base + RP_ECTL_2_R1);
-+
-+	value = readl(port->base + RP_ECTL_4_R1);
-+	value &= ~RP_ECTL_4_R1_RX_CDR_CTRL_1C_MASK;
-+	value |= soc->rp_ectl_4_r1;
-+	writel(value, port->base + RP_ECTL_4_R1);
-+
-+	value = readl(port->base + RP_ECTL_5_R1);
-+	value &= ~RP_ECTL_5_R1_RX_EQ_CTRL_L_1C_MASK;
-+	value |= soc->rp_ectl_5_r1;
-+	writel(value, port->base + RP_ECTL_5_R1);
-+
-+	value = readl(port->base + RP_ECTL_6_R1);
-+	value &= ~RP_ECTL_6_R1_RX_EQ_CTRL_H_1C_MASK;
-+	value |= soc->rp_ectl_6_r1;
-+	writel(value, port->base + RP_ECTL_6_R1);
-+
-+	value = readl(port->base + RP_ECTL_2_R2);
-+	value &= ~RP_ECTL_2_R2_RX_CTLE_1C_MASK;
-+	value |= soc->rp_ectl_2_r2;
-+	writel(value, port->base + RP_ECTL_2_R2);
-+
-+	value = readl(port->base + RP_ECTL_4_R2);
-+	value &= ~RP_ECTL_4_R2_RX_CDR_CTRL_1C_MASK;
-+	value |= soc->rp_ectl_4_r2;
-+	writel(value, port->base + RP_ECTL_4_R2);
-+
-+	value = readl(port->base + RP_ECTL_5_R2);
-+	value &= ~RP_ECTL_5_R2_RX_EQ_CTRL_L_1C_MASK;
-+	value |= soc->rp_ectl_5_r2;
-+	writel(value, port->base + RP_ECTL_5_R2);
-+
-+	value = readl(port->base + RP_ECTL_6_R2);
-+	value &= ~RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK;
-+	value |= soc->rp_ectl_6_r2;
-+	writel(value, port->base + RP_ECTL_6_R2);
-+}
-+
- static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
- {
- 	unsigned long value;
-@@ -2125,6 +2204,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	struct tegra_pcie_port *port, *tmp;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
- 
- 	tegra_pcie_apply_pad_settings(pcie);
- 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-@@ -2132,6 +2212,8 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 			 port->index, port->lanes);
- 
- 		tegra_pcie_port_enable(port);
-+		if (soc->program_ectl_settings)
-+			tegra_pcie_program_ectl_settings(port);
- 		tegra_pcie_enable_rp_features(port);
- 	}
- 
-@@ -2198,6 +2280,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.has_gen2 = false,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-+	.program_ectl_settings = false,
- };
- 
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2214,6 +2297,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.has_gen2 = false,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-+	.program_ectl_settings = false,
- };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2229,6 +2313,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.has_gen2 = true,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-+	.program_ectl_settings = false,
- };
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
-@@ -2237,6 +2322,14 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
- 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
- 	.pads_refclk_cfg0 = 0x90b890b8,
-+	.rp_ectl_2_r1 = 0x0000000f,
-+	.rp_ectl_4_r1 = 0x00670000,
-+	.rp_ectl_5_r1 = 0x55010000,
-+	.rp_ectl_6_r1 = 0x00000001,
-+	.rp_ectl_2_r2 = 0x0000008f,
-+	.rp_ectl_4_r2 = 0x00c70000,
-+	.rp_ectl_5_r2 = 0x55010000,
-+	.rp_ectl_6_r2 = 0x00000001,
- 	.has_pex_clkreq_en = true,
- 	.has_pex_bias_ctrl = true,
- 	.has_intr_prsnt_sense = true,
-@@ -2244,6 +2337,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.has_gen2 = true,
- 	.force_pca_enable = true,
- 	.program_uphy = true,
-+	.program_ectl_settings = true,
- };
- 
- static const struct tegra_pcie_soc tegra186_pcie = {
-@@ -2260,6 +2354,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.has_gen2 = true,
- 	.force_pca_enable = false,
- 	.program_uphy = false,
-+	.program_ectl_settings = false,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
--- 
-2.1.4
+Would it make sense to change this to the following?
+
+  rc = pci_dev_specific_reset(dev, 0);
+  if (rc == 0)
+    return 0;
+
+  if (pcie_has_flr(dev)) {
+    pcie_flr(dev);
+    return 0;
+  }
+
+  rc = pci_af_flr(dev, 0);
+  if (rc == 0)
+    return 0;
+
+I found two cases where this would make a difference: reset_ivb_igd()
+returns -ENOMEM if pci_iomap() fails, and pci_pm_reset() returns
+-EINVAL if the device is not in D0.
+
+In both cases we currently return the failure, but it would seem
+reasonable to me to try another reset method.
+
+That could be done in a new patch before this one.  Then *this* patch
+could use -ETIMEDOUT instead of -ENOTTY, and I think the whole thing
+would become a little more readable.
+
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/pci.c   | 18 ++++++++++--------
+>  include/linux/pci.h |  2 +-
+>  2 files changed, 11 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 23681f4..27ec45d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3820,7 +3820,7 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+>  
+> -static void pci_flr_wait(struct pci_dev *dev)
+> +static int pci_flr_wait(struct pci_dev *dev)
+>  {
+>  	int delay = 1, timeout = 60000;
+>  	u32 id;
+> @@ -3849,7 +3849,7 @@ static void pci_flr_wait(struct pci_dev *dev)
+>  		if (delay > timeout) {
+>  			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
+>  				 100 + delay - 1);
+> -			return;
+> +			return -ENOTTY;
+>  		}
+>  
+>  		if (delay > 1000)
+> @@ -3863,6 +3863,8 @@ static void pci_flr_wait(struct pci_dev *dev)
+>  
+>  	if (delay > 1000)
+>  		dev_info(&dev->dev, "ready %dms after FLR\n", 100 + delay - 1);
+> +
+> +	return 0;
+>  }
+>  
+>  /**
+> @@ -3891,13 +3893,13 @@ static bool pcie_has_flr(struct pci_dev *dev)
+>   * device supports FLR before calling this function, e.g. by using the
+>   * pcie_has_flr() helper.
+>   */
+> -void pcie_flr(struct pci_dev *dev)
+> +int pcie_flr(struct pci_dev *dev)
+>  {
+>  	if (!pci_wait_for_pending_transaction(dev))
+>  		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+>  
+>  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+> -	pci_flr_wait(dev);
+> +	return pci_flr_wait(dev);
+>  }
+>  EXPORT_SYMBOL_GPL(pcie_flr);
+>  
+> @@ -3930,8 +3932,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+>  		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
+>  
+>  	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+> -	pci_flr_wait(dev);
+> -	return 0;
+> +	return pci_flr_wait(dev);
+>  }
+>  
+>  /**
+> @@ -4203,8 +4204,9 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+>  	if (rc != -ENOTTY)
+>  		return rc;
+>  	if (pcie_has_flr(dev)) {
+> -		pcie_flr(dev);
+> -		return 0;
+> +		rc = pcie_flr(dev);
+> +		if (rc != -ENOTTY)
+> +			return rc;
+>  	}
+>  	rc = pci_af_flr(dev, 0);
+>  	if (rc != -ENOTTY)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index f68c58a..104224f7 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1088,7 +1088,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+>  int pcie_set_mps(struct pci_dev *dev, int mps);
+>  int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+>  			  enum pcie_link_width *width);
+> -void pcie_flr(struct pci_dev *dev);
+> +int pcie_flr(struct pci_dev *dev);
+>  int __pci_reset_function(struct pci_dev *dev);
+>  int __pci_reset_function_locked(struct pci_dev *dev);
+>  int pci_reset_function(struct pci_dev *dev);
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
