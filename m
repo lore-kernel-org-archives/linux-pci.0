@@ -1,82 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 12/15] RDMA/cma: make config_item_type const
-Date: Mon, 16 Oct 2017 17:18:51 +0200
-Message-Id: <1508167134-6243-13-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org
+Subject: [PATCH 4/9] arm64: dma-mapping: export symbol arch_setup_dma_ops
+Date: Wed, 11 Oct 2017 18:34:24 -0400
+Message-Id: <1507761269-7017-5-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Rob Herring <robh+dt@kernel.org>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jim Quinlan <jim2101024@gmail.com>, Brian Norris <computersforpeace@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make these structures const as they are either passed to the functions
-having the argument as const or stored as a reference in the "ci_type"
-const field of a config_item structure.
+The BrcmSTB driver needs to get ahold of a pointer to swiotlb_dma_ops.
+However, that variable is defined as static.  Instead, we use
+arch_setup_dma_ops() to get the pointer to swiotlb_dma_ops.  Since
+we also want our driver to be a separate module, we need to
+export this function.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
 ---
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
+ arch/arm64/mm/dma-mapping.c | 1 +
+ 1 file changed, 1 insertion(+)
 
- drivers/infiniband/core/cma_configfs.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/infiniband/core/cma_configfs.c b/drivers/infiniband/core/cma_configfs.c
-index 54076a3..31dfee0 100644
---- a/drivers/infiniband/core/cma_configfs.c
-+++ b/drivers/infiniband/core/cma_configfs.c
-@@ -186,7 +186,7 @@ static ssize_t default_roce_tos_store(struct config_item *item,
- 	NULL,
- };
- 
--static struct config_item_type cma_port_group_type = {
-+static const struct config_item_type cma_port_group_type = {
- 	.ct_attrs	= cma_configfs_attributes,
- 	.ct_owner	= THIS_MODULE
- };
-@@ -263,7 +263,7 @@ static void release_cma_ports_group(struct config_item  *item)
- 	.release = release_cma_ports_group
- };
- 
--static struct config_item_type cma_ports_group_type = {
-+static const struct config_item_type cma_ports_group_type = {
- 	.ct_item_ops	= &cma_ports_item_ops,
- 	.ct_owner	= THIS_MODULE
- };
-@@ -272,7 +272,7 @@ static void release_cma_ports_group(struct config_item  *item)
- 	.release = release_cma_dev
- };
- 
--static struct config_item_type cma_device_group_type = {
-+static const struct config_item_type cma_device_group_type = {
- 	.ct_item_ops	= &cma_device_item_ops,
- 	.ct_owner	= THIS_MODULE
- };
-@@ -323,7 +323,7 @@ static struct config_group *make_cma_dev(struct config_group *group,
- 	.make_group	= make_cma_dev,
- };
- 
--static struct config_item_type cma_subsys_type = {
-+static const struct config_item_type cma_subsys_type = {
- 	.ct_group_ops	= &cma_subsys_group_ops,
- 	.ct_owner	= THIS_MODULE,
- };
+diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+index 614af88..dae572f 100644
+--- a/arch/arm64/mm/dma-mapping.c
++++ b/arch/arm64/mm/dma-mapping.c
+@@ -936,3 +936,4 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+ 	}
+ #endif
+ }
++EXPORT_SYMBOL(arch_setup_dma_ops);
 -- 
-1.9.1
+1.9.0.138.g2de3478
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
