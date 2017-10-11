@@ -1,89 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, Xinming Hu <huxm@marvell.com>,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:55429 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752610AbdJKWfC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2017 18:35:02 -0400
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: bcm-kernel-feedback-list@broadcom.com,
+        linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
         Catalin Marinas <catalin.marinas@arm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-acpi@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
         Will Deacon <will.deacon@arm.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Len Brown <lenb@kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Caesar Wang <wxt@rock-chips.com>,
-        Klaus Goger <klaus.goger@theobroma-systems.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [RFC PATCH v10 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci core
-Date: Sat, 28 Oct 2017 11:07:30 +0200
-Message-ID: <1872710.P2f02irZl9@aspire.rjw.lan>
-In-Reply-To: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
-References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Kevin Cernekee <cernekee@gmail.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Jim Quinlan <jim2101024@gmail.com>
+Subject: [PATCH 6/9] PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for MIPS
+Date: Wed, 11 Oct 2017 18:34:26 -0400
+Message-Id: <1507761269-7017-7-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 27, 2017 9:26:05 AM CEST Jeffy Chen wrote:
-> 
-> Currently we are handling wake irq in mrvl wifi driver. Move it into
-> pci core.
-> 
-> Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
-> 
-> 
-> Changes in v10:
-> Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-> since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
-> 
-> Changes in v9:
-> Add section for PCI devices and rewrite the commit message.
-> Rewrite the commit message.
-> Fix check error in .cleanup().
-> Move dedicated wakeirq setup to setup() callback and use
-> device_set_wakeup_enable() to enable/disable.
-> 
-> Changes in v8:
-> Add optional "pci", and rewrite commit message.
-> Rewrite the commit message.
-> Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-> 
-> Changes in v7:
-> Move PCIE_WAKE handling into pci core.
-> 
-> Changes in v6:
-> Fix device_init_wake error handling, and add some comments.
-> 
-> Changes in v5:
-> Move to pci.txt
-> Use "wakeup" instead of "wake"
-> Rebase.
-> 
-> Changes in v3:
-> Fix error handling.
-> 
-> Changes in v2:
-> Use dev_pm_set_dedicated_wake_irq.
-> 
-> Jeffy Chen (7):
->   dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
->   of/irq: Adjust of_pci_irq parsing for multiple interrupts
->   mwifiex: Disable wakeup irq handling for pcie
->   arm64: dts: rockchip: Move PCIe WAKE# irq to pcie driver for Gru
->   PCI: Make pci_platform_pm_ops's callbacks optional
->   PCI / PM: Move acpi wakeup code to pci core
->   PCI / PM: Add support for the PCIe WAKE# signal for OF
+Add MIPS as an arch that supports PCI_MSI_IRQ_DOMAIN and add
+generation of msi.h in the MIPS arch.
 
-Overall, I don't quite like the direction this is going into, but I need to
-have a deeper look.  Which may take some time, so please bear with me.
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+---
+ arch/mips/include/asm/Kbuild | 1 +
+ drivers/pci/Kconfig          | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-Thanks,
-Rafael
-
+diff --git a/arch/mips/include/asm/Kbuild b/arch/mips/include/asm/Kbuild
+index 7c8aab2..8c78ba7 100644
+--- a/arch/mips/include/asm/Kbuild
++++ b/arch/mips/include/asm/Kbuild
+@@ -9,6 +9,7 @@ generic-y += irq_work.h
+ generic-y += local64.h
+ generic-y += mcs_spinlock.h
+ generic-y += mm-arch-hooks.h
++generic-y += msi.h
+ generic-y += parport.h
+ generic-y += percpu.h
+ generic-y += preempt.h
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index c32a77f..927c335 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -25,7 +25,7 @@ config PCI_MSI
+ 	   If you don't know what to do here, say Y.
+ 
+ config PCI_MSI_IRQ_DOMAIN
+-	def_bool ARC || ARM || ARM64 || X86
++	def_bool ARC || ARM || ARM64 || MIPS || X86
+ 	depends on PCI_MSI
+ 	select GENERIC_MSI_IRQ_DOMAIN
+ 
+-- 
+1.9.0.138.g2de3478
