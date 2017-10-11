@@ -1,175 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48712 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751994AbdJKNHn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Oct 2017 09:07:43 -0400
 MIME-Version: 1.0
-In-Reply-To: <4337843.QuD5zygUhU@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2890181.vdGMMavi5M@aspire.rjw.lan>
- <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com> <4337843.QuD5zygUhU@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Thu, 19 Oct 2017 14:21:07 +0200
-Message-ID: <CAPDyKFqq9_ZbPFYn22s+6sxtxePWgnd0GJNodeqkCKF2+QkrNA@mail.gmail.com>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
+In-Reply-To: <20171011080041.12918-1-kishon@ti.com>
+References: <20171011080041.12918-1-kishon@ti.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Wed, 11 Oct 2017 08:07:21 -0500
+Message-ID: <CAL_JsqLLgCt+wS5uFmLXB5Z-_vb-akme0hXjemtc_gzQwpwPYA@mail.gmail.com>
+Subject: Re: [PATCH] of: Devices with pci_epf_bus_type require DMA configuration
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Mark Rutland <mark.rutland@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
+        linux-omap <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sekhar Nori <nsekhar@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19 October 2017 at 00:12, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Wednesday, October 18, 2017 4:11:33 PM CEST Ulf Hansson wrote:
->> [...]
->>
->> >>
->> >> The reason why pm_runtime_force_* needs to respects the hierarchy of
->> >> the RPM callbacks, is because otherwise it can't safely update the
->> >> runtime PM status of the device.
->> >
->> > I'm not sure I follow this requirement.  Why is that so?
->>
->> If the PM domain controls some resources for the device in its RPM
->> callbacks and the driver controls some other resources in its RPM
->> callbacks - then these resources needs to be managed together.
+On Wed, Oct 11, 2017 at 3:00 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> pci-epc-core.c invokes of_dma_configure in order to configure
+> the coherent_dma_mask/dma_mask of endpoint function device. This is
+> required for dma_alloc_coherent to succeed in pci function driver
+> (pci-epf-test.c). However after
+> commit 723288836628bc1c08 ("of: restrict DMA configuration"),
+> of_dma_configure doesn't configure the coherent_dma_mask/dma_mask
+> of endpoint function device (since it doesn't have dma-ranges
+> property), resulting in dma_alloc_coherent in pci endpoint function
+> driver to to fail. Fix it by making sure of_dma_configure configures
+> coherent_dma_mask/dma_mask irrespective of whether the node has
+> dma-ranges property or not.
 >
-> Right, but that doesn't automatically make it necessary to use runtime PM
-> callbacks in the middle layer.  Its system-wide PM callbacks may be
-> suitable for that just fine.
+> Fixes: 723288836628bc1c08 ("of: restrict DMA configuration")
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/of/device.c                 | 4 +++-
+>  drivers/pci/endpoint/pci-epf-core.c | 3 +--
+>  include/linux/pci-epf.h             | 1 +
+>  3 files changed, 5 insertions(+), 3 deletions(-)
 >
-> That is, at least in some cases, you can combine ->runtime_suspend from a
-> driver and ->suspend_late from a middle layer with no problems, for example.
+> diff --git a/drivers/of/device.c b/drivers/of/device.c
+> index 64b710265d39..881cf80a3d69 100644
+> --- a/drivers/of/device.c
+> +++ b/drivers/of/device.c
+> @@ -10,6 +10,7 @@
+>  #include <linux/mod_devicetable.h>
+>  #include <linux/slab.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-epf.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/amba/bus.h>
 >
-> That's why some middle layers allow drivers to point ->suspend_late and
-> ->runtime_suspend to the same routine if they want to reuse that code.
->
->> This follows the behavior of when a regular call to
->> pm_runtime_get|put(), triggers the RPM callbacks to be invoked.
->
-> But (a) it doesn't have to follow it and (b) in some cases it should not
-> follow it.
+> @@ -105,7 +106,8 @@ int of_dma_configure(struct device *dev, struct device_node *np)
+>  #ifdef CONFIG_ARM_AMBA
+>                     dev->bus != &amba_bustype &&
+>  #endif
+> -                   dev->bus != &platform_bus_type)
+> +                   dev->bus != &platform_bus_type &&
+> +                   dev->bus != &pci_epf_bus_type)
 
-Of course you don't explicitly *have to* respect the hierarchy of the
-RPM callbacks in pm_runtime_force_*.
+This is going to fail when this PCI is disabled. There's some
+restructuring of this code proposed that will help you that I copied
+you on.
 
-However, changing that would require some additional information
-exchange between the driver and the middle-layer/PM domain, as to
-instruct the middle-layer/PM domain of what to do during system-wide
-PM. Especially in cases when the driver deals with wakeup, as in those
-cases the instructions may change dynamically.
-
-[...]
-
->> > In general, not if the wakeup settings are adjusted by the middle layer.
->>
->> Correct!
->>
->> To use pm_runtime_force* for these cases, one would need some
->> additional information exchange between the driver and the
->> middle-layer.
->
-> Which pretty much defeats the purpose of the wrappers, doesn't it?
-
-Well, no matter if the wrappers are used or not, we need some kind of
-information exchange between the driver and the middle-layers/PM
-domains.
-
-Anyway, me personally think it's too early to conclude that using the
-wrappers may not be useful going forward. At this point, they clearly
-helps trivial cases to remain being trivial.
-
->
->> >
->> >> Regarding hibernation, honestly that's not really my area of
->> >> expertise. Although, I assume the middle-layer and driver can treat
->> >> that as a separate case, so if it's not suitable to use
->> >> pm_runtime_force* for that case, then they shouldn't do it.
->> >
->> > Well, agreed.
->> >
->> > In some simple cases, though, driver callbacks can be reused for hibernation
->> > too, so it would be good to have a common way to do that too, IMO.
->>
->> Okay, that makes sense!
->>
->> >
->> >> >
->> >> > Also, quite so often other middle layers interact with PCI directly or
->> >> > indirectly (eg. a platform device may be a child or a consumer of a PCI
->> >> > device) and some optimizations need to take that into account (eg. parents
->> >> > generally need to be accessible when their childres are resumed and so on).
->> >>
->> >> A device's parent becomes informed when changing the runtime PM status
->> >> of the device via pm_runtime_force_suspend|resume(), as those calls
->> >> pm_runtime_set_suspended|active().
->> >
->> > This requires the parent driver or middle layer to look at the reference
->> > counter and understand it the same way as pm_runtime_force_*.
->> >
->> >> In case that isn't that sufficient, what else is needed? Perhaps you can
->> >> point me to an example so I can understand better?
->> >
->> > Say you want to leave the parent suspended after system resume, but the
->> > child drivers use pm_runtime_force_suspend|resume().  The parent would then
->> > need to use pm_runtime_force_suspend|resume() too, no?
->>
->> Actually no.
->>
->> Currently the other options of "deferring resume" (not using
->> pm_runtime_force_*), is either using the "direct_complete" path or
->> similar to the approach you took for the i2c designware driver.
->>
->> Both cases should play nicely in combination of a child being managed
->> by pm_runtime_force_*. That's because only when the parent device is
->> kept runtime suspended during system suspend, resuming can be
->> deferred.
->
-> And because the parent remains in runtime suspend late enough in the
-> system suspend path, its children also are guaranteed to be suspended.
-
-Yes.
-
->
-> But then all of them need to be left in runtime suspend during system
-> resume too, which is somewhat restrictive, because some drivers may
-> want their devices to be resumed then.
-
-Actually, this scenario is also addressed when using the pm_runtime_force_*.
-
-The driver for the child would only need to bump the runtime PM usage
-count (pm_runtime_get_noresume()) before calling
-pm_runtime_force_suspend() at system suspend. That then also
-propagates to the parent, leading to that both the parent and the
-child will be resumed when pm_runtime_force_resume() is called for
-them.
-
-Of course, if the driver of the parent isn't using pm_runtime_force_,
-we would have to assume that it's always being resumed at system
-resume.
-
-As at matter of fact, doesn't this scenario actually indicates that we
-do need to involve the runtime PM core (updating RPM status according
-to the HW state even during system-wide PM) to really get this right.
-It's not enough to only use "driver PM flags"!?
-
-Seems like we need to create a list of all requirements, pitfalls,
-good things vs bad things etc. :-)
-
->
-> [BTW, our current documentation recommends resuming devices during
-> system resume, actually, and gives a list of reasons why. :-)]
-
-Yes, but that too easy and to me not good enough. :-)
-
-[...]
-
-Kind regards
-Uffe
+Rob
