@@ -1,82 +1,86 @@
-Return-Path: <SRS0=T556=BQ=linux.vnet.ibm.com=jjalvare@kernel.org>
-Return-Path: <SRS0=T556=BQ=linux.vnet.ibm.com=jjalvare@kernel.org>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Steven Royer <seroyer@linux.vnet.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com,
-        benh@kernel.crashing.org, paulus@samba.org, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>,
-        Bodong Wang <bodong@mellanox.com>, Eli Cohen <eli@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>
-References: <87efq92ei6.fsf@concordia.ellerman.id.au>
- <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
- <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
- <20171013033456.GC25517@bhelgaas-glaptop.roam.corp.google.com>
- <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
- <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
- <20171013120558.1a129183@t450s.home>
- <24fdec01-8df4-f027-0b3c-0472a2d73946@linux.vnet.ibm.com>
- <20171017135123.GA5641@bhelgaas-glaptop.roam.corp.google.com>
- <7e23c703-750b-b4f8-f252-0c872a40ae8a@linux.vnet.ibm.com>
- <20171017162621.GB5641@bhelgaas-glaptop.roam.corp.google.com>
-From: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
-Date: Tue, 17 Oct 2017 12:23:01 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:38664 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751906AbdJKTcK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Oct 2017 15:32:10 -0400
+Date: Wed, 11 Oct 2017 14:32:07 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keerthy <j-keerthy@ti.com>
+Cc: kishon@ti.com, bhelgaas@google.com, t-kristo@ti.com,
+        linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4] pci: dwc: dra7xx: Add shutdown handler to cleanly
+ turn off clocks
+Message-ID: <20171011193207.GO25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1505885055-30657-1-git-send-email-j-keerthy@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20171017162621.GB5641@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <f8fbbd56-f165-0a17-a24a-2b021f7fa238@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1505885055-30657-1-git-send-email-j-keerthy@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/17/17 11:26 AM, Bjorn Helgaas wrote:
-> To pop back up to the top of the stack, I think the main point of this
-> patch is to keep from binding a driver to the VFs in the kernel that
-> set PCI_SRIOV_CTRL_VFE.  This patch does that by setting
-> pdev->match_driver to -1 in powerpc-specific code.
-Correct, to add to your comment, we will only add to the PSeries platform
- (in PowerPC)  configure SR-IOV path.
-> I think all systems, not just powerpc, want to prevent this VF driver
-> binding, so I hope there's a generic solution that everybody can use.
-The patch that we made this change dependent on:
+On Wed, Sep 20, 2017 at 10:54:15AM +0530, Keerthy wrote:
+> Add shutdown handler to cleanly turn off clocks. This will help
+> in cases of kexec where in a new kernel can boot abruptly.
+> 
+> Signed-off-by: Keerthy <j-keerthy@ti.com>
+> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 
-https://patchwork.kernel.org/patch/9882915/
+Applied to pci/host-dra7xx for v4.15, thanks!
 
-Is a generic form of not binding a pci device to a device driver
-and can be used in another environment if needed.
->
->>>> So like existing way of enabling SRIOV we still rely on the PF driver to
->>>> enable VFs - but in this case the attachment phase is done via a user
->>>> action via a management console in our case (novalink or hmc) triggered
->>>> event that will essentially act like a hotplug.
->>>>
->>>> So in the fine details of that user triggered action the system
->>>> firmware will bind the VFs, allowing resources to be allocated to
->>>> the VF.  - Which essentially does all the attaching as we know it
->>>> today but is managed by PHYP not by the kernel.
->>> What exactly does "firmware binding the VFs" mean?  I guess this must
->>> mean assigning a VF to a partition, injecting a hotplug add event to
->>> that partition, and making the VF visible in config space?
->> Firmware basically adds a device node to the device tree as defined
->> in the (PAPR) Power Architecture Platform Requirements document.
-> From the point of view of the kernel that consumes this device tree
-> and owns the VF, I guess this looks like a hot-add.  
-Correct, this is intended. We want to minimize change and only focus
-on configure SR-IOV path in the PF on PSeries platform.
-> It would be nice
-> if this could be exposed to that kernel by having the firmware inject
-> a normal PCIe hotplug interrupt, but I'm guessing it's not that
-> simple.
-I don't understand entirely your suggestion. However, in the case of
-interrupts PHYP owns all the resources and will be associated accordingly
-with a partitionable endpoint (PE).
-> But if I understand correctly, this patch series isn't concerned with
-> that kernel; it's concerned with the kernel that owns the PF and sets
-> PCI_SRIOV_CTRL_VFE.
-Correct, we will enable SR-IOV in the PF through the Linux kernel and map system resources
-for the new VFs in powerpc platform specific kernel code. Furthermore, not binding
-the device drivers for the VFs that get mapped within the configure SR-IOV path
-is a requirement for this PSeries SR-IOV environment.
-
-Juan J. Alvarez
+> ---
+> 
+> Changes in v4:
+> 
+>   * Added the missing changes from v2!
+> 
+> Changes in v3:
+> 
+>   * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
+>   * Added more details to commit log.
+> 
+> Changes in v2:
+> 
+>   * used a local dev pointer instead of dereferencing dev at multiple places.
+>   * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
+> 
+>  drivers/pci/dwc/pci-dra7xx.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 34427a6..d084800 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -794,6 +794,22 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>  }
+>  #endif
+>  
+> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+> +	int ret;
+> +
+> +	dra7xx_pcie_stop_link(dra7xx->pci);
+> +
+> +	ret = pm_runtime_put_sync(dev);
+> +	if (ret < 0)
+> +		dev_dbg(dev, "pm_runtime_put_sync failed\n");
+> +
+> +	pm_runtime_disable(dev);
+> +	dra7xx_pcie_disable_phy(dra7xx);
+> +}
+> +
+>  static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+>  	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
+>  	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
+> @@ -807,5 +823,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>  		.suppress_bind_attrs = true,
+>  		.pm	= &dra7xx_pcie_pm_ops,
+>  	},
+> +	.shutdown = dra7xx_pcie_shutdown,
+>  };
+>  builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
+> -- 
+> 1.9.1
+> 
