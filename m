@@ -1,60 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Dexuan Cui <decui@microsoft.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        LKML <linux-kernel@vger.kernel.org>
-CC: "x86@kernel.org" <x86@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>
-Subject: RE: [patch 3/3] x86/vector/msi: Select
- CONFIG_GENERIC_IRQ_RESERVATION_MODE
-Date: Tue, 17 Oct 2017 18:59:27 +0000
-Message-ID: <KL1P15301MB000624AF90FB90B39BE84160BF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-References: <20171017075456.694047687@linutronix.de>
- <20171017075600.527569354@linutronix.de>
-In-Reply-To: <20171017075600.527569354@linutronix.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56770 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756214AbdJKAJM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 10 Oct 2017 20:09:12 -0400
+Date: Tue, 10 Oct 2017 19:09:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>,
+        Vidya Sagar <sagar.tv@gmail.com>,
+        Erik Faye-Lund <kusmabite@gmail.com>,
+        Tomasz Maciej Nowak <tmn505@gmail.com>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH] Revert "PCI: tegra: Do not allocate MSI target memory"
+Message-ID: <20171011000909.GA25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171002201924.GC5407@bhelgaas-glaptop.roam.corp.google.com>
+ <20171009102935.14515-1-thierry.reding@gmail.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171009102935.14515-1-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Thomas Gleixner [mailto:tglx@linutronix.de]
-> Sent: Tuesday, October 17, 2017 12:55 AM
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -95,7 +95,7 @@ config X86
->  	select GENERIC_IRQ_MATRIX_ALLOCATOR	if X86_LOCAL_APIC
->  	select GENERIC_IRQ_MIGRATION		if SMP
->  	select GENERIC_IRQ_PROBE
-> -	select GENERIC_IRQ_SHOW
-> +	select GENERIC_IRQ_RESERVATION_MODE
->  	select GENERIC_PENDING_IRQ		if SMP
->  	select GENERIC_SMP_IDLE_THREAD
->  	select GENERIC_STRNCPY_FROM_USER
+On Mon, Oct 09, 2017 at 12:29:35PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> This reverts commit d7bd554f27c942e6b8b54100b4044f9be1038edf.
+> 
+> It turns out that Tegra20 has a bug in the implementation of the MSI
+> target address register (which is worked around by the existence of the
+> struct tegra_pcie_soc.msi_base_shift parameter) that restricts the MSI
+> target memory to the lower 32 bits of physical memory on that particular
+> generation. The offending patch causes a regression on TrimSlice, which
+> is a Tegra20-based device and has a PCI network interface card.
+> 
+> An initial, simpler fix was to change the MSI target address for Tegra20
+> only, but it was pointed out that the offending commit also prevents the
+> use of 32-bit only MSI capable devices, even on later chips. Technically
+> this was never guaranteed to work with the prior code in the first place
+> because the allocated page could have resided beyond the 4 GiB boundary,
+> but it is still possible that this could've introduced a regression.
+> 
+> The proper fix that was settled on is to select a fixed address within
+> the lowest 32 bits of physical address space that is otherwise unused,
+> but testing of that patch has provided mixed results that are not fully
+> understood yet.
+> 
+> Given all of the above and the relative urgency to get this fixed in
+> v4.13, revert the offending commit until a universal fix is found.
+> 
+> Cc: stable@vger.kernel.org # 4.13.x
+> Reported-by: Tomasz Maciej Nowak <tmn505@gmail.com>
+> Reported-by: Erik Faye-Lund <kusmabite@gmail.com>
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-Hi Thomas,
-It looks you removed GENERIC_IRQ_SHOW by accident?
+I applied this revert to for-linus for v4.14, thanks!
 
-I got this build error:
-...
-  LD      vmlinux.o
-  MODPOST vmlinux.o
-fs/proc/interrupts.o:(.rodata+0x118): undefined reference to `show_interrup=
-ts'
-Makefile:1000: recipe for target 'vmlinux' failed
-make: *** [vmlinux] Error 1
-
-Adding GENERIC_IRQ_SHOW back can fix the build failure, and with the
-pachset Hyper-V PCI pass-through can work fine.
-
-Thanks,
--- Dexuan
+> ---
+>  drivers/pci/host/pci-tegra.c | 22 ++++++----------------
+>  1 file changed, 6 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 9c40da54f88a..1987fec1f126 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -233,6 +233,7 @@ struct tegra_msi {
+>  	struct msi_controller chip;
+>  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>  	struct irq_domain *domain;
+> +	unsigned long pages;
+>  	struct mutex lock;
+>  	u64 phys;
+>  	int irq;
+> @@ -1529,22 +1530,9 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+>  		goto err;
+>  	}
+>  
+> -	/*
+> -	 * The PCI host bridge on Tegra contains some logic that intercepts
+> -	 * MSI writes, which means that the MSI target address doesn't have
+> -	 * to point to actual physical memory. Rather than allocating one 4
+> -	 * KiB page of system memory that's never used, we can simply pick
+> -	 * an arbitrary address within an area reserved for system memory
+> -	 * in the FPCI address map.
+> -	 *
+> -	 * However, in order to avoid confusion, we pick an address that
+> -	 * doesn't map to physical memory. The FPCI address map reserves a
+> -	 * 1012 GiB region for system memory and memory-mapped I/O. Since
+> -	 * none of the Tegra SoCs that contain this PCI host bridge can
+> -	 * address more than 16 GiB of system memory, the last 4 KiB of
+> -	 * these 1012 GiB is a good candidate.
+> -	 */
+> -	msi->phys = 0xfcfffff000;
+> +	/* setup AFI/FPCI range */
+> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> +	msi->phys = virt_to_phys((void *)msi->pages);
+>  
+>  	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+>  	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
+> @@ -1596,6 +1584,8 @@ static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
+>  	afi_writel(pcie, 0, AFI_MSI_EN_VEC6);
+>  	afi_writel(pcie, 0, AFI_MSI_EN_VEC7);
+>  
+> +	free_pages(msi->pages, 0);
+> +
+>  	if (msi->irq > 0)
+>  		free_irq(msi->irq, pcie);
+>  
+> -- 
+> 2.14.1
+> 
