@@ -1,62 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from michel.telenet-ops.be ([195.130.137.88]:49960 "EHLO
-        michel.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752236AbdJKNuX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2017 09:50:23 -0400
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ben Dooks <ben.dooks@codethink.co.uk>,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] dt-bindings: PCI: rcar: Correct example to match reality
-Date: Wed, 11 Oct 2017 15:50:13 +0200
-Message-Id: <1507729813-21501-1-git-send-email-geert+renesas@glider.be>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 12 Oct 2017 14:05:48 +0200
+From: Lothar =?UTF-8?B?V2HDn21hbm4=?= <LW@KARO-electronics.de>
+To: Julien Thierry <julien.thierry@arm.com>
+Subject: Re: [PATCH 1/2] vgaarb: Select a default VGA device even if there's
+ no legacy VGA
+Message-ID: <20171012140548.10754506@karo-electronics.de>
+In-Reply-To: <b5373cbb-7d0d-a626-159b-dee0b82d32d0@arm.com>
+References: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171006222428.12211.3635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <b5373cbb-7d0d-a626-159b-dee0b82d32d0@arm.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Dave Airlie <airlied@redhat.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ dri-devel@lists.freedesktop.org, Xinliang Liu <z.liuxinliang@hisilicon.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Lukas Wunner <lukas@wunner.de>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Rongrong Zou <zourongrong@gmail.com>, Daniel Vetter <daniel.vetter@intel.com>,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org,
+ Daniel Axtens <dja@axtens.net>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Correct the USB subnodes in the example, cfr. commit f7d569c1e6a6fa73
-("ARM: dts: r8a779x: Fix PCI bus dtc warnings"):
-  1. Drop the bogus 'device_type = "pci"' properties,
-  2. Correct the unit addresses.
-
-Update other bits in the example to match real use:
-  1. Rename the USB subnodes from "pci" to "usb",
-  2. Update the "phys" property.
-
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-index 3d038638612b8ec2..9fe7e12a7bf37b7c 100644
---- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-@@ -60,17 +60,15 @@ Example SoC configuration:
- 				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
- 				 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
- 
--		pci@0,1 {
-+		usb@1,0 {
- 			reg = <0x800 0 0 0 0>;
--			device_type = "pci";
--			phys = <&usbphy 0 0>;
-+			phys = <&usb0 0>;
- 			phy-names = "usb";
- 		};
- 
--		pci@0,2 {
-+		usb@2,0 {
- 			reg = <0x1000 0 0 0 0>;
--			device_type = "pci";
--			phys = <&usbphy 0 0>;
-+			phys = <&usb0 0>;
- 			phy-names = "usb";
- 		};
- 	};
--- 
-2.7.4
+SGksCgpPbiBUaHUsIDEyIE9jdCAyMDE3IDEyOjI0OjEwICswMTAwIEp1bGllbiBUaGllcnJ5IHdy
+b3RlOgo+IEhpIEJqb3JuLAo+IAo+IE9uIDA2LzEwLzE3IDIzOjI0LCBCam9ybiBIZWxnYWFzIHdy
+b3RlOgo+ID4gRnJvbTogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KPiA+IAo+
+ID4gRGFuaWVsIEF4dGVucyByZXBvcnRlZCB0aGF0IG9uIHRoZSBIaVNpbGljb24gRDA1IGJvYXJk
+LCB0aGUgVkdBIGRldmljZSBpcwo+ID4gYmVoaW5kIGEgYnJpZGdlIHRoYXQgZG9lc24ndCBzdXBw
+b3J0IFBDSV9CUklER0VfQ1RMX1ZHQSwgc28gdGhlIFZHQSBhcmJpdGVyCj4gPiBuZXZlciBzZWxl
+Y3RzIGl0IGFzIHRoZSBkZWZhdWx0LCB3aGljaCBtZWFucyBYb3JnIGF1dG8tZGV0ZWN0aW9uIGRv
+ZXNuJ3QKPiA+IHdvcmsuCj4gPiAKPiA+IFZHQSBpcyBhIGxlZ2FjeSBQQ0kgZmVhdHVyZTogYSBW
+R0EgZGV2aWNlIGNhbiByZXNwb25kIHRvIGFkZHJlc3NlcywgZS5nLiwKPiA+IFttZW0gMHhhMDAw
+MC0weGJmZmZmXSwgW2lvIDB4M2IwLTB4M2JiXSwgW2lvIDB4M2MwLTB4M2RmXSwgZXRjLiwgdGhh
+dCBhcmUKPiA+IG5vdCBjb25maWd1cmFibGUgYnkgQkFScy4gIENvbnNlcXVlbnRseSwgbXVsdGlw
+bGUgVkdBIGRldmljZXMgY2FuIGNvbmZsaWN0Cj4gPiB3aXRoIGVhY2ggb3RoZXIuICBUaGUgVkdB
+IGFyYml0ZXIgYXZvaWRzIGNvbmZsaWN0cyBieSBlbnN1cmluZyB0aGF0IHRob3NlCj4gPiBsZWdh
+Y3kgcmVzb3VyY2VzIGFyZSBvbmx5IHJvdXRlZCB0byBvbmUgVkdBIGRldmljZSBhdCBhIHRpbWUu
+Cj4gPiAKPiA+IFRoZSBhcmJpdGVyIGlkZW50aWZpZXMgdGhlICJkZWZhdWx0IFZHQSIgZGV2aWNl
+LCBpLmUuLCBhIGxlZ2FjeSBWR0EgZGV2aWNlCj4gPiB0aGF0IHdhcyB1c2VkIGJ5IGJvb3QgZmly
+bXdhcmUuICBJdCBzZWxlY3RzIHRoZSBmaXJzdCBkZXZpY2UgdGhhdDoKPiA+IAo+ID4gICAgLSBp
+cyBvZiBQQ0lfQ0xBU1NfRElTUExBWV9WR0EsCj4gPiAgICAtIGhhcyBib3RoIFBDSV9DT01NQU5E
+X0lPIGFuZCBQQ0lfQ09NTUFORF9NRU1PUlkgZW5hYmxlZCwgYW5kCj4gPiAgICAtIGhhcyBQQ0lf
+QlJJREdFX0NUTF9WR0Egc2V0IGluIGFsbCB1cHN0cmVhbSBicmlkZ2VzLgo+ID4gCj4gPiBTb21l
+IHN5c3RlbXMgZG9uJ3QgaGF2ZSBzdWNoIGEgZGV2aWNlLiAgRm9yIGV4YW1wbGUsIGlmIGEgaG9z
+dCBicmlkZ2UKPiA+IGRvZXNuJ3Qgc3VwcG9ydCBJL08gc3BhY2UsIFBDSV9DT01NQU5EX0lPIHBy
+b2JhYmx5IHdvbid0IGJlIGVuYWJsZWQgZm9yIGFueQo+ID4gZGV2aWNlcyBiZWxvdyBpdC4gIE9y
+LCBhcyBvbiB0aGUgSGlTaWxpY29uIEQwNSwgdGhlIFZHQSBkZXZpY2UgbWF5IGJlCj4gPiBiZWhp
+bmQgYSBicmlkZ2UgdGhhdCBkb2Vzbid0IHN1cHBvcnQgUENJX0JSSURHRV9DVExfVkdBLCBzbyBh
+Y2Nlc3NlcyB0byB0aGUKPiA+IGxlZ2FjeSBWR0EgcmVzb3VyY2VzIHdpbGwgbmV2ZXIgcmVhY2gg
+dGhlIGRldmljZS4KPiA+IAo+ID4gVGhpcyBwYXRjaCBleHRlbmRzIHRoZSBhcmJpdGVyIHNvIHRo
+YXQgaWYgaXQgZG9lc24ndCBmaW5kIGEgZGV2aWNlIHRoYXQKPiA+IG1lZXRzIGFsbCB0aGUgYWJv
+dmUgY3JpdGVyaWEsIGl0IHNlbGVjdHMgdGhlIGZpcnN0IGRldmljZSB0aGF0Ogo+ID4gCj4gPiAg
+ICAtIGlzIG9mIFBDSV9DTEFTU19ESVNQTEFZX1ZHQSBhbmQKPiA+ICAgIC0gaGFzIFBDSV9DT01N
+QU5EX0lPIG9yIFBDSV9DT01NQU5EX01FTU9SWSBlbmFibGVkCj4gPiAKPiA+IElmIGl0IGRvZXNu
+J3QgZmluZCBldmVuIHRoYXQsIGl0IHNlbGVjdHMgdGhlIGZpcnN0IGRldmljZSB0aGF0Ogo+ID4g
+Cj4gPiAgICAtIGlzIG9mIGNsYXNzIFBDSV9DTEFTU19ESVNQTEFZX1ZHQS4KPiA+IAo+ID4gU3Vj
+aCBhIGRldmljZSBtYXkgbm90IGJlIGFibGUgdG8gdXNlIHRoZSBsZWdhY3kgVkdBIHJlc291cmNl
+cywgYnV0IG1vc3QKPiA+IGRyaXZlcnMgY2FuIG9wZXJhdGUgdGhlIGRldmljZSB3aXRob3V0IHRo
+b3NlLiAgU2V0dGluZyBpdCBhcyB0aGUgZGVmYXVsdAo+ID4gZGV2aWNlIG1lYW5zIGl0cyAiYm9v
+dF92Z2EiIHN5c2ZzIGZpbGUgd2lsbCBjb250YWluICIxIiwgd2hpY2ggWG9yZyAodmlhCj4gPiBs
+aWJwY2lhY2Nlc3MpIHVzZXMgdG8gaGVscCBzZWxlY3QgaXRzIGRlZmF1bHQgb3V0cHV0IGRldmlj
+ZS4KPiA+IAo+ID4gVGhpcyBmaXhlcyBYb3JnIGF1dG8tZGV0ZWN0aW9uIG9uIHNvbWUgYXJtNjQg
+c3lzdGVtcyAoSGlTaWxpY29uIEQwNSBpbgo+ID4gcGFydGljdWxhcjsgc2VlIHRoZSBsaW5rIGJl
+bG93KS4KPiA+IAo+ID4gSXQgYWxzbyByZXBsYWNlcyB0aGUgcG93ZXJwYyBmaXh1cF92Z2EoKSBx
+dWlyaywgYWxiZWl0IHdpdGggc2xpZ2h0bHkKPiA+IGRpZmZlcmVudCBzZW1hbnRpY3M6IHRoZSBx
+dWlyayBzZWxlY3RlZCB0aGUgZmlyc3QgVkdBIGRldmljZSB3ZSBmb3VuZCwgYW5kCj4gPiBvdmVy
+cm9kZSB0aGF0IHNlbGVjdGlvbiB3aXRoIGFueSBlbmFibGVkIFZHQSBkZXZpY2Ugd2UgZm91bmQu
+ICBJZiB0aGVyZQo+ID4gd2VyZSBzZXZlcmFsIGVuYWJsZWQgVkdBIGRldmljZXMsIHRoZSAqbGFz
+dCogb25lIHdlIGZvdW5kIHdvdWxkIGJlY29tZSB0aGUKPiA+IGRlZmF1bHQuCj4gPiAKPiA+IFRo
+ZSBjb2RlIGhlcmUgaW5zdGVhZCBzZWxlY3RzIHRoZSAqZmlyc3QqIGVuYWJsZWQgVkdBIGRldmlj
+ZSB3ZSBmaW5kLCBhbmQKPiA+IGlmIG5vbmUgYXJlIGVuYWJsZWQsIHRoZSBmaXJzdCBWR0EgZGV2
+aWNlIHdlIGZpbmQuCj4gPiAKPiA+IExpbms6IGh0dHA6Ly9sa21sLmtlcm5lbC5vcmcvci8yMDE3
+MDkwMTA3Mjc0NC4yNDA5LTEtZGphQGF4dGVucy5uZXQKPiA+IFRlc3RlZC1ieTogRGFuaWVsIEF4
+dGVucyA8ZGphQGF4dGVucy5uZXQ+ICAgICMgYXJtNjQsIHBwYzY0LXFlbXUtdGNnCj4gPiBTaWdu
+ZWQtb2ZmLWJ5OiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPgo+ID4gLS0tCj4g
+PiAgIGFyY2gvcG93ZXJwYy9rZXJuZWwvcGNpLWNvbW1vbi5jIHwgICAxMiAtLS0tLS0tLS0tLS0K
+PiA+ICAgZHJpdmVycy9ncHUvdmdhL3ZnYWFyYi5jICAgICAgICAgfCAgIDI1ICsrKysrKysrKysr
+KysrKysrKysrKysrKysKPiA+ICAgMiBmaWxlcyBjaGFuZ2VkLCAyNSBpbnNlcnRpb25zKCspLCAx
+MiBkZWxldGlvbnMoLSkKPiA+IAo+ID4gZGlmZiAtLWdpdCBhL2FyY2gvcG93ZXJwYy9rZXJuZWwv
+cGNpLWNvbW1vbi5jIGIvYXJjaC9wb3dlcnBjL2tlcm5lbC9wY2ktY29tbW9uLmMKPiA+IGluZGV4
+IDAyODMxYTM5NjQxOS4uMGFjN2FhMzQ2YzY5IDEwMDY0NAo+ID4gLS0tIGEvYXJjaC9wb3dlcnBj
+L2tlcm5lbC9wY2ktY29tbW9uLmMKPiA+ICsrKyBiL2FyY2gvcG93ZXJwYy9rZXJuZWwvcGNpLWNv
+bW1vbi5jCj4gPiBAQCAtMTc0MCwxNSArMTc0MCwzIEBAIHN0YXRpYyB2b2lkIGZpeHVwX2hpZGVf
+aG9zdF9yZXNvdXJjZV9mc2woc3RydWN0IHBjaV9kZXYgKmRldikKPiA+ICAgfQo+ID4gICBERUNM
+QVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9NT1RPUk9MQSwgUENJX0FOWV9JRCwg
+Zml4dXBfaGlkZV9ob3N0X3Jlc291cmNlX2ZzbCk7Cj4gPiAgIERFQ0xBUkVfUENJX0ZJWFVQX0hF
+QURFUihQQ0lfVkVORE9SX0lEX0ZSRUVTQ0FMRSwgUENJX0FOWV9JRCwgZml4dXBfaGlkZV9ob3N0
+X3Jlc291cmNlX2ZzbCk7Cj4gPiAtCj4gPiAtc3RhdGljIHZvaWQgZml4dXBfdmdhKHN0cnVjdCBw
+Y2lfZGV2ICpwZGV2KQo+ID4gLXsKPiA+IC0JdTE2IGNtZDsKPiA+IC0KPiA+IC0JcGNpX3JlYWRf
+Y29uZmlnX3dvcmQocGRldiwgUENJX0NPTU1BTkQsICZjbWQpOwo+ID4gLQlpZiAoKGNtZCAmIChQ
+Q0lfQ09NTUFORF9JTyB8IFBDSV9DT01NQU5EX01FTU9SWSkpIHx8ICF2Z2FfZGVmYXVsdF9kZXZp
+Y2UoKSkKPiA+IC0JCXZnYV9zZXRfZGVmYXVsdF9kZXZpY2UocGRldik7Cj4gPiAtCj4gPiAtfQo+
+ID4gLURFQ0xBUkVfUENJX0ZJWFVQX0NMQVNTX0ZJTkFMKFBDSV9BTllfSUQsIFBDSV9BTllfSUQs
+Cj4gPiAtCQkJICAgICAgUENJX0NMQVNTX0RJU1BMQVlfVkdBLCA4LCBmaXh1cF92Z2EpOwo+ID4g
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L3ZnYS92Z2FhcmIuYyBiL2RyaXZlcnMvZ3B1L3ZnYS92
+Z2FhcmIuYwo+ID4gaW5kZXggNzY4NzVmNjI5OWI4Li5hZWI0MWY3OTNlZDQgMTAwNjQ0Cj4gPiAt
+LS0gYS9kcml2ZXJzL2dwdS92Z2EvdmdhYXJiLmMKPiA+ICsrKyBiL2RyaXZlcnMvZ3B1L3ZnYS92
+Z2FhcmIuYwo+ID4gQEAgLTE0NjgsNiArMTQ2OCwzMSBAQCBzdGF0aWMgaW50IF9faW5pdCB2Z2Ff
+YXJiX2RldmljZV9pbml0KHZvaWQpCj4gPiAgIAkJCXZnYWFyYl9pbmZvKGRldiwgIm5vIGJyaWRn
+ZSBjb250cm9sIHBvc3NpYmxlXG4iKTsKPiA+ICAgCX0KPiA+ICAgCj4gPiArCWlmICghdmdhX2Rl
+ZmF1bHRfZGV2aWNlKCkpIHsKPiA+ICsJCWxpc3RfZm9yX2VhY2hfZW50cnkodmdhZGV2LCAmdmdh
+X2xpc3QsIGxpc3QpIHsKPiA+ICsJCQlzdHJ1Y3QgZGV2aWNlICpkZXYgPSAmdmdhZGV2LT5wZGV2
+LT5kZXY7Cj4gPiArCQkJdTE2IGNtZDsKPiA+ICsKPiA+ICsJCQlwZGV2ID0gdmdhZGV2LT5wZGV2
+Owo+ID4gKwkJCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXYsIFBDSV9DT01NQU5ELCAmY21kKTsK
+PiA+ICsJCQlpZiAoY21kICYgKFBDSV9DT01NQU5EX0lPIHwgUENJX0NPTU1BTkRfTUVNT1JZKSkg
+ewo+ID4gKwkJCQl2Z2FhcmJfaW5mbyhkZXYsICJzZXR0aW5nIGFzIGJvb3QgZGV2aWNlIChWR0Eg
+bGVnYWN5IHJlc291cmNlcyBub3QgYXZhaWxhYmxlKVxuIik7Cj4gPiArCQkJCXZnYV9zZXRfZGVm
+YXVsdF9kZXZpY2UocGRldik7Cj4gPiArCQkJCWJyZWFrOwo+ID4gKwkJCX0KPiA+ICsJCX0KPiA+
+ICsJfQo+ID4gKwo+ID4gKwlpZiAoIXZnYV9kZWZhdWx0X2RldmljZSgpKSB7Cj4gPiArCQl2Z2Fk
+ZXYgPSBsaXN0X2ZpcnN0X2VudHJ5X29yX251bGwoJnZnYV9saXN0LAo+ID4gKwkJCQkJCSAgc3Ry
+dWN0IHZnYV9kZXZpY2UsIGxpc3QpOwo+ID4gKwkJaWYgKHZnYWRldikgewo+ID4gKwkJCXN0cnVj
+dCBkZXZpY2UgKmRldiA9ICZ2Z2FkZXYtPnBkZXYtPmRldjsKPiA+ICsJCQl2Z2FhcmJfaW5mbyhk
+ZXYsICJzZXR0aW5nIGFzIGJvb3QgZGV2aWNlIChWR0EgbGVnYWN5IHJlc291cmNlcyBub3QgYXZh
+aWxhYmxlKVxuIik7Cj4gPiArCQkJdmdhX3NldF9kZWZhdWx0X2RldmljZShwZGV2KTsKPiAKPiBJ
+c24ndCAncGRldicgTlVMTCBoZXJlPyBzaG91bGRuJ3QgaXQgYmUgdmdhZGV2LT5wZGV2IGluc3Rl
+YWQ/Cj4gClRoYXQgY2Fubm90IG5vdCBoYXBwZW4sIHRob3VnaCBpdCBpc24ndCBxdWl0ZSBvYnZp
+b3VzLgondmdhZGV2JyB3aWxsIG9ubHkgYmUgbm9uLU5VTEwsIHdoZW4gdGhlIHZnYV9saXN0IGlz
+bid0IGVtcHR5IGFuZCBpbgp0aGF0IGNhc2UgcGRldiBoYXMgYmVlbiBzZXQgdXAgaW4gdGhlIGxp
+c3RfZm9yX2VhY2hfZW50cnkoKSBsb29wIGFib3ZlLgoKCkxvdGhhciBXYcOfbWFubgoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5l
+bCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6
+Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
