@@ -1,126 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
-Subject: [PATCH v2 15/17] PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
-Date: Mon, 30 Oct 2017 13:42:18 +0100
-Message-Id: <20171030124221.20690-16-niklas.cassel@axis.com>
-In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0064.outbound.protection.outlook.com ([104.47.2.64]:63712
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752836AbdJLDSA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 11 Oct 2017 23:18:00 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Roy Zang" <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>
+Subject: RE: [PATCH 1/2] PCI: Disable MSI for Freescale PCIe RC mode
+Date: Thu, 12 Oct 2017 03:17:57 +0000
+Message-ID: <AM5PR0402MB2771384AB34878A38DD9ABD2844B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <20170922072522.36306-1-Zhiqiang.Hou@nxp.com>
+ <20170922072522.36306-2-Zhiqiang.Hou@nxp.com>
+ <20171011193737.GP25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171011193737.GP25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to hard code the cpu to bus address fixup mask.
-The PCIe controller has a global address on the AXI bus, however,
-from the perspective of the PCIe controller, its base starts at 0x0,
-so the local address is 0x0. To get the bus address, simply subtract
-the global address from the cpu address. The global address is taken
-from device tree.
-
-Also for ARTPEC-7, hard coding the cpu to bus address fixup mask is
-not possible, since it uses a High Address Bits Look Up Table, which
-means that it can, at runtime, map the PCIe window to an arbitrary
-address in the 32-bit address space.
-
-This also fixes a bug for ARTPEC-6, where the cpu to bus address
-fixup mask previously was off by one (GENMASK(27, 0), rather than
-GENMASK(28, 0)), which is another reason why the it is a good idea
-to calculate the mask by using values from device tree.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V2:
-* Reworked cpu_addr_fixup for pcie-artpec6, since the previous logic did
-  not handle the case where the size of the pcie window was greater than
-  the global address of the pcie controller.
-
- drivers/pci/dwc/pci-dra7xx.c      |  2 +-
- drivers/pci/dwc/pcie-artpec6.c    | 18 ++++++++++++++----
- drivers/pci/dwc/pcie-designware.c |  2 +-
- drivers/pci/dwc/pcie-designware.h |  2 +-
- 4 files changed, 17 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 175544d6c3ab..c01277811c8e 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -109,7 +109,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
- 
--static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-+static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
- {
- 	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
- }
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index d47da02b08fe..ef8815ea4776 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -69,8 +69,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define PHY_STATUS			0x118
- #define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
--
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
- 	u32 val;
-@@ -84,9 +82,21 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
- 	regmap_write(artpec6_pcie->regmap, offset, val);
- }
- 
--static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
-+static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
- {
--	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-+	struct pcie_port *pp = &pci->pp;
-+	struct dw_pcie_ep *ep = &pci->ep;
-+
-+	switch (artpec6_pcie->mode) {
-+	case DW_PCIE_RC_TYPE:
-+		return pci_addr - pp->cfg0_base;
-+	case DW_PCIE_EP_TYPE:
-+		return pci_addr - ep->phys_base;
-+	default:
-+		dev_err(pci->dev, "UNKNOWN device type\n");
-+	}
-+	return pci_addr;
- }
- 
- static int artpec6_pcie_establish_link(struct dw_pcie *pci)
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 88abdddee2ad..800be7a4f087 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 	u32 retries, val;
- 
- 	if (pci->ops->cpu_addr_fixup)
--		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
-+		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
- 
- 	if (pci->iatu_unroll_enabled) {
- 		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 24edac035160..cca5a81c1c74 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -205,7 +205,7 @@ struct dw_pcie_ep {
- };
- 
- struct dw_pcie_ops {
--	u64	(*cpu_addr_fixup)(u64 cpu_addr);
-+	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
- 	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
- 			    size_t size);
- 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
--- 
-2.14.2
+SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
+c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOoxMNTCMTLI1SAzOjM4DQo+IFRvOiBaLnEuIEhv
+dSA8emhpcWlhbmcuaG91QG54cC5jb20+DQo+IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwu
+b3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGxpbnV4LXBjaUB2
+Z2VyLmtlcm5lbC5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IFJveSBaYW5nDQo+IDxyb3kuemFu
+Z0BueHAuY29tPjsgTWluZ2thaSBIdSA8bWluZ2thaS5odUBueHAuY29tPjsgTS5oLiBMaWFuDQo+
+IDxtaW5naHVhbi5saWFuQG54cC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8yXSBQQ0k6
+IERpc2FibGUgTVNJIGZvciBGcmVlc2NhbGUgUENJZSBSQyBtb2RlDQo+IA0KPiBPbiBGcmksIFNl
+cCAyMiwgMjAxNyBhdCAwMzoyNToyMVBNICswODAwLCBaaGlxaWFuZyBIb3Ugd3JvdGU6DQo+ID4g
+RnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPg0KPiA+IFRoZSBG
+cmVlc2NhbGUgUENJZSBjb250cm9sbGVyIGFkdmVydGlzZXMgdGhlIE1TSS9NU0ktWCBjYXBhYmls
+aXR5IGluDQo+ID4gYm90aCBSQyBhbmQgRW5kcG9pbnQgbW9kZSwgYnV0IGluIFJDIG1vZGUgaXQg
+ZG9lc24ndCBzdXBwb3J0IE1TSS9NU0ktWA0KPiA+IGJ5IGl0IHNlbGYsIGl0IGNhbiBvbmx5IHRy
+YW5zZmVyIE1TSS9NU0ktWCBmcm9tIGRvd25zdHJlYW0NCj4gDQo+IHMvaXQgc2VsZiwvaXRzZWxm
+Oy8NCg0KSSdsbCBmaXggdGhpcyB0eXBvIGluIG5leHQgdmVyc2lvbi4NCg0KPiA+IGRldmljZXMu
+IFNvIGFkZCB0aGlzIHF1aXJrIHRvIHByZXZlbnQgdXNlIG9mIE1TSS9NU0ktWCBpbiBSQyBtb2Rl
+Lg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhw
+LmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9wY2kvcXVpcmtzLmMgfCA4ICsrKysrKysrDQo+
+ID4gIDEgZmlsZSBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQg
+YS9kcml2ZXJzL3BjaS9xdWlya3MuYyBiL2RyaXZlcnMvcGNpL3F1aXJrcy5jIGluZGV4DQo+ID4g
+YTRkMzM2MTlhN2JiLi5jMTA2M2E0MjBmMGMgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kv
+cXVpcmtzLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiA+IEBAIC00Nzk5LDMg
+KzQ3OTksMTEgQEAgc3RhdGljIHZvaWQgcXVpcmtfbm9fYXRzKHN0cnVjdCBwY2lfZGV2ICpwZGV2
+KQ0KPiA+ICAvKiBBTUQgU3RvbmV5IHBsYXRmb3JtIEdQVSAqLw0KPiA+ICBERUNMQVJFX1BDSV9G
+SVhVUF9GSU5BTChQQ0lfVkVORE9SX0lEX0FUSSwgMHg5OGU0LCBxdWlya19ub19hdHMpOw0KPiA+
+ICNlbmRpZiAvKiBDT05GSUdfUENJX0FUUyAqLw0KPiA+ICsNCj4gPiArLyogRnJlZXNjYWxlIFBD
+SWUgZG9lc24ndCBzdXBwb3J0IE1TSSBpbiBSQyBtb2RlICovIHN0YXRpYyB2b2lkDQo+ID4gK3F1
+aXJrX2ZzbF9ub19tc2koc3RydWN0IHBjaV9kZXYgKnBkZXYpIHsNCj4gPiArCWlmIChwY2lfcGNp
+ZV90eXBlKHBkZXYpID09IFBDSV9FWFBfVFlQRV9ST09UX1BPUlQpDQo+ID4gKwkJcGRldi0+bm9f
+bXNpID0gMTsNCj4gPiArfQ0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9GSU5BTChQQ0lfVkVORE9S
+X0lEX0ZSRUVTQ0FMRSwgUENJX0FOWV9JRCwNCj4gPiArcXVpcmtfZnNsX25vX21zaSk7DQo+IA0K
+PiBUaGlzIGRpc2FibGVzIE1TSSBmb3IgYWxsIEZyZWVzY2FsZSByb290IHBvcnRzLCBwYXN0LCBw
+cmVzZW50LCBhbmQgZnV0dXJlLiAgSXMNCj4gdGhhdCByZWFsbHkgd2hhdCB5b3Ugd2FudD8gIFRo
+aXMgaXMgYSBidWcgKHRoZSByb290IHBvcnQgc2hvdWxkbid0IGFkdmVydGlzZQ0KPiBNU0kgaWYg
+aXQgZG9lc24ndCBzdXBwb3J0IGl0KSwgYW5kIHByZXN1bWFibHkgaXQgbWlnaHQgYmUgZml4ZWQg
+aW4gc29tZSBmdXR1cmUNCj4gZGV2aWNlPw0KDQpGb3IgdGhlIHBhc3QgYW5kIHByZXNlbnQsIHRo
+ZXJlIGlzbid0IEZyZWVzY2FsZSByb290IHBvcnRzIHN1cHBvcnRpbmcgTVNJLiBJZiB0aGUgZnV0
+dXJlIEZyZWVzY2FsZSByb290IHBvcnQgc3VwcG9ydCBNU0ksIEknbGwgYWRkIGEgcGF0Y2ggZm9y
+IGl0IGNoZWNraW5nIHRoZSBQQ0kgZGV2aWNlIElEIHRvIGRldGVybWluZSBpZiBhcHBseSB0aGUg
+cXVpcmsuDQpBbmQgaXQgc2hvdWxkIGJlIG9rIGZvciB0aGUgcm9vdCBwb3J0cyB3aXRob3V0IHRo
+aXMgYnVnLg0KDQo+IA0KPiBUaGlzIG5lZWRzIGFuIGFjayBmcm9tIE1pbmdodWFuIG9yIE1pbmdr
+YWkgKGJhc2VkIG9uIE1BSU5UQUlORVJTKS4NCj4gDQoNClRoYW5rcywNClpoaXFpYW5nDQo=
