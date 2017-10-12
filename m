@@ -1,47 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:11637 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932396AbdJWOgl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 10:36:41 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH V2 6/7] ARM64: tegra: limit PCIe config space mapping to 4K for T210
-Date: Mon, 23 Oct 2017 20:05:11 +0530
-Message-ID: <1508769312-12465-7-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
-References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <bhelgaas@google.com>, <roy.zang@nxp.com>,
+ <mingkai.hu@nxp.com>, <minghuan.lian@nxp.com>
+Subject: [PATCHv2 0/2] PCI: layerscape: add fixes for layerscape-pcie errata
+Date: Thu, 12 Oct 2017 17:44:46 +0800
+Message-ID: <20171012094448.31217-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-reduces PCIe config space mapping size from its current 256MB
-to 4K to have only 4K of virtual memory mapping and to be
-in line with driver implementation
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V2:
-* no changes in this patch
+The [1/2] is to fix layerscape PCIe MSI/MSI-X capability errata.
+The [2/2] is to change the default AXI system error response behavior
+for PCI Express outbound non-posted requests.
 
- arch/arm64/boot/dts/nvidia/tegra210.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hou Zhiqiang (1):
+  PCI: Disable MSI for Freescale PCIe RC mode
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra210.dtsi b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-index 29f471e0f22a..8cad2516597b 100644
---- a/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-@@ -16,7 +16,7 @@
- 		device_type = "pci";
- 		reg = <0x0 0x01003000 0x0 0x00000800   /* PADS registers */
- 		       0x0 0x01003800 0x0 0x00000800   /* AFI registers */
--		       0x0 0x02000000 0x0 0x10000000>; /* configuration space */
-+		       0x0 0x11FFF000 0x0 0x00001000>; /* configuration space */
- 		reg-names = "pads", "afi", "cs";
- 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
- 			     <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
+Minghuan Lian (1):
+  pci/layerscape: change the default error response behavior
+
+ drivers/pci/dwc/pci-layerscape.c | 11 +++++++++++
+ drivers/pci/quirks.c             |  8 ++++++++
+ 2 files changed, 19 insertions(+)
+
 -- 
-2.7.4
+2.14.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
