@@ -1,165 +1,148 @@
-Return-Path: <SRS0=GJvY=BM=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=GJvY=BM=chromium.org=briannorris@kernel.org>
-Date: Thu, 12 Oct 2017 23:27:29 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
-	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>, linux-kernel@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>, Rajat Jain <rajatja@google.com>,
-	Frank Rowand <frowand.list@gmail.com>,
-	linux-arm-kernel@lists.infradead.org, furquan@chromium.org
-Subject: Re: [PATCH 0/3] PCI: rockchip: assert PERST# in S3
-Message-ID: <20171013062728.GA56763@google.com>
-References: <20171012205220.130048-1-briannorris@chromium.org>
- <20171013031523.GB25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=t/IE=BL=arm.com=julien.thierry@kernel.org>
+Return-Path: <SRS0=t/IE=BL=arm.com=julien.thierry@kernel.org>
+Subject: Re: [PATCH 1/2] vgaarb: Select a default VGA device even if there's
+ no legacy VGA
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Daniel Vetter <daniel.vetter@intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
+ Xinliang Liu <z.liuxinliang@hisilicon.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Lukas Wunner
+ <lukas@wunner.de>, Catalin Marinas <catalin.marinas@arm.com>,
+ Rongrong Zou <zourongrong@gmail.com>, Dave Airlie <airlied@redhat.com>,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org,
+ Daniel Axtens <dja@axtens.net>
+References: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171006222428.12211.3635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Julien Thierry <julien.thierry@arm.com>
+Message-ID: <b5373cbb-7d0d-a626-159b-dee0b82d32d0@arm.com>
+Date: Thu, 12 Oct 2017 12:24:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171013031523.GB25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171006222428.12211.3635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
 Hi Bjorn,
 
-On Thu, Oct 12, 2017 at 10:15:23PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 12, 2017 at 01:52:17PM -0700, Brian Norris wrote:
-> > Hi,
-> > 
-> > This patch series should mostly be self-descriptive, but it's motivated by the
-> > fact that I've found differing requirements from PCIe endpoint makers regarding
-> > the state of PERST# when in system suspend (S3). Additionally, some existing
-> > boards are not especially well suited for holding PERST# low in S3 (e.g., the
-> > pin is driven by a non-PMU GPIO, so it's hard or impossible to keep it
-> > asserted). So the solution is...give it a device tree property!
+On 06/10/17 23:24, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> How do ACPI systems solve this problem?
+> Daniel Axtens reported that on the HiSilicon D05 board, the VGA device is
+> behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so the VGA arbiter
+> never selects it as the default, which means Xorg auto-detection doesn't
+> work.
+> 
+> VGA is a legacy PCI feature: a VGA device can respond to addresses, e.g.,
+> [mem 0xa0000-0xbffff], [io 0x3b0-0x3bb], [io 0x3c0-0x3df], etc., that are
+> not configurable by BARs.  Consequently, multiple VGA devices can conflict
+> with each other.  The VGA arbiter avoids conflicts by ensuring that those
+> legacy resources are only routed to one VGA device at a time.
+> 
+> The arbiter identifies the "default VGA" device, i.e., a legacy VGA device
+> that was used by boot firmware.  It selects the first device that:
+> 
+>    - is of PCI_CLASS_DISPLAY_VGA,
+>    - has both PCI_COMMAND_IO and PCI_COMMAND_MEMORY enabled, and
+>    - has PCI_BRIDGE_CTL_VGA set in all upstream bridges.
+> 
+> Some systems don't have such a device.  For example, if a host bridge
+> doesn't support I/O space, PCI_COMMAND_IO probably won't be enabled for any
+> devices below it.  Or, as on the HiSilicon D05, the VGA device may be
+> behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so accesses to the
+> legacy VGA resources will never reach the device.
+> 
+> This patch extends the arbiter so that if it doesn't find a device that
+> meets all the above criteria, it selects the first device that:
+> 
+>    - is of PCI_CLASS_DISPLAY_VGA and
+>    - has PCI_COMMAND_IO or PCI_COMMAND_MEMORY enabled
+> 
+> If it doesn't find even that, it selects the first device that:
+> 
+>    - is of class PCI_CLASS_DISPLAY_VGA.
+> 
+> Such a device may not be able to use the legacy VGA resources, but most
+> drivers can operate the device without those.  Setting it as the default
+> device means its "boot_vga" sysfs file will contain "1", which Xorg (via
+> libpciaccess) uses to help select its default output device.
+> 
+> This fixes Xorg auto-detection on some arm64 systems (HiSilicon D05 in
+> particular; see the link below).
+> 
+> It also replaces the powerpc fixup_vga() quirk, albeit with slightly
+> different semantics: the quirk selected the first VGA device we found, and
+> overrode that selection with any enabled VGA device we found.  If there
+> were several enabled VGA devices, the *last* one we found would become the
+> default.
+> 
+> The code here instead selects the *first* enabled VGA device we find, and
+> if none are enabled, the first VGA device we find.
+> 
+> Link: http://lkml.kernel.org/r/20170901072744.2409-1-dja@axtens.net
+> Tested-by: Daniel Axtens <dja@axtens.net>    # arm64, ppc64-qemu-tcg
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>   arch/powerpc/kernel/pci-common.c |   12 ------------
+>   drivers/gpu/vga/vgaarb.c         |   25 +++++++++++++++++++++++++
+>   2 files changed, 25 insertions(+), 12 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 02831a396419..0ac7aa346c69 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
+>   }
+>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+> -
+> -static void fixup_vga(struct pci_dev *pdev)
+> -{
+> -	u16 cmd;
+> -
+> -	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> -	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+> -		vga_set_default_device(pdev);
+> -
+> -}
+> -DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+> -			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
+> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> index 76875f6299b8..aeb41f793ed4 100644
+> --- a/drivers/gpu/vga/vgaarb.c
+> +++ b/drivers/gpu/vga/vgaarb.c
+> @@ -1468,6 +1468,31 @@ static int __init vga_arb_device_init(void)
+>   			vgaarb_info(dev, "no bridge control possible\n");
+>   	}
+>   
+> +	if (!vga_default_device()) {
+> +		list_for_each_entry(vgadev, &vga_list, list) {
+> +			struct device *dev = &vgadev->pdev->dev;
+> +			u16 cmd;
+> +
+> +			pdev = vgadev->pdev;
+> +			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+> +				vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
+> +				vga_set_default_device(pdev);
+> +				break;
+> +			}
+> +		}
+> +	}
+> +
+> +	if (!vga_default_device()) {
+> +		vgadev = list_first_entry_or_null(&vga_list,
+> +						  struct vga_device, list);
+> +		if (vgadev) {
+> +			struct device *dev = &vgadev->pdev->dev;
+> +			vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
+> +			vga_set_default_device(pdev);
 
-I don't really know, because by design ACPI is rather opaque. And I
-expect people like it that way.
+Isn't 'pdev' NULL here? shouldn't it be vgadev->pdev instead?
 
-But from the very little experience I've had looking at ACPI
-configuration, this is done on a case-by-case basis. I've heard of cases
-where an Intel-based S0ix suspend-to-idle can't reinitialize PCIe
-devices reliably if PERST# was asserted and so...the firmware designers
-just hacked around it by not asserting PERST# (there was no difference
-in power consumption for this endpoint).
+Cheers,
 
-For the case I'm particularly looking at (the Wifi card vendor that
-suggests not to assert PERST#)...I haven't tested them on an ACPI-based
-system. But they claimed that their Windows/ACPI systems don't enter L2
-or assert PERST# at all -- they stay in L1.x. But then, I'm not sure
-this vendor has been very successful in the desktop/laptop market, where
-ACPI is common.
-
-But I'll elaborate a little on my problems on this non-ACPI system,
-where apparently I have to defend things in the open, since they're not
-hidden behind an opaque BIOS :)
-
-I'm looking at 2 different Wifi card vendors, both in M.2-compliant
-packages, and using them on Rockchip RK3399. We want to support
-Wake-on-WLAN, and these cards do not have an "auxiliary" power, so we
-leave them fully powered in system suspend (S3) and expect them to enter
-low power states when prompted. Rockchip supports L0, L0s, L1, and L2/3
-link states, but no L1.1 or L1.2. Its PCIe reference clock is driven off
-a clock which powers off in S3, and so by my understanding, the only
-legal transition is to enter L2/L3 link state before suspend.
-
-Now, one of these 2 Wifi vendors claims higher power consumption with
-PERST# asserted, because they exit L2 and go into a detect state. They
-also seem to claim that on some Windows/ACPI systems leave their link in
-L1.x states in system suspend, and PERST# is not involved there either.
-
-The other vendor is the opposite: when PERST# is not asserted, power
-consumption in L2 link state is higher, and (because device is not in D3
-cold?) PCIE WAKE# will not activate. After a closer reading of the PCIe
-specs, this seems to be a more correct reading of the specs.
-
-> Can you point to any relevant sections in the PCI specs?
-
-Sure, I can try.
-
-Per the above discussion, we expect to enter L2 link state when
-suspending. The PCIe Base Specification 3.1 section 5.3.2.3 (Entry into
-the L2/L3 Ready State) describes the L2/L3 transition sequence,
-involving the PME_Turn_Off and PME_TO_Ack messages. It doesn't describe
-what to do with PERST#.
-
-Separately, the PCI Express Card Electromechanical Specification
-Revision 3.0 talks about PERST#. Its main description is in section 2:
-
-"PERST# (required): indicates when the applied main power is within the
-specified tolerance and stable."
-
-Considering we always keep main power on for the endpoint, this doesn't
-appear to suggest anything.
-
-There is more language in 2.2, but it's less clear:
-
-"PERST# is asserted in advance of the power being switched off in a
-power-managed state like S3."
-
-Again, no power is switched off. And what is a "state like S3"? Rather
-vague. The "S3" I refer to for RK3399 is not determined by an ACPI spec.
-
-The PCIe M.2 specification is even lighter on details. It describes
-PERST# but only in the context of powering off. Although it does refer
-to the above PCIe Card EM Spec at times.
-
-> Is this a hole in those specs?  Is this something that needs to be
-> clarified by the PCI-SIG to improve interoperability?
-
-After re-re-reading the specifications, I'm more convinced that the
-first Wifi vendor got it wrong. I also don't trust them to get many
-things right in general, so this is pretty much par for the course.
-
-The only things I can suggest:
-* "main power" is never defined, as far as I can tell. So "main" and
-  "auxiliary" power don't have much meaning for many M.2 cards, and so
-  I end up reading much of the spec with a grain of salt
-* S3 is never defined in the PCIe Card EM spec, but it's thrown around a
-  few times
-* if possible, the PCIe base spec should mention something about the
-  fundamental reset which is expected with an L2 transition. It's not
-  clear what to do if you don't want to switch off power completely (and
-  so enter L3), but you also don't have "auxiliary" power
-
-> Why is this problem only showing up now?
-
-Because initial work on RK3399 (and most upstreaming efforts) was done
-on boards using the first Wifi vendor as the sole PCIe device on the
-bus, and now we're introducing a second Wifi vendor, which is more
-closely aligned with the PCIe Card EM spec.
-
-Also, even if the first vendors' chips could handle PERST# OK, the first
-boards may not be able to drive PERST# low in S3, as they'll get pulled
-up when the GPIO bank shuts off. (It's unclear if just toggling PERST#
-is enough to satisfy the spec.)
-
-As to why no one else ran into this, I can only speculate. Maybe our 1st
-Wifi vendor is the only vendor that got this wrong. Or maybe anyone who
-has handled this stuff just handles it in custom BIOS code that nobody
-ever reviewed.
-
-Brian
-
-> > Brian Norris (3):
-> >   Documentation/devicetree: Add pcie-reset-suspend property
-> >   of/pci: Add of_pci_get_pcie_reset_suspend() to parse
-> >     pcie-reset-suspend
-> >   PCI: rockchip: Support configuring PERST# state via DT
-> > 
-> >  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
-> >  drivers/of/of_pci.c                           | 25 +++++++++++++++++++++++++
-> >  drivers/pci/host/pcie-rockchip.c              |  7 +++++++
-> >  include/linux/of_pci.h                        |  7 +++++++
-> >  4 files changed, 50 insertions(+)
-> > 
-> > -- 
-> > 2.15.0.rc0.271.g36b669edcc-goog
-> > 
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Julien Thierry
