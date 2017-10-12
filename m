@@ -1,91 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 07/15] usb: gadget: configfs: make config_item_type const
-Date: Mon, 16 Oct 2017 17:18:46 +0200
-Message-Id: <1508167134-6243-8-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:56130 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751632AbdJLHyl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 03:54:41 -0400
+From: Pankaj Dubey <pankaj.dubey@samsung.com>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Pankaj Dubey <pankaj.dubey@samsung.com>
+Subject: [PATCH] PCI: dwc: designware: don't sleep in atomic context
+Date: Thu, 12 Oct 2017 13:24:49 +0530
+Message-id: <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
+References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make config_item_type structures const as they are either passed to a
-function having the argument as const or stored in the const "ci_type"
-field of a config_item structure.
+In pcie-designware.c many places we are calling "usleep_range" which
+are in atomic context. This patch fixes these potential BUGs and
+replaces "usleep_range" with mdelay calls.
 
-Done using Coccinelle.
-
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
 ---
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
+ drivers/pci/dwc/pcie-designware.c | 8 ++++----
+ drivers/pci/dwc/pcie-designware.h | 3 +--
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
- drivers/usb/gadget/configfs.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/usb/gadget/configfs.c b/drivers/usb/gadget/configfs.c
-index aeb9f3c..9d18b99 100644
---- a/drivers/usb/gadget/configfs.c
-+++ b/drivers/usb/gadget/configfs.c
-@@ -505,13 +505,13 @@ static ssize_t gadget_config_desc_bmAttributes_store(struct config_item *item,
- 	NULL,
- };
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 88abddd..35d19b9 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -138,7 +138,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+ 		if (val & PCIE_ATU_ENABLE)
+ 			return;
  
--static struct config_item_type gadget_config_type = {
-+static const struct config_item_type gadget_config_type = {
- 	.ct_item_ops	= &gadget_config_item_ops,
- 	.ct_attrs	= gadget_config_attrs,
- 	.ct_owner	= THIS_MODULE,
- };
+-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++		mdelay(LINK_WAIT_IATU_MIN);
+ 	}
+ 	dev_err(pci->dev, "outbound iATU is not being enabled\n");
+ }
+@@ -181,7 +181,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+ 		if (val & PCIE_ATU_ENABLE)
+ 			return;
  
--static struct config_item_type gadget_root_type = {
-+static const struct config_item_type gadget_root_type = {
- 	.ct_item_ops	= &gadget_root_item_ops,
- 	.ct_attrs	= gadget_root_attrs,
- 	.ct_owner	= THIS_MODULE,
-@@ -593,7 +593,7 @@ static void function_drop(
- 	.drop_item      = &function_drop,
- };
+-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++		mdelay(LINK_WAIT_IATU_MIN);
+ 	}
+ 	dev_err(pci->dev, "outbound iATU is not being enabled\n");
+ }
+@@ -239,7 +239,7 @@ static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index,
+ 		if (val & PCIE_ATU_ENABLE)
+ 			return 0;
  
--static struct config_item_type functions_type = {
-+static const struct config_item_type functions_type = {
- 	.ct_group_ops   = &functions_ops,
- 	.ct_owner       = THIS_MODULE,
- };
-@@ -694,7 +694,7 @@ static void config_desc_drop(
- 	.drop_item      = &config_desc_drop,
- };
+-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++		mdelay(LINK_WAIT_IATU_MIN);
+ 	}
+ 	dev_err(pci->dev, "inbound iATU is not being enabled\n");
  
--static struct config_item_type config_desc_type = {
-+static const struct config_item_type config_desc_type = {
- 	.ct_group_ops   = &config_desc_ops,
- 	.ct_owner       = THIS_MODULE,
- };
-@@ -1476,7 +1476,7 @@ static void gadgets_drop(struct config_group *group, struct config_item *item)
- 	.drop_item      = &gadgets_drop,
- };
+@@ -285,7 +285,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
+ 		if (val & PCIE_ATU_ENABLE)
+ 			return 0;
  
--static struct config_item_type gadgets_type = {
-+static const struct config_item_type gadgets_type = {
- 	.ct_group_ops   = &gadgets_ops,
- 	.ct_owner       = THIS_MODULE,
- };
+-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
++		mdelay(LINK_WAIT_IATU_MIN);
+ 	}
+ 	dev_err(pci->dev, "inbound iATU is not being enabled\n");
+ 
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index e5d9d77..13c17c9 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -28,8 +28,7 @@
+ 
+ /* Parameters for the waiting for iATU enabled routine */
+ #define LINK_WAIT_MAX_IATU_RETRIES	5
+-#define LINK_WAIT_IATU_MIN		9000
+-#define LINK_WAIT_IATU_MAX		10000
++#define LINK_WAIT_IATU_MIN		9
+ 
+ /* Synopsys-specific PCIe configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
 -- 
-1.9.1
-
+2.7.4
