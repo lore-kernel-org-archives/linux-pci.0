@@ -1,71 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53728 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753269AbdJTRar (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Oct 2017 13:30:47 -0400
-Date: Fri, 20 Oct 2017 12:30:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ben Dooks <ben.dooks@codethink.co.uk>,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: PCI: rcar: Correct example to match reality
-Message-ID: <20171020173044.GJ6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <1507729813-21501-1-git-send-email-geert+renesas@glider.be>
+Return-Path: <SRS0=d13r=BL=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=d13r=BL=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH 4/5] PCI: wait device ready after pci_pm_reset()
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org >> Linux PCI" <linux-pci@vger.kernel.org>,
+ timur@codeaurora.org, alex.williamson@redhat.com,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
+ <1506212218-29103-4-git-send-email-okaya@codeaurora.org>
+ <20171011220625.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <2702792d-e076-45a9-5b8a-82e1499cb624@codeaurora.org>
+Date: Thu, 12 Oct 2017 12:48:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1507729813-21501-1-git-send-email-geert+renesas@glider.be>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171011220625.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 03:50:13PM +0200, Geert Uytterhoeven wrote:
-> Correct the USB subnodes in the example, cfr. commit f7d569c1e6a6fa73
-> ("ARM: dts: r8a779x: Fix PCI bus dtc warnings"):
->   1. Drop the bogus 'device_type = "pci"' properties,
->   2. Correct the unit addresses.
-> 
-> Update other bits in the example to match real use:
->   1. Rename the USB subnodes from "pci" to "usb",
->   2. Update the "phys" property.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+On 10/11/2017 6:06 PM, Bjorn Helgaas wrote:
+>> static int pci_pm_reset(struct pci_dev *dev, int probe)
+>>  {
+>> +	unsigned int delay = dev->d3_delay;
+>>  	u16 csr;
+>>  
+>>  	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
+>> @@ -3988,7 +3989,10 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
+>>  	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+>>  	pci_dev_d3_sleep(dev);
+>>  
+>> -	return 0;
+>> +	if (delay < pci_pm_d3_delay)
+>> +		delay = pci_pm_d3_delay;
+>> +
+>> +	return pci_dev_wait(dev, "PM D3->D0", delay, 1000);
+> 1) Why do we wait up to 1 second here, when we wait up to 60 seconds
+> for the other methods?  Can they all be the same?  Maybe a #define for
+> it?
 
-Applied with acks from Sergei and Rob to pci/host-rcar for v4.15, thanks!
+I know you want to have similar behavior for systems that do and do not support
+CRS. That was the reason why I converted flr wait function to into dev_wait function.
 
-> ---
->  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
+However, here is the problem:
+
+For systems that do not support CRS, there is no way of knowing whether we
+are reading 0xFFFFFFFF because the endpoint is not reachable due to an error
+like "it doesn't support this reset type" or if it is actually emitting a CRS.
+
+If one system has a problem with pm_reset, this code would add an unnecessary
+1 second delay into the reset path. If I make it 60 it would be something like:
+
+1. try reset method A
+2. wait 60 seconds
+3. try reset method B
+4. wait 60 seconds. 
+5. try reset method C
+6. wait 60 seconds
+
+This might end up being a regression on some system. 
+
+I'm still leaning towards a wait only if we are observing a CRS. What's your
+thought on this?
+
+then the sequence would be.
+
+1. try reset method A
+2. if CRS pending, wait 60 seconds
+3. try reset method B
+4. if CRS pending, wait 60 seconds. 
+5. try reset method C
+6. if CRS pending, wait 60 seconds
+
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> index 3d038638612b8ec2..9fe7e12a7bf37b7c 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> @@ -60,17 +60,15 @@ Example SoC configuration:
->  				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
->  				 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
->  
-> -		pci@0,1 {
-> +		usb@1,0 {
->  			reg = <0x800 0 0 0 0>;
-> -			device_type = "pci";
-> -			phys = <&usbphy 0 0>;
-> +			phys = <&usb0 0>;
->  			phy-names = "usb";
->  		};
->  
-> -		pci@0,2 {
-> +		usb@2,0 {
->  			reg = <0x1000 0 0 0 0>;
-> -			device_type = "pci";
-> -			phys = <&usbphy 0 0>;
-> +			phys = <&usb0 0>;
->  			phy-names = "usb";
->  		};
->  	};
-> -- 
-> 2.7.4
+> 2) I don't really like the fact that we do the initial sleep one place
+> and then pass the length of that sleep here.  It's hard to verify
+> they're the same and keep them in sync.  I think the only thing you
+> use initial_wait for is to include that time in the dmesg messages.
+> Maybe we should just omit that time from the message and drop the
+> parameter?
 > 
+
+This was for printing reasons like you spotted, I can certainly get rid of
+the initial_wait.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
