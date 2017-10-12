@@ -1,74 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 06/10] PCI: dwc: artpec6: use BIT and GENMASK macros
-Date: Fri, 13 Oct 2017 18:09:09 +0200
-Message-Id: <20171013160914.3220-7-niklas.cassel@axis.com>
-In-Reply-To: <20171013160914.3220-1-niklas.cassel@axis.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35766 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752396AbdJLOke (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 10:40:34 -0400
+Received: by mail-wm0-f67.google.com with SMTP id b189so4106766wmd.2
+        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 07:40:33 -0700 (PDT)
+Date: Thu, 12 Oct 2017 16:40:32 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Roopa Prabhu <roopa@cumulusnetworks.com>
+Cc: Steve Lin <steven.lin1@broadcom.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Jiri Pirko <jiri@mellanox.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        michael.chan@broadcom.com, linux-pci@vger.kernel.org,
+        "John W. Linville" <linville@tuxdriver.com>, gospo@broadcom.com
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+Message-ID: <20171012144032.GG14672@nanopsycho>
+References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
+ <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This greatly improves readability.
+Thu, Oct 12, 2017 at 04:35:10PM CEST, roopa@cumulusnetworks.com wrote:
+>On Thu, Oct 12, 2017 at 6:34 AM, Steve Lin <steven.lin1@broadcom.com> wrote:
+>> Adds a devlink command for getting & setting device configuration
+>> parameters, and enumerates a bunch of those parameters as devlink
+>> attributes.  Also introduces an attribute that can be set by a
+>> driver to indicate that the config change doesn't take effect
+>> until the next restart (as in the case of the bnxt driver changes
+>> in this patchset, for which all the configuration changes affect NVM
+>> only, and aren't loaded until the next restart.)
+>>
+>> bnxt driver patches make use of these new devlink cmds/attributes.
+>>
+>> Steve Lin (3):
+>>   devlink: Add config parameter get/set operations
+>>   bnxt: Move generic devlink code to new file
+>>   bnxt: Add devlink support for config get/set
+>>
+>
+>Is the goal here to move all ethtool operations to devlink (I saw some
+>attrs related to speed etc). ?.
+>We do need to move ethtool attrs to netlink and devlink is a good
+>place (and of-course leave the current ethtool api around for backward
+>compatibility).
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 4b8ef266dc2f..18075e0fab80 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -39,28 +39,28 @@ struct artpec6_pcie {
- 
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
--#define  PCIECFG_DBG_OEN		(1 << 24)
--#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
--#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
--#define  PCIECFG_CLKREQ_B		(1 << 11)
--#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
--#define  PCIECFG_PLL_ENABLE		(1 << 9)
--#define  PCIECFG_PCLK_ENABLE		(1 << 8)
--#define  PCIECFG_RISRCREN		(1 << 4)
--#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
--#define  PCIECFG_CISRREN		(1 << 2)
--#define  PCIECFG_MACRO_ENABLE		(1 << 0)
-+#define  PCIECFG_DBG_OEN		BIT(24)
-+#define  PCIECFG_CORE_RESET_REQ		BIT(21)
-+#define  PCIECFG_LTSSM_ENABLE		BIT(20)
-+#define  PCIECFG_CLKREQ_B		BIT(11)
-+#define  PCIECFG_REFCLK_ENABLE		BIT(10)
-+#define  PCIECFG_PLL_ENABLE		BIT(9)
-+#define  PCIECFG_PCLK_ENABLE		BIT(8)
-+#define  PCIECFG_RISRCREN		BIT(4)
-+#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
-+#define  PCIECFG_CISRREN		BIT(2)
-+#define  PCIECFG_MACRO_ENABLE		BIT(0)
- 
- #define NOCCFG				0x40
--#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
--#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
--#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
--#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
-+#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
-+#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
-+#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
-+#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
- 
- #define PHY_STATUS			0x118
--#define PHY_COSPLLLOCK			(1 << 0)
-+#define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
-+#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
- 
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
--- 
-2.11.0
+We need to make sure we are not moving things to devlink which don't
+belong there. All options that use "netdev" as a handle should go into
+rtnetlink instead.
