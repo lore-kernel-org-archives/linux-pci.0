@@ -1,150 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44298 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753427AbdJMDrY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Oct 2017 23:47:24 -0400
-Subject: [PATCH v2 1/2] vgaarb: Select a default VGA device even if there's
- no legacy VGA
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-pci@vger.kernel.org,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        dri-devel@lists.freedesktop.org,
-        Xinliang Liu <z.liuxinliang@hisilicon.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Rongrong Zou <zourongrong@gmail.com>,
-        Dave Airlie <airlied@redhat.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org,
-        Daniel Axtens <dja@axtens.net>
-Date: Thu, 12 Oct 2017 22:47:22 -0500
-Message-ID: <20171013034721.14630.65913.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from shards.monkeyblade.net ([184.105.139.130]:55012 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751937AbdJLS7U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 14:59:20 -0400
+Date: Thu, 12 Oct 2017 11:59:19 -0700 (PDT)
+Message-Id: <20171012.115919.1264476300111721032.davem@davemloft.net>
+To: jiri@resnulli.us
+Cc: roopa@cumulusnetworks.com, steven.lin1@broadcom.com,
+        netdev@vger.kernel.org, jiri@mellanox.com,
+        michael.chan@broadcom.com, linux-pci@vger.kernel.org,
+        linville@tuxdriver.com, gospo@broadcom.com
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20171012144032.GG14672@nanopsycho>
+References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
+        <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com>
+        <20171012144032.GG14672@nanopsycho>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Daniel Axtens reported that on the HiSilicon D05 board, the VGA device is
-behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so the VGA arbiter
-never selects it as the default, which means Xorg auto-detection doesn't
-work.
+From: Jiri Pirko <jiri@resnulli.us>
+Date: Thu, 12 Oct 2017 16:40:32 +0200
 
-VGA is a legacy PCI feature: a VGA device can respond to addresses, e.g.,
-[mem 0xa0000-0xbffff], [io 0x3b0-0x3bb], [io 0x3c0-0x3df], etc., that are
-not configurable by BARs.  Consequently, multiple VGA devices can conflict
-with each other.  The VGA arbiter avoids conflicts by ensuring that those
-legacy resources are only routed to one VGA device at a time.
+> Thu, Oct 12, 2017 at 04:35:10PM CEST, roopa@cumulusnetworks.com wrote:
+>>On Thu, Oct 12, 2017 at 6:34 AM, Steve Lin <steven.lin1@broadcom.com> wrote:
+>>> Adds a devlink command for getting & setting device configuration
+>>> parameters, and enumerates a bunch of those parameters as devlink
+>>> attributes.  Also introduces an attribute that can be set by a
+>>> driver to indicate that the config change doesn't take effect
+>>> until the next restart (as in the case of the bnxt driver changes
+>>> in this patchset, for which all the configuration changes affect NVM
+>>> only, and aren't loaded until the next restart.)
+>>>
+>>> bnxt driver patches make use of these new devlink cmds/attributes.
+>>>
+>>> Steve Lin (3):
+>>>   devlink: Add config parameter get/set operations
+>>>   bnxt: Move generic devlink code to new file
+>>>   bnxt: Add devlink support for config get/set
+>>>
+>>
+>>Is the goal here to move all ethtool operations to devlink (I saw some
+>>attrs related to speed etc). ?.
+>>We do need to move ethtool attrs to netlink and devlink is a good
+>>place (and of-course leave the current ethtool api around for backward
+>>compatibility).
+> 
+> We need to make sure we are not moving things to devlink which don't
+> belong there. All options that use "netdev" as a handle should go into
+> rtnetlink instead.
 
-The arbiter identifies the "default VGA" device, i.e., a legacy VGA device
-that was used by boot firmware.  It selects the first device that:
-
-  - is of PCI_CLASS_DISPLAY_VGA,
-  - has both PCI_COMMAND_IO and PCI_COMMAND_MEMORY enabled, and
-  - has PCI_BRIDGE_CTL_VGA set in all upstream bridges.
-
-Some systems don't have such a device.  For example, if a host bridge
-doesn't support I/O space, PCI_COMMAND_IO probably won't be enabled for any
-devices below it.  Or, as on the HiSilicon D05, the VGA device may be
-behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so accesses to the
-legacy VGA resources will never reach the device.
-
-This patch extends the arbiter so that if it doesn't find a device that
-meets all the above criteria, it selects the first device that:
-
-  - is of PCI_CLASS_DISPLAY_VGA and
-  - has PCI_COMMAND_IO or PCI_COMMAND_MEMORY enabled
-
-If it doesn't find even that, it selects the first device that:
-
-  - is of class PCI_CLASS_DISPLAY_VGA.
-
-Such a device may not be able to use the legacy VGA resources, but most
-drivers can operate the device without those.  Setting it as the default
-device means its "boot_vga" sysfs file will contain "1", which Xorg (via
-libpciaccess) uses to help select its default output device.
-
-This fixes Xorg auto-detection on some arm64 systems (HiSilicon D05 in
-particular; see the link below).
-
-It also replaces the powerpc fixup_vga() quirk, albeit with slightly
-different semantics: the quirk selected the first VGA device we found, and
-overrode that selection with any enabled VGA device we found.  If there
-were several enabled VGA devices, the *last* one we found would become the
-default.
-
-The code here instead selects the *first* enabled VGA device we find, and
-if none are enabled, the first VGA device we find.
-
-Link: http://lkml.kernel.org/r/20170901072744.2409-1-dja@axtens.net
-Tested-by: Daniel Axtens <dja@axtens.net>       # arm64, ppc64-qemu-tcg
-Tested-by: Zhou Wang <wangzhou1@hisilicon.com>  # D05 Hisi Hip07, Hip08
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/powerpc/kernel/pci-common.c |   12 ------------
- drivers/gpu/vga/vgaarb.c         |   25 +++++++++++++++++++++++++
- 2 files changed, 25 insertions(+), 12 deletions(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 02831a396419..0ac7aa346c69 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
--
--static void fixup_vga(struct pci_dev *pdev)
--{
--	u16 cmd;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
--	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
--		vga_set_default_device(pdev);
--
--}
--DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
--			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 76875f6299b8..8035e38d5110 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -1468,6 +1468,31 @@ static int __init vga_arb_device_init(void)
- 			vgaarb_info(dev, "no bridge control possible\n");
- 	}
- 
-+	if (!vga_default_device()) {
-+		list_for_each_entry(vgadev, &vga_list, list) {
-+			struct device *dev = &vgadev->pdev->dev;
-+			u16 cmd;
-+
-+			pdev = vgadev->pdev;
-+			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-+				vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
-+				vga_set_default_device(pdev);
-+				break;
-+			}
-+		}
-+	}
-+
-+	if (!vga_default_device()) {
-+		vgadev = list_first_entry_or_null(&vga_list,
-+						  struct vga_device, list);
-+		if (vgadev) {
-+			struct device *dev = &vgadev->pdev->dev;
-+			vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
-+			vga_set_default_device(vgadev->pdev);
-+		}
-+	}
-+
- 	pr_info("loaded\n");
- 	return rc;
- }
+I agree.  Let's keep devlink what is was created for, which is situations
+where we don't have a netdev as the object to work upon.
