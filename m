@@ -1,32 +1,47 @@
-Return-Path: <SRS0=dXiK=BJ=linux.intel.com=alan@kernel.org>
-Return-Path: <SRS0=dXiK=BJ=linux.intel.com=alan@kernel.org>
-Message-ID: <1507626095.26339.5.camel@linux.intel.com>
-Subject: Re: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-related
- host controllers
-From: Alan Cox <alan@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, "Hunter, Adrian"
-	 <adrian.hunter@intel.com>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>, linux-mmc
- <linux-mmc@vger.kernel.org>,  linux-pci <linux-pci@vger.kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, linux-acpi <linux-acpi@vger.kernel.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Date: Tue, 10 Oct 2017 10:01:35 +0100
-In-Reply-To: <20171009202502.GN25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1507294259-20438-1-git-send-email-adrian.hunter@intel.com>
-	 <20171006162048.GC25517@bhelgaas-glaptop.roam.corp.google.com>
-	 <ada41e9b-6fb3-82ab-e458-af4942adba2d@intel.com>
-	 <20171009134154.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
-	 <363DA0ED52042842948283D2FC38E4649BF3590E@IRSMSX106.ger.corp.intel.com>
-	 <20171009202502.GN25517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:50303 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1757244AbdJLNey (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 09:34:54 -0400
+From: Steve Lin <steven.lin1@broadcom.com>
+To: netdev@vger.kernel.org
+Cc: jiri@mellanox.com, davem@davemloft.net, michael.chan@broadcom.com,
+        linux-pci@vger.kernel.org, linville@tuxdriver.com,
+        gospo@broadcom.com, steven.lin1@broadcom.com
+Subject: [RFC 0/3] Adding config get/set to devlink
+Date: Thu, 12 Oct 2017 09:34:19 -0400
+Message-Id: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Your concern was that a quirk would require a long list of device IDs
-> and we'd have to add new ones.  I share that concern,
+Adds a devlink command for getting & setting device configuration
+parameters, and enumerates a bunch of those parameters as devlink
+attributes.  Also introduces an attribute that can be set by a
+driver to indicate that the config change doesn't take effect
+until the next restart (as in the case of the bnxt driver changes
+in this patchset, for which all the configuration changes affect NVM
+only, and aren't loaded until the next restart.)
 
-I'm not sure I do. The bus topology tells you what is on die, and the
-id of the root bridge tells you if it's one of the parts you can do
-this.
+bnxt driver patches make use of these new devlink cmds/attributes.
 
-Alan
+Steve Lin (3):
+  devlink: Add config parameter get/set operations
+  bnxt: Move generic devlink code to new file
+  bnxt: Add devlink support for config get/set
+
+ drivers/net/ethernet/broadcom/bnxt/Makefile       |   2 +-
+ drivers/net/ethernet/broadcom/bnxt/bnxt.c         |   1 +
+ drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c | 403 ++++++++++++++++++++++
+ drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.h |  56 +++
+ drivers/net/ethernet/broadcom/bnxt/bnxt_hsi.h     | 100 ++++++
+ drivers/net/ethernet/broadcom/bnxt/bnxt_vfr.c     |  97 +-----
+ drivers/net/ethernet/broadcom/bnxt/bnxt_vfr.h     |  35 +-
+ include/net/devlink.h                             |   4 +
+ include/uapi/linux/devlink.h                      | 108 ++++++
+ net/core/devlink.c                                | 207 +++++++++++
+ 10 files changed, 882 insertions(+), 131 deletions(-)
+ create mode 100644 drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c
+ create mode 100644 drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.h
+
+-- 
+2.7.4
