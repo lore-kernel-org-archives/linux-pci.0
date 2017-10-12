@@ -1,122 +1,98 @@
-Return-Path: <SRS0=eSAM=BE=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=eSAM=BE=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-Path: <SRS0=OSuf=BL=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=OSuf=BL=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH V4 1/2] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port
+ service drivers
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Qiang Zheng <zhengqiang10@huawei.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, gabriele.paoloni@huawei.com, linuxarm@huawei.com
-Subject: Re: [PATCH V2] Bug fix for PME interrupt handler, add Root Status check
-Date: Thu, 05 Oct 2017 15:02:54 +0200
-Message-ID: <4989012.MpNStB6gzp@aspire.rjw.lan>
-In-Reply-To: <20171004221157.GL25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506737526-94266-1-git-send-email-zhengqiang10@huawei.com> <20171004221157.GL25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
+ <1507719178-112556-2-git-send-email-liudongdong3@huawei.com>
+ <20171011113049.GD25517@bhelgaas-glaptop.roam.corp.google.com>
+CC: <hch@lst.de>, <linux-pci@vger.kernel.org>, <stable@vger.kernel.org>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <ea6f7306-e4d3-9748-e3f4-f787aa700ec4@huawei.com>
+Date: Thu, 12 Oct 2017 10:40:21 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20171011113049.GD25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, October 5, 2017 12:11:57 AM CEST Bjorn Helgaas wrote:
-> On Sat, Sep 30, 2017 at 10:12:06AM +0800, Qiang Zheng wrote:
-> > PCIe PME and hot plug share same interrupt number. In some special case,
-> > Link down event cause hot plug interrupt, devices is not disconnected,
-> > But read config will return 0xff.
-> > 
-> > In that case, PME work function will run and not return Because
-> > Root Status PME bit always 1 and can not be cleared.
-> > 
-> > This patch add Root Status check in PME interrupt handler,
-> > Just do same as pciehp isr Slot status check.
-> > 
-> > Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
-> > ---
-> >  drivers/pci/pcie/pme.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> > index fafdb16..2ff2e57 100644
-> > --- a/drivers/pci/pcie/pme.c
-> > +++ b/drivers/pci/pcie/pme.c
-> > @@ -273,7 +273,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
-> >  	spin_lock_irqsave(&data->lock, flags);
-> >  	pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
-> >  
-> > -	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
-> > +	if (rtsta == U32_MAX || !(rtsta & PCI_EXP_RTSTA_PME)) {
-> >  		spin_unlock_irqrestore(&data->lock, flags);
-> >  		return IRQ_NONE;
-> >  	}
-> > 
-> 
-> I applied the patch below to pci/misc for v4.15.
-> 
-> I think we need a similar test in pcie_pme_work_fn() itself.  Without
-> it, I think there's a race: if we get a legitimate PME, enter
-> pcie_pme_work_fn(), and the link goes down, we could still get
-> 0xffffffff the next time we read PCI_EXP_RTSTA.
-> 
-> I also used "(u32) ~0" instead of U32_MAX because that's the style
-> used elsewhere.  It might be clunkier than necessary, but U32_MAX
-> suggests a limit, and that's not really the concept here.
-> 
-> I didn't add your reviewed-by, Rafael, since I made non-trivial
-> changes to the patch.
-> 
-> Bjorn
-> 
-> 
-> 
-> commit 303029d6d55ba10a37c82c31a89eb5550cde77ec
-> Author: Qiang <zhengqiang10@huawei.com>
-> Date:   Thu Sep 28 11:54:34 2017 +0800
-> 
->     PCI/PME: Handle invalid data when reading Root Status
->     
->     PCIe PME and native hotplug share the same interrupt number, so hotplug
->     interrupts are also processed by PME.  In some cases, e.g., a Link Down
->     interrupt, a device may be present but unreachable, so when we try to
->     read its Root Status register, the read fails and we get all ones data
->     (0xffffffff).
->     
->     Previously, we interpreted that data as PCI_EXP_RTSTA_PME being set, i.e.,
->     "some device has asserted PME," so we scheduled pcie_pme_work_fn().  This
->     caused an infinite loop because pcie_pme_work_fn() tried to handle PME
->     requests until PCI_EXP_RTSTA_PME is cleared, but with the link down,
->     PCI_EXP_RTSTA_PME can't be cleared.
->     
->     Check for the invalid 0xffffffff data everywhere we read the Root Status
->     register.
->     
->     1469d17dd341 ("PCI: pciehp: Handle invalid data when reading from
->     non-existent devices") added similar checks in the hotplug driver.
->     
->     Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
->     [bhelgaas: changelog, also check in pcie_pme_work_fn(), use "~0" to follow
->     other similar checks]
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index fafdb165dd2e..df290aa58dce 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -226,6 +226,9 @@ static void pcie_pme_work_fn(struct work_struct *work)
->  			break;
->  
->  		pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
-> +		if (rtsta == (u32) ~0)
-> +			break;
-> +
->  		if (rtsta & PCI_EXP_RTSTA_PME) {
->  			/*
->  			 * Clear PME status of the port.  If there are other
-> @@ -273,7 +276,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
->  	spin_lock_irqsave(&data->lock, flags);
->  	pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
->  
-> -	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
-> +	if (rtsta == (u32) ~0 || !(rtsta & PCI_EXP_RTSTA_PME)) {
->  		spin_unlock_irqrestore(&data->lock, flags);
->  		return IRQ_NONE;
->  	}
-> 
 
-FWIW, it looks OK to me.
+
+在 2017/10/11 19:30, Bjorn Helgaas 写道:
+> On Wed, Oct 11, 2017 at 06:52:57PM +0800, Dongdong Liu wrote:
+>> After removing and adding back the PCI root port device,
+>> we see the PCIe port service drivers request irq failed.
+>> pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
+>> aer: probe of 0000:00:00.0:pcie002 failed with error -22
+>> pciehp 0000:00:00.0:pcie004: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd-
+>> PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+>> pciehp 0000:00:00.0:pcie004: Cannot get irq 20 for the hotplug controller
+>> pciehp 0000:00:00.0:pcie004: Notification initialization failed (-1)
+>> dpc 0000:00:00.0:pcie010: request IRQ22 failed: -22
+>> dpc: probe of 0000:00:00.0:pcie010 failed with error -22
+>>
+>> The current code basically does this:
+>>
+>>   - allocate 32 vectors
+>>   - figure out vector used by PME and hotplug
+>>   - figure out vector used by AER
+>>   - figure out vector used by DPC
+>>   - free the 32 vectors we allocated
+>>   - allocate only as many vectors as we need
+>>
+>> but it is broken as calling pci_free_irq_vectors()
+>> invalidates the IRQ numbers returned before by pci_irq_vectors();
+>>
+>> The hardware works:
+>>   - PME and hotplug use the Interrupt Message Number from the PCIe
+>>     Capability register.
+>>
+>>   - AER uses the AER Interrupt Message Number from the AER Root Error
+>>     Status register.
+>>
+>>   - DPC uses the DPC Interrupt Message Number from the DPC Capability
+>>     register.
+>>
+>>   - FRS (not supported by Linux yet) uses the FRS Interrupt Message
+>>     Number from the FRS Queuing Capability register.
+>>
+>>   - That's a total of 4 possible MSI/MSI-X vectors used for PME,
+>>     hotplug, AER, DPC, and FRS, so there's no point in trying to
+>>     allocate more than 4 vectors (we currently start with 32).
+>
+> You pointed out that there actually may be some benefit to allocating
+> more than 4 vectors because the hardware may not distribute the
+> Interrupt Message Numbers across the allocated vectors, e.g., you have
+> a system with
+>
+>   HP/PME - message number 0
+>   AER - message number 2
+>   DPC - message number 6
+>
+> In that case, if we allocate 8 vectors, there's probably no sharing
+> (other than HP/PME), but if we allocate 4 vectors, the hardware might
+> put DPC on message number 0 or 2.
+
+Yes, test on HiSilicon hip08 platform, the HW puts DPC on message number 2.
+
+>
+> Out of curiosity, what does happen on this system when we only
+> allocate 4 vectors?  Does DPC end up sharing a vector with PME or AER?
+> Or is it smart enough to put DPC on message number 1 or 3?
+
+Test on HiSilicon hip08 platform, DPC shares a vector withs AER.
+
+[  139.106191] pcieport 0000:00:08.0: PME entry 0
+[  139.112511] pcieport 0000:00:08.0: AER entry 2
+[  139.117890] pcieport 0000:00:08.0: DPC entry 2
+
+  19:          1   ITS-MSI 131074 Edge      aerdrv, pcie-dpc
 
 Thanks,
-Rafael
+Dongdong
+>
+> Bjorn
+>
+> .
+>
