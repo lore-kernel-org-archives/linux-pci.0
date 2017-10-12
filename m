@@ -1,109 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3788 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932182AbdJ3LGT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 07:06:19 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
-        <yinghai@kernel.org>, <david.daney@cavium.com>,
-        <Julia.Lawall@lip6.fr>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH 4/4] PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
-Date: Mon, 30 Oct 2017 16:33:05 +0530
-Message-ID: <1509361385-21224-5-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
-References: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:43258 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752834AbdJLOqZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 10:46:25 -0400
+Received: by mail-pf0-f179.google.com with SMTP id a8so4680834pfc.0
+        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 07:46:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171012144032.GG14672@nanopsycho>
+References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
+ <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com> <20171012144032.GG14672@nanopsycho>
+From: Roopa Prabhu <roopa@cumulusnetworks.com>
+Date: Thu, 12 Oct 2017 07:46:24 -0700
+Message-ID: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: Steve Lin <steven.lin1@broadcom.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Jiri Pirko <jiri@mellanox.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        michael.chan@broadcom.com, linux-pci@vger.kernel.org,
+        "John W. Linville" <linville@tuxdriver.com>, gospo@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-sets CLKREQ asserted delay to a higher value to avoid
-unnecessary wake up from L1.2_ENTRY state for Tegra210
+On Thu, Oct 12, 2017 at 7:40 AM, Jiri Pirko <jiri@resnulli.us> wrote:
+> Thu, Oct 12, 2017 at 04:35:10PM CEST, roopa@cumulusnetworks.com wrote:
+>>On Thu, Oct 12, 2017 at 6:34 AM, Steve Lin <steven.lin1@broadcom.com> wrote:
+>>> Adds a devlink command for getting & setting device configuration
+>>> parameters, and enumerates a bunch of those parameters as devlink
+>>> attributes.  Also introduces an attribute that can be set by a
+>>> driver to indicate that the config change doesn't take effect
+>>> until the next restart (as in the case of the bnxt driver changes
+>>> in this patchset, for which all the configuration changes affect NVM
+>>> only, and aren't loaded until the next restart.)
+>>>
+>>> bnxt driver patches make use of these new devlink cmds/attributes.
+>>>
+>>> Steve Lin (3):
+>>>   devlink: Add config parameter get/set operations
+>>>   bnxt: Move generic devlink code to new file
+>>>   bnxt: Add devlink support for config get/set
+>>>
+>>
+>>Is the goal here to move all ethtool operations to devlink (I saw some
+>>attrs related to speed etc). ?.
+>>We do need to move ethtool attrs to netlink and devlink is a good
+>>place (and of-course leave the current ethtool api around for backward
+>>compatibility).
+>
+> We need to make sure we are not moving things to devlink which don't
+> belong there. All options that use "netdev" as a handle should go into
+> rtnetlink instead.
+>
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 08da67a82a2d..811209dedde2 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -204,6 +204,8 @@
- #define RP_L1_PM_SUBSTATES_1_CTL			0xC04
- #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
- #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
-+#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK		(0x1FF << 13)
-+#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY		(0x27 << 13)
- 
- #define RP_L1_PM_SUBSTATES_2_CTL			0xC08
- #define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
-@@ -354,6 +356,7 @@ struct tegra_pcie_soc {
- 	bool updateFC_threshold;
- 	bool has_aspm_l1;
- 	bool has_aspm_l1ss;
-+	bool l1ss_rp_wake_fixup;
- };
- 
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -2307,6 +2310,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
- 			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
- 		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
- 
-+		if (soc->l1ss_rp_wake_fixup) {
-+			/* Set CLKREQ asserted delay greater than Power_Off
-+			 * time (2us) to avoid RP wakeup in L1.2_ENTRY
-+			 */
-+			value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
-+			value &= ~RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK;
-+			value |= RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY;
-+			writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
-+		}
-+
- 		/* Following is based on clk_m being 19.2 MHz */
- 		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
- 		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
-@@ -2464,6 +2477,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.updateFC_threshold = false,
- 	.has_aspm_l1 = false,
- 	.has_aspm_l1ss = false,
-+	.l1ss_rp_wake_fixup = false,
- };
- 
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2487,6 +2501,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.updateFC_threshold = false,
- 	.has_aspm_l1 = true,
- 	.has_aspm_l1ss = false,
-+	.l1ss_rp_wake_fixup = false,
- };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2509,6 +2524,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.updateFC_threshold = false,
- 	.has_aspm_l1 = true,
- 	.has_aspm_l1ss = false,
-+	.l1ss_rp_wake_fixup = false,
- };
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
-@@ -2539,6 +2555,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.updateFC_threshold = true,
- 	.has_aspm_l1 = true,
- 	.has_aspm_l1ss = true,
-+	.l1ss_rp_wake_fixup = true,
- };
- 
- static const struct tegra_pcie_soc tegra186_pcie = {
-@@ -2562,6 +2579,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.updateFC_threshold = false,
- 	.has_aspm_l1 = true,
- 	.has_aspm_l1ss = true,
-+	.l1ss_rp_wake_fixup = false,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
--- 
-2.7.4
+Any reason you want to keep that restriction ?.
+FWIS, devlink is a driver api just like ethtool is.
+and ethtool needs to move to netlink soon...and It would be better to
+not put the rtnl_lock burden on ethtool driver operations. Instead of
+adding yet another driver api, extending devlink seems like a great
+fit to me.
