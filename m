@@ -1,68 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <6348630.r2z9ev4yl2@avalon>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
- <1985905.z83BJQzMUS@avalon> <20171019140657.GA22233@lst.de> <6348630.r2z9ev4yl2@avalon>
-From: Bhumika Goyal <bhumirks@gmail.com>
-Date: Fri, 20 Oct 2017 10:13:11 +0200
-Message-ID: <CAOH+1jFxhiF8j6MM9txfcs1SHOAuYihq=GZWmVb+wUR5aUCsnQ@mail.gmail.com>
-Subject: Re: [PATCH v2 02/15] usb: gadget: make config_item_type structures const
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-        Julia Lawall <julia.lawall@lip6.fr>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Jonathan Cameron <jic23@kernel.org>, knaack.h@gmx.de,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Peter Meerwald-Stadler <pmeerw@pmeerw.net>,
-        dledford@redhat.com, sean.hefty@intel.com,
-        Hal Rosenstock <hal.rosenstock@gmail.com>, sagi@grimberg.me,
-        kishon@ti.com, Bjorn Helgaas <bhelgaas@google.com>,
-        nab@linux-iscsi.org, balbi@kernel.org,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        Joel Becker <jlbec@evilplan.org>, ccaulfie@redhat.com,
-        teigland@redhat.com, mfasheh@versity.com,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:53386 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755216AbdJLUwe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 16:52:34 -0400
+Received: by mail-pf0-f182.google.com with SMTP id t188so4084730pfd.10
+        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 13:52:34 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 3/3] PCI: rockchip: Support configuring PERST# state via DT
+Date: Thu, 12 Oct 2017 13:52:20 -0700
+Message-Id: <20171012205220.130048-4-briannorris@chromium.org>
+In-Reply-To: <20171012205220.130048-1-briannorris@chromium.org>
+References: <20171012205220.130048-1-briannorris@chromium.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 19, 2017 at 5:05 PM, Laurent Pinchart
-<laurent.pinchart@ideasonboard.com> wrote:
-> Hi Christoph,
->
-> On Thursday, 19 October 2017 17:06:57 EEST Christoph Hellwig wrote:
->> > Now we have 9 const instances of the config_item_type structure that are
->> > identical, with only the .ct_owner field set. Should they be all merged
->> > into a single structure ?
->>
->> I think that's a good idea.
->>
->> But I'm about to slurp up this whole series into my tree, how about making
->> that an incremental patch?
->
-> I'm fine with that.
->
-> Bhumika, would you like to submit an incremental patch, or should I do it ?
->
+I've found that different endpoints and board configurations have
+required different behavior from the PCIe Reset (PERST#) signal when in
+low-power system suspend (e.g., S3). Use the new of_pci helper to
+request this state and assert (active low) PERST# before suspending.
 
-I will submit a patch for merging these structures.
-But should I make a separate patch for this particular change or send
-a v3 for the whole series?
+Note that we reinitialize the link (including reconfiguring PERST#) at
+resume time.
 
-Thanks,
-Bhumika
+This requires that the board and system firmware supports driving this
+signal low when the system is suspended, since PERST# may be pulled up
+by the endpoint, and some GPIO banks are not active in S3.
 
-> --
-> Regards,
->
-> Laurent Pinchart
->
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/pci/host/pcie-rockchip.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 9051c6c8fea4..1ab58c1abb34 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -233,6 +233,7 @@ struct rockchip_pcie {
+ 	struct	regulator *vpcie1v8; /* 1.8V power supply */
+ 	struct	regulator *vpcie0v9; /* 0.9V power supply */
+ 	struct	gpio_desc *ep_gpio;
++	bool	suspend_reset;
+ 	u32	lanes;
+ 	u8      lanes_map;
+ 	u8	root_bus_nr;
+@@ -1155,6 +1156,9 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 		dev_info(dev, "no vpcie0v9 regulator found\n");
+ 	}
+ 
++	/* Default not-asserted, to retain backward compatibility. */
++	rockchip->suspend_reset = of_pci_get_pcie_reset_suspend(node) > 0;
++
+ 	return 0;
+ }
+ 
+@@ -1463,6 +1467,9 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+ 		return ret;
+ 	}
+ 
++	if (rockchip->suspend_reset)
++		gpiod_set_value(rockchip->ep_gpio, 0);
++
+ 	rockchip_pcie_deinit_phys(rockchip);
+ 
+ 	rockchip_pcie_disable_clocks(rockchip);
+-- 
+2.15.0.rc0.271.g36b669edcc-goog
