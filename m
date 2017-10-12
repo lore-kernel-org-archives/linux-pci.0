@@ -1,85 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 05/17] PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
-Date: Mon, 30 Oct 2017 13:42:08 +0100
-Message-Id: <20171030124221.20690-6-niklas.cassel@axis.com>
-In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f52.google.com ([209.85.213.52]:49902 "EHLO
+        mail-vk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752697AbdJLOwA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 10:52:00 -0400
+Received: by mail-vk0-f52.google.com with SMTP id h191so2814273vke.6
+        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 07:52:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+Jmh7GOo4K8gpyhQ8kceFtpNuASp89WYi0NR8AaoXncTCAksQ@mail.gmail.com>
+References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
+ <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com> <CA+Jmh7GOo4K8gpyhQ8kceFtpNuASp89WYi0NR8AaoXncTCAksQ@mail.gmail.com>
+From: Roopa Prabhu <roopa@cumulusnetworks.com>
+Date: Thu, 12 Oct 2017 07:51:57 -0700
+Message-ID: <CAJieiUiwx+1J9eUvw7woviALNDyFDEJGPfgGjjbph+xBP6xV_g@mail.gmail.com>
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+To: Steve Lin <steven.lin1@broadcom.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Jiri Pirko <jiri@mellanox.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        "John W. Linville" <linville@tuxdriver.com>,
+        Andy Gospodarek <gospo@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This way pci-dra7xx.c does not need its own copy of dw_pcie_ep_reset_bar().
+On Thu, Oct 12, 2017 at 7:45 AM, Steve Lin <steven.lin1@broadcom.com> wrote:
+> Hi Roopa,
+>
+> The attributes added in this patchset are not really the same type as
+> ethtool - these are more device configuration type attributes.  The
+> speeds you saw, for example, affect the pre-OS [i.e. PXE boot time]
+> configuration for a port, and aren't run-time speed changes on a given
+> netdev like ethtool configures.  As Jiri mentioned, I will add some
+> comments to better describe each of the attributes.
+>
+> So I don't think there's much duplication here with ethtool.
+>
+> That said, there also shouldn't be anything in the patchset that would
+> preclude some future migration of ethtool settings to using devlink or
+> rtnetlink API.
+>
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V2:
-* New patch in this series.
-
- drivers/pci/dwc/pci-dra7xx.c         | 9 ---------
- drivers/pci/dwc/pcie-designware-ep.c | 2 +-
- drivers/pci/dwc/pcie-designware.h    | 5 +++++
- 3 files changed, 6 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index d0848006945a..a743545da4d4 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -336,15 +336,6 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
--{
--	u32 reg;
--
--	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
--	dw_pcie_writel_dbi2(pci, reg, 0x0);
--	dw_pcie_writel_dbi(pci, reg, 0x0);
--}
--
- static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index c291da2a10ba..47134a85a342 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -30,7 +30,7 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
- 	pci_epc_linkup(epc);
- }
- 
--static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- {
- 	u32 reg;
- 
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 5a1da459eda5..37dfad8d003f 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -338,6 +338,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
- #else
- static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
- {
-@@ -351,5 +352,9 @@ static inline int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
-+
-+static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+{
-+}
- #endif
- #endif /* _PCIE_DESIGNWARE_H */
--- 
-2.14.2
+ok, ack, thanks for the clarification. Just trying to find a best
+netlink place for future ethtool migration to netlink.
