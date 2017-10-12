@@ -1,94 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Xinming Hu <huxm@marvell.com>, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-acpi@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Len Brown <lenb@kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Caesar Wang <wxt@rock-chips.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v9 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci core
-Date: Fri, 27 Oct 2017 15:17:32 +0800
-Message-Id: <20171027071739.21927-1-jeffy.chen@rock-chips.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ua0-f169.google.com ([209.85.217.169]:49670 "EHLO
+        mail-ua0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752485AbdJLVx6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 17:53:58 -0400
+Received: by mail-ua0-f169.google.com with SMTP id h34so4020940uaa.6
+        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 14:53:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
+References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+ <20171012150419.GI14672@nanopsycho> <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
+ <20171012.120650.1063812043202847517.davem@davemloft.net> <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
+From: Roopa Prabhu <roopa@cumulusnetworks.com>
+Date: Thu, 12 Oct 2017 14:53:56 -0700
+Message-ID: <CAJieiUjK4CsBGT5_YidnEGk7mCVYYO_8S0xcsv+XfaW=amGCaQ@mail.gmail.com>
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: David Miller <davem@davemloft.net>,
+        =?UTF-8?B?SmnFmcOtIFDDrXJrbw==?= <jiri@resnulli.us>,
+        Steve Lin <steven.lin1@broadcom.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        "John W. Linville" <linville@tuxdriver.com>,
+        Andy Gospodarek <gospo@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Oct 12, 2017 at 12:20 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+> On 10/12/2017 12:06 PM, David Miller wrote:
+>> From: Florian Fainelli <f.fainelli@gmail.com>
+>> Date: Thu, 12 Oct 2017 08:43:59 -0700
+>>
+>>> Once we move ethtool (or however we name its successor) over to
+>>> netlink there is an opportunity for accessing objects that do and do
+>>> not have a netdevice representor today (e.g: management ports on
+>>> switches) with the same interface, and devlink could be used for
+>>> that.
+>>
+>> That is an interesting angle for including this in devlink.
+>>
+>> I'm not so sure what to do about this.
+>>
+>> One suggestion is that devlink is used for getting ethtool stats for
+>> objects lacking netdev representor's, and a new genetlink family is
+>> used for netdev based ethtool.
+>
+> Right, I was also thinking along those lines that we we would have a new
+> generic netlink family for ethtool to support ethtool over netlink.
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
+new api is fine by me. The reason for suggesting devlink was because
+some of the devlink
+port_* ops are close to ethtool ops that can operate on a port/netdev.
+eg split_port could be a netdev operation
+unless you want to split before the netdev is created.
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
-
-
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-Rewrite the commit message.
-Fix check error in .cleanup().
-Move dedicated wakeirq setup to setup() callback and use
-device_set_wakeup_enable() to enable/disable.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Rewrite the commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Use "wakeup" instead of "wake"
-Rebase.
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (7):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  of/irq: Adjust of_pci_irq parsing for multiple interrupts
-  mwifiex: Disable wakeup irq handling for pcie
-  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie driver for Gru
-  PCI: Make pci_platform_pm_ops's callbacks optional
-  PCI / PM: Move acpi wakeup code to pci core
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-
- Documentation/devicetree/bindings/pci/pci.txt |   8 ++
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  |  15 +--
- drivers/net/wireless/marvell/mwifiex/main.c   |   4 +
- drivers/of/of_pci_irq.c                       |  13 ++-
- drivers/pci/Makefile                          |   2 +-
- drivers/pci/pci-acpi.c                        | 121 ++++++++++++-------------
- drivers/pci/pci-driver.c                      |   9 ++
- drivers/pci/pci-of.c                          | 126 ++++++++++++++++++++++++++
- drivers/pci/pci.c                             | 112 +++++++++++++++++++----
- drivers/pci/pci.h                             |  31 +++++--
- drivers/pci/probe.c                           |  12 ++-
- drivers/pci/remove.c                          |   2 +
- include/linux/pci.h                           |   2 +
- 13 files changed, 360 insertions(+), 97 deletions(-)
- create mode 100644 drivers/pci/pci-of.c
-
--- 
-2.11.0
+There are some ops in devlink which are global hw parameters and not
+specific to a port, those fit perfectly with
+devlinks original goal.
 
 
+>
+>>
+>> I think it's important that we don't expand the scope of devlink
+>> beyond what it was originally designed for.
+>
+> It seems to me like devlink is well defined in what it is not for: it is
+> not meant to be used for any object that is/has a net_device, but it is
+> not well defined for what it can offer to these non network devices. For
+> instance, we have a tremendous amount of operations that are extremely
+> specific to its single user(s) such as mlx5 and mlxsw.
+>
+> For instance, I am not sure how the buffer reservation scheme can be
+> generalized, and this is always the tricky part with a single user
+> facility in that you try to generalize the best you can based on the HW
+> you know. This is not a criticism or meant to be anything negative, this
+> just happens to be the case, and we did not have anything better.
+>
+> So maybe the first thing is to clarify what devlink operations can and
+> should be and what they are absolutely not allowed to cover. We should
+> also clarify whether a generic set/get that Steven is proposing is
+> something that we tolerate, or whether there should be specific function
+> pointers implemented for each attribute, which would be more in line
+> with what has been done thus far.
+> --
+> Florian
