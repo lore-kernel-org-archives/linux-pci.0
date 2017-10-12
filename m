@@ -1,96 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 23/36] iommu/arm-smmu-v3: Share process page tables
-Date: Fri,  6 Oct 2017 14:31:50 +0100
-Message-Id: <20171006133203.22803-24-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/9] SOC: brcmstb: add memory API
+To: Julien Thierry <julien.thierry@arm.com>,
+ Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
+ <b6be2073-7a90-f83f-4e25-79ef04827bd7@arm.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <425b3363-1977-87e1-644e-68a28f648fb0@gmail.com>
+Date: Thu, 12 Oct 2017 09:53:36 -0700
+MIME-Version: 1.0
+In-Reply-To: <b6be2073-7a90-f83f-4e25-79ef04827bd7@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
+ devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Will Deacon <will.deacon@arm.com>,
+ Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Copy the content of TCR, MAIR and TTBR of a given task into a context
-descriptor.
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 38 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 36 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index c86a1182c137..293f260782c2 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -43,6 +43,7 @@
- #include <linux/amba/bus.h>
- 
- #include "io-pgtable.h"
-+#include "io-pgtable-arm.h"
- 
- /* MMIO registers */
- #define ARM_SMMU_IDR0			0x0
-@@ -2170,13 +2171,46 @@ static int arm_smmu_process_init_pgtable(struct arm_smmu_process *smmu_process,
- 					 struct mm_struct *mm)
- {
- 	int asid;
-+	unsigned long tcr;
-+	unsigned long reg, par;
-+	struct arm_smmu_ctx_desc *cfg = &smmu_process->ctx_desc;
- 
- 	asid = mm_context_get(mm);
- 	if (!asid)
- 		return -ENOSPC;
- 
--	smmu_process->ctx_desc.asid = asid;
--	/* TODO: init the rest */
-+	tcr = TCR_T0SZ(VA_BITS) | TCR_IRGN0_WBWA | TCR_ORGN0_WBWA |
-+		TCR_SH0_INNER | ARM_LPAE_TCR_EPD1;
-+
-+	switch (PAGE_SIZE) {
-+		case SZ_4K:
-+			tcr |= TCR_TG0_4K;
-+			break;
-+		case SZ_16K:
-+			tcr |= TCR_TG0_16K;
-+			break;
-+		case SZ_64K:
-+			tcr |= TCR_TG0_64K;
-+			break;
-+		default:
-+			WARN_ON(1);
-+			return -EFAULT;
-+	}
-+
-+	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
-+	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
-+	tcr |= par << ARM_LPAE_TCR_IPS_SHIFT;
-+
-+	tcr |= TCR_TBI0;
-+
-+	cfg->asid       = asid;
-+	cfg->ttbr       = virt_to_phys(mm->pgd);
-+	/*
-+	 * MAIR value is pretty much constant and global, so we can just get it
-+	 * from the current CPU register
-+	 */
-+	cfg->mair       = read_sysreg(mair_el1);
-+	cfg->tcr        = tcr;
- 
- 	return 0;
- }
--- 
-2.13.3
-
+T24gMTAvMTIvMjAxNyAwNzo0MSBBTSwgSnVsaWVuIFRoaWVycnkgd3JvdGU6Cj4gSGkgSmltLAo+
+IAo+IE9uIDExLzEwLzE3IDIzOjM0LCBKaW0gUXVpbmxhbiB3cm90ZToKPj4gRnJvbTogRmxvcmlh
+biBGYWluZWxsaSA8Zi5mYWluZWxsaUBnbWFpbC5jb20+Cj4+Cj4+IFRoaXMgY29tbWl0IGFkZHMg
+YSBtZW1vcnkgQVBJIHN1aXRhYmxlIGZvciBhc2NlcnRhaW5pbmcgdGhlIHNpemVzIG9mCj4+IGVh
+Y2ggb2YgdGhlIE4gbWVtb3J5IGNvbnRyb2xsZXJzIGluIGEgQnJvYWRjb20gU1RCIGNoaXAuICBJ
+dHMgZmlyc3QKPj4gdXNlciB3aWxsIGJlIHRoZSBCcm9hZGNvbSBTVEIgUENJZSByb290IGNvbXBs
+ZXggZHJpdmVyLCB3aGljaCBuZWVkcwo+PiB0byBrbm93IHRoZXNlIHNpemVzIHRvIHByb3Blcmx5
+IHNldCB1cCBETUEgbWFwcGluZ3MgZm9yIGluYm91bmQKPj4gcmVnaW9ucy4KPj4KPj4gV2UgY2Fu
+bm90IHVzZSBtZW1ibG9jayBoZXJlIG9yIGFueXRoaW5nIGxpa2Ugd2hhdCBMaW51eCBwcm92aWRl
+cwo+PiBiZWNhdXNlIGl0IGNvbGxhcHNlcyBhZGphY2VudCByZWdpb25zIHdpdGhpbiBhIGxhcmdl
+ciBibG9jaywgYW5kIGhlcmUKPj4gd2UgYWN0dWFsbHkgbmVlZCBwZXItbWVtb3J5IGNvbnRyb2xs
+ZXIgYWRkcmVzc2VzIGFuZCBzaXplcywgd2hpY2ggaXMKPj4gd2h5IHdlIHJlc29ydCB0byBtYW51
+YWwgRFQgcGFyc2luZy4KPj4KPj4gU2lnbmVkLW9mZi1ieTogSmltIFF1aW5sYW4gPGppbTIxMDEw
+MjRAZ21haWwuY29tPgo+PiAtLS0KPj4gICBkcml2ZXJzL3NvYy9iY20vYnJjbXN0Yi9NYWtlZmls
+ZSB8ICAgMiArLQo+PiAgIGRyaXZlcnMvc29jL2JjbS9icmNtc3RiL21lbW9yeS5jIHwgMTgzCj4+
+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwo+PiAgIGluY2x1ZGUvc29j
+L2JyY21zdGIvbWVtb3J5X2FwaS5oIHwgIDI1ICsrKysrKwo+PiAgIDMgZmlsZXMgY2hhbmdlZCwg
+MjA5IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkKPj4gICBjcmVhdGUgbW9kZSAxMDA2NDQg
+ZHJpdmVycy9zb2MvYmNtL2JyY21zdGIvbWVtb3J5LmMKPj4gICBjcmVhdGUgbW9kZSAxMDA2NDQg
+aW5jbHVkZS9zb2MvYnJjbXN0Yi9tZW1vcnlfYXBpLmgKPj4KPj4gZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvc29jL2JjbS9icmNtc3RiL01ha2VmaWxlCj4+IGIvZHJpdmVycy9zb2MvYmNtL2JyY21zdGIv
+TWFrZWZpbGUKPj4gaW5kZXggOTEyMGIyNy4uNGNlYTdiNiAxMDA2NDQKPj4gLS0tIGEvZHJpdmVy
+cy9zb2MvYmNtL2JyY21zdGIvTWFrZWZpbGUKPj4gKysrIGIvZHJpdmVycy9zb2MvYmNtL2JyY21z
+dGIvTWFrZWZpbGUKPj4gQEAgLTEgKzEgQEAKPj4gLW9iai15ICAgICAgICAgICAgICAgICs9IGNv
+bW1vbi5vIGJpdWN0cmwubwo+PiArb2JqLXkgICAgICAgICAgICAgICAgKz0gY29tbW9uLm8gYml1
+Y3RybC5vIG1lbW9yeS5vCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3NvYy9iY20vYnJjbXN0Yi9t
+ZW1vcnkuYwo+PiBiL2RyaXZlcnMvc29jL2JjbS9icmNtc3RiL21lbW9yeS5jCj4+IG5ldyBmaWxl
+IG1vZGUgMTAwNjQ0Cj4+IGluZGV4IDAwMDAwMDAuLmNiNmJmNzMKPj4gLS0tIC9kZXYvbnVsbAo+
+PiArKysgYi9kcml2ZXJzL3NvYy9iY20vYnJjbXN0Yi9tZW1vcnkuYwo+PiBAQCAtMCwwICsxLDE4
+MyBAQAo+PiArLyoKPj4gKyAqIENvcHlyaWdodCDCqSAyMDE1LTIwMTcgQnJvYWRjb20KPj4gKyAq
+Cj4+ICsgKiBUaGlzIHByb2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiByZWRpc3RyaWJ1
+dGUgaXQgYW5kL29yIG1vZGlmeQo+PiArICogaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUg
+R2VuZXJhbCBQdWJsaWMgTGljZW5zZSB2ZXJzaW9uIDIgYXMKPj4gKyAqIHB1Ymxpc2hlZCBieSB0
+aGUgRnJlZSBTb2Z0d2FyZSBGb3VuZGF0aW9uLgo+PiArICoKPj4gKyAqIFRoaXMgcHJvZ3JhbSBp
+cyBkaXN0cmlidXRlZCBpbiB0aGUgaG9wZSB0aGF0IGl0IHdpbGwgYmUgdXNlZnVsLAo+PiArICog
+YnV0IFdJVEhPVVQgQU5ZIFdBUlJBTlRZOyB3aXRob3V0IGV2ZW4gdGhlIGltcGxpZWQgd2FycmFu
+dHkgb2YKPj4gKyAqIE1FUkNIQU5UQUJJTElUWSBvciBGSVRORVNTIEZPUiBBIFBBUlRJQ1VMQVIg
+UFVSUE9TRS4gU2VlIHRoZQo+PiArICogR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1v
+cmUgZGV0YWlscy4KPj4gKyAqCj4+ICsgKiBBIGNvcHkgb2YgdGhlIEdQTCBpcyBhdmFpbGFibGUg
+YXQKPj4gKyAqIGh0dHA6Ly93d3cuYnJvYWRjb20uY29tL2xpY2Vuc2VzL0dQTHYyLnBocCBvciBm
+cm9tIHRoZSBGcmVlIFNvZnR3YXJlCj4+ICsgKiBGb3VuZGF0aW9uIGF0IGh0dHBzOi8vd3d3Lmdu
+dS5vcmcvbGljZW5zZXMvIC4KPj4gKyAqLwo+PiArCj4+ICsjaW5jbHVkZSA8bGludXgvZGV2aWNl
+Lmg+Cj4+ICsjaW5jbHVkZSA8bGludXgvaW8uaD4KPj4gKyNpbmNsdWRlIDxsaW51eC9saWJmZHQu
+aD4KPj4gKyNpbmNsdWRlIDxsaW51eC9vZl9hZGRyZXNzLmg+Cj4+ICsjaW5jbHVkZSA8bGludXgv
+b2ZfZmR0Lmg+Cj4+ICsjaW5jbHVkZSA8bGludXgvc2l6ZXMuaD4KPj4gKyNpbmNsdWRlIDxzb2Mv
+YnJjbXN0Yi9tZW1vcnlfYXBpLmg+Cj4+ICsKPj4gKy8qIC0tLS0tLS0tLS0tLS0tLS0tLS0tIENv
+bnN0YW50cyAtLS0tLS0tLS0tLS0tLS0tLS0tLSAqLwo+PiArCj4+ICsvKiBNYWNyb3MgdG8gaGVs
+cCBleHRyYWN0IHByb3BlcnR5IGRhdGEgKi8KPj4gKyNkZWZpbmUgVThUT1UzMihiLCBvZmZzKSBc
+Cj4+ICsgICAgKCgoKHUzMiliWzAgKyBvZmZzXSA8PCAwKSAgJiAweDAwMDAwMGZmKSB8IFwKPj4g
+KyAgICAgKCgodTMyKWJbMSArIG9mZnNdIDw8IDgpICAmIDB4MDAwMGZmMDApIHwgXAo+PiArICAg
+ICAoKCh1MzIpYlsyICsgb2Zmc10gPDwgMTYpICYgMHgwMGZmMDAwMCkgfCBcCj4+ICsgICAgICgo
+KHUzMiliWzMgKyBvZmZzXSA8PCAyNCkgJiAweGZmMDAwMDAwKSkKPj4gKwo+PiArI2RlZmluZSBE
+VF9QUk9QX0RBVEFfVE9fVTMyKGIsIG9mZnMpIChmZHQzMl90b19jcHUoVThUT1UzMihiLCBvZmZz
+KSkpCj4+ICsKPiAKPiBJIGZhaWwgdG8gdW5kZXJzdGFuZCB3aHkgdGhpcyBpcyBub3Q6Cj4gCj4g
+I2RlZmluZSBEVF9QUk9QX0RBVEFfVE9fVTMyKGIsIG9mZnMpIChmZHQzMl90b19jcHUoKih1MzIq
+KShiICsgb2ZmcykpKQo+IAo+IAo+IElmIEkgdW5kZXJzdGFuZCBjb3JyZWN0bHksIGZkdCBkYXRh
+IGlzIGluIGJpZyBlbmRpYW4sIHRoZSBtYWNybyBVOFRPVTMyCj4gcmVhZHMgaXQgYXMgbGl0dGxl
+IGVuZGlhbi4gTXkgZ3Vlc3MgaXMgdGhhdCB0aGlzIHdvbid0IHdvcmsgb24gYmlnCj4gZW5kaWFu
+IGtlcm5lbHMgYnV0IHNob3VsZCB3b3JrIG9uIGxpdHRsZSBlbmRpYW4gc2luY2UgZmR0MzJfdG9f
+Y3B1IHdpbGwKPiByZXZlcnQgdGhlIGJ5dGVzIGFnYWluLgo+IAo+IEFtIEkgbWlzc2luZyBzb21l
+dGhpbmc/CgpObywgeW91ciBwb2ludCBpcyB2YWxpZCwgdGhlcmUgaXMgbm8gcmVhc29uIHdoeSB0
+aGlzIGNhbm5vdCBiZQpmZHQzMl90b19jcHUoKSBoZXJlLgotLSAKRmxvcmlhbgoKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBt
+YWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9s
+aXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
