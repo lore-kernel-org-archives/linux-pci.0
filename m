@@ -1,90 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 10 Oct 2017 21:18:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH] PCI: aardvark: Move to struct pci_host_bridge IRQ
- mapping functions
-Message-ID: <20171011021815.GC25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171009070049.2684-1-thomas.petazzoni@free-electrons.com>
-MIME-Version: 1.0
-In-Reply-To: <20171009070049.2684-1-thomas.petazzoni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
- Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
- Hanna Hawa <hannah@marvell.com>, stable@vger.kernel.org,
- Nadav Haklai <nadavh@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Victor Gu <xigu@marvell.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:57049 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751092AbdJLMut (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 08:50:49 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, kishon@ti.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] PCI: endpoint: make config_item_type const
+Date: Thu, 12 Oct 2017 14:50:23 +0200
+Message-Id: <1507812623-12598-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 09, 2017 at 09:00:49AM +0200, Thomas Petazzoni wrote:
-> struct pci_host_bridge gained hooks to map/swizzle IRQs, so that the
-> IRQ mapping can be done automatically by PCI core code through the
-> pci_assign_irq() function instead of resorting to arch-specific
-> implementation callbacks to carry out the same task which force PCI
-> host bridge drivers implementation to implement per-arch kludges to
-> carry out a task that is inherently architecture agnostic.
-> 
-> Commit 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from
-> pcibios_alloc_irq()") was assuming all PCI host controller drivers had
-> been converted to use ->map_irq(), but that wasn't the case:
-> pci-aardvark had not been converted. Due to this, it broke the support
-> for legacy PCI interrupts when using the pci-aardvark driver (used on
-> Marvell Armada 3720 platforms).
-> 
-> In order to fix this, we make sure the ->map_irq and ->swizzle_irq
-> fields of pci_host_bridge are properly filled in.
-> 
-> Fixes: 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()")
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: <stable@vger.kernel.org> # v4.13+
+This is a followup patch for:
+https://patchwork.kernel.org/patch/9999649/ and
+https://lkml.org/lkml/2017/10/11/375
 
-Applied to for-linus for v4.14, thanks!
+Make config_item_type structures const as they are either passed to a
+function having the argument as const or stored in the const "ci_type"
+field of a config_item structure.
 
-> ---
-> Changes since v2:
->  - Adjust commit title to match other commits doing the same change in
->    other drivers
->  - Improve commit log.
-> ---
->  drivers/pci/host/pci-aardvark.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-> index 89f4e3d072d7..26ed0c08f209 100644
-> --- a/drivers/pci/host/pci-aardvark.c
-> +++ b/drivers/pci/host/pci-aardvark.c
-> @@ -935,6 +935,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
->  	bridge->sysdata = pcie;
->  	bridge->busnr = 0;
->  	bridge->ops = &advk_pcie_ops;
-> +	bridge->map_irq = of_irq_parse_and_map_pci;
-> +	bridge->swizzle_irq = pci_common_swizzle;
->  
->  	ret = pci_scan_root_bus_bridge(bridge);
->  	if (ret < 0) {
-> -- 
-> 2.13.6
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Done using Coccinelle.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
+ drivers/pci/endpoint/pci-ep-cfs.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 424fdd6..4f74386 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -150,7 +150,7 @@ static void pci_epc_epf_unlink(struct config_item *epc_item,
+ 	.drop_link	= pci_epc_epf_unlink,
+ };
+ 
+-static struct config_item_type pci_epc_type = {
++static const struct config_item_type pci_epc_type = {
+ 	.ct_item_ops	= &pci_epc_item_ops,
+ 	.ct_attrs	= pci_epc_attrs,
+ 	.ct_owner	= THIS_MODULE,
+@@ -361,7 +361,7 @@ static void pci_epf_release(struct config_item *item)
+ 	.release		= pci_epf_release,
+ };
+ 
+-static struct config_item_type pci_epf_type = {
++static const struct config_item_type pci_epf_type = {
+ 	.ct_item_ops	= &pci_epf_ops,
+ 	.ct_attrs	= pci_epf_attrs,
+ 	.ct_owner	= THIS_MODULE,
+@@ -400,7 +400,7 @@ static void pci_epf_drop(struct config_group *group, struct config_item *item)
+ 	.drop_item      = &pci_epf_drop,
+ };
+ 
+-static struct config_item_type pci_epf_group_type = {
++static const struct config_item_type pci_epf_group_type = {
+ 	.ct_group_ops	= &pci_epf_group_ops,
+ 	.ct_owner	= THIS_MODULE,
+ };
+@@ -428,15 +428,15 @@ void pci_ep_cfs_remove_epf_group(struct config_group *group)
+ }
+ EXPORT_SYMBOL(pci_ep_cfs_remove_epf_group);
+ 
+-static struct config_item_type pci_functions_type = {
++static const struct config_item_type pci_functions_type = {
+ 	.ct_owner	= THIS_MODULE,
+ };
+ 
+-static struct config_item_type pci_controllers_type = {
++static const struct config_item_type pci_controllers_type = {
+ 	.ct_owner	= THIS_MODULE,
+ };
+ 
+-static struct config_item_type pci_ep_type = {
++static const struct config_item_type pci_ep_type = {
+ 	.ct_owner	= THIS_MODULE,
+ };
+ 
+-- 
+1.9.1
