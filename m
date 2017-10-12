@@ -1,69 +1,43 @@
-Return-Path: <SRS0=tsZr=BI=gmail.com=ibmirkin@kernel.org>
-Return-Path: <SRS0=tsZr=BI=gmail.com=ibmirkin@kernel.org>
-MIME-Version: 1.0
-Sender: ibmirkin@gmail.com
-In-Reply-To: <246df1d8-cb6c-518d-7ca1-7a389ca8ef21@gmail.com>
-References: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
- <246df1d8-cb6c-518d-7ca1-7a389ca8ef21@gmail.com>
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Date: Mon, 9 Oct 2017 11:57:52 -0400
-Message-ID: <CAKb7Uviesg2=b4AKFjoz1yEGSqE1EAjdq=VMo9Z-cJ1x1tGKVg@mail.gmail.com>
-Subject: Re: Dynamically adding a PCI subfunction
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Ben Skeggs <bskeggs@redhat.com>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:55196 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751119AbdJLTGv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 15:06:51 -0400
+Date: Thu, 12 Oct 2017 12:06:50 -0700 (PDT)
+Message-Id: <20171012.120650.1063812043202847517.davem@davemloft.net>
+To: f.fainelli@gmail.com
+Cc: jiri@resnulli.us, roopa@cumulusnetworks.com,
+        steven.lin1@broadcom.com, netdev@vger.kernel.org,
+        jiri@mellanox.com, michael.chan@broadcom.com,
+        linux-pci@vger.kernel.org, linville@tuxdriver.com,
+        gospo@broadcom.com
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
+References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+        <20171012150419.GI14672@nanopsycho>
+        <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 9, 2017 at 11:45 AM, Christian K=C3=B6nig
-<ckoenig.leichtzumerken@gmail.com> wrote:
-> Am 09.10.2017 um 16:41 schrieb Ilia Mirkin:
->>
->> Hello,
->>
->> As a bit of background, all NVIDIA GPUs since GT215 have an audio
->> subfunction for HDMI(/DP) audio to be sent to the sink. This generally
->> works.
->>
->> However some, especially laptop, devices come up with that function
->> disabled. We have a quirk to enable it when coming back from runpm,
->> but that doesn't help the init case. Basically we have to write a bit
->> to the PCI config space:
->>
->>
->> https://github.com/torvalds/linux/blob/v4.12/drivers/gpu/drm/nouveau/nou=
-veau_drm.c#L783
->>
->> (MMIO 0x88000 is an alias for the PCI config space)
->>
->> This works for runtime pm resume, since the device was originally
->> there and we just have to make sure the underlying device agrees with
->> it, but when it's missing on boot, we have to convince linux that it
->> exists, bind a driver, etc.
->>
->> What's the best way of going about doing that?
->
->
-> Sounds similar to my work about resizing BARs.
->
-> I would just try to enable the device and then trigger a rescan of the BU=
-S
-> where it is attached (similar to echo 1 >
-> /sys/bus/pci/devices/$pci_id_of_your_bus/rescan).
->
-> There is certainly a function in the PCI subsystem you just need to call =
-for
+From: Florian Fainelli <f.fainelli@gmail.com>
+Date: Thu, 12 Oct 2017 08:43:59 -0700
+
+> Once we move ethtool (or however we name its successor) over to
+> netlink there is an opportunity for accessing objects that do and do
+> not have a netdevice representor today (e.g: management ports on
+> switches) with the same interface, and devlink could be used for
 > that.
 
-I'm not exactly familiar with the pci subsystem. I know that hotplug
-is a thing, at least in theory. I figured it'd be something related to
-that, since this is in essence a random device appearing on the bus
-after the initial scan. Is a bus rescan safe on a fully initialized
-system?
+That is an interesting angle for including this in devlink.
 
-Either way, some specific functions to call or look at would be great.
+I'm not so sure what to do about this.
 
-Cheers,
+One suggestion is that devlink is used for getting ethtool stats for
+objects lacking netdev representor's, and a new genetlink family is
+used for netdev based ethtool.
 
-  -ilia
+I think it's important that we don't expand the scope of devlink
+beyond what it was originally designed for.
