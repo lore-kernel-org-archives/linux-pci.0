@@ -1,200 +1,302 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:51942 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753622AbdJPPTL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 11:19:11 -0400
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 01/15] configfs: make ci_type field, some pointers and function arguments const
-Date: Mon, 16 Oct 2017 17:18:40 +0200
-Message-Id: <1508167134-6243-2-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:48078 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752454AbdJLOls (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Oct 2017 10:41:48 -0400
+Subject: Re: [PATCH 1/9] SOC: brcmstb: add memory API
+To: Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org
+Cc: bcm-kernel-feedback-list@broadcom.com,
+        linux-arm-kernel@lists.infradead.org, linux-mips@linux-mips.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Kevin Cernekee <cernekee@gmail.com>,
+        Brian Norris <computersforpeace@gmail.com>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
+From: Julien Thierry <julien.thierry@arm.com>
+Message-ID: <b6be2073-7a90-f83f-4e25-79ef04827bd7@arm.com>
+Date: Thu, 12 Oct 2017 15:41:42 +0100
+MIME-Version: 1.0
+In-Reply-To: <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ci_type field of the config_item structure do not modify the fields
-of the config_item_type structure it points to. And the other pointers
-initialized with ci_type do not modify the fields as well.
-So, make the ci_type field and the pointers initialized with ci_type
-as const.
+Hi Jim,
 
-Make the struct config_item_type *type function argument of functions
-config_{item/group}_init_type_name const as the argument in both the
-functions is only stored in the ci_type field of a config_item structure
-which is now made const.
-Make the argument of configfs_register_default_group const as it is
-only passed to the argument of the function config_group_init_type_name
-which is now const.
+On 11/10/17 23:34, Jim Quinlan wrote:
+> From: Florian Fainelli <f.fainelli@gmail.com>
+> 
+> This commit adds a memory API suitable for ascertaining the sizes of
+> each of the N memory controllers in a Broadcom STB chip.  Its first
+> user will be the Broadcom STB PCIe root complex driver, which needs
+> to know these sizes to properly set up DMA mappings for inbound
+> regions.
+> 
+> We cannot use memblock here or anything like what Linux provides
+> because it collapses adjacent regions within a larger block, and here
+> we actually need per-memory controller addresses and sizes, which is
+> why we resort to manual DT parsing.
+> 
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> ---
+>   drivers/soc/bcm/brcmstb/Makefile |   2 +-
+>   drivers/soc/bcm/brcmstb/memory.c | 183 +++++++++++++++++++++++++++++++++++++++
+>   include/soc/brcmstb/memory_api.h |  25 ++++++
+>   3 files changed, 209 insertions(+), 1 deletion(-)
+>   create mode 100644 drivers/soc/bcm/brcmstb/memory.c
+>   create mode 100644 include/soc/brcmstb/memory_api.h
+> 
+> diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmstb/Makefile
+> index 9120b27..4cea7b6 100644
+> --- a/drivers/soc/bcm/brcmstb/Makefile
+> +++ b/drivers/soc/bcm/brcmstb/Makefile
+> @@ -1 +1 @@
+> -obj-y				+= common.o biuctrl.o
+> +obj-y				+= common.o biuctrl.o memory.o
+> diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmstb/memory.c
+> new file mode 100644
+> index 0000000..cb6bf73
+> --- /dev/null
+> +++ b/drivers/soc/bcm/brcmstb/memory.c
+> @@ -0,0 +1,183 @@
+> +/*
+> + * Copyright © 2015-2017 Broadcom
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+> + * GNU General Public License for more details.
+> + *
+> + * A copy of the GPL is available at
+> + * http://www.broadcom.com/licenses/GPLv2.php or from the Free Software
+> + * Foundation at https://www.gnu.org/licenses/ .
+> + */
+> +
+> +#include <linux/device.h>
+> +#include <linux/io.h>
+> +#include <linux/libfdt.h>
+> +#include <linux/of_address.h>
+> +#include <linux/of_fdt.h>
+> +#include <linux/sizes.h>
+> +#include <soc/brcmstb/memory_api.h>
+> +
+> +/* -------------------- Constants -------------------- */
+> +
+> +/* Macros to help extract property data */
+> +#define U8TOU32(b, offs) \
+> +	((((u32)b[0 + offs] << 0)  & 0x000000ff) | \
+> +	 (((u32)b[1 + offs] << 8)  & 0x0000ff00) | \
+> +	 (((u32)b[2 + offs] << 16) & 0x00ff0000) | \
+> +	 (((u32)b[3 + offs] << 24) & 0xff000000))
+> +
+> +#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(U8TOU32(b, offs)))
+> +
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
+I fail to understand why this is not:
 
- fs/configfs/dir.c        | 10 +++++-----
- fs/configfs/item.c       |  6 +++---
- fs/configfs/symlink.c    |  4 ++--
- include/linux/configfs.h |  8 ++++----
- 4 files changed, 14 insertions(+), 14 deletions(-)
+#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(*(u32*)(b + offs)))
 
-diff --git a/fs/configfs/dir.c b/fs/configfs/dir.c
-index 56fb261..577cff2 100644
---- a/fs/configfs/dir.c
-+++ b/fs/configfs/dir.c
-@@ -584,7 +584,7 @@ static void detach_attrs(struct config_item * item)
- 
- static int populate_attrs(struct config_item *item)
- {
--	struct config_item_type *t = item->ci_type;
-+	const struct config_item_type *t = item->ci_type;
- 	struct configfs_attribute *attr;
- 	struct configfs_bin_attribute *bin_attr;
- 	int error = 0;
-@@ -901,7 +901,7 @@ static void configfs_detach_group(struct config_item *item)
- static void client_disconnect_notify(struct config_item *parent_item,
- 				     struct config_item *item)
- {
--	struct config_item_type *type;
-+	const struct config_item_type *type;
- 
- 	type = parent_item->ci_type;
- 	BUG_ON(!type);
-@@ -920,7 +920,7 @@ static void client_disconnect_notify(struct config_item *parent_item,
- static void client_drop_item(struct config_item *parent_item,
- 			     struct config_item *item)
- {
--	struct config_item_type *type;
-+	const struct config_item_type *type;
- 
- 	type = parent_item->ci_type;
- 	BUG_ON(!type);
-@@ -1260,7 +1260,7 @@ static int configfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode
- 	struct config_item *parent_item;
- 	struct configfs_subsystem *subsys;
- 	struct configfs_dirent *sd;
--	struct config_item_type *type;
-+	const struct config_item_type *type;
- 	struct module *subsys_owner = NULL, *new_item_owner = NULL;
- 	char *name;
- 
-@@ -1810,7 +1810,7 @@ void configfs_unregister_group(struct config_group *group)
- struct config_group *
- configfs_register_default_group(struct config_group *parent_group,
- 				const char *name,
--				struct config_item_type *item_type)
-+				const struct config_item_type *item_type)
- {
- 	int ret;
- 	struct config_group *group;
-diff --git a/fs/configfs/item.c b/fs/configfs/item.c
-index a66f662..88f266e 100644
---- a/fs/configfs/item.c
-+++ b/fs/configfs/item.c
-@@ -113,7 +113,7 @@ int config_item_set_name(struct config_item *item, const char *fmt, ...)
- 
- void config_item_init_type_name(struct config_item *item,
- 				const char *name,
--				struct config_item_type *type)
-+				const struct config_item_type *type)
- {
- 	config_item_set_name(item, "%s", name);
- 	item->ci_type = type;
-@@ -122,7 +122,7 @@ void config_item_init_type_name(struct config_item *item,
- EXPORT_SYMBOL(config_item_init_type_name);
- 
- void config_group_init_type_name(struct config_group *group, const char *name,
--			 struct config_item_type *type)
-+			 const struct config_item_type *type)
- {
- 	config_item_set_name(&group->cg_item, "%s", name);
- 	group->cg_item.ci_type = type;
-@@ -148,7 +148,7 @@ struct config_item *config_item_get_unless_zero(struct config_item *item)
- 
- static void config_item_cleanup(struct config_item *item)
- {
--	struct config_item_type *t = item->ci_type;
-+	const struct config_item_type *t = item->ci_type;
- 	struct config_group *s = item->ci_group;
- 	struct config_item *parent = item->ci_parent;
- 
-diff --git a/fs/configfs/symlink.c b/fs/configfs/symlink.c
-index c8aabba..78ffc26 100644
---- a/fs/configfs/symlink.c
-+++ b/fs/configfs/symlink.c
-@@ -138,7 +138,7 @@ int configfs_symlink(struct inode *dir, struct dentry *dentry, const char *symna
- 	struct configfs_dirent *sd;
- 	struct config_item *parent_item;
- 	struct config_item *target_item = NULL;
--	struct config_item_type *type;
-+	const struct config_item_type *type;
- 
- 	sd = dentry->d_parent->d_fsdata;
- 	/*
-@@ -186,7 +186,7 @@ int configfs_unlink(struct inode *dir, struct dentry *dentry)
- 	struct configfs_dirent *sd = dentry->d_fsdata;
- 	struct configfs_symlink *sl;
- 	struct config_item *parent_item;
--	struct config_item_type *type;
-+	const struct config_item_type *type;
- 	int ret;
- 
- 	ret = -EPERM;  /* What lack-of-symlink returns */
-diff --git a/include/linux/configfs.h b/include/linux/configfs.h
-index c967090..90b90f8 100644
---- a/include/linux/configfs.h
-+++ b/include/linux/configfs.h
-@@ -58,7 +58,7 @@ struct config_item {
- 	struct list_head	ci_entry;
- 	struct config_item	*ci_parent;
- 	struct config_group	*ci_group;
--	struct config_item_type	*ci_type;
-+	const struct config_item_type	*ci_type;
- 	struct dentry		*ci_dentry;
- };
- 
-@@ -72,7 +72,7 @@ static inline char *config_item_name(struct config_item * item)
- 
- extern void config_item_init_type_name(struct config_item *item,
- 				       const char *name,
--				       struct config_item_type *type);
-+				       const struct config_item_type *type);
- 
- extern struct config_item *config_item_get(struct config_item *);
- extern struct config_item *config_item_get_unless_zero(struct config_item *);
-@@ -101,7 +101,7 @@ struct config_group {
- extern void config_group_init(struct config_group *group);
- extern void config_group_init_type_name(struct config_group *group,
- 					const char *name,
--					struct config_item_type *type);
-+					const struct config_item_type *type);
- 
- static inline struct config_group *to_config_group(struct config_item *item)
- {
-@@ -261,7 +261,7 @@ int configfs_register_group(struct config_group *parent_group,
- struct config_group *
- configfs_register_default_group(struct config_group *parent_group,
- 				const char *name,
--				struct config_item_type *item_type);
-+				const struct config_item_type *item_type);
- void configfs_unregister_default_group(struct config_group *group);
- 
- /* These functions can sleep and can alloc with GFP_KERNEL */
+
+If I understand correctly, fdt data is in big endian, the macro U8TOU32 
+reads it as little endian. My guess is that this won't work on big 
+endian kernels but should work on little endian since fdt32_to_cpu will 
+revert the bytes again.
+
+Am I missing something?
+
+Cheers,
+
+> +/* Constants used when retrieving memc info */
+> +#define NUM_BUS_RANGES 10
+> +#define BUS_RANGE_ULIMIT_SHIFT 4
+> +#define BUS_RANGE_LLIMIT_SHIFT 4
+> +#define BUS_RANGE_PA_SHIFT 12
+> +
+> +enum {
+> +	BUSNUM_MCP0 = 0x4,
+> +	BUSNUM_MCP1 = 0x5,
+> +	BUSNUM_MCP2 = 0x6,
+> +};
+> +
+> +/* -------------------- Functions -------------------- */
+> +
+> +/*
+> + * If the DT nodes are handy, determine which MEMC holds the specified
+> + * physical address.
+> + */
+> +#ifdef CONFIG_ARCH_BRCMSTB
+> +int __brcmstb_memory_phys_addr_to_memc(phys_addr_t pa, void __iomem *base)
+> +{
+> +	int memc = -1;
+> +	int i;
+> +
+> +	for (i = 0; i < NUM_BUS_RANGES; i++, base += 8) {
+> +		const u64 ulimit_raw = readl(base);
+> +		const u64 llimit_raw = readl(base + 4);
+> +		const u64 ulimit =
+> +			((ulimit_raw >> BUS_RANGE_ULIMIT_SHIFT)
+> +			 << BUS_RANGE_PA_SHIFT) | 0xfff;
+> +		const u64 llimit = (llimit_raw >> BUS_RANGE_LLIMIT_SHIFT)
+> +				   << BUS_RANGE_PA_SHIFT;
+> +		const u32 busnum = (u32)(ulimit_raw & 0xf);
+> +
+> +		if (pa >= llimit && pa <= ulimit) {
+> +			if (busnum >= BUSNUM_MCP0 && busnum <= BUSNUM_MCP2) {
+> +				memc = busnum - BUSNUM_MCP0;
+> +				break;
+> +			}
+> +		}
+> +	}
+> +
+> +	return memc;
+> +}
+> +
+> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
+> +{
+> +	int memc = -1;
+> +	struct device_node *np;
+> +	void __iomem *cpubiuctrl;
+> +
+> +	np = of_find_compatible_node(NULL, NULL, "brcm,brcmstb-cpu-biu-ctrl");
+> +	if (!np)
+> +		return memc;
+> +
+> +	cpubiuctrl = of_iomap(np, 0);
+> +	if (!cpubiuctrl)
+> +		goto cleanup;
+> +
+> +	memc = __brcmstb_memory_phys_addr_to_memc(pa, cpubiuctrl);
+> +	iounmap(cpubiuctrl);
+> +
+> +cleanup:
+> +	of_node_put(np);
+> +
+> +	return memc;
+> +}
+> +
+> +#elif defined(CONFIG_MIPS)
+> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
+> +{
+> +	/* The logic here is fairly simple and hardcoded: if pa <= 0x5000_0000,
+> +	 * then this is MEMC0, else MEMC1.
+> +	 *
+> +	 * For systems with 2GB on MEMC0, MEMC1 starts at 9000_0000, with 1GB
+> +	 * on MEMC0, MEMC1 starts at 6000_0000.
+> +	 */
+> +	if (pa >= 0x50000000ULL)
+> +		return 1;
+> +	else
+> +		return 0;
+> +}
+> +#endif
+> +EXPORT_SYMBOL(brcmstb_memory_phys_addr_to_memc);
+> +
+> +u64 brcmstb_memory_memc_size(int memc)
+> +{
+> +	const void *fdt = initial_boot_params;
+> +	const int mem_offset = fdt_path_offset(fdt, "/memory");
+> +	int addr_cells = 1, size_cells = 1;
+> +	const struct fdt_property *prop;
+> +	int proplen, cellslen;
+> +	u64 memc_size = 0;
+> +	int i;
+> +
+> +	/* Get root size and address cells if specified */
+> +	prop = fdt_get_property(fdt, 0, "#size-cells", &proplen);
+> +	if (prop)
+> +		size_cells = DT_PROP_DATA_TO_U32(prop->data, 0);
+> +
+> +	prop = fdt_get_property(fdt, 0, "#address-cells", &proplen);
+> +	if (prop)
+> +		addr_cells = DT_PROP_DATA_TO_U32(prop->data, 0);
+> +
+> +	if (mem_offset < 0)
+> +		return -1;
+> +
+> +	prop = fdt_get_property(fdt, mem_offset, "reg", &proplen);
+> +	cellslen = (int)sizeof(u32) * (addr_cells + size_cells);
+> +	if ((proplen % cellslen) != 0)
+> +		return -1;
+> +
+> +	for (i = 0; i < proplen / cellslen; ++i) {
+> +		u64 addr = 0;
+> +		u64 size = 0;
+> +		int memc_idx;
+> +		int j;
+> +
+> +		for (j = 0; j < addr_cells; ++j) {
+> +			int offset = (cellslen * i) + (sizeof(u32) * j);
+> +
+> +			addr |= (u64)DT_PROP_DATA_TO_U32(prop->data, offset) <<
+> +				((addr_cells - j - 1) * 32);
+> +		}
+> +		for (j = 0; j < size_cells; ++j) {
+> +			int offset = (cellslen * i) +
+> +				(sizeof(u32) * (j + addr_cells));
+> +
+> +			size |= (u64)DT_PROP_DATA_TO_U32(prop->data, offset) <<
+> +				((size_cells - j - 1) * 32);
+> +		}
+> +
+> +		if ((phys_addr_t)addr != addr) {
+> +			pr_err("phys_addr_t is smaller than provided address 0x%llx!\n",
+> +			       addr);
+> +			return -1;
+> +		}
+> +
+> +		memc_idx = brcmstb_memory_phys_addr_to_memc((phys_addr_t)addr);
+> +		if (memc_idx == memc)
+> +			memc_size += size;
+> +	}
+> +
+> +	return memc_size;
+> +}
+> +EXPORT_SYMBOL(brcmstb_memory_memc_size);
+> +
+> diff --git a/include/soc/brcmstb/memory_api.h b/include/soc/brcmstb/memory_api.h
+> new file mode 100644
+> index 0000000..d922906
+> --- /dev/null
+> +++ b/include/soc/brcmstb/memory_api.h
+> @@ -0,0 +1,25 @@
+> +#ifndef __MEMORY_API_H
+> +#define __MEMORY_API_H
+> +
+> +/*
+> + * Bus Interface Unit control register setup, must happen early during boot,
+> + * before SMP is brought up, called by machine entry point.
+> + */
+> +void brcmstb_biuctrl_init(void);
+> +
+> +#ifdef CONFIG_SOC_BRCMSTB
+> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa);
+> +u64 brcmstb_memory_memc_size(int memc);
+> +#else
+> +static inline int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
+> +{
+> +	return -EINVAL;
+> +}
+> +
+> +static inline u64 brcmstb_memory_memc_size(int memc)
+> +{
+> +	return -1;
+> +}
+> +#endif
+> +
+> +#endif /* __MEMORY_API_H */
+> 
+
 -- 
-1.9.1
+Julien Thierry
