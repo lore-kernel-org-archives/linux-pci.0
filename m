@@ -1,53 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:52193 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965610AbdJQTNG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 15:13:06 -0400
-Received: by mail-qt0-f177.google.com with SMTP id h4so5893300qtk.8
-        for <linux-pci@vger.kernel.org>; Tue, 17 Oct 2017 12:13:06 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 17 Oct 2017 14:12:45 -0500
-Message-ID: <CAErSpo76LN8sMS6G0oFJuo_vWUeATt6TKT3SBEJVT+mAvxe1xw@mail.gmail.com>
-Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
- drivers when VFs are attached to VMs ...
-To: Casey Leedom <leedom@chelsio.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Komali Katari <komali@chelsio.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Steven Royer <seroyer@linux.vnet.ibm.com>,
-        Juan Alvarez <jjalvare@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <a8fa87e4-4d70-eb60-f1c5-94071d6394aa@arm.com>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-5-git-send-email-jim2101024@gmail.com>
+ <a8fa87e4-4d70-eb60-f1c5-94071d6394aa@arm.com>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Thu, 12 Oct 2017 14:15:30 -0400
+Message-ID: <CANCKTBuerHizxzY7BL-jP7L=z4g0=+2tfeafJnEJVkZ1zV+z-w@mail.gmail.com>
+Subject: Re: [PATCH 4/9] arm64: dma-mapping: export symbol arch_setup_dma_ops
+To: Robin Murphy <robin.murphy@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex, Bryant, Steven, Juan]
-
-On Tue, Oct 17, 2017 at 1:36 PM, Casey Leedom <leedom@chelsio.com> wrote:
+On Thu, Oct 12, 2017 at 1:06 PM, Robin Murphy <robin.murphy@arm.com> wrote:
+> On 11/10/17 23:34, Jim Quinlan wrote:
+>> The BrcmSTB driver needs to get ahold of a pointer to swiotlb_dma_ops.
+>> However, that variable is defined as static.  Instead, we use
+>> arch_setup_dma_ops() to get the pointer to swiotlb_dma_ops.  Since
+>> we also want our driver to be a separate module, we need to
+>> export this function.
 >
-> Hi there,
+> NAK. Retrieve the platform-assigned ops from the device via
+> get_dma_ops() and stash them in your drvdata or wherever before you
+> replace them. Don't go poking around arch code internals directly from a
+> driver.
+Will fix (and drop the commit).
+
 >
->   I hope this is the right Linux list for this issue.  One of our QA staff
-> has noticed a new behavior starting about 4.14.0-rc3.  We instantiate PCIe
-> SR-IOV Virtual Functions and the corresponding driver (cxgb4vf in this case)
-> is automatically loaded.  That's fine and has been the case for some time.
-> But, we remove the driver module (rmmod cxgb4vf) and then attach one of the
-> VFs to a KVM Virtual Machine and the cxgb4vf driver module gets reloaded in
-> the KVM Hypervisor.  This is new behavior.  I see that there was a pretty
-> big change done by Luis R. Rodriguez in kernel.org commit revision 2355869
-> but we haven't yet isolated the new behavior to that commit.  That'll be our
-> next test but I wanted to get this out there for comment.
+> Robin.
+>
+>> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+>> ---
+>>  arch/arm64/mm/dma-mapping.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+>> index 614af88..dae572f 100644
+>> --- a/arch/arm64/mm/dma-mapping.c
+>> +++ b/arch/arm64/mm/dma-mapping.c
+>> @@ -936,3 +936,4 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+>>       }
+>>  #endif
+>>  }
+>> +EXPORT_SYMBOL(arch_setup_dma_ops);
+>>
+>
 
-This is a good list.  I don't know what commit revision 2355869 refers
-to.  It would be helpful if you could cite the git SHA1 for the
-commit.
-
-We're also having a conversation about the question of binding drivers
-to VFs on powerpc here:
-https://lkml.kernel.org/r/20170922140608.47665-3-bryantly@linux.vnet.ibm.com
-
-It's not exactly the same issue, but you might have useful input there.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
