@@ -1,58 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 25 Oct 2017 08:23:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Faiz Abbas <faiz_abbas@ti.com>
-Cc: kishon@ti.com, bhelgaas@google.com, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] dwc: dra7xx: Print link state to console for debug
-Message-ID: <20171025132328.GK21840@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
- <20171024195950.GD21840@bhelgaas-glaptop.roam.corp.google.com>
- <c99814db-e349-e4b1-c652-561a3ca1abec@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:51802 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751348AbdJLTUO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 15:20:14 -0400
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+To: David Miller <davem@davemloft.net>
+Cc: jiri@resnulli.us, roopa@cumulusnetworks.com,
+        steven.lin1@broadcom.com, netdev@vger.kernel.org,
+        jiri@mellanox.com, michael.chan@broadcom.com,
+        linux-pci@vger.kernel.org, linville@tuxdriver.com,
+        gospo@broadcom.com
+References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+ <20171012150419.GI14672@nanopsycho>
+ <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
+ <20171012.120650.1063812043202847517.davem@davemloft.net>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
+Date: Thu, 12 Oct 2017 12:20:07 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c99814db-e349-e4b1-c652-561a3ca1abec@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171012.120650.1063812043202847517.davem@davemloft.net>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 25, 2017 at 01:51:53PM +0530, Faiz Abbas wrote:
-> Bjorn,
+On 10/12/2017 12:06 PM, David Miller wrote:
+> From: Florian Fainelli <f.fainelli@gmail.com>
+> Date: Thu, 12 Oct 2017 08:43:59 -0700
 > 
-> On Wednesday 25 October 2017 01:29 AM, Bjorn Helgaas wrote:
-> > On Thu, Oct 19, 2017 at 06:13:29PM +0530, Faiz Abbas wrote:
-> >> Enable support for printing the LTSSM link state for debugging PCI
-> >> when link is down.
-> >>
-> >> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
-> > 
-> > Applied with Kishon's ack to pci/host-dra7xx for v4.15, thanks!
-> > 
-> > I tweaked the "link up" testing as follows (what I suggested before):
-> > 
-> > 
-> > @@ -118,8 +157,18 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
-> >  {
-> >  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-> >  	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
-> > +	int link_up = !!(reg & LINK_UP);
-> > +	u32 cmd_reg;
-> > +	u32 ltssm_state;
-> > +
-> > +	if (!link_up) {
-> > +		cmd_reg = dra7xx_pcie_readl(dra7xx,
-> > +					    PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-> > +		ltssm_state = (cmd_reg & GENMASK(7, 2)) >> 2;
-> > +		dev_dbg(pci->dev, "Link state: %s\n", state[ltssm_state]);
-> > +	}
-> >  
-> > -	return !!(reg & LINK_UP);
-> > +	return link_up;
-> >  }
-> >  
-> >  static void dra7xx_pcie_stop_link(struct dw_pcie *pci)
-> > 
+>> Once we move ethtool (or however we name its successor) over to
+>> netlink there is an opportunity for accessing objects that do and do
+>> not have a netdevice representor today (e.g: management ports on
+>> switches) with the same interface, and devlink could be used for
+>> that.
 > 
-> I wanted to send another version with David's suggestions included.
-> Please don't merge.
+> That is an interesting angle for including this in devlink.
+> 
+> I'm not so sure what to do about this.
+> 
+> One suggestion is that devlink is used for getting ethtool stats for
+> objects lacking netdev representor's, and a new genetlink family is
+> used for netdev based ethtool.
 
-Dropped.
+Right, I was also thinking along those lines that we we would have a new
+generic netlink family for ethtool to support ethtool over netlink.
+
+> 
+> I think it's important that we don't expand the scope of devlink
+> beyond what it was originally designed for.
+
+It seems to me like devlink is well defined in what it is not for: it is
+not meant to be used for any object that is/has a net_device, but it is
+not well defined for what it can offer to these non network devices. For
+instance, we have a tremendous amount of operations that are extremely
+specific to its single user(s) such as mlx5 and mlxsw.
+
+For instance, I am not sure how the buffer reservation scheme can be
+generalized, and this is always the tricky part with a single user
+facility in that you try to generalize the best you can based on the HW
+you know. This is not a criticism or meant to be anything negative, this
+just happens to be the case, and we did not have anything better.
+
+So maybe the first thing is to clarify what devlink operations can and
+should be and what they are absolutely not allowed to cover. We should
+also clarify whether a generic set/get that Steven is proposing is
+something that we tolerate, or whether there should be specific function
+pointers implemented for each attribute, which would be more in line
+with what has been done thus far.
+-- 
+Florian
