@@ -1,63 +1,43 @@
-Return-Path: <SRS0=eZvA=BK=codeaurora.org=tbaicar@kernel.org>
-Return-Path: <SRS0=eZvA=BK=codeaurora.org=tbaicar@kernel.org>
-Subject: Re: [PATCH] PCI/AER: don't call recovery process for correctable
- errors
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, jonathan.derrick@intel.com, keith.busch@intel.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <1503940184-29423-1-git-send-email-tbaicar@codeaurora.org>
- <20171002231903.GE5407@bhelgaas-glaptop.roam.corp.google.com>
-From: Tyler Baicar <tbaicar@codeaurora.org>
-Message-ID: <ef205683-9254-8583-7351-7264faec567a@codeaurora.org>
-Date: Wed, 11 Oct 2017 10:37:47 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:10578 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751067AbdJLSxn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 14:53:43 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>
+Subject: [PATCH 5/6] ARM64: tegra: limit PCIe config space mapping to 4K for T132
+Date: Fri, 13 Oct 2017 00:20:10 +0530
+Message-ID: <1507834211-24922-6-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
+References: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20171002231903.GE5407@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/2/2017 7:19 PM, Bjorn Helgaas wrote:
-> On Mon, Aug 28, 2017 at 11:09:44AM -0600, Tyler Baicar wrote:
->> Correctable errors do not need any software intervention, so
->> avoid calling into the software recovery process for correctable
->> errors.
->>
->> Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
->> ---
->>   drivers/pci/pcie/aer/aerdrv_core.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
->> index b1303b3..4765c11 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> @@ -626,7 +626,8 @@ static void aer_recover_work_func(struct work_struct *work)
->>   			continue;
->>   		}
->>   		cper_print_aer(pdev, entry.severity, entry.regs);
->> -		do_recovery(pdev, entry.severity);
->> +		if (entry.severity != AER_CORRECTABLE)
->> +			do_recovery(pdev, entry.severity);
-> I think this is fine, and it mirrors what is done in
-> handle_error_source().
->
-> But I want to converge the APEI path and the "native" AER path, so as
-> one tiny step in that direction, can you look into doing this test
-> once, e.g., move the test from handle_error_source() into
-> do_recovery(), where one test will handle both paths?
-Hello Bjorn,
+reduces PCIe config space mapping size from its current 256MB
+to 4K to have only 4K of virtual memory mapping and to be
+in line with driver implementation
 
-Thank you for the input!
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+ arch/arm64/boot/dts/nvidia/tegra132.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I've looked into this and it seems there is still going to need to be 
-two versions of this check. The native AER path goes through 
-handle_error_source() and for correctable errors requires the write to 
-PCI_ERR_COR_STATUS, but the APEI path does not require this write. I 
-could move this check to the beginning of do_recovery() so it returns 
-right away for correctable errors and remove the else line in 
-handle_error_source() so it always calls into do_recovery(). That 
-doesn't seem like a very clean solution though since then there are 
-still two checks for correctable errors and now we're calling into 
-do_recovery() in both cases for nothing :)
-
-Thanks,
-Tyler
+diff --git a/arch/arm64/boot/dts/nvidia/tegra132.dtsi b/arch/arm64/boot/dts/nvidia/tegra132.dtsi
+index c2f0f2743578..2f0ff087112e 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra132.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra132.dtsi
+@@ -17,7 +17,7 @@
+ 		device_type = "pci";
+ 		reg = <0x0 0x01003000 0x0 0x00000800   /* PADS registers */
+ 		       0x0 0x01003800 0x0 0x00000800   /* AFI registers */
+-		       0x0 0x02000000 0x0 0x10000000>; /* configuration space */
++		       0x0 0x11FFF000 0x0 0x00001000>; /* configuration space */
+ 		reg-names = "pads", "afi", "cs";
+ 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
+ 			     <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
+-- 
+2.7.4
