@@ -1,44 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1508337211.46071.67.camel@redhat.com>
-Subject: Re: [PATCH v2 12/15] RDMA/cma: make config_item_type const
-From: Doug Ledford <dledford@redhat.com>
-To: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr,
-        rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        sean.hefty@intel.com, hal.rosenstock@gmail.com, hch@lst.de,
-        sagi@grimberg.me, kishon@ti.com, bhelgaas@google.com,
-        nab@linux-iscsi.org, balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Date: Wed, 18 Oct 2017 10:33:31 -0400
-In-Reply-To: <1508167134-6243-13-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-         <1508167134-6243-13-git-send-email-bhumirks@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20171012205220.130048-1-briannorris@chromium.org>
+References: <20171012205220.130048-1-briannorris@chromium.org>
+From: Doug Anderson <dianders@chromium.org>
+Date: Thu, 12 Oct 2017 15:27:16 -0700
+Message-ID: <CAD=FV=VyERPq9yGE27Uvj6bs4Mru81gZAiqCOP=yQv3ai6-YDQ@mail.gmail.com>
+Subject: Re: [PATCH 0/3] PCI: rockchip: assert PERST# in S3
+To: Brian Norris <briannorris@chromium.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+ Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2017-10-16 at 17:18 +0200, Bhumika Goyal wrote:
-> Make these structures const as they are either passed to the
-> functions
-> having the argument as const or stored as a reference in the
-> "ci_type"
-> const field of a config_item structure.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Hi,
 
-Acked-by: Doug Ledford <dledford@redhat.com>
+On Thu, Oct 12, 2017 at 1:52 PM, Brian Norris <briannorris@chromium.org> wrote:
+> Hi,
+>
+> This patch series should mostly be self-descriptive, but it's motivated by the
+> fact that I've found differing requirements from PCIe endpoint makers regarding
+> the state of PERST# when in system suspend (S3). Additionally, some existing
+> boards are not especially well suited for holding PERST# low in S3 (e.g., the
+> pin is driven by a non-PMU GPIO, so it's hard or impossible to keep it
+> asserted). So the solution is...give it a device tree property!
+>
+> Brian
+>
+> Brian Norris (3):
+>   Documentation/devicetree: Add pcie-reset-suspend property
+>   of/pci: Add of_pci_get_pcie_reset_suspend() to parse
+>     pcie-reset-suspend
+>   PCI: rockchip: Support configuring PERST# state via DT
+>
+>  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+>  drivers/of/of_pci.c                           | 25 +++++++++++++++++++++++++
+>  drivers/pci/host/pcie-rockchip.c              |  7 +++++++
+>  include/linux/of_pci.h                        |  7 +++++++
+>  4 files changed, 50 insertions(+)
 
--- 
-Doug Ledford <dledford@redhat.com>
-    GPG KeyID: B826A3330E572FDD
-    Key fingerprint = AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
+I'm nowhere near an expert on PCIe, but overall the series seems sane
+to me.  ...and I'd agree that the discussions I've seen from different
+vendors seem to have different opinions about what we should do with
+this line in S3.  ...so FWIW:
+
+Reviewed-by: Douglas Anderson <dianders@chromium.org>
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
