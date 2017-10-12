@@ -1,77 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:53386 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755216AbdJLUwe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 16:52:34 -0400
-Received: by mail-pf0-f182.google.com with SMTP id t188so4084730pfd.10
-        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 13:52:34 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatja@google.com>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 3/3] PCI: rockchip: Support configuring PERST# state via DT
-Date: Thu, 12 Oct 2017 13:52:20 -0700
-Message-Id: <20171012205220.130048-4-briannorris@chromium.org>
-In-Reply-To: <20171012205220.130048-1-briannorris@chromium.org>
-References: <20171012205220.130048-1-briannorris@chromium.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "M.h. Lian" <minghuan.lian@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Subject: RE: [PATCH 0/5] arm64: add ls1012a and ls1046a pcie support
+Date: Thu, 12 Oct 2017 03:12:47 +0000
+Message-ID: <VI1PR04MB16157ABDE174A8DD1567173CE84B0@VI1PR04MB1615.eurprd04.prod.outlook.com>
+References: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
+ <20171011185719.GL25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171011185719.GL25517@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Jason Cooper <jason@lakedaemon.net>, Roy Zang <roy.zang@nxp.com>,
+ "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>, Mingkai
+ Hu <mingkai.hu@nxp.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I've found that different endpoints and board configurations have
-required different behavior from the PCIe Reset (PERST#) signal when in
-low-power system suspend (e.g., S3). Use the new of_pci helper to
-request this state and assert (active low) PERST# before suspending.
+Hi Bjorn,
 
-Note that we reinitialize the link (including reconfiguring PERST#) at
-resume time.
+I greatly appreciate for your review and picking up them.
 
-This requires that the board and system firmware supports driving this
-signal low when the system is suspended, since PERST# may be pulled up
-by the endpoint, and some GPIO banks are not active in S3.
+Acked-by: Minghuan Lian <minghuan.Lian@nxp.com>
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/pci/host/pcie-rockchip.c | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 9051c6c8fea4..1ab58c1abb34 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -233,6 +233,7 @@ struct rockchip_pcie {
- 	struct	regulator *vpcie1v8; /* 1.8V power supply */
- 	struct	regulator *vpcie0v9; /* 0.9V power supply */
- 	struct	gpio_desc *ep_gpio;
-+	bool	suspend_reset;
- 	u32	lanes;
- 	u8      lanes_map;
- 	u8	root_bus_nr;
-@@ -1155,6 +1156,9 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 		dev_info(dev, "no vpcie0v9 regulator found\n");
- 	}
- 
-+	/* Default not-asserted, to retain backward compatibility. */
-+	rockchip->suspend_reset = of_pci_get_pcie_reset_suspend(node) > 0;
-+
- 	return 0;
- }
- 
-@@ -1463,6 +1467,9 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
- 		return ret;
- 	}
- 
-+	if (rockchip->suspend_reset)
-+		gpiod_set_value(rockchip->ep_gpio, 0);
-+
- 	rockchip_pcie_deinit_phys(rockchip);
- 
- 	rockchip_pcie_disable_clocks(rockchip);
--- 
-2.15.0.rc0.271.g36b669edcc-goog
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Thursday, October 12, 2017 2:57 AM
+> To: Z.q. Hou <zhiqiang.hou@nxp.com>
+> Cc: linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linuxppc-
+> dev@lists.ozlabs.org; marc.zyngier@arm.com; robh+dt@kernel.org;
+> mark.rutland@arm.com; bhelgaas@google.com; shawnguo@kernel.org;
+> Mingkai Hu <mingkai.hu@nxp.com>; M.h. Lian <minghuan.lian@nxp.com>; Roy
+> Zang <roy.zang@nxp.com>; Thomas Gleixner <tglx@linutronix.de>; Jason
+> Cooper <jason@lakedaemon.net>
+> Subject: Re: [PATCH 0/5] arm64: add ls1012a and ls1046a pcie support
+> 
+> On Tue, Sep 19, 2017 at 05:26:53PM +0800, Zhiqiang Hou wrote:
+> > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> >
+> > This patch set adds ls1012a MSI and PCIe support, including driver and
+> > device tree nodes. The ls1046a's MSI support patch and PCIe driver
+> > patch has been applied, so only adds the PCIe device tree nodes.
+> >
+> > Hou Zhiqiang (5):
+> >   irqchip/ls-scfg-msi: add LS1012a MSI support
+> >   arm64: dts: ls1012a: Add MSI controller DT node
+> >   PCI: layerscape: Add support for ls1012a
+> >   arm64: dts: ls1012a: Add PCIe controller DT node
+> >   arm64: dts: ls1046a: add PCIe controller DT nodes
+> >
+> >  .../interrupt-controller/fsl,ls-scfg-msi.txt       |  1 +
+> >  .../devicetree/bindings/pci/layerscape-pci.txt     |  1 +
+> >  arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi     | 31 +++++++++
+> >  arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi     | 75
+> ++++++++++++++++++++++
+> >  drivers/irqchip/irq-ls-scfg-msi.c                  |  1 +
+> >  drivers/pci/dwc/pci-layerscape.c                   |  1 +
+> >  6 files changed, 110 insertions(+)
+> 
+> I'm not 100% sure who should take these.  They trivially touch PCI and I haven't
+> seen anybody else respond, so I put them on pci/host-layerscape with Rob's acks.
+> 
+> If somebody else wants to take them, just let me know and I'll drop them.
+> 
+> They really should be acked by Minghuan or Mingkai, who are listed as the
+> maintainers of drivers/pci/dwc/pci-layerscape.c and are presumably responsible
+> for the related dtsi files, too.
+> 
+> Thomas, Jason, and Marc are listed as maintainers of drivers/irqchip/irq-ls-scfg-
+> msi.c.  It's a trivial change, but I added them to the cc list.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
