@@ -1,84 +1,114 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 15/15] configfs: make config_item_type const
-Date: Mon, 16 Oct 2017 17:18:54 +0200
-Message-Id: <1508167134-6243-16-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=v811=BL=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=v811=BL=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+To: Bjorn Helgaas <helgaas@kernel.org>, Michael Ellerman <mpe@ellerman.id.au>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        seroyer@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>
+References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
+ <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
+ <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+ <87efq92ei6.fsf@concordia.ellerman.id.au>
+ <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Thu, 12 Oct 2017 14:59:23 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Message-Id: <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Make config_item_type structures const as they are either passed to a
-function having the argument as const or stored in the const "ci_type"
-field of a config_item structure.
 
-Done using Coccinelle.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
+On 10/12/17 1:29 PM, Bjorn Helgaas wrote:
+> On Thu, Oct 12, 2017 at 03:09:53PM +1100, Michael Ellerman wrote:
+>> Bjorn Helgaas <helgaas@kernel.org> writes:
+>>
+>>> On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:
+>>>> This patch adds the machine dependent call for
+>>>> pcibios_bus_add_device, since the previous patch
+>>>> separated the calls out between the PowerNV and PowerVM.
+>>>>
+>>>> The difference here is that for the PowerVM environment
+>>>> we do not want match_driver set because in this environment
+>>>> we do not want the VF device drivers to load immediately, due to
+>>>> firmware loading the device node when VF device is assigned to the
+>>>> logical partition.
+>>>>
+>>>> This patch will depend on the patch linked below, which is under
+>>>> review.
+>>>>
+>>>> https://patchwork.kernel.org/patch/9882915/
+>>>>
+>>>> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+>>>> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+>>>> ---
+>>>>   arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
+>>>>   1 file changed, 24 insertions(+)
+>>>>
+>>>> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+>>>> index 6b812ad990e4..45946ee90985 100644
+>>>> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
+>>>> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+>>>> @@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
+>>>>   static DEFINE_SPINLOCK(slot_errbuf_lock);
+>>>>   static int eeh_error_buf_size;
+>>>>   
+>>>> +void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+>>>> +{
+>>>> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+>>>> +
+>>>> +	if (!pdev->is_virtfn)
+>>>> +		return;
+>>>> +
+>>>> +	pdn->device_id  =  pdev->device;
+>>>> +	pdn->vendor_id  =  pdev->vendor;
+>>>> +	pdn->class_code =  pdev->class;
+>>>> +
+>>>> +	/*
+>>>> +	 * The following operations will fail if VF's sysfs files
+>>>> +	 * aren't created or its resources aren't finalized.
+>>>> +	 */
+>>>> +	eeh_add_device_early(pdn);
+>>>> +	eeh_add_device_late(pdev);
+>>>> +	eeh_sysfs_add_device(pdev);
+>>>> +	pdev->match_driver = -1;
+>>> match_driver is a bool, which should be assigned "true" or "false".
+>> Above he mentioned a dependency on:
+>>
+>>    [04/10] PCI: extend pci device match_driver state
+>>    https://patchwork.kernel.org/patch/9882915/
+>>
+>>
+>> Which makes it an int.
+> Oh, right, I missed that, thanks.
+>
+>> Or has that patch been rejected or something?
+> I haven't *rejected* it, but it's low on my priority list, so you
+> shouldn't depend on it unless it adds functionality you really need.
+> If I did apply that particular patch, I would want some rework because
+> it currently obfuscates the match_driver logic.  There's no clue when
+> reading the code what -1/0/1 mean.
+So do you prefer enum's? - If so I can make a change for that.
+> Apparently here you *do* want the "-1 means the PCI core will never
+> set match_driver to 1" functionality, so maybe you do depend on it.
+We depend on the patch because we want that ability to never set 
+match_driver,
+for SRIOV on PowerVM.
+>
+> If that's the case, how to you ever bind a driver to these VFs?  The
+> changelog says you don't want VF drivers to load *immediately*, so I
+> assume you do want them to load eventually.
+>
+The VF's that get dynamically created within the configure SR-IOV call, 
+on the
+Pseries Platform, wont be matched with a driver. - We do not want it to 
+match.
 
- samples/configfs/configfs_sample.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+The Power Hypervisor will load the VFs. The VF's will get assigned(by 
+the user)
+via the HMC or Novalink in this environment which will then trigger PHYP
+to load the VF device node to the device tree.
 
-diff --git a/samples/configfs/configfs_sample.c b/samples/configfs/configfs_sample.c
-index 1ea3311..004a4e2 100644
---- a/samples/configfs/configfs_sample.c
-+++ b/samples/configfs/configfs_sample.c
-@@ -115,7 +115,7 @@ static ssize_t childless_description_show(struct config_item *item, char *page)
- 	NULL,
- };
- 
--static struct config_item_type childless_type = {
-+static const struct config_item_type childless_type = {
- 	.ct_attrs	= childless_attrs,
- 	.ct_owner	= THIS_MODULE,
- };
-@@ -193,7 +193,7 @@ static void simple_child_release(struct config_item *item)
- 	.release		= simple_child_release,
- };
- 
--static struct config_item_type simple_child_type = {
-+static const struct config_item_type simple_child_type = {
- 	.ct_item_ops	= &simple_child_item_ops,
- 	.ct_attrs	= simple_child_attrs,
- 	.ct_owner	= THIS_MODULE,
-@@ -261,7 +261,7 @@ static void simple_children_release(struct config_item *item)
- 	.make_item	= simple_children_make_item,
- };
- 
--static struct config_item_type simple_children_type = {
-+static const struct config_item_type simple_children_type = {
- 	.ct_item_ops	= &simple_children_item_ops,
- 	.ct_group_ops	= &simple_children_group_ops,
- 	.ct_attrs	= simple_children_attrs,
-@@ -331,7 +331,7 @@ static ssize_t group_children_description_show(struct config_item *item,
- 	.make_group	= group_children_make_group,
- };
- 
--static struct config_item_type group_children_type = {
-+static const struct config_item_type group_children_type = {
- 	.ct_group_ops	= &group_children_group_ops,
- 	.ct_attrs	= group_children_attrs,
- 	.ct_owner	= THIS_MODULE,
--- 
-1.9.1
-
+-Bryant
