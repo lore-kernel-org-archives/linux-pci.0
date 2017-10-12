@@ -1,60 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.192]:63472 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932493AbdJQOpL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 10:45:11 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Joe Perches' <joe@perches.com>, Faiz Abbas <faiz_abbas@ti.com>,
-        "kishon@ti.com" <kishon@ti.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: dwc: dra7xx: Print link state to console for debug
-Date: Tue, 17 Oct 2017 14:45:08 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00997A7@AcuExch.aculab.com>
-References: <1508219031-25592-1-git-send-email-faiz_abbas@ti.com>
- <1508222128.6530.22.camel@perches.com>
-In-Reply-To: <1508222128.6530.22.camel@perches.com>
-Content-Type: text/plain; charset="Windows-1252"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: RE: [PATCH 2/2] pci/layerscape: change the default error response
+ behavior
+Date: Thu, 12 Oct 2017 03:33:15 +0000
+Message-ID: <AM5PR0402MB27711353F4479D83E41359D8844B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <20170922072522.36306-1-Zhiqiang.Hou@nxp.com>
+ <20170922072522.36306-3-Zhiqiang.Hou@nxp.com>
+ <20171011194129.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171011194129.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Roy Zang <roy.zang@nxp.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "M.h. Lian" <minghuan.lian@nxp.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@nxp.com>
+Content-Type: text/plain; charset="gb2312"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joe Perches
-> Sent: 17 October 2017 07:35
-> On Tue, 2017-10-17 at 11:13 +0530, Faiz Abbas wrote:
-> > Enable support for printing the LTSSM link state for debugging PCI
-> > when link is down.
-> []
-> > diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> > index 34427a6..7b150b0 100644
-> > --- a/drivers/pci/dwc/pci-dra7xx.c
-> > +++ b/drivers/pci/dwc/pci-dra7xx.c
-> > @@ -98,6 +98,18 @@ struct dra7xx_pcie_of_data {
-> >
-> >  #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
-> >
-> > +static char state[][20] = {
-> > +	"DETECT_QUIET", "DETECT_ACT", "POLL_ACTIVE", "POLL_COMPLIANCE",
-> > +	"POLL_CONFIG", "PRE_DETECT_QUIET", "DETECT_WAIT", "CFG_LINKWD_START",
-> > +	"CFG_LINKWD_ACEPT", "CFG_LANENUM_WAIT", "CFG_LANENUM_ACEPT",
-> > +	"CFG_COMPLETE", "CFG_IDLE", "RCVRY_LOCK", "RCVRY_SPEED",
-> > +	"RCVRY_RCVRCFG", "RCVRY_IDLE", "L0", "L0S", "L123_SEND_EIDLE",
-> > +	"L1_IDLE", "L2_IDLE", "L2_WAKE", "DISABLED_ENTRY", "DISABLED_IDLE",
-> > +	"DISABLED", "LPBK_ENTRY", "LPBK_ACTIVE", "LPBK_EXIT",
-> > +	"LPBK_EXIT_TIMEOUT", "HOT_RESET_ENTRY", "HOT_RESET", "RCVRY_EQ0",
-> > +	"RCVRY_EQ1", "RCVRY_EQ2", "RCVRY_EQ3"
-> 
-> what's wrong with using the far more typical
-> 
-> static const char *link_state[] = {
-> 	"DETECT_QUIET",
-> 	...
-
-Or 4 aligned columns.
-Better still used named initialisers:
-	[xxx_DETECT_QUIET] = "DETECT_QUIET",
-you really don't want an 'off-by-one' in that list.
-
-	David
+SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciByZXZpZXchDQoNCj4gLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmhlbGdhYXNA
+a2VybmVsLm9yZ10NCj4gU2VudDogMjAxN8TqMTDUwjEyyNUgMzo0MQ0KPiBUbzogWi5xLiBIb3Ug
+PHpoaXFpYW5nLmhvdUBueHAuY29tPg0KPiBDYzogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9y
+ZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBsaW51eC1wY2lAdmdl
+ci5rZXJuZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBSb3kgWmFuZw0KPiA8cm95LnphbmdA
+bnhwLmNvbT47IE1pbmdrYWkgSHUgPG1pbmdrYWkuaHVAbnhwLmNvbT47IE0uaC4gTGlhbg0KPiA8
+bWluZ2h1YW4ubGlhbkBueHAuY29tPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDIvMl0gcGNpL2xh
+eWVyc2NhcGU6IGNoYW5nZSB0aGUgZGVmYXVsdCBlcnJvciByZXNwb25zZQ0KPiBiZWhhdmlvcg0K
+PiANCj4gT24gRnJpLCBTZXAgMjIsIDIwMTcgYXQgMDM6MjU6MjJQTSArMDgwMCwgWmhpcWlhbmcg
+SG91IHdyb3RlOg0KPiA+IEZyb206IE1pbmdodWFuIExpYW4gPE1pbmdodWFuLkxpYW5AbnhwLmNv
+bT4NCj4gPg0KPiA+IEJ5IGRlZmF1bHQsIHdoZW4gdGhlIFBDSWUgY29udHJvbGxlciBleHBlcmll
+bmNlcyBhbiBlcnJvbmVvdXMNCj4gPiBjb21wbGV0aW9uIGZyb20gYW4gZXh0ZXJuYWwgY29tcGxl
+dGVyIGZvciBpdHMgb3V0Ym91bmQgbm9uLXBvc3RlZA0KPiA+IHJlcXVlc3QsIGl0IGFsd2F5cyBz
+ZW5kcyBhbiBPS0FZIHJlc3BvbnNlIHRvIHRoZSBkZXZpY2UncyBpbnRlcm5hbCBBWEkNCj4gPiBz
+bGF2ZSBzeXN0ZW0gaW50ZXJmYWNlLiBIb3dldmVyLCBzdWNoIGRlZmF1bHQgc3lzdGVtIGVycm9y
+IHJlc3BvbnNlDQo+ID4gYmVoYXZpb3IgY2Fubm90IGJlIHVzZWQgZm9yIG90aGVyIHR5cGVzIG9m
+IG91dGJvdW5kIG5vbi1wb3N0ZWQNCj4gPiByZXF1ZXN0cy4gRm9yIGV4YW1wbGUsIHRoZSBvdXRi
+b3VuZCBtZW1vcnkgcmVhZCB0cmFuc2FjdGlvbiByZXF1aXJlcw0KPiA+IGFuIGFjdHVhbCBFUlJP
+UiByZXNwb25zZSwgbGlrZSBVUiBjb21wbGV0aW9uIG9yIGNvbXBsZXRpb24gdGltZW91dC4NCj4g
+PiBUaGUgcGF0Y2ggaXMgdG8gZml4IGl0IGJ5IGZvcndhcmRpbmcgdGhlIGVycm9yIHJlc3BvbnNl
+IG9mIHRoZQ0KPiA+IG5vbi1wb3N0ZWQgcmVxdWVzdC4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6
+IE1pbmdodWFuIExpYW4gPE1pbmdodWFuLkxpYW5AbnhwLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5
+OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2
+ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYyB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysr
+KysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDI1IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYg
+LS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+IGIvZHJpdmVycy9w
+Y2kvZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiBpbmRleCAzYjAxZTMwOWE1NWUuLmE2NDcwOTBj
+MTQwZSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0K
+PiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4gQEAgLTMzLDYg
+KzMzLDggQEANCj4gPg0KPiA+ICAvKiBQRVggSW50ZXJuYWwgQ29uZmlndXJhdGlvbiBSZWdpc3Rl
+cnMgKi8NCj4gPiAgI2RlZmluZSBQQ0lFX1NUUkZNUjEJCTB4NzFjIC8qIFN5bWJvbCBUaW1lciAm
+IEZpbHRlciBNYXNrDQo+IFJlZ2lzdGVyMSAqLw0KPiA+ICsjZGVmaW5lIFBDSUVfQUJTRVJSCQkw
+eDhkMCAvKiBCcmlkZ2UgU2xhdmUgRXJyb3IgUmVzcG9uc2UNCj4gUmVnaXN0ZXIgKi8NCj4gPiAr
+I2RlZmluZSBQQ0lFX0FCU0VSUl9TRVRUSU5HCTB4OTQwMSAvKiBGb3J3YXJkIGVycm9yIG9mIG5v
+bi1wb3N0ZWQNCj4gcmVxdWVzdCAqLw0KPiA+DQo+ID4gICNkZWZpbmUgUENJRV9JQVRVX05VTQkJ
+Ng0KPiA+DQo+ID4gQEAgLTU0LDYgKzU2LDE5IEBAIHN0cnVjdCBsc19wY2llIHsNCj4gPg0KPiA+
+ICAjZGVmaW5lIHRvX2xzX3BjaWUoeCkJZGV2X2dldF9kcnZkYXRhKCh4KS0+ZGV2KQ0KPiA+DQo+
+ID4gK3N0YXRpYyBpbnQgZXJyX3Jlc3BvbnNlX2ZsYWcgPSAxOw0KPiA+ICsNCj4gPiArc3RhdGlj
+IGludCBfX2luaXQgbHNfcGNpZV9wYXJhbShjaGFyICpwKSB7DQo+ID4gKwlpZiAocCAmJiBzdHJu
+Y21wKHAsICJuby1lcnItcmVzcG9uc2UiLCAxNSkgPT0gMCkNCj4gPiArCQllcnJfcmVzcG9uc2Vf
+ZmxhZyA9IDA7DQo+ID4gKwllbHNlDQo+ID4gKwkJZXJyX3Jlc3BvbnNlX2ZsYWcgPSAxOw0KPiA+
+ICsNCj4gPiArCXJldHVybiAwOw0KPiA+ICt9DQo+ID4gK2Vhcmx5X3BhcmFtKCJsc19wY2llIiwg
+bHNfcGNpZV9wYXJhbSk7DQo+IA0KPiBXaGF0J3MgdGhlIHBvaW50IG9mIHRoaXMgcGFyYW1ldGVy
+PyAgSWYgaXQncyBmb3IgZGVidWdnaW5nLCBpdCdzIG5vdCBjbGVhciB0aGF0DQo+IHdlIG5lZWQg
+aXQgdXBzdHJlYW0uICBJZiBpdCdzIGZvciBkZWJ1Z2dpbmcgYW5kIHdlICpkbyogbmVlZCBpdCB1
+cHN0cmVhbSwNCj4gdGhlcmUgc2hvdWxkIGJlIHNvbWUgc29ydCBvZiBjb21tZW50IHRvIHRoYXQg
+ZWZmZWN0Lg0KPiANCj4gSSBhc3N1bWUgeW91IG5ldmVyIGV4cGVjdCBhbiBlbmQgdXNlciB0byBu
+ZWVkIHRoaXMgcGFyYW1ldGVyLg0KDQpJdCBpcyBmb3IgZGVidWdnaW5nLCB3aWxsIGRyb3AgdGhp
+cyBwYXJhbWV0ZXIgbmV4dCB2ZXJzaW9uLg0KDQo+IA0KPiA+ICBzdGF0aWMgYm9vbCBsc19wY2ll
+X2lzX2JyaWRnZShzdHJ1Y3QgbHNfcGNpZSAqcGNpZSkgIHsNCj4gPiAgCXN0cnVjdCBkd19wY2ll
+ICpwY2kgPSBwY2llLT5wY2k7DQo+ID4gQEAgLTEyNCw2ICsxMzksMTQgQEAgc3RhdGljIGludCBs
+c19wY2llX2xpbmtfdXAoc3RydWN0IGR3X3BjaWUgKnBjaSkNCj4gPiAgCXJldHVybiAxOw0KPiA+
+ICB9DQo+ID4NCj4gPiArLyogRm9yd2FyZCBlcnJvciByZXNwb25zZSBvZiBvdXRib3VuZCBub24t
+cG9zdGVkIHJlcXVlc3RzICovIHN0YXRpYw0KPiA+ICt2b2lkIGxzX3BjaWVfZml4X2Vycm9yX3Jl
+c3BvbnNlKHN0cnVjdCBsc19wY2llICpwY2llKSB7DQo+ID4gKwlzdHJ1Y3QgZHdfcGNpZSAqcGNp
+ID0gcGNpZS0+cGNpOw0KPiA+ICsNCj4gPiArCWlvd3JpdGUzMihQQ0lFX0FCU0VSUl9TRVRUSU5H
+LCBwY2ktPmRiaV9iYXNlICsgUENJRV9BQlNFUlIpOyB9DQo+ID4gKw0KPiA+ICBzdGF0aWMgaW50
+IGxzX3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKSAgew0KPiA+ICAJc3RydWN0
+IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7IEBAIC0xMzUsNiArMTU4LDgg
+QEANCj4gPiBzdGF0aWMgaW50IGxzX3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBw
+KQ0KPiA+ICAJICogZHdfcGNpZV9zZXR1cF9yYygpIHdpbGwgcmVjb25maWd1cmUgdGhlIG91dGJv
+dW5kIHdpbmRvd3MuDQo+ID4gIAkgKi8NCj4gPiAgCWxzX3BjaWVfZGlzYWJsZV9vdXRib3VuZF9h
+dHVzKHBjaWUpOw0KPiA+ICsJaWYgKGVycl9yZXNwb25zZV9mbGFnKQ0KPiA+ICsJCWxzX3BjaWVf
+Zml4X2Vycm9yX3Jlc3BvbnNlKHBjaWUpOw0KPiA+DQo+ID4gIAlkd19wY2llX2RiaV9yb193cl9l
+bihwY2kpOw0KPiA+ICAJbHNfcGNpZV9jbGVhcl9tdWx0aWZ1bmN0aW9uKHBjaWUpOw0KPiA+IC0t
+DQo+ID4gMi4xNC4xDQo+ID4NCg0KVGhhbmtzLA0KWmhpcWlhbmcNCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBs
+aXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5m
+cmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
