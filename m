@@ -1,64 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46992 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751831AbdJ0URZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Oct 2017 16:17:25 -0400
-Date: Fri, 27 Oct 2017 15:17:21 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Meelis Roos <mroos@linux.ee>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>
-Subject: [GIT PULL] PCI fixes for v4.14
-Message-ID: <20171027201721.GA9235@bhelgaas-glaptop.roam.corp.google.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:10431 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751348AbdJLSvm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 14:51:42 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>
+Subject: [PATCH 0/6] Tegra PCIe end point config space map code refactoring
+Date: Fri, 13 Oct 2017 00:20:05 +0530
+Message-ID: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
+PCIe host controller in Tegra SoCs has 1GB of aperture available
+for mapping end points config space, IO and BARs. In that, currently
+256MB is being reserved for mapping end points configuration space
+which leaves less memory space available for mapping end points BARs
+on some of the platforms.
+This patch series attempts to use only 4K space from 1GB aperture to
+access end points configuration space.
 
-  - move alpha PCI IRQ map/swizzle functions out of initdata to fix
-    regression from PCI core IRQ mapping changes (Lorenzo Pieralisi)
+Currently, this change benefits T20 and future chips in saving (i.e. repurposed
+to use for BAR mapping) physical space as well as kernel virtual mapping space,
+it saves only kernel virtual address space in T30, T124, T132 and T210.
 
+Testing Done on T210:
+ Enumeration is and basic functionality of immediate devices
+ Enumeration of devices behind a PCIe switch
+ Complete 4K configuration space access
 
-The following changes since commit 407dae1e4415acde2d9f48bb76361893c4653756:
+Vidya Sagar (6):
+  PCI: tegra: refactor config space mapping code
+  ARM: tegra: limit PCIe config space mapping to 4K for T20
+  ARM: tegra: limit PCIe config space mapping to 4K for T30
+  ARM: tegra: limit PCIe config space mapping to 4K for T124
+  ARM64: tegra: limit PCIe config space mapping to 4K for T132
+  ARM64: tegra: limit PCIe config space mapping to 4K for T210
 
-  PCI: aardvark: Move to struct pci_host_bridge IRQ mapping functions (2017-10-10 21:17:43 -0500)
+ arch/arm/boot/dts/tegra124.dtsi          |  2 +-
+ arch/arm/boot/dts/tegra20.dtsi           |  8 +--
+ arch/arm/boot/dts/tegra30.dtsi           |  2 +-
+ arch/arm64/boot/dts/nvidia/tegra132.dtsi |  2 +-
+ arch/arm64/boot/dts/nvidia/tegra210.dtsi |  2 +-
+ drivers/pci/host/pci-tegra.c             | 85 +++++++++-----------------------
+ 6 files changed, 31 insertions(+), 70 deletions(-)
 
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.14-fixes-6
-
-for you to fetch changes up to 814eae5982cc55988f642f7f1d10eaf340845c00:
-
-  alpha/PCI: Move pci_map_irq()/pci_swizzle() out of initdata (2017-10-26 11:53:38 -0500)
-
-----------------------------------------------------------------
-pci-v4.14-fixes-6
-
-----------------------------------------------------------------
-Lorenzo Pieralisi (1):
-      alpha/PCI: Move pci_map_irq()/pci_swizzle() out of initdata
-
- arch/alpha/kernel/sys_alcor.c     |  4 ++--
- arch/alpha/kernel/sys_cabriolet.c | 12 ++++++------
- arch/alpha/kernel/sys_dp264.c     | 20 ++++++++++----------
- arch/alpha/kernel/sys_eb64p.c     |  4 ++--
- arch/alpha/kernel/sys_eiger.c     |  4 ++--
- arch/alpha/kernel/sys_miata.c     |  6 +++---
- arch/alpha/kernel/sys_mikasa.c    |  4 ++--
- arch/alpha/kernel/sys_nautilus.c  |  2 +-
- arch/alpha/kernel/sys_noritake.c  |  6 +++---
- arch/alpha/kernel/sys_rawhide.c   |  4 ++--
- arch/alpha/kernel/sys_ruffian.c   |  6 +++---
- arch/alpha/kernel/sys_rx164.c     |  4 ++--
- arch/alpha/kernel/sys_sable.c     | 10 +++++-----
- arch/alpha/kernel/sys_sio.c       |  8 ++++----
- arch/alpha/kernel/sys_sx164.c     |  4 ++--
- arch/alpha/kernel/sys_takara.c    |  6 +++---
- arch/alpha/kernel/sys_wildfire.c  |  4 ++--
- 17 files changed, 54 insertions(+), 54 deletions(-)
+-- 
+2.7.4
