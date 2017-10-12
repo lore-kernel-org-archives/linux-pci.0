@@ -1,138 +1,366 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-pci@vger.kernel.org
-Subject: [RFC PATCH v9 5/7] PCI: Make pci_platform_pm_ops's callbacks optional
-Date: Fri, 27 Oct 2017 15:17:37 +0800
-Message-Id: <20171027071739.21927-6-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171027071739.21927-1-jeffy.chen@rock-chips.com>
-References: <20171027071739.21927-1-jeffy.chen@rock-chips.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=6buc=BL=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=6buc=BL=linux.intel.com=mika.westerberg@kernel.org>
+Date: Thu, 12 Oct 2017 15:47:03 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ashok Raj <ashok.raj@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/7] PCI: Distribute available buses to hotplug capable
+ PCIe downstream ports
+Message-ID: <20171012124703.GD2761@lahna.fi.intel.com>
+References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+ <20170926141720.25067-4-mika.westerberg@linux.intel.com>
+ <20171011233243.GX25517@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20171011233243.GX25517@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow platforms not to provide some of the pci_platform_pm_ops's
-callbacks.
+On Wed, Oct 11, 2017 at 06:32:43PM -0500, Bjorn Helgaas wrote:
+> On Tue, Sep 26, 2017 at 05:17:16PM +0300, Mika Westerberg wrote:
+> > System BIOS sometimes allocates extra bus space for hotplug capable PCIe
+> > root/downstream ports. This space is needed if the device plugged to the
+> > port will have more hotplug capable downstream ports. A good example of
+> > this is Thunderbolt. Each Thunderbolt device contains a PCIe switch and
+> > one or more hotplug capable PCIe downstream ports where the daisy chain
+> > can be extended.
+> > 
+> > Currently Linux only allocates minimal bus space to make sure all the
+> > enumerated devices barely fit there. The BIOS reserved extra space is
+> > not taken into consideration at all. Because of this we run out of bus
+> > space pretty quickly when more PCIe devices are attached to hotplug
+> > downstream ports in order to extend the chain.
+> > 
+> > This modifies PCI core so that we distribute the available BIOS
+> > allocated bus space equally between hotplug capable PCIe downstream
+> > ports to make sure there is enough bus space for extending the
+> > hierarchy later on.
+> 
+> I think this makes sense in general.  It's a fairly complicated patch,
+> so my comments here are just a first pass.
 
-Also change the return value from -ENOSYS to -ENODEV for:
-warning: drivers/pci/pci.c,594: ENOSYS means 'invalid syscall nr' and nothing else
+Thanks for the comments!
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+> Why do you limit it to PCIe?  Isn't it conceivable that one could
+> hot-add a conventional PCI card that contained a bridge leading to
+> another hotplug slot?  E.g., a PCI card with PCMCIA slot or something
+> on it?
 
-Changes in v9: None
-Changes in v8: None
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v3: None
-Changes in v2: None
+I guess this could be generalized to such configurations but I wanted to
+restrict this with PCIe for a couple of reasons. Firstly, I'm able to
+actually test this ;-) Second, the rules in PCIe are quite simple,
+whenever you have hotplug bridge (downstream port with a hotplug
+capability set) you distribute the available bus space with it. With a
+conventional PCI it is not so clear (at least to me).
 
- drivers/pci/pci.c | 38 +++++++++++++++++++++++++-------------
- drivers/pci/pci.h |  5 +----
- 2 files changed, 26 insertions(+), 17 deletions(-)
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/hotplug-pci.c |  13 +++++-
+> >  drivers/pci/probe.c       | 114 ++++++++++++++++++++++++++++++++++++++--------
+> >  include/linux/pci.h       |  19 ++++++--
+> >  3 files changed, 123 insertions(+), 23 deletions(-)
+> > 
+> > diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
+> > index c68366cee6b7..deb06fe22b26 100644
+> > --- a/drivers/pci/hotplug-pci.c
+> > +++ b/drivers/pci/hotplug-pci.c
+> > @@ -8,6 +8,7 @@ int pci_hp_add_bridge(struct pci_dev *dev)
+> >  {
+> >  	struct pci_bus *parent = dev->bus;
+> >  	int pass, busnr, start = parent->busn_res.start;
+> > +	unsigned int available_buses = 0;
+> >  	int end = parent->busn_res.end;
+> >  
+> >  	for (busnr = start; busnr <= end; busnr++) {
+> > @@ -19,8 +20,18 @@ int pci_hp_add_bridge(struct pci_dev *dev)
+> >  				pci_name(dev));
+> >  		return -1;
+> >  	}
+> > +
+> > +	/*
+> > +	 * In case of PCIe the hierarchy can be extended through hotplug
+> > +	 * capable downstream ports. Distribute the available bus
+> > +	 * numbers between them to make extending the chain possible.
+> > +	 */
+> > +	if (pci_is_pcie(dev))
+> > +		available_buses = end - busnr;
+> > +
+> >  	for (pass = 0; pass < 2; pass++)
+> > -		busnr = pci_scan_bridge(parent, dev, busnr, pass);
+> > +		busnr = pci_scan_bridge_extend(parent, dev, busnr,
+> > +					       available_buses, pass);
+> >  	if (!dev->subordinate)
+> >  		return -1;
+> >  
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index f285cd74088e..ae0bf3c807f5 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -960,6 +960,17 @@ static void pci_enable_crs(struct pci_dev *pdev)
+> >  }
+> >  
+> >  /*
+> > + * pci_scan_bridge_extend() - Scan buses behind a bridge
+> > + * @bus: Parent bus the bridge is on
+> > + * @dev: Bridge itself
+> > + * @max: Starting subordinate number of buses behind this bridge
+> > + * @available_buses: Total number of buses available for this bridge and
+> > + *		     the devices below. After the minimal bus space has
+> > + *		     been allocated the remaining buses will be
+> > + *		     distributed equally between hotplug capable bridges.
+> > + * @pass: Either %0 (scan already configured bridges) or %1 (scan bridges
+> > + *        that need to be reconfigured.
+> > + *
+> >   * If it's a bridge, configure it and scan the bus behind it.
+> >   * For CardBus bridges, we don't scan behind as the devices will
+> >   * be handled by the bridge driver itself.
+> > @@ -969,7 +980,8 @@ static void pci_enable_crs(struct pci_dev *pdev)
+> >   * them, we proceed to assigning numbers to the remaining buses in
+> >   * order to avoid overlaps between old and new bus numbers.
+> >   */
+> > -int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+> > +int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev, int max,
+> > +			   unsigned int available_buses, int pass)
+> >  {
+> >  	struct pci_bus *child;
+> >  	int is_cardbus = (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS);
+> > @@ -1080,6 +1092,9 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+> >  						bus->busn_res.end);
+> >  		}
+> >  		max++;
+> > +		if (available_buses)
+> > +			available_buses--;
+> > +
+> >  		buses = (buses & 0xff000000)
+> >  		      | ((unsigned int)(child->primary)     <<  0)
+> >  		      | ((unsigned int)(child->busn_res.start)   <<  8)
+> > @@ -1101,7 +1116,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+> >  
+> >  		if (!is_cardbus) {
+> >  			child->bridge_ctl = bctl;
+> > -			max = pci_scan_child_bus(child);
+> > +			max = pci_scan_child_bus_extend(child, available_buses);
+> >  		} else {
+> >  			/*
+> >  			 * For CardBus bridges, we leave 4 bus numbers
+> > @@ -1169,7 +1184,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+> >  
+> >  	return max;
+> >  }
+> > -EXPORT_SYMBOL(pci_scan_bridge);
+> > +EXPORT_SYMBOL(pci_scan_bridge_extend);
+> >  
+> >  /*
+> >   * Read interrupt line and base address registers.
+> > @@ -2397,9 +2412,24 @@ void __weak pcibios_fixup_bus(struct pci_bus *bus)
+> >         /* nothing to do, expected to be removed in the future */
+> >  }
+> >  
+> > -unsigned int pci_scan_child_bus(struct pci_bus *bus)
+> > +/**
+> > + * pci_scan_child_bus_extend() - Scan devices below a bus
+> > + * @bus: Bus to scan for devices
+> > + * @available_buses: Total number of buses available (%0 does not try to
+> > + *		     extend beyond the minimal)
+> 
+> What does "%0" mean?  Is that kernel-doc for something?  0?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f0d68066c726..e120b00a9017 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -572,46 +572,58 @@ static void pci_restore_bars(struct pci_dev *dev)
- 
- static const struct pci_platform_pm_ops *pci_platform_pm;
- 
--int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
-+void pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
- {
--	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
--	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
--		return -EINVAL;
- 	pci_platform_pm = ops;
--	return 0;
- }
- 
- static inline bool platform_pci_power_manageable(struct pci_dev *dev)
- {
--	return pci_platform_pm ? pci_platform_pm->is_manageable(dev) : false;
-+	if (pci_platform_pm && pci_platform_pm->is_manageable)
-+		return pci_platform_pm->is_manageable(dev);
-+
-+	return false;
- }
- 
- static inline int platform_pci_set_power_state(struct pci_dev *dev,
- 					       pci_power_t t)
- {
--	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
-+	if (pci_platform_pm && pci_platform_pm->set_state)
-+		return pci_platform_pm->set_state(dev, t);
-+
-+	return -ENODEV;
- }
- 
- static inline pci_power_t platform_pci_get_power_state(struct pci_dev *dev)
- {
--	return pci_platform_pm ? pci_platform_pm->get_state(dev) : PCI_UNKNOWN;
-+	if (pci_platform_pm && pci_platform_pm->get_state)
-+		return pci_platform_pm->get_state(dev);
-+
-+	return PCI_UNKNOWN;
- }
- 
- static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
- {
--	return pci_platform_pm ?
--			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
-+	if (pci_platform_pm && pci_platform_pm->choose_state)
-+		return pci_platform_pm->choose_state(dev);
-+
-+	return PCI_POWER_ERROR;
- }
- 
- static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
- {
--	return pci_platform_pm ?
--			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
-+	if (pci_platform_pm && pci_platform_pm->set_wakeup)
-+		return pci_platform_pm->set_wakeup(dev, enable);
-+
-+	return -ENODEV;
- }
- 
- static inline bool platform_pci_need_resume(struct pci_dev *dev)
- {
--	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
-+	if (pci_platform_pm && pci_platform_pm->need_resume)
-+		return pci_platform_pm->need_resume(dev);
-+
-+	return false;
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e816a13e6259..048668271014 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -52,9 +52,6 @@ int pci_probe_reset_function(struct pci_dev *dev);
-  * @need_resume: returns 'true' if the given device (which is currently
-  *		suspended) needs to be resumed to be configured for system
-  *		wakeup.
-- *
-- * If given platform is generally capable of power managing PCI devices, all of
-- * these callbacks are mandatory.
-  */
- struct pci_platform_pm_ops {
- 	bool (*is_manageable)(struct pci_dev *dev);
-@@ -65,7 +62,7 @@ struct pci_platform_pm_ops {
- 	bool (*need_resume)(struct pci_dev *dev);
- };
- 
--int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
-+void pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
- void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
- void pci_power_up(struct pci_dev *dev);
- void pci_disable_enabled_device(struct pci_dev *dev);
--- 
-2.11.0
+"%" means constant in kernel-doc comments. I've been using it with
+numbers as well as with NULL and so on.
+
+> > + * Scans devices below @bus including subordinate buses. Returns new
+> > + * subordinate number including all the found devices. Passing
+> > + * @available_buses causes the remaining bus space to be distributed
+> > + * equally between hotplug capable bridges to allow future extension of
+> > + * the hierarchy.
+> > + */
+> > +unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+> > +				       unsigned int available_buses)
+> >  {
+> > -	unsigned int devfn, pass, max = bus->busn_res.start;
+> > +	unsigned int used_buses, hotplug_bridges = 0;
+> > +	unsigned int start = bus->busn_res.start;
+> > +	unsigned int devfn, cmax, max = start;
+> >  	struct pci_dev *dev;
+> >  
+> >  	dev_dbg(&bus->dev, "scanning bus\n");
+> > @@ -2409,7 +2439,8 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+> >  		pci_scan_slot(bus, devfn);
+> >  
+> >  	/* Reserve buses for SR-IOV capability. */
+> > -	max += pci_iov_bus_range(bus);
+> > +	used_buses = pci_iov_bus_range(bus);
+> > +	max += used_buses;
+> >  
+> >  	/*
+> >  	 * After performing arch-dependent fixup of the bus, look behind
+> > @@ -2421,23 +2452,68 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+> >  		bus->is_added = 1;
+> >  	}
+> >  
+> > -	for (pass = 0; pass < 2; pass++)
+> > -		list_for_each_entry(dev, &bus->devices, bus_list) {
+> > -			if (pci_is_bridge(dev))
+> > -				max = pci_scan_bridge(bus, dev, max, pass);
+> 
+> Thanks for getting rid of this "for (pass = 0; ...)" loop.  Much nicer
+> to just have it spelled out.  It might even be worth pulling this
+> looping change into a separate patch to simplify *this* patch a little
+> bit.
+
+OK, I'll make a separate patch of it.
+
+> I'd be happy if you did the same for the similar loop in
+> pci_hp_add_bridge().
+
+Sure, I'll do the same for pci_hp_add_bridge().
+
+> > +	/*
+> > +	 * First pass. Bridges that are already configured. We don't touch
+> > +	 * these unless they are misconfigured (which we will do in second
+> > +	 * pass).
+> > +	 */
+> > +	list_for_each_entry(dev, &bus->devices, bus_list) {
+> > +		if (pci_is_bridge(dev)) {
+> > +			/*
+> > +			 * Calculate how many hotplug bridges there are on
+> > +			 * this bus. We will distribute the additional
+> > +			 * available buses between them.
+> > +			 */
+> > +			if (dev->is_hotplug_bridge)
+> > +				hotplug_bridges++;
+> 
+> Maybe pull this out into a third list traversal, since it's not
+> related to the "scan bridge" functionality?
+
+OK.
+
+> > +
+> > +			cmax = max;
+> > +			max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
+> > +			used_buses += cmax - max;
+> > +		}
+> > +	}
+> 
+> I'm trying to relate the "Bridges that are already configured" comment
+> to this code.  I don't see any test here for whether the bridge is
+> already configured.  Oh, I see -- the last parameter (0) to
+> pci_scan_bridge_extend() means this is the first pass, and it
+> basically just checks for secondary and subordinate being set.
+> I thought "first pass" was related to the list_for_each_entry() loop
+> here, but it's actually related to the internals of
+> pci_scan_bridge_extend().  I think maybe rewording the comment can
+> address this.
+
+I'll update the comment.
+
+> > +	/* Second pass. Bridges that need to be configured. */
+> > +	list_for_each_entry(dev, &bus->devices, bus_list) {
+> > +		if (pci_is_bridge(dev)) {
+> > +			unsigned int buses = 0;
+> > +
+> > +			if (pcie_upstream_port(dev)) {
+> > +				/* Upstream port gets all available buses */
+> > +				buses = available_buses;
+> 
+> I guess this relies on the assumption that there can only be one
+> upstream port on a bus?  Is that true?  Typically a switch only has a
+> function 0 upstream port, but something niggles at me like the spec
+> admits the possibility of a switch with multiple functions of upstream
+> ports?  I don't know where that is right now (or if it exists), but
+> I'll try to find it.
+
+My understanding is that there can be only one upstream port on a bus.
+That said I looked at the spec again and there is this in chapter 7.3.1
+of PCIe 3.1 spec:
+
+  Switches, and components wishing to incorporate more than eight
+  Functions at their Upstream Port, are permitted to implement one or
+  more “virtual switches” represented by multiple Type 1 (PCI-PCI
+  Bridge) Configuration Space headers as illustrated in Figure 7-2.
+  These virtual switches serve to allow fan-out beyond eight Functions.
+  Since Switch Downstream Ports are permitted to appear on any Device
+  Number, in this case all address information fields (Bus, Device, and
+  Function Numbers) must be completely decoded to access the correct
+  register. Any Configuration Request targeting an unimplemented Bus,
+  Device, or Function must return a Completion with Unsupported Request
+  Completion Status.
+
+Not sure what it actually means, though. A "virtual switch" to me says
+it is a switch with one upstream port and multiple downstream ports,
+just like normal switch. Is this what you meant? Do you understand it so
+that there can be multiple upstream ports connected to a bus?
+
+> > +			} else if (dev->is_hotplug_bridge) {
+> > +				/*
+> > +				 * Distribute the extra buses between
+> > +				 * hotplug bridges if any.
+> > +				 */
+> > +				buses = available_buses / hotplug_bridges;
+> > +				buses = min(buses, available_buses - used_buses);
+> > +			}
+> > +
+> > +			cmax = max;
+> > +			max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
+> > +			used_buses += max - cmax;
+> >  		}
+> > +	}
+> >  
+> >  	/*
+> >  	 * Make sure a hotplug bridge has at least the minimum requested
+> > -	 * number of buses.
+> > +	 * number of buses but allow it to grow up to the maximum available
+> > +	 * bus number of there is room.
+> >  	 */
+> > -	if (bus->self && bus->self->is_hotplug_bridge && pci_hotplug_bus_size) {
+> > -		if (max - bus->busn_res.start < pci_hotplug_bus_size - 1)
+> > -			max = bus->busn_res.start + pci_hotplug_bus_size - 1;
+> > -
+> > -		/* Do not allocate more buses than we have room left */
+> > -		if (max > bus->busn_res.end)
+> > -			max = bus->busn_res.end;
+> > +	if (bus->self && bus->self->is_hotplug_bridge) {
+> > +		used_buses = max_t(unsigned int, available_buses,
+> > +				   pci_hotplug_bus_size - 1);
+> > +		if (max - start < used_buses) {
+> > +			max = start + used_buses;
+> > +
+> > +			/* Do not allocate more buses than we have room left */
+> > +			if (max > bus->busn_res.end)
+> > +				max = bus->busn_res.end;
+> > +
+> > +			dev_dbg(&bus->dev, "%pR extended by %#02x\n",
+> > +				&bus->busn_res, max - start);
+> > +		}
+> >  	}
+> >  
+> >  	/*
+> > @@ -2450,7 +2526,7 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+> >  	dev_dbg(&bus->dev, "bus scan returning with max=%02x\n", max);
+> >  	return max;
+> >  }
+> > -EXPORT_SYMBOL_GPL(pci_scan_child_bus);
+> > +EXPORT_SYMBOL_GPL(pci_scan_child_bus_extend);
+> 
+> Does this need to be exported?  The only callers I see are
+> pci_scan_bridge_extend() (already in the same module) and
+> pci_scan_child_bus() (now an inline in linux/pci.h).
+> 
+> I'd rather move pci_scan_child_bus() back to probe.c and make
+> pci_scan_child_bus_extend() static.
+
+OK.
+
+> Same with pci_scan_bridge_extend(), although that looks harder because
+> it's called from hotplug-pci.c.  Really, I'm not sure hotplug-pci.c
+> deserves to exist.  I think the whole file (one function) could be
+> folded into pci/probe.c (as a separate patch all by itself).
+
+No problem, I'll move it to drivers/pci/probe.c and make
+pci_scan_bridge_extend() static instead.
