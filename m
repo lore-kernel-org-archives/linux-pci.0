@@ -1,80 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:52269 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753931AbdJaWj5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:39:57 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 04/17] PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
-Date: Tue, 31 Oct 2017 23:39:22 +0100
-Message-Id: <20171031223936.27549-5-niklas.cassel@axis.com>
-In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:56600 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752309AbdJLPEV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 11:04:21 -0400
+Received: by mail-wm0-f67.google.com with SMTP id l68so14186809wmd.5
+        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 08:04:20 -0700 (PDT)
+Date: Thu, 12 Oct 2017 17:04:19 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Roopa Prabhu <roopa@cumulusnetworks.com>
+Cc: Steve Lin <steven.lin1@broadcom.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Jiri Pirko <jiri@mellanox.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        michael.chan@broadcom.com, linux-pci@vger.kernel.org,
+        "John W. Linville" <linville@tuxdriver.com>, gospo@broadcom.com
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+Message-ID: <20171012150419.GI14672@nanopsycho>
+References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
+ <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com>
+ <20171012144032.GG14672@nanopsycho>
+ <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain SoCs need to map the MSI address in raise_irq.
-To map an address, you first need to call pci_epc_mem_alloc_addr,
-however, pci_epc_mem_alloc_addr calls ioremap (which can sleep).
+Thu, Oct 12, 2017 at 04:46:24PM CEST, roopa@cumulusnetworks.com wrote:
+>On Thu, Oct 12, 2017 at 7:40 AM, Jiri Pirko <jiri@resnulli.us> wrote:
+>> Thu, Oct 12, 2017 at 04:35:10PM CEST, roopa@cumulusnetworks.com wrote:
+>>>On Thu, Oct 12, 2017 at 6:34 AM, Steve Lin <steven.lin1@broadcom.com> wrote:
+>>>> Adds a devlink command for getting & setting device configuration
+>>>> parameters, and enumerates a bunch of those parameters as devlink
+>>>> attributes.  Also introduces an attribute that can be set by a
+>>>> driver to indicate that the config change doesn't take effect
+>>>> until the next restart (as in the case of the bnxt driver changes
+>>>> in this patchset, for which all the configuration changes affect NVM
+>>>> only, and aren't loaded until the next restart.)
+>>>>
+>>>> bnxt driver patches make use of these new devlink cmds/attributes.
+>>>>
+>>>> Steve Lin (3):
+>>>>   devlink: Add config parameter get/set operations
+>>>>   bnxt: Move generic devlink code to new file
+>>>>   bnxt: Add devlink support for config get/set
+>>>>
+>>>
+>>>Is the goal here to move all ethtool operations to devlink (I saw some
+>>>attrs related to speed etc). ?.
+>>>We do need to move ethtool attrs to netlink and devlink is a good
+>>>place (and of-course leave the current ethtool api around for backward
+>>>compatibility).
+>>
+>> We need to make sure we are not moving things to devlink which don't
+>> belong there. All options that use "netdev" as a handle should go into
+>> rtnetlink instead.
+>>
+>
+>Any reason you want to keep that restriction ?.
+>FWIS, devlink is a driver api just like ethtool is.
+>and ethtool needs to move to netlink soon...and It would be better to
+>not put the rtnl_lock burden on ethtool driver operations. Instead of
+>adding yet another driver api, extending devlink seems like a great
+>fit to me.
 
-Since raise_irq is only called from atomic context, we can't call
-pci_epc_mem_alloc_addr from raise_irq, instead we pre-allocate
-a page in dw_pcie_ep_init, so this page can later be used to map/unmap
-the MSI address in raise_irq.
+Hmm, the original purpose of devlink was to obtain iface for things that
+could not use "netdev" as a handle. I try to stick with it as we already
+have iface for things that could use "netdev" as a handle - rtnetlink.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V3:
-* Use ep->page_size rather than PAGE_SIZE.
-
- drivers/pci/dwc/pcie-designware-ep.c | 10 ++++++++++
- drivers/pci/dwc/pcie-designware.h    |  2 ++
- 2 files changed, 12 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 3fb34be99715..2684090b782b 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -286,6 +286,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- 	struct pci_epc *epc = ep->epc;
- 
-+	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
-+			      ep->page_size);
-+
- 	pci_epc_mem_exit(epc);
- }
- 
-@@ -341,6 +344,13 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		return ret;
- 	}
- 
-+	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
-+					     ep->page_size);
-+	if (!ep->msi_mem) {
-+		dev_err(dev, "Failed to reserve memory for MSI\n");
-+		return -ENOMEM;
-+	}
-+
- 	ep->epc = epc;
- 	epc_set_drvdata(epc, ep);
- 	dw_pcie_setup(pci);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 9aaf0cd04dd6..5a1da459eda5 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -198,6 +198,8 @@ struct dw_pcie_ep {
- 	unsigned long		ob_window_map;
- 	u32			num_ib_windows;
- 	u32			num_ob_windows;
-+	void __iomem		*msi_mem;
-+	phys_addr_t		msi_mem_phys;
- };
- 
- struct dw_pcie_ops {
--- 
-2.14.2
+Not sure we want to go this way and add "netdev"-handle things into
+devlink. Thoughts?
