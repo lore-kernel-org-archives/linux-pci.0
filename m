@@ -1,115 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49114 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751500AbdJEUjC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Oct 2017 16:39:02 -0400
-Subject: [PATCH 3/4] PCI: Remove unused declarations
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-mips@linux-mips.org, Rich Felker <dalias@libc.org>,
-        linux-ia64@vger.kernel.org, linux-sh@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        David Howells <dhowells@redhat.com>,
-        Max Filippov <jcmvbkbc@gmail.com>,
-        Paul Mackerras <paulus@samba.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        linux-am33-list@redhat.com,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Helge Deller <deller@gmx.de>, x86@kernel.org,
-        "James E.J. Bottomley" <jejb@parisc-linux.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matt Turner <mattst88@gmail.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        linux-xtensa@linux-xtensa.org, Mikael Starvik <starvik@axis.com>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Richard Henderson <rth@twiddle.net>,
-        Chris Zankel <chris@zankel.net>,
-        Tony Luck <tony.luck@intel.com>, linux-cris-kernel@axis.com,
-        linux-parisc@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-        linux-alpha@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        "David S. Miller" <davem@davemloft.net>
-Date: Thu, 05 Oct 2017 15:38:56 -0500
-Message-ID: <20171005203856.18300.62381.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 4/9] arm64: dma-mapping: export symbol arch_setup_dma_ops
+To: Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-5-git-send-email-jim2101024@gmail.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <a8fa87e4-4d70-eb60-f1c5-94071d6394aa@arm.com>
+Date: Thu, 12 Oct 2017 18:06:48 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1507761269-7017-5-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Rob Herring <robh+dt@kernel.org>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On 11/10/17 23:34, Jim Quinlan wrote:
+> The BrcmSTB driver needs to get ahold of a pointer to swiotlb_dma_ops.
+> However, that variable is defined as static.  Instead, we use
+> arch_setup_dma_ops() to get the pointer to swiotlb_dma_ops.  Since
+> we also want our driver to be a separate module, we need to
+> export this function.
 
-Remove these unused declarations:
+NAK. Retrieve the platform-assigned ops from the device via
+get_dma_ops() and stash them in your drvdata or wherever before you
+replace them. Don't go poking around arch code internals directly from a
+driver.
 
-  pcibios_config_init()              # never defined anywhere
-  pcibios_scan_root()                # only defined by x86
-  pcibios_get_irq_routing_table()    # only defined by x86
-  pcibios_set_irq_routing()          # only defined by x86
+Robin.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/cris/include/asm/pci.h             |    6 ------
- arch/ia64/include/asm/pci.h             |    2 --
- arch/mn10300/unit-asb2305/pci-asb2305.h |    3 ---
- arch/x86/include/asm/pci.h              |    1 -
- 4 files changed, 12 deletions(-)
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> ---
+>  arch/arm64/mm/dma-mapping.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+> index 614af88..dae572f 100644
+> --- a/arch/arm64/mm/dma-mapping.c
+> +++ b/arch/arm64/mm/dma-mapping.c
+> @@ -936,3 +936,4 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+>  	}
+>  #endif
+>  }
+> +EXPORT_SYMBOL(arch_setup_dma_ops);
+> 
 
-diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
-index 8ea640560a46..141337bf16bc 100644
---- a/arch/cris/include/asm/pci.h
-+++ b/arch/cris/include/asm/pci.h
-@@ -16,12 +16,6 @@
- 
- #define PCIBIOS_MIN_CARDBUS_IO	0x4000
- 
--void pcibios_config_init(void);
--struct pci_bus * pcibios_scan_root(int bus);
--
--struct irq_routing_table *pcibios_get_irq_routing_table(void);
--int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
--
- /* Dynamic DMA mapping stuff.
-  * i386 has everything mapped statically.
-  */
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 8c4b37f6be3d..915531ede6a5 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -29,8 +29,6 @@ struct pci_vector_struct {
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
- 
--void pcibios_config_init(void);
--
- /*
-  * PCI_DMA_BUS_IS_PHYS should be set to 1 if there is _necessarily_ a direct
-  * correspondence between device bus addresses and CPU physical addresses.
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
-index 96c484b12226..0667f613b023 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.h
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
-@@ -30,9 +30,6 @@ extern void pcibios_resource_survey(void);
- 
- extern struct pci_ops *pci_root_ops;
- 
--extern struct irq_routing_table *pcibios_get_irq_routing_table(void);
--extern int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
--
- /* pci-irq.c */
- 
- struct irq_info {
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 645019085bb8..53873a875c01 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -88,7 +88,6 @@ extern unsigned long pci_mem_start;
- #define PCIBIOS_MIN_CARDBUS_IO	0x4000
- 
- extern int pcibios_enabled;
--void pcibios_config_init(void);
- void pcibios_scan_root(int bus);
- 
- struct irq_routing_table *pcibios_get_irq_routing_table(void);
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
