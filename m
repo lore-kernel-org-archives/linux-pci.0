@@ -1,49 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.134]:55683 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751212AbdJSLK1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Oct 2017 07:10:27 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [PATCH v7 2/3] dt-bindings: PCI: Add definition of pcie wake irq
-Date: Thu, 19 Oct 2017 19:10:06 +0800
-Message-Id: <20171019111007.25234-3-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171019111007.25234-1-jeffy.chen@rock-chips.com>
-References: <20171019111007.25234-1-jeffy.chen@rock-chips.com>
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:43023 "EHLO
+        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755121AbdJLUMw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 16:12:52 -0400
+Received: by mail-qk0-f178.google.com with SMTP id w134so2601286qkb.0
+        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 13:12:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
+References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+ <20171012150419.GI14672@nanopsycho> <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
+ <20171012.120650.1063812043202847517.davem@davemloft.net> <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
+From: Steve Lin <steven.lin1@broadcom.com>
+Date: Thu, 12 Oct 2017 16:12:31 -0400
+Message-ID: <CA+Jmh7Em0ZjN0y3FSk1yBhOtPKvFBnJCVA97oZZb7cgXXF_aUA@mail.gmail.com>
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: David Miller <davem@davemloft.net>, Jiri Pirko <jiri@resnulli.us>,
+        Roopa Prabhu <roopa@cumulusnetworks.com>,
+        netdev@vger.kernel.org, Jiri Pirko <jiri@mellanox.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-pci@vger.kernel.org, John Linville <linville@tuxdriver.com>,
+        Andy Gospodarek <gospo@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add an optional interrupt for PCIE_WAKE pin.
+On Thu, Oct 12, 2017 at 3:20 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+> On 10/12/2017 12:06 PM, David Miller wrote:
+>> From: Florian Fainelli <f.fainelli@gmail.com>
+>> Date: Thu, 12 Oct 2017 08:43:59 -0700
+>>
+>>> Once we move ethtool (or however we name its successor) over to
+>>> netlink there is an opportunity for accessing objects that do and do
+>>> not have a netdevice representor today (e.g: management ports on
+>>> switches) with the same interface, and devlink could be used for
+>>> that.
+>>
+>> That is an interesting angle for including this in devlink.
+>>
+>> I'm not so sure what to do about this.
+>>
+>> One suggestion is that devlink is used for getting ethtool stats for
+>> objects lacking netdev representor's, and a new genetlink family is
+>> used for netdev based ethtool.
+>
+> Right, I was also thinking along those lines that we we would have a new
+> generic netlink family for ethtool to support ethtool over netlink.
+>
+>>
+>> I think it's important that we don't expand the scope of devlink
+>> beyond what it was originally designed for.
+>
+> It seems to me like devlink is well defined in what it is not for: it is
+> not meant to be used for any object that is/has a net_device, but it is
+> not well defined for what it can offer to these non network devices. For
+> instance, we have a tremendous amount of operations that are extremely
+> specific to its single user(s) such as mlx5 and mlxsw.
+>
+> For instance, I am not sure how the buffer reservation scheme can be
+> generalized, and this is always the tricky part with a single user
+> facility in that you try to generalize the best you can based on the HW
+> you know. This is not a criticism or meant to be anything negative, this
+> just happens to be the case, and we did not have anything better.
+>
+> So maybe the first thing is to clarify what devlink operations can and
+> should be and what they are absolutely not allowed to cover. We should
+> also clarify whether a generic set/get that Steven is proposing is
+> something that we tolerate, or whether there should be specific function
+> pointers implemented for each attribute, which would be more in line
+> with what has been done thus far.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
+Hi Florian,
 
-Changes in v7: None
-Changes in v6: None
-Changes in v5:
-Move to pci.txt
+Some of this is subjective, of course, but just to clarify, it did
+seem like implementing a new devlink_op function pointer per attribute
+might be more consistent with what's been done so far.  But for code
+reuse purposes - i.e. to avoid replicating essentially the same
+function for each of the 30+ config attributes - I elected to just
+implement a single generic get and set devlink_op.
 
-Changes in v3: None
-Changes in v2: None
-
- Documentation/devicetree/bindings/pci/pci.txt | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index c77981c5dd18..5ae3a9e0134d 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,3 +24,5 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
-+- interrupts: Interrupt specifier for each name in interrupt-names.
-+- interrupt-names: May contains "wakeup" for PCI WAKE# interrupt.
--- 
-2.11.0
+Steve
