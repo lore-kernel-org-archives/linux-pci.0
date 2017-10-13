@@ -1,77 +1,150 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:44298 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753427AbdJMDrY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Oct 2017 23:47:24 -0400
+Subject: [PATCH v2 1/2] vgaarb: Select a default VGA device even if there's
+ no legacy VGA
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Daniel Vetter <daniel.vetter@intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        linux-pci@vger.kernel.org,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        dri-devel@lists.freedesktop.org,
+        Xinliang Liu <z.liuxinliang@hisilicon.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Rongrong Zou <zourongrong@gmail.com>,
+        Dave Airlie <airlied@redhat.com>,
+        linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org,
+        Daniel Axtens <dja@axtens.net>
+Date: Thu, 12 Oct 2017 22:47:22 -0500
+Message-ID: <20171013034721.14630.65913.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20171020145752.GA4694@lst.de>
-References: <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
- <589c04cb-061b-a453-3188-79324a02388e@arm.com> <20171017081422.GA19475@lst.de>
- <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
- <20171018065316.GA11183@lst.de>
- <CANCKTBv+yiCNsrnx3m+W9wPqC4NdKPZ2p=zLtSa8fX6v1rPcYQ@mail.gmail.com>
- <20171019091644.GA14983@lst.de>
- <CANCKTBuaTD29My77QfOeUmtZfLAmmJXUYe6QvBW+uoH2Kb+tAQ@mail.gmail.com>
- <20171020073730.GA12937@lst.de>
- <CANCKTBsRRkwNMrxWjtgxbyZqT6NOxPX0NHDbnEO2BMjj8oVtpg@mail.gmail.com>
- <20171020145752.GA4694@lst.de>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Fri, 20 Oct 2017 11:27:41 -0400
-Message-ID: <CANCKTBtxp9gSdndKAZ7xGA+VozQsn2PX_-9P8A22_5Matbb7-w@mail.gmail.com>
-Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
-To: Christoph Hellwig <hch@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
- Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, iommu@lists.linux-foundation.org,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 10:57 AM, Christoph Hellwig <hch@lst.de> wrote:
-> On Fri, Oct 20, 2017 at 10:41:56AM -0400, Jim Quinlan wrote:
->> I am not sure I understand your comment -- the size of the request
->> shouldn't be a factor.  Let's look at your example of the DMA request
->> of 3fffff00 to 4000000f (physical memory).  Lets say it is for 15
->> pages.  If we block out  the last page [0x3ffff000..0x3fffffff] from
->> what is available, there is no 15 page span that can happen across the
->> 0x40000000 boundary.  For SG, there can be no merge that connects a
->> page from one region to another region.  Can you give an example of
->> the scenario you are thinking of?
->
-> What prevents a merge from say the regions of
-> 0....3fffffff and 40000000....7fffffff?
+Daniel Axtens reported that on the HiSilicon D05 board, the VGA device is
+behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so the VGA arbiter
+never selects it as the default, which means Xorg auto-detection doesn't
+work.
 
-Huh? [0x3ffff000...x3ffffff] is not available to be used. Drawing from
-the original example, we now have to tell Linux that these are now our
-effective memory regions:
+VGA is a legacy PCI feature: a VGA device can respond to addresses, e.g.,
+[mem 0xa0000-0xbffff], [io 0x3b0-0x3bb], [io 0x3c0-0x3df], etc., that are
+not configurable by BARs.  Consequently, multiple VGA devices can conflict
+with each other.  The VGA arbiter avoids conflicts by ensuring that those
+legacy resources are only routed to one VGA device at a time.
 
-      memc0-a@[        0....3fffefff] <=> pci@[        0....3fffefff]
-      memc0-b@[100000000...13fffefff] <=> pci@[ 40000000....7fffefff]
-      memc1-a@[ 40000000....7fffefff] <=> pci@[ 80000000....bfffefff]
-      memc1-b@[300000000...33fffefff] <=> pci@[ c0000000....ffffefff]
-      memc2-a@[ 80000000....bfffefff] <=> pci@[100000000...13fffefff]
-      memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
+The arbiter identifies the "default VGA" device, i.e., a legacy VGA device
+that was used by boot firmware.  It selects the first device that:
 
-This leaves a one-page gap between phsyical memory regions which would
-normally be contiguous. One cannot have a dma alloc that spans any two
-regions.  This is a drastic step, but I don't see an alternative.
-Perhaps  I may be missing what you are saying...
+  - is of PCI_CLASS_DISPLAY_VGA,
+  - has both PCI_COMMAND_IO and PCI_COMMAND_MEMORY enabled, and
+  - has PCI_BRIDGE_CTL_VGA set in all upstream bridges.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Some systems don't have such a device.  For example, if a host bridge
+doesn't support I/O space, PCI_COMMAND_IO probably won't be enabled for any
+devices below it.  Or, as on the HiSilicon D05, the VGA device may be
+behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so accesses to the
+legacy VGA resources will never reach the device.
+
+This patch extends the arbiter so that if it doesn't find a device that
+meets all the above criteria, it selects the first device that:
+
+  - is of PCI_CLASS_DISPLAY_VGA and
+  - has PCI_COMMAND_IO or PCI_COMMAND_MEMORY enabled
+
+If it doesn't find even that, it selects the first device that:
+
+  - is of class PCI_CLASS_DISPLAY_VGA.
+
+Such a device may not be able to use the legacy VGA resources, but most
+drivers can operate the device without those.  Setting it as the default
+device means its "boot_vga" sysfs file will contain "1", which Xorg (via
+libpciaccess) uses to help select its default output device.
+
+This fixes Xorg auto-detection on some arm64 systems (HiSilicon D05 in
+particular; see the link below).
+
+It also replaces the powerpc fixup_vga() quirk, albeit with slightly
+different semantics: the quirk selected the first VGA device we found, and
+overrode that selection with any enabled VGA device we found.  If there
+were several enabled VGA devices, the *last* one we found would become the
+default.
+
+The code here instead selects the *first* enabled VGA device we find, and
+if none are enabled, the first VGA device we find.
+
+Link: http://lkml.kernel.org/r/20170901072744.2409-1-dja@axtens.net
+Tested-by: Daniel Axtens <dja@axtens.net>       # arm64, ppc64-qemu-tcg
+Tested-by: Zhou Wang <wangzhou1@hisilicon.com>  # D05 Hisi Hip07, Hip08
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/powerpc/kernel/pci-common.c |   12 ------------
+ drivers/gpu/vga/vgaarb.c         |   25 +++++++++++++++++++++++++
+ 2 files changed, 25 insertions(+), 12 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 02831a396419..0ac7aa346c69 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+-
+-static void fixup_vga(struct pci_dev *pdev)
+-{
+-	u16 cmd;
+-
+-	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+-	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+-		vga_set_default_device(pdev);
+-
+-}
+-DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+-			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index 76875f6299b8..8035e38d5110 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -1468,6 +1468,31 @@ static int __init vga_arb_device_init(void)
+ 			vgaarb_info(dev, "no bridge control possible\n");
+ 	}
+ 
++	if (!vga_default_device()) {
++		list_for_each_entry(vgadev, &vga_list, list) {
++			struct device *dev = &vgadev->pdev->dev;
++			u16 cmd;
++
++			pdev = vgadev->pdev;
++			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
++				vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
++				vga_set_default_device(pdev);
++				break;
++			}
++		}
++	}
++
++	if (!vga_default_device()) {
++		vgadev = list_first_entry_or_null(&vga_list,
++						  struct vga_device, list);
++		if (vgadev) {
++			struct device *dev = &vgadev->pdev->dev;
++			vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
++			vga_set_default_device(vgadev->pdev);
++		}
++	}
++
+ 	pr_info("loaded\n");
+ 	return rc;
+ }
