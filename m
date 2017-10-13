@@ -1,74 +1,89 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Jim Quinlan' <jim2101024@gmail.com>, "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>, "Brian
- Norris" <computersforpeace@gmail.com>, Russell King
- <rmk+kernel@armlinux.org.uk>, Robin Murphy <robin.murphy@arm.com>,
- "Christoph Hellwig" <hch@lst.de>, Florian Fainelli <f.fainelli@gmail.com>
-Subject: RE: [PATCH 4/8] PCI: host: brcmstb: add dma-ranges for inbound traffic
-Date: Wed, 25 Oct 2017 09:46:45 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A252D@AcuExch.aculab.com>
-References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
- <1508868949-16652-5-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1508868949-16652-5-git-send-email-jim2101024@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:37773 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751284AbdJMHI0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Oct 2017 03:08:26 -0400
+Received: by mail-wm0-f66.google.com with SMTP id r68so5146892wmr.4
+        for <linux-pci@vger.kernel.org>; Fri, 13 Oct 2017 00:08:25 -0700 (PDT)
+Date: Fri, 13 Oct 2017 09:08:23 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Steve Lin <steven.lin1@broadcom.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+        David Miller <davem@davemloft.net>,
+        Roopa Prabhu <roopa@cumulusnetworks.com>,
+        netdev@vger.kernel.org, Jiri Pirko <jiri@mellanox.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-pci@vger.kernel.org, John Linville <linville@tuxdriver.com>,
+        Andy Gospodarek <gospo@broadcom.com>
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+Message-ID: <20171013070823.GE1952@nanopsycho.orion>
+References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+ <20171012150419.GI14672@nanopsycho>
+ <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
+ <20171012.120650.1063812043202847517.davem@davemloft.net>
+ <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
+ <CA+Jmh7Em0ZjN0y3FSk1yBhOtPKvFBnJCVA97oZZb7cgXXF_aUA@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
- "bcm-kernel-feedback-list@broadcom.com"
- <bcm-kernel-feedback-list@broadcom.com>, Gregory Fong <gregory.0xf0@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+Jmh7Em0ZjN0y3FSk1yBhOtPKvFBnJCVA97oZZb7cgXXF_aUA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jim Quinlan
-> Sent: 24 October 2017 19:16
-> The Broadcom STB PCIe host controller is intimately related to the
-> memory subsystem.  This close relationship adds complexity to how cpu
-> system memory is mapped to PCIe memory.  Ideally, this mapping is an
-> identity mapping, or an identity mapping off by a constant.  Not so in
-> this case.
-> 
-> Consider the Broadcom reference board BCM97445LCC_4X8 which has 6 GB
-> of system memory.  Here is how the PCIe controller maps the
-> system memory to PCIe memory:
-> 
->   memc0-a@[        0....3fffffff] <=> pci@[        0....3fffffff]
->   memc0-b@[100000000...13fffffff] <=> pci@[ 40000000....7fffffff]
->   memc1-a@[ 40000000....7fffffff] <=> pci@[ 80000000....bfffffff]
->   memc1-b@[300000000...33fffffff] <=> pci@[ c0000000....ffffffff]
->   memc2-a@[ 80000000....bfffffff] <=> pci@[100000000...13fffffff]
->   memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
+Thu, Oct 12, 2017 at 10:12:31PM CEST, steven.lin1@broadcom.com wrote:
+>On Thu, Oct 12, 2017 at 3:20 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+>> On 10/12/2017 12:06 PM, David Miller wrote:
+>>> From: Florian Fainelli <f.fainelli@gmail.com>
+>>> Date: Thu, 12 Oct 2017 08:43:59 -0700
+>>>
+>>>> Once we move ethtool (or however we name its successor) over to
+>>>> netlink there is an opportunity for accessing objects that do and do
+>>>> not have a netdevice representor today (e.g: management ports on
+>>>> switches) with the same interface, and devlink could be used for
+>>>> that.
+>>>
+>>> That is an interesting angle for including this in devlink.
+>>>
+>>> I'm not so sure what to do about this.
+>>>
+>>> One suggestion is that devlink is used for getting ethtool stats for
+>>> objects lacking netdev representor's, and a new genetlink family is
+>>> used for netdev based ethtool.
+>>
+>> Right, I was also thinking along those lines that we we would have a new
+>> generic netlink family for ethtool to support ethtool over netlink.
+>>
+>>>
+>>> I think it's important that we don't expand the scope of devlink
+>>> beyond what it was originally designed for.
+>>
+>> It seems to me like devlink is well defined in what it is not for: it is
+>> not meant to be used for any object that is/has a net_device, but it is
+>> not well defined for what it can offer to these non network devices. For
+>> instance, we have a tremendous amount of operations that are extremely
+>> specific to its single user(s) such as mlx5 and mlxsw.
+>>
+>> For instance, I am not sure how the buffer reservation scheme can be
+>> generalized, and this is always the tricky part with a single user
+>> facility in that you try to generalize the best you can based on the HW
+>> you know. This is not a criticism or meant to be anything negative, this
+>> just happens to be the case, and we did not have anything better.
+>>
+>> So maybe the first thing is to clarify what devlink operations can and
+>> should be and what they are absolutely not allowed to cover. We should
+>> also clarify whether a generic set/get that Steven is proposing is
+>> something that we tolerate, or whether there should be specific function
+>> pointers implemented for each attribute, which would be more in line
+>> with what has been done thus far.
+>
+>Hi Florian,
+>
+>Some of this is subjective, of course, but just to clarify, it did
+>seem like implementing a new devlink_op function pointer per attribute
+>might be more consistent with what's been done so far.  But for code
+>reuse purposes - i.e. to avoid replicating essentially the same
+>function for each of the 30+ config attributes - I elected to just
+>implement a single generic get and set devlink_op.
 
-I presume the first column is the 'cpu physical address'
-and the second the 'pci' address?
-
-...
-
-Isn't this just the same as having an iommu that converts 'bus'
-addresses into 'physical' ones?
-
-A simple table lookup of the high address bits will do the
-conversion.
-
-	David
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Also, it this case, unlike any existing cmds, the config options are
+all permanent, written in hw. I think it is fine to have one set
+of get/set cmd to handle them all at once. Same family.
