@@ -1,74 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:17825 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752212AbdJ3N7E (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 09:59:04 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
-        <mperttunen@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V3 07/12] PCI: tegra: Disable AFI dynamic clock gating
-Date: Mon, 30 Oct 2017 19:27:18 +0530
-Message-ID: <1509371843-22931-8-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:46061 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbdJMHLW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Oct 2017 03:11:22 -0400
+Received: by mail-wm0-f65.google.com with SMTP id q124so18796025wmb.0
+        for <linux-pci@vger.kernel.org>; Fri, 13 Oct 2017 00:11:22 -0700 (PDT)
+Date: Fri, 13 Oct 2017 09:11:21 +0200
+From: Jiri Pirko <jiri@resnulli.us>
+To: Roopa Prabhu <roopa@cumulusnetworks.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+        David Miller <davem@davemloft.net>,
+        Steve Lin <steven.lin1@broadcom.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        "John W. Linville" <linville@tuxdriver.com>,
+        Andy Gospodarek <gospo@broadcom.com>
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+Message-ID: <20171013071121.GF1952@nanopsycho.orion>
+References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+ <20171012150419.GI14672@nanopsycho>
+ <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
+ <20171012.120650.1063812043202847517.davem@davemloft.net>
+ <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
+ <CAJieiUjK4CsBGT5_YidnEGk7mCVYYO_8S0xcsv+XfaW=amGCaQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJieiUjK4CsBGT5_YidnEGk7mCVYYO_8S0xcsv+XfaW=amGCaQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When there are 32 outstanding writes from AFI to memory, the outstanding
-write counter overflows and indicates that there are "0" outstanding write
-transactions. This outstanding write counter is used to generate IDLE
-signal to dynamically gate the AFI clock.
+Thu, Oct 12, 2017 at 11:53:56PM CEST, roopa@cumulusnetworks.com wrote:
+>On Thu, Oct 12, 2017 at 12:20 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+>> On 10/12/2017 12:06 PM, David Miller wrote:
+>>> From: Florian Fainelli <f.fainelli@gmail.com>
+>>> Date: Thu, 12 Oct 2017 08:43:59 -0700
+>>>
+>>>> Once we move ethtool (or however we name its successor) over to
+>>>> netlink there is an opportunity for accessing objects that do and do
+>>>> not have a netdevice representor today (e.g: management ports on
+>>>> switches) with the same interface, and devlink could be used for
+>>>> that.
+>>>
+>>> That is an interesting angle for including this in devlink.
+>>>
+>>> I'm not so sure what to do about this.
+>>>
+>>> One suggestion is that devlink is used for getting ethtool stats for
+>>> objects lacking netdev representor's, and a new genetlink family is
+>>> used for netdev based ethtool.
+>>
+>> Right, I was also thinking along those lines that we we would have a new
+>> generic netlink family for ethtool to support ethtool over netlink.
+>
+>new api is fine by me. The reason for suggesting devlink was because
+>some of the devlink
+>port_* ops are close to ethtool ops that can operate on a port/netdev.
+>eg split_port could be a netdev operation
+>unless you want to split before the netdev is created.
 
-When memory controller is under heavy load, its possible that write
-completions will come back to AFI after long delay and AFI write counter
-overflows. AFI clock gets gated even when there are outstanding
-transactions towards memory controller resutling in system hang.
+Let me correct you. The split is always devlink_port operation. In some
+cases however when there is a mapping between devlink_port and netdev,
+userspace part could translate netdev->devlink_port.
 
-Disable dynamic clock gating of AFI clock to avoid system hang.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V3:
-* no change in this patch
-V2:
-* no change in this patch
+>
+>There are some ops in devlink which are global hw parameters and not
+>specific to a port, those fit perfectly with
+>devlinks original goal.
 
- drivers/pci/host/pci-tegra.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 4562b0c113a8..c264037112cb 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -103,8 +103,9 @@
- #define AFI_MSI_EN_VEC6		0xa4
- #define AFI_MSI_EN_VEC7		0xa8
- 
--#define AFI_CONFIGURATION		0xac
--#define  AFI_CONFIGURATION_EN_FPCI	(1 << 0)
-+#define AFI_CONFIGURATION			0xac
-+#define  AFI_CONFIGURATION_EN_FPCI		(1 << 0)
-+#define  AFI_CONFIGURATION_CLKEN_OVERRIDE	(1 << 31)
- 
- #define AFI_FPCI_ERROR_MASKS	0xb0
- 
-@@ -1059,9 +1060,10 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 		}
- 	}
- 
--	/* finally enable PCIe */
-+	/* Disable AFI dynamic clock gating and enable PCIe */
- 	value = afi_readl(pcie, AFI_CONFIGURATION);
--	value |= AFI_CONFIGURATION_EN_FPCI;
-+	value |= (AFI_CONFIGURATION_EN_FPCI |
-+			AFI_CONFIGURATION_CLKEN_OVERRIDE);
- 	afi_writel(pcie, value, AFI_CONFIGURATION);
- 
- 	value = AFI_INTR_EN_INI_SLVERR | AFI_INTR_EN_INI_DECERR |
--- 
-2.1.4
+There are 2 handles from the very beginning:
+1) devlink - asic-wide handle
+2) devlink_port - port handle
