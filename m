@@ -1,174 +1,163 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 5 Oct 2017 12:31:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 3/7] PCI: aardvark: set host and device to the same
- MAX payload size
-Message-ID: <20171005173102.GR25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
- <20170928125838.11887-4-thomas.petazzoni@free-electrons.com>
+Return-Path: <SRS0=eK56=BM=linux.vnet.ibm.com=seroyer@kernel.org>
+Return-Path: <SRS0=eK56=BM=linux.vnet.ibm.com=seroyer@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170928125838.11887-4-thomas.petazzoni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
- Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
- Hanna Hawa <hannah@marvell.com>, Nadav Haklai <nadavh@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Victor Gu <xigu@marvell.com>,
- =?iso-8859-1?Q?Miqu=E8l?= Raynal <miquel.raynal@free-electrons.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Antoine Tenart <antoine.tenart@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 13 Oct 2017 07:01:48 -0500
+From: Steven Royer <seroyer@linux.vnet.ibm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        Michael Ellerman
+ <mpe@ellerman.id.au>, bhelgaas@google.com,
+        benh@kernel.crashing.org, paulus@samba.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>,
+        Alex Williamson
+ <alex.williamson@redhat.com>,
+        Bodong Wang <bodong@mellanox.com>, Eli Cohen
+ <eli@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+In-Reply-To: <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
+References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
+ <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
+ <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+ <87efq92ei6.fsf@concordia.ellerman.id.au>
+ <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+ <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
+ <20171013033456.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+ <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
+Message-Id: <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 28, 2017 at 02:58:34PM +0200, Thomas Petazzoni wrote:
-> From: Victor Gu <xigu@marvell.com>
+On 2017-10-13 06:53, Steven Royer wrote:
+> On 2017-10-12 22:34, Bjorn Helgaas wrote:
+>> [+cc Alex, Bodong, Eli, Saeed]
+>> 
+>> On Thu, Oct 12, 2017 at 02:59:23PM -0500, Bryant G. Ly wrote:
+>>> On 10/12/17 1:29 PM, Bjorn Helgaas wrote:
+>>> >On Thu, Oct 12, 2017 at 03:09:53PM +1100, Michael Ellerman wrote:
+>>> >>Bjorn Helgaas <helgaas@kernel.org> writes:
+>>> >>
+>>> >>>On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:
+>>> >>>>This patch adds the machine dependent call for
+>>> >>>>pcibios_bus_add_device, since the previous patch
+>>> >>>>separated the calls out between the PowerNV and PowerVM.
+>>> >>>>
+>>> >>>>The difference here is that for the PowerVM environment
+>>> >>>>we do not want match_driver set because in this environment
+>>> >>>>we do not want the VF device drivers to load immediately, due to
+>>> >>>>firmware loading the device node when VF device is assigned to the
+>>> >>>>logical partition.
+>>> >>>>
+>>> >>>>This patch will depend on the patch linked below, which is under
+>>> >>>>review.
+>>> >>>>
+>>> >>>>https://patchwork.kernel.org/patch/9882915/
+>>> >>>>
+>>> >>>>Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+>>> >>>>Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+>>> >>>>---
+>>> >>>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
+>>> >>>>  1 file changed, 24 insertions(+)
+>>> >>>>
+>>> >>>>diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+>>> >>>>index 6b812ad990e4..45946ee90985 100644
+>>> >>>>--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
+>>> >>>>+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+>>> >>>>@@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
+>>> >>>>  static DEFINE_SPINLOCK(slot_errbuf_lock);
+>>> >>>>  static int eeh_error_buf_size;
+>>> >>>>+void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+>>> >>>>+{
+>>> >>>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
+>>> >>>>+
+>>> >>>>+	if (!pdev->is_virtfn)
+>>> >>>>+		return;
+>>> >>>>+
+>>> >>>>+	pdn->device_id  =  pdev->device;
+>>> >>>>+	pdn->vendor_id  =  pdev->vendor;
+>>> >>>>+	pdn->class_code =  pdev->class;
+>>> >>>>+
+>>> >>>>+	/*
+>>> >>>>+	 * The following operations will fail if VF's sysfs files
+>>> >>>>+	 * aren't created or its resources aren't finalized.
+>>> >>>>+	 */
+>>> >>>>+	eeh_add_device_early(pdn);
+>>> >>>>+	eeh_add_device_late(pdev);
+>>> >>>>+	eeh_sysfs_add_device(pdev);
+>>> >>>>+	pdev->match_driver = -1;
+>>> >>>match_driver is a bool, which should be assigned "true" or "false".
+>>> >>Above he mentioned a dependency on:
+>>> >>
+>>> >>   [04/10] PCI: extend pci device match_driver state
+>>> >>   https://patchwork.kernel.org/patch/9882915/
+>>> >>
+>>> >>
+>>> >>Which makes it an int.
+>>> >Oh, right, I missed that, thanks.
+>>> >
+>>> >>Or has that patch been rejected or something?
+>>> >I haven't *rejected* it, but it's low on my priority list, so you
+>>> >shouldn't depend on it unless it adds functionality you really need.
+>>> >If I did apply that particular patch, I would want some rework because
+>>> >it currently obfuscates the match_driver logic.  There's no clue when
+>>> >reading the code what -1/0/1 mean.
+>>> So do you prefer enum's? - If so I can make a change for that.
+>>> >Apparently here you *do* want the "-1 means the PCI core will never
+>>> >set match_driver to 1" functionality, so maybe you do depend on it.
+>>> We depend on the patch because we want that ability to never set
+>>> match_driver,
+>>> for SRIOV on PowerVM.
+>> 
+>> Is this really new PowerVM-specific functionality?  ISTR recent 
+>> discussions
+>> about inhibiting driver binding in a generic way, e.g.,
+>> http://lkml.kernel.org/r/1490022874-54718-1-git-send-email-bodong@mellanox.com
+>> 
+>>> >If that's the case, how to you ever bind a driver to these VFs?  The
+>>> >changelog says you don't want VF drivers to load *immediately*, so I
+>>> >assume you do want them to load eventually.
+>>> >
+>>> The VF's that get dynamically created within the configure SR-IOV
+>>> call, on the Pseries Platform, wont be matched with a driver. - We
+>>> do not want it to match.
+>>> 
+>>> The Power Hypervisor will load the VFs. The VF's will get
+>>> assigned(by the user) via the HMC or Novalink in this environment
+>>> which will then trigger PHYP to load the VF device node to the
+>>> device tree.
+>> 
+>> I don't know what it means for the Hypervisor to "load the VFs."  Can
+>> you explain that in PCI-speak?
+>> 
+>> The things I know about are:
+>> 
+>>   - we set PCI_SRIOV_CTRL_VFE in the PF, which enables VFs
+>>   - now the VFs respond to config accesses
+>>   - the PCI core enumerates the VFs by reading their config space
+>>   - the PCI core builds pci_dev structs for the VFs
+>>   - the PCI core adds these pci_devs to the bus
+>>   - we try to bind drivers to the VFs
+>>   - the VF driver probe function may read VF config space and VF BARs
+>>   - the VF may be assigned to a guest VM
+>> 
+>> Where does "loading the VFs" fit in?  I don't know what HMC, Novalink,
+>> or PHYP are.  I don't *need* to know what they are, as long as you can
+>> explain what's happening in terms of the PCI concepts and generic 
+>> Linux VMs
+>> and device assignment.
+>> 
+>> Bjorn
 > 
-> Since the Aardvark does not implement a PCIe root bus, 
-
-What exactly do you mean by "does not implement a PCIe root bus"?  I
-assume there is still a hierarchy of PCI buses, and I assume the
-hierarchy has a top-most ("root") bus.
-
-Maybe there's no Root Port?  There are other systems that don't have
-Root Ports, and we've made changes to accommodate that, e.g.,
-
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=1b8a6079015f
-
-If we can make the generic code work for whatever the Aardvark
-topology is, that would be better than adding Aardvark-specific code
-here.
-
-> the Linux PCIe
-> subsystem will not align the MAX payload size between the host and the
-> device. This patch ensures that the host and device have the same MAX
-> payload size, fixing a number of problems with various PCIe devices.
+> The VFs will be hotplugged into the VM separately from the enable
+> SR-IOV, so the driver will load as part of the hotplug operation.
 > 
-> This is part of fixing bug
-> https://bugzilla.kernel.org/show_bug.cgi?id=196339, this commit was
-> reported as the user to be important to get a Intel 7260 mini-PCIe
-> WiFi card working.
-> 
-> Fixes: Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-> Signed-off-by: Victor Gu <xigu@marvell.com>
-> Reviewed-by: Evan Wang <xswang@marvell.com>
-> Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-> [Thomas: tweak commit log.]
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/pci/host/pci-aardvark.c | 60 ++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 59 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-> index af7a9c4a61a4..c8a97bad6c4c 100644
-> --- a/drivers/pci/host/pci-aardvark.c
-> +++ b/drivers/pci/host/pci-aardvark.c
-> @@ -30,8 +30,10 @@
->  #define PCIE_CORE_DEV_CTRL_STATS_REG				0xc8
->  #define     PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE	(0 << 4)
->  #define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT	5
-> +#define     PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ		0x2
->  #define     PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE		(0 << 11)
->  #define     PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT	12
-> +#define     PCIE_CORE_MPS_UNIT_BYTE				128
->  #define PCIE_CORE_LINK_CTRL_STAT_REG				0xd0
->  #define     PCIE_CORE_LINK_L0S_ENTRY				BIT(0)
->  #define     PCIE_CORE_LINK_TRAINING				BIT(5)
-> @@ -297,7 +299,8 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
->  
->  	/* Set PCIe Device Control and Status 1 PF0 register */
->  	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
-> -		(7 << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
-> +		(PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ <<
-> +		 PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT) |
->  		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE |
->  		PCIE_CORE_DEV_CTRL_STATS_MAX_RD_REQ_SIZE_SHIFT;
->  	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
-> @@ -879,6 +882,58 @@ static int advk_pcie_parse_request_of_pci_ranges(struct advk_pcie *pcie)
->  	return err;
->  }
->  
-> +static int advk_pcie_find_smpss(struct pci_dev *dev, void *data)
-> +{
-> +	u8 *smpss = data;
-> +
-> +	if (!dev)
-> +		return 0;
-> +
-> +	if (!pci_is_pcie(dev))
-> +		return 0;
-> +
-> +	if (*smpss > dev->pcie_mpss)
-> +		*smpss = dev->pcie_mpss;
-> +
-> +	return 0;
-> +}
-> +
-> +static int advk_pcie_bus_configure_mps(struct pci_dev *dev, void *data)
-> +{
-> +	int mps;
-> +
-> +	if (!dev)
-> +		return 0;
-> +
-> +	if (!pci_is_pcie(dev))
-> +		return 0;
-> +
-> +	mps = PCIE_CORE_MPS_UNIT_BYTE << *(u8 *)data;
-> +	pcie_set_mps(dev, mps);
-> +
-> +	return 0;
-> +}
-> +
-> +static void advk_pcie_configure_mps(struct pci_bus *bus, struct advk_pcie *pcie)
-> +{
-> +	u8 smpss = PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ;
-> +	u32 reg;
-> +
-> +	/* Find the minimal supported MAX payload size */
-> +	advk_pcie_find_smpss(bus->self, &smpss);
-> +	pci_walk_bus(bus, advk_pcie_find_smpss, &smpss);
-> +
-> +	/* Configure RC MAX payload size */
-> +	reg = advk_readl(pcie, PCIE_CORE_DEV_CTRL_STATS_REG);
-> +	reg &= ~PCI_EXP_DEVCTL_PAYLOAD;
-> +	reg |= smpss << PCIE_CORE_DEV_CTRL_STATS_MAX_PAYLOAD_SZ_SHIFT;
-> +	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
-> +
-> +	/* Configure device MAX payload size */
-> +	advk_pcie_bus_configure_mps(bus->self, &smpss);
-> +	pci_walk_bus(bus, advk_pcie_bus_configure_mps, &smpss);
-> +}
-> +
->  static int advk_pcie_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> @@ -950,6 +1005,9 @@ static int advk_pcie_probe(struct platform_device *pdev)
->  	list_for_each_entry(child, &bus->children, node)
->  		pcie_bus_configure_settings(child);
->  
-> +	/* Configure the MAX pay load size */
-> +	advk_pcie_configure_mps(bus, pcie);
-> +
->  	pci_bus_add_devices(bus);
->  	return 0;
->  }
-> -- 
-> 2.13.5
-> 
+> Steve
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+One more point of clarification: when the hotplug happens, the VF will 
+show up on a virtual PCI bus that is not directly correlated to the real 
+PCI bus that the PF is on.  On that virtual PCI bus, the driver will 
+match because it won't be set to -1.
+
+Steve
