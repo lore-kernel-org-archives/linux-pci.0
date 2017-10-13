@@ -1,205 +1,119 @@
-Return-Path: <SRS0=9KjW=BJ=gmail.com=jim2101024@kernel.org>
-Return-Path: <SRS0=9KjW=BJ=gmail.com=jim2101024@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Niklas Cassel'" <niklas.cassel@axis.com>,
+        "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>
+Cc: "'Niklas Cassel'" <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20171013160914.3220-1-niklas.cassel@axis.com> <20171013160914.3220-2-niklas.cassel@axis.com>
+In-Reply-To: <20171013160914.3220-2-niklas.cassel@axis.com>
+Subject: Re: [PATCH 01/10] PCI: dwc: use DMA-API for allocating MSI data
+Date: Fri, 13 Oct 2017 12:43:25 -0400
+Message-ID: <000001d34442$640e85c0$2c2b9140$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAC3K-4qy09zdRuCw+OO1XsBha4LagXDVe_yp9SOY-0ZpaiNKUQ@mail.gmail.com>
-References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
- <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
- <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com> <CAC3K-4qy09zdRuCw+OO1XsBha4LagXDVe_yp9SOY-0ZpaiNKUQ@mail.gmail.com>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Tue, 10 Oct 2017 12:18:58 -0400
-Message-ID: <CANCKTBtbGgyy-=gYA90WdJAzzTa8k9MS4=adhSsMk+DfiSk9dQ@mail.gmail.com>
-Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
-To: Jon Mason <jon.mason@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Ray Jui <ray.jui@broadcom.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>, Ray Jui <rjui@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+        charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-BTW, can someone point out to me what precise provision in the PCI
-spec says that 8/16/32 bit config space writes must be provided?
+On Friday, October 13, 2017 12:09 PM, Niklas Cassel wrote:
+> 
+> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+> to write to this location, the proper way to get the address to this this
+> location is really to use the DMA API, rather than virt_to_phys.
+> 
+> Using virt_to_phys might work on some systems, but by using the DMA API,
+> we know that it will work on all systems.
+> 
+> This is essentially the same thing as allocating a buffer in a driver,
+> to which the endpoint will write to. To do this, we use the DMA API.
 
-On Tue, Oct 10, 2017 at 10:59 AM, Jon Mason <jon.mason@broadcom.com> wrote:
-> On Tue, Oct 10, 2017 at 7:10 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Mon, Oct 09, 2017 at 10:33:01PM -0700, Ray Jui wrote:
->>> Hi Florian,
->>>
->>> This is from the following commit:
->>>
->>> commit fb26592301200dbbe4a9943fe188b57a46716900
->>> Author: Bjorn Helgaas <bhelgaas@google.com>
->>> Date:   Mon Oct 31 16:00:01 2016 -0500
->>>
->>>     PCI: Warn on possible RW1C corruption for sub-32 bit config writes
->>>
->>>     Hardware that supports only 32-bit config writes is not spec-compliant.
->>>     For example, if software performs a 16-bit write, we must do a 32-bit read,
->>>     merge in the 16 bits we intend to write, followed by a 32-bit write.  If
->>>     the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
->>>     to-clear) bits set, we just inadvertently cleared something we shouldn't
->>>     have.
->>>
->>>     Add a rate-limited warning when we do sub-32 bit config writes.  Remove
->>>     similar probe-time warnings from some of the affected host bridge drivers.
->>>
->>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>     Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
->>>     Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
->>>     Acked-by: Thierry Reding <treding@nvidia.com>
->>>
->>> This warning message will show up on every root complex that can only
->>> support 32-bit config register write (instead of 8-bit, 16-bit writes)
->>> and iProc based host controller happens to be one of them.
->>>
->>> This limitation violates the PCIe spec as the 32-bit write may clear
->>> RW1C bits of a config register. But I believe those registers are
->>> usually used in AER which we do not currently support in the iProc
->>> based hos controllers.
->>
->> This warning is ratelimited, but maybe even that is overkill.  It
->> looks like we currently warn on every config write of less than 32
->> bits.  How many of those do you see?  Once per boot might be enough,
->> or maybe once per device (so we get a hint when loading a new driver).
->
-> It's fairly trivial to change the warning in question to
-> dev_warn_once().  If this is acceptable, I can crank it out.
->
-> Thanks,
-> Jon
->
->>> On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
->>> > Hi,
->>> >
->>> > With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
->>> > warnings using pcie_iproc; is this something to be worried about?
->>> >
->>> > [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
->>> >
->>> >
->>> >
->>> > [    2.632358] pci_bus 0000:00: root bus resource [mem
->>> > 0x08000000-0x0fffffff]
->>> >
->>> >
->>> > [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
->>> > will use [bus 00-ff]
->>> >
->>> >
->>> > [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0x4 may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0x4 may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0x4c may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0x3e may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0x4 may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
->>> > offset 0xc may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.705531] PCI: bus0: Fast back to back transfers disabled
->>> >
->>> >
->>> >
->>> > [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
->>> > 00-00]), reconfiguring
->>> >
->>> >
->>> > [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0x3e may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0xc8 may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0x3e may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
->>> > offset 0x3e may corrupt adjacent RW1C bits
->>> >
->>> >
->>> > [    2.758262] pci 0000:01:00.0: enabling Extended Tags
->>> >
->>> >
->>> >
->>> > [    2.763577] PCI: bus1: Fast back to back transfers disabled
->>> >
->>> >
->>> >
->>> > [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
->>> > 0x08000000-0x080fffff]
->>> >
->>> >
->>> > [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
->>> > 0x08000000-0x08003fff 64bit]
->>> >
->>> >
->>> > [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
->>> >
->>> >
->>> >
->>> > [    2.788293] pci 0000:00:00.0:   bridge window [mem
->>> > 0x08000000-0x080fffff]
->>> >
->>> >
->>> > [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
->>> >
->>> >
->>> >
->>> > [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
->>> >
->>> >
->>> >
->>> > [    2.922349] pci_bus 0001:00: root bus resource [mem
->>> > 0x40000000-0x47ffffff]
->>> >
->>> >
->>> > [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
->>> > will use [bus 00-ff]
->>> >
->>> >
->>> > [    2.937482] PCI: bus0: Fast back to back transfers disabled
->>> >
->>> >
->>> >
->>> > [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
->>> > 00-00]), reconfiguring
->>> >
->>> >
->>> > [    2.951713] PCI: bus1: Fast back to back transfers disabled
->>> >
->>> >
->>> >
->>> > [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
->>> > 0x40000000-0x400fffff]
->>> >
->>> >
->>> > [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
->>> > 0x40000000-0x40007fff 64bit]
->>> >
->>> >
->>> > [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
->>> >
->>> >
->>> >
->>> > [    2.976434] pci 0001:00:00.0:   bridge window [mem
->>> > 0x40000000-0x400fffff]
->>> > --
->>> > Florian
+I have no objection. However, did you test your patch?
+In my opinion, your company does not handle DWC PCIe controller, right?
+If so, you need to get tested-by from other people.
+
+Best regards,
+Jingoo Han
+
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/dwc/pcie-designware-host.c | 23 ++++++++++++++++-------
+>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
+>  2 files changed, 18 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c
+> b/drivers/pci/dwc/pcie-designware-host.c
+> index 81e2157a7cfb..f6d152ea2a03 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -83,16 +83,25 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+> 
+>  void dw_pcie_msi_init(struct pcie_port *pp)
+>  {
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct device *dev = pci->dev;
+> +	struct page *page;
+>  	u64 msi_target;
+> 
+> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+> -	msi_target = virt_to_phys((void *)pp->msi_data);
+> +	page = alloc_page(GFP_KERNEL | GFP_DMA32);
+> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE,
+> DMA_FROM_DEVICE);
+> +	if (dma_mapping_error(dev, pp->msi_data)) {
+> +		dev_err(dev, "failed to map msi data\n");
+> +		__free_page(page);
+> +		return;
+> +	}
+> +	msi_target = (u64)pp->msi_data;
+> 
+>  	/* program the msi_data */
+>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> -			    (u32)(msi_target & 0xffffffff));
+> +			    lower_32_bits(msi_target));
+>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+> -			    (u32)(msi_target >> 32 & 0xffffffff));
+> +			    upper_32_bits(msi_target));
+>  }
+> 
+>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+> @@ -187,10 +196,10 @@ static void dw_msi_setup_msg(struct pcie_port *pp,
+> unsigned int irq, u32 pos)
+>  	if (pp->ops->get_msi_addr)
+>  		msi_target = pp->ops->get_msi_addr(pp);
+>  	else
+> -		msi_target = virt_to_phys((void *)pp->msi_data);
+> +		msi_target = (u64)pp->msi_data;
+> 
+> -	msg.address_lo = (u32)(msi_target & 0xffffffff);
+> -	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+> +	msg.address_lo = lower_32_bits(msi_target);
+> +	msg.address_hi = upper_32_bits(msi_target);
+> 
+>  	if (pp->ops->get_msi_data)
+>  		msg.data = pp->ops->get_msi_data(pp, pos);
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-
+> designware.h
+> index e5d9d77b778e..547352a317f8 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -17,6 +17,7 @@
+>  #include <linux/irq.h>
+>  #include <linux/msi.h>
+>  #include <linux/pci.h>
+> +#include <linux/dma-mapping.h>
+> 
+>  #include <linux/pci-epc.h>
+>  #include <linux/pci-epf.h>
+> @@ -168,7 +169,7 @@ struct pcie_port {
+>  	const struct dw_pcie_host_ops *ops;
+>  	int			msi_irq;
+>  	struct irq_domain	*irq_domain;
+> -	unsigned long		msi_data;
+> +	dma_addr_t		msi_data;
+>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>  };
+> 
+> --
+> 2.11.0
