@@ -1,68 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.135]:52027 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751068AbdJ0H0g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 03:26:36 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v10 1/7] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-Date: Fri, 27 Oct 2017 15:26:06 +0800
-Message-Id: <20171027072612.26565-2-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
-References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:50797 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752333AbdJMQiL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Oct 2017 12:38:11 -0400
+Date: Fri, 13 Oct 2017 18:38:08 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, jonathanh@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        mperttunen@nvidia.com
+Subject: Re: [PATCH V2 2/4] PCI: tegra: Add Tegra186 PCIe support
+Message-ID: <20171013163808.GB8761@ulmo>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+ <1506513517-25870-3-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="kXdP64Ggrk/fb43R"
+In-Reply-To: <1506513517-25870-3-git-send-email-mmaddireddy@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We are going to handle PCIe WAKE# pin for PCI bus bridges and PCI
-devices in the pci core, so add definitions of the optional PCIe
-WAKE# pin for PCI bus bridges and PCI devices.
 
-Also add an definition of the optional PCI interrupt pin for PCI
-devices to distinguish it from the PCIe WAKE# pin.
+--kXdP64Ggrk/fb43R
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+On Wed, Sep 27, 2017 at 05:28:35PM +0530, Manikanta Maddireddy wrote:
+> UPHY programming is performed by BPMP, PHY enable calls are
+> not required for Tegra186 PCIe. Power partition ungate is
+> done by BPMP powergate driver.
+>=20
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+> Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
+> ---
+> V2: Add soc->program_uphy check for phy_exit call
+>  drivers/pci/host/pci-tegra.c | 132 +++++++++++++++++++++++++++++++++++--=
+------
+>  1 file changed, 108 insertions(+), 24 deletions(-)
 
-Changes in v10: None
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
+This works, excellent!
 
-Changes in v8:
-Add optional "pci", and rewrite commit message.
+Tested-by: Thierry Reding <treding@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
 
-Changes in v7: None
-Changes in v6: None
-Changes in v5:
-Move to pci.txt
+--kXdP64Ggrk/fb43R
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Changes in v3: None
-Changes in v2: None
+-----BEGIN PGP SIGNATURE-----
 
- Documentation/devicetree/bindings/pci/pci.txt | 8 ++++++++
- 1 file changed, 8 insertions(+)
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlng6/AACgkQ3SOs138+
+s6G/9Q/+Mqtt6TeRw54xtAsCf7NlK5K/Tj+pxVpoMxBhF2jdiTdT0aT5cYqQxd42
+OgjDFgJ6RFjBl6sCDMNl9BAKqxI7g9iTpoIa88dmPNt/Wd/cLEd0gpyllysEjeF7
+tybyVNL6Ij/OBep8sCz5WJZjRhTQqjYKzyoJqEV7F51p3cjC0MQEtNGw76zzymse
+CA1g+J4fxNh6pUgGZ8qB5x1DOL9Om8gyC/p2ZcDSNPTWGqMA//iSXxO7BHZ8jA0s
+9NKaWRmgEqhcPUiKzbslVa44dAFXDixpNgIEGW2R0noTpuKzWEeRGkqdgyoOJEfq
+mThzOlmdwxJeo7YiSEI3upcpzlOI8D0JIIBuhsT6NQu5ig1RC1ScpENPpGq8A1Ts
+2sCTnBZnWvE3p5wMav1Wb9UZbyxG2okdk6wWQJFc8cUtkKCZddJfCp0MScbOS9js
+wiCNB3M0pJtsQdnb1fjlJA+qFgolC3QNRbqETCgBID64nNsBUU3NdMJTg90oauVd
+MgGFS7oAh0gsYjloQUjWTfl9gJh7b0D/kcJZQyMRPx9D9FkhAyhWxXdmUYylJqJV
+ZxvgPlNWnJo6tDpgGGwy92QeXvzZR+UXsBijsA2dCwsGJ+S94UB0z93VIk4VkAfR
+aYKxtNCF60mD92s7PTNmROUXKJhXSdAcrUxhcKmJOx1zXzQ8QAg=
+=Rqcm
+-----END PGP SIGNATURE-----
 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index c77981c5dd18..d4406d4e15ad 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,3 +24,11 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
-+- interrupts: Interrupt specifier for each name in interrupt-names.
-+- interrupt-names: May contains "wakeup" for PCIe WAKE# interrupt.
-+
-+PCI devices have standardized Device Tree bindings:
-+
-+- interrupts: Interrupt specifier for each name in interrupt-names.
-+- interrupt-names: May contains "wakeup" for PCIe WAKE# interrupt and "pci" for
-+  PCI interrupt.
--- 
-2.11.0
+--kXdP64Ggrk/fb43R--
