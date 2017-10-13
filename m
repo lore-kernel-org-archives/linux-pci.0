@@ -1,84 +1,41 @@
-Return-Path: <SRS0=fxcv=BE=free-electrons.com=thomas.petazzoni@kernel.org>
-Return-Path: <SRS0=fxcv=BE=free-electrons.com=thomas.petazzoni@kernel.org>
-Date: Thu, 5 Oct 2017 21:35:12 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Jason
- Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian
- Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement
- <gregory.clement@free-electrons.com>, Nadav Haklai <nadavh@marvell.com>,
- Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>,
- linux-arm-kernel@lists.infradead.org, Antoine Tenart
- <antoine.tenart@free-electrons.com>, =?UTF-8?B?TWlxdcOobA==?= Raynal
- <miquel.raynal@free-electrons.com>, Lorenzo Pieralisi
- <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v2 0/7] PCI: aardvark: improve compatibility with PCI
- devices
-Message-ID: <20171005213512.5cdcd879@windsurf.lan>
-In-Reply-To: <20171005181615.GU25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
-	<20171005175310.3c2dde95@windsurf.lan>
-	<20171005181615.GU25517@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:42671 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751441AbdJMQyz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Oct 2017 12:54:55 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-pcmcia@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] pcmcia: convert to use for_each_pci_bridge() helper
+Date: Fri, 13 Oct 2017 19:53:52 +0300
+Message-Id: <20171013165352.25550-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+...which makes code slightly cleaner.
 
-On Thu, 5 Oct 2017 13:16:17 -0500, Bjorn Helgaas wrote:
+Requires: d43f59ce6c50 ("PCI: Add for_each_pci_bridge() helper")
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/pcmcia/cardbus.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> The general rule is that after the merge window, I merge fixes to
-> things we put in during the merge window, as well as important
-> regression fixes.  Most bug fixes will be queued for the next merge
-> window.  I'll need some guidance on classifying these.
-> 
-> I think the map_irq/swizzle_irq patch should definitely be in v4.14.
-> (It looks a lot like these:
-> 
->   1ee4d93d5037 PCI: xilinx-nwl: Move to struct pci_host_bridge IRQ mapping functions
->   5a3dc3c1f694 PCI: rockchip: Move to struct pci_host_bridge IRQ mapping functions
->   c62e98bdaa70 PCI: xgene: Move to struct pci_host_bridge IRQ mapping functions
->   6ab380957838 PCI: altera: Drop pci_fixup_irqs()
->   cf60374de8f6 PCI: versatile: Drop pci_fixup_irqs()
->   6982a068aa5f PCI: generic: Drop pci_fixup_irqs()
->   f7c2e69b65fe PCI: faraday: Drop pci_fixup_irqs()
->   60eca198b1ea PCI: designware: Drop pci_fixup_irqs()
->   64bcd00a7ef5 PCI: iproc: Drop pci_fixup_irqs()
->   29db991902ec PCI: rcar: Drop pci_fixup_irqs()
->   cc2eaaef63df PCI: xilinx: Drop pci_fixup_irqs()
->   dd5fcce2a7f9 PCI: tegra: Drop pci_fixup_irqs()
-> 
-> and I'm obsessive enough to use one of those subject lines to tie this
-> patch together with those.)
-
-Fine, I'll adjust the commit title to be "PCI: aardvark: Move to struct
-pci_host_bridge IRQ mapping functions". I also find it nice when commit
-titles are very consistent, so I can only agree with your obsessiveness
-on this!
-
-> Most of the rest look like they've been there since the driver was
-> first merged, so they would *probably* go in the v4.15 queue.
-
-I agree that the other patches do not fix regressions but bugs. So it's
-really up to you as to what you consider a "fix". The Aardvark driver
-in its current form leaves a lot of PCIe devices unusable, and we get
-bug reports about this. But admittedly, such PCIe devices have never
-worked with Aardvark.
-
-> Sorry for the delay; mostly just lack of time.  I used to work pretty
-> strictly first-in, first-out, but the native host bridge drivers
-> consume a disproportionate share of my time compared with the generic
-> code that benefits everybody, so I'm trying to figure out how to
-> prioritize generic changes.  Obviously I need a solution that gives
-> *some* time to the native drivers.
-
-No problem. I do understand that reviewing all of those native drivers
-takes a significant amount of time.
-
-Best regards,
-
-Thomas
+diff --git a/drivers/pcmcia/cardbus.c b/drivers/pcmcia/cardbus.c
+index 4fe4cc4ae19a..5c0170597037 100644
+--- a/drivers/pcmcia/cardbus.c
++++ b/drivers/pcmcia/cardbus.c
+@@ -77,9 +77,8 @@ int __ref cb_alloc(struct pcmcia_socket *s)
+ 
+ 	max = bus->busn_res.start;
+ 	for (pass = 0; pass < 2; pass++)
+-		list_for_each_entry(dev, &bus->devices, bus_list)
+-			if (pci_is_bridge(dev))
+-				max = pci_scan_bridge(bus, dev, max, pass);
++		for_each_pci_bridge(dev, bus)
++			max = pci_scan_bridge(bus, dev, max, pass);
+ 
+ 	/*
+ 	 * Size all resources below the CardBus controller.
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+2.14.2
