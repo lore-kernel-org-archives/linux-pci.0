@@ -1,140 +1,134 @@
-Return-Path: <SRS0=EL+E=BC=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=EL+E=BC=arm.com=robin.murphy@kernel.org>
-Subject: Re: [PATCH v2] ACPI/IORT: Fix PCI ACS enablement
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-acpi@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
- Sudeep Holla <sudeep.holla@arm.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Zhou Wang <wangzhou1@hisilicon.com>
-References: <1506965324-5818-1-git-send-email-lorenzo.pieralisi@arm.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <121eb6d7-1ac7-ecfa-5ec4-75e5446f5e85@arm.com>
-Date: Tue, 3 Oct 2017 14:47:28 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 12 Oct 2017 18:56:22 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v5 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20171013015620.GA94568@google.com>
+References: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
+ <20170911151029.25185-2-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <1506965324-5818-1-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170911151029.25185-2-jeffy.chen@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/10/17 18:28, Lorenzo Pieralisi wrote:
-> commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
-> workarounds") removed kernel code that was allowing to initialize
-> and probe the SMMU devices early (ie earlier than PCI devices, through
-> linker script callback entries) in the boot process because it was not
-> needed any longer in that the SMMU devices/drivers now support deferred
-> probing.
+Hi,
+
+On Mon, Sep 11, 2017 at 11:10:27PM +0800, Jeffy Chen wrote:
+> Add support for PCIE_WAKE pin in rockchip pcie driver.
 > 
-> Since the SMMUs probe routines are also in charge of requesting global
-> PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
-> up early-probing workarounds") also postponed PCI ACS enablement to
-> SMMUs devices probe time, which is too late given that PCI devices needs
-> to detect if PCI ACS is enabled to init the respective capability
-> through the following call path:
-> 
-> pci_device_add()
->  -> pci_init_capabilities()
->   -> pci_enable_acs()
-> 
-> Add code in the ACPI IORT SMMU platform devices initialization path
-> (that is called before ACPI PCI enumeration) to detect if there
-> exists firmware mappings to map root complexes ids to SMMU ids
-> and if so enable ACS for the system.
-
-As a self-contained fix I think this looks reasonable and sufficiently
-unintrusive if it wants backporting:
-
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-
-More generally, though, I do wonder why this pci_request_acs() mechanism
-is like it is - Alex, Bjorn, is there any particular reason that IOMMU
-drivers couldn't call pci_enable_acs() directly from their .add_device
-callback? In the cases we care about, we can still rely on the IOMMU
-probing before any bridge or endpoint drivers, so AFAICS at that point
-nothing should have changed much since pci_device_add() time.
-
-Robin.
-
-> Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
-> Signed-workarounds")
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Sudeep Holla <sudeep.holla@arm.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Zhou Wang <wangzhou1@hisilicon.com>
-> Cc: Alex Williamson <alex.williamson@redhat.com>
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 > ---
-> v1 -> v2:
 > 
-> - Reworked ACS enablement logic and based on root complex to SMMU
->   ids firmware mapping detection
-> - Rebased against v4.14-rc3
+> Changes in v5:
+> Rebase
 > 
-> v1: https://marc.info/?l=linux-acpi&m=150584059818925&w=2
+> Changes in v3:
+> Fix error handling
 > 
->  drivers/acpi/arm64/iort.c | 35 +++++++++++++++++++++++++++++++++++
->  1 file changed, 35 insertions(+)
+> Changes in v2:
+> Use dev_pm_set_dedicated_wake_irq
+>         -- Suggested by Brian Norris <briannorris@chromium.com>
 > 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index 9565d57..de56394 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -1178,12 +1178,44 @@ static int __init iort_add_smmu_platform_device(struct acpi_iort_node *node)
->  	return ret;
->  }
+>  drivers/pci/host/pcie-rockchip.c | 19 +++++++++++++++++--
+>  1 file changed, 17 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 9051c6c8fea4..a8b7272597a7 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -37,6 +37,7 @@
+>  #include <linux/pci_ids.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/pm_wakeirq.h>
+>  #include <linux/reset.h>
+>  #include <linux/regmap.h>
 >  
-> +static bool __init iort_enable_acs(struct acpi_iort_node *iort_node)
-> +{
-> +	if (iort_node->type == ACPI_IORT_NODE_PCI_ROOT_COMPLEX) {
-> +		struct acpi_iort_node *parent;
-> +		struct acpi_iort_id_mapping *map;
-> +		int i;
-> +
-> +		map = ACPI_ADD_PTR(struct acpi_iort_id_mapping, iort_node,
-> +				   iort_node->mapping_offset);
-> +
-> +		for (i = 0; i < iort_node->mapping_count; i++, map++) {
-> +			if (!map->output_reference)
-> +				continue;
-> +
-> +			parent = ACPI_ADD_PTR(struct acpi_iort_node,
-> +					iort_table,  map->output_reference);
-> +			/*
-> +			 * If we detect a RC->SMMU mapping, make sure
-> +			 * we enable ACS on the system.
-> +			 */
-> +			if ((parent->type == ACPI_IORT_NODE_SMMU) ||
-> +				(parent->type == ACPI_IORT_NODE_SMMU_V3)) {
-> +				pci_request_acs();
-> +				return true;
-> +			}
-> +		}
+> @@ -995,6 +996,15 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+>  		return err;
+>  	}
+>  
+> +	/* Must init wakeup before setting dedicated wakeup irq. */
+> +	device_init_wakeup(dev, true);
+
+Am I crazy, or should this go inside the 'irq >= 0' conditional?
+Otherwise, for the whole series:
+
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Brian Norris <briannorris@chromium.org>
+
+Bjorn, were you planning to pick this up?
+
+Also, the DT binding change conflicts (just simple context) with the
+PERST# series I just sent out. Would be good if we could land one or
+both :)
+
+Thanks,
+Brian
+
+> +	irq = platform_get_irq_byname(pdev, "wakeup");
+> +	if (irq >= 0) {
+> +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
+> +		if (err)
+> +			dev_err(dev, "failed to setup PCIe wakeup IRQ\n");
 > +	}
 > +
-> +	return false;
-> +}
-> +
->  static void __init iort_init_platform_devices(void)
->  {
->  	struct acpi_iort_node *iort_node, *iort_end;
->  	struct acpi_table_iort *iort;
->  	struct fwnode_handle *fwnode;
->  	int i, ret;
-> +	bool acs_enabled = false;
+>  	return 0;
+>  }
 >  
->  	/*
->  	 * iort_table and iort both point to the start of IORT table, but
-> @@ -1203,6 +1235,9 @@ static void __init iort_init_platform_devices(void)
->  			return;
->  		}
+> @@ -1542,11 +1552,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
 >  
-> +		if (!acs_enabled)
-> +			acs_enabled = iort_enable_acs(iort_node);
-> +
->  		if ((iort_node->type == ACPI_IORT_NODE_SMMU) ||
->  			(iort_node->type == ACPI_IORT_NODE_SMMU_V3)) {
+>  	err = rockchip_pcie_parse_dt(rockchip);
+>  	if (err)
+> -		return err;
+> +		goto err_disable_wake;
 >  
+>  	err = rockchip_pcie_enable_clocks(rockchip);
+>  	if (err)
+> -		return err;
+> +		goto err_disable_wake;
+>  
+>  	err = rockchip_pcie_set_vpcie(rockchip);
+>  	if (err) {
+> @@ -1656,6 +1666,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  		regulator_disable(rockchip->vpcie0v9);
+>  err_set_vpcie:
+>  	rockchip_pcie_disable_clocks(rockchip);
+> +err_disable_wake:
+> +	dev_pm_clear_wake_irq(dev);
+> +	device_init_wakeup(dev, false);
+>  	return err;
+>  }
+>  
+> @@ -1682,6 +1695,8 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+>  	if (!IS_ERR(rockchip->vpcie0v9))
+>  		regulator_disable(rockchip->vpcie0v9);
+>  
+> +	dev_pm_clear_wake_irq(dev);
+> +	device_init_wakeup(dev, false);
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.11.0
 > 
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
