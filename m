@@ -1,71 +1,80 @@
-Return-Path: <SRS0=l13C=BI=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=l13C=BI=linaro.org=ard.biesheuvel@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20171009164607.GD30085@arm.com>
-References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
- <20171006163919.14898-2-ard.biesheuvel@linaro.org> <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
- <20171009164607.GD30085@arm.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 9 Oct 2017 19:50:04 +0100
-Message-ID: <CAKv+Gu8_h=92bLpybsJytSb7p9_333iUTtXtSkDu19EJy0ws=A@mail.gmail.com>
-Subject: Re: [PATCH v4 1/2] PCI: pci-host-generic: add support for Synopsys
- DesignWare RC in ECAM mode
-To: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	Leif Lindholm <leif.lindholm@linaro.org>, Graeme Gregory <graeme.gregory@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 8/8] PCI: pciehp: Check that the device is really present before touching it
+Date: Fri, 13 Oct 2017 21:35:48 +0300
+Message-Id: <20171013183548.68283-9-mika.westerberg@linux.intel.com>
+In-Reply-To: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
+References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9 October 2017 at 17:46, Will Deacon <will.deacon@arm.com> wrote:
-> On Fri, Oct 06, 2017 at 06:21:59PM -0500, Bjorn Helgaas wrote:
->> On Fri, Oct 06, 2017 at 05:39:18PM +0100, Ard Biesheuvel wrote:
->> > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
->> > index 7d709a7e0aa8..01e81a30e303 100644
->> > --- a/drivers/pci/host/pci-host-generic.c
->> > +++ b/drivers/pci/host/pci-host-generic.c
->> > @@ -35,6 +35,43 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
->> >     }
->> >  };
->> >
->> > +static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
->> > +                              int size, u32 *val)
->> > +{
->> > +   struct pci_config_window *cfg = bus->sysdata;
->> > +
->> > +   /*
->> > +    * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
->> > +    * type 0 config TLPs sent to devices 1 and up on its downstream port,
->> > +    * resulting in devices appearing multiple times on bus 0 unless we
->> > +    * filter out those accesses here.
->> > +    */
->> > +   if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
->> > +           return PCIBIOS_DEVICE_NOT_FOUND;
->>
->> I think we should return 0xffffffff data here, as we do in other
->> similar accessors (dw_pcie_rd_conf(), altera_pcie_cfg_read(),
->> rockchip_pcie_rd_conf()).
->>
->> Actually, xilinx-nwl has a nice trick: it implements
->> nwl_pcie_map_bus(), which returns NULL for invalid devices.  Then it
->> can use the generic accessors, and pci_generic_config_read() already
->> fills in ~0 for this case.
->>
->> What do you think of the following?  I put it on my pci/host-generic
->> branch for now (pending your response and an ack from Will).
->
-> I'd probably just inline the device check in pci_dw_ecam_map_bus directly,
-> but either way:
->
-> Acked-by: Will Deacon <will.deacon@arm.com>
->
+During surprise hot-unplug the device is not there anymore. When that
+happens we read 0xffffffff from the registers and pciehp_unconfigure_device()
+inadvertently thinks the device is a display device because bridge
+control register returns 0xff refusing to remove it:
 
-Thanks
+  pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
+  pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
+  pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
 
-> I'm assuming this is so small that there's no point in having a Kconfig
-> option for these guys that depends on the generic host driver?
->
+This causes the hotplug functionality to leave the hierarcy untouched
+preventing further hotplug operations.
 
-I can make the compatible strings shorter if you like?
+To fix this verify presence of a device by calling pci_device_is_present()
+for it before we touch it any further.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp_pci.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 2a1ca020cf5a..fb4333168e23 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -100,8 +100,14 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 	 */
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
++		bool present;
++
+ 		pci_dev_get(dev);
+-		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
++
++		/* Check if the device is really there anymore */
++		present = presence ? pci_device_is_present(dev) : false;
++
++		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && present) {
+ 			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+ 			if (bctl & PCI_BRIDGE_CTL_VGA) {
+ 				ctrl_err(ctrl,
+@@ -112,7 +118,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 				break;
+ 			}
+ 		}
+-		if (!presence) {
++		if (!present) {
+ 			pci_dev_set_disconnected(dev, NULL);
+ 			if (pci_has_subordinate(dev))
+ 				pci_walk_bus(dev->subordinate,
+@@ -123,7 +129,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 		 * Ensure that no new Requests will be generated from
+ 		 * the device.
+ 		 */
+-		if (presence) {
++		if (present) {
+ 			pci_read_config_word(dev, PCI_COMMAND, &command);
+ 			command &= ~(PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
+ 			command |= PCI_COMMAND_INTX_DISABLE;
+-- 
+2.14.2
