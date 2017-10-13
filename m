@@ -1,109 +1,142 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:44362 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753427AbdJMDrc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Oct 2017 23:47:32 -0400
+Subject: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default device
+ selection
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Daniel Vetter <daniel.vetter@intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        linux-pci@vger.kernel.org,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        dri-devel@lists.freedesktop.org,
+        Xinliang Liu <z.liuxinliang@hisilicon.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Rongrong Zou <zourongrong@gmail.com>,
+        Dave Airlie <airlied@redhat.com>,
+        linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org,
+        Daniel Axtens <dja@axtens.net>
+Date: Thu, 12 Oct 2017 22:47:29 -0500
+Message-ID: <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20171017133807.GB948@red-moon>
-References: <1506448161-30961-1-git-send-email-kdinh@apm.com>
- <CAAsHzqv-oQVNm-pNP4Q1KmiSmjaiFx1S4j8uCnij53Te3h8KKg@mail.gmail.com>
- <20171017133807.GB948@red-moon>
-From: Khuong Dinh <kdinh@apm.com>
-Date: Tue, 17 Oct 2017 22:45:35 -0700
-Message-ID: <CAAsHzqsxMy8On5ThggTwYohqMCLEJTbA=b1LgUPiuKu9C+eHeQ@mail.gmail.com>
-Subject: Re: [PATCH v4 pci 0/2] PCI/MSI: pci-xgene-msi: Enable MSI support in
- ACPI boot for X-Gene v1
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci@vger.kernel.org, msalter@redhat.com, patches <patches@apm.com>,
- linux-kernel@vger.kernel.org, jcm@redhat.com,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+The default VGA device is normally set in vga_arbiter_add_pci_device() when
+we call it for the first enabled device that can be accessed with the
+legacy VGA resources ([mem 0xa0000-0xbffff], etc.)
 
-On Tue, Oct 17, 2017 at 6:38 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> Hi Khuong,
->
-> On Mon, Oct 16, 2017 at 02:19:50PM -0700, Khuong Dinh wrote:
->> Hi Lorenzo,
->>   Do you have any comments for this patch?
->
-> I'd have some comments but given that there are related issues with ACPI
-> probe ordering that Marc is trying to solve on his side - I will work
-> with him to see if we can accommodate changes that can solve this issue
-> too.
->
-> Again - I recognize it is a complex problem (that is not even
-> contemplated by the current ACPI specs), we have to try to make
-> the solution as generic as we can to prevent reinventing the wheel
-> anytime a sligthly different issue (related to ACPI probe ordering)
-> comes up.
->
-> Leave it to me (us) and I will get back to you on this.
+That default device can be overridden by an EFI device that owns the boot
+framebuffer.  As a fallback, we can also select a VGA device that can't be
+accessed via legacy VGA resources, or a VGA device that isn't even enabled.
 
-Thanks for helping to take care of the generic ACPI probe ordering issue.
-Given that the patch 'PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
-boot for X-Gene v1" adds only the ACPI ID, can you pull in this patch
-independently from the ACPI probe ordering issue?
+Factor out this EFI and fallback selection from vga_arb_device_init() into
+a separate vga_arb_select_default_device() function.  This doesn't change
+any behavior, but it untangles the "bridge control possible" checking and
+messages from the default device selection.
 
-Best regards,
-Khuong Dinh
+Tested-by: Zhou Wang <wangzhou1@hisilicon.com>  # D05 Hisi Hip07, Hip08
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/gpu/vga/vgaarb.c |   57 ++++++++++++++++++++++++++++------------------
+ 1 file changed, 35 insertions(+), 22 deletions(-)
 
-> Thanks,
-> Lorenzo
->
->> Best regards,
->> Khuong Dinh
->>
->> On Tue, Sep 26, 2017 at 10:49 AM, Khuong Dinh <kdinh@apm.com> wrote:
->> > This patch set enables ACPI MSI support for X-Gene PCIe v1 hardware
->> > and provides the proper MSI driver initialization ordering.
->> >
->> > Signed-off-by: Khuong Dinh <kdinh@apm.com>
->> > ---
->> > v4:
->> >  - Remove Marc Zyngier ACK in v2
->> >  - Use acpi_bus_scan on MSI controller handle when MSI device is found
->> >  - Register ACPI MSI driver when MSI device is found instead of using
->> >  subsys_initcall
->> >  - Split ACPI MSI driver support into two patches - one to enable MSI
->> > support for X-Gene PCIe v1 hardware, one to enforce MSI driver loaded
->> > before PCIe controller driver in ACPI boot mode
->> > v3:
->> >  - Input X-Gene MSI base address for irq_domain_alloc_fwnode
->> >  - Add a hook to enforce X-Gene MSI be probed prior acpi_bus_scan happens
->> > v2:
->> >  - Verify with BIOS version 3.06.25 and 3.07.09
->> > v1:
->> >  - Initial version
->> > ---
->> >
->> > Khuong Dinh (2):
->> >   PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot for X-Gene v1
->> >   PCI/MSI: Enforce MSI driver loaded before PCIe in ACPI boot
->> >
->> >  drivers/acpi/Makefile            |    2 +-
->> >  drivers/acpi/acpi_msi.c          |   86 ++++++++++++++++++++++++++++++++++++++
->> >  drivers/acpi/acpi_platform.c     |    3 +-
->> >  drivers/acpi/internal.h          |    1 +
->> >  drivers/acpi/scan.c              |    1 +
->> >  drivers/pci/host/pci-xgene-msi.c |   60 ++++++++++++++++++++++++--
->> >  include/linux/acpi_msi.h         |   37 ++++++++++++++++
->> >  7 files changed, 183 insertions(+), 7 deletions(-)
->> >  create mode 100644 drivers/acpi/acpi_msi.c
->> >  create mode 100644 include/linux/acpi_msi.h
->> >
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index 8035e38d5110..d35d6d271f3f 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -1402,29 +1402,14 @@ static struct miscdevice vga_arb_device = {
+ 	MISC_DYNAMIC_MINOR, "vga_arbiter", &vga_arb_device_fops
+ };
+ 
+-static int __init vga_arb_device_init(void)
++static void __init vga_arb_select_default_device(void)
+ {
+-	int rc;
+ 	struct pci_dev *pdev;
+ 	struct vga_device *vgadev;
+ 
+-	rc = misc_register(&vga_arb_device);
+-	if (rc < 0)
+-		pr_err("error %d registering device\n", rc);
+-
+-	bus_register_notifier(&pci_bus_type, &pci_notifier);
+-
+-	/* We add all pci devices satisfying vga class in the arbiter by
+-	 * default */
+-	pdev = NULL;
+-	while ((pdev =
+-		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-			       PCI_ANY_ID, pdev)) != NULL)
+-		vga_arbiter_add_pci_device(pdev);
+-
++#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+ 	list_for_each_entry(vgadev, &vga_list, list) {
+ 		struct device *dev = &vgadev->pdev->dev;
+-#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+ 		/*
+ 		 * Override vga_arbiter_add_pci_device()'s I/O based detection
+ 		 * as it may take the wrong device (e.g. on Apple system under
+@@ -1461,12 +1446,8 @@ static int __init vga_arb_device_init(void)
+ 				vgaarb_info(dev, "overriding boot device\n");
+ 			vga_set_default_device(vgadev->pdev);
+ 		}
+-#endif
+-		if (vgadev->bridge_has_one_vga)
+-			vgaarb_info(dev, "bridge control possible\n");
+-		else
+-			vgaarb_info(dev, "no bridge control possible\n");
+ 	}
++#endif
+ 
+ 	if (!vga_default_device()) {
+ 		list_for_each_entry(vgadev, &vga_list, list) {
+@@ -1492,6 +1473,38 @@ static int __init vga_arb_device_init(void)
+ 			vga_set_default_device(vgadev->pdev);
+ 		}
+ 	}
++}
++
++static int __init vga_arb_device_init(void)
++{
++	int rc;
++	struct pci_dev *pdev;
++	struct vga_device *vgadev;
++
++	rc = misc_register(&vga_arb_device);
++	if (rc < 0)
++		pr_err("error %d registering device\n", rc);
++
++	bus_register_notifier(&pci_bus_type, &pci_notifier);
++
++	/* We add all PCI devices satisfying VGA class in the arbiter by
++	 * default */
++	pdev = NULL;
++	while ((pdev =
++		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
++			       PCI_ANY_ID, pdev)) != NULL)
++		vga_arbiter_add_pci_device(pdev);
++
++	list_for_each_entry(vgadev, &vga_list, list) {
++		struct device *dev = &vgadev->pdev->dev;
++
++		if (vgadev->bridge_has_one_vga)
++			vgaarb_info(dev, "bridge control possible\n");
++		else
++			vgaarb_info(dev, "no bridge control possible\n");
++	}
++
++	vga_arb_select_default_device();
+ 
+ 	pr_info("loaded\n");
+ 	return rc;
