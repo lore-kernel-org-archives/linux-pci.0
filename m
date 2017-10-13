@@ -1,46 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0102.outbound.protection.outlook.com ([104.47.41.102]:43088
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751429AbdJ3BEt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Oct 2017 21:04:49 -0400
-From: "Stephen  Bates" <sbates@raithlin.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: "corbet@lwn.net" <corbet@lwn.net>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "mingo@kernel.org" <mingo@kernel.org>,
-        "cdall@linaro.org" <cdall@linaro.org>,
-        "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-        "zohar@linux.vnet.ibm.com" <zohar@linux.vnet.ibm.com>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "logang@deltatee.com" <logang@deltatee.com>,
-        "tom@talpey.com" <tom@talpey.com>
-Subject: Re: [PATCH] pci: Add a acs_disable option for pci kernel parameter
-Date: Mon, 30 Oct 2017 01:04:47 +0000
-Message-ID: <7AEEED4D-1C64-4330-96E2-AB665E3D4B7D@raithlin.com>
-References: <1509071869-18771-1-git-send-email-sbates@raithlin.com>
- <20171027063745.GA19799@infradead.org>
-In-Reply-To: <20171027063745.GA19799@infradead.org>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 7/8] PCI: pciehp: Do not clear Presence Detect Changed during initialization
+Date: Fri, 13 Oct 2017 21:35:47 +0300
+Message-Id: <20171013183548.68283-8-mika.westerberg@linux.intel.com>
+In-Reply-To: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
+References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pj4gVGhpcyBwYXRjaCBhZGRzIGEgbmV3IGJvb3Qgb3B0aW9uIHRvIHRoZSBwY2kga2VybmVsIHBh
-cmFtZXRlciBjYWxsZWQNCj4+ICJhY3NfZGlzYWJsZSIgdGhhdCB3aWxsIGRpc2FibGUgQUNTLiBU
-aGlzIGlzIHVzZWZ1bCBmb3IgUENJIHBlZXIgdG8NCj4+IHBlZXIgY29tbXVuaWNhdGlvbiBidXQg
-Y2FuIGNhdXNlIHByb2JsZW1zIHdoZW4gSU9WQSBpc29sYXRpb24gaXMNCj4+IHJlcXVpcmVkIGFu
-ZCBhbiBJT01NVSBpcyBlbmFibGVkLiBVc2Ugd2l0aCBjYXJlLg0KDQo+IEV3dy4NCg0KVGhhbmtz
-IGZvciB0aGUgZmVlZGJhY2sgQ2hyaXN0b3BoLiBNeSBzZW50aW1lbnRzIGV4YWN0bHkgOy0pLiAg
-DQoNCj4gQ2FuIHdlIHBsZWFzZSBhZGQgc21iaW9zIHF1aXJrcyBmb3IgdGhlIHN5c3RlbXMgd2hl
-cmUgeW91J3ZlDQo+IG9ic2VydmVkIHRoaXM/IA0KDQpJIGNhbiBsb29rIGF0IGRvaW5nIHRoaXMu
-IFRoZSBpc3N1ZSB3aXRoIHRoaXMgYXBwcm9hY2ggaXMgdGhhdCBpdCB3aWxsIHJlcXVpcmUgYSBr
-ZXJuZWwgcGF0Y2ggZm9yIGVhY2ggbmV3IHN5c3RlbSB0aGF0IGlzIGRldGVjdGVkLg0KDQo+IHdl
-IHByb2JhYmx5IGFsc28gd2FudCB0byBrZWVwIHRoZSBvcHRpb24ganVzdCBpbiBjYXNlKS4NCg0K
-QWdyZWVkLiBBdCBsZWFzdCB0aGVuIG9wZXJhdG9ycyBoYXZlIGEgcGF0aCB0byBBQ1MgZGlzYWJs
-ZSBwcmlvciB0byBhIHF1aXJrIGJlaW5nIGFjY2VwdGVkLg0KDQpTdGVwaGVuDQoNCg==
+It is possible that the hotplug event has already happened before the
+driver is attached to a PCIe hotplug downstream port. If we just clear
+the status we never get the hotplug interrupt and thus the event will be
+missed.
+
+To make sure that does not happen, we leave Presence Detect Changed bit
+untouched during initialization. Then once the event is unmasked we get
+an interrupt and handle the hotplug event properly.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 83c93f9da65a..bc1622aa7a05 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -862,11 +862,16 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
+ 		ctrl->link_active_reporting = 1;
+ 
+-	/* Clear all remaining event bits in Slot Status register */
++	/*
++	 * Clear all remaining event bits in Slot Status register except
++	 * Presence Detect Changed. We want to make sure possible
++	 * hotplug event is triggered when the interrupt is unmasked so
++	 * that we don't lose that event.
++	 */
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+ 		PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+-		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+-		PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
++		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
++		PCI_EXP_SLTSTA_DLLSC);
+ 
+ 	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c\n",
+ 		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
+-- 
+2.14.2
