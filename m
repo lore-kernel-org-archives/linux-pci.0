@@ -1,34 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:42126 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932690AbdJQI2C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 04:28:02 -0400
-Date: Tue, 17 Oct 2017 10:28:09 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Robin Murphy <robin.murphy@arm.com>, robh+dt@kernel.org,
-        m.szyprowski@samsung.com, mperttunen@nvidia.com,
-        jonathanh@nvidia.com, thierry.reding@gmail.com, kishon@ti.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: Flag buses which demand DMA configuration
-Message-ID: <20171017082809.GA4947@kroah.com>
-References: <bd1c6061a6a16f720e992a0f12933bdee6591aea.1507823375.git.robin.murphy@arm.com>
- <20171017081701.GB19475@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171017081701.GB19475@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 3/8] PCI: Do not allocate more buses than available in parent
+Date: Fri, 13 Oct 2017 21:35:43 +0300
+Message-Id: <20171013183548.68283-4-mika.westerberg@linux.intel.com>
+In-Reply-To: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
+References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 10:17:01AM +0200, Christoph Hellwig wrote:
-> Looks fine:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Greg, do you want to take this or should I queue it up in the
-> dma-mapping tree?
+One can ask more buses to be reserved for hotplug bridges by passing
+pci=hpbussize=N in the kernel command line. However, if the parent bus
+does not have enough bus space available we still create child bus with
+the requested number of subordinate buses.
 
-You can take it, thanks!
+In the example below hpbussize is set to one more than we have available
+buses in the root port:
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+  pci 0000:07:00.0: [8086:1578] type 01 class 0x060400
+  pci 0000:07:00.0: calling pci_fixup_transparent_bridge+0x0/0x20
+  pci 0000:07:00.0: supports D1 D2
+  pci 0000:07:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+  pci 0000:07:00.0: PME# disabled
+  pci 0000:07:00.0: scanning [bus 00-00] behind bridge, pass 0
+  pci 0000:07:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+  pci 0000:07:00.0: scanning [bus 00-00] behind bridge, pass 1
+  pci_bus 0000:08: busn_res: can not insert [bus 08-ff] under [bus 07-3f] (conflicts with (null) [bus 07-3f])
+  pci_bus 0000:08: scanning bus
+  ...
+  pci_bus 0000:0a: bus scan returning with max=40
+  pci_bus 0000:0a: busn_res: [bus 0a-ff] end is updated to 40
+  pci_bus 0000:0a: [bus 0a-40] partially hidden behind bridge 0000:07 [bus 07-3f]
+  pci_bus 0000:08: bus scan returning with max=40
+  pci_bus 0000:08: busn_res: [bus 08-ff] end is updated to 40
+
+Instead of allowing this we limit the subordinate number to be less than
+or equal the maximum subordinate number allocated for the parent bus (if
+it has any).
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/probe.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 107052f1dad9..32921f6f21b6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1076,7 +1076,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 			child = pci_add_new_bus(bus, dev, max+1);
+ 			if (!child)
+ 				goto out;
+-			pci_bus_insert_busn_res(child, max+1, 0xff);
++			pci_bus_insert_busn_res(child, max+1,
++						bus->busn_res.end);
+ 		}
+ 		max++;
+ 		buses = (buses & 0xff000000)
+@@ -2439,6 +2440,10 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ 	if (bus->self && bus->self->is_hotplug_bridge && pci_hotplug_bus_size) {
+ 		if (max - bus->busn_res.start < pci_hotplug_bus_size - 1)
+ 			max = bus->busn_res.start + pci_hotplug_bus_size - 1;
++
++		/* Do not allocate more buses than we have room left */
++		if (max > bus->busn_res.end)
++			max = bus->busn_res.end;
+ 	}
+ 
+ 	/*
+-- 
+2.14.2
