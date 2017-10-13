@@ -1,142 +1,170 @@
-Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH v4 2/3] pseries: Add PSeries SR-IOV Machine dependent
- calls
-To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Juan J . Alvarez" <jjalvare@us.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
-References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
- <20171031144724.27808-3-bryantly@linux.vnet.ibm.com>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Tue, 31 Oct 2017 09:52:36 -0500
+Return-Path: <SRS0=Kkfq=BM=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=Kkfq=BM=redhat.com=alex.williamson@kernel.org>
+Date: Fri, 13 Oct 2017 12:05:58 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Steven Royer <seroyer@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Bryant G. Ly"
+ <bryantly@linux.vnet.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
+ bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, "Juan J .
+ Alvarez" <jjalvare@us.ibm.com>, Bodong Wang <bodong@mellanox.com>, Eli
+ Cohen <eli@mellanox.com>, Saeed Mahameed <saeedm@mellanox.com>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+Message-ID: <20171013120558.1a129183@t450s.home>
+In-Reply-To: <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
+References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
+	<20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
+	<20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+	<87efq92ei6.fsf@concordia.ellerman.id.au>
+	<20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+	<e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
+	<20171013033456.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+	<88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
+	<11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20171031144724.27808-3-bryantly@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <b8d76f23-1db7-13b9-29fd-4f5b13cf078a@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Add linuxppc-dev@lists.ozlabs.org
+On Fri, 13 Oct 2017 07:01:48 -0500
+Steven Royer <seroyer@linux.vnet.ibm.com> wrote:
 
-On 10/31/17 9:47 AM, Bryant G. Ly wrote:
+> On 2017-10-13 06:53, Steven Royer wrote:
+> > On 2017-10-12 22:34, Bjorn Helgaas wrote:  
+> >> [+cc Alex, Bodong, Eli, Saeed]
+> >> 
+> >> On Thu, Oct 12, 2017 at 02:59:23PM -0500, Bryant G. Ly wrote:  
+> >>> On 10/12/17 1:29 PM, Bjorn Helgaas wrote:  
+> >>> >On Thu, Oct 12, 2017 at 03:09:53PM +1100, Michael Ellerman wrote:  
+> >>> >>Bjorn Helgaas <helgaas@kernel.org> writes:
+> >>> >>  
+> >>> >>>On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:  
+> >>> >>>>This patch adds the machine dependent call for
+> >>> >>>>pcibios_bus_add_device, since the previous patch
+> >>> >>>>separated the calls out between the PowerNV and PowerVM.
+> >>> >>>>
+> >>> >>>>The difference here is that for the PowerVM environment
+> >>> >>>>we do not want match_driver set because in this environment
+> >>> >>>>we do not want the VF device drivers to load immediately, due to
+> >>> >>>>firmware loading the device node when VF device is assigned to the
+> >>> >>>>logical partition.
+> >>> >>>>
+> >>> >>>>This patch will depend on the patch linked below, which is under
+> >>> >>>>review.
+> >>> >>>>
+> >>> >>>>https://patchwork.kernel.org/patch/9882915/
+> >>> >>>>
+> >>> >>>>Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> >>> >>>>Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+> >>> >>>>---
+> >>> >>>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
+> >>> >>>>  1 file changed, 24 insertions(+)
+> >>> >>>>
+> >>> >>>>diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> >>> >>>>index 6b812ad990e4..45946ee90985 100644
+> >>> >>>>--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
+> >>> >>>>+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> >>> >>>>@@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
+> >>> >>>>  static DEFINE_SPINLOCK(slot_errbuf_lock);
+> >>> >>>>  static int eeh_error_buf_size;
+> >>> >>>>+void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+> >>> >>>>+{
+> >>> >>>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
+> >>> >>>>+
+> >>> >>>>+	if (!pdev->is_virtfn)
+> >>> >>>>+		return;
+> >>> >>>>+
+> >>> >>>>+	pdn->device_id  =  pdev->device;
+> >>> >>>>+	pdn->vendor_id  =  pdev->vendor;
+> >>> >>>>+	pdn->class_code =  pdev->class;
+> >>> >>>>+
+> >>> >>>>+	/*
+> >>> >>>>+	 * The following operations will fail if VF's sysfs files
+> >>> >>>>+	 * aren't created or its resources aren't finalized.
+> >>> >>>>+	 */
+> >>> >>>>+	eeh_add_device_early(pdn);
+> >>> >>>>+	eeh_add_device_late(pdev);
+> >>> >>>>+	eeh_sysfs_add_device(pdev);
+> >>> >>>>+	pdev->match_driver = -1;  
+> >>> >>>match_driver is a bool, which should be assigned "true" or "false".  
+> >>> >>Above he mentioned a dependency on:
+> >>> >>
+> >>> >>   [04/10] PCI: extend pci device match_driver state
+> >>> >>   https://patchwork.kernel.org/patch/9882915/
+> >>> >>
+> >>> >>
+> >>> >>Which makes it an int.  
+> >>> >Oh, right, I missed that, thanks.
+> >>> >  
+> >>> >>Or has that patch been rejected or something?  
+> >>> >I haven't *rejected* it, but it's low on my priority list, so you
+> >>> >shouldn't depend on it unless it adds functionality you really need.
+> >>> >If I did apply that particular patch, I would want some rework because
+> >>> >it currently obfuscates the match_driver logic.  There's no clue when
+> >>> >reading the code what -1/0/1 mean.  
+> >>> So do you prefer enum's? - If so I can make a change for that.  
+> >>> >Apparently here you *do* want the "-1 means the PCI core will never
+> >>> >set match_driver to 1" functionality, so maybe you do depend on it.  
+> >>> We depend on the patch because we want that ability to never set
+> >>> match_driver,
+> >>> for SRIOV on PowerVM.  
+> >> 
+> >> Is this really new PowerVM-specific functionality?  ISTR recent 
+> >> discussions
+> >> about inhibiting driver binding in a generic way, e.g.,
+> >> http://lkml.kernel.org/r/1490022874-54718-1-git-send-email-bodong@mellanox.com
+> >>   
+> >>> >If that's the case, how to you ever bind a driver to these VFs?  The
+> >>> >changelog says you don't want VF drivers to load *immediately*, so I
+> >>> >assume you do want them to load eventually.
+> >>> >  
+> >>> The VF's that get dynamically created within the configure SR-IOV
+> >>> call, on the Pseries Platform, wont be matched with a driver. - We
+> >>> do not want it to match.
+> >>> 
+> >>> The Power Hypervisor will load the VFs. The VF's will get
+> >>> assigned(by the user) via the HMC or Novalink in this environment
+> >>> which will then trigger PHYP to load the VF device node to the
+> >>> device tree.  
+> >> 
+> >> I don't know what it means for the Hypervisor to "load the VFs."  Can
+> >> you explain that in PCI-speak?
+> >> 
+> >> The things I know about are:
+> >> 
+> >>   - we set PCI_SRIOV_CTRL_VFE in the PF, which enables VFs
+> >>   - now the VFs respond to config accesses
+> >>   - the PCI core enumerates the VFs by reading their config space
+> >>   - the PCI core builds pci_dev structs for the VFs
+> >>   - the PCI core adds these pci_devs to the bus
+> >>   - we try to bind drivers to the VFs
+> >>   - the VF driver probe function may read VF config space and VF BARs
+> >>   - the VF may be assigned to a guest VM
+> >> 
+> >> Where does "loading the VFs" fit in?  I don't know what HMC, Novalink,
+> >> or PHYP are.  I don't *need* to know what they are, as long as you can
+> >> explain what's happening in terms of the PCI concepts and generic 
+> >> Linux VMs
+> >> and device assignment.
+> >> 
+> >> Bjorn  
+> > 
+> > The VFs will be hotplugged into the VM separately from the enable
+> > SR-IOV, so the driver will load as part of the hotplug operation.
+> > 
+> > Steve  
+> 
+> One more point of clarification: when the hotplug happens, the VF will 
+> show up on a virtual PCI bus that is not directly correlated to the real 
+> PCI bus that the PF is on.  On that virtual PCI bus, the driver will 
+> match because it won't be set to -1.
 
-> Add calls for PSeries platform to configure/deconfigure
-> SR-IOV.
->
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
-> ---
->  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 +++++++++++++++++++++++
->  arch/powerpc/platforms/pseries/pci.c         | 29 ++++++++++++++++++++++++----
->  2 files changed, 49 insertions(+), 4 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> index 6b812ad990e4..2295f117e2d3 100644
-> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> @@ -55,6 +55,27 @@ static int ibm_get_config_addr_info;
->  static int ibm_get_config_addr_info2;
->  static int ibm_configure_pe;
->
-> +void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
-> +{
-> +	struct pci_dn *pdn = pci_get_pdn(pdev);
-> +
-> +	if (!pdev->is_virtfn)
-> +		return;
-> +
-> +	pdn->device_id  =  pdev->device;
-> +	pdn->vendor_id  =  pdev->vendor;
-> +	pdn->class_code =  pdev->class;
-> +
-> +	/*
-> +	 * The following operations will fail if VF's sysfs files
-> +	 * aren't created or its resources aren't finalized.
-> +	 */
-> +	eeh_add_device_early(pdn);
-> +	eeh_add_device_late(pdev);
-> +	eeh_sysfs_add_device(pdev);
-> +
-> +}
-> +
->  /*
->   * Buffer for reporting slot-error-detail rtas calls. Its here
->   * in BSS, and not dynamically alloced, so that it ends up in
-> @@ -120,6 +141,9 @@ static int pseries_eeh_init(void)
->  	/* Set EEH probe mode */
->  	eeh_add_flag(EEH_PROBE_MODE_DEVTREE | EEH_ENABLE_IO_FOR_LOG);
->
-> +	/* Set EEH machine dependent code */
-> +	ppc_md.pcibios_bus_add_device = pseries_pcibios_bus_add_device;
-> +
->  	return 0;
->  }
->
-> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-> index 09eba5a9929a..14a90cf471cc 100644
-> --- a/arch/powerpc/platforms/pseries/pci.c
-> +++ b/arch/powerpc/platforms/pseries/pci.c
-> @@ -3,17 +3,17 @@
->   * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
->   *
->   * pSeries specific routines for PCI.
-> - * 
-> + *
->   * This program is free software; you can redistribute it and/or modify
->   * it under the terms of the GNU General Public License as published by
->   * the Free Software Foundation; either version 2 of the License, or
->   * (at your option) any later version.
-> - *    
-> + *
->   * This program is distributed in the hope that it will be useful,
->   * but WITHOUT ANY WARRANTY; without even the implied warranty of
->   * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->   * GNU General Public License for more details.
-> - * 
-> + *
->   * You should have received a copy of the GNU General Public License
->   * along with this program; if not, write to the Free Software
->   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-> @@ -54,10 +54,26 @@ void pcibios_name_device(struct pci_dev *dev)
->  			}
->  		}
->  	}
-> -}   
-> +}
->  DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
->  #endif
->
-> +#ifdef CONFIG_PCI_IOV
-> +int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-> +{
-> +	/* Allocate PCI data */
-> +	add_dev_pci_data(pdev);
-> +	return 0;
-> +}
-> +
-> +int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
-> +{
-> +	/* Release PCI data */
-> +	remove_dev_pci_data(pdev);
-> +	return 0;
-> +}
-> +#endif
-> +
->  static void __init pSeries_request_regions(void)
->  {
->  	if (!isa_io_base)
-> @@ -76,6 +92,11 @@ void __init pSeries_final_fixup(void)
->  	pSeries_request_regions();
->
->  	eeh_addr_cache_build();
-> +
-> +#ifdef CONFIG_PCI_IOV
-> +	ppc_md.pcibios_sriov_enable = pseries_pcibios_sriov_enable;
-> +	ppc_md.pcibios_sriov_disable = pseries_pcibios_sriov_disable;
-> +#endif
->  }
->
->  /*
+I'm pretty lost too, but I think what's being said is that the
+paravirtualized SR-IOV enable creates VFs according to the SR-IOV
+offset and stride capabilities of the PF, but we're supposed to ignore
+those (why are we even creating pci_devs for them?) and the hypervisor
+will actually hotplug the VFs somewhere else.  How's that still
+SR-IOV?  Why wouldn't the hypervisor just add the real VFs that we're
+supposed to use at the offset and stride indicated by the PF SR-IOV
+capability and mask the VFs that we're not supposed to see?  Thanks,
+
+Alex
