@@ -1,63 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 17 Oct 2017 23:49:30 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Dexuan Cui <decui@microsoft.com>
-cc: LKML <linux-kernel@vger.kernel.org>,
-        "x86@kernel.org" <x86@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>
-Subject: RE: [patch 3/3] x86/vector/msi: Select
- CONFIG_GENERIC_IRQ_RESERVATION_MODE
-In-Reply-To: <KL1P15301MB000624AF90FB90B39BE84160BF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-Message-ID: <alpine.DEB.2.20.1710172348450.2134@nanos>
-References: <20171017075456.694047687@linutronix.de> <20171017075600.527569354@linutronix.de> <KL1P15301MB000624AF90FB90B39BE84160BF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Return-Path: <SRS0=BJII=BM=atomide.com=tony@kernel.org>
+Return-Path: <SRS0=BJII=BM=atomide.com=tony@kernel.org>
+Date: Fri, 13 Oct 2017 10:58:26 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Jeffy Chen <jeffy.chen@rock-chips.com>,
+	linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+	shawn.lin@rock-chips.com, briannorris@chromium.org,
+	dianders@chromium.org, linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20171013175825.GR4394@atomide.com>
+References: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
+ <20170911151029.25185-2-jeffy.chen@rock-chips.com>
+ <20171013030441.GA25517@bhelgaas-glaptop.roam.corp.google.com>
+ <2453698.N4jfPaHx71@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2453698.N4jfPaHx71@aspire.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 17 Oct 2017, Dexuan Cui wrote:
-
-> > From: Thomas Gleixner [mailto:tglx@linutronix.de]
-> > Sent: Tuesday, October 17, 2017 12:55 AM
-> > --- a/arch/x86/Kconfig
-> > +++ b/arch/x86/Kconfig
-> > @@ -95,7 +95,7 @@ config X86
-> >  	select GENERIC_IRQ_MATRIX_ALLOCATOR	if X86_LOCAL_APIC
-> >  	select GENERIC_IRQ_MIGRATION		if SMP
-> >  	select GENERIC_IRQ_PROBE
-> > -	select GENERIC_IRQ_SHOW
-> > +	select GENERIC_IRQ_RESERVATION_MODE
-> >  	select GENERIC_PENDING_IRQ		if SMP
-> >  	select GENERIC_SMP_IDLE_THREAD
-> >  	select GENERIC_STRNCPY_FROM_USER
+* Rafael J. Wysocki <rjw@rjwysocki.net> [171013 06:32]:
+> [+cc Tony]
 > 
-> Hi Thomas,
-> It looks you removed GENERIC_IRQ_SHOW by accident?
+> On Friday, October 13, 2017 5:04:41 AM CEST Bjorn Helgaas wrote:
+> > [+cc Rafael, linux-pm]
+> > On Mon, Sep 11, 2017 at 11:10:27PM +0800, Jeffy Chen wrote:
+> > > Add support for PCIE_WAKE pin in rockchip pcie driver.
+...
+> > > @@ -995,6 +996,15 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+> > >  		return err;
+> > >  	}
+> > >  
+> > > +	/* Must init wakeup before setting dedicated wakeup irq. */
+> > > +	device_init_wakeup(dev, true);
+> > > +	irq = platform_get_irq_byname(pdev, "wakeup");
+> > > +	if (irq >= 0) {
+> > > +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
+> > 
+> > I'm a little skeptical about dev_pm_set_dedicated_wake_irq(), not
+> > because I know anything at all about it, but because there are only
+> > five callers in the whole tree, three of which are in UART code, and
+> > none in anything resembling PCI code.
 
-Indeed. My patch foo today is more than bad....
+Well it should work for any device that can provide an out of band wakeup
+interrupt such as a dedicated GPIO line.
 
-> I got this build error:
-> ...
->   LD      vmlinux.o
->   MODPOST vmlinux.o
-> fs/proc/interrupts.o:(.rodata+0x118): undefined reference to `show_interrupts'
-> Makefile:1000: recipe for target 'vmlinux' failed
-> make: *** [vmlinux] Error 1
-> 
-> Adding GENERIC_IRQ_SHOW back can fix the build failure, and with the
-> pachset Hyper-V PCI pass-through can work fine.
+> > Is Rockchip really that special, or are we going about this the wrong
+> > way?
 
-Thanks for testing.
+Maybe this can be set up in a generic way somewhere similar to what
+the I2C bus is doing?
 
-       tglx
+See i2c_device_probe() for dev_pm_set_dedicated_wake_irq() in
+drivers/i2c/i2c-core-base.c.
+
+Regards,
+
+Tony
