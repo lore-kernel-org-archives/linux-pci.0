@@ -1,63 +1,124 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Faiz Abbas <faiz_abbas@ti.com>
-To: <kishon@ti.com>
-CC: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <faiz_abbas@ti.com>
-Subject: [PATCH] PCI: dwc: dra7xx: Print link state to console for debug
-Date: Tue, 17 Oct 2017 11:13:51 +0530
-Message-ID: <1508219031-25592-1-git-send-email-faiz_abbas@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 07/10] PCI: dwc: artpec6: split artpec6_pcie_establish_link to smaller functions
+Date: Fri, 13 Oct 2017 18:09:10 +0200
+Message-Id: <20171013160914.3220-8-niklas.cassel@axis.com>
+In-Reply-To: <20171013160914.3220-1-niklas.cassel@axis.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable support for printing the LTSSM link state for debugging PCI
-when link is down.
+This is done to better match other drivers such as dra7xx and imx6,
+but also to prepare for endpoint mode support.
 
-Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/dwc/pci-dra7xx.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/pci/dwc/pcie-artpec6.c | 59 +++++++++++++++++++++++-------------------
+ 1 file changed, 32 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 34427a6..7b150b0 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -98,6 +98,18 @@ struct dra7xx_pcie_of_data {
- 
- #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
- 
-+static char state[][20] = {
-+	"DETECT_QUIET", "DETECT_ACT", "POLL_ACTIVE", "POLL_COMPLIANCE",
-+	"POLL_CONFIG", "PRE_DETECT_QUIET", "DETECT_WAIT", "CFG_LINKWD_START",
-+	"CFG_LINKWD_ACEPT", "CFG_LANENUM_WAIT", "CFG_LANENUM_ACEPT",
-+	"CFG_COMPLETE", "CFG_IDLE", "RCVRY_LOCK", "RCVRY_SPEED",
-+	"RCVRY_RCVRCFG", "RCVRY_IDLE", "L0", "L0S", "L123_SEND_EIDLE",
-+	"L1_IDLE", "L2_IDLE", "L2_WAKE", "DISABLED_ENTRY", "DISABLED_IDLE",
-+	"DISABLED", "LPBK_ENTRY", "LPBK_ACTIVE", "LPBK_EXIT",
-+	"LPBK_EXIT_TIMEOUT", "HOT_RESET_ENTRY", "HOT_RESET", "RCVRY_EQ0",
-+	"RCVRY_EQ1", "RCVRY_EQ2", "RCVRY_EQ3"
-+};
-+
- static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
- {
- 	return readl(pcie->base + offset);
-@@ -118,6 +130,15 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
- 	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
-+	u32 cmd_reg;
-+	u32 ltssm_state;
-+
-+	if (!(reg & LINK_UP)) {
-+		cmd_reg = dra7xx_pcie_readl(dra7xx,
-+					    PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-+		ltssm_state = (cmd_reg & GENMASK(7, 2)) >> 2;
-+		dev_err(pci->dev, "Link state:%s\n", state[ltssm_state]);
-+	}
- 
- 	return !!(reg & LINK_UP);
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 18075e0fab80..c5d7f98dc6b2 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -80,18 +80,11 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
+ 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
  }
+ 
+-static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
++static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+ {
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+ 	u32 val;
+ 	unsigned int retries;
+ 
+-	/* Hold DW core in reset */
+-	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_CORE_RESET_REQ;
+-	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
+ 		PCIECFG_MODE_TX_DRV_EN |
+@@ -131,30 +124,18 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
+ 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
+ 		retries--;
+ 	} while (retries && !(val & PHY_COSPLLLOCK));
++}
+ 
+-	/* Take DW core out of reset */
+-	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val &= ~PCIECFG_CORE_RESET_REQ;
+-	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-	usleep_range(100, 200);
+-
+-	/* setup root complex */
+-	dw_pcie_setup_rc(pp);
++static int artpec6_pcie_establish_link(struct dw_pcie *pci)
++{
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	u32 val;
+ 
+-	/* assert LTSSM enable */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 	val |= PCIECFG_LTSSM_ENABLE;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ 
+-	/* check if the link is up or not */
+-	if (!dw_pcie_wait_for_link(pci))
+-		return 0;
+-
+-	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
+-
+-	return -ETIMEDOUT;
++	return 0;
+ }
+ 
+ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+@@ -166,12 +147,36 @@ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+ 		dw_pcie_msi_init(pp);
+ }
+ 
++static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
++
++	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++	val |= PCIECFG_CORE_RESET_REQ;
++	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++}
++
++static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
++
++	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++	val &= ~PCIECFG_CORE_RESET_REQ;
++	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++	usleep_range(100, 200);
++}
++
+ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 
+-	artpec6_pcie_establish_link(artpec6_pcie);
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	dw_pcie_setup_rc(pp);
++	artpec6_pcie_establish_link(pci);
++	dw_pcie_wait_for_link(pci);
+ 	artpec6_pcie_enable_interrupts(artpec6_pcie);
+ 
+ 	return 0;
 -- 
-2.7.4
+2.11.0
