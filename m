@@ -1,32 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0139.outbound.protection.outlook.com ([104.47.32.139]:28224
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750807AbdJRRXZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Oct 2017 13:23:25 -0400
-From: Casey Leedom <leedom@chelsio.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
-        "Komali Katari" <komali@chelsio.com>,
-        "Alex Williamson" <alex.williamson@redhat.com>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
- drivers when VFs are attached to VMs ...
-Date: Wed, 18 Oct 2017 17:23:22 +0000
-Message-ID: <MWHPR12MB16004ED0D14F6531DDDD1692C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20171017133702.1b0e35bc@t450s.home>
- <MWHPR12MB16008EEBF251F321E9B48D41C84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAB=NE6U-1ytEbL9A2FeVjcOfN3VSNAJUa9JbsQH9UfjRfANKxw@mail.gmail.com>
- <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>,<CAB=NE6Xwj20hwX3XzW_bYEby+24c=gY_nQtXPOu1J_c7uRHRjA@mail.gmail.com>
-In-Reply-To: <CAB=NE6Xwj20hwX3XzW_bYEby+24c=gY_nQtXPOu1J_c7uRHRjA@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 06/10] PCI: dwc: artpec6: use BIT and GENMASK macros
+Date: Fri, 13 Oct 2017 18:09:09 +0200
+Message-Id: <20171013160914.3220-7-niklas.cassel@axis.com>
+In-Reply-To: <20171013160914.3220-1-niklas.cassel@axis.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  Okay, I'll have Komali do a full bisct and report back.
+This greatly improves readability.
 
-Casey
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 4b8ef266dc2f..18075e0fab80 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -39,28 +39,28 @@ struct artpec6_pcie {
+ 
+ /* ARTPEC-6 specific registers */
+ #define PCIECFG				0x18
+-#define  PCIECFG_DBG_OEN		(1 << 24)
+-#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
+-#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
+-#define  PCIECFG_CLKREQ_B		(1 << 11)
+-#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
+-#define  PCIECFG_PLL_ENABLE		(1 << 9)
+-#define  PCIECFG_PCLK_ENABLE		(1 << 8)
+-#define  PCIECFG_RISRCREN		(1 << 4)
+-#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
+-#define  PCIECFG_CISRREN		(1 << 2)
+-#define  PCIECFG_MACRO_ENABLE		(1 << 0)
++#define  PCIECFG_DBG_OEN		BIT(24)
++#define  PCIECFG_CORE_RESET_REQ		BIT(21)
++#define  PCIECFG_LTSSM_ENABLE		BIT(20)
++#define  PCIECFG_CLKREQ_B		BIT(11)
++#define  PCIECFG_REFCLK_ENABLE		BIT(10)
++#define  PCIECFG_PLL_ENABLE		BIT(9)
++#define  PCIECFG_PCLK_ENABLE		BIT(8)
++#define  PCIECFG_RISRCREN		BIT(4)
++#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
++#define  PCIECFG_CISRREN		BIT(2)
++#define  PCIECFG_MACRO_ENABLE		BIT(0)
+ 
+ #define NOCCFG				0x40
+-#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
+-#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
+-#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
+-#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
++#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
++#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
++#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
++#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
+ 
+ #define PHY_STATUS			0x118
+-#define PHY_COSPLLLOCK			(1 << 0)
++#define  PHY_COSPLLLOCK			BIT(0)
+ 
+-#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
++#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
+ 
+ static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+ {
+-- 
+2.11.0
