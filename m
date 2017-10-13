@@ -1,16 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Daniel Axtens <dja@axtens.net>
-To: Bjorn Helgaas <bhelgaas@google.com>,
- Daniel Vetter <daniel.vetter@intel.com>
-Subject: Re: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default device
- selection
-In-Reply-To: <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Date: Tue, 17 Oct 2017 13:03:46 +1100
-Message-ID: <871sm2y1h9.fsf@linkitivity.dja.id.au>
+Date: Thu, 12 Oct 2017 22:15:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Subject: Re: [PATCH 0/3] PCI: rockchip: assert PERST# in S3
+Message-ID: <20171013031523.GB25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171012205220.130048-1-briannorris@chromium.org>
 MIME-Version: 1.0
+In-Reply-To: <20171012205220.130048-1-briannorris@chromium.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,145 +15,56 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
- Xinliang Liu <z.liuxinliang@hisilicon.com>,
- Alex Williamson <alex.williamson@redhat.com>, Lukas Wunner <lukas@wunner.de>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Rongrong Zou <zourongrong@gmail.com>, Dave Airlie <airlied@redhat.com>,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, linux-kernel@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, Rob Herring <robh+dt@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
+ Frank Rowand <frowand.list@gmail.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
+On Thu, Oct 12, 2017 at 01:52:17PM -0700, Brian Norris wrote:
+> Hi,
+> 
+> This patch series should mostly be self-descriptive, but it's motivated by the
+> fact that I've found differing requirements from PCIe endpoint makers regarding
+> the state of PERST# when in system suspend (S3). Additionally, some existing
+> boards are not especially well suited for holding PERST# low in S3 (e.g., the
+> pin is driven by a non-PMU GPIO, so it's hard or impossible to keep it
+> asserted). So the solution is...give it a device tree property!
 
-> The default VGA device is normally set in vga_arbiter_add_pci_device() when
-> we call it for the first enabled device that can be accessed with the
-> legacy VGA resources ([mem 0xa0000-0xbffff], etc.)
->
-> That default device can be overridden by an EFI device that owns the boot
-> framebuffer.  As a fallback, we can also select a VGA device that can't be
-> accessed via legacy VGA resources, or a VGA device that isn't even enabled.
->
-> Factor out this EFI and fallback selection from vga_arb_device_init() into
-> a separate vga_arb_select_default_device() function.  This doesn't change
-> any behavior, but it untangles the "bridge control possible" checking and
-> messages from the default device selection.
->
-> Tested-by: Zhou Wang <wangzhou1@hisilicon.com>  # D05 Hisi Hip07, Hip08
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/gpu/vga/vgaarb.c |   57 ++++++++++++++++++++++++++++------------------
->  1 file changed, 35 insertions(+), 22 deletions(-)
->
-> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> index 8035e38d5110..d35d6d271f3f 100644
-> --- a/drivers/gpu/vga/vgaarb.c
-> +++ b/drivers/gpu/vga/vgaarb.c
-> @@ -1402,29 +1402,14 @@ static struct miscdevice vga_arb_device = {
->  	MISC_DYNAMIC_MINOR, "vga_arbiter", &vga_arb_device_fops
->  };
->  
-> -static int __init vga_arb_device_init(void)
-> +static void __init vga_arb_select_default_device(void)
->  {
-> -	int rc;
->  	struct pci_dev *pdev;
->  	struct vga_device *vgadev;
->  
-> -	rc = misc_register(&vga_arb_device);
-> -	if (rc < 0)
-> -		pr_err("error %d registering device\n", rc);
-> -
-> -	bus_register_notifier(&pci_bus_type, &pci_notifier);
-> -
-> -	/* We add all pci devices satisfying vga class in the arbiter by
-> -	 * default */
-> -	pdev = NULL;
-> -	while ((pdev =
-> -		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-> -			       PCI_ANY_ID, pdev)) != NULL)
-> -		vga_arbiter_add_pci_device(pdev);
-> -
-> +#if defined(CONFIG_X86) || defined(CONFIG_IA64)
->  	list_for_each_entry(vgadev, &vga_list, list) {
->  		struct device *dev = &vgadev->pdev->dev;
-> -#if defined(CONFIG_X86) || defined(CONFIG_IA64)
->  		/*
->  		 * Override vga_arbiter_add_pci_device()'s I/O based detection
->  		 * as it may take the wrong device (e.g. on Apple system under
-> @@ -1461,12 +1446,8 @@ static int __init vga_arb_device_init(void)
->  				vgaarb_info(dev, "overriding boot device\n");
->  			vga_set_default_device(vgadev->pdev);
->  		}
-> -#endif
-> -		if (vgadev->bridge_has_one_vga)
-> -			vgaarb_info(dev, "bridge control possible\n");
-> -		else
-> -			vgaarb_info(dev, "no bridge control possible\n");
->  	}
-> +#endif
->  
->  	if (!vga_default_device()) {
->  		list_for_each_entry(vgadev, &vga_list, list) {
-> @@ -1492,6 +1473,38 @@ static int __init vga_arb_device_init(void)
->  			vga_set_default_device(vgadev->pdev);
->  		}
->  	}
-> +}
-> +
-> +static int __init vga_arb_device_init(void)
-> +{
-> +	int rc;
-> +	struct pci_dev *pdev;
-> +	struct vga_device *vgadev;
-> +
-> +	rc = misc_register(&vga_arb_device);
-> +	if (rc < 0)
-> +		pr_err("error %d registering device\n", rc);
-> +
-> +	bus_register_notifier(&pci_bus_type, &pci_notifier);
-> +
-> +	/* We add all PCI devices satisfying VGA class in the arbiter by
-> +	 * default */
-> +	pdev = NULL;
-> +	while ((pdev =
-> +		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-> +			       PCI_ANY_ID, pdev)) != NULL)
-> +		vga_arbiter_add_pci_device(pdev);
-> +
-> +	list_for_each_entry(vgadev, &vga_list, list) {
-> +		struct device *dev = &vgadev->pdev->dev;
-> +
-> +		if (vgadev->bridge_has_one_vga)
-> +			vgaarb_info(dev, "bridge control possible\n");
-> +		else
-> +			vgaarb_info(dev, "no bridge control possible\n");
-> +	}
+How do ACPI systems solve this problem?
 
-Initially I wondered if this info printk could be moved into
-vga_arbiter_check_bridge_sharing(), but it's been separated out since
-3448a19da479b ("vgaarb: use bridges to control VGA routing where
-possible."), and upon closer examination, it seems you can't be sure a
-device doesn't share a bridge until the end of the process, so this is
-indeed correct.
+Can you point to any relevant sections in the PCI specs?
 
-Everything else also looks good to me.
+Is this a hole in those specs?  Is this something that needs to be
+clarified by the PCI-SIG to improve interoperability?
 
-Reviewed-by: Daniel Axtens <dja@axtens.net>
+Why is this problem only showing up now?
 
-Regards,
-Daniel
-
-> +
-> +	vga_arb_select_default_device();
->  
->  	pr_info("loaded\n");
->  	return rc;
+> Brian Norris (3):
+>   Documentation/devicetree: Add pcie-reset-suspend property
+>   of/pci: Add of_pci_get_pcie_reset_suspend() to parse
+>     pcie-reset-suspend
+>   PCI: rockchip: Support configuring PERST# state via DT
+> 
+>  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+>  drivers/of/of_pci.c                           | 25 +++++++++++++++++++++++++
+>  drivers/pci/host/pcie-rockchip.c              |  7 +++++++
+>  include/linux/of_pci.h                        |  7 +++++++
+>  4 files changed, 50 insertions(+)
+> 
+> -- 
+> 2.15.0.rc0.271.g36b669edcc-goog
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
 _______________________________________________
 linux-arm-kernel mailing list
