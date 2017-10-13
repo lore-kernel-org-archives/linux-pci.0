@@ -1,76 +1,102 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <1506448161-30961-1-git-send-email-kdinh@apm.com>
-References: <1506448161-30961-1-git-send-email-kdinh@apm.com>
-From: Khuong Dinh <kdinh@apm.com>
-Date: Mon, 16 Oct 2017 14:19:50 -0700
-Message-ID: <CAAsHzqv-oQVNm-pNP4Q1KmiSmjaiFx1S4j8uCnij53Te3h8KKg@mail.gmail.com>
-Subject: Re: [PATCH v4 pci 0/2] PCI/MSI: pci-xgene-msi: Enable MSI support in
- ACPI boot for X-Gene v1
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, msalter@redhat.com,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, jcm@redhat.com
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, Khuong Dinh <kdinh@apm.com>, patches <patches@apm.com>,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 01/10] PCI: dwc: use DMA-API for allocating MSI data
+Date: Fri, 13 Oct 2017 18:09:04 +0200
+Message-Id: <20171013160914.3220-2-niklas.cassel@axis.com>
+In-Reply-To: <20171013160914.3220-1-niklas.cassel@axis.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-  Do you have any comments for this patch?
+Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+to write to this location, the proper way to get the address to this this
+location is really to use the DMA API, rather than virt_to_phys.
 
-Best regards,
-Khuong Dinh
+Using virt_to_phys might work on some systems, but by using the DMA API,
+we know that it will work on all systems.
 
-On Tue, Sep 26, 2017 at 10:49 AM, Khuong Dinh <kdinh@apm.com> wrote:
-> This patch set enables ACPI MSI support for X-Gene PCIe v1 hardware
-> and provides the proper MSI driver initialization ordering.
->
-> Signed-off-by: Khuong Dinh <kdinh@apm.com>
-> ---
-> v4:
->  - Remove Marc Zyngier ACK in v2
->  - Use acpi_bus_scan on MSI controller handle when MSI device is found
->  - Register ACPI MSI driver when MSI device is found instead of using
->  subsys_initcall
->  - Split ACPI MSI driver support into two patches - one to enable MSI
-> support for X-Gene PCIe v1 hardware, one to enforce MSI driver loaded
-> before PCIe controller driver in ACPI boot mode
-> v3:
->  - Input X-Gene MSI base address for irq_domain_alloc_fwnode
->  - Add a hook to enforce X-Gene MSI be probed prior acpi_bus_scan happens
-> v2:
->  - Verify with BIOS version 3.06.25 and 3.07.09
-> v1:
->  - Initial version
-> ---
->
-> Khuong Dinh (2):
->   PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot for X-Gene v1
->   PCI/MSI: Enforce MSI driver loaded before PCIe in ACPI boot
->
->  drivers/acpi/Makefile            |    2 +-
->  drivers/acpi/acpi_msi.c          |   86 ++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/acpi_platform.c     |    3 +-
->  drivers/acpi/internal.h          |    1 +
->  drivers/acpi/scan.c              |    1 +
->  drivers/pci/host/pci-xgene-msi.c |   60 ++++++++++++++++++++++++--
->  include/linux/acpi_msi.h         |   37 ++++++++++++++++
->  7 files changed, 183 insertions(+), 7 deletions(-)
->  create mode 100644 drivers/acpi/acpi_msi.c
->  create mode 100644 include/linux/acpi_msi.h
->
+This is essentially the same thing as allocating a buffer in a driver,
+to which the endpoint will write to. To do this, we use the DMA API.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 23 ++++++++++++++++-------
+ drivers/pci/dwc/pcie-designware.h      |  3 ++-
+ 2 files changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 81e2157a7cfb..f6d152ea2a03 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -83,16 +83,25 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 
+ void dw_pcie_msi_init(struct pcie_port *pp)
+ {
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct device *dev = pci->dev;
++	struct page *page;
+ 	u64 msi_target;
+ 
+-	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+-	msi_target = virt_to_phys((void *)pp->msi_data);
++	page = alloc_page(GFP_KERNEL | GFP_DMA32);
++	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
++	if (dma_mapping_error(dev, pp->msi_data)) {
++		dev_err(dev, "failed to map msi data\n");
++		__free_page(page);
++		return;
++	}
++	msi_target = (u64)pp->msi_data;
+ 
+ 	/* program the msi_data */
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+-			    (u32)(msi_target & 0xffffffff));
++			    lower_32_bits(msi_target));
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+-			    (u32)(msi_target >> 32 & 0xffffffff));
++			    upper_32_bits(msi_target));
+ }
+ 
+ static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+@@ -187,10 +196,10 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ 	if (pp->ops->get_msi_addr)
+ 		msi_target = pp->ops->get_msi_addr(pp);
+ 	else
+-		msi_target = virt_to_phys((void *)pp->msi_data);
++		msi_target = (u64)pp->msi_data;
+ 
+-	msg.address_lo = (u32)(msi_target & 0xffffffff);
+-	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
++	msg.address_lo = lower_32_bits(msi_target);
++	msg.address_hi = upper_32_bits(msi_target);
+ 
+ 	if (pp->ops->get_msi_data)
+ 		msg.data = pp->ops->get_msi_data(pp, pos);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index e5d9d77b778e..547352a317f8 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -17,6 +17,7 @@
+ #include <linux/irq.h>
+ #include <linux/msi.h>
+ #include <linux/pci.h>
++#include <linux/dma-mapping.h>
+ 
+ #include <linux/pci-epc.h>
+ #include <linux/pci-epf.h>
+@@ -168,7 +169,7 @@ struct pcie_port {
+ 	const struct dw_pcie_host_ops *ops;
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+-	unsigned long		msi_data;
++	dma_addr_t		msi_data;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
+-- 
+2.11.0
