@@ -1,104 +1,130 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 16 Oct 2017 13:24:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 06/15] PCI: endpoint: make config_item_type const
-Message-ID: <20171016182437.GG25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
- <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
+Return-Path: <SRS0=xvJt=BM=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=xvJt=BM=linux.intel.com=mika.westerberg@kernel.org>
+Date: Fri, 13 Oct 2017 13:26:18 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ashok Raj <ashok.raj@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/7] PCI: Distribute available buses to hotplug capable
+ PCIe downstream ports
+Message-ID: <20171013102618.GA2761@lahna.fi.intel.com>
+References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+ <20170926141720.25067-4-mika.westerberg@linux.intel.com>
+ <20171011233243.GX25517@bhelgaas-glaptop.roam.corp.google.com>
+ <20171012124703.GD2761@lahna.fi.intel.com>
+ <20171012183223.GY25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20171012183223.GY25517@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 16, 2017 at 05:18:45PM +0200, Bhumika Goyal wrote:
-> Make config_item_type structures const as they are either passed to a
-> function having the argument as const or stored in the const "ci_type"
-> field of a config_item structure.
+On Thu, Oct 12, 2017 at 01:32:23PM -0500, Bjorn Helgaas wrote:
+> On Thu, Oct 12, 2017 at 03:47:03PM +0300, Mika Westerberg wrote:
+> > On Wed, Oct 11, 2017 at 06:32:43PM -0500, Bjorn Helgaas wrote:
+> > > On Tue, Sep 26, 2017 at 05:17:16PM +0300, Mika Westerberg wrote:
+> > > > System BIOS sometimes allocates extra bus space for hotplug capable PCIe
+> > > > root/downstream ports. This space is needed if the device plugged to the
+> > > > port will have more hotplug capable downstream ports. A good example of
+> > > > this is Thunderbolt. Each Thunderbolt device contains a PCIe switch and
+> > > > one or more hotplug capable PCIe downstream ports where the daisy chain
+> > > > can be extended.
+> > > > 
+> > > > Currently Linux only allocates minimal bus space to make sure all the
+> > > > enumerated devices barely fit there. The BIOS reserved extra space is
+> > > > not taken into consideration at all. Because of this we run out of bus
+> > > > space pretty quickly when more PCIe devices are attached to hotplug
+> > > > downstream ports in order to extend the chain.
+> > > > 
+> > > > This modifies PCI core so that we distribute the available BIOS
+> > > > allocated bus space equally between hotplug capable PCIe downstream
+> > > > ports to make sure there is enough bus space for extending the
+> > > > hierarchy later on.
+> > > 
+> > > I think this makes sense in general.  It's a fairly complicated patch,
+> > > so my comments here are just a first pass.
+> > 
+> > Thanks for the comments!
+> > 
+> > > Why do you limit it to PCIe?  Isn't it conceivable that one could
+> > > hot-add a conventional PCI card that contained a bridge leading to
+> > > another hotplug slot?  E.g., a PCI card with PCMCIA slot or something
+> > > on it?
+> > 
+> > I guess this could be generalized to such configurations but I wanted to
+> > restrict this with PCIe for a couple of reasons. Firstly, I'm able to
+> > actually test this ;-) Second, the rules in PCIe are quite simple,
+> > whenever you have hotplug bridge (downstream port with a hotplug
+> > capability set) you distribute the available bus space with it. With a
+> > conventional PCI it is not so clear (at least to me).
 > 
-> Done using Coccinelle.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+> You're testing dev->is_hotplug_bridge, which I think is the right
+> approach.  It happens that we currently only set that for PCIe bridges
+> with PCI_EXP_SLTCAP_HPC and for some ACPI cases (and a quirk for one
+> device).  But in principle we could and probably should set it if we
+> can identify a conventional PCI hotplug bridge.  So my suggestion is
+> to just remove the explicit PCIe tests.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Fair enough :)
 
-Please apply this along with the rest of the series, since it depends
-on an earlier patch in the series.
+> > > > +	/* Second pass. Bridges that need to be configured. */
+> > > > +	list_for_each_entry(dev, &bus->devices, bus_list) {
+> > > > +		if (pci_is_bridge(dev)) {
+> > > > +			unsigned int buses = 0;
+> > > > +
+> > > > +			if (pcie_upstream_port(dev)) {
+> > > > +				/* Upstream port gets all available buses */
+> > > > +				buses = available_buses;
+> > > 
+> > > I guess this relies on the assumption that there can only be one
+> > > upstream port on a bus?  Is that true?  Typically a switch only has a
+> > > function 0 upstream port, but something niggles at me like the spec
+> > > admits the possibility of a switch with multiple functions of upstream
+> > > ports?  I don't know where that is right now (or if it exists), but
+> > > I'll try to find it.
+> > 
+> > My understanding is that there can be only one upstream port on a bus.
+> > That said I looked at the spec again and there is this in chapter 7.3.1
+> > of PCIe 3.1 spec:
+> > 
+> >   Switches, and components wishing to incorporate more than eight
+> >   Functions at their Upstream Port, are permitted to implement one or
+> >   more “virtual switches” represented by multiple Type 1 (PCI-PCI
+> >   Bridge) Configuration Space headers as illustrated in Figure 7-2.
+> >   These virtual switches serve to allow fan-out beyond eight Functions.
+> >   Since Switch Downstream Ports are permitted to appear on any Device
+> >   Number, in this case all address information fields (Bus, Device, and
+> >   Function Numbers) must be completely decoded to access the correct
+> >   register. Any Configuration Request targeting an unimplemented Bus,
+> >   Device, or Function must return a Completion with Unsupported Request
+> >   Completion Status.
+> > 
+> > Not sure what it actually means, though. A "virtual switch" to me says
+> > it is a switch with one upstream port and multiple downstream ports,
+> > just like normal switch. Is this what you meant? Do you understand it so
+> > that there can be multiple upstream ports connected to a bus?
+> 
+> I agree with you; I think that section is just saying that if a
+> component needs more then eight functions, it can incorporate a
+> switch, so it could have one upstream port, one internal logical bus,
+> up to 32 * 8 = 256 downstream ports on that logical bus, and 8
+> endpoints below each downstream port.  Of course, there wouldn't be
+> enough bus number space for all that.  But I don't think this is
+> talking about a multifunction switch upstream port.
+> 
+> Anyway, I think you're right that there can only be one upstream port
+> on a bus, because an upstream port contains link management stuff, and
+> it wouldn't make sense to have two upstream ports trying to manage the
+> same end of a single link.
+> 
+> But I would really like to remove the PCIe-specific nature of this
+> test somehow so it could work on a conventional PCI topology.
 
-> ---
-> * Changes in v2- Combine all the followup patches and the constification
-> patches into a series.
-> 
->  drivers/pci/endpoint/pci-ep-cfs.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-> index 424fdd6..4f74386 100644
-> --- a/drivers/pci/endpoint/pci-ep-cfs.c
-> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
-> @@ -150,7 +150,7 @@ static void pci_epc_epf_unlink(struct config_item *epc_item,
->  	.drop_link	= pci_epc_epf_unlink,
->  };
->  
-> -static struct config_item_type pci_epc_type = {
-> +static const struct config_item_type pci_epc_type = {
->  	.ct_item_ops	= &pci_epc_item_ops,
->  	.ct_attrs	= pci_epc_attrs,
->  	.ct_owner	= THIS_MODULE,
-> @@ -361,7 +361,7 @@ static void pci_epf_release(struct config_item *item)
->  	.release		= pci_epf_release,
->  };
->  
-> -static struct config_item_type pci_epf_type = {
-> +static const struct config_item_type pci_epf_type = {
->  	.ct_item_ops	= &pci_epf_ops,
->  	.ct_attrs	= pci_epf_attrs,
->  	.ct_owner	= THIS_MODULE,
-> @@ -400,7 +400,7 @@ static void pci_epf_drop(struct config_group *group, struct config_item *item)
->  	.drop_item      = &pci_epf_drop,
->  };
->  
-> -static struct config_item_type pci_epf_group_type = {
-> +static const struct config_item_type pci_epf_group_type = {
->  	.ct_group_ops	= &pci_epf_group_ops,
->  	.ct_owner	= THIS_MODULE,
->  };
-> @@ -428,15 +428,15 @@ void pci_ep_cfs_remove_epf_group(struct config_group *group)
->  }
->  EXPORT_SYMBOL(pci_ep_cfs_remove_epf_group);
->  
-> -static struct config_item_type pci_functions_type = {
-> +static const struct config_item_type pci_functions_type = {
->  	.ct_owner	= THIS_MODULE,
->  };
->  
-> -static struct config_item_type pci_controllers_type = {
-> +static const struct config_item_type pci_controllers_type = {
->  	.ct_owner	= THIS_MODULE,
->  };
->  
-> -static struct config_item_type pci_ep_type = {
-> +static const struct config_item_type pci_ep_type = {
->  	.ct_owner	= THIS_MODULE,
->  };
->  
-> -- 
-> 1.9.1
-> 
+I think we can change the test to check if the bus has only one
+non-hotplug bridge and assing resources to it then instead of explictly
+checking for PCIe upstream port.
