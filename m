@@ -1,85 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:44741 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752774AbdJTLVF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Oct 2017 07:21:05 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [Update][PATCH v2 01/12] PM / core: Add NEVER_SKIP and SMART_PREPARE driver flags
-Date: Fri, 20 Oct 2017 13:11:22 +0200
-Message-ID: <1564009.ulyn1Ag4Ad@aspire.rjw.lan>
-In-Reply-To: <20171019073315.GB20787@kroah.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <11013815.Nxk07oyMGD@aspire.rjw.lan> <20171019073315.GB20787@kroah.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 13 Oct 2017 20:22:10 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+Subject: Re: [PATCH v9 4/4] PCI: hisi: blacklist hip06/hip07 controllers
+ behind SMMUv3
+Message-ID: <20171013192209.GH30572@arm.com>
+References: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
+ <20171006140450.89652-5-shameerali.kolothum.thodi@huawei.com>
 MIME-Version: 1.0
+In-Reply-To: <20171006140450.89652-5-shameerali.kolothum.thodi@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, gabriele.paoloni@huawei.com,
+ marc.zyngier@arm.com, linux-pci@vger.kernel.org, joro@8bytes.org,
+ john.garry@huawei.com, guohanjun@huawei.com, linuxarm@huawei.com,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ wangzhou1@hisilicon.com, sudeep.holla@arm.com, bhelgaas@google.com,
+ robin.murphy@arm.com, linux-arm-kernel@lists.infradead.org, devel@acpica.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, October 19, 2017 9:33:15 AM CEST Greg Kroah-Hartman wrote:
-> On Thu, Oct 19, 2017 at 01:17:31AM +0200, Rafael J. Wysocki wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > The motivation for this change is to provide a way to work around
-> > a problem with the direct-complete mechanism used for avoiding
-> > system suspend/resume handling for devices in runtime suspend.
-> > 
-> > The problem is that some middle layer code (the PCI bus type and
-> > the ACPI PM domain in particular) returns positive values from its
-> > system suspend ->prepare callbacks regardless of whether the driver's
-> > ->prepare returns a positive value or 0, which effectively prevents
-> > drivers from being able to control the direct-complete feature.
-> > Some drivers need that control, however, and the PCI bus type has
-> > grown its own flag to deal with this issue, but since it is not
-> > limited to PCI, it is better to address it by adding driver flags at
-> > the core level.
-> > 
-> > To that end, add a driver_flags field to struct dev_pm_info for flags
-> > that can be set by device drivers at the probe time to inform the PM
-> > core and/or bus types, PM domains and so on on the capabilities and/or
-> > preferences of device drivers.  Also add two static inline helpers
-> > for setting that field and testing it against a given set of flags
-> > and make the driver core clear it automatically on driver remove
-> > and probe failures.
-> > 
-> > Define and document two PM driver flags related to the direct-
-> > complete feature: NEVER_SKIP and SMART_PREPARE that can be used,
-> > respectively, to indicate to the PM core that the direct-complete
-> > mechanism should never be used for the device and to inform the
-> > middle layer code (bus types, PM domains etc) that it can only
-> > request the PM core to use the direct-complete mechanism for
-> > the device (by returning a positive value from its ->prepare
-> > callback) if it also has been requested by the driver.
-> > 
-> > While at it, make the core check pm_runtime_suspended() when
-> > setting power.direct_complete so that it doesn't need to be
-> > checked by ->prepare callbacks.
-> > 
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Fri, Oct 06, 2017 at 03:04:50PM +0100, Shameer Kolothum wrote:
+> The HiSilicon erratum 161010801 describes the limitation of
+> HiSilicon platforms hip06/hip07 to support the SMMUv3 mappings
+> for MSI transactions.
 > 
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> PCIe controller on these platforms has to differentiate the MSI
+> payload against other DMA payload and has to modify the MSI
+> payload. This basically makes it difficult for this platforms to
+> have a SMMU translation for MSI. In order to workaround this, ARM
+> SMMUv3 driver requires a quirk to treat the MSI regions separately.
+> Such a quirk is currently missing for DT based systems and therefore
+> we need to blacklist the hip06/hip07 PCIe controllers.
+> 
+> Signed-off-by: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
+> ---
+>  drivers/pci/dwc/pcie-hisi.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+> index a201791..6800747 100644
+> --- a/drivers/pci/dwc/pcie-hisi.c
+> +++ b/drivers/pci/dwc/pcie-hisi.c
+> @@ -270,6 +270,12 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+>  	struct resource *reg;
+>  	int ret;
+>  
+> +	if ((IS_BUILTIN(CONFIG_ARM_SMMU_V3)) &&
+> +			of_property_read_bool(dev->of_node, "iommu-map")) {
+> +		dev_warn(dev, "HiSilicon erratum 161010801: blacklisting PCIe controllers behind SMMUv3\n");
+> +		return -ENODEV;
+> +	}
+> +
+>  	hisi_pcie = devm_kzalloc(dev, sizeof(*hisi_pcie), GFP_KERNEL);
+>  	if (!hisi_pcie)
+>  		return -ENOMEM;
+> @@ -340,6 +346,12 @@ static int hisi_pcie_almost_ecam_probe(struct platform_device *pdev)
+>  	struct device *dev = &pdev->dev;
+>  	struct pci_ecam_ops *ops;
+>  
+> +	if ((IS_BUILTIN(CONFIG_ARM_SMMU_V3)) &&
+> +			of_property_read_bool(dev->of_node, "iommu-map")) {
+> +		dev_warn(dev, "HiSilicon erratum 161010801: blacklisting PCIe controllers behind SMMUv3\n");
+> +		return -ENODEV;
+> +	}
 
-Thanks!
+This isn't the right way to solve this problem. I was really hoping you'd
+come up with a solution for DT, and I know you've been trying, so I suppose
+for now we'll just have to go with the ACPI workaround you have and leave DT
+in the balance. I'm not at all happy with that, but I don't think this patch
+really improves things.
 
-Does it also apply to the other patches in the series?
+What I think you should do is remove the relevant smmu/iommu-map entries
+from the .dts files that are available for these platforms (i.e. comment
+them out with a description as to why).
 
-I'd like to queue up the core patches for 4.15 as they are specifically
-designed to only affect the drivers that actually set the flags, so there
-shouldn't be any regression resulting from them, and I'd like to be
-able to start using the flags in drivers going forward.
+Will
 
-Thanks,
-Rafael
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
