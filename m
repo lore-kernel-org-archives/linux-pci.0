@@ -1,94 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "M.h. Lian" <minghuan.lian@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: RE: [PATCH 0/5] arm64: add ls1012a and ls1046a pcie support
-Date: Thu, 12 Oct 2017 03:12:47 +0000
-Message-ID: <VI1PR04MB16157ABDE174A8DD1567173CE84B0@VI1PR04MB1615.eurprd04.prod.outlook.com>
-References: <20170919092658.22482-1-Zhiqiang.Hou@nxp.com>
- <20171011185719.GL25517@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171011185719.GL25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59334 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751138AbdJMQvy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Oct 2017 12:51:54 -0400
+Date: Fri, 13 Oct 2017 11:51:52 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        Doug Anderson <dianders@chromium.org>
+Subject: Re: [PATCH 1/3] Documentation/devicetree: Add pcie-reset-suspend
+ property
+Message-ID: <20171013165152.GE25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171012205220.130048-1-briannorris@chromium.org>
+ <20171012205220.130048-2-briannorris@chromium.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Jason Cooper <jason@lakedaemon.net>, Roy Zang <roy.zang@nxp.com>,
- "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, Mingkai
- Hu <mingkai.hu@nxp.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "shawnguo@kernel.org" <shawnguo@kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171012205220.130048-2-briannorris@chromium.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+[+cc Doug]
 
-I greatly appreciate for your review and picking up them.
+On Thu, Oct 12, 2017 at 01:52:18PM -0700, Brian Norris wrote:
+> The patch is self-descriptive. I've found that we may need
+> platform-specific behavior for the PERST# signal in system suspend,
+> depending on the type of PCIe endpoints are attached.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+>  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> index c77981c5dd18..91339b6d0652 100644
+> --- a/Documentation/devicetree/bindings/pci/pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> @@ -24,3 +24,14 @@ driver implementation may support the following properties:
+>     unsupported link speed, for instance, trying to do training for
+>     unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+>     for gen2, and '1' for gen1. Any other values are invalid.
+> +- pcie-reset-suspend:
+> +   If present this property defines whether the PCIe Reset signal (referred to
+> +   as PERST#) should be asserted when the system enters low-power suspend modes
+> +   (e.g., S3). Depending on the form factor, the associated PCIe
+> +   electromechanical specification may specify a particular behavior (e.g.,
+> +   "PERST# is asserted in advance of the power being switched off in a
+> +   power-managed state like S3") or it may be less clear. The net result is
+> +   that some endpoints perform better (e.g., lower power consumption) with
+> +   PERST# asserted, and others prefer PERST# deasserted. The value must be '0'
+> +   or '1', where '0' means do not assert PERST# and '1' means assert PERST#.
+> +   When absent, behavior may be platform-specific.
 
-Acked-by: Minghuan Lian <minghuan.Lian@nxp.com>
+I don't understand this at all.  Are you suggesting that we need
+different "pcie-reset-suspend" values based on what sort of endpoint
+the user plugs in?
 
+If so, I really don't want to get involved in that, because that's an
+issue that needs to be resolved by the vendors and the PCI-SIG.  If we
+put in a tweak like this, I think it would be a band-aid that only
+delays getting a real solution figured out.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Thursday, October 12, 2017 2:57 AM
-> To: Z.q. Hou <zhiqiang.hou@nxp.com>
-> Cc: linux-kernel@vger.kernel.org; devicetree@vger.kernel.org; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linuxppc-
-> dev@lists.ozlabs.org; marc.zyngier@arm.com; robh+dt@kernel.org;
-> mark.rutland@arm.com; bhelgaas@google.com; shawnguo@kernel.org;
-> Mingkai Hu <mingkai.hu@nxp.com>; M.h. Lian <minghuan.lian@nxp.com>; Roy
-> Zang <roy.zang@nxp.com>; Thomas Gleixner <tglx@linutronix.de>; Jason
-> Cooper <jason@lakedaemon.net>
-> Subject: Re: [PATCH 0/5] arm64: add ls1012a and ls1046a pcie support
-> 
-> On Tue, Sep 19, 2017 at 05:26:53PM +0800, Zhiqiang Hou wrote:
-> > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> >
-> > This patch set adds ls1012a MSI and PCIe support, including driver and
-> > device tree nodes. The ls1046a's MSI support patch and PCIe driver
-> > patch has been applied, so only adds the PCIe device tree nodes.
-> >
-> > Hou Zhiqiang (5):
-> >   irqchip/ls-scfg-msi: add LS1012a MSI support
-> >   arm64: dts: ls1012a: Add MSI controller DT node
-> >   PCI: layerscape: Add support for ls1012a
-> >   arm64: dts: ls1012a: Add PCIe controller DT node
-> >   arm64: dts: ls1046a: add PCIe controller DT nodes
-> >
-> >  .../interrupt-controller/fsl,ls-scfg-msi.txt       |  1 +
-> >  .../devicetree/bindings/pci/layerscape-pci.txt     |  1 +
-> >  arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi     | 31 +++++++++
-> >  arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi     | 75
-> ++++++++++++++++++++++
-> >  drivers/irqchip/irq-ls-scfg-msi.c                  |  1 +
-> >  drivers/pci/dwc/pci-layerscape.c                   |  1 +
-> >  6 files changed, 110 insertions(+)
-> 
-> I'm not 100% sure who should take these.  They trivially touch PCI and I haven't
-> seen anybody else respond, so I put them on pci/host-layerscape with Rob's acks.
-> 
-> If somebody else wants to take them, just let me know and I'll drop them.
-> 
-> They really should be acked by Minghuan or Mingkai, who are listed as the
-> maintainers of drivers/pci/dwc/pci-layerscape.c and are presumably responsible
-> for the related dtsi files, too.
-> 
-> Thomas, Jason, and Marc are listed as maintainers of drivers/irqchip/irq-ls-scfg-
-> msi.c.  It's a trivial change, but I added them to the cc list.
+If you want a quirk to tune this based on specific devices, that might
+make sense.  It would still sound like an interoperability issue and
+an ongoing maintenance problem, but at least we would have specific
+details about which devices are involved, and we'd have a chance to
+make them work on more controllers than just Rockchip.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
