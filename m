@@ -1,40 +1,41 @@
-Return-Path: <SRS0=gpAo=BW=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=gpAo=BW=linux.intel.com=mika.westerberg@kernel.org>
-Date: Mon, 23 Oct 2017 14:04:45 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ashok Raj <ashok.raj@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <yehezkel.bernat@intel.com>,
-	Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 8/8] PCI: pciehp: Check that the device is really
- present before touching it
-Message-ID: <20171023110445.GA29656@lahna.fi.intel.com>
-References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
- <20171013183548.68283-9-mika.westerberg@linux.intel.com>
- <20171020211502.GR6332@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171020211502.GR6332@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 05/10] PCI: artpec6: remove unused defines
+Date: Fri, 13 Oct 2017 18:09:08 +0200
+Message-Id: <20171013160914.3220-6-niklas.cassel@axis.com>
+In-Reply-To: <20171013160914.3220-1-niklas.cassel@axis.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 04:15:02PM -0500, Bjorn Helgaas wrote:
-> > +
-> > +		/* Check if the device is really there anymore */
-> > +		present = presence ? pci_device_is_present(dev) : false;
-> > +
-> > +		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && present) {
-> >  			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
-> 
-> I don't like this fix because it's still racy.  We always have to be deal
-> with a config read that returns 0xffffffff, even if we previously checked
-> pci_device_is_present().  The device might have disappeared in the interim.
+Commit b015b37e6693 ("PCI: artpec6: Stop enabling writes to
+DBI read-only registers") removed the only write using these
+defines, but it did not remove the defines.
+Remove the defines since they are now unused.
 
-That's a fair point. I guess it is better just to check if bctl holds
-0xffff before we decide it is a display device.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-I'll rework this patch and send an updated version separately.
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 6653619db6a1..4b8ef266dc2f 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -37,9 +37,6 @@ struct artpec6_pcie {
+ #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
+ #define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
+ 
+-#define MISC_CONTROL_1_OFF		(PL_OFFSET + 0x1bc)
+-#define  DBI_RO_WR_EN			1
+-
+ /* ARTPEC-6 specific registers */
+ #define PCIECFG				0x18
+ #define  PCIECFG_DBG_OEN		(1 << 24)
+-- 
+2.11.0
