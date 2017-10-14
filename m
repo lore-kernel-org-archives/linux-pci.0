@@ -1,134 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59742 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753783AbdJQRHz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Oct 2017 13:07:55 -0400
-Date: Tue, 17 Oct 2017 12:07:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org,
-        David Gibson <david@gibson.dropbear.id.au>,
-        kvm-ppc@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Russell Currey <ruscur@russell.cc>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH kernel v2] powerpc/powernv: Reserve a hole which appears
- after enabling IOV
-Message-ID: <20171017170754.GD5641@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170927065231.20382-1-aik@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170927065231.20382-1-aik@ozlabs.ru>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:51628 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751138AbdJNWHv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 14 Oct 2017 18:07:51 -0400
+Received: by mail-qk0-f194.google.com with SMTP id 17so8837343qkq.8
+        for <linux-pci@vger.kernel.org>; Sat, 14 Oct 2017 15:07:51 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>
+Subject: [PATCH 5/5] PCI: xilinx-nwl: Fix platform_get_irq() error handling
+Date: Sat, 14 Oct 2017 19:07:31 -0300
+Message-Id: <1508018851-9272-5-git-send-email-festevam@gmail.com>
+In-Reply-To: <1508018851-9272-1-git-send-email-festevam@gmail.com>
+References: <1508018851-9272-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 27, 2017 at 04:52:31PM +1000, Alexey Kardashevskiy wrote:
-> In order to make generic IOV code work, the physical function IOV BAR
-> should start from offset of the first VF. Since M64 segments share
-> PE number space across PHB, and some PEs may be in use at the time
-> when IOV is enabled, the existing code shifts the IOV BAR to the index
-> of the first PE/VF. This creates a hole in IOMEM space which can be
-> potentially taken by some other device.
-> 
-> This reserves a temporary hole on a parent and releases it when IOV is
-> disabled; the temporary resources are stored in pci_dn to avoid
-> kmalloc/free.
-> 
-> Cc: linux-pci@vger.kernel.org
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+When platform_get_irq() fails we should propagate the real error value
+instead of always returning -EINVAL.
 
-Looks good to me.
+Cc: Michal Simek <michal.simek@xilinx.com>
+Signed-off-by: Fabio Estevam <festevam@gmail.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I assume this will be merged via the powerpc branch.
-
-> ---
-> 
-> I assume this goes to powerpc next branch but before this I'd like to
-> get Bjorn's opinion as he continously commented on this bit.
-> 
-> This is the diff in /proc/iomem:
-> 
-> @@ -11,6 +11,7 @@
->          200800000000-200bffffffff : 0000:04:00.0
->  210000000000-21fdffffffff : /pciex@3fffe40100000
->    210000000000-21fdfff0ffff : PCI Bus 0001:01
-> +    210000000000-210009ffffff : pnv_iov_reserved
->      21000a000000-2101ffffffff : 0001:01:00.0
->        21000a000000-21000bffffff : 0001:01:00.2
->          21000a000000-21000bffffff : mlx5_core
-> 
-> ---
-> Changes:
-> v2:
-> * changed order - now devm_release_resource() is called before
-> pci_update_resource(). Strangely the opposite did not produce a warning
-> but still
-> ---
->  arch/powerpc/include/asm/pci-bridge.h     |  1 +
->  arch/powerpc/platforms/powernv/pci-ioda.c | 24 +++++++++++++++++++++---
->  2 files changed, 22 insertions(+), 3 deletions(-)
-> 
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 0b8aa1fe2d5f..62ed83db04ae 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -218,6 +218,7 @@ struct pci_dn {
->  #endif
->  	struct list_head child_list;
->  	struct list_head list;
-> +	struct resource holes[PCI_SRIOV_NUM_BARS];
->  };
->  
->  /* Get the pointer to a device_node's pci_dn */
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 57f9e55f4352..d66a758b8efb 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -1002,9 +1002,12 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
->  	}
->  
->  	/*
-> -	 * After doing so, there would be a "hole" in the /proc/iomem when
-> -	 * offset is a positive value. It looks like the device return some
-> -	 * mmio back to the system, which actually no one could use it.
-> +	 * Since M64 BAR shares segments among all possible 256 PEs,
-> +	 * we have to shift the beginning of PF IOV BAR to make it start from
-> +	 * the segment which belongs to the PE number assigned to the first VF.
-> +	 * This creates a "hole" in the /proc/iomem which could be used for
-> +	 * allocating other resources so we reserve this area below and
-> +	 * release when IOV is released.
->  	 */
->  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
->  		res = &dev->resource[i + PCI_IOV_RESOURCES];
-> @@ -1018,7 +1021,22 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
->  		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
->  			 i, &res2, res, (offset > 0) ? "En" : "Dis",
->  			 num_vfs, offset);
-> +
-> +		if (offset < 0) {
-> +			devm_release_resource(&dev->dev, &pdn->holes[i]);
-> +			memset(&pdn->holes[i], 0, sizeof(pdn->holes[i]));
-> +		}
-> +
->  		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
-> +
-> +		if (offset > 0) {
-> +			pdn->holes[i].start = res2.start;
-> +			pdn->holes[i].end = res2.start + size * offset - 1;
-> +			pdn->holes[i].flags = IORESOURCE_BUS;
-> +			pdn->holes[i].name = "pnv_iov_reserved";
-> +			devm_request_resource(&dev->dev, res->parent,
-> +					&pdn->holes[i]);
-> +		}
->  	}
->  	return 0;
->  }
-> -- 
-> 2.11.0
-> 
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 65dea98..b896167 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -591,7 +591,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie)
+ 	msi->irq_msi1 = platform_get_irq_byname(pdev, "msi1");
+ 	if (msi->irq_msi1 < 0) {
+ 		dev_err(dev, "failed to get IRQ#%d\n", msi->irq_msi1);
+-		ret = -EINVAL;
++		ret = msi->irq_msi1;
+ 		goto err;
+ 	}
+ 
+@@ -602,7 +602,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie)
+ 	msi->irq_msi0 = platform_get_irq_byname(pdev, "msi0");
+ 	if (msi->irq_msi0 < 0) {
+ 		dev_err(dev, "failed to get IRQ#%d\n", msi->irq_msi0);
+-		ret = -EINVAL;
++		ret = msi->irq_msi0;
+ 		goto err;
+ 	}
+ 
+@@ -735,7 +735,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	if (pcie->irq_misc < 0) {
+ 		dev_err(dev, "failed to get misc IRQ %d\n",
+ 			pcie->irq_misc);
+-		return -EINVAL;
++		return pcie->irq_misc;
+ 	}
+ 
+ 	err = devm_request_irq(dev, pcie->irq_misc,
+-- 
+2.7.4
