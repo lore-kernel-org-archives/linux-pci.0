@@ -1,222 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 26 Oct 2017 22:55:30 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, rjw@rjwysocki.net, dianders@chromium.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v8 7/7] PCI / PM: Add support for the PCIe WAKE#
- signal for OF
-Message-ID: <20171027055529.GB85582@google.com>
-References: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
- <20171026132840.20946-8-jeffy.chen@rock-chips.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f45.google.com ([209.85.213.45]:45766 "EHLO
+        mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751602AbdJNEVx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 14 Oct 2017 00:21:53 -0400
+Received: by mail-vk0-f45.google.com with SMTP id q13so5253410vkb.2
+        for <linux-pci@vger.kernel.org>; Fri, 13 Oct 2017 21:21:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171026132840.20946-8-jeffy.chen@rock-chips.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171013071121.GF1952@nanopsycho.orion>
+References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
+ <20171012150419.GI14672@nanopsycho> <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
+ <20171012.120650.1063812043202847517.davem@davemloft.net> <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
+ <CAJieiUjK4CsBGT5_YidnEGk7mCVYYO_8S0xcsv+XfaW=amGCaQ@mail.gmail.com> <20171013071121.GF1952@nanopsycho.orion>
+From: Roopa Prabhu <roopa@cumulusnetworks.com>
+Date: Fri, 13 Oct 2017 21:21:51 -0700
+Message-ID: <CAJieiUivmAzJ2rxaf44HxOJ2u1nXUuFMkGSkjK2zfy3JKyfxFA@mail.gmail.com>
+Subject: Re: [RFC 0/3] Adding config get/set to devlink
+To: Jiri Pirko <jiri@resnulli.us>
+Cc: Florian Fainelli <f.fainelli@gmail.com>,
+        David Miller <davem@davemloft.net>,
+        Steve Lin <steven.lin1@broadcom.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        linux-pci@vger.kernel.org,
+        "John W. Linville" <linville@tuxdriver.com>,
+        Andy Gospodarek <gospo@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jeffy,
+On Fri, Oct 13, 2017 at 12:11 AM, Jiri Pirko <jiri@resnulli.us> wrote:
+> Thu, Oct 12, 2017 at 11:53:56PM CEST, roopa@cumulusnetworks.com wrote:
+>>On Thu, Oct 12, 2017 at 12:20 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+>>> On 10/12/2017 12:06 PM, David Miller wrote:
+>>>> From: Florian Fainelli <f.fainelli@gmail.com>
+>>>> Date: Thu, 12 Oct 2017 08:43:59 -0700
+>>>>
+>>>>> Once we move ethtool (or however we name its successor) over to
+>>>>> netlink there is an opportunity for accessing objects that do and do
+>>>>> not have a netdevice representor today (e.g: management ports on
+>>>>> switches) with the same interface, and devlink could be used for
+>>>>> that.
+>>>>
+>>>> That is an interesting angle for including this in devlink.
+>>>>
+>>>> I'm not so sure what to do about this.
+>>>>
+>>>> One suggestion is that devlink is used for getting ethtool stats for
+>>>> objects lacking netdev representor's, and a new genetlink family is
+>>>> used for netdev based ethtool.
+>>>
+>>> Right, I was also thinking along those lines that we we would have a new
+>>> generic netlink family for ethtool to support ethtool over netlink.
+>>
+>>new api is fine by me. The reason for suggesting devlink was because
+>>some of the devlink
+>>port_* ops are close to ethtool ops that can operate on a port/netdev.
+>>eg split_port could be a netdev operation
+>>unless you want to split before the netdev is created.
+>
+> Let me correct you. The split is always devlink_port operation. In some
+> cases however when there is a mapping between devlink_port and netdev,
+> userspace part could translate netdev->devlink_port.
 
-On Thu, Oct 26, 2017 at 09:28:40PM +0800, Jeffy Chen wrote:
-> Add pci-of.c to handle the PCIe WAKE# interrupt.
-> 
-> Also use the dedicated wakeirq infrastructure to simplify it.
-> 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
-> 
-> Changes in v8:
-> Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-> 
-> Changes in v7:
-> Move PCIE_WAKE handling into pci core.
-> 
-> Changes in v6:
-> Fix device_init_wake error handling, and add some comments.
-> 
-> Changes in v5:
-> Rebase.
-> 
-> Changes in v3:
-> Fix error handling.
-> 
-> Changes in v2:
-> Use dev_pm_set_dedicated_wake_irq.
-> 
->  drivers/pci/Makefile |   2 +-
->  drivers/pci/pci-of.c | 136 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 137 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/pci/pci-of.c
-> 
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index 66a21acad952..4f76dbdb024c 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -49,7 +49,7 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
->  
->  obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
->  
-> -obj-$(CONFIG_OF) += of.o
-> +obj-$(CONFIG_OF) += of.o pci-of.o
->  
->  ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
->  
-> diff --git a/drivers/pci/pci-of.c b/drivers/pci/pci-of.c
-> new file mode 100644
-> index 000000000000..55a33206fc84
-> --- /dev/null
-> +++ b/drivers/pci/pci-of.c
-> @@ -0,0 +1,136 @@
-> +/*
-> + * OF PCI PM support
-> + *
-> + * Copyright (c) 2017 Rockchip, Inc.
-> + *
-> + * Author: Jeffy Chen <jeffy.chen@rock-chips.com>
-> + *
-> + * This program is free software: you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation, either version 2 of the License, or
-> + * (at your option) any later version.
-> + */
-> +
-> +#include <linux/init.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/pci.h>
-> +#include <linux/pm_wakeirq.h>
-> +#include "pci.h"
-> +
-> +struct of_pci_pm_data {
-> +	struct device	*dev;
-> +	unsigned int	wakeup_irq;
-> +	atomic_t	wakeup_cnt;
-> +};
-> +
-> +static void *of_pci_setup(struct device *dev)
-> +{
-> +	struct of_pci_pm_data *data;
-> +	int irq;
-> +
-> +	if (!dev->of_node)
-> +		return NULL;
-> +
-> +	data = devm_kzalloc(dev, sizeof(struct of_pci_pm_data), GFP_KERNEL);
-> +	if (!data)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	irq = of_irq_get_byname(dev->of_node, "wakeup");
-> +	if (irq < 0) {
-> +		if (irq == -EPROBE_DEFER)
-> +			return ERR_PTR(irq);
-> +
-> +		return NULL;
-> +	}
-> +
-> +	data->wakeup_irq = irq;
-> +	data->dev = dev;
-> +
-> +	device_init_wakeup(dev, false);
-> +
-> +	dev_info(dev, "Wakeup IRQ %d\n", irq);
-> +	return data;
-> +}
-> +
-> +static void *of_pci_setup_dev(struct pci_dev *pci_dev)
-> +{
-> +	return of_pci_setup(&pci_dev->dev);
-> +}
-> +
-> +static void *of_pci_setup_host_bridge(struct pci_host_bridge *bridge)
-> +{
-> +	return of_pci_setup(bridge->dev.parent);
-> +}
-> +
-> +static void of_pci_cleanup(void *pmdata)
-> +{
-> +	struct of_pci_pm_data *data = pmdata;
-> +
-> +	if (IS_ERR_OR_NULL(data)) {
-> +		device_init_wakeup(data->dev, false);
-> +		dev_pm_clear_wake_irq(data->dev);
-> +	}
-> +}
-> +
-> +static bool of_pci_can_wakeup(void *pmdata)
-> +{
-> +	struct of_pci_pm_data *data = pmdata;
-> +
-> +	if (IS_ERR_OR_NULL(data))
-> +		return false;
-> +
-> +	return data->wakeup_irq > 0;
-> +}
-> +
-> +static int of_pci_dev_wakeup(void *pmdata, bool enable)
-> +{
-> +	struct of_pci_pm_data *data = pmdata;
-> +	struct device *dev = data->dev;
-> +	int ret;
-> +
-> +	if (!enable) {
-> +		dev_pm_clear_wake_irq(dev);
-> +		return device_set_wakeup_enable(dev, false);
-> +	}
-> +
-> +	ret = device_set_wakeup_enable(dev, true);
-> +	if (ret < 0)
-> +		return ret;
+yes, thats what i was trying to hint..that in some cases devlink_port
+can already be mapped to a netdev.
 
-One reason this series is failing for me: the above is failing with
--EINVAL -- it seems like no one set the 'can_wakeup' flag for the
-Marvell Wifi card I'm using. It seems like we probably *should* be
-calling device_set_wakeup_capable() from your new setup method, to say
-that we're capable of wakeup. The PCI PME code does this already, which
-seems to make sense. There are also some network drivers that do it too
-(e.g., ath10k), but not all.
+>
+>
+>>
+>>There are some ops in devlink which are global hw parameters and not
+>>specific to a port, those fit perfectly with
+>>devlinks original goal.
+>
+> There are 2 handles from the very beginning:
+> 1) devlink - asic-wide handle
+> 2) devlink_port - port handle
 
-Brian
+yep, i know that...and i was not trying to say that is a bad thing.
 
-> +
-> +	ret = dev_pm_set_dedicated_wake_irq(dev, data->wakeup_irq);
-> +	if (ret < 0) {
-> +		device_set_wakeup_enable(dev, false);
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int of_pci_bridge_wakeup(void *pmdata, bool enable)
-> +{
-> +	struct of_pci_pm_data *data = pmdata;
-> +
-> +	if (enable && atomic_inc_return(&data->wakeup_cnt) != 1)
-> +		return 0;
-> +
-> +	if (!enable && atomic_dec_return(&data->wakeup_cnt) != 0)
-> +		return 0;
-> +
-> +	return of_pci_dev_wakeup(pmdata, enable);
-> +}
-> +
-> +static const struct pci_platform_pm_ops of_pci_platform_pm = {
-> +	.setup_dev		= of_pci_setup_dev,
-> +	.setup_host_bridge	= of_pci_setup_host_bridge,
-> +	.cleanup		= of_pci_cleanup,
-> +	.can_wakeup		= of_pci_can_wakeup,
-> +	.dev_wakeup		= of_pci_dev_wakeup,
-> +	.bridge_wakeup		= of_pci_bridge_wakeup,
-> +};
-> +
-> +static int __init of_pci_init(void)
-> +{
-> +	pci_set_platform_pm(&of_pci_platform_pm);
-> +	return 0;
-> +}
-> +arch_initcall(of_pci_init);
-> -- 
-> 2.11.0
-> 
-> 
+I think we will end up with devlink_port operations that could also be
+done on a netdev down the lane. And, we may have to then argue where
+an attribute will go. Hence my suggestion on classifying the api by
+the target (driver in this case vs kernel networking for rtnetlink).
+If you take netdev out of the picture, the port attributes that
+devlink tries to set are similar to the ethtool port attributes today.
+Also, it seemed like the new port attributes set api (proposed in this
+thread) was close to the ethtool attributes set. Having all link hw
+attributes in the same tool/api has  advantages. I have no plans to
+move anything yet...so if the general preference is to keep devlink
+netdev free for now, thats fine.
