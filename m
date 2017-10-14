@@ -1,55 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 20 Oct 2017 18:01:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Dexuan Cui <decui@microsoft.com>, x86@kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        linux-pci@vger.kernel.org, devel@linuxdriverproject.org,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>
-Subject: Re: [patch 0/3] x86/PCI/MSI: Make sure that irq reservation mode
- works everywhere
-Message-ID: <20171020230127.GW6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171017075456.694047687@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171017075456.694047687@linutronix.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:47459 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751138AbdJNWHn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 14 Oct 2017 18:07:43 -0400
+Received: by mail-qt0-f193.google.com with SMTP id z50so25437062qtj.4
+        for <linux-pci@vger.kernel.org>; Sat, 14 Oct 2017 15:07:43 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 1/5] PCI: aardvark: Check for platform_get_irq() error
+Date: Sat, 14 Oct 2017 19:07:27 -0300
+Message-Id: <1508018851-9272-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 09:54:56AM +0200, Thomas Gleixner wrote:
-> Dexuan reported that the recent rework of the vector allocation mode in x86
-> broke HyperV PCI passtrough because the rework missed to add the
-> MSI_FLAG_MUST_REACTIVATE flag to the HyperV/PCI interrupt domain info.
-> 
-> The simple solution would be to set the flag in the HyperV/PCI driver but
-> it's better to make this generic and let the PCI/MSI core code set the flag
-> when reservation mode is enabled. That ensures that future users of this
-> wont trip over the same problem.
-> 
-> Thanks,
-> 
-> 	tglx
-> 
-> ---
->  arch/x86/Kconfig           |    2 +-
->  arch/x86/kernel/apic/msi.c |    5 ++---
->  drivers/pci/msi.c          |    2 ++
->  kernel/irq/Kconfig         |    3 +++
->  4 files changed, 8 insertions(+), 4 deletions(-)
+platform_get_irq() may fail and in the case of failure the error value
+should be propagated.
 
-This mentions 4900be83602b ("x86/vector/msi: Switch to global reservation
-mode"), which I don't have, so I assume it's an x86 thing.  So I guess
-you'll probably merge this via the same tree?
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Fabio Estevam <festevam@gmail.com>
+---
+ drivers/pci/host/pci-aardvark.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Here's my ack for the PCI part:
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 26ed0c0..f3b16ff 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -901,6 +901,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pcie->base);
+ 
+ 	irq = platform_get_irq(pdev, 0);
++	if (irq < 0)
++		return irq;
+ 	ret = devm_request_irq(dev, irq, advk_pcie_irq_handler,
+ 			       IRQF_SHARED | IRQF_NO_THREAD, "advk-pcie",
+ 			       pcie);
+-- 
+2.7.4
