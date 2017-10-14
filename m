@@ -1,100 +1,69 @@
-Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH v4 3/3] pci/iov: Expose VF drivers Auto Probe Globally
-To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, linuxppc-dev@lists.ozlabs.org
-References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
- <20171031144724.27808-4-bryantly@linux.vnet.ibm.com>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Tue, 31 Oct 2017 09:52:55 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20171031144724.27808-4-bryantly@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <01c04bf3-36bf-31f6-c714-a616ea2fcf56@linux.vnet.ibm.com>
+In-Reply-To: <20171013062728.GA56763@google.com>
+References: <20171012205220.130048-1-briannorris@chromium.org>
+ <20171013031523.GB25517@bhelgaas-glaptop.roam.corp.google.com>
+ <20171013062728.GA56763@google.com>
+From: Brian Norris <briannorris@chromium.org>
+Date: Fri, 13 Oct 2017 17:06:48 -0700
+Message-ID: <CA+ASDXM2UnoGOkyVy=y3XToTvLZ1djLNaDESkB89mf-mzqGHRg@mail.gmail.com>
+Subject: Re: [PATCH 0/3] PCI: rockchip: assert PERST# in S3
+To: Bjorn Helgaas <helgaas@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Heiko Stuebner <heiko@sntech.de>, furquan@chromium.org,
+ linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-kernel@vger.kernel.org,
+ "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+ Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add linuxppc-dev@lists.ozlabs.org
+Hi Bjorn,
 
-On 10/31/17 9:47 AM, Bryant G. Ly wrote:
+One piece of information to add:
 
-> When SR-IOV is supported in pci_dev struct the
-> member variable drivers_autoprobe controls the
-> VF drivers auto probe functionality. This
-> patch exposes a gloabal function to be used
-> if needed when configuring the pci_dev sriov object.
+On Thu, Oct 12, 2017 at 11:27 PM, Brian Norris <briannorris@chromium.org> wrote:
+> On Thu, Oct 12, 2017 at 10:15:23PM -0500, Bjorn Helgaas wrote:
+> > Is this a hole in those specs?  Is this something that needs to be
+> > clarified by the PCI-SIG to improve interoperability?
 >
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/platforms/pseries/pci.c |  2 ++
->  drivers/pci/iov.c                    | 12 ++++++++++++
->  include/linux/pci.h                  |  2 ++
->  3 files changed, 16 insertions(+)
+> After re-re-reading the specifications, I'm more convinced that the
+> first Wifi vendor got it wrong. I also don't trust them to get many
+> things right in general, so this is pretty much par for the course.
 >
-> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-> index 14a90cf471cc..48d3af026f90 100644
-> --- a/arch/powerpc/platforms/pseries/pci.c
-> +++ b/arch/powerpc/platforms/pseries/pci.c
-> @@ -63,6 +63,7 @@ int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
->  {
->  	/* Allocate PCI data */
->  	add_dev_pci_data(pdev);
-> +	pci_vf_drivers_autoprobe(pdev, false);
->  	return 0;
->  }
->
-> @@ -70,6 +71,7 @@ int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
->  {
->  	/* Release PCI data */
->  	remove_dev_pci_data(pdev);
-> +	pci_vf_drivers_autoprobe(pdev, true);
->  	return 0;
->  }
->  #endif
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index ac41c8be9200..41465c06975c 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -634,6 +634,18 @@ void pci_restore_iov_state(struct pci_dev *dev)
->  }
->
->  /**
-> + * pci_vf_drivers_autoprobe - set pf property drivers_autoprobe for vfs
-> + * @dev: the PCI device
-> + * @auto_probe: set vf drivers auto probe flag
-> + */
-> +void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool auto_probe)
-> +{
-> +	if (dev->is_physfn)
-> +		dev->sriov->drivers_autoprobe = auto_probe;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_vf_drivers_autoprobe);
-> +
-> +/**
->   * pci_iov_bus_range - find bus range used by Virtual Function
->   * @bus: the PCI bus
->   *
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index f4f8ee5a7362..17a08554baa2 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1965,6 +1965,7 @@ int pci_vfs_assigned(struct pci_dev *dev);
->  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
->  int pci_sriov_get_totalvfs(struct pci_dev *dev);
->  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
-> +void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
->  #else
->  static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
->  {
-> @@ -1992,6 +1993,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
->  { return 0; }
->  static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
->  { return 0; }
-> +static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
->  #endif
->
->  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+> The only things I can suggest:
+> * "main power" is never defined, as far as I can tell. So "main" and
+>   "auxiliary" power don't have much meaning for many M.2 cards, and so
+>   I end up reading much of the spec with a grain of salt
+
+This part is where the first vendor seems to disagree. They claim that
+because power is not switched off, PERST# can remain asserted or
+deasserted -- whichever leads to least power consumption. (i.e., they
+don't consider they need to follow the parts that describe "when
+removing main power" (e.g., in S3) we must assert PERST#.
+
+> * S3 is never defined in the PCIe Card EM spec, but it's thrown around a
+>   few times
+> * if possible, the PCIe base spec should mention something about the
+>   fundamental reset which is expected with an L2 transition. It's not
+>   clear what to do if you don't want to switch off power completely (and
+>   so enter L3), but you also don't have "auxiliary" power
+
+Brian
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
