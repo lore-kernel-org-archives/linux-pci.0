@@ -1,114 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 20 Oct 2017 17:52:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Guo <shawnguo@kernel.org>
-Subject: Re: [PATCH] PCI: hisi: add PCIe driver support for HiSilicon STB SoCs
-Message-ID: <20171020225248.GV6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508043971-23216-1-git-send-email-shawnguo@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1508043971-23216-1-git-send-email-shawnguo@kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Jianguo Sun <sunjianguo1@huawei.com>,
- Jiancheng Xue <xuejiancheng@hisilicon.com>, Rob Herring <robh+dt@kernel.org>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Shawn Guo <shawn.guo@linaro.org>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pu1apc01on0136.outbound.protection.outlook.com ([104.47.126.136]:63712
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753528AbdJNDBr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 13 Oct 2017 23:01:47 -0400
+From: Dexuan Cui <decui@microsoft.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>
+Subject: [PATCH] PCI: hv: fix "spurious APIC interrupt" due to new vector
+ reservation mode
+Date: Sat, 14 Oct 2017 03:01:22 +0000
+Message-ID: <KL1P15301MB0006E6E2D1AF8F6E27686DD0BF490@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 15, 2017 at 01:06:11PM +0800, Shawn Guo wrote:
-> From: Jianguo Sun <sunjianguo1@huawei.com>
-> 
-> Add PCIe controller driver for HiSilicon STB SoCs,
-> the controller is based on the DesignWare's PCIe core.
 
-s/DesignWare's/DesignWare/
+Last month the vector management code was reworked, and as a result of the
+changes, e.g. commit 22d0b12f3560 ("genirq/irqdomain: Add force
+reactivation flag to irq domains"), commit 4900be83602b ("x86/vector/msi:
+Switch to global reservation mode") etc, now we must add this new flag
+MSI_FLAG_MUST_REACTIVATE when calling pci_msi_create_irq_domain() on x86,
+otherwise Hyper-V PCIe pass-through can't work, and we get:
+"spurious APIC interrupt through vector ff on CPU#0, should never happen",
+this is because no valid MSI/MSI-X vector is allocated.
 
-> Signed-off-by: Jianguo Sun <sunjianguo1@huawei.com>
-> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
-> ---
->  .../bindings/pci/hisilicon-histb-pcie.txt          |  66 +++
->  drivers/pci/dwc/Kconfig                            |  10 +
->  drivers/pci/dwc/Makefile                           |   1 +
->  drivers/pci/dwc/pcie-histb.c                       | 469 +++++++++++++++++++++
->  4 files changed, 546 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
->  create mode 100644 drivers/pci/dwc/pcie-histb.c
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: K. Y. Srinivasan <kys@microsoft.com>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: Stephen Hemminger <sthemmin@microsoft.com>
+---
 
-Looks beautiful overall!
+Currently the "reservation mode" patchset has not been in Linus's tree yet,=
+ so
+today's mainline hasn't shown the issue, but today's linux-next has shown t=
+he
+issue (PCIe pass-through on Hyper-V can't work).
 
-This needs a MAINTAINERS update so "./scripts/get_maintainer.pl -f" prints
-something useful.
+I think any caller of pci_msi_create_irq_domain() that runs on x86 needs to
+be updated, but besides pci-hyper I'm not sure which callers run on x86.
 
-A few minor nits below that I would fix myself, but since you need to
-supply the MAINTAINERS update anyway, I'll let you do it :)
+ drivers/pci/host/pci-hyperv.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-> new file mode 100644
-> index 000000000000..9474ad9bc36c
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
-> @@ -0,0 +1,66 @@
-> +HiSilicon STB PCIe host bridge DT description
-> +
-> +HiSilicon STB PCIe host controller is based on Designware PCI core.
-> +It shares common functions with PCIe Designware core driver and inherits
-> +common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pcie.txt.
-
-s/Designware/DesignWare/ in English text above (not in filenames,
-function names, etc).
-
-s/PCI/PCIe/
-
-> +static u32 histb_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
-> +				u32 reg, size_t size)
-
-These should be lined up exactly ("u32" should line up with "struct"
-above it).  They are currently off by one.  Similarly for
-histb_pcie_write_dbi(), histb_pcie_rd_own_conf(),
-histb_pcie_wr_own_conf().
-
-> +	hipcie->aux_clk = devm_clk_get(dev, "aux");
-> +	if (IS_ERR(hipcie->aux_clk)) {
-> +		dev_err(dev, "Failed to get pcie aux clk\n");
-
-s/pcie/PCIe/ in this message and the ones below.  Also in
-histb_pcie_host_enable() comment.
-
-> +		return PTR_ERR(hipcie->aux_clk);
-> +	}
-> +
-> +	hipcie->pipe_clk = devm_clk_get(dev, "pipe");
-> +	if (IS_ERR(hipcie->pipe_clk)) {
-> +		dev_err(dev, "Failed to get pcie pipe clk\n");
-> +		return PTR_ERR(hipcie->pipe_clk);
-
-> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> +		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
-> +		if (pp->msi_irq < 0) {
-> +			dev_err(dev, "Failed to get msi irq\n");
-> +			return pp->msi_irq;
-> +		}
-> +
-> +		ret = devm_request_irq(dev, pp->msi_irq,
-> +				       histb_pcie_msi_irq_handler,
-> +				       IRQF_SHARED, "histb-pcie-msi", pp);
-> +		if (ret) {
-> +			dev_err(dev, "cannot request msi irq\n");
-
-s/msi irq/MSI IRQ/ in the error message.  Also a few lines above.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 0fe3ea1..35a7683 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -1196,7 +1196,8 @@ static int hv_pcie_init_irq_domain(struct hv_pcibus_d=
+evice *hbus)
+ 	hbus->msi_info.ops =3D &hv_msi_ops;
+ 	hbus->msi_info.flags =3D (MSI_FLAG_USE_DEF_DOM_OPS |
+ 		MSI_FLAG_USE_DEF_CHIP_OPS | MSI_FLAG_MULTI_PCI_MSI |
+-		MSI_FLAG_PCI_MSIX);
++		MSI_FLAG_PCI_MSIX |
++		MSI_FLAG_MUST_REACTIVATE);
+ 	hbus->msi_info.handler =3D handle_edge_irq;
+ 	hbus->msi_info.handler_name =3D "edge";
+ 	hbus->msi_info.data =3D hbus;
+--=20
+2.7.4
