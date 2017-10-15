@@ -1,110 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:15403 "EHLO
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:8459 "EHLO
         hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750915AbdJ2JfI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 05:35:08 -0400
-Subject: Re: [PATCH 03/12] PCI: tegra: Retrain link for Gen2 speed
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>
+        with ESMTP id S1750704AbdJOGVx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Oct 2017 02:21:53 -0400
+Subject: Re: [PATCH 0/6] Tegra PCIe end point config space map code
+ refactoring
+To: Vidya Sagar <vidyas@nvidia.com>, <treding@nvidia.com>,
+        <bhelgaas@google.com>
 CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <kthota@nvidia.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
- <1509132569-9398-4-git-send-email-mmaddireddy@nvidia.com>
-From: Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <c8dc3a6e-21f2-a7bd-6a2f-5e14f7976dbf@nvidia.com>
-Date: Sun, 29 Oct 2017 15:04:40 +0530
+References: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <545282e4-e702-2839-7ae8-49e309259287@nvidia.com>
+Date: Sun, 15 Oct 2017 11:51:30 +0530
 MIME-Version: 1.0
-In-Reply-To: <1509132569-9398-4-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+These series of patches are tested on Tegra210
+
+Reviewed-by: Manikanta Maddireddy<mmaddireddy@nvidia.com>
+Tested-by: Manikanta Maddireddy<mmaddireddy@nvidia.com>
 
 
-On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
-> Tegra124, 132, 210 and 186 supports Gen2 link speed. After the link is up
-> in Gen1, set target link speed as Gen2 and retrain link. Link switches to
-> Gen2 speed if Gen2 capable end point is connected, else link stays in Gen1.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
->   drivers/pci/host/pci-tegra.c | 42 ++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 42 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 2c64eb6cc3cc..15df60e13a14 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -232,6 +232,8 @@
->   #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
->   #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
->   
-> +#define LINK_RETRAIN_TIMEOUT HZ
-> +
->   struct tegra_msi {
->   	struct msi_controller chip;
->   	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> @@ -2133,6 +2135,42 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->   	}
->   }
->   
-> +static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
-> +		struct pci_dev *pci_dev)
-> +{
-> +	struct device *dev = pcie->dev;
-> +	unsigned long start_jiffies;
-> +	unsigned short val;
-> +
-> +	/* Skip if the current device is not a root port */
-> +	if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
-> +		return;
-> +
-> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
-> +	val &= ~PCI_EXP_LNKSTA_CLS;
-> +	val |= PCI_EXP_LNKSTA_CLS_5_0GB;
-> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
-> +
-> +	/* Retrain the link */
-> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
-> +	val |= PCI_EXP_LNKCTL_RL;
-> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
-> +
-> +	start_jiffies = jiffies;
-> +	for (;;) {
-> +		pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
-> +		if (!(val & PCI_EXP_LNKSTA_LT))
-> +			break;
-> +		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
-> +			break;
-> +		usleep_range(2000, 3000);
-> +	}
-> +
-> +	if (val & PCI_EXP_LNKSTA_LT)
-> +		dev_err(dev, "link retrain of PCIe slot %u failed\n",
-> +				PCI_SLOT(pci_dev->devfn));
-> +}
-> +
->   static const struct tegra_pcie_soc tegra20_pcie = {
->   	.num_ports = 2,
->   	.msi_base_shift = 0,
-> @@ -2334,6 +2372,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->   	struct pci_host_bridge *host;
->   	struct tegra_pcie *pcie;
->   	struct pci_bus *child;
-> +	struct pci_dev *pci_dev = NULL;
->   	int err;
->   
->   	host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-> @@ -2399,6 +2438,9 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->   
->   	pci_bus_add_devices(host->bus);
->   
-> +	for_each_pci_dev(pci_dev)
-> +		tegra_pcie_change_link_speed(pcie, pci_dev);
-> +
-Why can't we loop over only root ports using 'pcie->ports' like how it 
-is done in tegra_pcie_enable_ports() ?
->   	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
->   		err = tegra_pcie_debugfs_init(pcie);
->   		if (err < 0)
+On 13-Oct-17 12:20 AM, Vidya Sagar wrote:
+> PCIe host controller in Tegra SoCs has 1GB of aperture available
+> for mapping end points config space, IO and BARs. In that, currently
+> 256MB is being reserved for mapping end points configuration space
+> which leaves less memory space available for mapping end points BARs
+> on some of the platforms.
+> This patch series attempts to use only 4K space from 1GB aperture to
+> access end points configuration space.
+> 
+> Currently, this change benefits T20 and future chips in saving (i.e. repurposed
+> to use for BAR mapping) physical space as well as kernel virtual mapping space,
+> it saves only kernel virtual address space in T30, T124, T132 and T210.
+> 
+> Testing Done on T210:
+>  Enumeration is and basic functionality of immediate devices
+>  Enumeration of devices behind a PCIe switch
+>  Complete 4K configuration space access
+> 
+> Vidya Sagar (6):
+>   PCI: tegra: refactor config space mapping code
+>   ARM: tegra: limit PCIe config space mapping to 4K for T20
+>   ARM: tegra: limit PCIe config space mapping to 4K for T30
+>   ARM: tegra: limit PCIe config space mapping to 4K for T124
+>   ARM64: tegra: limit PCIe config space mapping to 4K for T132
+>   ARM64: tegra: limit PCIe config space mapping to 4K for T210
+> 
+>  arch/arm/boot/dts/tegra124.dtsi          |  2 +-
+>  arch/arm/boot/dts/tegra20.dtsi           |  8 +--
+>  arch/arm/boot/dts/tegra30.dtsi           |  2 +-
+>  arch/arm64/boot/dts/nvidia/tegra132.dtsi |  2 +-
+>  arch/arm64/boot/dts/nvidia/tegra210.dtsi |  2 +-
+>  drivers/pci/host/pci-tegra.c             | 85 +++++++++-----------------------
+>  6 files changed, 31 insertions(+), 70 deletions(-)
+> 
