@@ -1,43 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:14453 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750722AbdJLSwm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 14:52:42 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>
-Subject: [PATCH 4/6] ARM: tegra: limit PCIe config space mapping to 4K for T124
-Date: Fri, 13 Oct 2017 00:20:09 +0530
-Message-ID: <1507834211-24922-5-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
-References: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH v2 11/15] stm class: make config_item_type const
+Date: Mon, 16 Oct 2017 17:18:50 +0200
+Message-Id: <1508167134-6243-12-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-reduces PCIe config space mapping size from its current 256MB
-to 4K to have only 4K of virtual memory mapping and to be
-in line with driver implementation
+Make config_item_type structures const as they are either passed to a
+function having the argument as const or used inside a if statement or
+stored in the const "ci_type" field of a config_item structure.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Done using Coccinelle.
+
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- arch/arm/boot/dts/tegra124.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+* Changes in v2- Combine all the followup patches and the constification
+patches into a series.
 
-diff --git a/arch/arm/boot/dts/tegra124.dtsi b/arch/arm/boot/dts/tegra124.dtsi
-index 8baf00b89efb..e3cd9dca57cb 100644
---- a/arch/arm/boot/dts/tegra124.dtsi
-+++ b/arch/arm/boot/dts/tegra124.dtsi
-@@ -19,7 +19,7 @@
- 		device_type = "pci";
- 		reg = <0x0 0x01003000 0x0 0x00000800   /* PADS registers */
- 		       0x0 0x01003800 0x0 0x00000800   /* AFI registers */
--		       0x0 0x02000000 0x0 0x10000000>; /* configuration space */
-+		       0x0 0x11FFF000 0x0 0x00001000>; /* configuration space */
- 		reg-names = "pads", "afi", "cs";
- 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
- 			     <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
+ drivers/hwtracing/stm/policy.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/hwtracing/stm/policy.c b/drivers/hwtracing/stm/policy.c
+index 6c0ae29..33e9a1b 100644
+--- a/drivers/hwtracing/stm/policy.c
++++ b/drivers/hwtracing/stm/policy.c
+@@ -187,8 +187,8 @@ static void stp_policy_node_release(struct config_item *item)
+ 	NULL,
+ };
+ 
+-static struct config_item_type stp_policy_type;
+-static struct config_item_type stp_policy_node_type;
++static const struct config_item_type stp_policy_type;
++static const struct config_item_type stp_policy_node_type;
+ 
+ static struct config_group *
+ stp_policy_node_make(struct config_group *group, const char *name)
+@@ -236,7 +236,7 @@ static void stp_policy_node_release(struct config_item *item)
+ 	.drop_item	= stp_policy_node_drop,
+ };
+ 
+-static struct config_item_type stp_policy_node_type = {
++static const struct config_item_type stp_policy_node_type = {
+ 	.ct_item_ops	= &stp_policy_node_item_ops,
+ 	.ct_group_ops	= &stp_policy_node_group_ops,
+ 	.ct_attrs	= stp_policy_node_attrs,
+@@ -311,7 +311,7 @@ static void stp_policy_release(struct config_item *item)
+ 	.make_group	= stp_policy_node_make,
+ };
+ 
+-static struct config_item_type stp_policy_type = {
++static const struct config_item_type stp_policy_type = {
+ 	.ct_item_ops	= &stp_policy_item_ops,
+ 	.ct_group_ops	= &stp_policy_group_ops,
+ 	.ct_attrs	= stp_policy_attrs,
+@@ -380,7 +380,7 @@ static void stp_policy_release(struct config_item *item)
+ 	.make_group	= stp_policies_make,
+ };
+ 
+-static struct config_item_type stp_policies_type = {
++static const struct config_item_type stp_policies_type = {
+ 	.ct_group_ops	= &stp_policies_group_ops,
+ 	.ct_owner	= THIS_MODULE,
+ };
 -- 
-2.7.4
+1.9.1
+
