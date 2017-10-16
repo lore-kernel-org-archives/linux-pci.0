@@ -1,103 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFCv2 PATCH 01/36] iommu: Keep track of processes and PASIDs
-To: "Raj, Ashok" <ashok.raj@intel.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-2-jean-philippe.brucker@arm.com>
- <A2975661238FB949B60364EF0F2C257439AFD88A@SHSMSX104.ccr.corp.intel.com>
- <7aaf9851-9546-f34d-1496-cbeea404abbd@arm.com>
- <20171025180546.GA12356@otc-nc-03>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <5c48f76c-d139-76a5-c4e5-ac40cf2bd5ea@arm.com>
-Date: Mon, 30 Oct 2017 10:28:05 +0000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH 03/12] PM: i2c-designware-platdrv: Use DPM_FLAG_SMART_PREPARE
+Date: Mon, 16 Oct 2017 03:29:23 +0200
+Message-ID: <4017204.UeppN1BopX@aspire.rjw.lan>
+In-Reply-To: <3806130.B2KCK0tvef@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20171025180546.GA12356@otc-nc-03>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, "Liu,
- Yi L" <yi.l.liu@intel.com>, "tn@semihalf.com" <tn@semihalf.com>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25/10/17 19:05, Raj, Ashok wrote:
-> Hi Jean
-> 
-> On Mon, Oct 23, 2017 at 01:17:07PM +0100, Jean-Philippe Brucker wrote:
->> On 23/10/17 12:04, Liu, Yi L wrote:
->>>> +	idr_preload(GFP_KERNEL);
->>>> +	spin_lock(&iommu_process_lock);
->>>> +	pasid = idr_alloc_cyclic(&iommu_process_idr, process, domain->min_pasid,
->>>> +				 domain->max_pasid + 1, GFP_ATOMIC);
->>>> +	process->pasid = pasid;
->>>
->>> [Liu, Yi L] If I'm understanding well, here is managing the pasid allocation in iommu
->>> layer instead of vendor iommu driver? Is there strong reason here? I think pasid
->>> management may be better within vendor iommu driver as pasid management
->>> could differ from vendor to vendor.
->>
->> But that's the thing, we're trying to abstract PASID and process
->> management to have it in the core, because there shouldn't be many
->> differences from vendor to vendor. This way we have the allocation code in
->> one place and vendor drivers don't have to copy paste it from other drivers.
-> 
-> I think this makes sense for the native case and also in the vIOMMU
-> if the PASID tables and allocation are completely managed by the guest.
-> 
-> If the vIOMMU requires any co-ordination in how the PASID's are allocated
-> for guest devices there might need to be some control on how these are 
-> allocated that ultimately need to be managed by VMM/Physical IOMMU. For 
-> instance if the PASID space is sparse for e.g
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-(I don't have your example)
+Modify i2c-designware-platdrv to set DPM_FLAG_SMART_PREPARE for its
+devices and return 0 from the system suspend ->prepare callback
+if the device has an ACPI companion object in order to tell the PM
+core and middle layers to avoid skipping system suspend/resume
+callbacks for the device in that case (which may be problematic,
+because the device may be accessed during suspend and resume of
+other devices via I2C operation regions then).
 
-> if we make the PASID allocation as one of the ops, the IOMMU implementation
-> will choose the default function, or if it choose a differnt mechanism it would
-> have that flexibility.
-> 
-> Does this make sense?
+Also the pm_runtime_suspended() check in dw_i2c_plat_prepare()
+is not necessary any more, because the core does it when setting
+power.direct_complete for the device, so drop it.
 
-If the PASID space is sparse, maybe we can add a firmware or probe
-mechanism to declare reserved PASIDs, like we have for reserved IOVAs,
-that feeds into the core IOMMU driver. But I agree that we can always let
-vendor drivers implement their own allocator if they need one in the
-future. For the moment it can stay generic.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/i2c/busses/i2c-designware-platdrv.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Thanks,
-Jean
+Index: linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+===================================================================
+--- linux-pm.orig/drivers/i2c/busses/i2c-designware-platdrv.c
++++ linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+@@ -370,6 +370,8 @@ static int dw_i2c_plat_probe(struct plat
+ 	ACPI_COMPANION_SET(&adap->dev, ACPI_COMPANION(&pdev->dev));
+ 	adap->dev.of_node = pdev->dev.of_node;
+ 
++	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
++
+ 	/* The code below assumes runtime PM to be disabled. */
+ 	WARN_ON(pm_runtime_enabled(&pdev->dev));
+ 
+@@ -433,7 +435,13 @@ MODULE_DEVICE_TABLE(of, dw_i2c_of_match)
+ #ifdef CONFIG_PM_SLEEP
+ static int dw_i2c_plat_prepare(struct device *dev)
+ {
+-	return pm_runtime_suspended(dev);
++	/*
++	 * If the ACPI companion device object is present for this device, it
++	 * may be accessed during suspend and resume of other devices via I2C
++	 * operation regions, so tell the PM core and middle layers to avoid
++	 * skipping system suspend/resume callbacks for it in that case.
++	 */
++	return !has_acpi_companion(dev);
+ }
+ 
+ static void dw_i2c_plat_complete(struct device *dev)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
