@@ -1,78 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59334 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751138AbdJMQvy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Oct 2017 12:51:54 -0400
-Date: Fri, 13 Oct 2017 11:51:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        Doug Anderson <dianders@chromium.org>
-Subject: Re: [PATCH 1/3] Documentation/devicetree: Add pcie-reset-suspend
- property
-Message-ID: <20171013165152.GE25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171012205220.130048-1-briannorris@chromium.org>
- <20171012205220.130048-2-briannorris@chromium.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:55718 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751637AbdJPMLT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 08:11:19 -0400
+Subject: Re: [PATCH 01/10] PCI: dwc: use DMA-API for allocating MSI data
+To: Jingoo Han <jingoohan1@gmail.com>,
+        'Joao Pinto' <Joao.Pinto@synopsys.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-2-niklas.cassel@axis.com>
+ <000101d34442$f1740840$d45c18c0$@gmail.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <658e5e14-05ca-d733-457c-41729114d151@axis.com>
+Date: Mon, 16 Oct 2017 14:11:15 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171012205220.130048-2-briannorris@chromium.org>
+In-Reply-To: <000101d34442$f1740840$d45c18c0$@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Doug]
-
-On Thu, Oct 12, 2017 at 01:52:18PM -0700, Brian Norris wrote:
-> The patch is self-descriptive. I've found that we may need
-> platform-specific behavior for the PERST# signal in system suspend,
-> depending on the type of PCIe endpoints are attached.
+On 10/13/2017 06:47 PM, Jingoo Han wrote:
+> On Friday, October 13, 2017 12:09 PM, Niklas Cassel wrote:
+>>
+>> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+>> to write to this location, the proper way to get the address to this this
+>> location is really to use the DMA API, rather than virt_to_phys.
+>>
+>> Using virt_to_phys might work on some systems, but by using the DMA API,
+>> we know that it will work on all systems.
+>>
+>> This is essentially the same thing as allocating a buffer in a driver,
+>> to which the endpoint will write to. To do this, we use the DMA API.
+>>
+>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+>> ---
+>>  drivers/pci/dwc/pcie-designware-host.c | 23 ++++++++++++++++-------
+>>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
+>>  2 files changed, 18 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/pci/dwc/pcie-designware-host.c
+>> b/drivers/pci/dwc/pcie-designware-host.c
+>> index 81e2157a7cfb..f6d152ea2a03 100644
+>> --- a/drivers/pci/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/dwc/pcie-designware-host.c
+>> @@ -83,16 +83,25 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>
+>>  void dw_pcie_msi_init(struct pcie_port *pp)
+>>  {
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	struct device *dev = pci->dev;
+>> +	struct page *page;
+>>  	u64 msi_target;
+>>
+>> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+>> -	msi_target = virt_to_phys((void *)pp->msi_data);
+>> +	page = alloc_page(GFP_KERNEL | GFP_DMA32);
+>> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE,
+>> DMA_FROM_DEVICE);
+>> +	if (dma_mapping_error(dev, pp->msi_data)) {
+>> +		dev_err(dev, "failed to map msi data\n");
+>> +		__free_page(page);
+>> +		return;
+>> +	}
+>> +	msi_target = (u64)pp->msi_data;
+>>
+>>  	/* program the msi_data */
+>>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+>> -			    (u32)(msi_target & 0xffffffff));
+>> +			    lower_32_bits(msi_target));
+>>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+>> -			    (u32)(msi_target >> 32 & 0xffffffff));
+>> +			    upper_32_bits(msi_target));
+>>  }
+>>
+>>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+>> @@ -187,10 +196,10 @@ static void dw_msi_setup_msg(struct pcie_port *pp,
+>> unsigned int irq, u32 pos)
+>>  	if (pp->ops->get_msi_addr)
+>>  		msi_target = pp->ops->get_msi_addr(pp);
+>>  	else
+>> -		msi_target = virt_to_phys((void *)pp->msi_data);
+>> +		msi_target = (u64)pp->msi_data;
+>>
+>> -	msg.address_lo = (u32)(msi_target & 0xffffffff);
+>> -	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+>> +	msg.address_lo = lower_32_bits(msi_target);
+>> +	msg.address_hi = upper_32_bits(msi_target);
+>>
+>>  	if (pp->ops->get_msi_data)
+>>  		msg.data = pp->ops->get_msi_data(pp, pos);
+>> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-
+>> designware.h
+>> index e5d9d77b778e..547352a317f8 100644
+>> --- a/drivers/pci/dwc/pcie-designware.h
+>> +++ b/drivers/pci/dwc/pcie-designware.h
+>> @@ -17,6 +17,7 @@
+>>  #include <linux/irq.h>
+>>  #include <linux/msi.h>
+>>  #include <linux/pci.h>
+>> +#include <linux/dma-mapping.h>
 > 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
->  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
->  1 file changed, 11 insertions(+)
+> If possible, please add this header in alphabetical order.
+
+Absolutely, I will send a V2 series as soon as I get some
+review comments on any of the other patches in the series.
+
+
+Regards,
+Niklas
+
+
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index c77981c5dd18..91339b6d0652 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -24,3 +24,14 @@ driver implementation may support the following properties:
->     unsupported link speed, for instance, trying to do training for
->     unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
->     for gen2, and '1' for gen1. Any other values are invalid.
-> +- pcie-reset-suspend:
-> +   If present this property defines whether the PCIe Reset signal (referred to
-> +   as PERST#) should be asserted when the system enters low-power suspend modes
-> +   (e.g., S3). Depending on the form factor, the associated PCIe
-> +   electromechanical specification may specify a particular behavior (e.g.,
-> +   "PERST# is asserted in advance of the power being switched off in a
-> +   power-managed state like S3") or it may be less clear. The net result is
-> +   that some endpoints perform better (e.g., lower power consumption) with
-> +   PERST# asserted, and others prefer PERST# deasserted. The value must be '0'
-> +   or '1', where '0' means do not assert PERST# and '1' means assert PERST#.
-> +   When absent, behavior may be platform-specific.
-
-I don't understand this at all.  Are you suggesting that we need
-different "pcie-reset-suspend" values based on what sort of endpoint
-the user plugs in?
-
-If so, I really don't want to get involved in that, because that's an
-issue that needs to be resolved by the vendors and the PCI-SIG.  If we
-put in a tweak like this, I think it would be a band-aid that only
-delays getting a real solution figured out.
-
-If you want a quirk to tune this based on specific devices, that might
-make sense.  It would still sound like an interoperability issue and
-an ongoing maintenance problem, but at least we would have specific
-details about which devices are involved, and we'd have a chance to
-make them work on more controllers than just Rockchip.
-
-Bjorn
+> Best regards,
+> Jingoo Han
+> 
+>>
+>>  #include <linux/pci-epc.h>
+>>  #include <linux/pci-epf.h>
+>> @@ -168,7 +169,7 @@ struct pcie_port {
+>>  	const struct dw_pcie_host_ops *ops;
+>>  	int			msi_irq;
+>>  	struct irq_domain	*irq_domain;
+>> -	unsigned long		msi_data;
+>> +	dma_addr_t		msi_data;
+>>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>>  };
+>>
+>> --
+>> 2.11.0
+> 
+> 
