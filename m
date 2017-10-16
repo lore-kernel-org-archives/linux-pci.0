@@ -1,70 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:52303 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753486AbdJaWkS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:40:18 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 08/17] PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than in probe
-Date: Tue, 31 Oct 2017 23:39:26 +0100
-Message-Id: <20171031223936.27549-9-niklas.cassel@axis.com>
-In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:57183 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753774AbdJPPTZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 11:19:25 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH v2 06/15] PCI: endpoint: make config_item_type const
+Date: Mon, 16 Oct 2017 17:18:45 +0200
+Message-Id: <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This matches how other drivers like exynos, imx7, keystone, armada8k,
-artpec6, designware-plat, hisi, kirin and spear13xx does it.
+Make config_item_type structures const as they are either passed to a
+function having the argument as const or stored in the const "ci_type"
+field of a config_item structure.
 
-This is probably a remainder since when dev and ops were assigned as
-members to pp. Since we now assign them as members to struct dw_pcie,
-the pp->ops assignment should definitely be in dra7xx_add_pcie_port().
+Done using Coccinelle.
 
-This is also needed to be able to compile host/ep mode specific code
-independently.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
-V3:
-* Added Kishon's ack.
+* Changes in v2- Combine all the followup patches and the constification
+patches into a series.
 
- drivers/pci/dwc/pci-dra7xx.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/pci/endpoint/pci-ep-cfs.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index a743545da4d4..009f6aeeee1c 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -460,6 +460,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 	if (!pci->dbi_base)
- 		return -ENOMEM;
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 424fdd6..4f74386 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -150,7 +150,7 @@ static void pci_epc_epf_unlink(struct config_item *epc_item,
+ 	.drop_link	= pci_epc_epf_unlink,
+ };
  
-+	pp->ops = &dra7xx_pcie_host_ops;
-+
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "failed to initialize host\n");
-@@ -588,7 +590,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	void __iomem *base;
- 	struct resource *res;
- 	struct dw_pcie *pci;
--	struct pcie_port *pp;
- 	struct dra7xx_pcie *dra7xx;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
-@@ -616,9 +617,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
+-static struct config_item_type pci_epc_type = {
++static const struct config_item_type pci_epc_type = {
+ 	.ct_item_ops	= &pci_epc_item_ops,
+ 	.ct_attrs	= pci_epc_attrs,
+ 	.ct_owner	= THIS_MODULE,
+@@ -361,7 +361,7 @@ static void pci_epf_release(struct config_item *item)
+ 	.release		= pci_epf_release,
+ };
  
--	pp = &pci->pp;
--	pp->ops = &dra7xx_pcie_host_ops;
--
- 	irq = platform_get_irq(pdev, 0);
- 	if (irq < 0) {
- 		dev_err(dev, "missing IRQ resource: %d\n", irq);
+-static struct config_item_type pci_epf_type = {
++static const struct config_item_type pci_epf_type = {
+ 	.ct_item_ops	= &pci_epf_ops,
+ 	.ct_attrs	= pci_epf_attrs,
+ 	.ct_owner	= THIS_MODULE,
+@@ -400,7 +400,7 @@ static void pci_epf_drop(struct config_group *group, struct config_item *item)
+ 	.drop_item      = &pci_epf_drop,
+ };
+ 
+-static struct config_item_type pci_epf_group_type = {
++static const struct config_item_type pci_epf_group_type = {
+ 	.ct_group_ops	= &pci_epf_group_ops,
+ 	.ct_owner	= THIS_MODULE,
+ };
+@@ -428,15 +428,15 @@ void pci_ep_cfs_remove_epf_group(struct config_group *group)
+ }
+ EXPORT_SYMBOL(pci_ep_cfs_remove_epf_group);
+ 
+-static struct config_item_type pci_functions_type = {
++static const struct config_item_type pci_functions_type = {
+ 	.ct_owner	= THIS_MODULE,
+ };
+ 
+-static struct config_item_type pci_controllers_type = {
++static const struct config_item_type pci_controllers_type = {
+ 	.ct_owner	= THIS_MODULE,
+ };
+ 
+-static struct config_item_type pci_ep_type = {
++static const struct config_item_type pci_ep_type = {
+ 	.ct_owner	= THIS_MODULE,
+ };
+ 
 -- 
-2.14.2
+1.9.1
