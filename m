@@ -1,76 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0071.outbound.protection.outlook.com ([104.47.38.71]:61792
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751711AbdJIQHF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Oct 2017 12:07:05 -0400
-Subject: Re: Dynamically adding a PCI subfunction
-To: Ilia Mirkin <imirkin@alum.mit.edu>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
-References: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
- <246df1d8-cb6c-518d-7ca1-7a389ca8ef21@gmail.com>
- <CAKb7Uviesg2=b4AKFjoz1yEGSqE1EAjdq=VMo9Z-cJ1x1tGKVg@mail.gmail.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <ea88ea23-636e-e182-0882-3c39b88f3078@amd.com>
-Date: Mon, 9 Oct 2017 18:06:51 +0200
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:41400 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751750AbdJPBnF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Oct 2017 21:43:05 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH 06/12] PCI / PM: Take SMART_SUSPEND driver flag into account
+Date: Mon, 16 Oct 2017 03:29:47 +0200
+Message-ID: <12906785.qsTjxC3pk6@aspire.rjw.lan>
+In-Reply-To: <3806130.B2KCK0tvef@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAKb7Uviesg2=b4AKFjoz1yEGSqE1EAjdq=VMo9Z-cJ1x1tGKVg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 09.10.2017 um 17:57 schrieb Ilia Mirkin:
-> On Mon, Oct 9, 2017 at 11:45 AM, Christian König
-> <ckoenig.leichtzumerken@gmail.com> wrote:
->> Am 09.10.2017 um 16:41 schrieb Ilia Mirkin:
->>> Hello,
->>>
->>> As a bit of background, all NVIDIA GPUs since GT215 have an audio
->>> subfunction for HDMI(/DP) audio to be sent to the sink. This generally
->>> works.
->>>
->>> However some, especially laptop, devices come up with that function
->>> disabled. We have a quirk to enable it when coming back from runpm,
->>> but that doesn't help the init case. Basically we have to write a bit
->>> to the PCI config space:
->>>
->>>
->>> https://github.com/torvalds/linux/blob/v4.12/drivers/gpu/drm/nouveau/nouveau_drm.c#L783
->>>
->>> (MMIO 0x88000 is an alias for the PCI config space)
->>>
->>> This works for runtime pm resume, since the device was originally
->>> there and we just have to make sure the underlying device agrees with
->>> it, but when it's missing on boot, we have to convince linux that it
->>> exists, bind a driver, etc.
->>>
->>> What's the best way of going about doing that?
->>
->> Sounds similar to my work about resizing BARs.
->>
->> I would just try to enable the device and then trigger a rescan of the BUS
->> where it is attached (similar to echo 1 >
->> /sys/bus/pci/devices/$pci_id_of_your_bus/rescan).
->>
->> There is certainly a function in the PCI subsystem you just need to call for
->> that.
-> I'm not exactly familiar with the pci subsystem. I know that hotplug
-> is a thing, at least in theory. I figured it'd be something related to
-> that, since this is in essence a random device appearing on the bus
-> after the initial scan. Is a bus rescan safe on a fully initialized
-> system?
->
-> Either way, some specific functions to call or look at would be great.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Well I would just try to use pci_rescan_bus(), as far as I know that 
-should be save even when devices are already configured.
+Make the PCI bus type take DPM_FLAG_SMART_SUSPEND into account in its
+system suspend callbacks and make sure that all code that should not
+run in parallel with pci_pm_runtime_resume() is executed in the "late"
+phases of system suspend, freeze and poweroff transitions.
 
-Christian.
+[Note that the pm_runtime_suspended() check in pci_dev_keep_suspended()
+is an optimization, because if is not passed, all of the subsequent
+checks may be skipped and some of them are much more overhead in
+general.]
 
->
-> Cheers,
->
->    -ilia
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+---
+ Documentation/power/pci.txt |    6 ++++
+ drivers/pci/pci-driver.c    |   56 ++++++++++++++++++++++++++++++--------------
+ 2 files changed, 45 insertions(+), 17 deletions(-)
+
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -727,18 +727,25 @@ static int pci_pm_suspend(struct device
+ 
+ 	if (!pm) {
+ 		pci_pm_default_suspend(pci_dev);
+-		goto Fixup;
++		return 0;
+ 	}
+ 
+ 	/*
+-	 * PCI devices suspended at run time need to be resumed at this point,
+-	 * because in general it is necessary to reconfigure them for system
+-	 * suspend.  Namely, if the device is supposed to wake up the system
+-	 * from the sleep state, we may need to reconfigure it for this purpose.
+-	 * In turn, if the device is not supposed to wake up the system from the
+-	 * sleep state, we'll have to prevent it from signaling wake-up.
++	 * PCI devices suspended at run time may need to be resumed at this
++	 * point, because in general it may be necessary to reconfigure them for
++	 * system suspend.  Namely, if the device is expected to wake up the
++	 * system from the sleep state, it may have to be reconfigured for this
++	 * purpose, or if the device is not expected to wake up the system from
++	 * the sleep state, it should be prevented from signaling wakeup events
++	 * going forward.
++	 *
++	 * Also if the driver of the device does not indicate that its system
++	 * suspend callbacks can cope with runtime-suspended devices, it is
++	 * better to resume the device from runtime suspend here.
+ 	 */
+-	pm_runtime_resume(dev);
++	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) ||
++	    !pci_dev_keep_suspended(pci_dev))
++		pm_runtime_resume(dev);
+ 
+ 	pci_dev->state_saved = false;
+ 	if (pm->suspend) {
+@@ -758,12 +765,16 @@ static int pci_pm_suspend(struct device
+ 		}
+ 	}
+ 
+- Fixup:
+-	pci_fixup_device(pci_fixup_suspend, pci_dev);
+-
+ 	return 0;
+ }
+ 
++static int pci_pm_suspend_late(struct device *dev)
++{
++	pci_fixup_device(pci_fixup_suspend, to_pci_dev(dev));
++
++	return pm_generic_suspend_late(dev);;
++}
++
+ static int pci_pm_suspend_noirq(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+@@ -872,6 +883,7 @@ static int pci_pm_resume(struct device *
+ #else /* !CONFIG_SUSPEND */
+ 
+ #define pci_pm_suspend		NULL
++#define pci_pm_suspend_late	NULL
+ #define pci_pm_suspend_noirq	NULL
+ #define pci_pm_resume		NULL
+ #define pci_pm_resume_noirq	NULL
+@@ -906,7 +918,8 @@ static int pci_pm_freeze(struct device *
+ 	 * devices should not be touched during freeze/thaw transitions,
+ 	 * however.
+ 	 */
+-	pm_runtime_resume(dev);
++	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
++		pm_runtime_resume(dev);
+ 
+ 	pci_dev->state_saved = false;
+ 	if (pm->freeze) {
+@@ -1004,11 +1017,13 @@ static int pci_pm_poweroff(struct device
+ 
+ 	if (!pm) {
+ 		pci_pm_default_suspend(pci_dev);
+-		goto Fixup;
++		return 0;
+ 	}
+ 
+ 	/* The reason to do that is the same as in pci_pm_suspend(). */
+-	pm_runtime_resume(dev);
++	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) ||
++	    !pci_dev_keep_suspended(pci_dev))
++		pm_runtime_resume(dev);
+ 
+ 	pci_dev->state_saved = false;
+ 	if (pm->poweroff) {
+@@ -1020,12 +1035,16 @@ static int pci_pm_poweroff(struct device
+ 			return error;
+ 	}
+ 
+- Fixup:
+-	pci_fixup_device(pci_fixup_suspend, pci_dev);
+-
+ 	return 0;
+ }
+ 
++static int pci_pm_poweroff_late(struct device *dev)
++{
++	pci_fixup_device(pci_fixup_suspend, to_pci_dev(dev));
++
++	return pm_generic_poweroff_late(dev);
++}
++
+ static int pci_pm_poweroff_noirq(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+@@ -1124,6 +1143,7 @@ static int pci_pm_restore(struct device
+ #define pci_pm_thaw		NULL
+ #define pci_pm_thaw_noirq	NULL
+ #define pci_pm_poweroff		NULL
++#define pci_pm_poweroff_late	NULL
+ #define pci_pm_poweroff_noirq	NULL
+ #define pci_pm_restore		NULL
+ #define pci_pm_restore_noirq	NULL
+@@ -1239,10 +1259,12 @@ static const struct dev_pm_ops pci_dev_p
+ 	.prepare = pci_pm_prepare,
+ 	.complete = pci_pm_complete,
+ 	.suspend = pci_pm_suspend,
++	.suspend_late = pci_pm_suspend_late,
+ 	.resume = pci_pm_resume,
+ 	.freeze = pci_pm_freeze,
+ 	.thaw = pci_pm_thaw,
+ 	.poweroff = pci_pm_poweroff,
++	.poweroff_late = pci_pm_poweroff_late,
+ 	.restore = pci_pm_restore,
+ 	.suspend_noirq = pci_pm_suspend_noirq,
+ 	.resume_noirq = pci_pm_resume_noirq,
+Index: linux-pm/Documentation/power/pci.txt
+===================================================================
+--- linux-pm.orig/Documentation/power/pci.txt
++++ linux-pm/Documentation/power/pci.txt
+@@ -980,6 +980,12 @@ positive value from pci_pm_prepare() if
+ driver of the device returns a positive value.  That allows the driver to opt
+ out from using the direct-complete mechanism dynamically.
+ 
++The DPM_FLAG_SMART_SUSPEND flag tells the PCI bus type that from the driver's
++perspective the device can be safely left in runtime suspend during system
++suspend.  That causes pci_pm_suspend(), pci_pm_freeze() and pci_pm_poweroff()
++to skip resuming the device from runtime suspend unless there are PCI-specific
++reasons for doing that.
++
+ 3.2. Device Runtime Power Management
+ ------------------------------------
+ In addition to providing device power management callbacks PCI device drivers
