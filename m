@@ -1,53 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:30551 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752068AbdJJHmW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2017 03:42:22 -0400
-Subject: Re: [PATCH 1/2] PCI: dwc: dra7xx: Create functional dependency
- between PCIe and PHY
-To: Roger Quadros <rogerq@ti.com>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20171009090338.26033-1-kishon@ti.com>
- <20171009090338.26033-2-kishon@ti.com>
- <f258c2f0-11a2-60ac-3919-dcc0badfa870@ti.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ac5b3f42-19a1-3f8d-3bb6-37d63c3574de@ti.com>
-Date: Tue, 10 Oct 2017 13:12:18 +0530
-MIME-Version: 1.0
-In-Reply-To: <f258c2f0-11a2-60ac-3919-dcc0badfa870@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH v2 12/15] RDMA/cma: make config_item_type const
+Date: Mon, 16 Oct 2017 17:18:51 +0200
+Message-Id: <1508167134-6243-13-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Roger,
+Make these structures const as they are either passed to the functions
+having the argument as const or stored as a reference in the "ci_type"
+const field of a config_item structure.
 
-On Tuesday 10 October 2017 12:49 PM, Roger Quadros wrote:
-> On 09/10/17 12:03, Kishon Vijay Abraham I wrote:
->> PCI core access configuration space registers in resume_noirq callbacks.
->> In the case of dra7xx, PIPE3 PHY connected to PCIe controller has to be
->> enabled before accessing configuration space registers. Since
->> PIPE3 PHY is enabled by only configuring control module registers, no
->> aborts has been observed so far (though during noirq stage, interface
->> clock of PIPE3 PHY is not enabled).
->>
->> With new TRM updates, PIPE3 PHY has to be initialized (PIPE3 PHY
->> registers has to be accessed) as well which requires the interface
->> clock of PIPE3 PHY to be enabled. The interface clock of PIPE3 PHY is
->> derived from OCP2SCP and hence PCIe PHY is modeled as a child of
->> OCP2SCP. Since pm_runtime is not enabled during noirq stage,
->> pm_runtime_get_sync done in phy_init doesn't enable
->> OCP2SCP clocks resulting in abort when PIPE3 PHY registers are
->> accessed.
-> 
-> This could be the case not only with PCIe but even with USB and SATA?
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
+* Changes in v2- Combine all the followup patches and the constification
+patches into a series.
 
-right, if USB/SATA driver has no_irq callbacks then the same issue might occur.
-But looks like none of them uses no_irq callbacks.
-> Maybe today it doesn't complain because USB/SATA is being resumed (by chance) after PHY?
+ drivers/infiniband/core/cma_configfs.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-But once pm_runtime is enabled, USB/SATA can enable PHY which in turn will
-enable OCP2SCP and PHY can be accessed without any issues.
+diff --git a/drivers/infiniband/core/cma_configfs.c b/drivers/infiniband/core/cma_configfs.c
+index 54076a3..31dfee0 100644
+--- a/drivers/infiniband/core/cma_configfs.c
++++ b/drivers/infiniband/core/cma_configfs.c
+@@ -186,7 +186,7 @@ static ssize_t default_roce_tos_store(struct config_item *item,
+ 	NULL,
+ };
+ 
+-static struct config_item_type cma_port_group_type = {
++static const struct config_item_type cma_port_group_type = {
+ 	.ct_attrs	= cma_configfs_attributes,
+ 	.ct_owner	= THIS_MODULE
+ };
+@@ -263,7 +263,7 @@ static void release_cma_ports_group(struct config_item  *item)
+ 	.release = release_cma_ports_group
+ };
+ 
+-static struct config_item_type cma_ports_group_type = {
++static const struct config_item_type cma_ports_group_type = {
+ 	.ct_item_ops	= &cma_ports_item_ops,
+ 	.ct_owner	= THIS_MODULE
+ };
+@@ -272,7 +272,7 @@ static void release_cma_ports_group(struct config_item  *item)
+ 	.release = release_cma_dev
+ };
+ 
+-static struct config_item_type cma_device_group_type = {
++static const struct config_item_type cma_device_group_type = {
+ 	.ct_item_ops	= &cma_device_item_ops,
+ 	.ct_owner	= THIS_MODULE
+ };
+@@ -323,7 +323,7 @@ static struct config_group *make_cma_dev(struct config_group *group,
+ 	.make_group	= make_cma_dev,
+ };
+ 
+-static struct config_item_type cma_subsys_type = {
++static const struct config_item_type cma_subsys_type = {
+ 	.ct_group_ops	= &cma_subsys_group_ops,
+ 	.ct_owner	= THIS_MODULE,
+ };
+-- 
+1.9.1
 
-Thanks
-Kishon
