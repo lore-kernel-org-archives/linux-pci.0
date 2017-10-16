@@ -1,119 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:5357 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751279AbdJMSfx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Oct 2017 14:35:53 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/8] PCI: Move pci_hp_add_bridge() to drivers/pci/probe.c
-Date: Fri, 13 Oct 2017 21:35:41 +0300
-Message-Id: <20171013183548.68283-2-mika.westerberg@linux.intel.com>
-In-Reply-To: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 16 Oct 2017 19:48:03 +0100
+In-Reply-To: <1508167134-6243-5-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1508167134-6243-5-git-send-email-bhumirks@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Subject: Re: [PATCH v2 04/15] iio: make function argument and some structures const
+To: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr,
+        rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+From: Jonathan Cameron <jic23@jic23.retrosnub.co.uk>
+Message-ID: <7091CB3C-16A9-429D-B684-8141955611A7@jic23.retrosnub.co.uk>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is not much point of having a file with a single function in it.
-Instead we can just move pci_hp_add_bridge() to drivers/pci/probe.c and
-make it available always when PCI core is enabled.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/Makefile      |  3 ---
- drivers/pci/hotplug-pci.c | 29 -----------------------------
- drivers/pci/probe.c       | 24 ++++++++++++++++++++++++
- 3 files changed, 24 insertions(+), 32 deletions(-)
- delete mode 100644 drivers/pci/hotplug-pci.c
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 66a21acad952..fa56267fa2c0 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -16,9 +16,6 @@ obj-$(CONFIG_PCIEPORTBUS) += pcie/
- 
- # Build the PCI Hotplug drivers if we were asked to
- obj-$(CONFIG_HOTPLUG_PCI) += hotplug/
--ifdef CONFIG_HOTPLUG_PCI
--obj-y += hotplug-pci.o
--endif
- 
- # Build the PCI MSI interrupt support
- obj-$(CONFIG_PCI_MSI) += msi.o
-diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
-deleted file mode 100644
-index c68366cee6b7..000000000000
---- a/drivers/pci/hotplug-pci.c
-+++ /dev/null
-@@ -1,29 +0,0 @@
--/* Core PCI functionality used only by PCI hotplug */
--
--#include <linux/pci.h>
--#include <linux/export.h>
--#include "pci.h"
--
--int pci_hp_add_bridge(struct pci_dev *dev)
--{
--	struct pci_bus *parent = dev->bus;
--	int pass, busnr, start = parent->busn_res.start;
--	int end = parent->busn_res.end;
--
--	for (busnr = start; busnr <= end; busnr++) {
--		if (!pci_find_bus(pci_domain_nr(parent), busnr))
--			break;
--	}
--	if (busnr-- > end) {
--		printk(KERN_ERR "No bus number available for hot-added bridge %s\n",
--				pci_name(dev));
--		return -1;
--	}
--	for (pass = 0; pass < 2; pass++)
--		busnr = pci_scan_bridge(parent, dev, busnr, pass);
--	if (!dev->subordinate)
--		return -1;
--
--	return 0;
--}
--EXPORT_SYMBOL_GPL(pci_hp_add_bridge);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cdc2f83c11c5..7302cef51d3f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2735,3 +2735,27 @@ void __init pci_sort_breadthfirst(void)
- {
- 	bus_sort_breadthfirst(&pci_bus_type, &pci_sort_bf_cmp);
- }
-+
-+int pci_hp_add_bridge(struct pci_dev *dev)
-+{
-+	struct pci_bus *parent = dev->bus;
-+	int pass, busnr, start = parent->busn_res.start;
-+	int end = parent->busn_res.end;
-+
-+	for (busnr = start; busnr <= end; busnr++) {
-+		if (!pci_find_bus(pci_domain_nr(parent), busnr))
-+			break;
-+	}
-+	if (busnr-- > end) {
-+		printk(KERN_ERR "No bus number available for hot-added bridge %s\n",
-+				pci_name(dev));
-+		return -1;
-+	}
-+	for (pass = 0; pass < 2; pass++)
-+		busnr = pci_scan_bridge(parent, dev, busnr, pass);
-+	if (!dev->subordinate)
-+		return -1;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_hp_add_bridge);
+On 16 October 2017 16:18:43 BST, Bhumika Goyal <bhumirks@gmail.com> wrote:
+>Make the argument of the functions iio_sw{d/t}_group_init_type_name
+>const
+>as they are only passed to the function config_group_init_type_name
+>having
+>the argument as const.
+>
+>Make the config_item_type structures const as they are either passed to
+>the functions having the argument as const or they are
+>stored in the const "ci_type" field of a config_item structure.
+>
+>Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Acked-by: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+>---
+>* Changes in v2- Combine all the followup patches and the
+>constification
+>patches into a series.
+>
+> drivers/iio/dummy/iio_simple_dummy.c   | 2 +-
+> drivers/iio/industrialio-configfs.c    | 2 +-
+> drivers/iio/industrialio-sw-device.c   | 6 +++---
+> drivers/iio/industrialio-sw-trigger.c  | 6 +++---
+> drivers/iio/trigger/iio-trig-hrtimer.c | 2 +-
+> drivers/iio/trigger/iio-trig-loop.c    | 2 +-
+> include/linux/iio/sw_device.h          | 2 +-
+> include/linux/iio/sw_trigger.h         | 2 +-
+> 8 files changed, 12 insertions(+), 12 deletions(-)
+>
+>diff --git a/drivers/iio/dummy/iio_simple_dummy.c
+>b/drivers/iio/dummy/iio_simple_dummy.c
+>index a45d01e..6205247 100644
+>--- a/drivers/iio/dummy/iio_simple_dummy.c
+>+++ b/drivers/iio/dummy/iio_simple_dummy.c
+>@@ -26,7 +26,7 @@
+> #include <linux/iio/sw_device.h>
+> #include "iio_simple_dummy.h"
+> 
+>-static struct config_item_type iio_dummy_type = {
+>+static const struct config_item_type iio_dummy_type = {
+> 	.ct_owner = THIS_MODULE,
+> };
+> 
+>diff --git a/drivers/iio/industrialio-configfs.c
+>b/drivers/iio/industrialio-configfs.c
+>index 45ce2bc..5a0aae1 100644
+>--- a/drivers/iio/industrialio-configfs.c
+>+++ b/drivers/iio/industrialio-configfs.c
+>@@ -17,7 +17,7 @@
+> #include <linux/iio/iio.h>
+> #include <linux/iio/configfs.h>
+> 
+>-static struct config_item_type iio_root_group_type = {
+>+static const struct config_item_type iio_root_group_type = {
+> 	.ct_owner       = THIS_MODULE,
+> };
+> 
+>diff --git a/drivers/iio/industrialio-sw-device.c
+>b/drivers/iio/industrialio-sw-device.c
+>index 81b49cf..90df97c 100644
+>--- a/drivers/iio/industrialio-sw-device.c
+>+++ b/drivers/iio/industrialio-sw-device.c
+>@@ -19,9 +19,9 @@
+> #include <linux/configfs.h>
+> 
+> static struct config_group *iio_devices_group;
+>-static struct config_item_type iio_device_type_group_type;
+>+static const struct config_item_type iio_device_type_group_type;
+> 
+>-static struct config_item_type iio_devices_group_type = {
+>+static const struct config_item_type iio_devices_group_type = {
+> 	.ct_owner = THIS_MODULE,
+> };
+> 
+>@@ -156,7 +156,7 @@ static void device_drop_group(struct config_group
+>*group,
+> 	.drop_item	= &device_drop_group,
+> };
+> 
+>-static struct config_item_type iio_device_type_group_type = {
+>+static const struct config_item_type iio_device_type_group_type = {
+> 	.ct_group_ops = &device_ops,
+> 	.ct_owner       = THIS_MODULE,
+> };
+>diff --git a/drivers/iio/industrialio-sw-trigger.c
+>b/drivers/iio/industrialio-sw-trigger.c
+>index 8d24fb1..bc6b7fb 100644
+>--- a/drivers/iio/industrialio-sw-trigger.c
+>+++ b/drivers/iio/industrialio-sw-trigger.c
+>@@ -19,9 +19,9 @@
+> #include <linux/configfs.h>
+> 
+> static struct config_group *iio_triggers_group;
+>-static struct config_item_type iio_trigger_type_group_type;
+>+static const struct config_item_type iio_trigger_type_group_type;
+> 
+>-static struct config_item_type iio_triggers_group_type = {
+>+static const struct config_item_type iio_triggers_group_type = {
+> 	.ct_owner = THIS_MODULE,
+> };
+> 
+>@@ -156,7 +156,7 @@ static void trigger_drop_group(struct config_group
+>*group,
+> 	.drop_item	= &trigger_drop_group,
+> };
+> 
+>-static struct config_item_type iio_trigger_type_group_type = {
+>+static const struct config_item_type iio_trigger_type_group_type = {
+> 	.ct_group_ops = &trigger_ops,
+> 	.ct_owner       = THIS_MODULE,
+> };
+>diff --git a/drivers/iio/trigger/iio-trig-hrtimer.c
+>b/drivers/iio/trigger/iio-trig-hrtimer.c
+>index 3ee9216..7accd01 100644
+>--- a/drivers/iio/trigger/iio-trig-hrtimer.c
+>+++ b/drivers/iio/trigger/iio-trig-hrtimer.c
+>@@ -30,7 +30,7 @@ struct iio_hrtimer_info {
+> 	ktime_t period;
+> };
+> 
+>-static struct config_item_type iio_hrtimer_type = {
+>+static const struct config_item_type iio_hrtimer_type = {
+> 	.ct_owner = THIS_MODULE,
+> };
+> 
+>diff --git a/drivers/iio/trigger/iio-trig-loop.c
+>b/drivers/iio/trigger/iio-trig-loop.c
+>index b4b02db..94a90e0 100644
+>--- a/drivers/iio/trigger/iio-trig-loop.c
+>+++ b/drivers/iio/trigger/iio-trig-loop.c
+>@@ -36,7 +36,7 @@ struct iio_loop_info {
+> 	struct task_struct *task;
+> };
+> 
+>-static struct config_item_type iio_loop_type = {
+>+static const struct config_item_type iio_loop_type = {
+> 	.ct_owner = THIS_MODULE,
+> };
+> 
+>diff --git a/include/linux/iio/sw_device.h
+>b/include/linux/iio/sw_device.h
+>index fa79319..8642b91 100644
+>--- a/include/linux/iio/sw_device.h
+>+++ b/include/linux/iio/sw_device.h
+>@@ -60,7 +60,7 @@ struct iio_sw_device *to_iio_sw_device(struct
+>config_item *item)
+> static inline
+> void iio_swd_group_init_type_name(struct iio_sw_device *d,
+> 				  const char *name,
+>-				  struct config_item_type *type)
+>+				  const struct config_item_type *type)
+> {
+> #if IS_ENABLED(CONFIG_CONFIGFS_FS)
+> 	config_group_init_type_name(&d->group, name, type);
+>diff --git a/include/linux/iio/sw_trigger.h
+>b/include/linux/iio/sw_trigger.h
+>index c97eab6..0c43738 100644
+>--- a/include/linux/iio/sw_trigger.h
+>+++ b/include/linux/iio/sw_trigger.h
+>@@ -60,7 +60,7 @@ struct iio_sw_trigger *to_iio_sw_trigger(struct
+>config_item *item)
+> static inline
+> void iio_swt_group_init_type_name(struct iio_sw_trigger *t,
+> 				  const char *name,
+>-				  struct config_item_type *type)
+>+				  const struct config_item_type *type)
+> {
+> #if IS_ENABLED(CONFIG_CONFIGFS_FS)
+> 	config_group_init_type_name(&t->group, name, type);
+
 -- 
-2.14.2
+Sent from my Android device with K-9 Mail. Please excuse my brevity.
