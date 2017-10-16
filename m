@@ -1,104 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47420 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752639AbdJTQWa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Oct 2017 12:22:30 -0400
-Subject: [PATCH v6 4/4] PCI/portdrv: Compute MSI/MSI-X IRQ vectors after
- final allocation
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
-        Christoph Hellwig <hch@lst.de>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        linux-pci@vger.kernel.org
-Date: Fri, 20 Oct 2017 11:22:27 -0500
-Message-ID: <20171020162227.6391.14432.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH v2 09/15] ACPI: configfs: make config_item_type const
+Date: Mon, 16 Oct 2017 17:18:48 +0200
+Message-Id: <1508167134-6243-10-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Make these structures const as they are either passed to the functions
+having the argument as const or stored as a reference in the "ci_type"
+const field of a config_item structure.
 
-When setting up portdrv MSI/MSI-X interrupts, we previously allocated the
-maximum possible number of vectors, read the Interrupt Message Numbers for
-each service, saved the IRQ for each, freed the vectors, and finally used
-the largest Message Number to reallocate only as many vectors as we need.
+Done using Coccienlle.
 
-The problem is that freeing the vectors invalidates their IRQs, so the
-saved IRQ numbers may now be invalid, which can result in errors like
-this:
-
-  pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
-  pciehp 0000:00:00.0:pcie004: Cannot get irq 20 for the hotplug controller
-  aer: probe of 0000:00:00.0:pcie002 failed with error -22
-  dpc 0000:00:00.0:pcie010: request IRQ22 failed: -22
-
-Change the setup so we save the Interrupt Message Numbers (not the IRQs)
-before we free the original setup, then use the Message Numbers to compute
-the IRQs (via pci_irq_vector()) *after* we reallocate the vectors.
-
-This should always be safe for MSI-X because the Message Numbers are fixed.
-For MSI, the hardware is allowed to change Message Numbers when we update
-the MSI Multiple Message Enable field when reallocating the vectors, but
-since we allocate enough vectors to accommodate the largest Message Number
-we found, that's unlikely.  See PCIe r3.1, sec 7.8.2, 7.10.10, 7.31.2.
-
-Fixes: 3674cc49da9a ("PCI/portdrv: Use pci_irq_alloc_vectors()")
-Based-on-patch-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>  # HiSilicon hip08
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/pci/pcie/portdrv_core.c |   30 ++++++++++++++++++++----------
- 1 file changed, 20 insertions(+), 10 deletions(-)
+* Changes in v2- Combine all the followup patches and the constification
+patches into a series.
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 102f5c5fcfe0..3cd5eb48644a 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -117,6 +117,26 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 		return -EIO;
- 	}
+ drivers/acpi/acpi_configfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/acpi/acpi_configfs.c b/drivers/acpi/acpi_configfs.c
+index 853bc7f..b588503 100644
+--- a/drivers/acpi/acpi_configfs.c
++++ b/drivers/acpi/acpi_configfs.c
+@@ -204,7 +204,7 @@ struct configfs_attribute *acpi_table_attrs[] = {
+ 	NULL,
+ };
  
-+	/*
-+	 * If we allocated more than we need, free them and reallocate fewer.
-+	 *
-+	 * Reallocating may change the specific vectors we get, so
-+	 * pci_irq_vector() must be done *after* the reallocation.
-+	 *
-+	 * If we're using MSI, hardware is *allowed* to change the Interrupt
-+	 * Message Numbers when we free and reallocate the vectors, but we
-+	 * assume it won't because we allocate enough vectors for the
-+	 * biggest Message Number we found.
-+	 */
-+	if (nvec != nr_entries) {
-+		pci_free_irq_vectors(dev);
-+
-+		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
-+				PCI_IRQ_MSIX | PCI_IRQ_MSI);
-+		if (nr_entries < 0)
-+			return nr_entries;
-+	}
-+
- 	/* PME and hotplug share an MSI/MSI-X vector */
- 	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
- 		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, pme);
-@@ -129,16 +149,6 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 	if (mask & PCIE_PORT_SERVICE_DPC)
- 		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, dpc);
+-static struct config_item_type acpi_table_type = {
++static const struct config_item_type acpi_table_type = {
+ 	.ct_owner = THIS_MODULE,
+ 	.ct_bin_attrs = acpi_table_bin_attrs,
+ 	.ct_attrs = acpi_table_attrs,
+@@ -237,12 +237,12 @@ struct configfs_group_operations acpi_table_group_ops = {
+ 	.drop_item = acpi_table_drop_item,
+ };
  
--	/* If we allocated more than we need, free them and allocate fewer */
--	if (nvec != nr_entries) {
--		pci_free_irq_vectors(dev);
--
--		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
--				PCI_IRQ_MSIX | PCI_IRQ_MSI);
--		if (nr_entries < 0)
--			return nr_entries;
--	}
--
- 	return 0;
- }
+-static struct config_item_type acpi_tables_type = {
++static const struct config_item_type acpi_tables_type = {
+ 	.ct_owner = THIS_MODULE,
+ 	.ct_group_ops = &acpi_table_group_ops,
+ };
  
+-static struct config_item_type acpi_root_group_type = {
++static const struct config_item_type acpi_root_group_type = {
+ 	.ct_owner = THIS_MODULE,
+ };
+ 
+-- 
+1.9.1
+
