@@ -1,102 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Randy Dunlap <rdunlap@infradead.org>, "catalin.marinas@arm.com"
- <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, "frowand.list@gmail.com"
- <frowand.list@gmail.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "rafael@kernel.org" <rafael@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "lorenzo.pieralisi@arm.com"
- <lorenzo.pieralisi@arm.com>
-Subject: RE: [PATCH v10 6/9] LPC: Support the LPC host on Hip06/Hip07 with
- DT bindings
-Date: Mon, 30 Oct 2017 15:55:15 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40CAEE3A@FRAEML521-MBX.china.huawei.com>
-References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
- <1509120687-7352-7-git-send-email-gabriele.paoloni@huawei.com>
- <de9f0362-6f2d-2f73-a23a-af248a9b1963@infradead.org>
-In-Reply-To: <de9f0362-6f2d-2f73-a23a-af248a9b1963@infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:36648 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751935AbdJPW0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Oct 2017 18:26:35 -0400
+Date: Mon, 16 Oct 2017 17:26:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/10] PCI: designware-ep: set_msi should only set MMC
+ bits
+Message-ID: <20171016222632.GL25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-3-niklas.cassel@axis.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "minyard@acm.org" <minyard@acm.org>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- John Garry <john.garry@huawei.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "olof@lixom.net" <olof@lixom.net>,
- "brian.starkey@arm.com" <brian.starkey@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171013160914.3220-3-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Randy
+Would you mind capitalizing the first letter of the changelog summary,
+i.e., to follow the convention of "git log --oneline
+drivers/pci/dwc/pcie-designware-ep.c"?  I usually fix that up
+manually, but it saves me time if you do it.
 
-> -----Original Message-----
-> From: Randy Dunlap [mailto:rdunlap@infradead.org]
-> Sent: 27 October 2017 17:44
-> To: Gabriele Paoloni; catalin.marinas@arm.com; will.deacon@arm.com;
-> robh+dt@kernel.org; frowand.list@gmail.com; bhelgaas@google.com;
-> rafael@kernel.org; arnd@arndb.de; linux-arm-kernel@lists.infradead.org;
-> lorenzo.pieralisi@arm.com
-> Cc: mark.rutland@arm.com; brian.starkey@arm.com; olof@lixom.net;
-> benh@kernel.crashing.org; linux-kernel@vger.kernel.org; linux-
-> acpi@vger.kernel.org; Linuxarm; linux-pci@vger.kernel.org;
-> minyard@acm.org; John Garry; xuwei (O); zhichang.yuan
-> Subject: Re: [PATCH v10 6/9] LPC: Support the LPC host on Hip06/Hip07
-> with DT bindings
-> 
-> On 10/27/17 09:11, Gabriele Paoloni wrote:
-> > diff --git a/drivers/bus/Kconfig b/drivers/bus/Kconfig
-> > index 2408ea3..358eed3 100644
-> > --- a/drivers/bus/Kconfig
-> > +++ b/drivers/bus/Kconfig
-> > @@ -64,6 +64,15 @@ config BRCMSTB_GISB_ARB
-> >  	  arbiter. This driver provides timeout and target abort error
-> handling
-> >  	  and internal bus master decoding.
-> >
-> > +config HISILICON_LPC
-> > +	bool "Support for ISA I/O space on Hisilicon Hip0X"
-> > +	depends on (ARM64 && (ARCH_HISI || COMPILE_TEST))
-> > +	select LOGIC_PIO
-> > +	select INDIRECT_PIO
-> > +	help
-> > +	  Driver needed for some legacy ISA devices attached to Low-Pin-
-> Count
-> > +	  on Hisilicon Hip0X SoC.
-> > +
-> >  config IMX_WEIM
-> >  	bool "Freescale EIM DRIVER"
-> >  	depends on ARCH_MXC
-> 
-> Hi,
-> 
-> Why bool? why not tristate?
+On Fri, Oct 13, 2017 at 06:09:05PM +0200, Niklas Cassel wrote:
+> Previously, set_msi wrote all bits in the Message Control
+> register, thus overwriting the 64 bit address capable bit.
+> By clearing the 64 bit address capable bit, we break MSI
+> on systems where the RC has set a 64 bit MSI address.
 
-Well for the nature of our HW it would not make much sense to have the
-LPC modular. Also you can see in patch 8 the LPC host is "translating"
-the resources of its children before these are actually probed and this
-is done by acpi_indirectio_scan_init() as part of the ACPI init process.
+s/set_msi/dw_pcie_ep_set_msi()/ to be specific.
 
-Thanks
-Gab
+I think we overwrote PCI_MSI_FLAGS_64BIT (and PCI_MSI_FLAGS_ENABLE).
 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
+>  drivers/pci/dwc/pcie-designware.h    | 1 +
+>  2 files changed, 4 insertions(+), 1 deletion(-)
 > 
-> --
-> ~Randy
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index d53d5f168363..c92ab87fd660 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -220,7 +220,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
+>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> -	val = (encode_int << MSI_CAP_MMC_SHIFT);
+> +	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+> +	val &= ~MSI_CAP_MMC_MASK;
+> +	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
+>  	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
+>  
+>  	return 0;
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index 547352a317f8..36183906e1d2 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -101,6 +101,7 @@
+>  
+>  #define MSI_MESSAGE_CONTROL		0x52
+>  #define MSI_CAP_MMC_SHIFT		1
+> +#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
+>  #define MSI_CAP_MME_SHIFT		4
+>  #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+>  #define MSI_MESSAGE_ADDR_L32		0x54
+
+It looks like these are really other names for PCI_MSI_FLAGS_QMASK and
+PCI_MSI_FLAGS_QSIZE.  I wish the DW code used those to make the
+connection more obvious.
+
+But I think this patch is correct as-is and that would be a different
+patch.
