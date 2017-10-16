@@ -1,131 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:46747 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752020AbdJ3Jbg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Oct 2017 05:31:36 -0400
-Subject: Re: [PATCH V2 03/12] PCI: tegra: Retrain link for Gen2 speed
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
- <1509337143-25963-4-git-send-email-mmaddireddy@nvidia.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <ba7d166b-bb5d-7e25-6a68-227828b7dfe8@kapsi.fi>
-Date: Mon, 30 Oct 2017 11:31:34 +0200
+Received: from us-smtp-delivery-107.mimecast.com ([216.205.24.107]:38406 "EHLO
+        us-smtp-delivery-107.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751501AbdJPJLB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 05:11:01 -0400
+Subject: Re: [PATCH 4/5] PCI: tango: Fix platform_get_irq() error handling
+To: Fabio Estevam <festevam@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci <linux-pci@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Mason <slash.tmp@free.fr>
+References: <1508018851-9272-1-git-send-email-festevam@gmail.com>
+ <1508018851-9272-4-git-send-email-festevam@gmail.com>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Message-ID: <169eac7a-4dd1-f164-6342-9bac8b7dbf3a@sigmadesigns.com>
+Date: Mon, 16 Oct 2017 11:09:15 +0200
 MIME-Version: 1.0
-In-Reply-To: <1509337143-25963-4-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1508018851-9272-4-git-send-email-festevam@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30.10.2017 06:18, Manikanta Maddireddy wrote:
-> Tegra124, 132, 210 and 186 supports Gen2 link speed. After the link is up
++ gkh, maz, tglx, linus w
 
-s/supports/support/
+On 15/10/2017 00:07, Fabio Estevam wrote:
 
-> in Gen1, set target link speed as Gen2 and retrain link. Link switches to
-> Gen2 speed if Gen2 capable end point is connected, else link stays in Gen1.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> When platform_get_irq() fails we should propagate the real error value
+> instead of always returning -ENXIO.
+> 
+> Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> Signed-off-by: Fabio Estevam <festevam@gmail.com>
 > ---
-> V2:
-> * Fixed alignment issue
->
->  drivers/pci/host/pci-tegra.c | 42 ++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 42 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 2c64eb6cc3cc..9f6d331c3571 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -232,6 +232,8 @@
->  #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
->  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
->
-> +#define LINK_RETRAIN_TIMEOUT HZ
-
-I guess this originates in the pcie-altera driver or some common 
-ancestor, but it doesn't make much sense to me why this is bound to HZ. 
-It seems to me it should be just some constant.
-
-> +
->  struct tegra_msi {
->  	struct msi_controller chip;
->  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-> @@ -2133,6 +2135,42 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>  drivers/pci/host/pcie-tango.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+> index e23f738..5196583 100644
+> --- a/drivers/pci/host/pcie-tango.c
+> +++ b/drivers/pci/host/pcie-tango.c
+> @@ -272,9 +272,9 @@ static int tango_pcie_probe(struct platform_device *pdev)
+>  		writel_relaxed(0, pcie->base + SMP8759_ENABLE + offset);
+>  
+>  	virq = platform_get_irq(pdev, 1);
+> -	if (virq <= 0) {
+> +	if (virq < 0) {
+>  		dev_err(dev, "Failed to map IRQ\n");
+> -		return -ENXIO;
+> +		return virq;
 >  	}
->  }
->
-> +static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
-> +					 struct pci_dev *pci_dev)
-> +{
-> +	struct device *dev = pcie->dev;
-> +	unsigned long start_jiffies;
-> +	unsigned short val;
-> +
-> +	/* Skip if the current device is not a root port */
-> +	if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
-> +		return;
-> +
-> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
-> +	val &= ~PCI_EXP_LNKSTA_CLS;
-> +	val |= PCI_EXP_LNKSTA_CLS_5_0GB;
-> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
-> +
-> +	/* Retrain the link */
-> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
-> +	val |= PCI_EXP_LNKCTL_RL;
-> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
-> +
-> +	start_jiffies = jiffies;
-> +	for (;;) {
-> +		pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
-> +		if (!(val & PCI_EXP_LNKSTA_LT))
-> +			break;
-> +		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
-> +			break;
-> +		usleep_range(2000, 3000);
-> +	}
+>  
+>  	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &dom_ops, pcie);
 
-Please use the ktime series of functions instead of using jiffies 
-directly. E.g.
+Hello Fabio,
 
-ktime_t deadline = ktime_add_us(ktime_get(), LINK_RETRAIN_TIMEOUT);
-if (ktime_after(ktime_get(), deadline))
-	break;
+I don't think this patch is correct.
 
-(and replace LINK_RETRAIN_TIMEOUT with a timeout in microseconds)
+AFAIU, on all but legacy platforms, when platform_get_irq() returns 0,
+it is to signal an error condition.
 
-You can take a look at the macros in linux/iopoll.h which do this but 
-for iomem access.
+Marc Z pointed out this discussion:
+http://yarchive.net/comp/linux/zero.html
 
-> +
-> +	if (val & PCI_EXP_LNKSTA_LT)
-> +		dev_err(dev, "link retrain of PCIe slot %u failed\n",
-> +			PCI_SLOT(pci_dev->devfn));
-> +}
-> +
->  static const struct tegra_pcie_soc tegra20_pcie = {
->  	.num_ports = 2,
->  	.msi_base_shift = 0,
-> @@ -2334,6 +2372,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  	struct pci_host_bridge *host;
->  	struct tegra_pcie *pcie;
->  	struct pci_bus *child;
-> +	struct pci_dev *pci_dev = NULL;
->  	int err;
->
->  	host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-> @@ -2399,6 +2438,9 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->
->  	pci_bus_add_devices(host->bus);
->
-> +	for_each_pci_dev(pci_dev)
-> +		tegra_pcie_change_link_speed(pcie, pci_dev);
-> +
->  	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
->  		err = tegra_pcie_debugfs_init(pcie);
->  		if (err < 0)
->
+Looking more closely at the platform_get_irq implementation, and ignoring
+the CONFIG_SPARC special-case, the return value is either:
+
+* a valid virq > 0, or
+* -EPROBE_DEFER, or
+* some error code < 0, in the ACPI case, or
+* -ENXIO, or
+* res->start (an unsigned type, so >= 0)
+
+
+I suppose it would be slightly nicer to write:
+
+	virq = platform_get_irq(pdev, 1);
+	if (virq <= 0)
+		return virq ? virq : -ENODEV;
+
+Regards.
