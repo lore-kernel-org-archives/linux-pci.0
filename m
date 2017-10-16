@@ -1,89 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 16 Oct 2017 13:24:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2 06/15] PCI: endpoint: make config_item_type const
+Message-ID: <20171016182437.GG25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+ <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
 MIME-Version: 1.0
-From: Daniel Drake <drake@endlessm.com>
-Date: Wed, 18 Oct 2017 16:36:49 +0800
-Message-ID: <CAD8Lp47nOCt-93kBxmcJzUam=P7XRcm8vhwogoxXTJ_mwCH_Cg@mail.gmail.com>
-Subject: PCIe legacy interrupts blocked on Intel Apollo Lake platforms
-To: Andy Shevchenko <andy@infradead.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        x86@kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        AceLan Kao <acelan.kao@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1508167134-6243-7-git-send-email-bhumirks@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[retitling and re-summarizing in hope of attention from Intel]
+On Mon, Oct 16, 2017 at 05:18:45PM +0200, Bhumika Goyal wrote:
+> Make config_item_type structures const as they are either passed to a
+> function having the argument as const or stored in the const "ci_type"
+> field of a config_item structure.
+> 
+> Done using Coccinelle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 
-Andy / Rafael,
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Thomas Gleixner suggested that you might be able to help with a nasty
-issue related to Intel Apollo Lake platforms - or you can put us in
-contact with another relevant person at Intel.
+Please apply this along with the rest of the series, since it depends
+on an earlier patch in the series.
 
-On Thu, Oct 5, 2017 at 6:13 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
->> We have tried taking the mini-PCIe wifi module out of one of the affected
->> Acer products and moved it to another computer, where it is working fine
->> with legacy interrupts. So this suggests that the wifi module itself is OK,
->> but we are facing a hardware limitation or BIOS limitation on the affected
->> products. In the Dell thread it says "Some platform(BIOS) blocks legacy
->> interrupts (INTx)".
->>
->> If you have any suggestions for how we might solve this without getting into
->> the MSI mess then that would be much appreciated. If the BIOS blocks the
->> interrupts, can Linux unblock them?
->
-> I'm pretty sure we can. Cc'ed Rafael and Andy. They might know, if not they
-> certainly know whom to ask @Intel.
-
-To summarize the issue:
-
-At least 8 new Acer consumer laptop products based on Intel Apollo
-Lake are unable to deliver legacy interrupts from the ath9k miniPCIe
-wifi card to the host. This results in wifi connectivity being
-unusable on those systems.
-
-This also seems to affect the 4 Dell systems included in this patch series:
-  https://lkml.org/lkml/2017/9/26/55
-at least 2 of which are also Apollo Lake (can't find specs for the other 2).
-
-We know that the wifi module itself is OK, since we can take it to
-another laptop and it delivers legacy interrupts just fine.
-
-We know that this is not a fundamental limitation of Intel Apollo
-Lake, since we have other Apollo Lake products in hand with ath9k wifi
-modules and legacy interrupts work fine there.
-
-We would like to switch to MSI interrupts instead, but unfortunately
-ath9k seems to have a hardware bug in that it corrupts the MSI message
-data, see:
-
-  ath9k hardware corrupts MSI Message Data, raises wrong interrupt
-  https://marc.info/?l=linux-pci&m=150238260826803&w=2
-
-We have explored workarounds for this on the Linux side, but that has
-turned out to be unattractive and impractical:
-
-  [PATCH] PCI MSI: allow alignment restrictions on vector allocation
-  https://marc.info/?t=150631283200001&r=1&w=2
-
-Interrupt remapping could probably help us avoid this MSI problem, but
-unfortunately that's not available on the affected platforms:
-
-  DMAR table missing, Intel IOMMU not available
-  https://lists.linuxfoundation.org/pipermail/iommu/2017-August/023717.html
-
-So now, digging for other options, I would like to explore the theory
-mentioned on the Dell thread that the BIOS is blocking legacy
-interrupts on these platforms. The question for Intel is: if the BIOS
-is blocking legacy interrupts, can Linux unblock them? (and how)
-
-I have Apollo Lake platforms here which exhibit the issue, and also
-other Apollo Lake platforms that work fine, so let me know where I can
-help look for differences (register dumps etc)
-
-Thanks
-Daniel
+> ---
+> * Changes in v2- Combine all the followup patches and the constification
+> patches into a series.
+> 
+>  drivers/pci/endpoint/pci-ep-cfs.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> index 424fdd6..4f74386 100644
+> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -150,7 +150,7 @@ static void pci_epc_epf_unlink(struct config_item *epc_item,
+>  	.drop_link	= pci_epc_epf_unlink,
+>  };
+>  
+> -static struct config_item_type pci_epc_type = {
+> +static const struct config_item_type pci_epc_type = {
+>  	.ct_item_ops	= &pci_epc_item_ops,
+>  	.ct_attrs	= pci_epc_attrs,
+>  	.ct_owner	= THIS_MODULE,
+> @@ -361,7 +361,7 @@ static void pci_epf_release(struct config_item *item)
+>  	.release		= pci_epf_release,
+>  };
+>  
+> -static struct config_item_type pci_epf_type = {
+> +static const struct config_item_type pci_epf_type = {
+>  	.ct_item_ops	= &pci_epf_ops,
+>  	.ct_attrs	= pci_epf_attrs,
+>  	.ct_owner	= THIS_MODULE,
+> @@ -400,7 +400,7 @@ static void pci_epf_drop(struct config_group *group, struct config_item *item)
+>  	.drop_item      = &pci_epf_drop,
+>  };
+>  
+> -static struct config_item_type pci_epf_group_type = {
+> +static const struct config_item_type pci_epf_group_type = {
+>  	.ct_group_ops	= &pci_epf_group_ops,
+>  	.ct_owner	= THIS_MODULE,
+>  };
+> @@ -428,15 +428,15 @@ void pci_ep_cfs_remove_epf_group(struct config_group *group)
+>  }
+>  EXPORT_SYMBOL(pci_ep_cfs_remove_epf_group);
+>  
+> -static struct config_item_type pci_functions_type = {
+> +static const struct config_item_type pci_functions_type = {
+>  	.ct_owner	= THIS_MODULE,
+>  };
+>  
+> -static struct config_item_type pci_controllers_type = {
+> +static const struct config_item_type pci_controllers_type = {
+>  	.ct_owner	= THIS_MODULE,
+>  };
+>  
+> -static struct config_item_type pci_ep_type = {
+> +static const struct config_item_type pci_ep_type = {
+>  	.ct_owner	= THIS_MODULE,
+>  };
+>  
+> -- 
+> 1.9.1
+> 
