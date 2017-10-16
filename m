@@ -1,83 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:37128 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751869AbdJFM5q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Oct 2017 08:57:46 -0400
-From: Adrian Hunter <adrian.hunter@intel.com>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi <linux-acpi@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-related host controllers
-Date: Fri,  6 Oct 2017 15:50:59 +0300
-Message-Id: <1507294259-20438-1-git-send-email-adrian.hunter@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH v2 14/15] dlm: make config_item_type const
+Date: Mon, 16 Oct 2017 17:18:53 +0200
+Message-Id: <1508167134-6243-15-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The default D3 cold delay of 100 ms can cause pauses when streaming audio
-from eMMC.
+Make config_item_type structures const as they are either passed to a
+function having the argument as const or stored in the const "ci_type"
+field of a config_item structure.
 
-Intel BYT-related host controllers do not need PCI D3 delays. Although the
-delays can be set to zero via an ACPI _DSM, unfortunately that is not being
-used in all cases. So just set the delays to zero in the driver.
+Done using Coccinelle.
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/mmc/host/sdhci-pci-core.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+* Changes in v2- Combine all the followup patches and the constification
+patches into a series.
 
-diff --git a/drivers/mmc/host/sdhci-pci-core.c b/drivers/mmc/host/sdhci-pci-core.c
-index 5f3f7b51299f..14ef99b6e5b7 100644
---- a/drivers/mmc/host/sdhci-pci-core.c
-+++ b/drivers/mmc/host/sdhci-pci-core.c
-@@ -592,9 +592,18 @@ static void byt_read_dsm(struct sdhci_pci_slot *slot)
- 	slot->chip->rpm_retune = intel_host->d3_retune;
- }
+ fs/dlm/config.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/fs/dlm/config.c b/fs/dlm/config.c
+index 7211e82..1270551 100644
+--- a/fs/dlm/config.c
++++ b/fs/dlm/config.c
+@@ -282,44 +282,44 @@ struct dlm_node {
+ 	.release = release_node,
+ };
  
--static int byt_emmc_probe_slot(struct sdhci_pci_slot *slot)
-+static void byt_common_setup(struct sdhci_pci_slot *slot)
- {
- 	byt_read_dsm(slot);
-+
-+	/* PCI D3 delays are not needed */
-+	slot->chip->pdev->d3_delay = 0;
-+	slot->chip->pdev->d3cold_delay = 0;
-+}
-+
-+static int byt_emmc_probe_slot(struct sdhci_pci_slot *slot)
-+{
-+	byt_common_setup(slot);
- 	slot->host->mmc->caps |= MMC_CAP_8_BIT_DATA | MMC_CAP_NONREMOVABLE |
- 				 MMC_CAP_HW_RESET | MMC_CAP_1_8V_DDR |
- 				 MMC_CAP_CMD_DURING_TFR |
-@@ -649,7 +658,7 @@ static int ni_byt_sdio_probe_slot(struct sdhci_pci_slot *slot)
- {
- 	int err;
+-static struct config_item_type clusters_type = {
++static const struct config_item_type clusters_type = {
+ 	.ct_group_ops = &clusters_ops,
+ 	.ct_owner = THIS_MODULE,
+ };
  
--	byt_read_dsm(slot);
-+	byt_common_setup(slot);
+-static struct config_item_type cluster_type = {
++static const struct config_item_type cluster_type = {
+ 	.ct_item_ops = &cluster_ops,
+ 	.ct_attrs = cluster_attrs,
+ 	.ct_owner = THIS_MODULE,
+ };
  
- 	err = ni_set_max_freq(slot);
- 	if (err)
-@@ -662,7 +671,7 @@ static int ni_byt_sdio_probe_slot(struct sdhci_pci_slot *slot)
+-static struct config_item_type spaces_type = {
++static const struct config_item_type spaces_type = {
+ 	.ct_group_ops = &spaces_ops,
+ 	.ct_owner = THIS_MODULE,
+ };
  
- static int byt_sdio_probe_slot(struct sdhci_pci_slot *slot)
- {
--	byt_read_dsm(slot);
-+	byt_common_setup(slot);
- 	slot->host->mmc->caps |= MMC_CAP_POWER_OFF_CARD | MMC_CAP_NONREMOVABLE |
- 				 MMC_CAP_WAIT_WHILE_BUSY;
- 	return 0;
-@@ -670,7 +679,7 @@ static int byt_sdio_probe_slot(struct sdhci_pci_slot *slot)
+-static struct config_item_type space_type = {
++static const struct config_item_type space_type = {
+ 	.ct_item_ops = &space_ops,
+ 	.ct_owner = THIS_MODULE,
+ };
  
- static int byt_sd_probe_slot(struct sdhci_pci_slot *slot)
- {
--	byt_read_dsm(slot);
-+	byt_common_setup(slot);
- 	slot->host->mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY |
- 				 MMC_CAP_AGGRESSIVE_PM | MMC_CAP_CD_WAKE;
- 	slot->cd_idx = 0;
+-static struct config_item_type comms_type = {
++static const struct config_item_type comms_type = {
+ 	.ct_group_ops = &comms_ops,
+ 	.ct_owner = THIS_MODULE,
+ };
+ 
+-static struct config_item_type comm_type = {
++static const struct config_item_type comm_type = {
+ 	.ct_item_ops = &comm_ops,
+ 	.ct_attrs = comm_attrs,
+ 	.ct_owner = THIS_MODULE,
+ };
+ 
+-static struct config_item_type nodes_type = {
++static const struct config_item_type nodes_type = {
+ 	.ct_group_ops = &nodes_ops,
+ 	.ct_owner = THIS_MODULE,
+ };
+ 
+-static struct config_item_type node_type = {
++static const struct config_item_type node_type = {
+ 	.ct_item_ops = &node_ops,
+ 	.ct_attrs = node_attrs,
+ 	.ct_owner = THIS_MODULE,
 -- 
 1.9.1
+
