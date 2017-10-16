@@ -1,78 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <2745759.OYb9FSKnNE@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAPDyKFrMTSUHP86hnpHius2CDfv-ap4svGg=xgwAiH8pKj9Lvw@mail.gmail.com>
- <1591167.zlNa3zLfmM@aspire.rjw.lan> <2745759.OYb9FSKnNE@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Wed, 18 Oct 2017 14:34:10 +0200
-Message-ID: <CAPDyKFpNHL=tZYbQduDJqypz7rbwPwvW7sOymm-djbRSFgZ00g@mail.gmail.com>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:59359 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751410AbdJPMk1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 08:40:27 -0400
+Subject: Re: [PATCH 09/10] PCI: dwc: make cpu_addr_fixup take struct dw_pcie
+ as argument
+To: Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+        Jesper Nilsson <jespern@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@axis.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-10-niklas.cassel@axis.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <3970f7e1-c5bf-3c0c-98fb-fc0bf5b14212@axis.com>
+Date: Mon, 16 Oct 2017 14:40:24 +0200
+MIME-Version: 1.0
+In-Reply-To: <20171013160914.3220-10-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[...]
+On 10/13/2017 06:09 PM, Niklas Cassel wrote:
+(snip)
 
->> Are there any major reasons why the appended patch (obviously untested) won't
->> work, then?
->
-> OK, there is a reason, which is the optimizations bundled into
-> pm_runtime_force_*, because (a) the device may be left in runtime suspend
-> by them (in which case amba_pm_suspend_early() in my patch should not run)
-> and (b) pm_runtime_force_resume() may decide to leave it suspended (in which
-> case amba_pm_suspend_late() in my patch should not run).
+Hello Kishon
 
-Exactly.
+I just wanted to say that the function
+artpec6_pcie_calc_cpu_fixup_mask should work on dra7xx
+as well. (I had dra7xx in mind when I wrote it.)
+However, I did not want to change pci-dra7xx.c to
+also use this function, since your current code is
+quite simple.
+But if you think that it's a good idea, we could
+rename and move artpec6_pcie_calc_cpu_fixup_mask
+to pcie-designware.c, and migrate pci-dra7xx
+to utilize this function as well, as it is strictly
+more correct to use values from device tree, rather
+than having a hard coded define in the SoC driver.
 
->
-> [BTW, the "leave the device suspended" optimization in pm_runtime_force_*
-> is potentially problematic too, because it requires the children to do
-> the right thing, which effectively means that their drivers need to use
-> pm_runtime_force_* too, but what if they don't want to reuse their
-> runtime PM callbacks for system-wide PM?]
 
-Deployment of pm_runtime_force_suspend() should generally be done for
-children devices first.
-
-If some reason that isn't the case, it's expected that the call to
-pm_runtime_set_suspended() invoked from pm_runtime_force_suspend(),
-for the parent, should fail and thus abort system suspend.
-
->
-> Honestly, I don't like the way this is designed.  IMO, it would be better
-> to do the optimizations and all in the bus type middle-layer code instead
-> of expecting drivers to use pm_runtime_force_* as their system-wide PM
-> callbacks (and that expectation should at least be documented, which I'm
-> not sure is the case now).  But whatever.
->
-> It all should work the way it does now without pm_runtime_force_* if (a) the
-> bus type's PM callbacks are changed like in the last patch and the drivers
-> (b) point their system suspend callbacks to the runtime PM callback routines
-> and (c) set DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED for the
-> devices (if they need to do the PM in ->suspend and ->resume, they may set
-> DPM_FLAG_AVOID_RPM too).
->
-> And if you see a reason why that won't work, please let me know.
-
-I will have look and try out the series by using my local "runtime PM
-test driver".
-
-I get back to you with an update on this.
-
-Kind regards
-Uffe
+Regards,
+Niklas
