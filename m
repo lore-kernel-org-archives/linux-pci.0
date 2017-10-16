@@ -1,89 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41072 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751059AbdJBUI4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Oct 2017 16:08:56 -0400
-Date: Mon, 2 Oct 2017 15:08:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Hari Vyas <hari.vyas@broadcom.com>,
-        Abhishek Shah <abhishek.shah@broadcom.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Vikram Prakash <vikram.prakash@broadcom.com>
-Subject: Re: [RFC] PCIe bus address at 0x00000000
-Message-ID: <20171002200854.GB5407@bhelgaas-glaptop.roam.corp.google.com>
-References: <a9aba0db-4865-2a6b-b77c-9cb70a4eeab0@broadcom.com>
- <20171002193532.GA5407@bhelgaas-glaptop.roam.corp.google.com>
- <e0a89ffe-a936-9b41-c9c0-3616452376e2@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 01/10] PCI: dwc: use DMA-API for allocating MSI data
+To: David Laight <David.Laight@ACULAB.COM>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-2-niklas.cassel@axis.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD009511B@AcuExch.aculab.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <2057f883-0c02-3e56-f3c2-ecc90e778e8e@axis.com>
+Date: Mon, 16 Oct 2017 13:43:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <e0a89ffe-a936-9b41-c9c0-3616452376e2@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD009511B@AcuExch.aculab.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 02, 2017 at 12:47:16PM -0700, Ray Jui wrote:
-> Hi Bjorn,
+On 10/13/2017 06:42 PM, David Laight wrote:
+> From: Behalf Of Niklas Cassel
+>> Sent: 13 October 2017 17:09
+>> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+>> to write to this location, the proper way to get the address to this this
+>> location is really to use the DMA API, rather than virt_to_phys.
+>>
+>> Using virt_to_phys might work on some systems, but by using the DMA API,
+>> we know that it will work on all systems.
+>>
+>> This is essentially the same thing as allocating a buffer in a driver,
+>> to which the endpoint will write to. To do this, we use the DMA API.
+>>
+>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+>> ---
+>>  drivers/pci/dwc/pcie-designware-host.c | 23 ++++++++++++++++-------
+>>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
+>>  2 files changed, 18 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+>> index 81e2157a7cfb..f6d152ea2a03 100644
+>> --- a/drivers/pci/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/dwc/pcie-designware-host.c
+>> @@ -83,16 +83,25 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>
+>>  void dw_pcie_msi_init(struct pcie_port *pp)
+>>  {
+>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +	struct device *dev = pci->dev;
+>> +	struct page *page;
+>>  	u64 msi_target;
+>>
+>> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+>> -	msi_target = virt_to_phys((void *)pp->msi_data);
+>> +	page = alloc_page(GFP_KERNEL | GFP_DMA32);
+>> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
 > 
-> On 10/2/2017 12:35 PM, Bjorn Helgaas wrote:
-> >On Fri, Sep 29, 2017 at 05:47:23PM -0700, Ray Jui wrote:
-> >>Hi Bjorn and all,
-> >>
-> >>One of our ARM64 based processor (NS2) has our system address
-> >>reversed for PCIe outbound transaction in the range of 0x0000_0000
-> >>and 0x1fff_ffff. If we use 1:1 mapping between the system address
-> >>and PCIe address, we end up having the PCIe address in the same
-> >>range.
-> >>
-> >>In this case, we noticed that certain USB-PCI adapters will decline
-> >>access to BARs mapped in this address range with "Unsupported
-> >>Request". In this case, if we change the PCIe address range to
-> >>something else like 0x8000_0000, it would work without an issue.
-> >>
-> >>This sounds like an issue with the USB PCI adapter that cannot allow
-> >>BARs to be used with specific PCIe address range. Is my
-> >>understanding correct?
-> >
-> >I assume you're seeing "Unsupported Request" completions on the PCIe
-> >link?  Can you tell with an analyzer that the TLP actually appears on
-> >the link and it's the device that is responding with UR?  I'm just
-> >wondering if there's something in the RC that could be
-> >short-circuiting this.  But I guess you mention "certain USB-PCI
-> >adapters", which implies that these BAR addresses work for *some*
-> >devices, just not these particular USB-PCI ones.
-> 
-> Yes, UR is observed with a PCIe analyzer. See attached two JPGs for
-> captures from PCIe analyzer (one uses PCIe address of 0x0000_0000
-> and the other uses 0x8000_0000).
-> 
-> And yes, this behavior is only seen with certain PCIe-USB adapters.
-> Most other PCIe endpoint devices (NVMe SSDs, Ethernet dongle, PCIe
-> switches, and etc) work fine with PICe address of 0x0000_0000.
-> 
-> >
-> >AFAIK, there's no PCIe reason why the 0x0000_0000 - 0x1fff_ffff
-> >region shouldn't be used for BARs.
-> >
-> 
-> Okay, thanks for helping to confirm that.
-> 
-> >It's surprising to me that a device would special-case addresses like
-> >that, but maybe it does.
-> 
-> If this is proven to be a shortcoming of some specific PCIe-USB
-> adapters (and in fact it seems to be the case so far based on all of
-> the data points). Does it make any sense to you to have a workaround
-> done by the root complex, i.e., to avoid using 0x0000_0000 outbound
-> region; instead, use something else, .e.g, 0x1000_0000
+> Where are the matching frees?
 
-We could have a workaround, as long as it's done in a way that doesn't
-penalize all the correctly-working hardware.  I don't want to give up
-1/16 of the 32-bit address space for everybody just to accomodate some
-broken hardware.
+Hello David.
 
-I'm not sure what form such a workaround would take.  A quirk could
-mark a zero-valued BAR as invalid and force reallocation, but I'm not
-sure how we'd force the allocator to avoid this region.  There might
-be some development required there.
+I couldn't find any matching free_pages call to the
+__get_free_pages() allocation, so following the same design,
+I did not add a dma_unmap_page.
 
-Bjorn
+The current design of most (all?) DWC PCI drivers is that
+they can only be built-in (i.e. not built as a module),
+and that they cannot be unbinded (suppress_bind_attrs
+= true in the platform_driver struct).
+
+I will be happy to add a dma_unmap_page (and free_pages),
+if the maintainer suggests somewhere where I should put it.
+
+Regards,
+Niklas
+
+> 
+> 	David
+> 
+>> +	if (dma_mapping_error(dev, pp->msi_data)) {
+>> +		dev_err(dev, "failed to map msi data\n");
+>> +		__free_page(page);
+>> +		return;
+>> +	}
+>> +	msi_target = (u64)pp->msi_data;
+>>
+>>  	/* program the msi_data */
+>>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+>> -			    (u32)(msi_target & 0xffffffff));
+>> +			    lower_32_bits(msi_target));
+>>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+>> -			    (u32)(msi_target >> 32 & 0xffffffff));
+>> +			    upper_32_bits(msi_target));
+>>  }
+>>
+>>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+>> @@ -187,10 +196,10 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+>>  	if (pp->ops->get_msi_addr)
+>>  		msi_target = pp->ops->get_msi_addr(pp);
+>>  	else
+>> -		msi_target = virt_to_phys((void *)pp->msi_data);
+>> +		msi_target = (u64)pp->msi_data;
+>>
+>> -	msg.address_lo = (u32)(msi_target & 0xffffffff);
+>> -	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+>> +	msg.address_lo = lower_32_bits(msi_target);
+>> +	msg.address_hi = upper_32_bits(msi_target);
+>>
+>>  	if (pp->ops->get_msi_data)
+>>  		msg.data = pp->ops->get_msi_data(pp, pos);
+>> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+>> index e5d9d77b778e..547352a317f8 100644
+>> --- a/drivers/pci/dwc/pcie-designware.h
+>> +++ b/drivers/pci/dwc/pcie-designware.h
+>> @@ -17,6 +17,7 @@
+>>  #include <linux/irq.h>
+>>  #include <linux/msi.h>
+>>  #include <linux/pci.h>
+>> +#include <linux/dma-mapping.h>
+>>
+>>  #include <linux/pci-epc.h>
+>>  #include <linux/pci-epf.h>
+>> @@ -168,7 +169,7 @@ struct pcie_port {
+>>  	const struct dw_pcie_host_ops *ops;
+>>  	int			msi_irq;
+>>  	struct irq_domain	*irq_domain;
+>> -	unsigned long		msi_data;
+>> +	dma_addr_t		msi_data;
+>>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>>  };
+>>
+>> --
+>> 2.11.0
+> 
