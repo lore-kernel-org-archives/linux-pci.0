@@ -1,94 +1,251 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.194]:53852 "EHLO
-        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751398AbdJXO6O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 10:58:14 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: "'Petrosyan, Ludwig'" <ludwig.petrosyan@desy.de>,
-        Logan Gunthorpe <logang@deltatee.com>
-CC: Alexander Deucher <Alexander.Deucher@amd.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Linux-media <Linux-media@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        John Bridgman <John.Bridgman@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        Serguei Sagalovitch <Serguei.Sagalovitch@amd.com>,
-        Paul Blinzer <Paul.Blinzer@amd.com>,
-        "Christian Koenig" <Christian.Koenig@amd.com>,
-        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-        Ben Sander <ben.sander@amd.com>
-Subject: RE: Enabling peer to peer device transactions for PCIe devices
-Date: Tue, 24 Oct 2017 14:58:24 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A19B9@AcuExch.aculab.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
- <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
- <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
- <063D6719AE5E284EB5DD2968C1650D6DD00A04EA@AcuExch.aculab.com>
- <d61b6829-0515-a809-2a43-c41add4b1594@deltatee.com>
- <1264390131.14701401.1508824699016.JavaMail.zimbra@desy.de>
-In-Reply-To: <1264390131.14701401.1508824699016.JavaMail.zimbra@desy.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:54063 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751764AbdJPBnG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Oct 2017 21:43:06 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH 04/12] PM / core: Add SMART_SUSPEND driver flag
+Date: Mon, 16 Oct 2017 03:29:31 +0200
+Message-ID: <2481137.OYGUrPQscL@aspire.rjw.lan>
+In-Reply-To: <3806130.B2KCK0tvef@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-UGxlYXNlIGRvbid0IHRvcCBwb3N0LCB3cml0ZSBzaG9ydGVyIGxpbmVzLCBhbmQgYWRkIHRoZSBv
-ZGQgYmxhbmsgbGluZS4NCkJpZyBibG9ja3Mgb2YgdGV4dCBhcmUgaGFyZCB0byByZWFkIHF1aWNr
-bHkuDQoNCj4gRnJvbTogUGV0cm9zeWFuLCBMdWR3aWcgW21haWx0bzpsdWR3aWcucGV0cm9zeWFu
-QGRlc3kuZGVdDQo+IFllcyBJIGFncmVlIGl0IGhhcyB0byBiZSBzdGFydGVkIHdpdGggdGhlIHdy
-aXRlIHRyYW5zYWN0aW9uLCBhY2NvcmRpbmcgb2YgUENJZSBzdGFuZGFyZCBhbGwgd3JpdGUNCj4g
-dHJhbnNhY3Rpb24gYXJlIGFkZHJlc3Mgcm91dGVkLCBhbmQgSSBhZ3JlZSB3aXRoIExvZ2FuOg0K
-PiBpZiBpbiB3cml0ZSB0cmFuc2FjdGlvbiBUTFAgdGhlIGVuZHBvaW50IGFkZHJlc3Mgd3JpdHRl
-biBpbiBoZWFkZXIgdGhlIFRMUCBzaG91bGQgbm90IHRvdWNoIENQVSwgdGhlDQo+IFBDSWUgU3dp
-dGNoIGhhcyB0byByb3V0ZSBpdCB0byBlbmRwb2ludC4NCg0KVGhhdCBkZXBlbmRzLCBJSVJDIHRo
-ZXJlIGlzIGEgZmVhdHVyZSBmb3IgUENJZSBzd2l0Y2hlcyB0byBmb3JjZSB0aGVtDQp0byBzZW5k
-IGFsbCB0cmFuc2FjdGlvbnMgdG8gdGhlIHJvb3QgaHViLg0KVGhpcyBpcyB0aGVyZSBzbyB0aGF0
-IHRoZSBob3N0IGNhbiBlbmZvcmNlIHJ1bGVzIHRvIHN0b3AgcDJwIHRyYW5zZmVycy4NCkl0IG1p
-Z2h0IGVuYWJsZWQgb24gdGhlIHN3aXRjaCB5b3UgaGF2ZS4NCg0KPiBUaGUgaWRlYSB3YXM6IGlu
-IE1UQ0Egc3lzdGVtIHRoZXJlIGlzIFBDSWUgU3dpdGNoIG9uIE1DSCAoTVRDQSBjcmF0ZSBIVUIp
-IHRoaXMgc3dpdGNoIGNvbm5lY3RzIENQVSB0bw0KPiBvdGhlciBDcmF0ZSBTbG90cywgc28gb25l
-IHBvcnQgaXMgVXBzdHJlYW0gYW5kIG90aGVycyBhcmUgRG93bnN0cmVhbSAgcG9ydHMsIERNQSBy
-ZWFkIGZyb20gQ1BVIGlzDQo+IHVzdWFsIHdyaXRlIG9uIGVuZHBvaW50IHNpZGUsIFhpbGlueCBE
-TUEgY29yZSBoYXMgdHdvIHJlZ2lzdGVycyBEZXN0aW5hdGlvbiBBZGRyZXNzIGFuZCBTb3VyY2UN
-Cj4gQWRkcmVzcywNCj4gZGV2aWNlIGRyaXZlciB0byBtYWtlIERNQSBoYXMgdG8gc2V0IHVwIHRo
-ZXNlIHJlZ2lzdGVycywNCj4gdXN1YWxseSBkZXZpY2UgZHJpdmVyIHRvIHN0YXJ0IERNQSByZWFk
-IGZyb20gQm9hcmQgc2V0cyBTb3VyY2UgYWRkcmVzcyBhcyBGUEdBIG1lbW9yeSBhZGRyZXNzIGFu
-ZA0KPiBEZXN0aW5hdGlvbiBhZGRyZXNzIGlzIERNQSBwcmVwYXJlZCBzeXN0ZW0gYWRkcmVzcywN
-Cj4gaW4gY2FzZSBvZiB0ZXN0aW5nIHAycCBJIHNldCBEZXN0aW5hdGlvbiBhZGRyZXNzIGFzIHBo
-eXNpY2FsIGFkZHJlc3Mgb2Ygb3RoZXIgZW5kcG9pbnQuDQoNClVubmVjZXNzYXJ5IGRldGFpbC4u
-Lg0KDQo+IE1vcmUgZGV0YWlsZWQ6DQo+IHdlIGhhdmUgc28gY2FsbGVkIHBjaWUgdW5pdmVyc2Fs
-IGRyaXZlcjogdGhlIGlkZWEgYmVoaW5kIGlzDQo+IDEuIGFsbCBwY2llIGNvbmZpZ3VyYXRpb24g
-c3RhZmYsIGZpbmQgZW5hYmxlZCBCQVJzLCBtYXBwaW5nIEJBUnMsIHVzdWFsIHJlYWQvd3JpdGUg
-YW5kIGNvbW1vbiBpb2N0bA0KPiAoZ2V0IHNsb3QgbnVtYmVyLCBnZXQgZHJpdmVyIHZlcnNpb24g
-Li4uKSBpbXBsZW1lbnRlZCBpbiB1bml2ZXJzYWwgZHJpdmVyIGFuZCBFWFBPUlRlZC4NCj4gMi4g
-aWYgc29tZSBzeXN0ZW0gZnVuY3Rpb24gaW4gbmV3IGtlcm5lbCBhcmUgY2hhbmdlZCB3ZSBjaGFu
-Z2UgaXQgb25seSBpbiB1bml2ZXJzYWwgcGFydHMgKGVhc3kNCj4gc3VwcG9ydCBhIGJpZyBudW1i
-ZXIgb2YgZHJpdmVycyApDQo+IHNvIHRoZSB1bml2ZXJzYWwgZHJpdmVyIHNvbWV0aGluZyBsaWtl
-IFBDSWUgRHJpdmVyIEFQSQ0KPiAzLiB0aGUgdW5pdmVyc2FsIGRyaXZlciBwcm92aWRlcyByZWFk
-L3dyaXQgZnVuY3Rpb25zIHNvIHdlIGhhdmUgdGhlIHNhbWUgZGV2aWNlIGFjY2VzcyBBUEkgZm9y
-IGFueQ0KPiBQQ0llIGRldmljZSwgd2UgY291bGQgdXNlIHRoZSBzYW1lIHVzZXIgYXBwbGljYXRp
-b24gd2l0aCBhbnkgUENJZSBkZXZpY2UNCg0KTW9yZSBjcmFwLi4uDQoNCj4gbm93LiBkdXJpbmcg
-QkFScyBmaW5kaW5nIGFuZCBtYXBwaW5nIHVuaXZlcnNhbCBkcml2ZXIga2VlcHMgcGNpZSBlbmRw
-b2ludCBwaHlzaWNhbCBhZGRyZXNzIGluIHNvbWUNCj4gaW50ZXJuYWwgc3RydWN0dXJlcywgYW55
-IHRvcCBkcml2ZXIgbWF5IGdldCBwaHlzaWNhbCBhZGRyZXNzDQo+IG9mIG90aGVyIHBjaWUgZW5k
-cG9pbnQgYnkgc2xvdCBudW1iZXIuDQo+IGluIG1heSBjYXNlIGR1cmluZyBnZXRfcmVzb3JjZSB0
-aGUgcGh5c2ljYWwgYWRkcmVzcyBpcyAweEIyMDAwMDAwLCBJIGNoZWNrIGxzcGNpIC1IMSAtdnZ2
-diAtcyBwc2llDQo+IHN3aXRjaCBwb3J0IGJ1cyBhZGRyZXNzICh0aGUgZW5kcG9pbnQgY29ubmVj
-dGVkIHRvIHRoaXMgcG9ydCwgY2hlY2tlZCBieSBsc3BjaSAtSDEgLXQpIHRoZSBzYW1lDQo+IGFk
-ZHJlc3MgKDB4QjIwMDAwMCkgaXMgdGhlIG1lbW9yeSBiZWhpbmQgYnJpZGdlLA0KDQpPdmVybHkg
-dmVyYm9zZS4uLg0KDQo+IEkgd2FudCB0byBtYWtlIHAycCB3cml0ZXMgdG8gb2Zmc2V0IDB4NDAw
-MDAsIHNvIEkgc2V0IERNQSBkZXN0aW5hdGlvbiBhZGRyZXNzIDB4QjI0MDAwMDANCj4gaXMgc29t
-ZXRoaW5nIHdyb25nPw0KDQpQb3NzaWJseS4NCg0KWW91IGFsbW9zdCBjZXJ0YWlubHkgbmVlZCB0
-aGUgYWRkcmVzcyB0aGF0IGlzIHdyaXR0ZW4gaW50byB0aGUgQkFSIG9mIHRoZQ0KdGFyZ2V0IGVu
-ZHBvaW50Lg0KVGhpcyBjb3VsZCB3ZWxsIGJlIGRpZmZlcmVudCBmcm9tIHRoZSBwaHlzaWNhbCBh
-ZGRyZXNzIHRoYXQgdGhlIGNwdSB1c2VzDQp0byB3cml0ZSB0byB0aGUgZW5kcG9pbnQgKGFzIHdl
-bGwgYXMgdGhlIGNwdSB2aXJ0dWFsIGFkZHJlc3MpLg0KDQpsc3BjaSBsaWVzIFsxXSwgcnVuIGxz
-cGNpIC14ICAob3IgaGV4ZHVtcCBjb25maWcgc3BhY2UgdGhyb3VnaCAvc3lzL2RldmljZXMpDQp0
-byBzZWUgd2hhdCBpcyBhY3R1YWxseSBpbiB0aGUgQkFSLg0KDQpbMV0gVGhlIGFkZHJlc3NlcyBj
-b21lIGZyb20gc29tZXdoZXJlIG90aGVyIHRoYW4gcmVhZGluZyB0aGUgQkFSLg0KSWYgdGhlIGVu
-ZHBvaW50IHJlc2V0cyB0aGUgQkFSIGxzcGNpIHdpbGwgc3RpbGwgcmVwb3J0IHRoZSBvbGQNCmFk
-ZHJlc3Nlcy4NCg0KCURhdmlkDQoNCg==
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+Define and document a SMART_SUSPEND flag to instruct bus types and PM
+domains that the system suspend callbacks provided by the driver can
+cope with runtime-suspended devices, so from the driver's perspective
+it should be safe to leave devices in runtime suspend during system
+suspend.
+
+Setting that flag also causes the PM core to skip the "late" and
+"noirq" phases of device suspend for devices that remain in runtime
+suspend at the beginning of the "late" phase (when runtime PM has
+been disabled for them) under the assumption that their state cannot
+(and should not) change after that point until the system suspend
+transition is complete.  Moreover, the PM core prevents runtime PM
+from acting on devices with DPM_FLAG_SMART_SUSPEND during system
+resume by setting their runtime PM status to "active" at the end of
+the "early" phase (right prior to enabling runtime PM for them).
+That allows system resume callbacks to do whatever is necessary to
+resume the device without worrying about runtime PM possibly
+running in parallel with them.
+
+However, that doesn't apply to transitions involving ->thaw_noirq,
+->thaw_early and ->thaw callbacks during hibernation, as they
+generally are not expected to change the power states of devices.
+Consequently, if a device is in runtime suspend at the beginning
+of such a transition, it must stay in runtime suspend until the
+"complete" phase of it (since the callbacks may not change its
+power state).
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ Documentation/driver-api/pm/devices.rst |   17 ++++++++
+ drivers/base/power/main.c               |   63 ++++++++++++++++++++++++++++----
+ include/linux/pm.h                      |    9 ++++
+ 3 files changed, 82 insertions(+), 7 deletions(-)
+
+Index: linux-pm/Documentation/driver-api/pm/devices.rst
+===================================================================
+--- linux-pm.orig/Documentation/driver-api/pm/devices.rst
++++ linux-pm/Documentation/driver-api/pm/devices.rst
+@@ -766,6 +766,23 @@ the state of devices (possibly except fo
+ from their ``->prepare`` and ``->suspend`` callbacks (or equivalent) *before*
+ invoking device drivers' ``->suspend`` callbacks (or equivalent).
+ 
++Some bus types and PM domains have a policy to resume all devices from runtime
++suspend upfront in their ``->suspend`` callbacks, but that may not be really
++necessary if the system suspend-resume callbacks provided by the device's
++driver can cope with runtime-suspended devices.  The driver can indicate that
++by setting ``DPM_FLAG_SMART_SUSPEND`` in :c:member:`power.driver_flags` at the
++probe time, by passing it to the :c:func:`dev_pm_set_driver_flags` helper.  That
++also causes the PM core to skip the ``suspend_late`` and ``suspend_noirq``
++phases of device suspend for the device if it remains in runtime suspend at the
++beginning of the ``suspend_late`` phase (when runtime PM has been disabled for
++it) under the assumption that its state cannot (and should not) change after
++that point until the system-wide transition is over.  Moreover, the PM core
++updates the runtime power management status of devices with
++``DPM_FLAG_SMART_SUSPEND`` set to "active" at the end of the ``resume_early``
++phase of device resume (right prior to enabling runtime PM for them) in order
++to prevent runtime PM from acting on them before the ``complete`` phase, which
++means that they should be put into the full-power state before that phase.
++
+ During system-wide resume from a sleep state it's easiest to put devices into
+ the full-power state, as explained in :file:`Documentation/power/runtime_pm.txt`.
+ Refer to that document for more information regarding this particular issue as
+Index: linux-pm/include/linux/pm.h
+===================================================================
+--- linux-pm.orig/include/linux/pm.h
++++ linux-pm/include/linux/pm.h
+@@ -558,6 +558,7 @@ struct pm_subsys_data {
+  *
+  * NEVER_SKIP: Do not skip system suspend/resume callbacks for the device.
+  * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
++ * SMART_SUSPEND: No need to resume the device from runtime suspend.
+  *
+  * Setting SMART_PREPARE instructs bus types and PM domains which may want
+  * system suspend/resume callbacks to be skipped for the device to return 0 from
+@@ -565,9 +566,17 @@ struct pm_subsys_data {
+  * other words, the system suspend/resume callbacks can only be skipped for the
+  * device if its driver doesn't object against that).  This flag has no effect
+  * if NEVER_SKIP is set.
++ *
++ * Setting SMART_SUSPEND instructs bus types and PM domains which may want to
++ * runtime resume the device upfront during system suspend that doing so is not
++ * necessary from the driver's perspective.  It also causes the PM core to skip
++ * the "late" and "noirq" phases of device suspend for the device if it remains
++ * in runtime suspend at the beginning of the "late" phase (when runtime PM has
++ * been disabled for it).
+  */
+ #define DPM_FLAG_NEVER_SKIP	BIT(0)
+ #define DPM_FLAG_SMART_PREPARE	BIT(1)
++#define DPM_FLAG_SMART_SUSPEND	BIT(2)
+ 
+ struct dev_pm_info {
+ 	pm_message_t		power_state;
+Index: linux-pm/drivers/base/power/main.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/main.c
++++ linux-pm/drivers/base/power/main.c
+@@ -551,6 +551,18 @@ static int device_resume_noirq(struct de
+ 	if (!dev->power.is_noirq_suspended)
+ 		goto Out;
+ 
++	if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
++	    pm_runtime_status_suspended(dev) && (state.event == PM_EVENT_THAW ||
++	    state.event == PM_EVENT_RECOVER)) {
++		/*
++		 * The device has to stay in runtime suspend, because the
++		 * subsequent callbacks may not try to change its power state.
++		 */
++		dev->power.is_suspended = false;
++		dev->power.is_late_suspended = false;
++		goto Skip;
++	}
++
+ 	dpm_wait_for_superior(dev, async);
+ 
+ 	if (dev->pm_domain) {
+@@ -573,9 +585,11 @@ static int device_resume_noirq(struct de
+ 	}
+ 
+ 	error = dpm_run_callback(callback, dev, state, info);
++
++Skip:
+ 	dev->power.is_noirq_suspended = false;
+ 
+- Out:
++Out:
+ 	complete_all(&dev->power.completion);
+ 	TRACE_RESUME(error);
+ 	return error;
+@@ -715,6 +729,14 @@ static int device_resume_early(struct de
+ 	error = dpm_run_callback(callback, dev, state, info);
+ 	dev->power.is_late_suspended = false;
+ 
++	/*
++	 * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
++	 * during system suspend, so update their runtime PM status to "active"
++	 * to prevent runtime PM from acting on them before device_complete().
++	 */
++	if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
++		pm_runtime_set_active(dev);
++
+  Out:
+ 	TRACE_RESUME(error);
+ 
+@@ -1107,6 +1129,15 @@ static int __device_suspend_noirq(struct
+ 	if (dev->power.syscore || dev->power.direct_complete)
+ 		goto Complete;
+ 
++	/*
++	 * The state of devices with DPM_FLAG_SMART_SUSPEND set that remain in
++	 * runtime suspend at this point cannot change going forward, so skip
++	 * the callback invocation for them.
++	 */
++	if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
++	    pm_runtime_status_suspended(dev))
++		goto Skip;
++
+ 	if (dev->pm_domain) {
+ 		info = "noirq power domain ";
+ 		callback = pm_noirq_op(&dev->pm_domain->ops, state);
+@@ -1127,10 +1158,13 @@ static int __device_suspend_noirq(struct
+ 	}
+ 
+ 	error = dpm_run_callback(callback, dev, state, info);
+-	if (!error)
+-		dev->power.is_noirq_suspended = true;
+-	else
++	if (error) {
+ 		async_error = error;
++		goto Complete;
++	}
++
++Skip:
++	dev->power.is_noirq_suspended = true;
+ 
+ Complete:
+ 	complete_all(&dev->power.completion);
+@@ -1268,6 +1302,15 @@ static int __device_suspend_late(struct
+ 	if (dev->power.syscore || dev->power.direct_complete)
+ 		goto Complete;
+ 
++	/*
++	 * The state of devices with DPM_FLAG_SMART_SUSPEND set that remain in
++	 * runtime suspend at this point cannot change going forward, so skip
++	 * the callback invocation for them.
++	 */
++	if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
++	    pm_runtime_status_suspended(dev))
++		goto Skip;
++
+ 	if (dev->pm_domain) {
+ 		info = "late power domain ";
+ 		callback = pm_late_early_op(&dev->pm_domain->ops, state);
+@@ -1288,10 +1331,13 @@ static int __device_suspend_late(struct
+ 	}
+ 
+ 	error = dpm_run_callback(callback, dev, state, info);
+-	if (!error)
+-		dev->power.is_late_suspended = true;
+-	else
++	if (error) {
+ 		async_error = error;
++		goto Complete;
++	}
++
++Skip:
++	dev->power.is_late_suspended = true;
+ 
+ Complete:
+ 	TRACE_SUSPEND(error);
+@@ -1652,6 +1698,9 @@ static int device_prepare(struct device
+ 	if (dev->power.syscore)
+ 		return 0;
+ 
++	WARN_ON(dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
++		!pm_runtime_enabled(dev));
++
+ 	/*
+ 	 * If a device's parent goes into runtime suspend at the wrong time,
+ 	 * it won't be possible to resume the device.  To prevent this we
