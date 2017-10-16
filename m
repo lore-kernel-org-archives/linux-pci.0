@@ -1,99 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:38934 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751113AbdJWNFE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 23 Oct 2017 09:05:04 -0400
-Subject: Re: [PATCH] of: Devices with pci_epf_bus_type require DMA
- configuration
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, nsekhar@ti.com
-References: <20171011080041.12918-1-kishon@ti.com>
- <cae4b8e9-9944-6482-c12c-8ce87aea1487@arm.com>
- <3599d3e2-d496-eac3-7179-2d1795fc059d@ti.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <037082e6-5abe-daf9-47aa-9586a4aead99@arm.com>
-Date: Mon, 23 Oct 2017 14:05:00 +0100
+Return-Path: <SRS0=GLfr=BP=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=GLfr=BP=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH V4 0/2] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port
+ service drivers
+To: <helgaas@kernel.org>, <hch@lst.de>
+References: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
+CC: <linux-pci@vger.kernel.org>, <stable@vger.kernel.org>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <5380b9e0-b756-6950-2d87-01b60189324d@huawei.com>
+Date: Mon, 16 Oct 2017 20:09:50 +0800
 MIME-Version: 1.0
-In-Reply-To: <3599d3e2-d496-eac3-7179-2d1795fc059d@ti.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/10/17 06:43, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Wednesday 11 October 2017 10:15 PM, Robin Murphy wrote:
->> On 11/10/17 09:00, Kishon Vijay Abraham I wrote:
->>> pci-epc-core.c invokes of_dma_configure in order to configure
->>> the coherent_dma_mask/dma_mask of endpoint function device. This is
->>> required for dma_alloc_coherent to succeed in pci function driver
->>> (pci-epf-test.c). However after
->>> commit 723288836628bc1c08 ("of: restrict DMA configuration"),
->>> of_dma_configure doesn't configure the coherent_dma_mask/dma_mask
->>> of endpoint function device (since it doesn't have dma-ranges
->>> property), resulting in dma_alloc_coherent in pci endpoint function
->>> driver to to fail. Fix it by making sure of_dma_configure configures
->>> coherent_dma_mask/dma_mask irrespective of whether the node has
->>> dma-ranges property or not.
->>
->> Frankly, what the endpoint stuff is doing looks wrong anyway. As I
->> understand it, the endpoint functions aren't real devices, just a
->> partitioning of resources - the only piece of hardware actually doing
->> DMA is the EPC itself, which should already have been configured
->> appropriately as a platform device.
-> 
-> EPF devices use EPC devices which in turn use the actual platform device for
-> configuring the hardware. IMO the devices in one layer shouldn't have to
-> explicitly use devices in another layer other than using clearly defined API's.
-> Here platform_device is the bottom later, above which is epc_device and on top
-> is epf_device.
+Hi Bjorn
 
-Note that the "sysdev"-type model that I'm implying already has
-precedent elsewhere, e.g. in the USB layer. Since you already have
-things abstracted behind the pci_epf_{alloc,free}_space() API, this
-seems like a simple change to make.
+Is this patchset ok ?  or do I still need to work v5 without optimizing
+the interrupt vector allocation strategy(just use PATCH v3 and
+add #defines for the AER and DPC Interrupt Message Number masks.)
 
-> The idea is just by doing the initial setup in the framework, the epf driver be
-> able to use APIs like dma_alloc_coherent using it's own *device* rather than
-> the EPC's "device".
+Thanks,
+Dongdong
 
-OK, but when would that actually happen? Please correct me if I've got
-it wrong, but as best I understand it, the hardware extent of the EPF is
-some registers controlling the config space that the EPC exposes to the
-other end of the PCI link - the only actual DMA happening will be in
-response to PCI traffic in and out of the EPF's BARs, between the EPC
-and the memory backing those BAR regions which is already controlled by
-your API. Sure, the EPF *driver* is free to access whatever memory it
-feels like, but as a software construct that doesn't constitute DMA.
-
-To put it another way, if an endpoint driver *does* call
-dma_alloc_coherent(epf_device, ...), what does it then do with the
-resulting DMA address?
-
->> It seems to me that the EPF BAR allocations should just be using the EPC
->> device directly, rather than trying to pretend the EPFs are distinct DMA
->> masters.
->>
->> Furthermore, now that I've looked:
->>
->>> 	dma_addr_t phys_addr;
->>
->> please no :(
->>
->> (I can easily think of more than one system with an EP-capable DWC PCIe
->> block integrated behind an IOMMU)
-> 
-> hmm.. haven't used IOMMU but won't setting up parent-child relationship between
-> EPC and EPF help in the case of IOMMU?
-
-I was merely referring to the characterisation throughout this code that
-a DMA address is a physical address; it isn't, for any number of reasons
-(IOMMUs are just the most obvious). Fortunately it's only a cosmetic
-naming problem, the actual usage looks OK.
-
-Robin.
+ÔÚ 2017/10/11 18:52, Dongdong Liu Ð´µÀ:
+> This patchset is to optimize the interrupt vector allocation strategy
+> in pcie_port_enable_irq_vec() and add #defines for the AER and DPC
+> Interrupt Message Number masks.
+>
+> v3->v4:
+> - Optimize the interrupt vector allocation strategy in
+> pcie_port_enable_irq_vec().
+> - add #defines for the AER and DPC Interrupt Message Number masks.
+> v2->v3:
+> - Use a 12-character SHA1 commit id.
+> - Rebase on v4.14-rc4.
+> v1->v2:
+> - Fix comments on PATCH v1.
+> - Simplify implementation.
+>
+> Dongdong Liu (2):
+>   PCI/portdrv: Fix MSI/MSI-X bug for PCIe port service drivers
+>   PCI/portdrv: Add #defines for the AER and DPC Interrupt Message Number
+>     masks
+>
+>  drivers/pci/pcie/portdrv_core.c | 49 ++++++++++++++---------------------------
+>  include/uapi/linux/pci_regs.h   |  2 ++
+>  2 files changed, 18 insertions(+), 33 deletions(-)
+>
