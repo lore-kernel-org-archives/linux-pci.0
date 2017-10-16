@@ -1,43 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:17164 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751205AbdJLSxa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 14:53:30 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>
-Subject: [PATCH 6/6] ARM64: tegra: limit PCIe config space mapping to 4K for T210
-Date: Fri, 13 Oct 2017 00:20:11 +0530
-Message-ID: <1507834211-24922-7-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
-References: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH 09/12] PM / mfd: intel-lpss: Use DPM_FLAG_SMART_SUSPEND
+Date: Mon, 16 Oct 2017 03:30:16 +0200
+Message-ID: <5094729.JAaD38WncM@aspire.rjw.lan>
+In-Reply-To: <3806130.B2KCK0tvef@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-reduces PCIe config space mapping size from its current 256MB
-to 4K to have only 4K of virtual memory mapping and to be
-in line with driver implementation
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Make the intel-lpss driver set DPM_FLAG_SMART_SUSPEND for its
+devices which will allow them to stay in runtime suspend during
+system suspend unless they need to be reconfigured for some reason.
+
+Also make it avoid resuming its child devices if they have
+DPM_FLAG_SMART_SUSPEND set to allow them to remain in runtime
+suspend during system suspend.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/arm64/boot/dts/nvidia/tegra210.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/mfd/intel-lpss.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra210.dtsi b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-index 29f471e0f22a..8cad2516597b 100644
---- a/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-@@ -16,7 +16,7 @@
- 		device_type = "pci";
- 		reg = <0x0 0x01003000 0x0 0x00000800   /* PADS registers */
- 		       0x0 0x01003800 0x0 0x00000800   /* AFI registers */
--		       0x0 0x02000000 0x0 0x10000000>; /* configuration space */
-+		       0x0 0x11FFF000 0x0 0x00001000>; /* configuration space */
- 		reg-names = "pads", "afi", "cs";
- 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
- 			     <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
--- 
-2.7.4
+Index: linux-pm/drivers/mfd/intel-lpss.c
+===================================================================
+--- linux-pm.orig/drivers/mfd/intel-lpss.c
++++ linux-pm/drivers/mfd/intel-lpss.c
+@@ -450,6 +450,8 @@ int intel_lpss_probe(struct device *dev,
+ 	if (ret)
+ 		goto err_remove_ltr;
+ 
++	dev_pm_set_driver_flags(dev, DPM_FLAG_SMART_SUSPEND);
++
+ 	return 0;
+ 
+ err_remove_ltr:
+@@ -478,7 +480,9 @@ EXPORT_SYMBOL_GPL(intel_lpss_remove);
+ 
+ static int resume_lpss_device(struct device *dev, void *data)
+ {
+-	pm_runtime_resume(dev);
++	if (!dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
++		pm_runtime_resume(dev);
++
+ 	return 0;
+ }
+ 
+
+
