@@ -1,55 +1,169 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43280 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751117AbdJCVeh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Oct 2017 17:34:37 -0400
-Date: Tue, 3 Oct 2017 16:34:34 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 16 Oct 2017 18:43:26 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Daniel Drake <drake@endlessm.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, x86@kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        linux@endlessm.com
-Subject: Re: [PATCH] PCI MSI: allow alignment restrictions on vector
- allocation
-Message-ID: <20171003213434.GI25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.DEB.2.20.1709271555430.2027@nanos>
- <20171002085732.4039-1-drake@endlessm.com>
- <alpine.DEB.2.20.1710021540030.2185@nanos>
- <alpine.DEB.2.20.1710021817500.9529@nanos>
- <alpine.DEB.2.20.1710032306170.2278@nanos>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Duc Dang <dhdang@apm.com>, linux-arm-kernel@axis.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
+Message-ID: <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-9-niklas.cassel@axis.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1710032306170.2278@nanos>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171013160914.3220-9-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 03, 2017 at 11:07:58PM +0200, Thomas Gleixner wrote:
-> On Mon, 2 Oct 2017, Thomas Gleixner wrote:
-> > On Mon, 2 Oct 2017, Thomas Gleixner wrote:
-> > > On Mon, 2 Oct 2017, Daniel Drake wrote:
-> > >   2) The affinity setting of straight MSI interrupts (w/o remapping) on x86
-> > >      requires to make the affinity change from the interrupt context of the
-> > >      current active vector in order not to lose interrupts or worst case
-> > >      getting into a stale state.
-> > > 
-> > >      That works for single vectors, but trying to move all vectors in one
-> > >      go is more or less impossible, as there is no reliable way to
-> > >      determine that none of the other vectors is on flight.
-> > > 
-> > >      There might be some 'workarounds' for that, but I rather avoid that
-> > >      unless we get an official documented one from Intel/AMD.
-> > 
-> > Thinking more about it. That might be actually a non issue for MSI, but we
-> > have that modus operandi in the current code and we need to address that
-> > first before even thinking about multi MSI support.
+On Fri, Oct 13, 2017 at 06:09:11PM +0200, Niklas Cassel wrote:
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
+>  drivers/pci/dwc/Kconfig                            |  41 +++--
+>  drivers/pci/dwc/Makefile                           |   4 +-
+>  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
+>  4 files changed, 233 insertions(+), 17 deletions(-)
 > 
-> But even if its possible, it's very debatable whether it's worth the effort
-> when this driver just can use the legacy INTx.and be done with it.
+> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> index 4e4aee4439ea..33eef7ae5a23 100644
+> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+>  and thus inherits all the common properties defined in designware-pcie.txt.
+>  
+>  Required properties:
+> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
+> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
+>  - reg: base addresses and lengths of the PCIe controller (DBI),
+>  	the PHY controller, and configuration address space.
+>  - reg-names: Must include the following entries:
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 22ec82fcdea2..e333283fb1ed 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -14,6 +14,36 @@ config PCIE_DW_EP
+>  	depends on PCI_ENDPOINT
+>  	select PCIE_DW
+>  
+> +config PCIE_ARTPEC6
+> +	bool "Axis ARTPEC-6 PCIe controller"
+> +	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+> +	depends on MACH_ARTPEC6
+> +	help
+> +	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+> +	  SoCs.  This PCIe controller uses the DesignWare core.
+> +
+> +if PCIE_ARTPEC6
+> +
+> +config PCIE_ARTPEC6_HOST
+> +	bool "Axis ARTPEC-6 Host Mode"
+> +	depends on PCI
+> +	depends on PCI_MSI_IRQ_DOMAIN
+> +	select PCIEPORTBUS
+> +	select PCIE_DW_HOST
+> +	help
+> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
+> +	  host mode.
+> +
+> +config PCIE_ARTPEC6_EP
+> +	bool "Axis ARTPEC-6 Endpoint Mode"
+> +	depends on PCI_ENDPOINT
+> +	select PCIE_DW_EP
+> +	help
+> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
+> +	  endpoint mode.
+> +
+> +endif
+> +
+>  config PCI_DRA7XX
+>  	bool "TI DRA7xx PCIe controller"
+>  	depends on SOC_DRA7XX || COMPILE_TEST
+> @@ -148,17 +178,6 @@ config PCIE_ARMADA_8K
+>  	  DesignWare hardware and therefore the driver re-uses the
+>  	  DesignWare core functions to implement the driver.
+>  
+> -config PCIE_ARTPEC6
+> -	bool "Axis ARTPEC-6 PCIe controller"
+> -	depends on PCI
+> -	depends on MACH_ARTPEC6
+> -	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+> -	select PCIE_DW_HOST
+> -	help
+> -	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+> -	  SoCs.  This PCIe controller uses the DesignWare core.
+> -
+>  config PCIE_KIRIN
+>  	depends on OF && ARM64
+>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
 
-Daniel said "Legacy interrupts do not work on that module, so MSI
-support is required," so I assume he means INTx doesn't work.  Maybe
-the driver could poll?  I don't know how much slower that would be,
-but at least it would penalize the broken device, not everybody.
+> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+> index c61be9738cce..ac98242b83a9 100644
+> --- a/drivers/pci/dwc/Makefile
+> +++ b/drivers/pci/dwc/Makefile
+> @@ -2,6 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+>  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+>  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+>  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+> +ifneq ($(filter y,$(CONFIG_PCIE_ARTPEC6_HOST) $(CONFIG_PCIE_ARTPEC6_EP)),)
+> +        obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+> +endif
+
+I see you're copying the DRA7XX style here, but I don't really
+understand it.  I guess the idea is to build pcie-artpec6.o if either
+CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
+
+Is this really the simplest way to express that in Kconfig?  Both the
+"if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
+unusual.
+
+>  ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+>          obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+>  endif
+
+> +static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+
+Looks funny to have this dw_*() function in pcie-artpec6.c.  Intended?
+Or is this something other endpoint drivers could/should share?
+
+> +{
+> +	u32 reg;
+> +
+> +	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+> +	dw_pcie_dbi_ro_wr_en(pci);
+> +	dw_pcie_writel_dbi2(pci, reg, 0x0);
+> +	dw_pcie_writel_dbi(pci, reg, 0x0);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+> +}
+> +
+> +static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+> +	enum pci_barno bar;
+> +
+> +	artpec6_pcie_assert_core_reset(artpec6_pcie);
+> +	artpec6_pcie_init_phy(artpec6_pcie);
+> +	artpec6_pcie_deassert_core_reset(artpec6_pcie);
+> +
+> +	for (bar = BAR_0; bar <= BAR_5; bar++)
+> +		dw_pcie_ep_reset_bar(pci, bar);
+> +}
+
+I naively expected some of this new code to be #ifdef PCIE_ARTPEC6_EP.
+But I haven't really internalized the endpoint support, so maybe that
+doesn't make sense?
 
 Bjorn
