@@ -1,69 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.182]:61829 "EHLO
-        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751260AbdJWQIk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 12:08:40 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: "'Petrosyan, Ludwig'" <ludwig.petrosyan@desy.de>,
-        Logan Gunthorpe <logang@deltatee.com>
-CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>
-Subject: RE: Enabling peer to peer device transactions for PCIe devices
-Date: Mon, 23 Oct 2017 16:08:48 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A04EA@AcuExch.aculab.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
- <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
- <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
-In-Reply-To: <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:51942 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753622AbdJPPTL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 11:19:11 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH v2 01/15] configfs: make ci_type field, some pointers and function arguments const
+Date: Mon, 16 Oct 2017 17:18:40 +0200
+Message-Id: <1508167134-6243-2-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogUGV0cm9zeWFuIEx1ZHdpZw0KPiBTZW50OiAyMiBPY3RvYmVyIDIwMTcgMDc6MTQNCj4g
-Q291bGQgYmUgSSBoYXZlIGRvbmUgaXMgc3R1cGlkLi4uDQo+IEJ1dCBhdCBmaXJzdCBzaWdodCBp
-dCBoYXMgdG8gYmUgc2ltcGxlOg0KPiBUaGUgUENJZSBXcml0ZSB0cmFuc2FjdGlvbnMgYXJlIGFk
-ZHJlc3Mgcm91dGVkLCBzbyBpZiBpbiB0aGUgcGFja2V0IGhlYWRlciB0aGUgb3RoZXIgZW5kcG9p
-bnQgYWRkcmVzcw0KPiBpcyB3cml0dGVuIHRoZSBUTFAgaGFzIHRvIGJlIHJvdXRlZCAoYnkgUENJ
-ZSBTd2l0Y2ggdG8gdGhlIGVuZHBvaW50KSwgdGhlIERNQSByZWFkaW5nIGZyb20gdGhlIGVuZA0K
-PiBwb2ludCBpcyByZWFsbHkgd3JpdGUgdHJhbnNhY3Rpb25zIGZyb20gdGhlIGVuZHBvaW50LCB1
-c3VhbGx5IChYaWxpbnggY29yZSkgdG8gc3RhcnQgRE1BIG9uZSBoYXMgdG8NCj4gd3JpdGUgdG8g
-dGhlIERNQSBjb250cm9sIHJlZ2lzdGVyIG9mIHRoZSBlbmRwb2ludCB0aGUgZGVzdGluYXRpb24g
-YWRkcmVzcy4gU28gSSBoYXZlIGNoYW5nZSB0aGUgZGV2aWNlDQo+IGRyaXZlciB0byBzZXQgaW4g
-dGhpcyByZWdpc3RlciB0aGUgcGh5c2ljYWwgYWRkcmVzcyBvZiB0aGUgb3RoZXIgZW5kcG9pbnQg
-KGdldF9yZXNvdXJjZSBzdGFydCBjYWxsZWQNCj4gdG8gb3RoZXIgZW5kcG9pbnQsIGFuZCBpdCBp
-cyB0aGUgc2FtZSBhZGRyZXNzIHdoaWNoIEkgY291bGQgc2VlIGluIGxzcGNpIC12dnZ2IC1zIGJ1
-cy1hZGRyZXNzIG9mIHRoZQ0KPiBzd2l0Y2ggcG9ydCwgbWVtb3JpZXMgYmVoaW5kIGJyaWRnZSks
-IHNvIG5vdyB0aGUgZW5kcG9pbnQgaGFzIHRvIHN0YXJ0IHNlbmQgd3JpdGVzIFRMUCB3aXRoIHRo
-ZSBvdGhlcg0KPiBlbmRwb2ludCBhZGRyZXNzIGluIHRoZSBUTFAgaGVhZGVyLg0KPiBCdXQgdGhp
-cyBpcyBub3Qgd29ya2luZyAoSSB3YW50IHRvIHVuZGVyc3RhbmQgd2h5IC4uLiksIGJ1dCBJIGNv
-dWxkIHNlZSB0aGUgZmlyc3QgYWRkcmVzcyBvZiB0aGUNCj4gZGVzdGluYXRpb24gZW5kcG9pbnQg
-aXMgY2hhbmdlZCAod2l0aCB0aGUgd3JvbmcgdmFsdWUgMHhGRiksDQo+IG5vdyBJIHdhbnQgdG8g
-dHJ5IHByZXBhcmUgaW4gdGhlIGRyaXZlciBvZiBvbmUgZW5kcG9pbnQgdGhlIERNQSBidWZmZXIg
-LCBidXQgdXNpbmcgcGh5c2ljYWwgYWRkcmVzcyBvZg0KPiB0aGUgb3RoZXIgZW5kcG9pbnQsDQo+
-IENvdWxkIGJlIGl0IHdpbGwgbmV2ZXIgd29yaywgYnV0IEkgd2FudCB0byB1bmRlcnN0YW5kIHdo
-eSwgdGhlcmUgaXMgbXkgZXJyb3IgLi4uDQoNCkl0IGlzIGFsc28gd29ydGggY2hlY2tpbmcgdGhh
-dCB0aGUgaGFyZHdhcmUgYWN0dWFsbHkgc3VwcG9ydHMgcDJwIHRyYW5zZmVycy4NCldyaXRlcyBh
-cmUgbW9yZSBsaWtlbHkgdG8gYmUgc3VwcG9ydGVkIHRoZW4gcmVhZHMuDQpJU1RSIHRoYXQgc29t
-ZSBpbnRlbCBjcHVzIHN1cHBvcnQgc29tZSBwMnAgd3JpdGVzLCBidXQgdGhlcmUgY291bGQgZWFz
-aWx5DQpiZSBlcnJhdGEgYWdhaW5zdCB0aGVtLg0KDQpJJ2QgY2VydGFpbmx5IHRlc3QgYSBzaW5n
-bGUgd29yZCB3cml0ZSB0byByZWFkL3dyaXRlIG1lbW9yeSBsb2NhdGlvbi4NCkZpcnN0IHZlcmlm
-eSBhZ2FpbnN0IGtlcm5lbCBtZW1vcnksIHRoZW4gYWdhaW5zdCBhICdzbGF2ZScgYm9hcmQuDQoN
-CkkgZG9uJ3Qga25vdyBhYm91dCBYaWxpbnggZnBnYSwgYnV0IHdlJ3ZlIGhhZCAnZnVuJyBnZXR0
-aW5nIEFsdGVyYSBmcGdhDQp0byBkbyBzZW5zaWJsZSBQQ0llIGN5Y2xlcyAoSSBlbmRlZCB1cCB3
-cml0aW5nIGEgc2ltcGxlIGRtYSBjb250cm9sbGVyIA0KdGhhdCB3b3VsZCBnZW5lcmF0ZSBsb25n
-IFRMUCkuDQpXZSBhbHNvIGZvdW5kIGEgYnVnIGluIHRoZSBBbHRlcmEgbG9naWMgdGhhdCBwcm9j
-ZXNzZWQgaW50ZXJsZWF2ZWQNCnJlYWQgY29tcGxldGlvbnMuDQoNCglEYXZpZA0KDQo=
+The ci_type field of the config_item structure do not modify the fields
+of the config_item_type structure it points to. And the other pointers
+initialized with ci_type do not modify the fields as well.
+So, make the ci_type field and the pointers initialized with ci_type
+as const.
+
+Make the struct config_item_type *type function argument of functions
+config_{item/group}_init_type_name const as the argument in both the
+functions is only stored in the ci_type field of a config_item structure
+which is now made const.
+Make the argument of configfs_register_default_group const as it is
+only passed to the argument of the function config_group_init_type_name
+which is now const.
+
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
+* Changes in v2- Combine all the followup patches and the constification
+patches into a series.
+
+ fs/configfs/dir.c        | 10 +++++-----
+ fs/configfs/item.c       |  6 +++---
+ fs/configfs/symlink.c    |  4 ++--
+ include/linux/configfs.h |  8 ++++----
+ 4 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/fs/configfs/dir.c b/fs/configfs/dir.c
+index 56fb261..577cff2 100644
+--- a/fs/configfs/dir.c
++++ b/fs/configfs/dir.c
+@@ -584,7 +584,7 @@ static void detach_attrs(struct config_item * item)
+ 
+ static int populate_attrs(struct config_item *item)
+ {
+-	struct config_item_type *t = item->ci_type;
++	const struct config_item_type *t = item->ci_type;
+ 	struct configfs_attribute *attr;
+ 	struct configfs_bin_attribute *bin_attr;
+ 	int error = 0;
+@@ -901,7 +901,7 @@ static void configfs_detach_group(struct config_item *item)
+ static void client_disconnect_notify(struct config_item *parent_item,
+ 				     struct config_item *item)
+ {
+-	struct config_item_type *type;
++	const struct config_item_type *type;
+ 
+ 	type = parent_item->ci_type;
+ 	BUG_ON(!type);
+@@ -920,7 +920,7 @@ static void client_disconnect_notify(struct config_item *parent_item,
+ static void client_drop_item(struct config_item *parent_item,
+ 			     struct config_item *item)
+ {
+-	struct config_item_type *type;
++	const struct config_item_type *type;
+ 
+ 	type = parent_item->ci_type;
+ 	BUG_ON(!type);
+@@ -1260,7 +1260,7 @@ static int configfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode
+ 	struct config_item *parent_item;
+ 	struct configfs_subsystem *subsys;
+ 	struct configfs_dirent *sd;
+-	struct config_item_type *type;
++	const struct config_item_type *type;
+ 	struct module *subsys_owner = NULL, *new_item_owner = NULL;
+ 	char *name;
+ 
+@@ -1810,7 +1810,7 @@ void configfs_unregister_group(struct config_group *group)
+ struct config_group *
+ configfs_register_default_group(struct config_group *parent_group,
+ 				const char *name,
+-				struct config_item_type *item_type)
++				const struct config_item_type *item_type)
+ {
+ 	int ret;
+ 	struct config_group *group;
+diff --git a/fs/configfs/item.c b/fs/configfs/item.c
+index a66f662..88f266e 100644
+--- a/fs/configfs/item.c
++++ b/fs/configfs/item.c
+@@ -113,7 +113,7 @@ int config_item_set_name(struct config_item *item, const char *fmt, ...)
+ 
+ void config_item_init_type_name(struct config_item *item,
+ 				const char *name,
+-				struct config_item_type *type)
++				const struct config_item_type *type)
+ {
+ 	config_item_set_name(item, "%s", name);
+ 	item->ci_type = type;
+@@ -122,7 +122,7 @@ void config_item_init_type_name(struct config_item *item,
+ EXPORT_SYMBOL(config_item_init_type_name);
+ 
+ void config_group_init_type_name(struct config_group *group, const char *name,
+-			 struct config_item_type *type)
++			 const struct config_item_type *type)
+ {
+ 	config_item_set_name(&group->cg_item, "%s", name);
+ 	group->cg_item.ci_type = type;
+@@ -148,7 +148,7 @@ struct config_item *config_item_get_unless_zero(struct config_item *item)
+ 
+ static void config_item_cleanup(struct config_item *item)
+ {
+-	struct config_item_type *t = item->ci_type;
++	const struct config_item_type *t = item->ci_type;
+ 	struct config_group *s = item->ci_group;
+ 	struct config_item *parent = item->ci_parent;
+ 
+diff --git a/fs/configfs/symlink.c b/fs/configfs/symlink.c
+index c8aabba..78ffc26 100644
+--- a/fs/configfs/symlink.c
++++ b/fs/configfs/symlink.c
+@@ -138,7 +138,7 @@ int configfs_symlink(struct inode *dir, struct dentry *dentry, const char *symna
+ 	struct configfs_dirent *sd;
+ 	struct config_item *parent_item;
+ 	struct config_item *target_item = NULL;
+-	struct config_item_type *type;
++	const struct config_item_type *type;
+ 
+ 	sd = dentry->d_parent->d_fsdata;
+ 	/*
+@@ -186,7 +186,7 @@ int configfs_unlink(struct inode *dir, struct dentry *dentry)
+ 	struct configfs_dirent *sd = dentry->d_fsdata;
+ 	struct configfs_symlink *sl;
+ 	struct config_item *parent_item;
+-	struct config_item_type *type;
++	const struct config_item_type *type;
+ 	int ret;
+ 
+ 	ret = -EPERM;  /* What lack-of-symlink returns */
+diff --git a/include/linux/configfs.h b/include/linux/configfs.h
+index c967090..90b90f8 100644
+--- a/include/linux/configfs.h
++++ b/include/linux/configfs.h
+@@ -58,7 +58,7 @@ struct config_item {
+ 	struct list_head	ci_entry;
+ 	struct config_item	*ci_parent;
+ 	struct config_group	*ci_group;
+-	struct config_item_type	*ci_type;
++	const struct config_item_type	*ci_type;
+ 	struct dentry		*ci_dentry;
+ };
+ 
+@@ -72,7 +72,7 @@ static inline char *config_item_name(struct config_item * item)
+ 
+ extern void config_item_init_type_name(struct config_item *item,
+ 				       const char *name,
+-				       struct config_item_type *type);
++				       const struct config_item_type *type);
+ 
+ extern struct config_item *config_item_get(struct config_item *);
+ extern struct config_item *config_item_get_unless_zero(struct config_item *);
+@@ -101,7 +101,7 @@ struct config_group {
+ extern void config_group_init(struct config_group *group);
+ extern void config_group_init_type_name(struct config_group *group,
+ 					const char *name,
+-					struct config_item_type *type);
++					const struct config_item_type *type);
+ 
+ static inline struct config_group *to_config_group(struct config_item *item)
+ {
+@@ -261,7 +261,7 @@ int configfs_register_group(struct config_group *parent_group,
+ struct config_group *
+ configfs_register_default_group(struct config_group *parent_group,
+ 				const char *name,
+-				struct config_item_type *item_type);
++				const struct config_item_type *item_type);
+ void configfs_unregister_default_group(struct config_group *group);
+ 
+ /* These functions can sleep and can alloc with GFP_KERNEL */
+-- 
+1.9.1
