@@ -1,131 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:5598 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751209AbdJ3EXN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:23:13 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 09/12] PCI: tegra: Enable PCIe xclk clock clamping
-Date: Mon, 30 Oct 2017 09:49:00 +0530
-Message-ID: <1509337143-25963-10-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH v2 13/15] netconsole: make config_item_type const
+Date: Mon, 16 Oct 2017 17:18:52 +0200
+Message-Id: <1508167134-6243-14-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enables PCIe xlck clock clamping by pad control. Pad control
-asserts UPHY lane sleep signal when L1 entry signal received from PCIe.
-UPHY sleep signal assertion is done per lane. Default clamp threshold
-margin is not enough to assert all UPHY lane sleep signals. Increase
-the clamp threshold in Tegra124, 132, 210 and 186.
+Make these structures const as they are either passed to the functions
+having the argument as const or stored as a reference in the "ci_type"
+const field of a config_item structure.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Done using Coccienlle.
+
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
-V2:
-* no change in this patch
+* Changes in v2- Combine all the followup patches and the constification
+patches into a series.
 
- drivers/pci/host/pci-tegra.c | 28 ++++++++++++++++++++++++++--
- 1 file changed, 26 insertions(+), 2 deletions(-)
+ drivers/net/netconsole.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 7f1e34e670d7..3c625ccfa539 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -224,8 +224,14 @@
- #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
- 
- #define RP_PRIV_MISC	0x00000fe0
--#define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT (0xe << 0)
--#define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT (0xf << 0)
-+#define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT		(0xe << 0)
-+#define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT		(0xf << 0)
-+#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD_MASK	(0x7f << 16)
-+#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD		(0xf << 16)
-+#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE		(1 << 23)
-+#define  RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD_MASK	(0x7f << 24)
-+#define  RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD		(0xf << 24)
-+#define  RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE		(1 << 31)
- 
- #define RP_LINK_CONTROL_STATUS			0x00000090
- #define  RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE	0x20000000
-@@ -300,6 +306,7 @@ struct tegra_pcie_soc {
- 	bool force_pca_enable;
- 	bool program_uphy;
- 	bool program_ectl_settings;
-+	bool update_clamp_threshold;
+diff --git a/drivers/net/netconsole.c b/drivers/net/netconsole.c
+index 0e27920..be9aa36 100644
+--- a/drivers/net/netconsole.c
++++ b/drivers/net/netconsole.c
+@@ -616,7 +616,7 @@ static void netconsole_target_release(struct config_item *item)
+ 	.release		= netconsole_target_release,
  };
  
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -2156,6 +2163,7 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
- 
- static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
- {
-+	const struct tegra_pcie_soc *soc = port->pcie->soc;
- 	unsigned long value;
- 
- 	/* Optimal settings to enhance bandwidth */
-@@ -2170,6 +2178,17 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
- 	value = readl(port->base + RP_VEND_XP_BIST);
- 	value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
- 	writel(value, port->base + RP_VEND_XP_BIST);
-+
-+	value = readl(port->base + RP_PRIV_MISC);
-+	value |= (RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE |
-+			 RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE);
-+	if (soc->update_clamp_threshold) {
-+		value &= ~(RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD_MASK |
-+				RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD_MASK);
-+		value |= (RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD |
-+				RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD);
-+	}
-+	writel(value, port->base + RP_PRIV_MISC);
- }
- /*
-  * FIXME: If there are no PCIe cards attached, then calling this function
-@@ -2306,6 +2325,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.force_pca_enable = false,
- 	.program_uphy = true,
- 	.program_ectl_settings = false,
-+	.update_clamp_threshold = false,
+-static struct config_item_type netconsole_target_type = {
++static const struct config_item_type netconsole_target_type = {
+ 	.ct_attrs		= netconsole_target_attrs,
+ 	.ct_item_ops		= &netconsole_target_item_ops,
+ 	.ct_owner		= THIS_MODULE,
+@@ -682,7 +682,7 @@ static void drop_netconsole_target(struct config_group *group,
+ 	.drop_item	= drop_netconsole_target,
  };
  
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2323,6 +2343,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.force_pca_enable = false,
- 	.program_uphy = true,
- 	.program_ectl_settings = false,
-+	.update_clamp_threshold = false,
+-static struct config_item_type netconsole_subsys_type = {
++static const struct config_item_type netconsole_subsys_type = {
+ 	.ct_group_ops	= &netconsole_subsys_group_ops,
+ 	.ct_owner	= THIS_MODULE,
  };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2339,6 +2360,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.force_pca_enable = false,
- 	.program_uphy = true,
- 	.program_ectl_settings = false,
-+	.update_clamp_threshold = true,
- };
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
-@@ -2363,6 +2385,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.force_pca_enable = true,
- 	.program_uphy = true,
- 	.program_ectl_settings = true,
-+	.update_clamp_threshold = true,
- };
- 
- static const struct tegra_pcie_soc tegra186_pcie = {
-@@ -2380,6 +2403,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.force_pca_enable = false,
- 	.program_uphy = false,
- 	.program_ectl_settings = false,
-+	.update_clamp_threshold = false,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
-2.1.4
+1.9.1
+
