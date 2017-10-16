@@ -1,37 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:46773 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751348AbdJLOPt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 10:15:49 -0400
-Received: by mail-wm0-f47.google.com with SMTP id m72so13636530wmc.1
-        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 07:15:49 -0700 (PDT)
-Date: Thu, 12 Oct 2017 16:15:48 +0200
-From: Jiri Pirko <jiri@resnulli.us>
-To: Steve Lin <steven.lin1@broadcom.com>
-Cc: netdev@vger.kernel.org, jiri@mellanox.com, davem@davemloft.net,
-        michael.chan@broadcom.com, linux-pci@vger.kernel.org,
-        linville@tuxdriver.com, gospo@broadcom.com
-Subject: Re: [RFC 1/3] devlink: Add config parameter get/set operations
-Message-ID: <20171012141548.GE14672@nanopsycho>
-References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
- <1507815262-33294-2-git-send-email-steven.lin1@broadcom.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>
+Subject: [PATCH 11/12] PM: i2c-designware-platdrv: Optimize power management
+Date: Mon, 16 Oct 2017 03:31:17 +0200
+Message-ID: <2298462.BTY6P2Oy1l@aspire.rjw.lan>
+In-Reply-To: <3806130.B2KCK0tvef@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1507815262-33294-2-git-send-email-steven.lin1@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thu, Oct 12, 2017 at 03:34:20PM CEST, steven.lin1@broadcom.com wrote:
->+
->+	/* When config doesn't take effect until next reboot (config
->+	 * just changed NVM which isn't read until boot, for example),
->+	 * this attribute should be set by the driver.
->+	 */
->+	DEVLINK_ATTR_RESTART_REQUIRED,		/* u8 */
->+
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I think it would be nice to return this information as a part of retply
-to set message - extack
+Optimize the power management in i2c-designware-platdrv by making it
+set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
+allows some code to be dropped from its PM callbacks.
 
-Also, we need to expose to the user the original value (currently being
-used) and the new one (to be used after driver re-instatiation)
+First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
+to avoid resuming i2c-designware-platdrv devices in its ->prepare
+callback, so they can stay in runtime suspend after that point even
+if the direct-complete feature is not used for them.
+
+It also causes the PM core to avoid invoking "late" and "noirq"
+suspend callbacks for these devices if they are in runtime suspend
+at the beginning of the "late" phase of device suspend during
+system suspend.  That guarantees dw_i2c_plat_suspend() to be
+called for a device only if it is not in runtime suspend.
+Moreover, it also causes the PM core to set the device's runtime
+PM status to "active" after calling dw_i2c_plat_resume() for
+it, so the driver doesn't need internal flags to avoid invoking
+either dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in
+a row.
+
+Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
+allowing the device to stay suspended after system resume under
+suitable conditions, so again the driver doesn't need to take
+care of that by itself.
+
+Accordingly, the internal "suspended" and "skip_resume" flags
+used by the driver are not necessary any more, so drop them and
+simplify the driver's PM callbacks.
+
+Additionally, notice that dw_i2c_plat_complete() only needs
+to schedule runtime PM for the device if platform firmware
+has been involved in resuming the system, so make it call
+pm_resume_via_firmware() to check that.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/i2c/busses/i2c-designware-core.h    |    2 --
+ drivers/i2c/busses/i2c-designware-platdrv.c |   25 ++++++-------------------
+ 2 files changed, 6 insertions(+), 21 deletions(-)
+
+Index: linux-pm/drivers/i2c/busses/i2c-designware-core.h
+===================================================================
+--- linux-pm.orig/drivers/i2c/busses/i2c-designware-core.h
++++ linux-pm/drivers/i2c/busses/i2c-designware-core.h
+@@ -280,8 +280,6 @@ struct dw_i2c_dev {
+ 	int			(*acquire_lock)(struct dw_i2c_dev *dev);
+ 	void			(*release_lock)(struct dw_i2c_dev *dev);
+ 	bool			pm_disabled;
+-	bool			suspended;
+-	bool			skip_resume;
+ 	void			(*disable)(struct dw_i2c_dev *dev);
+ 	void			(*disable_int)(struct dw_i2c_dev *dev);
+ 	int			(*init)(struct dw_i2c_dev *dev);
+Index: linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+===================================================================
+--- linux-pm.orig/drivers/i2c/busses/i2c-designware-platdrv.c
++++ linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+@@ -42,6 +42,7 @@
+ #include <linux/reset.h>
+ #include <linux/sched.h>
+ #include <linux/slab.h>
++#include <linux/suspend.h>
+ 
+ #include "i2c-designware-core.h"
+ 
+@@ -370,7 +371,10 @@ static int dw_i2c_plat_probe(struct plat
+ 	ACPI_COMPANION_SET(&adap->dev, ACPI_COMPANION(&pdev->dev));
+ 	adap->dev.of_node = pdev->dev.of_node;
+ 
+-	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
++	dev_pm_set_driver_flags(&pdev->dev,
++				DPM_FLAG_SMART_PREPARE |
++				DPM_FLAG_SMART_SUSPEND |
++				DPM_FLAG_LEAVE_SUSPENDED);
+ 
+ 	/* The code below assumes runtime PM to be disabled. */
+ 	WARN_ON(pm_runtime_enabled(&pdev->dev));
+@@ -446,7 +450,7 @@ static int dw_i2c_plat_prepare(struct de
+ 
+ static void dw_i2c_plat_complete(struct device *dev)
+ {
+-	if (dev->power.direct_complete)
++	if (dev->power.direct_complete && pm_resume_via_firmware())
+ 		pm_request_resume(dev);
+ }
+ #else
+@@ -459,16 +463,9 @@ static int dw_i2c_plat_suspend(struct de
+ {
+ 	struct dw_i2c_dev *i_dev = dev_get_drvdata(dev);
+ 
+-	if (i_dev->suspended) {
+-		i_dev->skip_resume = true;
+-		return 0;
+-	}
+-
+ 	i_dev->disable(i_dev);
+ 	i2c_dw_plat_prepare_clk(i_dev, false);
+ 
+-	i_dev->suspended = true;
+-
+ 	return 0;
+ }
+ 
+@@ -476,19 +473,9 @@ static int dw_i2c_plat_resume(struct dev
+ {
+ 	struct dw_i2c_dev *i_dev = dev_get_drvdata(dev);
+ 
+-	if (!i_dev->suspended)
+-		return 0;
+-
+-	if (i_dev->skip_resume) {
+-		i_dev->skip_resume = false;
+-		return 0;
+-	}
+-
+ 	i2c_dw_plat_prepare_clk(i_dev, true);
+ 	i_dev->init(i_dev);
+ 
+-	i_dev->suspended = false;
+-
+ 	return 0;
+ }
+ 
+
