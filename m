@@ -1,404 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:60072 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750950AbdJFN16 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Oct 2017 09:27:58 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 01/36] iommu: Keep track of processes and PASIDs
-Date: Fri,  6 Oct 2017 14:31:28 +0100
-Message-Id: <20171006133203.22803-2-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <3806130.B2KCK0tvef@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Tue, 17 Oct 2017 10:36:39 +0200
+Message-ID: <CAPDyKFrw6-pC3aBF5DrSRftuKv5v-X518oyy5mBt+hzM3EpHzA@mail.gmail.com>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IOMMU drivers need a way to bind Linux processes to devices. This is used
-for Shared Virtual Memory (SVM), where devices support paging. In that
-mode, DMA can directly target virtual addresses of a process.
+On 16 October 2017 at 03:12, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> Hi All,
+>
+> Well, this took more time than expected, as I tried to cover everything I had
+> in mind regarding PM flags for drivers.
+>
+> This work was triggered by attempts to fix and optimize PM in the
+> i2c-designware-platdev driver that ended up with adding a couple of
+> flags to the driver's internal data structures for the tracking of
+> device state (https://marc.info/?l=linux-acpi&m=150629646805636&w=2).
+> That approach is sort of suboptimal, though, because other drivers will
+> probably want to do similar things and if all of them need to use internal
+> flags for that, quite a bit of code duplication may ensue at least.
+>
+> That can be avoided in a couple of ways and one of them is to provide a means
+> for drivers to tell the core what to do and to make the core take care of it
+> if told to do so.  Hence, the idea to use driver flags for system-wide PM
+> that was briefly discussed during the LPC in LA last month.
+>
+> One of the flags considered at that time was to possibly cause the core
+> to reuse the runtime PM callback path of a device for system suspend/resume.
+> Admittedly, that idea didn't look too bad to me until I had started to try to
+> implement it and I got to the PCI bus type's hibernation callbacks.  Then, I
+> moved the patch I was working on to /dev/null right away.  I mean it.
+>
+> No, this is not going to happen.  No way.
+>
+> Moreover, that experience made me realize that the whole *idea* of using the
+> runtime PM callback path for system-wide PM was actually totally bogus (sorry
+> Ulf).
+>
+> The whole point of having different callbacks pointers for different types of
+> device transitions is because it may be necessary to do different things in
+> those callbacks in general.  Now, if you consider runtime PM and system
+> suspend/resume *only* and from a driver perspective, then yes, in some cases
+> the same pair of callback routines may be used for all suspend-like and
+> resume-like transitions of the device, but if you add hibernation to the mix,
+> then it is not so clear any more unless the callbacks don't actually do any
+> power management at all, but simply quiesce the device's activity and then
+> activate it again.  Namely, changing power states of devices during the
+> hibernation's "freeze" and "thaw" transitions rarely makes sense at all and
+> the "restore" transition needs to be able to cope with uninitialized devices
+> (in fact, it should be prepared to cope with devices in *any* state), so
+> runtime PM is hardly suitable for them.  Still, if a *driver* choses to not
+> do any real PM in its PM callbacks and leaves that to a middle layer (quite
+> a few drivers do that), then it possibly can use one pair of callbacks in all
+> cases and be happy, but middle layers pretty much have to use different
+> callback routines for different transitions.
+>
+> If you are a middle layer, your role is basically to do PM for a certain
+> group of devices.  Thus you cannot really do the same in ->suspend or
+> ->suspend_early and in ->runtime_suspend (because the former generally need to
+> take device_may_wakeup() into account and the latter doesn't) and you shouldn't
+> really do the same in ->suspend and ->freeze (becuase the latter shouldn't
+> change the device's power state) and so on.  To put it bluntly, trying
+> to use the ->runtime_suspend callback of a middle layer for anything other
+> than runtime suspend is complete and utter nonsense.  At the same time, the
+> ->runtime_resume callback of a middle layer may be reused to some extent,
+> but even that doesn't cover the "thaw" transitions during hibernation.
+>
+> What can work (and this is the only strategy that can work AFAICS) is to
+> point different callback pointers *in* *a* *driver* to the same routine
+> if the driver wants to reuse that code.  That actually will work for PCI
+> and USB drivers today, at least most of the time, but unfortunately there
+> are problems with it for, say, platform devices.
+>
+> The first problem is the requirement to track the status of the device
+> (suspended vs not suspended) in the callbacks, because the system-wide PM
+> code in the PM core doesn't do that.  The runtime PM framework does it, so
+> this means adding some extra code which isn't necessary for runtime PM to
+> the callback routines and that is not particularly nice.
+>
+> The second problem is that, if the driver wants to do anything in its
+> ->suspend callback, it generally has to prevent runtime suspend of the
+> device from taking place in parallel with that, which is quite cumbersome.
+> Usually, that is taken care of by resuming the device from runtime suspend
+> upfront, but generally doing that is wasteful (there may be no real need to
+> resume the device except for the fact that the code is designed this way).
+>
+> On top of the above, there are optimizations to be made, like leaving certain
+> devices in suspend after system resume to avoid wasting time on waiting for
+> them to resume before user space can run again and similar.
+>
+> This patch series focuses on addressing those problems so as to make it
+> easier to reuse callback routines by pointing different callback pointers
+> to them in device drivers.  The flags introduced here are to instruct the
+> PM core and middle layers (whatever they are) on how the driver wants the
+> device to be handled and then the driver has to provide callbacks to match
+> these instructions and the rest should be taken care of by the code above it.
+>
+> The flags are introduced one by one to avoid making too many changes in
+> one go and to allow things to be explained better (hopefully).  They mostly
+> are mutually independent with some clearly documented exceptions.
+>
+> The first three patches in the series are about an issue with the
+> direct-complete optimization introduced some time ago in which some middle
+> layers decide on whether or not to do the optimization without asking the
+> drivers.  And, as it turns out, in some cases the drivers actually know
+> better, so the new flags introduced by these patches are here for these
+> drivers (and the DPM_FLAG_NEVER_SKIP one is really to avoid having to define
+> ->prepare callbacks always returning zero).
+>
+> The really interesting things start to happen in patches [4-9/12] which make it
+> possible to avoid resuming devices from runtime suspend upfront during system
+> suspend at least in some cases (and when direct-complete is not applied to the
+> devices in question), but please refer to the changelogs for details.
+>
+> The i2d-designware-platdev driver is used as the primary example in the series
+> and the patches modifying it are based on some previous changes currently in
+> linux-next AFAICS (the same applies to the intel-lpss driver), but these
+> patches can wait until everything is properly merged.  They are included here
+> mostly as illustration.
+>
+> Overall, the series is based on the linux-next branch of the linux-pm.git tree
+> with some extra patches on top of it and all of the names of new entities
+> introduced in it are negotiable.
+>
+> Thanks,
+> Rafael
+>
 
-Introduce boilerplate code for allocating process structures and binding
-them to devices. Four operations are added to IOMMU drivers:
+I am not sure I fully understand the goal you have with this series.
+Can we please try to get that clear before I continue the review.
 
-* process_alloc, process_free: to create an iommu_process structure and
-  perform architecture-specific operations required to grab the process
-  (for instance on ARM SMMU, pin down the CPU ASID). There is a single
-  iommu_process structure per Linux process.
+Now, re-using runtime PM callbacks for system sleep, is already
+happening. We have > 60 users (git grep "pm_runtime_force_suspend")
+deploying this and from a middle layer point of view, all the trivial
+cases supports this. Like the spi bus, i2c bus, amba bus, platform
+bus, genpd, etc. There are no changes needed to continue to support
+this option, if you see what I mean.
 
-* process_attach: attach a process to a device. The IOMMU driver checks
-  that the device is capable of sharing an address space with this
-  process, and writes the PASID table entry to install the process page
-  directory.
+So, when you say that re-using runtime PM callbacks for system-wide PM
+isn't going to happen, can you please elaborate what you mean?
 
-  Some IOMMU drivers (e.g. ARM SMMU and virtio-iommu) will have a single
-  PASID table per domain, for convenience. Other can implement it
-  differently but to help these drivers, process_attach and process_detach
-  take a 'first' or 'last' parameter telling whether they need to
-  install/remove the PASID entry or only send the required TLB
-  invalidations.
+I assume you mean that the PM core won't be involved to support this,
+but is that it?
 
-* process_detach: detach a process from a device. The IOMMU driver removes
-  the PASID table entry and invalidates the IOTLBs.
+Do you also mean that *all* users of pm_runtime_force_suspend|resume()
+must convert to this new thing, using "driver PM flags", so in the end
+you want to remove pm_runtime_force_suspend|resume()?
+ - Then if so, you must of course consider all cases for how
+pm_runtime_force_suspend|resume() are being deployed currently, else
+existing users can't convert to the "driver PM flags" thing. Have you
+done that in this series?
 
-process_attach and process_detach operations are serialized with a
-spinlock. At the moment it is global, but if we try to optimize it, the
-core should at least prevent concurrent attach/detach on the same domain.
-(so multi-level PASID table code can allocate tables lazily without having
-to go through the io-pgtable concurrency nightmare). process_alloc can
-sleep, but process_free must not (because we'll have to call it from
-call_srcu.)
-
-At the moment we use an IDR for allocating PASIDs and retrieving contexts.
-We also use a single spinlock. These can be refined and optimized later (a
-custom allocator will be needed for top-down PASID allocation).
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/Kconfig         |  10 ++
- drivers/iommu/Makefile        |   1 +
- drivers/iommu/iommu-process.c | 225 ++++++++++++++++++++++++++++++++++++++++++
- drivers/iommu/iommu.c         |   1 +
- include/linux/iommu.h         |  24 +++++
- 5 files changed, 261 insertions(+)
- create mode 100644 drivers/iommu/iommu-process.c
-
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index f3a21343e636..1ea5c90e37be 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -74,6 +74,16 @@ config IOMMU_DMA
- 	select IOMMU_IOVA
- 	select NEED_SG_DMA_LENGTH
- 
-+config IOMMU_PROCESS
-+	bool "Process management API for the IOMMU"
-+	select IOMMU_API
-+	help
-+	  Enable process management for the IOMMU API. In systems that support
-+	  it, device drivers can bind processes to devices and share their page
-+	  tables using this API.
-+
-+	  If unsure, say N here.
-+
- config FSL_PAMU
- 	bool "Freescale IOMMU support"
- 	depends on PCI
-diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
-index b910aea813a1..a2832edbfaa2 100644
---- a/drivers/iommu/Makefile
-+++ b/drivers/iommu/Makefile
-@@ -1,6 +1,7 @@
- obj-$(CONFIG_IOMMU_API) += iommu.o
- obj-$(CONFIG_IOMMU_API) += iommu-traces.o
- obj-$(CONFIG_IOMMU_API) += iommu-sysfs.o
-+obj-$(CONFIG_IOMMU_PROCESS) += iommu-process.o
- obj-$(CONFIG_IOMMU_DMA) += dma-iommu.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
-diff --git a/drivers/iommu/iommu-process.c b/drivers/iommu/iommu-process.c
-new file mode 100644
-index 000000000000..a7e5a1c94305
---- /dev/null
-+++ b/drivers/iommu/iommu-process.c
-@@ -0,0 +1,225 @@
-+/*
-+ * Track processes bound to devices
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License version 2 as published
-+ * by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-+ *
-+ * Copyright (C) 2017 ARM Ltd.
-+ *
-+ * Author: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-+ */
-+
-+#include <linux/idr.h>
-+#include <linux/iommu.h>
-+#include <linux/slab.h>
-+#include <linux/spinlock.h>
-+
-+/* Link between a domain and a process */
-+struct iommu_context {
-+	struct iommu_process	*process;
-+	struct iommu_domain	*domain;
-+
-+	struct list_head	process_head;
-+	struct list_head	domain_head;
-+
-+	/* Number of devices that use this context */
-+	refcount_t		ref;
-+};
-+
-+/*
-+ * Because we're using an IDR, PASIDs are limited to 31 bits (the sign bit is
-+ * used for returning errors). In practice implementations will use at most 20
-+ * bits, which is the PCI limit.
-+ */
-+static DEFINE_IDR(iommu_process_idr);
-+
-+/*
-+ * For the moment this is an all-purpose lock. It serializes
-+ * access/modifications to contexts (process-domain links), access/modifications
-+ * to the PASID IDR, and changes to process refcount as well.
-+ */
-+static DEFINE_SPINLOCK(iommu_process_lock);
-+
-+/*
-+ * Allocate a iommu_process structure for the given task.
-+ *
-+ * Ideally we shouldn't need the domain parameter, since iommu_process is
-+ * system-wide, but we use it to retrieve the driver's allocation ops and a
-+ * PASID range.
-+ */
-+static struct iommu_process *
-+iommu_process_alloc(struct iommu_domain *domain, struct task_struct *task)
-+{
-+	int err;
-+	int pasid;
-+	struct iommu_process *process;
-+
-+	if (WARN_ON(!domain->ops->process_alloc || !domain->ops->process_free))
-+		return ERR_PTR(-ENODEV);
-+
-+	process = domain->ops->process_alloc(task);
-+	if (IS_ERR(process))
-+		return process;
-+	if (!process)
-+		return ERR_PTR(-ENOMEM);
-+
-+	process->pid		= get_task_pid(task, PIDTYPE_PID);
-+	process->release	= domain->ops->process_free;
-+	INIT_LIST_HEAD(&process->domains);
-+	kref_init(&process->kref);
-+
-+	if (!process->pid) {
-+		err = -EINVAL;
-+		goto err_free_process;
-+	}
-+
-+	idr_preload(GFP_KERNEL);
-+	spin_lock(&iommu_process_lock);
-+	pasid = idr_alloc_cyclic(&iommu_process_idr, process, domain->min_pasid,
-+				 domain->max_pasid + 1, GFP_ATOMIC);
-+	process->pasid = pasid;
-+	spin_unlock(&iommu_process_lock);
-+	idr_preload_end();
-+
-+	if (pasid < 0) {
-+		err = pasid;
-+		goto err_put_pid;
-+	}
-+
-+	return process;
-+
-+err_put_pid:
-+	put_pid(process->pid);
-+
-+err_free_process:
-+	domain->ops->process_free(process);
-+
-+	return ERR_PTR(err);
-+}
-+
-+static void iommu_process_release(struct kref *kref)
-+{
-+	struct iommu_process *process;
-+	void (*release)(struct iommu_process *);
-+
-+	assert_spin_locked(&iommu_process_lock);
-+
-+	process = container_of(kref, struct iommu_process, kref);
-+	release = process->release;
-+
-+	WARN_ON(!list_empty(&process->domains));
-+
-+	idr_remove(&iommu_process_idr, process->pasid);
-+	put_pid(process->pid);
-+	release(process);
-+}
-+
-+/*
-+ * Returns non-zero if a reference to the process was successfully taken.
-+ * Returns zero if the process is being freed and should not be used.
-+ */
-+static int iommu_process_get_locked(struct iommu_process *process)
-+{
-+	assert_spin_locked(&iommu_process_lock);
-+
-+	if (process)
-+		return kref_get_unless_zero(&process->kref);
-+
-+	return 0;
-+}
-+
-+static void iommu_process_put_locked(struct iommu_process *process)
-+{
-+	assert_spin_locked(&iommu_process_lock);
-+
-+	kref_put(&process->kref, iommu_process_release);
-+}
-+
-+static int iommu_process_attach(struct iommu_domain *domain, struct device *dev,
-+				struct iommu_process *process)
-+{
-+	int err;
-+	int pasid = process->pasid;
-+	struct iommu_context *context;
-+
-+	if (WARN_ON(!domain->ops->process_attach || !domain->ops->process_detach))
-+		return -ENODEV;
-+
-+	if (pasid > domain->max_pasid || pasid < domain->min_pasid)
-+		return -ENOSPC;
-+
-+	context = kzalloc(sizeof(*context), GFP_KERNEL);
-+	if (!context)
-+		return -ENOMEM;
-+
-+	context->process	= process;
-+	context->domain		= domain;
-+	refcount_set(&context->ref, 1);
-+
-+	spin_lock(&iommu_process_lock);
-+	err = domain->ops->process_attach(domain, dev, process, true);
-+	if (err) {
-+		kfree(context);
-+		spin_unlock(&iommu_process_lock);
-+		return err;
-+	}
-+
-+	list_add(&context->process_head, &process->domains);
-+	list_add(&context->domain_head, &domain->processes);
-+	spin_unlock(&iommu_process_lock);
-+
-+	return 0;
-+}
-+
-+static void iommu_context_free(struct iommu_context *context)
-+{
-+	assert_spin_locked(&iommu_process_lock);
-+
-+	if (WARN_ON(!context->process || !context->domain))
-+		return;
-+
-+	list_del(&context->process_head);
-+	list_del(&context->domain_head);
-+	iommu_process_put_locked(context->process);
-+
-+	kfree(context);
-+}
-+
-+/* Attach an existing context to the device */
-+static int iommu_process_attach_locked(struct iommu_context *context,
-+				       struct device *dev)
-+{
-+	assert_spin_locked(&iommu_process_lock);
-+
-+	refcount_inc(&context->ref);
-+	return context->domain->ops->process_attach(context->domain, dev,
-+						    context->process, false);
-+}
-+
-+/* Detach device from context and release it if necessary */
-+static void iommu_process_detach_locked(struct iommu_context *context,
-+					struct device *dev)
-+{
-+	bool last = false;
-+	struct iommu_domain *domain = context->domain;
-+
-+	assert_spin_locked(&iommu_process_lock);
-+
-+	if (refcount_dec_and_test(&context->ref))
-+		last = true;
-+
-+	domain->ops->process_detach(domain, dev, context->process, last);
-+
-+	if (last)
-+		iommu_context_free(context);
-+}
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 3de5c0bcb5cc..b2b34cf7c978 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -1264,6 +1264,7 @@ static struct iommu_domain *__iommu_domain_alloc(struct bus_type *bus,
- 	domain->type = type;
- 	/* Assume all sizes by default; the driver may override this later */
- 	domain->pgsize_bitmap  = bus->iommu_ops->pgsize_bitmap;
-+	INIT_LIST_HEAD(&domain->processes);
- 
- 	return domain;
- }
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 41b8c5757859..3978dc094706 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -94,6 +94,19 @@ struct iommu_domain {
- 	void *handler_token;
- 	struct iommu_domain_geometry geometry;
- 	void *iova_cookie;
-+
-+	unsigned int min_pasid, max_pasid;
-+	struct list_head processes;
-+};
-+
-+struct iommu_process {
-+	struct pid		*pid;
-+	int			pasid;
-+	struct list_head	domains;
-+	struct kref		kref;
-+
-+	/* Release callback for this process */
-+	void (*release)(struct iommu_process *process);
- };
- 
- enum iommu_cap {
-@@ -164,6 +177,11 @@ struct iommu_resv_region {
-  * @domain_free: free iommu domain
-  * @attach_dev: attach device to an iommu domain
-  * @detach_dev: detach device from an iommu domain
-+ * @process_alloc: allocate iommu process
-+ * @process_free: free iommu process
-+ * @process_attach: attach iommu process to a domain
-+ * @process_detach: detach iommu process from a domain. Remove PASID entry and
-+ *                  flush associated TLB entries.
-  * @map: map a physically contiguous memory region to an iommu domain
-  * @unmap: unmap a physically contiguous memory region from an iommu domain
-  * @map_sg: map a scatter-gather list of physically contiguous memory chunks
-@@ -197,6 +215,12 @@ struct iommu_ops {
- 
- 	int (*attach_dev)(struct iommu_domain *domain, struct device *dev);
- 	void (*detach_dev)(struct iommu_domain *domain, struct device *dev);
-+	struct iommu_process *(*process_alloc)(struct task_struct *task);
-+	void (*process_free)(struct iommu_process *process);
-+	int (*process_attach)(struct iommu_domain *domain, struct device *dev,
-+			      struct iommu_process *process, bool first);
-+	void (*process_detach)(struct iommu_domain *domain, struct device *dev,
-+			       struct iommu_process *process, bool last);
- 	int (*map)(struct iommu_domain *domain, unsigned long iova,
- 		   phys_addr_t paddr, size_t size, int prot);
- 	size_t (*unmap)(struct iommu_domain *domain, unsigned long iova,
--- 
-2.13.3
+Kind regards
+Uffe
