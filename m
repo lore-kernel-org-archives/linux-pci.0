@@ -1,68 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alex.williamson@redhat.com
-Cc: Wilson.Snyder@cavium.com, robert.richter@cavium.com,
-        david.daney@cavium.com, mjaggi@caviumnetworks.com,
-        Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-Subject: [PATCH v7 2/2] PCI: quirks: Apply Cavium ThunderX ACS quirk only to Root Ports
-Date: Tue, 17 Oct 2017 05:47:39 -0700
-Message-Id: <1508244459-2615-3-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-In-Reply-To: <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:54927 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757464AbdJQH43 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 03:56:29 -0400
+Message-Id: <20171017075600.448649905@linutronix.de>
+Date: Tue, 17 Oct 2017 09:54:58 +0200
+From: Thomas Gleixner <tglx@linutronix.de>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Dexuan Cui <decui@microsoft.com>, x86@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        linux-pci@vger.kernel.org, devel@linuxdriverproject.org,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Mihai Costache <v-micos@microsoft.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>
+Subject: [patch 2/3] PCI/MSI: Set MSI_FLAG_MUST_REACTIVATE in core code
+References: <20171017075456.694047687@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+If interrupt reservation mode is enabled then the PCI/MSI interrupts must
+be reactivated after early activation.
 
-This commit changes the Cavium PCI ACS quirk appliance only to
-Cavium CN8xxx PICe Root Ports.
+Make sure that all callers of pci_msi_create_irq_domain() have the
+MSI_FLAG_MUST_REACTIVATE set when reservation mode is enabled.
 
-Current quirk implementation doesn't take into account PCIe Root Ports
-which needs to be quirked. So the pci device id check mask is updated
-accordingly to CN8xxx device identification scheme and check of device
-ID moved into separate function.
-
-Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/quirks.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ drivers/pci/msi.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 5e0e83304fda..cfefb2431348 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4211,6 +4211,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
- #endif
- }
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1441,6 +1441,8 @@ struct irq_domain *pci_msi_create_irq_do
+ 		pci_msi_domain_update_chip_ops(info);
  
-+static bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
-+{
-+	/*
-+	 * Effectively selects all downstream ports for whole ThunderX 1 
-+	 * family by 0xf800 mask (which represents 8 SoCs), while the lower
-+	 * bits of device ID are used to indicate which subdevice is used 
-+	 * within the SoC.
-+	 */
-+	return (pci_is_pcie(dev) &&
-+		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
-+		((dev->device & 0xf800) == 0xa000));
-+}
-+
- static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- {
- 	/*
-@@ -4222,7 +4235,7 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- 	 */
- 	acs_flags &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF);
+ 	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
++	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION))
++		info->flags |= MSI_FLAG_MUST_REACTIVATE;
  
--	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
-+	if (!pci_quirk_cavium_acs_match(dev))
- 		return -ENOTTY;
- 
- 	return acs_flags ? 0 : 1;
--- 
-2.13.6
+ 	domain = msi_create_irq_domain(fwnode, info, parent);
+ 	if (!domain)
