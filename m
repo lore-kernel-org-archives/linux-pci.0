@@ -1,214 +1,93 @@
-Return-Path: <SRS0=V+Ja=BD=amazon.de=prvs=4434d25af=sironi@kernel.org>
-Return-Path: <SRS0=V+Ja=BD=amazon.de=prvs=4434d25af=sironi@kernel.org>
-From: "Sironi, Filippo" <sironi@amazon.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] pci: Expose offset, stride, and VF device ID via
- sysfs
-Date: Wed, 4 Oct 2017 17:32:20 +0000
-Message-ID: <38998983-95AF-468B-885B-F56D63E57E54@amazon.de>
-References: <1503927530-26076-1-git-send-email-sironi@amazon.de>
- <1503927530-26076-2-git-send-email-sironi@amazon.de>
- <20170925185523.GF15970@bhelgaas-glaptop.roam.corp.google.com>
- <922D0B9C-4900-4226-9FB3-1BF3EA103708@amazon.de>
- <20171003193114.GE25517@bhelgaas-glaptop.roam.corp.google.com>
- <20171003194855.GG25517@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171003194855.GG25517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:34250 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1763517AbdJQRhm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Oct 2017 13:37:42 -0400
+Date: Tue, 17 Oct 2017 12:37:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, thierry.reding@gmail.com,
+        jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, mperttunen@nvidia.com
+Subject: Re: [PATCH V2 0/4] Add Tegra186 PCIe support
+Message-ID: <20171017173740.GF5641@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 27, 2017 at 05:28:33PM +0530, Manikanta Maddireddy wrote:
+> Tegra186 has three PCIe controllers which can be operated
+> in 401, 211 or 111 lane configurations. Tegra TX2 platform
+> has x4 and M.2 Key E PCIe slots, these patches enables
+> x4 slot. BPMP programs UPHY lane0 ownership to USB,
+> so M.2 Key E PCIe will not work.
+> 
+> Testing: x4 slot is verified with PCIe based USB3.1 card.
+> PCIe link up, usb flash drive mounting and file copy are
+> verified. These patches are also verified by
+> Mikko Perttunen <mperttunen@nvidia.com> with an Intel 82574L
+> ethernet card.
+> 
+> Patch V2 adds soc->program_uphy check for phy_exit call.
+> 
+> Pasting PCIe link up logs below.
+> 
+> [    1.452512] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
+> [    1.452723] tegra-pcie 10003000.pcie: Failed to get supply 'dvdd-pex': -517
+> [    1.561824] ehci-pci: EHCI PCI platform driver
+> [    1.591587] ohci-pci: OHCI PCI platform driver
+> [    3.072464] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
+> [    3.078989] tegra-pcie 10003000.pcie: probing port 0, using 4 lanes
+> [    3.087272] tegra-pcie 10003000.pcie: Slot present pin change, signature: 00000018
+> [    3.128818] tegra-pcie 10003000.pcie: PCI host bridge to bus 0000:00
+> [    3.135174] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> [    3.141352] pci_bus 0000:00: root bus resource [mem 0x50100000-0x57ffffff]
+> [    3.148221] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7fffffff pref]
+> [    3.155542] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    3.161173] pci 0000:00:01.0: [10de:10e5] type 01 class 0x060400
+> [    3.161188] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
+> [    3.170838] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
+> [    3.180532] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x52 may corrupt adjacent RW1C bits
+> [    3.190305] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3cold
+> [    3.190312] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4c may corrupt adjacent RW1C bits
+> [    3.200158] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> [    3.208158] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
+> [    3.217918] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
+> [    3.227649] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
+> [    3.237382] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x6 may corrupt adjacent RW1C bits
+> [    3.247135] pci 0000:01:00.0: [1b21:1242] type 00 class 0x0c0330
+> [    3.247157] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
+> [    3.256807] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
+> [    3.266477] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 64bit]
+> [    3.266544] pci 0000:01:00.0: enabling Extended Tags
+> [    3.271622] pci 0000:01:00.0: PME# supported from D3hot D3cold
+> [    3.271775] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+> [    3.271798] pci 0000:00:01.0: BAR 14: assigned [mem 0x50100000-0x501fffff]
+> [    3.278671] pci 0000:01:00.0: BAR 0: assigned [mem 0x50100000-0x50107fff 64bit]
+> [    3.285993] pci 0000:00:01.0: PCI bridge to [bus 01]
+> [    3.290959] pci 0000:00:01.0:   bridge window [mem 0x50100000-0x501fffff]
+> [    3.297763] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host bridge
+> [    3.304784] pcieport 0000:00:01.0: enabling device (0000 -> 0002)
+> [    3.311014] pcieport 0000:00:01.0: Signaling PME with IRQ 57
+> [    3.316768] pci 0000:01:00.0: enabling device (0000 -> 0002)
+> 
+> 
+> Manikanta Maddireddy (4):
+>   dt-bindings: pci: tegra: Document Tegra186 PCIe DT
+>   PCI: tegra: Add Tegra186 PCIe support
 
-> On 3. Oct 2017, at 21:48, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> =
+I applied these two with Thierry's tested-by and acks to
+pci/host-tegra for v4.15, thanks!  If you have a changelog update for
+the pm_domain question, I can fold that in.
 
-> On Tue, Oct 03, 2017 at 02:31:14PM -0500, Bjorn Helgaas wrote:
->> On Fri, Sep 29, 2017 at 07:53:31AM +0000, Sironi, Filippo wrote:
->>> =
-
->>> Hi Bjorn,
->>> =
-
->>>> On 25. Sep 2017, at 20:55, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>> =
-
->>>> Hi Filippo,
->>>> =
-
->>>> On Mon, Aug 28, 2017 at 03:38:50PM +0200, Filippo Sironi wrote:
->>>>> +static ssize_t sriov_vf_did_show(struct device *dev,
->>>>> +				 struct device_attribute *attr,
->>>>> +				 char *buf)
->>>>> +{
->>>>> +	struct pci_dev *pdev =3D to_pci_dev(dev);
->>>>> +
->>>>> +	return sprintf(buf, "%x\n", pdev->sriov->vf_did);
->>>>> +}
->>>> =
-
->>>> What does the vf_did part look like in sysfs?  Do we have a directory =
-with
->>>> both "device" and "vf_did" in it?  If so, why do we have both and do we
->>>> need both?  Could we put the vf_did in the "device" file?
->>> =
-
->>> On my machine:
->>> =
-
->>> /sys/bus/pci/devices/0000:03:00.0# ls -l  # this is the PF
->>> total 0
->>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 broken_parity_status
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 class
->>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 config
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 consistent_dma_mask_bits
->>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 d3cold_allowed
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 device
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 dma_mask_bits
->>> lrwxrwxrwx 1 root root       0 Sep 28 19:41 driver -> ../../../../bus/p=
-ci/drivers/igb
->>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 driver_override
->>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 enable
->>> lrwxrwxrwx 1 root root       0 Sep 28 19:41 firmware_node -> ../../../L=
-NXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:4b/device:4c
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 irq
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 local_cpulist
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 local_cpus
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 modalias
->>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 msi_bus
->>> drwxr-xr-x 2 root root       0 Sep 29 09:44 msi_irqs
->>> drwxr-xr-x 3 root root       0 Sep 28 19:41 net
->>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 numa_node
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 offset  # this is new
->>> drwxr-xr-x 2 root root       0 Sep 28 19:41 power
->>> drwxr-xr-x 3 root root       0 Sep 28 19:41 ptp
->>> --w--w---- 1 root root    4096 Sep 28 19:41 remove
->>> --w--w---- 1 root root    4096 Sep 28 19:41 rescan
->>> --w------- 1 root root    4096 Sep 28 19:41 reset
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 resource
->>> -rw------- 1 root root  131072 Sep 28 19:41 resource0
->>> -rw------- 1 root root 4194304 Sep 28 19:41 resource1
->>> -rw------- 1 root root      32 Sep 28 19:41 resource2
->>> -rw------- 1 root root   16384 Sep 28 19:41 resource3
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 revision
->>> -rw-rw-r-- 1 root root    4096 Sep 29 09:44 sriov_numvfs
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 sriov_totalvfs
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 stride  # this is new
->>> lrwxrwxrwx 1 root root       0 Sep 28 19:41 subsystem -> ../../../../bu=
-s/pci
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 subsystem_device
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 subsystem_vendor
->>> -rw-r--r-- 1 root root    4096 Sep 28 19:41 uevent
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 vendor
->>> -r--r--r-- 1 root root    4096 Sep 28 19:41 vf_did  # this is new
->>> lrwxrwxrwx 1 root root       0 Sep 29 09:44 virtfn0 -> ../0000:03:10.0
->>> =
-
->>> nothing changes on for VFs.
->>> Then:
->>> =
-
->>> /sys/bus/pci/devices/0000:03:00.0# cat device =
-
->>> 0x10c9
->>> =
-
->>> /sys/bus/pci/devices/0000:03:00.0# cat vf_did
->>> 0x10ca
->>> =
-
->>> Putting the VF device ID in the PF device file would be a change of
->>> that we expose to userspace.  Something might break.
->> =
-
->> Oh, sorry, I misunderstood!  I was thinking that you were adding
->> "vf_did" to the VF directory, not the PF directory.
->> =
-
->> Then I guess my only issue is that "vf_did" doesn't match the pattern
->> of other names.  I think "virtfn_device" would give more of a hint and
->> would match "device" and "subsystem_device".
-> =
-
-> I was going to just make this tweak myself, but realized I'd actually
-> propose these changes as well:
-> =
-
->  offset -> sriov_offset
->  stride -> sriov_stride
->  vf_did -> virtfn_device (could be sriov_device as well)
-> =
-
-> and I can't really test it to make sure I get all the details right.
-> Can you update those and repost this?
-> =
-
-> Bjorn
-
-I'll give this a spin tomorrow.
-
-Thanks,
-Filippo
-
-
->>> vf_did provides a easy way to retrieve the VF device ID without reading
->>> the PF config (looking up the SR-IOV capability and reading it) or with=
-out
->>> enabling SR-IOV to read for example virtfn0/device.
->>> =
-
->>> Similar considerations (ease of access) apply to offset and stride.
->>> =
-
->>> =
-
->>>>> static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
->>>>> 					    struct device_attribute *attr,
->>>>> 					    char *buf)
->>>>> @@ -676,6 +703,9 @@ static struct device_attribute sriov_totalvfs_att=
-r =3D __ATTR_RO(sriov_totalvfs);
->>>>> static struct device_attribute sriov_numvfs_attr =3D
->>>>> 		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
->>>>> 		       sriov_numvfs_show, sriov_numvfs_store);
->>>>> +static struct device_attribute sriov_offset_attr =3D __ATTR_RO(sriov=
-_offset);
->>>>> +static struct device_attribute sriov_stride_attr =3D __ATTR_RO(sriov=
-_stride);
->>>>> +static struct device_attribute sriov_vf_did_attr =3D __ATTR_RO(sriov=
-_vf_did);
->>>>> static struct device_attribute sriov_drivers_autoprobe_attr =3D
->>>>> 		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
->>>>> 		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
->>>>> @@ -1744,6 +1774,9 @@ static struct attribute_group pci_dev_hp_attr_g=
-roup =3D {
->>>>> static struct attribute *sriov_dev_attrs[] =3D {
->>>>> 	&sriov_totalvfs_attr.attr,
->>>>> 	&sriov_numvfs_attr.attr,
->>>>> +	&sriov_offset_attr.attr,
->>>>> +	&sriov_stride_attr.attr,
->>>>> +	&sriov_vf_did_attr.attr,
->>>>> 	&sriov_drivers_autoprobe_attr.attr,
->>>>> 	NULL,
->>>>> };
->>>>> -- =
-
->>>>> 2.7.4
->>>>> =
-
->>>> =
-
->>> =
-
->>> Amazon Development Center Germany GmbH
->>> Berlin - Dresden - Aachen
->>> main office: Krausenstr. 38, 10117 Berlin
->>> Geschaeftsfuehrer: Dr. Ralf Herbrich, Christian Schlaeger
->>> Ust-ID: DE289237879
->>> Eingetragen am Amtsgericht Charlottenburg HRB 149173 B
-
-Amazon Development Center Germany GmbH
-Berlin - Dresden - Aachen
-main office: Krausenstr. 38, 10117 Berlin
-Geschaeftsfuehrer: Dr. Ralf Herbrich, Christian Schlaeger
-Ust-ID: DE289237879
-Eingetragen am Amtsgericht Charlottenburg HRB 149173 B
+>   arm64: tegra: Add PCIe node for Tegra186
+>   arm64: tegra: Enable PCIe on Jetson TX2
+> 
+>  .../bindings/pci/nvidia,tegra20-pcie.txt           | 134 ++++++++++++++++++++-
+>  arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi     |  24 ++++
+>  arch/arm64/boot/dts/nvidia/tegra186.dtsi           |  82 +++++++++++++
+>  drivers/pci/host/pci-tegra.c                       | 132 ++++++++++++++++----
+>  4 files changed, 344 insertions(+), 28 deletions(-)
