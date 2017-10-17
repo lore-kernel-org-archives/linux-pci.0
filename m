@@ -1,71 +1,167 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 27 Oct 2017 17:04:01 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, rjw@rjwysocki.net, dianders@chromium.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH v8 7/7] PCI / PM: Add support for the PCIe WAKE#
- signal for OF
-Message-ID: <20171028000400.GE105121@google.com>
-References: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
- <20171026132840.20946-8-jeffy.chen@rock-chips.com>
- <334be327-543f-d379-83de-ce84799fa49a@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 17 Oct 2017 14:05:06 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default
+ device selection
+Message-ID: <20171017120506.ervbnyjue55zn67b@phenom.ffwll.local>
+References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <871sm2y1h9.fsf@linkitivity.dja.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <334be327-543f-d379-83de-ce84799fa49a@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <871sm2y1h9.fsf@linkitivity.dja.id.au>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Dave Airlie <airlied@redhat.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
+ Xinliang Liu <z.liuxinliang@hisilicon.com>,
+ Rongrong Zou <zourongrong@gmail.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Daniel Vetter <daniel.vetter@intel.com>, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
-
-I'm not sure I understand all your suggestions below.
-
-On Thu, Oct 26, 2017 at 11:16:55AM -0400, Sinan Kaya wrote:
-> On 10/26/2017 9:28 AM, Jeffy Chen wrote:
-> >  drivers/pci/Makefile |   2 +-
-> >  drivers/pci/pci-of.c | 136 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  2 files changed, 137 insertions(+), 1 deletion(-)
-> >  create mode 100644 drivers/pci/pci-of.c
-> > 
-> > diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> > index 66a21acad952..4f76dbdb024c 100644
-> > --- a/drivers/pci/Makefile
-> > +++ b/drivers/pci/Makefile
-> > @@ -49,7 +49,7 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
-> >  
-> >  obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
-> >  
-> > -obj-$(CONFIG_OF) += of.o
-> > +obj-$(CONFIG_OF) += of.o pci-of.o
+On Tue, Oct 17, 2017 at 01:03:46PM +1100, Daniel Axtens wrote:
+> Bjorn Helgaas <bhelgaas@google.com> writes:
 > 
-> If the intention is to push this to pci directory, this code needs to be made
-> platform agnostic by splitting into two pieces.
+> > The default VGA device is normally set in vga_arbiter_add_pci_device() when
+> > we call it for the first enabled device that can be accessed with the
+> > legacy VGA resources ([mem 0xa0000-0xbffff], etc.)
+> >
+> > That default device can be overridden by an EFI device that owns the boot
+> > framebuffer.  As a fallback, we can also select a VGA device that can't be
+> > accessed via legacy VGA resources, or a VGA device that isn't even enabled.
+> >
+> > Factor out this EFI and fallback selection from vga_arb_device_init() into
+> > a separate vga_arb_select_default_device() function.  This doesn't change
+> > any behavior, but it untangles the "bridge control possible" checking and
+> > messages from the default device selection.
+> >
+> > Tested-by: Zhou Wang <wangzhou1@hisilicon.com>  # D05 Hisi Hip07, Hip08
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  drivers/gpu/vga/vgaarb.c |   57 ++++++++++++++++++++++++++++------------------
+> >  1 file changed, 35 insertions(+), 22 deletions(-)
+> >
+> > diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> > index 8035e38d5110..d35d6d271f3f 100644
+> > --- a/drivers/gpu/vga/vgaarb.c
+> > +++ b/drivers/gpu/vga/vgaarb.c
+> > @@ -1402,29 +1402,14 @@ static struct miscdevice vga_arb_device = {
+> >  	MISC_DYNAMIC_MINOR, "vga_arbiter", &vga_arb_device_fops
+> >  };
+> >  
+> > -static int __init vga_arb_device_init(void)
+> > +static void __init vga_arb_select_default_device(void)
+> >  {
+> > -	int rc;
+> >  	struct pci_dev *pdev;
+> >  	struct vga_device *vgadev;
+> >  
+> > -	rc = misc_register(&vga_arb_device);
+> > -	if (rc < 0)
+> > -		pr_err("error %d registering device\n", rc);
+> > -
+> > -	bus_register_notifier(&pci_bus_type, &pci_notifier);
+> > -
+> > -	/* We add all pci devices satisfying vga class in the arbiter by
+> > -	 * default */
+> > -	pdev = NULL;
+> > -	while ((pdev =
+> > -		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> > -			       PCI_ANY_ID, pdev)) != NULL)
+> > -		vga_arbiter_add_pci_device(pdev);
+> > -
+> > +#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+> >  	list_for_each_entry(vgadev, &vga_list, list) {
+> >  		struct device *dev = &vgadev->pdev->dev;
+> > -#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+> >  		/*
+> >  		 * Override vga_arbiter_add_pci_device()'s I/O based detection
+> >  		 * as it may take the wrong device (e.g. on Apple system under
+> > @@ -1461,12 +1446,8 @@ static int __init vga_arb_device_init(void)
+> >  				vgaarb_info(dev, "overriding boot device\n");
+> >  			vga_set_default_device(vgadev->pdev);
+> >  		}
+> > -#endif
+> > -		if (vgadev->bridge_has_one_vga)
+> > -			vgaarb_info(dev, "bridge control possible\n");
+> > -		else
+> > -			vgaarb_info(dev, "no bridge control possible\n");
+> >  	}
+> > +#endif
+> >  
+> >  	if (!vga_default_device()) {
+> >  		list_for_each_entry(vgadev, &vga_list, list) {
+> > @@ -1492,6 +1473,38 @@ static int __init vga_arb_device_init(void)
+> >  			vga_set_default_device(vgadev->pdev);
+> >  		}
+> >  	}
+> > +}
+> > +
+> > +static int __init vga_arb_device_init(void)
+> > +{
+> > +	int rc;
+> > +	struct pci_dev *pdev;
+> > +	struct vga_device *vgadev;
+> > +
+> > +	rc = misc_register(&vga_arb_device);
+> > +	if (rc < 0)
+> > +		pr_err("error %d registering device\n", rc);
+> > +
+> > +	bus_register_notifier(&pci_bus_type, &pci_notifier);
+> > +
+> > +	/* We add all PCI devices satisfying VGA class in the arbiter by
+> > +	 * default */
+> > +	pdev = NULL;
+> > +	while ((pdev =
+> > +		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> > +			       PCI_ANY_ID, pdev)) != NULL)
+> > +		vga_arbiter_add_pci_device(pdev);
+> > +
+> > +	list_for_each_entry(vgadev, &vga_list, list) {
+> > +		struct device *dev = &vgadev->pdev->dev;
+> > +
+> > +		if (vgadev->bridge_has_one_vga)
+> > +			vgaarb_info(dev, "bridge control possible\n");
+> > +		else
+> > +			vgaarb_info(dev, "no bridge control possible\n");
+> > +	}
 > 
-> I think you can make this code common by abstracting the IRQ number and
-> have some generic code like pci-wake.c in pci directory without the of prefix
-> in this file.
+> Initially I wondered if this info printk could be moved into
+> vga_arbiter_check_bridge_sharing(), but it's been separated out since
+> 3448a19da479b ("vgaarb: use bridges to control VGA routing where
+> possible."), and upon closer examination, it seems you can't be sure a
+> device doesn't share a bridge until the end of the process, so this is
+> indeed correct.
+> 
+> Everything else also looks good to me.
+> 
+> Reviewed-by: Daniel Axtens <dja@axtens.net>
 
-Why would 'pci-wake' be a good name for this? We're doing basically the
-same things that pci-acpi.c is doing (it also can configure the WAKE#
-signal, via ACPI firmware calls).
+R-b for both patches? And ok with everyone if I pull this into drm-misc
+for 4.15 (deadline is end of this week for feature-y stuff)?
 
-> Then, you can have some other OF specific code in the drivers/of directory
-> that reads the IRQ from OF and calls the common code in PCI directory.
+Thanks, Daniel
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
 
-Why is drivers/of/ special? I thought in general, the DT maintainers
-preferred to move domain-specific stuff into the respective subsystems.
-
-Also, the extraction is a very tiny piece of code, and the logic around
-walking a PCI tree is the more important part. And in the
-meantime...Jeffy has sent two more revisions of this patch set already,
-and he did the latter (I like his abstraction of PCI device trees,
-shared between ACPI and OF code) but not the former (it's still all
-'pci-of.c').
-
-Feel free to comment further on here or on v10, but at the moment I'm
-not sure I understand yet how your suggestions would improve things.
-
-Brian
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
