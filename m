@@ -1,118 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <SRS0=l7Ns=BQ=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=l7Ns=BQ=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Bjorn Helgaas' <helgaas@kernel.org>
+CC: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Subject: RE: PCIe error reporting
+Date: Tue, 17 Oct 2017 15:27:02 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD0099256@AcuExch.aculab.com>
+References: <063D6719AE5E284EB5DD2968C1650D6DD008D9F2@AcuExch.aculab.com>
+ <20171010211035.GY25517@bhelgaas-glaptop.roam.corp.google.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD0090E73@AcuExch.aculab.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD00911C9@AcuExch.aculab.com>
+ <20171011132525.GF25517@bhelgaas-glaptop.roam.corp.google.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD009155B@AcuExch.aculab.com>
+ <20171011172113.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD0097D9F@AcuExch.aculab.com>
+ <20171016220631.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171016220631.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <3825270.mro2tgMB2C@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <3825270.mro2tgMB2C@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Mon, 23 Oct 2017 18:40:24 +0200
-Message-ID: <CAPDyKFrzW5ZJ5WE=utoT6PZUwEfv1xryw0M4zXsdD8SBJPEe5Q@mail.gmail.com>
-Subject: Re: [PATCH 02/12] PCI / PM: Use the NEVER_SKIP driver flag
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16 October 2017 at 03:29, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Replace the PCI-specific flag PCI_DEV_FLAGS_NEEDS_RESUME with the
-> PM core's DPM_FLAG_NEVER_SKIP one everywhere and drop it.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Bjorn Helgaas
+> Sent: 16 October 2017 23:07
+...
+> I don't know how to tell what Windows is doing with respect to AER.
 
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+Just hopeful someone might :-)
 
-> ---
->  drivers/gpu/drm/i915/i915_drv.c |    2 +-
->  drivers/misc/mei/pci-me.c       |    2 +-
->  drivers/misc/mei/pci-txe.c      |    2 +-
->  drivers/pci/pci.c               |    3 +--
->  include/linux/pci.h             |    7 +------
->  5 files changed, 5 insertions(+), 11 deletions(-)
->
-> Index: linux-pm/include/linux/pci.h
-> ===================================================================
-> --- linux-pm.orig/include/linux/pci.h
-> +++ linux-pm/include/linux/pci.h
-> @@ -205,13 +205,8 @@ enum pci_dev_flags {
->         PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT = (__force pci_dev_flags_t) (1 << 9),
->         /* Do not use FLR even if device advertises PCI_AF_CAP */
->         PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
-> -       /*
-> -        * Resume before calling the driver's system suspend hooks, disabling
-> -        * the direct_complete optimization.
-> -        */
-> -       PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
->         /* Don't use Relaxed Ordering for TLPs directed at this device */
-> -       PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
-> +       PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
->  };
->
->  enum pci_irq_reroute_variant {
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -2166,8 +2166,7 @@ bool pci_dev_keep_suspended(struct pci_d
->
->         if (!pm_runtime_suspended(dev)
->             || pci_target_state(pci_dev, wakeup) != pci_dev->current_state
-> -           || platform_pci_need_resume(pci_dev)
-> -           || (pci_dev->dev_flags & PCI_DEV_FLAGS_NEEDS_RESUME))
-> +           || platform_pci_need_resume(pci_dev))
->                 return false;
->
->         /*
-> Index: linux-pm/drivers/gpu/drm/i915/i915_drv.c
-> ===================================================================
-> --- linux-pm.orig/drivers/gpu/drm/i915/i915_drv.c
-> +++ linux-pm/drivers/gpu/drm/i915/i915_drv.c
-> @@ -1304,7 +1304,7 @@ int i915_driver_load(struct pci_dev *pde
->          * becaue the HDA driver may require us to enable the audio power
->          * domain during system suspend.
->          */
-> -       pdev->dev_flags |= PCI_DEV_FLAGS_NEEDS_RESUME;
-> +       dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
->
->         ret = i915_driver_init_early(dev_priv, ent);
->         if (ret < 0)
-> Index: linux-pm/drivers/misc/mei/pci-txe.c
-> ===================================================================
-> --- linux-pm.orig/drivers/misc/mei/pci-txe.c
-> +++ linux-pm/drivers/misc/mei/pci-txe.c
-> @@ -141,7 +141,7 @@ static int mei_txe_probe(struct pci_dev
->          * MEI requires to resume from runtime suspend mode
->          * in order to perform link reset flow upon system suspend.
->          */
-> -       pdev->dev_flags |= PCI_DEV_FLAGS_NEEDS_RESUME;
-> +       dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
->
->         /*
->         * For not wake-able HW runtime pm framework
-> Index: linux-pm/drivers/misc/mei/pci-me.c
-> ===================================================================
-> --- linux-pm.orig/drivers/misc/mei/pci-me.c
-> +++ linux-pm/drivers/misc/mei/pci-me.c
-> @@ -223,7 +223,7 @@ static int mei_me_probe(struct pci_dev *
->          * MEI requires to resume from runtime suspend mode
->          * in order to perform link reset flow upon system suspend.
->          */
-> -       pdev->dev_flags |= PCI_DEV_FLAGS_NEEDS_RESUME;
-> +       dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
->
->         /*
->         * For not wake-able HW runtime pm framework
->
+> > I've 'bodged' the Linux kernel to think that the BIOS gave it control
+> > of AER (set OSC_PCI_EXPRESS_AER_CONTROL into *mask and
+> > root->osc_control_set in acpi_pci_osc_control_set()).
+> > I think this is the earliest place the info is saved.
+> > This is enough to the 'pcieport ... AER enabled with IRQ nn' messages
+> > (It is sharing the interrupt with PME).
+> >
+> > I've made sure my card is beneath one of the cpu bridges (the companion
+> > chip host bridges don't support AER).
+> > I've also bodged the driver to ioremap() an area larger than one of the
+> > BARs so I can generated PCIe read and write TLP that are outside the
+> > BAR ranges.
+> > Reads set CESta: NonFatalError.
+> > Writes set UESTA: UnsepReq and save the TLP header.
+> > No interrupts to aerdrv are generated.
+> > I can clear the status bits using setpci.
+> > Should I expect these errors to raise interrupts?
+>=20
+> I think that depends on the Root Error Command register.
+
+AFAICT that is set to 7 (all interrupts enabled), nothing gets
+set in the 'pending' word that follows.
+
+If I unmask NonFatalErr from the card's CEMsk read errors also set
+UnsupReq and save the TLP header.
+
+Unfortunately we don't have a PCIe analyser (too expensive),
+so I can't see any TLP generated by the low level hardware.
+(I can see all the read/write/completions that match the BARs.)
+
+I've also looked as the lspci -vvnnxxxx output from one of our
+Dell server systems (I've not got one to play with).
+They have the Root Error Command register set to zero.
+The RootCtl register (in the main root port capabilities) has both
+ErrNon-Fatal and ErrFatal set.
+I think this means that the errors I'm generating would set CERR
+and probably generate an NMI!
+It is likely to explain why taking down the PCIe physical layer
+generates an NMI even after 'echo 1 > xxx/remove'.
+Maybe the kernel should be unsetting these bits when a card is
+removed and restoring them after a rescan?
+
+	David
