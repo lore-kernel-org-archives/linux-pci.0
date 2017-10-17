@@ -1,58 +1,58 @@
-Return-Path: <SRS0=Un9p=BI=linux-mips.org=ralf@kernel.org>
-Return-Path: <SRS0=Un9p=BI=linux-mips.org=ralf@kernel.org>
-Date: Mon, 9 Oct 2017 15:12:27 +0200
-From: Ralf Baechle <ralf@linux-mips.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-        Rich Felker <dalias@libc.org>, linux-ia64@vger.kernel.org,
-        linux-sh@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        David Howells <dhowells@redhat.com>,
-        Max Filippov <jcmvbkbc@gmail.com>,
-        Paul Mackerras <paulus@samba.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, sparclinux@vger.kernel.org,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        linux-am33-list@redhat.com,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Helge Deller <deller@gmx.de>, x86@kernel.org,
-        "James E.J. Bottomley" <jejb@parisc-linux.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Matt Turner <mattst88@gmail.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        linux-xtensa@linux-xtensa.org, Mikael Starvik <starvik@axis.com>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Richard Henderson <rth@twiddle.net>,
-        Chris Zankel <chris@zankel.net>,
-        Tony Luck <tony.luck@intel.com>, linux-cris-kernel@axis.com,
-        linux-parisc@vger.kernel.org, linux-alpha@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 2/4] PCI: Remove redundant pci_dev, pci_bus, resource
- declarations
-Message-ID: <20171009131227.GG20977@linux-mips.org>
-References: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171005203849.18300.20999.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=l7Ns=BQ=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=l7Ns=BQ=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Tyler Baicar' <tbaicar@codeaurora.org>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "helgaas@kernel.org" <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI/AER: update AER status string print to match other
+ AER logs
+Date: Tue, 17 Oct 2017 16:00:40 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD0099999@AcuExch.aculab.com>
+References: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
+In-Reply-To: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171005203849.18300.20999.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 05, 2017 at 03:38:49PM -0500, Bjorn Helgaas wrote:
+From: Tyler Baicar
+> Sent: 17 October 2017 16:42
+> Currently the AER driver uses cper_print_bits() to print the AER status
+> string. This causes the status string to not include the proper PCI devic=
+e
+> name prefix that the other AER prints include. Also, it has a different
+> print level than all the other AER prints.
+>=20
+> Update the AER driver to print the AER status string with the proper stri=
+ng
+> prefix and proper print level.
+>=20
+> Previous log example:
+>=20
+> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+> Receiver Error, Bad TLP
+...
+> New log:
+>=20
+> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+> e1000e 0003:01:00.1: Receiver Error
+> e1000e 0003:01:00.1: Bad TLP
 
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> <linux/pci.h> defines struct pci_bus and struct pci_dev and includes the
-> struct resource definition before including <asm/pci.h>.  Nobody includes
-> <asm/pci.h> directly, so they don't need their own declarations.
-> 
-> Remove the redundant struct pci_dev, pci_bus, resource declarations.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Wouldn't it be better to manage to print the above all on 1 line?
 
-For MIPS:
+...
+> index 54c4b69..b718daa 100644
+> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+> @@ -206,6 +206,19 @@ void aer_print_port_info(struct pci_dev *dev, struct=
+ aer_err_info *info)
+>  }
+>=20
+>  #ifdef CONFIG_ACPI_APEI_PCIEAER
+> +void dev_print_bits(struct pci_dev *dev, unsigned int bits,
+> +		    const char * const strs[], unsigned int strs_size)
 
-Acked-by: Ralf Baechle <ralf@linux-mips.org>
+static and rename to aer_print_bits since this isn't a generic 'dev'
+function.
 
-  Ralf
+	David
