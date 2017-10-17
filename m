@@ -1,77 +1,42 @@
-Return-Path: <SRS0=Ech1=BG=gmail.com=mingo.kernel.org@kernel.org>
-Return-Path: <SRS0=Ech1=BG=gmail.com=mingo.kernel.org@kernel.org>
-Sender: Ingo Molnar <mingo.kernel.org@gmail.com>
-Date: Sat, 7 Oct 2017 10:58:58 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
-	Rich Felker <dalias@libc.org>, linux-ia64@vger.kernel.org,
-	linux-sh@vger.kernel.org,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Paul Mackerras <paulus@samba.org>, "H. Peter Anvin" <hpa@zytor.com>,
-	sparclinux@vger.kernel.org,
-	Jesper Nilsson <jesper.nilsson@axis.com>,
-	linux-am33-list@redhat.com,
-	Yoshinori Sato <ysato@users.sourceforge.jp>,
-	Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
-	x86@kernel.org, "James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Ingo Molnar <mingo@redhat.com>, Matt Turner <mattst88@gmail.com>,
-	Fenghua Yu <fenghua.yu@intel.com>, linux-xtensa@linux-xtensa.org,
-	Mikael Starvik <starvik@axis.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Richard Henderson <rth@twiddle.net>,
-	Chris Zankel <chris@zankel.net>, Tony Luck <tony.luck@intel.com>,
-	linux-cris-kernel@axis.com, linux-parisc@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>, linux-alpha@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 0/4] PCI: Cleanup unused stuff
-Message-ID: <20171007085858.hjjowcgm457wo3cg@gmail.com>
-References: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 17 Oct 2017 12:25:01 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, laurent.pinchart@ideasonboard.com,
+        jlbec@evilplan.org, ccaulfie@redhat.com, teigland@redhat.com,
+        mfasheh@versity.com, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-usb@vger.kernel.org, cluster-devel@redhat.com,
+        ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2 11/15] stm class: make config_item_type const
+Message-ID: <20171017102501.GC25786@kroah.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+ <1508167134-6243-12-git-send-email-bhumirks@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171005201939.18300.25690.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1508167134-6243-12-git-send-email-bhumirks@gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-* Bjorn Helgaas <helgaas@kernel.org> wrote:
-
-> Sorry for the long cc list.  These are pretty trivial; they just remove
-> some unnecessary declarations across several arches.
+On Mon, Oct 16, 2017 at 05:18:50PM +0200, Bhumika Goyal wrote:
+> Make config_item_type structures const as they are either passed to a
+> function having the argument as const or used inside a if statement or
+> stored in the const "ci_type" field of a config_item structure.
 > 
+> Done using Coccinelle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 > ---
-> 
-> Bjorn Helgaas (4):
->       PCI: Remove redundant pcibios_set_master() declarations
->       PCI: Remove redundant pci_dev, pci_bus, resource declarations
->       PCI: Remove unused declarations
->       alpha/PCI: Make pdev_save_srm_config() static
-> 
-> 
->  arch/alpha/include/asm/pci.h            |    5 -----
->  arch/alpha/kernel/pci.c                 |   11 ++++++++++-
->  arch/alpha/kernel/pci_impl.h            |    8 --------
->  arch/cris/include/asm/pci.h             |    9 ---------
->  arch/frv/include/asm/pci.h              |    4 ----
->  arch/ia64/include/asm/pci.h             |    4 ----
->  arch/mips/include/asm/pci.h             |    4 ----
->  arch/mn10300/include/asm/pci.h          |    4 ----
->  arch/mn10300/unit-asb2305/pci-asb2305.h |    3 ---
->  arch/parisc/include/asm/pci.h           |    8 --------
->  arch/powerpc/include/asm/pci.h          |    2 --
->  arch/sh/include/asm/pci.h               |    4 ----
->  arch/sparc/include/asm/pci_32.h         |    2 --
->  arch/x86/include/asm/pci.h              |    2 --
->  arch/xtensa/include/asm/pci.h           |    2 --
->  15 files changed, 10 insertions(+), 62 deletions(-)
+> * Changes in v2- Combine all the followup patches and the constification
+> patches into a series.
 
-Nice cleanups! For the whole series:
-
-  Reviewed-by: Ingo Molnar <mingo@kernel.org>
-
-Thanks,
-
-	Ingo
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
