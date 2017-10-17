@@ -1,157 +1,147 @@
-Return-Path: <SRS0=4nOf=BR=axis.com=niklas.cassel@kernel.org>
-Return-Path: <SRS0=4nOf=BR=axis.com=niklas.cassel@kernel.org>
-Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Jesper Nilsson <jespern@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-	"Jingoo Han" <jingoohan1@gmail.com>, Xiaowei Song
-	<songxiaowei@hisilicon.com>, "Peter Robinson" <pbrobinson@gmail.com>, Tomasz
- Nowicki <tn@semihalf.com>, "Gabriele Paoloni" <gabriele.paoloni@huawei.com>,
-	Duc Dang <dhdang@apm.com>, <linux-arm-kernel@axis.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-9-niklas.cassel@axis.com>
- <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
- <ebc64a29-4080-af88-c774-b3223115aef0@ti.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <6a9b7221-1ed7-368d-f737-084e4a1519dc@axis.com>
-Date: Wed, 18 Oct 2017 10:15:28 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35390 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1762589AbdJQNv0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Oct 2017 09:51:26 -0400
+Date: Tue, 17 Oct 2017 08:51:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        Steven Royer <seroyer@linux.vnet.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com,
+        benh@kernel.crashing.org, paulus@samba.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>,
+        Eli Cohen <eli@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        jjalvare@linux.vnet.ibm.com
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+Message-ID: <20171017135123.GA5641@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
+ <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+ <87efq92ei6.fsf@concordia.ellerman.id.au>
+ <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+ <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
+ <20171013033456.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+ <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
+ <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
+ <20171013120558.1a129183@t450s.home>
+ <24fdec01-8df4-f027-0b3c-0472a2d73946@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <ebc64a29-4080-af88-c774-b3223115aef0@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <24fdec01-8df4-f027-0b3c-0472a2d73946@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/18/2017 10:03 AM, Kishon Vijay Abraham I wrote:
-> Hi Bjorn,
+On Fri, Oct 13, 2017 at 02:12:32PM -0500, Bryant G. Ly wrote:
 > 
-> On Tuesday 17 October 2017 05:13 AM, Bjorn Helgaas wrote:
->> On Fri, Oct 13, 2017 at 06:09:11PM +0200, Niklas Cassel wrote:
->>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->>> ---
->>>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
->>>  drivers/pci/dwc/Kconfig                            |  41 +++--
->>>  drivers/pci/dwc/Makefile                           |   4 +-
->>>  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
->>>  4 files changed, 233 insertions(+), 17 deletions(-)
->>>
->>> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->>> index 4e4aee4439ea..33eef7ae5a23 100644
->>> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->>> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->>> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
->>>  and thus inherits all the common properties defined in designware-pcie.txt.
->>>  
->>>  Required properties:
->>> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
->>> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
->>> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
->>>  - reg: base addresses and lengths of the PCIe controller (DBI),
->>>  	the PHY controller, and configuration address space.
->>>  - reg-names: Must include the following entries:
->>> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
->>> index 22ec82fcdea2..e333283fb1ed 100644
->>> --- a/drivers/pci/dwc/Kconfig
->>> +++ b/drivers/pci/dwc/Kconfig
->>> @@ -14,6 +14,36 @@ config PCIE_DW_EP
->>>  	depends on PCI_ENDPOINT
->>>  	select PCIE_DW
->>>  
->>> +config PCIE_ARTPEC6
->>> +	bool "Axis ARTPEC-6 PCIe controller"
->>> +	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
->>> +	depends on MACH_ARTPEC6
->>> +	help
->>> +	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
->>> +	  SoCs.  This PCIe controller uses the DesignWare core.
->>> +
->>> +if PCIE_ARTPEC6
->>> +
->>> +config PCIE_ARTPEC6_HOST
->>> +	bool "Axis ARTPEC-6 Host Mode"
->>> +	depends on PCI
->>> +	depends on PCI_MSI_IRQ_DOMAIN
->>> +	select PCIEPORTBUS
->>> +	select PCIE_DW_HOST
->>> +	help
->>> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
->>> +	  host mode.
->>> +
->>> +config PCIE_ARTPEC6_EP
->>> +	bool "Axis ARTPEC-6 Endpoint Mode"
->>> +	depends on PCI_ENDPOINT
->>> +	select PCIE_DW_EP
->>> +	help
->>> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
->>> +	  endpoint mode.
->>> +
->>> +endif
->>> +
->>>  config PCI_DRA7XX
->>>  	bool "TI DRA7xx PCIe controller"
->>>  	depends on SOC_DRA7XX || COMPILE_TEST
->>> @@ -148,17 +178,6 @@ config PCIE_ARMADA_8K
->>>  	  DesignWare hardware and therefore the driver re-uses the
->>>  	  DesignWare core functions to implement the driver.
->>>  
->>> -config PCIE_ARTPEC6
->>> -	bool "Axis ARTPEC-6 PCIe controller"
->>> -	depends on PCI
->>> -	depends on MACH_ARTPEC6
->>> -	depends on PCI_MSI_IRQ_DOMAIN
->>> -	select PCIEPORTBUS
->>> -	select PCIE_DW_HOST
->>> -	help
->>> -	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
->>> -	  SoCs.  This PCIe controller uses the DesignWare core.
->>> -
->>>  config PCIE_KIRIN
->>>  	depends on OF && ARM64
->>>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
->>
->>> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
->>> index c61be9738cce..ac98242b83a9 100644
->>> --- a/drivers/pci/dwc/Makefile
->>> +++ b/drivers/pci/dwc/Makefile
->>> @@ -2,6 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
->>>  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
->>>  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
->>>  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
->>> +ifneq ($(filter y,$(CONFIG_PCIE_ARTPEC6_HOST) $(CONFIG_PCIE_ARTPEC6_EP)),)
->>> +        obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
->>> +endif
->>
->> I see you're copying the DRA7XX style here, but I don't really
->> understand it.  I guess the idea is to build pcie-artpec6.o if either
->> CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
->>
->> Is this really the simplest way to express that in Kconfig?  Both the
->> "if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
->> unusual.
->>
->>>  ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
->>>          obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
->>>  endif
->>
->>> +static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->>
->> Looks funny to have this dw_*() function in pcie-artpec6.c.  Intended?
->> Or is this something other endpoint drivers could/should share?
 > 
-> yeah, dw_pcie_ep_reset_bar is already present in pcie-designware-ep.c which
-> should be made as library function to be used by other drivers. (pci-dra7xx.c
-> has also added something like above which should also be fixed).
+> On 10/13/17 1:05 PM, Alex Williamson wrote:
+> >On Fri, 13 Oct 2017 07:01:48 -0500
+> >Steven Royer <seroyer@linux.vnet.ibm.com> wrote:
+> >
+> >>On 2017-10-13 06:53, Steven Royer wrote:
+> >>>On 2017-10-12 22:34, Bjorn Helgaas wrote:
+> >>>>[+cc Alex, Bodong, Eli, Saeed]
+> >>>>
+> >>>>On Thu, Oct 12, 2017 at 02:59:23PM -0500, Bryant G. Ly wrote:
+> >>>>>On 10/12/17 1:29 PM, Bjorn Helgaas wrote:
+> >>>>>>On Thu, Oct 12, 2017 at 03:09:53PM +1100, Michael Ellerman wrote:
+> >>>>>>>Bjorn Helgaas <helgaas@kernel.org> writes:
+> >>>>>>>>On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:
+> >>>>>>reading the code what -1/0/1 mean.
+
+> >>>>>>Apparently here you *do* want the "-1 means the PCI core will never
+> >>>>>>set match_driver to 1" functionality, so maybe you do depend on it.
+> >>>>>We depend on the patch because we want that ability to never set
+> >>>>>match_driver,
+> >>>>>for SRIOV on PowerVM.
+> >>>>Is this really new PowerVM-specific functionality?  ISTR recent
+> >>>>discussions
+> >>>>about inhibiting driver binding in a generic way, e.g.,
+> >>>>http://lkml.kernel.org/r/1490022874-54718-1-git-send-email-bodong@mellanox.com
+> >>>>>>If that's the case, how to you ever bind a driver to these VFs?  The
+> >>>>>>changelog says you don't want VF drivers to load *immediately*, so I
+> >>>>>>assume you do want them to load eventually.
+> >>>>>The VF's that get dynamically created within the configure SR-IOV
+> >>>>>call, on the Pseries Platform, wont be matched with a driver. - We
+> >>>>>do not want it to match.
+> >>>>>
+> >>>>>The Power Hypervisor will load the VFs. The VF's will get
+> >>>>>assigned(by the user) via the HMC or Novalink in this environment
+> >>>>>which will then trigger PHYP to load the VF device node to the
+> >>>>>device tree.
+> >>>>I don't know what it means for the Hypervisor to "load the VFs."  Can
+> >>>>you explain that in PCI-speak?
+> >>>>
+> >>>>The things I know about are:
+> >>>>
+> >>>>   - we set PCI_SRIOV_CTRL_VFE in the PF, which enables VFs
+> >>>>   - now the VFs respond to config accesses
+> >>>>   - the PCI core enumerates the VFs by reading their config space
+> >>>>   - the PCI core builds pci_dev structs for the VFs
+> >>>>   - the PCI core adds these pci_devs to the bus
+> >>>>   - we try to bind drivers to the VFs
+> >>>>   - the VF driver probe function may read VF config space and VF BARs
+> >>>>   - the VF may be assigned to a guest VM
+> >>>>
+> >>>>Where does "loading the VFs" fit in?  I don't know what HMC, Novalink,
+> >>>>or PHYP are.  I don't *need* to know what they are, as long as you can
+> >>>>explain what's happening in terms of the PCI concepts and generic
+> >>>>Linux VMs
+> >>>>and device assignment.
+> >>>>
+> >>>>Bjorn
+> >>>The VFs will be hotplugged into the VM separately from the enable
+> >>>SR-IOV, so the driver will load as part of the hotplug operation.
+> >>>
+> >>>Steve
+> >>One more point of clarification: when the hotplug happens, the VF will
+> >>show up on a virtual PCI bus that is not directly correlated to the real
+> >>PCI bus that the PF is on.  On that virtual PCI bus, the driver will
+> >>match because it won't be set to -1.
+> So lets refer to Bjorn's list of things for SRIOV.
 > 
+>   - we set PCI_SRIOV_CTRL_VFE in the PF, which enables VFs
+>   - now the VFs respond to config accesses
+>   - the PCI core enumerates the VFs by reading their config space
+>   - the PCI core builds pci_dev structs for the VFs
+>   - the PCI core adds these pci_devs to the bus
+> 
+> So everything is the same up to here.
+>   - we try to bind drivers to the VFs
+>   - the VF driver probe function may read VF config space and VF BARs
+>   - the VF may be assigned to a guest VM
+> 
+> PowerVM environment is very different than traditional KVM in terms
+> of SRIOV.  In our environment the VFs are not usable or view-able by
+> the Hosting Partition in this case Linux. This is a very important
+> point in that the Host CAN NOT do anything to any of the VFs
+> available.
 
-Hello Kishon,
+This is where I get confused.  I guess the Linux that sets
+PCI_SRIOV_CTRL_VFE to enable the VFs can also perform config accesses
+to the VFs, since it can enumerate them and build pci_dev structs for
+them, right?
 
-I can remove the static keyword from dw_pcie_ep_reset_bar,
-move the declaration to pcie-designware.h,
-and make sure that both pcie-artpec6.c and pci-dra7xx.c uses it.
+And the Linux in the "Hosting Partition" is a guest that cannot see a
+VF until a management console attaches the VF to the Hosting
+Partition?  I'm not a VFIO or KVM expert but that sounds vaguely like
+what they would do when assigning a VF to a guest.
 
-Will do this in the next version of the patch series if you
-don't have any objection.
+> So like existing way of enabling SRIOV we still rely on the PF driver to
+> enable VFs - but in this case the attachment phase is done via a user
+> action via a management console in our case (novalink or hmc) triggered
+> event that will essentially act like a hotplug.
+> 
+> So in the fine details of that user triggered action the system
+> firmware will bind the VFs, allowing resources to be allocated to
+> the VF.  - Which essentially does all the attaching as we know it
+> today but is managed by PHYP not by the kernel.
 
+What exactly does "firmware binding the VFs" mean?  I guess this must
+mean assigning a VF to a partition, injecting a hotplug add event to
+that partition, and making the VF visible in config space?
 
-Regards,
-Niklas
+Bjorn
