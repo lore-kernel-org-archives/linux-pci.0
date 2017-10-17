@@ -1,48 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:43048 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751907AbdJ3MnW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:43:22 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 10/17] PCI: dwc: artpec6: Remove unused defines
-Date: Mon, 30 Oct 2017 13:42:13 +0100
-Message-Id: <20171030124221.20690-11-niklas.cassel@axis.com>
-In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:54925 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754557AbdJQH43 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 03:56:29 -0400
+Message-Id: <20171017075600.369375409@linutronix.de>
+Date: Tue, 17 Oct 2017 09:54:57 +0200
+From: Thomas Gleixner <tglx@linutronix.de>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Dexuan Cui <decui@microsoft.com>, x86@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        linux-pci@vger.kernel.org, devel@linuxdriverproject.org,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Mihai Costache <v-micos@microsoft.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>
+Subject: [patch 1/3] genirq: Add config option for reservation mode
+References: <20171017075456.694047687@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit b015b37e6693 ("PCI: artpec6: Stop enabling writes to
-DBI read-only registers") removed the only write using these
-defines, but it did not remove the defines.
-Remove the defines since they are now unused.
+The interrupt reservation mode requires reactivation of PCI/MSI
+interrupts. Create a config option, so the PCI code can set the
+corresponding flag when required.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
-V2:
-* Changed commit message to include correct prefix.
+ kernel/irq/Kconfig |    3 +++
+ 1 file changed, 3 insertions(+)
 
- drivers/pci/dwc/pcie-artpec6.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 6653619db6a1..4b8ef266dc2f 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -37,9 +37,6 @@ struct artpec6_pcie {
- #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
+--- a/kernel/irq/Kconfig
++++ b/kernel/irq/Kconfig
+@@ -100,6 +100,9 @@ config IRQ_TIMINGS
+ config GENERIC_IRQ_MATRIX_ALLOCATOR
+ 	bool
  
--#define MISC_CONTROL_1_OFF		(PL_OFFSET + 0x1bc)
--#define  DBI_RO_WR_EN			1
--
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
- #define  PCIECFG_DBG_OEN		(1 << 24)
--- 
-2.14.2
++config GENERIC_IRQ_RESERVATION_MODE
++	bool
++
+ config IRQ_DOMAIN_DEBUG
+ 	bool "Expose hardware/virtual IRQ mapping via debugfs"
+ 	depends on IRQ_DOMAIN && DEBUG_FS
