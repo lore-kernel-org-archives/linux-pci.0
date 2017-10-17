@@ -1,47 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Pankaj Dubey' <pankaj.dubey@samsung.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: RE: [PATCH] PCI: dwc: designware: don't sleep in atomic context
-Date: Thu, 12 Oct 2017 10:39:39 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00924BC@AcuExch.aculab.com>
-References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
- <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
-In-Reply-To: <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
-Content-Type: text/plain; charset="Windows-1252"
+Return-Path: <SRS0=T556=BQ=linux.vnet.ibm.com=jjalvare@kernel.org>
+Return-Path: <SRS0=T556=BQ=linux.vnet.ibm.com=jjalvare@kernel.org>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        Steven Royer <seroyer@linux.vnet.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com,
+        benh@kernel.crashing.org, paulus@samba.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>, Eli Cohen <eli@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>
+References: <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
+ <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+ <87efq92ei6.fsf@concordia.ellerman.id.au>
+ <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+ <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
+ <20171013033456.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+ <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
+ <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
+ <20171013120558.1a129183@t450s.home>
+ <24fdec01-8df4-f027-0b3c-0472a2d73946@linux.vnet.ibm.com>
+ <20171017135123.GA5641@bhelgaas-glaptop.roam.corp.google.com>
+From: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
+Date: Tue, 17 Oct 2017 09:33:34 -0500
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171017135123.GA5641@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <7e23c703-750b-b4f8-f252-0c872a40ae8a@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Pankaj Dubey
-> Sent: 12 October 2017 08:55
-> In pcie-designware.c many places we are calling "usleep_range" which
-> are in atomic context. This patch fixes these potential BUGs and
-> replaces "usleep_range" with mdelay calls.
-> 
-> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> ---
->  drivers/pci/dwc/pcie-designware.c | 8 ++++----
->  drivers/pci/dwc/pcie-designware.h | 3 +--
->  2 files changed, 5 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> index 88abddd..35d19b9 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -138,7 +138,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
->  		if (val & PCIE_ATU_ENABLE)
->  			return;
-> 
-> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +		mdelay(LINK_WAIT_IATU_MIN);
->  	}
 
-Spinning for 9ms (possibly 10 times) isn't really a good idea.
+On 10/17/17 8:51 AM, Bjorn Helgaas wrote:
+> This is where I get confused.  I guess the Linux that sets
+> PCI_SRIOV_CTRL_VFE to enable the VFs can also perform config accesses
+> to the VFs, since it can enumerate them and build pci_dev structs for
+> them, right?
 
-	David
+Correct, we are not changing anything related to how the VF gets initialized
+in the kernel.
+>
+> And the Linux in the "Hosting Partition" is a guest that cannot see a
+> VF until a management console attaches the VF to the Hosting
+> Partition?  
+
+Correct, this is how PHYP does normal adapter assignment.
+> I'm not a VFIO or KVM expert but that sounds vaguely like
+> what they would do when assigning a VF to a guest.
+I do not know the specifics on VFIO and KVM. However, in this
+case there is no KVM running on the Linux LPAR. PHYP owns all
+the system resources.
+>
+>> So like existing way of enabling SRIOV we still rely on the PF driver to
+>> enable VFs - but in this case the attachment phase is done via a user
+>> action via a management console in our case (novalink or hmc) triggered
+>> event that will essentially act like a hotplug.
+>>
+>> So in the fine details of that user triggered action the system
+>> firmware will bind the VFs, allowing resources to be allocated to
+>> the VF.  - Which essentially does all the attaching as we know it
+>> today but is managed by PHYP not by the kernel.
+> What exactly does "firmware binding the VFs" mean?  I guess this must
+> mean assigning a VF to a partition, injecting a hotplug add event to
+> that partition, and making the VF visible in config space?
+Firmware basically adds a device node to the device tree as defined
+in the (PAPR) Power Architecture Platform Requirements document.
+
+Juan
