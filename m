@@ -1,106 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54510 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750992AbdJLS3e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Oct 2017 14:29:34 -0400
-Date: Thu, 12 Oct 2017 13:29:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, bhelgaas@google.com,
-        benh@kernel.crashing.org, paulus@samba.org,
-        seroyer@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-Message-ID: <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
- <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
- <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
- <87efq92ei6.fsf@concordia.ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87efq92ei6.fsf@concordia.ellerman.id.au>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Qroj=BQ=codeaurora.org=tbaicar@kernel.org>
+Return-Path: <SRS0=Qroj=BQ=codeaurora.org=tbaicar@kernel.org>
+From: Tyler Baicar <tbaicar@codeaurora.org>
+To: bhelgaas@google.com,
+	helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Tyler Baicar <tbaicar@codeaurora.org>
+Subject: [PATCH] PCI/AER: update AER status string print to match other AER logs
+Date: Tue, 17 Oct 2017 09:42:02 -0600
+Message-Id: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 03:09:53PM +1100, Michael Ellerman wrote:
-> Bjorn Helgaas <helgaas@kernel.org> writes:
-> 
-> > On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:
-> >> This patch adds the machine dependent call for
-> >> pcibios_bus_add_device, since the previous patch
-> >> separated the calls out between the PowerNV and PowerVM.
-> >> 
-> >> The difference here is that for the PowerVM environment
-> >> we do not want match_driver set because in this environment
-> >> we do not want the VF device drivers to load immediately, due to
-> >> firmware loading the device node when VF device is assigned to the
-> >> logical partition.
-> >> 
-> >> This patch will depend on the patch linked below, which is under
-> >> review.
-> >> 
-> >> https://patchwork.kernel.org/patch/9882915/
-> >> 
-> >> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> >> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
-> >> ---
-> >>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
-> >>  1 file changed, 24 insertions(+)
-> >> 
-> >> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> >> index 6b812ad990e4..45946ee90985 100644
-> >> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-> >> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> >> @@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
-> >>  static DEFINE_SPINLOCK(slot_errbuf_lock);
-> >>  static int eeh_error_buf_size;
-> >>  
-> >> +void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
-> >> +{
-> >> +	struct pci_dn *pdn = pci_get_pdn(pdev);
-> >> +
-> >> +	if (!pdev->is_virtfn)
-> >> +		return;
-> >> +
-> >> +	pdn->device_id  =  pdev->device;
-> >> +	pdn->vendor_id  =  pdev->vendor;
-> >> +	pdn->class_code =  pdev->class;
-> >> +
-> >> +	/*
-> >> +	 * The following operations will fail if VF's sysfs files
-> >> +	 * aren't created or its resources aren't finalized.
-> >> +	 */
-> >> +	eeh_add_device_early(pdn);
-> >> +	eeh_add_device_late(pdev);
-> >> +	eeh_sysfs_add_device(pdev);
-> >> +	pdev->match_driver = -1;
-> >
-> > match_driver is a bool, which should be assigned "true" or "false".
-> 
-> Above he mentioned a dependency on:
-> 
->   [04/10] PCI: extend pci device match_driver state
->   https://patchwork.kernel.org/patch/9882915/
-> 
-> 
-> Which makes it an int.
+Currently the AER driver uses cper_print_bits() to print the AER status
+string. This causes the status string to not include the proper PCI device
+name prefix that the other AER prints include. Also, it has a different
+print level than all the other AER prints.
 
-Oh, right, I missed that, thanks.
+Update the AER driver to print the AER status string with the proper string
+prefix and proper print level.
 
-> Or has that patch been rejected or something?
+Previous log example:
 
-I haven't *rejected* it, but it's low on my priority list, so you
-shouldn't depend on it unless it adds functionality you really need.
-If I did apply that particular patch, I would want some rework because
-it currently obfuscates the match_driver logic.  There's no clue when
-reading the code what -1/0/1 mean.
+e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+Receiver Error, Bad TLP
+e1000e 0003:01:00.1: aer_layer=Physical Layer, aer_agent=Receiver ID
+pcieport 0003:00:00.0: aer_status: 0x00001000, aer_mask: 0x0000e000
+Replay Timer Timeout
+pcieport 0003:00:00.0: aer_layer=Data Link Layer, aer_agent=Transmitter ID
 
-Apparently here you *do* want the "-1 means the PCI core will never
-set match_driver to 1" functionality, so maybe you do depend on it.
+New log:
 
-If that's the case, how to you ever bind a driver to these VFs?  The
-changelog says you don't want VF drivers to load *immediately*, so I
-assume you do want them to load eventually.
+e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+e1000e 0003:01:00.1: Receiver Error
+e1000e 0003:01:00.1: Bad TLP
+e1000e 0003:01:00.1: aer_layer=Physical Layer, aer_agent=Receiver ID
+pcieport 0003:00:00.0: aer_status: 0x00001000, aer_mask: 0x0000e000
+pcieport 0003:00:00.0: Replay Timer Timeout
+pcieport 0003:00:00.0: aer_layer=Data Link Layer, aer_agent=Transmitter ID
 
-Bjorn
+Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
+---
+ drivers/pci/pcie/aer/aerdrv_errprint.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv_errprint.c b/drivers/pci/pcie/aer/aerdrv_errprint.c
+index 54c4b69..b718daa 100644
+--- a/drivers/pci/pcie/aer/aerdrv_errprint.c
++++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+@@ -206,6 +206,19 @@ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
++void dev_print_bits(struct pci_dev *dev, unsigned int bits,
++		    const char * const strs[], unsigned int strs_size)
++{
++	unsigned int i;
++
++	for (i = 0; i < strs_size; i++) {
++		if (!(bits & (1U << i)))
++			continue;
++		if (strs[i])
++			dev_err(&dev->dev, "%s\n", strs[i]);
++	}
++}
++
+ int cper_severity_to_aer(int cper_severity)
+ {
+ 	switch (cper_severity) {
+@@ -243,7 +256,7 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+ 	agent = AER_GET_AGENT(aer_severity, status);
+ 
+ 	dev_err(&dev->dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
+-	cper_print_bits("", status, status_strs, status_strs_size);
++	dev_print_bits(dev, status, status_strs, status_strs_size);
+ 	dev_err(&dev->dev, "aer_layer=%s, aer_agent=%s\n",
+ 		aer_error_layer[layer], aer_agent_string[agent]);
+ 
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
