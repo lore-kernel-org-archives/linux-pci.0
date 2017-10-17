@@ -1,174 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:5992 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751192AbdJaEYn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 00:24:43 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
-        <yinghai@kernel.org>, <david.daney@cavium.com>,
-        <Julia.Lawall@lip6.fr>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH V2 3/4] PCI: tegra: Apply sw fixups to support ASPM-L1 Sub-States
-Date: Tue, 31 Oct 2017 09:52:48 +0530
-Message-ID: <1509423769-10522-4-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
-References: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <SRS0=IxYi=BQ=cavium.com=Vadim.Lomovtsev@kernel.org>
+Return-Path: <SRS0=IxYi=BQ=cavium.com=Vadim.Lomovtsev@kernel.org>
+Date: Tue, 17 Oct 2017 04:29:24 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Wilson.Snyder@cavium.com,
+	alex.williamson@redhat.com, David Daney <david.daney@cavium.com>,
+	Manish Jaggi <mjaggi@caviumnetworks.com>,
+	vadim.lomovtsev@cavium.com
+Subject: Re: [PATCH v6] PCI: quirks: update Cavium ThunderX ACS quirk
+ implementation
+Message-ID: <20171017112924.GA2354@localhost.localdomain>
+References: <1506344920-24016-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20171016212320.GI25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171016212320.GI25517@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
-values to get them reflected in ASPM-L1 Sub-States capability registers
-Also adjusts internal counter values according to 19.2 MHz clk_m value
+On Mon, Oct 16, 2017 at 04:23:20PM -0500, Bjorn Helgaas wrote:
+Hi Bjorn,
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V2:
-* no change in this patch
+> [+cc David, Manish]
+> 
+> Please use a subject line that tells more about what's going on.
+> "Update quirk" doesn't really convey any useful information.
+> Something like "Apply Cavium ThunderX ACS quirk only to Root Ports".
+> 
+> On Wed, Sep 27, 2017 at 11:20:39AM -0700, Vadim Lomovtsev wrote:
+> > This commit makes Cavium PCI ACS quirk applicable only to Cavium
+> > ThunderX (CN8XXX) family PCIE Root Ports which has limited PCI capabilities
+> > in terms of no ACS support advertisement. However, the RTL internally
+> > implements similar protection as if ACS had completion/request redirection,
+> > upstream forwarding and validation features enabled.
+> > 
+> > Current quirk implementation doesn't take into account PCIERCs which
+> > also needs to be quirked. So the pci device id check mask is updated
+> > and check of device ID moved into separate function.
+> 
+> s/PCIE/PCIe/ above
+> 
+> s/PCIERCs/PCIe Root Ports/ (I assume, since usually a Root Complex
+> itself doesn't appear as a pci_dev)
+> 
+> > Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> > ---
+> > 	v5 -> v6: comment typo fix: change 0xa00 to 0xa000
+> > 
+> >  drivers/pci/quirks.c | 29 +++++++++++++++++++++--------
+> >  1 file changed, 21 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index a4d3361..ed6c76d 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4211,20 +4211,33 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+> >  #endif
+> >  }
+> >  
+> > -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +/*
+> > + * The Cavium downstream ports doesn't advertise their ACS capability registers.
+> > + * However, the RTL internally implements similar protection as if
+> > + * ACS had completion redirection, forwarding and validation features enabled.
+> > + * So by this flags we're asserting that the hardware implements and
+> > + * enables equivalent ACS functionality for these flags.
+> > + */
+> > +#define CAVIUM_CN8XXX_ACS_FLAGS (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF)
+> 
+> You are changing the set of flags, which isn't mentioned in the changelog.
+> I think the best thing would be to have two patches: one that changes the
+> set of flags and a second that changes the set of affected devices.
+> 
+> This set of flags was used twice in the original patch, so a #define made
+> sense.  But now you only use it once, so there's no benefit in adding the
+> #define, and adding it makes the change in the set of flags harder to see.
+> 
+> > +static __inline__  bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+> 
+> No need to use "__inline__" here.  This isn't performance critical,
+> and the compiler will probably inline it anyway because there's only
+> one use.
+>
+> >  {
+> >  	/*
+> > -	 * Cavium devices matching this quirk do not perform peer-to-peer
+> > -	 * with other functions, allowing masking out these bits as if they
+> > -	 * were unimplemented in the ACS capability.
+> > +	 * Effectively selects all downstream ports for whole ThunderX 1 family
+> > +	 * by 0xa000 mask (which represents 8 SoCs), while the lower bits of device ID
+> > +	 * are used to indicate which subdevice is used within the SoC.
+> 
+> Please wrap your comments so they fit in 80 columns.
+> 
+> >  	 */
+> > -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> > -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> > +	return (pci_is_pcie(dev) &&
+> > +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
+> > +		((dev->device & 0xf800) == 0xa000));
+> 
+> I'm just a little confused by the 0xa000 mask you refer to in the
+> comment, because the mask in the code is 0xf800.
 
- drivers/pci/host/pci-tegra.c | 65 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 65 insertions(+)
+Sorry for confusion, will correct it to 0xf800 for comment.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e1526cc5d381..08da67a82a2d 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -40,6 +40,7 @@
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
- #include <linux/pci.h>
-+#include <linux/pci-aspm.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/reset.h>
-@@ -191,6 +192,27 @@
- #define RP_PRIV_XP_DL	0x494
- #define  RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD	(0x1ff << 1)
- 
-+#define RP_L1_PM_SUBSTATES_CTL				0xC00
-+#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK		(0xFF << 8)
-+#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT		8
-+#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK		(0x3 << 16)
-+#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT		16
-+#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK		(0x1F << 19)
-+#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT		19
-+#define RP_L1_PM_SUBSTATES_CTL_HIDE_CAP			(0x1 << 24)
-+
-+#define RP_L1_PM_SUBSTATES_1_CTL			0xC04
-+#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
-+#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
-+
-+#define RP_L1_PM_SUBSTATES_2_CTL			0xC08
-+#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
-+#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY		0x4D
-+#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK	(0xFF << 13)
-+#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND		(0x13 << 13)
-+#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK	(0xF << 21)
-+#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP	(0x2 << 21)
-+
- #define RP_RX_HDR_LIMIT	0xe00
- #define  RP_RX_HDR_LIMIT_PW_MASK	(0xff << 8)
- #define  RP_RX_HDR_LIMIT_PW		(0x0e << 8)
-@@ -331,6 +353,7 @@ struct tegra_pcie_soc {
- 	bool program_deskew_time;
- 	bool updateFC_threshold;
- 	bool has_aspm_l1;
-+	bool has_aspm_l1ss;
- };
- 
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -423,6 +446,12 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
- 	return readl(pcie->pads + offset);
- }
- 
-+u32 pcie_aspm_get_ltr_l_1_2_threshold(void)
-+{
-+	/* LTR L1.2 Threshold = 55us for all ports */
-+	return ((0x37 << 16) | (0x02 << 29));
-+}
-+
- /*
-  * The configuration space mapping on Tegra is somewhat similar to the ECAM
-  * defined by PCIe. However it deviates a bit in how the 4 bits for extended
-@@ -2262,6 +2291,37 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
- 		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
- 		writel(value, port->base + RP_VEND_XP);
- 	}
-+
-+	if (soc->has_aspm_l1ss) {
-+		/* Set Common Mode Restore Time to 30us */
-+		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
-+		value &= ~RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK;
-+		value |= (0x1E << RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT);
-+		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
-+
-+		/* set T_Power_On to 70us */
-+		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
-+		value &= ~(RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK |
-+			RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK);
-+		value |= (1 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT) |
-+			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
-+		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
-+
-+		/* Following is based on clk_m being 19.2 MHz */
-+		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
-+		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
-+		value |= RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY;
-+		writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
-+
-+		value = readl(port->base + RP_L1_PM_SUBSTATES_2_CTL);
-+		value &= ~RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK;
-+		value |= RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY;
-+		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK;
-+		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND;
-+		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK;
-+		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP;
-+		writel(value, port->base + RP_L1_PM_SUBSTATES_2_CTL);
-+	}
- }
- /*
-  * FIXME: If there are no PCIe cards attached, then calling this function
-@@ -2403,6 +2463,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
- 	.has_aspm_l1 = false,
-+	.has_aspm_l1ss = false,
- };
- 
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2425,6 +2486,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
- 	.has_aspm_l1 = true,
-+	.has_aspm_l1ss = false,
- };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2446,6 +2508,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
- 	.has_aspm_l1 = true,
-+	.has_aspm_l1ss = false,
- };
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
-@@ -2475,6 +2538,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.program_deskew_time = true,
- 	.updateFC_threshold = true,
- 	.has_aspm_l1 = true,
-+	.has_aspm_l1ss = true,
- };
- 
- static const struct tegra_pcie_soc tegra186_pcie = {
-@@ -2497,6 +2561,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
- 	.has_aspm_l1 = true,
-+	.has_aspm_l1ss = true,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
--- 
-2.7.4
+> 
+> Previously the quirk applied to all Cavium device IDs in the range
+> 0xa000-0xa0ff.  Now it applies to device IDs in the range
+> 0xa000-0xa7ff, but only if they are PCIe Root Ports.  Right?
+
+Correct. Since this quirk is necessary for Root Ports only.
+
+Thanks for reply, I'll re-work this one accordingly to your comments and re-send v7.
+
+WBR,
+Vadim
+
+> 
+> > +}
+> >  
+> > -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+> > +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +{
+> > +	if (!pci_quirk_cavium_acs_match(dev))
+> >  		return -ENOTTY;
+> >  
+> > -	return acs_flags ? 0 : 1;
+> > +	return acs_flags & ~(CAVIUM_CN8XXX_ACS_FLAGS) ? 0 : 1;
+> >  }
+> >  
+> >  static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+> > -- 
+> > 2.4.11
+> > 
