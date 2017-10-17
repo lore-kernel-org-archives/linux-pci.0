@@ -1,68 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 17 Oct 2017 16:12:19 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+In-Reply-To: <CAPDyKFrMTSUHP86hnpHius2CDfv-ap4svGg=xgwAiH8pKj9Lvw@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1710171558170.1864-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <20171012205220.130048-1-briannorris@chromium.org>
-References: <20171012205220.130048-1-briannorris@chromium.org>
-From: Doug Anderson <dianders@chromium.org>
-Date: Thu, 12 Oct 2017 15:27:16 -0700
-Message-ID: <CAD=FV=VyERPq9yGE27Uvj6bs4Mru81gZAiqCOP=yQv3ai6-YDQ@mail.gmail.com>
-Subject: Re: [PATCH 0/3] PCI: rockchip: assert PERST# in S3
-To: Brian Norris <briannorris@chromium.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
- Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Rajat Jain <rajatja@google.com>, Frank Rowand <frowand.list@gmail.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, 17 Oct 2017, Ulf Hansson wrote:
 
-On Thu, Oct 12, 2017 at 1:52 PM, Brian Norris <briannorris@chromium.org> wrote:
-> Hi,
->
-> This patch series should mostly be self-descriptive, but it's motivated by the
-> fact that I've found differing requirements from PCIe endpoint makers regarding
-> the state of PERST# when in system suspend (S3). Additionally, some existing
-> boards are not especially well suited for holding PERST# low in S3 (e.g., the
-> pin is driven by a non-PMU GPIO, so it's hard or impossible to keep it
-> asserted). So the solution is...give it a device tree property!
->
-> Brian
->
-> Brian Norris (3):
->   Documentation/devicetree: Add pcie-reset-suspend property
->   of/pci: Add of_pci_get_pcie_reset_suspend() to parse
->     pcie-reset-suspend
->   PCI: rockchip: Support configuring PERST# state via DT
->
->  Documentation/devicetree/bindings/pci/pci.txt | 11 +++++++++++
->  drivers/of/of_pci.c                           | 25 +++++++++++++++++++++++++
->  drivers/pci/host/pcie-rockchip.c              |  7 +++++++
->  include/linux/of_pci.h                        |  7 +++++++
->  4 files changed, 50 insertions(+)
+> > These functions are wrong, however, because they attempt to reuse the
+> > whole callback *path* instead of just reusing driver callbacks.  The
+> > *only* reason why it all "works" is because there are no middle layer
+> > callbacks involved in that now.
+> >
+> > If you changed them to reuse driver callbacks only today, nothing would break
+> > AFAICS.
+> 
+> Yes, it would.
+> 
+> First, for example, the amba bus is responsible for the amba bus
+> clock, but relies on drivers to gate/ungate it during system sleep. In
+> case the amba drivers don't use the pm_runtime_force_suspend|resume(),
+> it will explicitly have to start manage the clock during system sleep
+> themselves. Leading to open coding.
 
-I'm nowhere near an expert on PCIe, but overall the series seems sane
-to me.  ...and I'd agree that the discussions I've seen from different
-vendors seem to have different opinions about what we should do with
-this line in S3.  ...so FWIW:
+I think what Rafael has in mind is that the PM core will call the amba
+bus's ->suspend callback, and that routine will then be able to call
+the amba driver's runtime_suspend routine directly, if it wants to --
+as opposed to going through pm_runtime_force_suspend.
 
-Reviewed-by: Douglas Anderson <dianders@chromium.org>
+However, it's not clear whether this fully answers your concerns.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Second, it will introduce a regression in behavior for all users of
+> pm_runtime_force_suspend|resume(), especially during system resume as
+> the driver may then end up resuming the device even in case it isn't
+> needed. I believe I have explained why, also several times by now -
+> and that's also how far you could take the i2c designware driver at
+> this point.
+> 
+> That said, I assume the second part may be addressed in this series,
+> if these drivers convert to use the "driver PM flags", right?
+
+Presumably.
+
+The problem is how to handle things which need to be treated
+differently for runtime PM vs. system suspend vs. hibernation.  If
+everything filters through a runtime_suspend routine, that doesn't
+leave any scope for handling the different kinds of PM transitions
+differently.  Instead, we can make the middle layer (i.e., the bus-type
+callbacks) take care of the varying tasks, and they can directly invoke
+a driver's runtime-PM callbacks to handle all the common activities.  
+If that's how the middle layer wants to do it.
+
+> However, what about the first case? Is some open coding needed or your
+> think the amba driver can instruct the amba bus via the "driver PM
+> flags"?
+
+PM flags won't directly be able to cover things like disabling clocks.  
+But they could be useful for indicating explicitly whether the code to
+take care of those things needs to reside at the driver layer or at the
+bus layer.
+
+Alan Stern
