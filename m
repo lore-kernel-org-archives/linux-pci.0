@@ -1,61 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:51628 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751138AbdJNWHv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 14 Oct 2017 18:07:51 -0400
-Received: by mail-qk0-f194.google.com with SMTP id 17so8837343qkq.8
-        for <linux-pci@vger.kernel.org>; Sat, 14 Oct 2017 15:07:51 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH 5/5] PCI: xilinx-nwl: Fix platform_get_irq() error handling
-Date: Sat, 14 Oct 2017 19:07:31 -0300
-Message-Id: <1508018851-9272-5-git-send-email-festevam@gmail.com>
-In-Reply-To: <1508018851-9272-1-git-send-email-festevam@gmail.com>
-References: <1508018851-9272-1-git-send-email-festevam@gmail.com>
+Received: from mail-sn1nam01on0136.outbound.protection.outlook.com ([104.47.32.136]:36446
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754212AbdJQSgZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Oct 2017 14:36:25 -0400
+From: Casey Leedom <leedom@chelsio.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+CC: "Komali  Katari" <komali@chelsio.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
+ drivers when VFs are attached to VMs ...
+Date: Tue, 17 Oct 2017 18:36:21 +0000
+Message-ID: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When platform_get_irq() fails we should propagate the real error value
-instead of always returning -EINVAL.
+Hi there,
 
-Cc: Michal Simek <michal.simek@xilinx.com>
-Signed-off-by: Fabio Estevam <festevam@gmail.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+  I hope this is the right Linux list for this issue.  One of our QA staff
+has noticed a new behavior starting about 4.14.0-rc3.  We instantiate PCIe
+SR-IOV Virtual Functions and the corresponding driver (cxgb4vf in this case=
+)
+is automatically loaded.  That's fine and has been the case for some time.
+But, we remove the driver module (rmmod cxgb4vf) and then attach one of the
+VFs to a KVM Virtual Machine and the cxgb4vf driver module gets reloaded in
+the KVM Hypervisor.  This is new behavior.  I see that there was a pretty
+big change done by Luis R. Rodriguez in kernel.org commit revision 2355869
+but we haven't yet isolated the new behavior to that commit.  That'll be ou=
+r
+next test but I wanted to get this out there for comment.
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 65dea98..b896167 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -591,7 +591,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie)
- 	msi->irq_msi1 = platform_get_irq_byname(pdev, "msi1");
- 	if (msi->irq_msi1 < 0) {
- 		dev_err(dev, "failed to get IRQ#%d\n", msi->irq_msi1);
--		ret = -EINVAL;
-+		ret = msi->irq_msi1;
- 		goto err;
- 	}
- 
-@@ -602,7 +602,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie)
- 	msi->irq_msi0 = platform_get_irq_byname(pdev, "msi0");
- 	if (msi->irq_msi0 < 0) {
- 		dev_err(dev, "failed to get IRQ#%d\n", msi->irq_msi0);
--		ret = -EINVAL;
-+		ret = msi->irq_msi0;
- 		goto err;
- 	}
- 
-@@ -735,7 +735,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
- 	if (pcie->irq_misc < 0) {
- 		dev_err(dev, "failed to get misc IRQ %d\n",
- 			pcie->irq_misc);
--		return -EINVAL;
-+		return pcie->irq_misc;
- 	}
- 
- 	err = devm_request_irq(dev, pcie->irq_misc,
--- 
-2.7.4
+Casey=
