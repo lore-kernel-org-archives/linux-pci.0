@@ -1,102 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:43325 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756925AbdJQXRO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 19:17:14 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-Date: Wed, 18 Oct 2017 01:07:35 +0200
-Message-ID: <2098332.bUT5UI0m5H@aspire.rjw.lan>
-In-Reply-To: <Pine.LNX.4.44L0.1710171558170.1864-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1710171558170.1864-100000@iolanthe.rowland.org>
+Return-Path: <SRS0=Qroj=BQ=codeaurora.org=tbaicar@kernel.org>
+Return-Path: <SRS0=Qroj=BQ=codeaurora.org=tbaicar@kernel.org>
+Subject: Re: [PATCH] PCI/AER: update AER status string print to match other
+ AER logs
+To: David Laight <David.Laight@ACULAB.COM>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "helgaas@kernel.org" <helgaas@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
+ <063D6719AE5E284EB5DD2968C1650D6DD0099999@AcuExch.aculab.com>
+From: Tyler Baicar <tbaicar@codeaurora.org>
+Message-ID: <afd74efa-96eb-3597-7323-a110f53e221b@codeaurora.org>
+Date: Tue, 17 Oct 2017 13:13:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD0099999@AcuExch.aculab.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 17, 2017 10:12:19 PM CEST Alan Stern wrote:
-> On Tue, 17 Oct 2017, Ulf Hansson wrote:
-> 
-> > > These functions are wrong, however, because they attempt to reuse the
-> > > whole callback *path* instead of just reusing driver callbacks.  The
-> > > *only* reason why it all "works" is because there are no middle layer
-> > > callbacks involved in that now.
-> > >
-> > > If you changed them to reuse driver callbacks only today, nothing would break
-> > > AFAICS.
-> > 
-> > Yes, it would.
-> > 
-> > First, for example, the amba bus is responsible for the amba bus
-> > clock, but relies on drivers to gate/ungate it during system sleep. In
-> > case the amba drivers don't use the pm_runtime_force_suspend|resume(),
-> > it will explicitly have to start manage the clock during system sleep
-> > themselves. Leading to open coding.
-> 
-> I think what Rafael has in mind is that the PM core will call the amba
-> bus's ->suspend callback, and that routine will then be able to call
-> the amba driver's runtime_suspend routine directly, if it wants to --
-> as opposed to going through pm_runtime_force_suspend.
+On 10/17/2017 12:00 PM, David Laight wrote:
+> From: Tyler Baicar
+>> Sent: 17 October 2017 16:42
+>> Currently the AER driver uses cper_print_bits() to print the AER status
+>> string. This causes the status string to not include the proper PCI device
+>> name prefix that the other AER prints include. Also, it has a different
+>> print level than all the other AER prints.
+>>
+>> Update the AER driver to print the AER status string with the proper string
+>> prefix and proper print level.
+>>
+>> Previous log example:
+>>
+>> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+>> Receiver Error, Bad TLP
+> ...
+>> New log:
+>>
+>> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+>> e1000e 0003:01:00.1: Receiver Error
+>> e1000e 0003:01:00.1: Bad TLP
+> Wouldn't it be better to manage to print the above all on 1 line?
+Hello David,
 
-Right in general.
+I broke them up into separate lines to simplify the code. If you look at 
+cper_print_bits(),
+it is not a clean solution and involves some hard coded values to try to limit 
+the lines to
+80 characters.
 
-> However, it's not clear whether this fully answers your concerns.
+http://elixir.free-electrons.com/linux/v4.14-rc5/source/drivers/firmware/efi/cper.c#L85
 
-Well, in the particular AMBA case fixing this should be quite straightforward.
-
-> > Second, it will introduce a regression in behavior for all users of
-> > pm_runtime_force_suspend|resume(), especially during system resume as
-> > the driver may then end up resuming the device even in case it isn't
-> > needed. I believe I have explained why, also several times by now -
-> > and that's also how far you could take the i2c designware driver at
-> > this point.
-> > 
-> > That said, I assume the second part may be addressed in this series,
-> > if these drivers convert to use the "driver PM flags", right?
-> 
-> Presumably.
-> 
-> The problem is how to handle things which need to be treated
-> differently for runtime PM vs. system suspend vs. hibernation.  If
-> everything filters through a runtime_suspend routine, that doesn't
-> leave any scope for handling the different kinds of PM transitions
-> differently.  Instead, we can make the middle layer (i.e., the bus-type
-> callbacks) take care of the varying tasks, and they can directly invoke
-> a driver's runtime-PM callbacks to handle all the common activities.  
-> If that's how the middle layer wants to do it.
-
-Well, that's what happens today, except that driver runtime PM callbacks
-are not directly invoked.  Actually, I tried to implement that, but it was
-so ugly and fragile that I gave up.
-
-It really is better if drivers point the different callback pointers to the
-same rountine if they want to reuse it.
-
-> > However, what about the first case? Is some open coding needed or your
-> > think the amba driver can instruct the amba bus via the "driver PM
-> > flags"?
-> 
-> PM flags won't directly be able to cover things like disabling clocks.  
-> But they could be useful for indicating explicitly whether the code to
-> take care of those things needs to reside at the driver layer or at the
-> bus layer.
-
-Right.
+I think printing one error per line in this case is a better solution since the 
+code is much
+cleaner. If you would like me to add this code to print them in a list and limit 
+the lines
+to 80 characters I can add that in though.
+>
+> ...
+>> index 54c4b69..b718daa 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_errprint.c
+>> @@ -206,6 +206,19 @@ void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+>>   }
+>>
+>>   #ifdef CONFIG_ACPI_APEI_PCIEAER
+>> +void dev_print_bits(struct pci_dev *dev, unsigned int bits,
+>> +		    const char * const strs[], unsigned int strs_size)
+> static and rename to aer_print_bits since this isn't a generic 'dev'
+> function.
+Will do.
 
 Thanks,
-Rafael
+Tyler
+
+--
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
