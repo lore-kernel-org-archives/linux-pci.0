@@ -1,82 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:56431 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932294AbdJ3JhB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Oct 2017 05:37:01 -0400
-Subject: Re: [PATCH V2 04/12] PCI: tegra: Advertise AER capability
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
- <1509337143-25963-5-git-send-email-mmaddireddy@nvidia.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <04b11c1b-270f-d335-185f-d3bc40133f7b@kapsi.fi>
-Date: Mon, 30 Oct 2017 11:36:59 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 17 Oct 2017 14:28:39 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: LKML <linux-kernel@vger.kernel.org>
+cc: Dexuan Cui <decui@microsoft.com>, x86@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        linux-pci@vger.kernel.org, devel@linuxdriverproject.org,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Mihai Costache <v-micos@microsoft.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>
+Subject: Re: [patch 2/3] PCI/MSI: Set MSI_FLAG_MUST_REACTIVATE in core code
+In-Reply-To: <20171017075600.448649905@linutronix.de>
+Message-ID: <alpine.DEB.2.20.1710171416240.1932@nanos>
+References: <20171017075456.694047687@linutronix.de> <20171017075600.448649905@linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <1509337143-25963-5-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30.10.2017 06:18, Manikanta Maddireddy wrote:
-> Default root port settings hide AER capability. This patch enables the
-> advertisement of AER capability by root port.
+On Tue, 17 Oct 2017, Thomas Gleixner wrote:
 
-Can you open/explain the term AER in the commit message?
-
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> If interrupt reservation mode is enabled then the PCI/MSI interrupts must
+> be reactivated after early activation.
+> 
+> Make sure that all callers of pci_msi_create_irq_domain() have the
+> MSI_FLAG_MUST_REACTIVATE set when reservation mode is enabled.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 > ---
-> V2:
-> * no change in this patch
->
->  drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 9f6d331c3571..2a7665a9ce5b 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -187,6 +187,9 @@
->  #define RP_VEND_XP	0x00000f00
->  #define  RP_VEND_XP_DL_UP	(1 << 30)
->
-> +#define RP_VEND_CTL1	0xf48
-> +#define  RP_VEND_CTL1_ERPT	(1 << 13)
-> +
->  #define RP_VEND_CTL2 0x00000fa8
->  #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
->
-> @@ -2055,6 +2058,16 @@ static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
->  		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
->  }
->
-> +static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
-> +{
-> +	unsigned long value;
-> +
-> +	/* Enable AER capability */
-> +	value = readl(port->base + RP_VEND_CTL1);
-> +	value |= RP_VEND_CTL1_ERPT;
-> +	writel(value, port->base + RP_VEND_CTL1);
-> +}
-> +
->  /*
->   * FIXME: If there are no PCIe cards attached, then calling this function
->   * can result in the increase of the bootup time as there are big timeout
-> @@ -2119,6 +2132,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->  			 port->index, port->lanes);
->
->  		tegra_pcie_port_enable(port);
-> +		tegra_pcie_enable_rp_features(port);
+>  drivers/pci/msi.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1441,6 +1441,8 @@ struct irq_domain *pci_msi_create_irq_do
+>  		pci_msi_domain_update_chip_ops(info);
+>  
+>  	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
+> +	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION))
 
-I would prefer writing the register in-line here instead of in a 
-separate function, since the operation is so simple. Having a separate 
-function adds some complexity.
+Bah. quilt refresh seems overrated. Correct patch below.
 
->  	}
->
->  	/* take the PCIe interface module out of reset */
->
+Thanks,
+
+	tglx
+
+8<----------------
+
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1441,6 +1441,8 @@ struct irq_domain *pci_msi_create_irq_do
+ 		pci_msi_domain_update_chip_ops(info);
+ 
+ 	info->flags |= MSI_FLAG_ACTIVATE_EARLY;
++	if (IS_ENABLED(CONFIG_GENERIC_IRQ_RESERVATION_MODE))
++		info->flags |= MSI_FLAG_MUST_REACTIVATE;
+ 
+ 	domain = msi_create_irq_domain(fwnode, info, parent);
+ 	if (!domain)
