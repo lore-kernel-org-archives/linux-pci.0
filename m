@@ -1,117 +1,38 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Trent Piepho <tpiepho@impinj.com>
-To: linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
- linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] PCI: imx6: Check for link training status in link up check
-Date: Mon, 16 Oct 2017 17:11:59 -0700
-Message-Id: <20171017001159.109152-2-tpiepho@impinj.com>
-In-Reply-To: <20171017001159.109152-1-tpiepho@impinj.com>
-References: <20171017001159.109152-1-tpiepho@impinj.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f170.google.com ([209.85.223.170]:54760 "EHLO
+        mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933143AbdJQQWZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 12:22:25 -0400
+Received: by mail-io0-f170.google.com with SMTP id e89so2872406ioi.11
+        for <linux-pci@vger.kernel.org>; Tue, 17 Oct 2017 09:22:24 -0700 (PDT)
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Lucas Stach <l.stach@pengutronix.de>, Trent Piepho <tpiepho@impinj.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1508242263-73684-1-git-send-email-weiyongjun1@huawei.com>
+References: <1508242263-73684-1-git-send-email-weiyongjun1@huawei.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 17 Oct 2017 18:22:23 +0200
+Message-ID: <CACRpkdZFykqQ+SoO1NSJrXcPxGbQQmL2_-Fk4n31yQ5N4LcsPQ@mail.gmail.com>
+Subject: Re: [PATCH -next] PCI: faraday: Fix wrong pointer passed to PTR_ERR()
+To: Wei Yongjun <weiyongjun1@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+        Brian Norris <briannorris@chromium.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes a regression introduced in merge 562df5c8521e.
+On Tue, Oct 17, 2017 at 2:11 PM, Wei Yongjun <weiyongjun1@huawei.com> wrote:
 
-Prior to this the link up check done by imx6_pcie_wait_for_link()
-consisted of a polling loop on imx6_pcie_link_up() (via the former
-calling dw_pcie_link_up() which called the latter as callback), and
-imx6_pcie_link_up() polled the link status register checking for link
-up *and link not still training*.
+> PTR_ERR should access the value just tested by IS_ERR, otherwise
+> the wrong error code will be returned.
+>
+> Fixes: 2eeb02b28579 ("PCI: faraday: Add clock handling")
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 
-This was a polling loop inside another polling loop.  And the outermost
-loop was duplicated with minor variations in a number of other dwc based
-host drivers.
+Whoops, thanks!
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-This was addressed in two commits.  Commit 4d107d3b5a68 ("PCI: imx6: Move
-link up check into imx6_pcie_wait_for_link()"), changed
-imx6_pcie_wait_for_link() to poll the link status register directly,
-checking for link up and not training, and made imx6_pcie_link_up() only
-check the link up bit (once, not a polling loop).
-
-While commit commit 886bc5ceb5cc ("PCI: designware: Add generic
-dw_pcie_wait_for_link()"), replaced the loop in imx6_pcie_wait_for_link()
-with a call to a new dwc core function, which polled imx6_pcie_link_up(),
-which still checked both link up and not training in a loop.
-
-When these two commits were merged, the version of
-imx6_pcie_wait_for_link() from '886 was kept, which eliminated the link
-training check placed there by '4d1.  But the version of
-imx6_pcie_link_up() from '4d1 was kept, which eliminated the link training
-check that had been there and was moved to imx6_pcie_wait_for_link().
-
-There result is no link training check.
-
-Then commit dac29e6c5460 ("PCI: designware: Add default link up check if
-sub-driver doesn't override") added a link training check to the default
-version of dw_pcie_link_up(), but since imx6 uses imx6_pcie_link_up() it
-does not use the default version with this fix.
-
-This commit eliminates imx6_pcie_link_up() so that the default
-dw_pcie_link_up() is used.  The default has the correct code and is what
-the imx6 driver used to do.
-
-Fixes: 562df5c8521e1371f3cbd0b7b868034da376d714
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Trent Piepho <tpiepho@impinj.com>
----
- drivers/pci/dwc/pci-imx6.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index b73483534a5b..1f1069b70e45 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -83,8 +83,6 @@ struct imx6_pcie {
- #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
--#define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
--#define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
- 
- #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
- #define PCIE_PHY_CTRL_DATA_LOC 0
-@@ -653,12 +651,6 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- 
--static int imx6_pcie_link_up(struct dw_pcie *pci)
--{
--	return dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1) &
--			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
--}
--
- static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
- 	.host_init = imx6_pcie_host_init,
- };
-@@ -701,7 +693,7 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- }
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
--	.link_up = imx6_pcie_link_up,
-+	/* No special ops needed, but pcie-designware still expects this struct */
- };
- 
- static int imx6_pcie_probe(struct platform_device *pdev)
--- 
-2.13.6
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yours,
+Linus Walleij
