@@ -1,70 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Simon Horman <horms@verge.net.au>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH] PCI: rcar: Use common error handling code in
- rcar_pcie_enable_msi()
-Message-ID: <c598933b-b14f-91a1-c7a3-f4a46ec98e77@users.sourceforge.net>
-Date: Mon, 30 Oct 2017 08:35:30 +0100
+Return-Path: <SRS0=A4lV=BQ=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=A4lV=BQ=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+To: Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        seroyer@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>, jjalvare@linux.vnet.ibm.com
+References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
+ <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
+ <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+ <87efq92ei6.fsf@concordia.ellerman.id.au>
+ <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+ <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
+ <87r2u2jvfb.fsf@concordia.ellerman.id.au>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Tue, 17 Oct 2017 09:11:01 -0500
 MIME-Version: 1.0
+In-Reply-To: <87r2u2jvfb.fsf@concordia.ellerman.id.au>
 Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Message-Id: <3507ee2e-00ee-7bd0-36a3-292af5112734@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Mon, 30 Oct 2017 08:28:06 +0100
+Adding Juan back into the cc: jjalvare@linux.vnet.ibm.com
 
-Adjust a jump target so that a specific error message is stored only once
-at the end of this function implementation.
-Replace two calls of the function "dev_err" by goto statements.
 
-This issue was detected by using the Coccinelle software.
+On 10/16/17 10:38 PM, Michael Ellerman wrote:
+> "Bryant G. Ly" <bryantly@linux.vnet.ibm.com> writes:
+>> On 10/12/17 1:29 PM, Bjorn Helgaas wrote:
+> ...
+>>> If that's the case, how to you ever bind a driver to these VFs?  The
+>>> changelog says you don't want VF drivers to load *immediately*, so I
+>>> assume you do want them to load eventually.
+>>>
+>> The VF's that get dynamically created within the configure SR-IOV call, 
+>> on the Pseries Platform, wont be matched with a driver. - We do not
+>> want it to match.
+>>
+>> The Power Hypervisor will load the VFs. The VF's will get assigned(by 
+>> the user) > via the HMC or Novalink in this environment which will
+>> then trigger PHYP to load the VF device node to the device tree.
+> What about the other "Power Hypervisor"? ie. KVM running on Power.
+This path is only exercised when configuring SR-IOV for Pseries LPAR,
+therefore it will not affect PowerNV or KVM(opal). Which is the reason for
+the separation of calls to the machine dependent stuff.
+> We also use the pseries platform when running under KVM.
+>
+> cheers
+>
+If anyone plans to enable SR-IOV on Pseries platform, firmware must provide the
+resources to enable the VFs and map them with system resources. A new version
+of the PAPR Document will be added to document these system resources. Lastly,
+we were not aware that there is an intention to enable SR-IOV in adapters assigned
+to a VM with Pseries running on KVM. Furthermore, this could be left as a todo
+for the future if this type of configuration is needed.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/pci/host/pcie-rcar.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 12796eccb2be..38101f8bebf1 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -873,18 +873,14 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- 	err = devm_request_irq(dev, msi->irq1, rcar_pcie_msi_irq,
- 			       IRQF_SHARED | IRQF_NO_THREAD,
- 			       rcar_msi_irq_chip.name, pcie);
--	if (err < 0) {
--		dev_err(dev, "failed to request IRQ: %d\n", err);
--		goto err;
--	}
-+	if (err < 0)
-+		goto report_request_failure;
- 
- 	err = devm_request_irq(dev, msi->irq2, rcar_pcie_msi_irq,
- 			       IRQF_SHARED | IRQF_NO_THREAD,
- 			       rcar_msi_irq_chip.name, pcie);
--	if (err < 0) {
--		dev_err(dev, "failed to request IRQ: %d\n", err);
--		goto err;
--	}
-+	if (err < 0)
-+		goto report_request_failure;
- 
- 	/* setup MSI data target */
- 	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-@@ -898,7 +894,8 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- 
- 	return 0;
- 
--err:
-+report_request_failure:
-+	dev_err(dev, "failed to request IRQ: %d\n", err);
- 	irq_domain_remove(msi->domain);
- 	return err;
- }
--- 
-2.14.3
+-Bryant
