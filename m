@@ -1,49 +1,134 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 20 Oct 2017 13:28:45 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59742 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753783AbdJQRHz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Oct 2017 13:07:55 -0400
+Date: Tue, 17 Oct 2017 12:07:54 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Subject: Re: [PATCHv2 0/2] PCI: layerscape: add fixes for layerscape-pcie
- errata
-Message-ID: <20171020182845.GM6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171012094448.31217-1-Zhiqiang.Hou@nxp.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linuxppc-dev@lists.ozlabs.org,
+        David Gibson <david@gibson.dropbear.id.au>,
+        kvm-ppc@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Russell Currey <ruscur@russell.cc>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH kernel v2] powerpc/powernv: Reserve a hole which appears
+ after enabling IOV
+Message-ID: <20171017170754.GD5641@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170927065231.20382-1-aik@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <20171012094448.31217-1-Zhiqiang.Hou@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: roy.zang@nxp.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- minghuan.lian@nxp.com, linux-arm-kernel@lists.infradead.org,
- bhelgaas@google.com, mingkai.hu@nxp.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170927065231.20382-1-aik@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 05:44:46PM +0800, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Wed, Sep 27, 2017 at 04:52:31PM +1000, Alexey Kardashevskiy wrote:
+> In order to make generic IOV code work, the physical function IOV BAR
+> should start from offset of the first VF. Since M64 segments share
+> PE number space across PHB, and some PEs may be in use at the time
+> when IOV is enabled, the existing code shifts the IOV BAR to the index
+> of the first PE/VF. This creates a hole in IOMEM space which can be
+> potentially taken by some other device.
 > 
-> The [1/2] is to fix layerscape PCIe MSI/MSI-X capability errata.
-> The [2/2] is to change the default AXI system error response behavior
-> for PCI Express outbound non-posted requests.
+> This reserves a temporary hole on a parent and releases it when IOV is
+> disabled; the temporary resources are stored in pci_dn to avoid
+> kmalloc/free.
 > 
-> Hou Zhiqiang (1):
->   PCI: Disable MSI for Freescale PCIe RC mode
-> 
-> Minghuan Lian (1):
->   pci/layerscape: change the default error response behavior
-> 
->  drivers/pci/dwc/pci-layerscape.c | 11 +++++++++++
->  drivers/pci/quirks.c             |  8 ++++++++
->  2 files changed, 19 insertions(+)
+> Cc: linux-pci@vger.kernel.org
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 
-Applied to pci/host-layerscape for v4.15, thanks!
+Looks good to me.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I assume this will be merged via the powerpc branch.
+
+> ---
+> 
+> I assume this goes to powerpc next branch but before this I'd like to
+> get Bjorn's opinion as he continously commented on this bit.
+> 
+> This is the diff in /proc/iomem:
+> 
+> @@ -11,6 +11,7 @@
+>          200800000000-200bffffffff : 0000:04:00.0
+>  210000000000-21fdffffffff : /pciex@3fffe40100000
+>    210000000000-21fdfff0ffff : PCI Bus 0001:01
+> +    210000000000-210009ffffff : pnv_iov_reserved
+>      21000a000000-2101ffffffff : 0001:01:00.0
+>        21000a000000-21000bffffff : 0001:01:00.2
+>          21000a000000-21000bffffff : mlx5_core
+> 
+> ---
+> Changes:
+> v2:
+> * changed order - now devm_release_resource() is called before
+> pci_update_resource(). Strangely the opposite did not produce a warning
+> but still
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h     |  1 +
+>  arch/powerpc/platforms/powernv/pci-ioda.c | 24 +++++++++++++++++++++---
+>  2 files changed, 22 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 0b8aa1fe2d5f..62ed83db04ae 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -218,6 +218,7 @@ struct pci_dn {
+>  #endif
+>  	struct list_head child_list;
+>  	struct list_head list;
+> +	struct resource holes[PCI_SRIOV_NUM_BARS];
+>  };
+>  
+>  /* Get the pointer to a device_node's pci_dn */
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 57f9e55f4352..d66a758b8efb 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -1002,9 +1002,12 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>  	}
+>  
+>  	/*
+> -	 * After doing so, there would be a "hole" in the /proc/iomem when
+> -	 * offset is a positive value. It looks like the device return some
+> -	 * mmio back to the system, which actually no one could use it.
+> +	 * Since M64 BAR shares segments among all possible 256 PEs,
+> +	 * we have to shift the beginning of PF IOV BAR to make it start from
+> +	 * the segment which belongs to the PE number assigned to the first VF.
+> +	 * This creates a "hole" in the /proc/iomem which could be used for
+> +	 * allocating other resources so we reserve this area below and
+> +	 * release when IOV is released.
+>  	 */
+>  	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+>  		res = &dev->resource[i + PCI_IOV_RESOURCES];
+> @@ -1018,7 +1021,22 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
+>  		dev_info(&dev->dev, "VF BAR%d: %pR shifted to %pR (%sabling %d VFs shifted by %d)\n",
+>  			 i, &res2, res, (offset > 0) ? "En" : "Dis",
+>  			 num_vfs, offset);
+> +
+> +		if (offset < 0) {
+> +			devm_release_resource(&dev->dev, &pdn->holes[i]);
+> +			memset(&pdn->holes[i], 0, sizeof(pdn->holes[i]));
+> +		}
+> +
+>  		pci_update_resource(dev, i + PCI_IOV_RESOURCES);
+> +
+> +		if (offset > 0) {
+> +			pdn->holes[i].start = res2.start;
+> +			pdn->holes[i].end = res2.start + size * offset - 1;
+> +			pdn->holes[i].flags = IORESOURCE_BUS;
+> +			pdn->holes[i].name = "pnv_iov_reserved";
+> +			devm_request_resource(&dev->dev, res->parent,
+> +					&pdn->holes[i]);
+> +		}
+>  	}
+>  	return 0;
+>  }
+> -- 
+> 2.11.0
+> 
