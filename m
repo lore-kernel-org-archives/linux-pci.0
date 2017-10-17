@@ -1,66 +1,95 @@
-Return-Path: <SRS0=pqNZ=BI=arm.com=will.deacon@kernel.org>
-Return-Path: <SRS0=pqNZ=BI=arm.com=will.deacon@kernel.org>
-Date: Mon, 9 Oct 2017 17:46:07 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Leif Lindholm <leif.lindholm@linaro.org>,
-	Graeme Gregory <graeme.gregory@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: pci-host-generic: add support for Synopsys
- DesignWare RC in ECAM mode
-Message-ID: <20171009164607.GD30085@arm.com>
-References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
- <20171006163919.14898-2-ard.biesheuvel@linaro.org>
- <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54786 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932914AbdJQQ0Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 17 Oct 2017 12:26:25 -0400
+Date: Tue, 17 Oct 2017 11:26:21 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steven Royer <seroyer@linux.vnet.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com,
+        benh@kernel.crashing.org, paulus@samba.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>,
+        Eli Cohen <eli@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+Message-ID: <20171017162621.GB5641@bhelgaas-glaptop.roam.corp.google.com>
+References: <87efq92ei6.fsf@concordia.ellerman.id.au>
+ <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+ <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
+ <20171013033456.GC25517@bhelgaas-glaptop.roam.corp.google.com>
+ <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
+ <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
+ <20171013120558.1a129183@t450s.home>
+ <24fdec01-8df4-f027-0b3c-0472a2d73946@linux.vnet.ibm.com>
+ <20171017135123.GA5641@bhelgaas-glaptop.roam.corp.google.com>
+ <7e23c703-750b-b4f8-f252-0c872a40ae8a@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171006232158.GI25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <7e23c703-750b-b4f8-f252-0c872a40ae8a@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 06, 2017 at 06:21:59PM -0500, Bjorn Helgaas wrote:
-> On Fri, Oct 06, 2017 at 05:39:18PM +0100, Ard Biesheuvel wrote:
-> > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> > index 7d709a7e0aa8..01e81a30e303 100644
-> > --- a/drivers/pci/host/pci-host-generic.c
-> > +++ b/drivers/pci/host/pci-host-generic.c
-> > @@ -35,6 +35,43 @@ static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
-> >  	}
-> >  };
-> >  
-> > +static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
-> > +				   int size, u32 *val)
-> > +{
-> > +	struct pci_config_window *cfg = bus->sysdata;
-> > +
-> > +	/*
-> > +	 * The Synopsys DesignWare PCIe controller in ECAM mode will not filter
-> > +	 * type 0 config TLPs sent to devices 1 and up on its downstream port,
-> > +	 * resulting in devices appearing multiple times on bus 0 unless we
-> > +	 * filter out those accesses here.
-> > +	 */
-> > +	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
-> > +		return PCIBIOS_DEVICE_NOT_FOUND;
+On Tue, Oct 17, 2017 at 09:33:34AM -0500, Juan Alvarez wrote:
+> On 10/17/17 8:51 AM, Bjorn Helgaas wrote:
+> > This is where I get confused.  I guess the Linux that sets
+> > PCI_SRIOV_CTRL_VFE to enable the VFs can also perform config accesses
+> > to the VFs, since it can enumerate them and build pci_dev structs for
+> > them, right?
 > 
-> I think we should return 0xffffffff data here, as we do in other
-> similar accessors (dw_pcie_rd_conf(), altera_pcie_cfg_read(),
-> rockchip_pcie_rd_conf()).
+> Correct, we are not changing anything related to how the VF gets initialized
+> in the kernel.
+> >
+> > And the Linux in the "Hosting Partition" is a guest that cannot see a
+> > VF until a management console attaches the VF to the Hosting
+> > Partition?  
 > 
-> Actually, xilinx-nwl has a nice trick: it implements
-> nwl_pcie_map_bus(), which returns NULL for invalid devices.  Then it
-> can use the generic accessors, and pci_generic_config_read() already
-> fills in ~0 for this case. 
+> Correct, this is how PHYP does normal adapter assignment.
 > 
-> What do you think of the following?  I put it on my pci/host-generic
-> branch for now (pending your response and an ack from Will).
+> > I'm not a VFIO or KVM expert but that sounds vaguely like
+> > what they would do when assigning a VF to a guest.
+>
+> I do not know the specifics on VFIO and KVM. However, in this
+> case there is no KVM running on the Linux LPAR. PHYP owns all
+> the system resources.
 
-I'd probably just inline the device check in pci_dw_ecam_map_bus directly,
-but either way:
+To pop back up to the top of the stack, I think the main point of this
+patch is to keep from binding a driver to the VFs in the kernel that
+set PCI_SRIOV_CTRL_VFE.  This patch does that by setting
+pdev->match_driver to -1 in powerpc-specific code.
 
-Acked-by: Will Deacon <will.deacon@arm.com>
+I think all systems, not just powerpc, want to prevent this VF driver
+binding, so I hope there's a generic solution that everybody can use.
 
-I'm assuming this is so small that there's no point in having a Kconfig
-option for these guys that depends on the generic host driver?
+> >> So like existing way of enabling SRIOV we still rely on the PF driver to
+> >> enable VFs - but in this case the attachment phase is done via a user
+> >> action via a management console in our case (novalink or hmc) triggered
+> >> event that will essentially act like a hotplug.
+> >>
+> >> So in the fine details of that user triggered action the system
+> >> firmware will bind the VFs, allowing resources to be allocated to
+> >> the VF.  - Which essentially does all the attaching as we know it
+> >> today but is managed by PHYP not by the kernel.
+> >
+> > What exactly does "firmware binding the VFs" mean?  I guess this must
+> > mean assigning a VF to a partition, injecting a hotplug add event to
+> > that partition, and making the VF visible in config space?
+>
+> Firmware basically adds a device node to the device tree as defined
+> in the (PAPR) Power Architecture Platform Requirements document.
 
-Will
+>From the point of view of the kernel that consumes this device tree
+and owns the VF, I guess this looks like a hot-add.  It would be nice
+if this could be exposed to that kernel by having the firmware inject
+a normal PCIe hotplug interrupt, but I'm guessing it's not that
+simple.
+
+But if I understand correctly, this patch series isn't concerned with
+that kernel; it's concerned with the kernel that owns the PF and sets
+PCI_SRIOV_CTRL_VFE.
+
+Bjorn
