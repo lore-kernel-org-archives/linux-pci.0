@@ -1,93 +1,89 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 30/36] ACPI/IORT: Check ATS capability in root complex nodes
-Date: Fri,  6 Oct 2017 14:31:57 +0100
-Message-Id: <20171006133203.22803-31-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/9] SOC: brcmstb: add memory API
+To: Christoph Hellwig <hch@infradead.org>, Jim Quinlan <jim2101024@gmail.com>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
+ <20171017082413.GA10574@infradead.org>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <abdb1e9d-f8c9-8066-48c5-37b4e2474952@gmail.com>
+Date: Tue, 17 Oct 2017 09:12:22 -0700
+MIME-Version: 1.0
+In-Reply-To: <20171017082413.GA10574@infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Root complex node in IORT has a bit telling whether it supports ATS or
-not. Store this bit in the IOMMU fwspec when setting up a device, so it
-can be accessed later by an IOMMU driver.
+On 10/17/2017 01:24 AM, Christoph Hellwig wrote:
+>> +/* Macros to help extract property data */
+>> +#define U8TOU32(b, offs) \
+>> +	((((u32)b[0 + offs] << 0)  & 0x000000ff) | \
+>> +	 (((u32)b[1 + offs] << 8)  & 0x0000ff00) | \
+>> +	 (((u32)b[2 + offs] << 16) & 0x00ff0000) | \
+>> +	 (((u32)b[3 + offs] << 24) & 0xff000000))
+> 
+> Please us helpers like get_unaligned_le32 instead opencoding them.
+> 
+>> +#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(U8TOU32(b, offs)))
+> 
+> And together with this it looks really whacky.  So you're converting
+> from le to native first and then do another conversion from be to cpu?
+> 
+> Something doesn't work out here.
+> 
+>> +/* -------------------- Functions -------------------- */
+> 
+> Please remove pointless comments like this one.
+> 
+>> +
+>> +/*
+>> + * If the DT nodes are handy, determine which MEMC holds the specified
+>> + * physical address.
+>> + */
+>> +#ifdef CONFIG_ARCH_BRCMSTB
+>> +int __brcmstb_memory_phys_addr_to_memc(phys_addr_t pa, void __iomem *base)
+> 
+> Please move this into the arm arch code.
 
-Use the negative version at the moment because it's not clear if/how the
-bit needs to be integrated in other firmare descriptions. The SMMU has a
-feature bit telling if it supports ATS, which might be sufficient in most
-systems for deciding whether or not we should enable the ATS capability in
-endpoints.
+No, this needs to work on both ARM and ARM64, hence the reason why this
+is in a reasonably architecture neutral place.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/acpi/arm64/iort.c | 11 +++++++++++
- include/linux/iommu.h     |  4 ++++
- 2 files changed, 15 insertions(+)
+> 
+>> +#elif defined(CONFIG_MIPS)
+> 
+> And this into the mips arch code.
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 9565d572f8dd..b94eac8ed21e 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -768,6 +768,14 @@ void iort_dma_setup(struct device *dev, u64 *dma_addr, u64 *dma_size)
- 	dev_dbg(dev, "dma_pfn_offset(%#08llx)\n", offset);
- }
- 
-+static bool iort_pci_rc_supports_ats(struct acpi_iort_node *node)
-+{
-+	struct acpi_iort_root_complex *pci_rc;
-+
-+	pci_rc = (struct acpi_iort_root_complex *)node->node_data;
-+	return pci_rc->ats_attribute & ACPI_IORT_ATS_SUPPORTED;
-+}
-+
- /**
-  * iort_iommu_configure - Set-up IOMMU configuration for a device.
-  *
-@@ -803,6 +811,9 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
- 		info.node = node;
- 		err = pci_for_each_dma_alias(to_pci_dev(dev),
- 					     iort_pci_iommu_init, &info);
-+
-+		if (!err && !iort_pci_rc_supports_ats(node))
-+			dev->iommu_fwspec->flags |= IOMMU_FWSPEC_PCI_NO_ATS;
- 	} else {
- 		int i = 0;
- 
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 2eb65d4724bb..661031aed0c4 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -534,12 +534,16 @@ struct iommu_fwspec {
- 	const struct iommu_ops	*ops;
- 	struct fwnode_handle	*iommu_fwnode;
- 	void			*iommu_priv;
-+	u32			flags;
- 	unsigned int		num_ids;
- 	unsigned int		num_pasid_bits;
- 	bool			can_stall;
- 	u32			ids[1];
- };
- 
-+/* Firmware disabled ATS in the root complex */
-+#define IOMMU_FWSPEC_PCI_NO_ATS			(1 << 0)
-+
- int iommu_fwspec_init(struct device *dev, struct fwnode_handle *iommu_fwnode,
- 		      const struct iommu_ops *ops);
- void iommu_fwspec_free(struct device *dev);
+Same reason as above.
+
+> 
+>> +EXPORT_SYMBOL(brcmstb_memory_phys_addr_to_memc);
+> 
+>> +EXPORT_SYMBOL(brcmstb_memory_memc_size);
+> 
+> Why is this exported?
+
+Because the PCIE RC driver can be built as a module.
 -- 
-2.13.3
+Florian
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
