@@ -1,88 +1,137 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ua0-f169.google.com ([209.85.217.169]:49670 "EHLO
-        mail-ua0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752485AbdJLVx6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 17:53:58 -0400
-Received: by mail-ua0-f169.google.com with SMTP id h34so4020940uaa.6
-        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 14:53:57 -0700 (PDT)
+Return-Path: <SRS0=6/CK=BQ=gmail.com=thierry.reding@kernel.org>
+Return-Path: <SRS0=6/CK=BQ=gmail.com=thierry.reding@kernel.org>
+Date: Tue, 17 Oct 2017 22:28:14 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
+	jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, mperttunen@nvidia.com
+Subject: Re: [PATCH V2 0/4] Add Tegra186 PCIe support
+Message-ID: <20171017202814.GC10482@ulmo>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+ <20171017173740.GF5641@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
-References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
- <20171012150419.GI14672@nanopsycho> <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
- <20171012.120650.1063812043202847517.davem@davemloft.net> <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
-From: Roopa Prabhu <roopa@cumulusnetworks.com>
-Date: Thu, 12 Oct 2017 14:53:56 -0700
-Message-ID: <CAJieiUjK4CsBGT5_YidnEGk7mCVYYO_8S0xcsv+XfaW=amGCaQ@mail.gmail.com>
-Subject: Re: [RFC 0/3] Adding config get/set to devlink
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: David Miller <davem@davemloft.net>,
-        =?UTF-8?B?SmnFmcOtIFDDrXJrbw==?= <jiri@resnulli.us>,
-        Steve Lin <steven.lin1@broadcom.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Jiri Pirko <jiri@mellanox.com>,
-        Michael Chan <michael.chan@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        "John W. Linville" <linville@tuxdriver.com>,
-        Andy Gospodarek <gospo@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="/Uq4LBwYP4y1W6pO"
+In-Reply-To: <20171017173740.GF5641@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 12:20 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
-> On 10/12/2017 12:06 PM, David Miller wrote:
->> From: Florian Fainelli <f.fainelli@gmail.com>
->> Date: Thu, 12 Oct 2017 08:43:59 -0700
->>
->>> Once we move ethtool (or however we name its successor) over to
->>> netlink there is an opportunity for accessing objects that do and do
->>> not have a netdevice representor today (e.g: management ports on
->>> switches) with the same interface, and devlink could be used for
->>> that.
->>
->> That is an interesting angle for including this in devlink.
->>
->> I'm not so sure what to do about this.
->>
->> One suggestion is that devlink is used for getting ethtool stats for
->> objects lacking netdev representor's, and a new genetlink family is
->> used for netdev based ethtool.
->
-> Right, I was also thinking along those lines that we we would have a new
-> generic netlink family for ethtool to support ethtool over netlink.
 
-new api is fine by me. The reason for suggesting devlink was because
-some of the devlink
-port_* ops are close to ethtool ops that can operate on a port/netdev.
-eg split_port could be a netdev operation
-unless you want to split before the netdev is created.
+--/Uq4LBwYP4y1W6pO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-There are some ops in devlink which are global hw parameters and not
-specific to a port, those fit perfectly with
-devlinks original goal.
+On Tue, Oct 17, 2017 at 12:37:40PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 27, 2017 at 05:28:33PM +0530, Manikanta Maddireddy wrote:
+> > Tegra186 has three PCIe controllers which can be operated
+> > in 401, 211 or 111 lane configurations. Tegra TX2 platform
+> > has x4 and M.2 Key E PCIe slots, these patches enables
+> > x4 slot. BPMP programs UPHY lane0 ownership to USB,
+> > so M.2 Key E PCIe will not work.
+> >=20
+> > Testing: x4 slot is verified with PCIe based USB3.1 card.
+> > PCIe link up, usb flash drive mounting and file copy are
+> > verified. These patches are also verified by
+> > Mikko Perttunen <mperttunen@nvidia.com> with an Intel 82574L
+> > ethernet card.
+> >=20
+> > Patch V2 adds soc->program_uphy check for phy_exit call.
+> >=20
+> > Pasting PCIe link up logs below.
+> >=20
+> > [    1.452512] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
+> > [    1.452723] tegra-pcie 10003000.pcie: Failed to get supply 'dvdd-pex=
+': -517
+> > [    1.561824] ehci-pci: EHCI PCI platform driver
+> > [    1.591587] ohci-pci: OHCI PCI platform driver
+> > [    3.072464] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
+> > [    3.078989] tegra-pcie 10003000.pcie: probing port 0, using 4 lanes
+> > [    3.087272] tegra-pcie 10003000.pcie: Slot present pin change, signa=
+ture: 00000018
+> > [    3.128818] tegra-pcie 10003000.pcie: PCI host bridge to bus 0000:00
+> > [    3.135174] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> > [    3.141352] pci_bus 0000:00: root bus resource [mem 0x50100000-0x57f=
+fffff]
+> > [    3.148221] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7ff=
+fffff pref]
+> > [    3.155542] pci_bus 0000:00: root bus resource [bus 00-ff]
+> > [    3.161173] pci 0000:00:01.0: [10de:10e5] type 01 class 0x060400
+> > [    3.161188] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
+set 0x4 may corrupt adjacent RW1C bits
+> > [    3.170838] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
+set 0x4 may corrupt adjacent RW1C bits
+> > [    3.180532] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
+set 0x52 may corrupt adjacent RW1C bits
+> > [    3.190305] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3c=
+old
+> > [    3.190312] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
+set 0x4c may corrupt adjacent RW1C bits
+> > [    3.200158] pci 0000:00:01.0: bridge configuration invalid ([bus 00-=
+00]), reconfiguring
+> > [    3.208158] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
+set 0x3e may corrupt adjacent RW1C bits
+> > [    3.217918] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
+set 0x3e may corrupt adjacent RW1C bits
+> > [    3.227649] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
+set 0x3e may corrupt adjacent RW1C bits
+> > [    3.237382] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
+set 0x6 may corrupt adjacent RW1C bits
+> > [    3.247135] pci 0000:01:00.0: [1b21:1242] type 00 class 0x0c0330
+> > [    3.247157] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 off=
+set 0x4 may corrupt adjacent RW1C bits
+> > [    3.256807] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 off=
+set 0x4 may corrupt adjacent RW1C bits
+> > [    3.266477] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 6=
+4bit]
+> > [    3.266544] pci 0000:01:00.0: enabling Extended Tags
+> > [    3.271622] pci 0000:01:00.0: PME# supported from D3hot D3cold
+> > [    3.271775] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to=
+ 01
+> > [    3.271798] pci 0000:00:01.0: BAR 14: assigned [mem 0x50100000-0x501=
+fffff]
+> > [    3.278671] pci 0000:01:00.0: BAR 0: assigned [mem 0x50100000-0x5010=
+7fff 64bit]
+> > [    3.285993] pci 0000:00:01.0: PCI bridge to [bus 01]
+> > [    3.290959] pci 0000:00:01.0:   bridge window [mem 0x50100000-0x501f=
+ffff]
+> > [    3.297763] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host=
+ bridge
+> > [    3.304784] pcieport 0000:00:01.0: enabling device (0000 -> 0002)
+> > [    3.311014] pcieport 0000:00:01.0: Signaling PME with IRQ 57
+> > [    3.316768] pci 0000:01:00.0: enabling device (0000 -> 0002)
+> >=20
+> >=20
+> > Manikanta Maddireddy (4):
+> >   dt-bindings: pci: tegra: Document Tegra186 PCIe DT
+> >   PCI: tegra: Add Tegra186 PCIe support
+>=20
+> I applied these two with Thierry's tested-by and acks to
+> pci/host-tegra for v4.15, thanks!  If you have a changelog update for
+> the pm_domain question, I can fold that in.
 
+Thanks!
 
->
->>
->> I think it's important that we don't expand the scope of devlink
->> beyond what it was originally designed for.
->
-> It seems to me like devlink is well defined in what it is not for: it is
-> not meant to be used for any object that is/has a net_device, but it is
-> not well defined for what it can offer to these non network devices. For
-> instance, we have a tremendous amount of operations that are extremely
-> specific to its single user(s) such as mlx5 and mlxsw.
->
-> For instance, I am not sure how the buffer reservation scheme can be
-> generalized, and this is always the tricky part with a single user
-> facility in that you try to generalize the best you can based on the HW
-> you know. This is not a criticism or meant to be anything negative, this
-> just happens to be the case, and we did not have anything better.
->
-> So maybe the first thing is to clarify what devlink operations can and
-> should be and what they are absolutely not allowed to cover. We should
-> also clarify whether a generic set/get that Steven is proposing is
-> something that we tolerate, or whether there should be specific function
-> pointers implemented for each attribute, which would be more in line
-> with what has been done thus far.
-> --
-> Florian
+Thierry
+
+--/Uq4LBwYP4y1W6pO
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlnmZ94ACgkQ3SOs138+
+s6FMUhAAgoD+BPGEVUXULpGAgUFuh8OpnM1W0NLh2Cz5F5CqRCVYo98nuIYmUjd9
+0oIASQnil7GsZkv0STPAkvCh4CKu1cLX7DOEeEDCAkn47+lJYkJtqPSQRSl/QC/G
+03ccknaATAu+oJVdTVZaASucBUE0YvRs5djnLzNKVQtUF2CMCbe9rL0EvvhjaN1S
++/Jbn/ssDE6Yd3GckyqTqHIxMCZDFRaBZry6hZu0H6UNA5EKrgQwPbZYyq8YVewq
+nq6xUPRYYoJjencjFP6EHHWcNWSAUt86ToDHwqL+TcYDVD392q22GroC3zbPrvq3
+0w5aVOhvQcA5ugGguuBOfQmhXV/L8/kA9MCAshWBaZKvFB047gds7Wkdt4YZ7D5R
+g0iVDqSNuOTyzync2adOCmdrMNeSx8ZsMqhtDhiG4P1nspIsx5dL3iEzUI3ZuaOj
+mB1mGDI8F1cjgCBGiuDdWhxwxy0PfkD7kTwN5VDxpdlLcvaIshLcLAn/IkjfCw9J
+/7K57u1rPXCaMv0YFnqBQY8T0s3j9Aq1pMB/zvlCOTe+NWxHUZVUapuGWU7gsfKZ
+4JOy4IPv2DLmJk2C6kH0HzXeO4emNEdCqThxPqCCbukVyazs34zU+rIWYes+awaQ
+z1ouvTsIjSlOxG9MGa73pRgPabSWOpirhKQla9wdEOpbkE7vxiQ=
+=2Krb
+-----END PGP SIGNATURE-----
+
+--/Uq4LBwYP4y1W6pO--
