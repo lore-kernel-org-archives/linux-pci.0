@@ -1,71 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51662 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751189AbdJ0Vaw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 27 Oct 2017 17:30:52 -0400
-Date: Fri, 27 Oct 2017 16:30:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
-Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Steven Royer <seroyer@linux.vnet.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com,
-        benh@kernel.crashing.org, paulus@samba.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>,
-        Bodong Wang <bodong@mellanox.com>,
-        Eli Cohen <eli@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-Message-ID: <20171027213039.GB9235@bhelgaas-glaptop.roam.corp.google.com>
-References: <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
- <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
- <20171013120558.1a129183@t450s.home>
- <24fdec01-8df4-f027-0b3c-0472a2d73946@linux.vnet.ibm.com>
- <20171017135123.GA5641@bhelgaas-glaptop.roam.corp.google.com>
- <7e23c703-750b-b4f8-f252-0c872a40ae8a@linux.vnet.ibm.com>
- <20171017162621.GB5641@bhelgaas-glaptop.roam.corp.google.com>
- <f8fbbd56-f165-0a17-a24a-2b021f7fa238@linux.vnet.ibm.com>
- <20171017185242.GG5641@bhelgaas-glaptop.roam.corp.google.com>
- <eb1ac136-a054-ea2b-2368-af740e0c23d4@linux.vnet.ibm.com>
+Return-Path: <SRS0=6/CK=BQ=gmail.com=thierry.reding@kernel.org>
+Return-Path: <SRS0=6/CK=BQ=gmail.com=thierry.reding@kernel.org>
+Date: Tue, 17 Oct 2017 22:27:49 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
+	jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, mperttunen@nvidia.com
+Subject: Re: [PATCH V2 2/4] PCI: tegra: Add Tegra186 PCIe support
+Message-ID: <20171017202749.GB10482@ulmo>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+ <1506513517-25870-3-git-send-email-mmaddireddy@nvidia.com>
+ <20171017173428.GE5641@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <eb1ac136-a054-ea2b-2368-af740e0c23d4@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="H1spWtNR+x+ondvy"
+In-Reply-To: <20171017173428.GE5641@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 06:13:35PM -0500, Juan Alvarez wrote:
-> On 10/17/17 1:52 PM, Bjorn Helgaas wrote:
-> > I'm suggesting that maybe there should be a generic way to prevent
-> > binding to VF devices that works for everybody and doesn't require any
-> > arch-specific code at all.
-> 
-> The patch that you have suggested in kernel 4.12 is also a generic way.
-> 
-> https://marc.info/?l=linux-kernel&m=149002335105804&w=2
 
-The patch mentioned above is now upstream:
+--H1spWtNR+x+ondvy
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=0e7df22401a3
+On Tue, Oct 17, 2017 at 12:34:28PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 27, 2017 at 05:28:35PM +0530, Manikanta Maddireddy wrote:
+> > UPHY programming is performed by BPMP, PHY enable calls are
+> > not required for Tegra186 PCIe. Power partition ungate is
+> > done by BPMP powergate driver.
+> >=20
+> > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+> > Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
+> > ---
+> > V2: Add soc->program_uphy check for phy_exit call
+> >  drivers/pci/host/pci-tegra.c | 132 +++++++++++++++++++++++++++++++++++=
+--------
+> >  1 file changed, 108 insertions(+), 24 deletions(-)
+>=20
+> > @@ -1012,10 +1016,12 @@ static int tegra_pcie_enable_controller(struct =
+tegra_pcie *pcie)
+> >  		afi_writel(pcie, value, AFI_FUSE);
+> >  	}
+> > =20
+> > -	err =3D tegra_pcie_phy_power_on(pcie);
+> > -	if (err < 0) {
+> > -		dev_err(dev, "failed to power on PHY(s): %d\n", err);
+> > -		return err;
+> > +	if (soc->program_uphy) {
+> > +		err =3D tegra_pcie_phy_power_on(pcie);
+> > +		if (err < 0) {
+> > +			dev_err(dev, "failed to power on PHY(s): %d\n", err);
+> > +			return err;
+> > +		}
+>=20
+> This looks good: it's obvious that the previously-supported devices
+> continue to work the same way because you set ".program_uphy =3D true"
+> for them.  (It would be even more obvious if you changed the sense so
+> that only the new device had to add this initializaer, but in general
+> I prefer the positive logic as you have here, and I did verify that
+> you added the initializer for all tegra_pcie_soc variants.)
+>=20
+> > @@ -1048,19 +1054,23 @@ static int tegra_pcie_enable_controller(struct =
+tegra_pcie *pcie)
+> >  static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+> >  {
+> >  	struct device *dev =3D pcie->dev;
+> > +	const struct tegra_pcie_soc *soc =3D pcie->soc;
+> >  	int err;
+> > =20
+> >  	/* TODO: disable and unprepare clocks? */
+> > =20
+> > -	err =3D tegra_pcie_phy_power_off(pcie);
+> > -	if (err < 0)
+> > -		dev_err(dev, "failed to power off PHY(s): %d\n", err);
+> > +	if (soc->program_uphy) {
+> > +		err =3D tegra_pcie_phy_power_off(pcie);
+> > +		if (err < 0)
+> > +			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+> > +	}
+> > =20
+> >  	reset_control_assert(pcie->pcie_xrst);
+> >  	reset_control_assert(pcie->afi_rst);
+> >  	reset_control_assert(pcie->pex_rst);
+> > =20
+> > -	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+> > +	if (!dev->pm_domain)
+> > +		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+>=20
+> But this one isn't obvious because nothing in your patch obviously
+> affects dev->pm_domain, so I can't tell whether this is safe.  It's
+> worth a changelog comment to help justify this.
 
-> Perhaps we can use the same constructs that this patch uses at our level.
-> Nonetheless, that will take a rework to this patch and possibly an export
-> of a function to set drivers_autoprobe globally. I know that was frowned
-> upon on first email thread. Let me know if this is an acceptable
-> solution.
+The last sentence in the commit message is what this is about. Maybe it
+should be more verbose:
 
-I would definitely like to see you use a solution that is somehow
-connected with the sriov->drivers_autoprobe mechanism added by
-0e7df22401a3.
+	Since the BPMP controls the powergates on Tegra186, there is no
+	need to manually power on and off the PCIe power partition. The
+	BPMP generic power domain driver takes care of it instead.
 
-0e7df22401a3 is a per-PF solution, and you're looking for a
-system-wide switch.  I could imagine a system-wide flag exposed in
-sysfs and used by pci_device_can_probe().  Or maybe some arch hook in
-the pci_device_add() path that clears sriov->drivers_autoprobe for
-every PF.
+?
 
-I think the important thing is that it is coordinated as much as
-possible with other driver binding controls and not unnecessarily
-arch-dependent.
+Thierry
 
-Bjorn
+--H1spWtNR+x+ondvy
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlnmZ8QACgkQ3SOs138+
+s6HYJxAAtb6cw7AK6M1SmCe/ROsp1SR10Nrc692TeU8XTmUm+Q2UrSemrLi8yWA8
+vim+7gf1FkoaRtzd/5Kl+NdZMc1rlZE7OhgYFZQpisA9qsyasbqlK6slzbv8Uaic
+m4Ti2euzRrzIs3582miHH3AthqgTh4Xh7Du0IhorKpYm4S3GEA+aXx8RbHQ1Mj6N
+pelYjCy3nCcdNck5vYEeZ054jteEwX1vVPoJe6AJTrDjf4qTjgp5Ig1B/sRwU8Rs
+P92Ux8GpQN6xz0asIj5Ff1gO7VypVcz9aySR2txjyPSUii2fla8PRoHlfVr83lYx
+Cl2BtLQg4A5uhRr/iq8HD7fcNcTY9LAPXJXq/XfVZM7Y2NicxHrBQFG+eYhfHQJn
+9veihonWi9NRnFan+8VV2ip8iEr87iNXFmOi3lByFtVroMJQ2HTs/L4kkymCTX48
+OcJ3MZx6Kj5pfV+jIMhbMVB0P2M3ENFGsFOsza/SaigDzSCPrrZDmHaZnvX4D62M
+Tida+w5yeD0BJsd8qDrx77rN7NPQfw8B6Xf3sTCoUG0uTpBkq+BGjqV4cMXIoWbM
+SDzVNp9NVF4HY3hdvWeSziVt0PkzmNbthD4FfCGA9FDBeEtED5a3DekstAKxSKO7
+CgFhf93/8i3zx2RVStb8Gre/rVp2giZmRzTuDCrlzfiEnOzKB9g=
+=TaIQ
+-----END PGP SIGNATURE-----
+
+--H1spWtNR+x+ondvy--
