@@ -1,18 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Trent Piepho <tpiepho@impinj.com>
-To: "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: imx6: Check for link training status in link up
- check
-Date: Tue, 17 Oct 2017 17:37:49 +0000
-Message-ID: <1508261868.110408.5.camel@impinj.com>
-References: <20171017001159.109152-1-tpiepho@impinj.com>
- <20171017001159.109152-2-tpiepho@impinj.com>
- <1508229842.2146.4.camel@pengutronix.de>
-In-Reply-To: <1508229842.2146.4.camel@pengutronix.de>
+From: Daniel Axtens <dja@axtens.net>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+ Daniel Vetter <daniel.vetter@intel.com>
+Subject: Re: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default device
+ selection
+In-Reply-To: <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Date: Tue, 17 Oct 2017 13:03:46 +1100
+Message-ID: <871sm2y1h9.fsf@linkitivity.dja.id.au>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -21,33 +18,146 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
- "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
+ Xinliang Liu <z.liuxinliang@hisilicon.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Lukas Wunner <lukas@wunner.de>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Rongrong Zou <zourongrong@gmail.com>, Dave Airlie <airlied@redhat.com>,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-10-17 at 10:44 +0200, Lucas Stach wrote:
-> Am Montag, den 16.10.2017, 17:11 -0700 schrieb Trent Piepho:
-> > 
-> > 
-> > There result is no link training check.
-> > 
-> > Then commit dac29e6c5460 ("PCI: designware: Add default link up check if
-> > sub-driver doesn't override")
-> 
-> I think you meant 01c076732e82 (PCI: designware: Check LTSSM training
-> bit before deciding link is up) here.
-> 
-> >  added a link training check to the default
-> > version of dw_pcie_link_up(), but since imx6 uses imx6_pcie_link_up() it
-> > does not use the default version with this fix.
+Bjorn Helgaas <bhelgaas@google.com> writes:
 
-It was really the combination of both commits.  'dac added the common
-link up check, which imx6 didn't use, and then '01c added the training
-check to it.  It appears I've attributed both changes to 'dac in my
-message and forgot '01c.  I'll fix.
+> The default VGA device is normally set in vga_arbiter_add_pci_device() when
+> we call it for the first enabled device that can be accessed with the
+> legacy VGA resources ([mem 0xa0000-0xbffff], etc.)
+>
+> That default device can be overridden by an EFI device that owns the boot
+> framebuffer.  As a fallback, we can also select a VGA device that can't be
+> accessed via legacy VGA resources, or a VGA device that isn't even enabled.
+>
+> Factor out this EFI and fallback selection from vga_arb_device_init() into
+> a separate vga_arb_select_default_device() function.  This doesn't change
+> any behavior, but it untangles the "bridge control possible" checking and
+> messages from the default device selection.
+>
+> Tested-by: Zhou Wang <wangzhou1@hisilicon.com>  # D05 Hisi Hip07, Hip08
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/gpu/vga/vgaarb.c |   57 ++++++++++++++++++++++++++++------------------
+>  1 file changed, 35 insertions(+), 22 deletions(-)
+>
+> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> index 8035e38d5110..d35d6d271f3f 100644
+> --- a/drivers/gpu/vga/vgaarb.c
+> +++ b/drivers/gpu/vga/vgaarb.c
+> @@ -1402,29 +1402,14 @@ static struct miscdevice vga_arb_device = {
+>  	MISC_DYNAMIC_MINOR, "vga_arbiter", &vga_arb_device_fops
+>  };
+>  
+> -static int __init vga_arb_device_init(void)
+> +static void __init vga_arb_select_default_device(void)
+>  {
+> -	int rc;
+>  	struct pci_dev *pdev;
+>  	struct vga_device *vgadev;
+>  
+> -	rc = misc_register(&vga_arb_device);
+> -	if (rc < 0)
+> -		pr_err("error %d registering device\n", rc);
+> -
+> -	bus_register_notifier(&pci_bus_type, &pci_notifier);
+> -
+> -	/* We add all pci devices satisfying vga class in the arbiter by
+> -	 * default */
+> -	pdev = NULL;
+> -	while ((pdev =
+> -		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> -			       PCI_ANY_ID, pdev)) != NULL)
+> -		vga_arbiter_add_pci_device(pdev);
+> -
+> +#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+>  	list_for_each_entry(vgadev, &vga_list, list) {
+>  		struct device *dev = &vgadev->pdev->dev;
+> -#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+>  		/*
+>  		 * Override vga_arbiter_add_pci_device()'s I/O based detection
+>  		 * as it may take the wrong device (e.g. on Apple system under
+> @@ -1461,12 +1446,8 @@ static int __init vga_arb_device_init(void)
+>  				vgaarb_info(dev, "overriding boot device\n");
+>  			vga_set_default_device(vgadev->pdev);
+>  		}
+> -#endif
+> -		if (vgadev->bridge_has_one_vga)
+> -			vgaarb_info(dev, "bridge control possible\n");
+> -		else
+> -			vgaarb_info(dev, "no bridge control possible\n");
+>  	}
+> +#endif
+>  
+>  	if (!vga_default_device()) {
+>  		list_for_each_entry(vgadev, &vga_list, list) {
+> @@ -1492,6 +1473,38 @@ static int __init vga_arb_device_init(void)
+>  			vga_set_default_device(vgadev->pdev);
+>  		}
+>  	}
+> +}
+> +
+> +static int __init vga_arb_device_init(void)
+> +{
+> +	int rc;
+> +	struct pci_dev *pdev;
+> +	struct vga_device *vgadev;
+> +
+> +	rc = misc_register(&vga_arb_device);
+> +	if (rc < 0)
+> +		pr_err("error %d registering device\n", rc);
+> +
+> +	bus_register_notifier(&pci_bus_type, &pci_notifier);
+> +
+> +	/* We add all PCI devices satisfying VGA class in the arbiter by
+> +	 * default */
+> +	pdev = NULL;
+> +	while ((pdev =
+> +		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> +			       PCI_ANY_ID, pdev)) != NULL)
+> +		vga_arbiter_add_pci_device(pdev);
+> +
+> +	list_for_each_entry(vgadev, &vga_list, list) {
+> +		struct device *dev = &vgadev->pdev->dev;
+> +
+> +		if (vgadev->bridge_has_one_vga)
+> +			vgaarb_info(dev, "bridge control possible\n");
+> +		else
+> +			vgaarb_info(dev, "no bridge control possible\n");
+> +	}
+
+Initially I wondered if this info printk could be moved into
+vga_arbiter_check_bridge_sharing(), but it's been separated out since
+3448a19da479b ("vgaarb: use bridges to control VGA routing where
+possible."), and upon closer examination, it seems you can't be sure a
+device doesn't share a bridge until the end of the process, so this is
+indeed correct.
+
+Everything else also looks good to me.
+
+Reviewed-by: Daniel Axtens <dja@axtens.net>
+
+Regards,
+Daniel
+
+> +
+> +	vga_arb_select_default_device();
+>  
+>  	pr_info("loaded\n");
+>  	return rc;
+
 _______________________________________________
 linux-arm-kernel mailing list
 linux-arm-kernel@lists.infradead.org
