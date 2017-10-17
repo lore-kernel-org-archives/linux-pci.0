@@ -1,79 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:13269 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750733AbdJaEXj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 00:23:39 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
-        <yinghai@kernel.org>, <david.daney@cavium.com>,
-        <Julia.Lawall@lip6.fr>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH V2 1/4] PCI/ASPM: Add API to supply LTR L1.2 threshold
-Date: Tue, 31 Oct 2017 09:52:46 +0530
-Message-ID: <1509423769-10522-2-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
-References: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171017081422.GA19475@lst.de>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
+ <589c04cb-061b-a453-3188-79324a02388e@arm.com>
+ <20171017081422.GA19475@lst.de>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Tue, 17 Oct 2017 12:11:55 -0400
+Message-ID: <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
+Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
+To: Christoph Hellwig <hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, iommu@lists.linux-foundation.org,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-adds API for host controller drivers to specify LTR L1.2
-threshold value if it is different from the default value.
-weak implementation of the API is added to supply default
-value
+On Tue, Oct 17, 2017 at 4:14 AM, Christoph Hellwig <hch@lst.de> wrote:
+> Just took a quick look over this and I basically agree with the comments
+> from Robin.
+>
+> What I don't understand is why you're even trying to do all these
+> hacky things.
+>
+> It seems like the controller should simply set dma_pfn_offset for
+> each device hanging off it, and all the supported architectures
+> should be updated to obey that if they don't do so yet, and
+> you're done without needing this giant mess.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V2:
-* removed dummy implementation of pcie_aspm_init_link_state() API
+My understanding is that dma_pfn_offset is that it is a single
+constant offset from RAM, in our case, to map to PCIe space.  But in
+my commit message I detail how our PCIe controller presents memory
+with multiple regions with multiple different offsets. If an EP device
+maps to a region on the host memory, yes we can set the dma_pfn_offset
+for that device for that location within that range,.  But if the
+device then unmaps and allocates from another region with a different
+offset, it won't work.  If  I set dma_pfn_offset I have to assume that
+the device is using only one region of memory only, not more than one,
+and that it is not unmapping that region and mapping another (with a
+different offset).  Can I make those assumptions?
 
- drivers/pci/pcie/aspm.c  | 11 ++++++++---
- include/linux/pci-aspm.h |  1 +
- 2 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 1dfa10cc566b..c6e8604796e5 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -436,6 +436,11 @@ static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
- 	return NULL;
- }
- 
-+u32 __weak pcie_aspm_get_ltr_l_1_2_threshold(void)
-+{
-+	return LTR_L1_2_THRESHOLD_BITS;
-+}
-+
- /* Calculate L1.2 PM substate timing parameters */
- static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 				struct aspm_register_info *upreg,
-@@ -458,10 +463,10 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 	else
- 		link->l1ss.ctl1 |= val2 << 8;
- 	/*
--	 * We currently use LTR L1.2 threshold to be fixed constant picked from
--	 * Intel's coreboot.
-+	 * Get LTR L1.2 threshold value specific to a platform if present
-+	 * Otherwise, get a constant value picked from Intel's coreboot.
- 	 */
--	link->l1ss.ctl1 |= LTR_L1_2_THRESHOLD_BITS;
-+	link->l1ss.ctl1 |= pcie_aspm_get_ltr_l_1_2_threshold();
- 
- 	/* Choose the greater of the two T_pwr_on */
- 	val1 = (upreg->l1ss_cap >> 19) & 0x1F;
-diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
-index 207c561fb40e..3a083f4ffe71 100644
---- a/include/linux/pci-aspm.h
-+++ b/include/linux/pci-aspm.h
-@@ -30,6 +30,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
- void pci_disable_link_state(struct pci_dev *pdev, int state);
- void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
- void pcie_no_aspm(void);
-+u32 pcie_aspm_get_ltr_l_1_2_threshold(void);
- #else
- static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
- {
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
