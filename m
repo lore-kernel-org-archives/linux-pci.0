@@ -1,124 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2] dwc: dra7xx: Print link state to console for debug
-From: Faiz Abbas <faiz_abbas@ti.com>
-To: David Laight <David.Laight@ACULAB.COM>,
-        "kishon@ti.com" <kishon@ti.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
- <9378c5c9-381d-4c40-3290-f7e3720792ba@ti.com>
- <063D6719AE5E284EB5DD2968C1650D6DD009C62B@AcuExch.aculab.com>
- <53ed97ab-ed02-23be-0ce9-e79f2aaac979@ti.com>
-Message-ID: <a4832f67-8511-e903-044c-609e0f4a0352@ti.com>
-Date: Mon, 30 Oct 2017 14:18:32 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 17 Oct 2017 01:24:13 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Jim Quinlan <jim2101024@gmail.com>
+Subject: Re: [PATCH 1/9] SOC: brcmstb: add memory API
+Message-ID: <20171017082413.GA10574@infradead.org>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <53ed97ab-ed02-23be-0ce9-e79f2aaac979@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1507761269-7017-2-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+> +/* Macros to help extract property data */
+> +#define U8TOU32(b, offs) \
+> +	((((u32)b[0 + offs] << 0)  & 0x000000ff) | \
+> +	 (((u32)b[1 + offs] << 8)  & 0x0000ff00) | \
+> +	 (((u32)b[2 + offs] << 16) & 0x00ff0000) | \
+> +	 (((u32)b[3 + offs] << 24) & 0xff000000))
 
+Please us helpers like get_unaligned_le32 instead opencoding them.
 
-On Thursday 26 October 2017 01:29 PM, Faiz Abbas wrote:
-> David,
-> 
-> On Thursday 19 October 2017 06:56 PM, David Laight wrote:
->> From: Faiz Abbas
->>> Sent: 19 October 2017 14:09
->>> On Thursday 19 October 2017 06:13 PM, Faiz Abbas wrote:
->>>> Enable support for printing the LTSSM link state for debugging PCI
->>>> when link is down.
->>>>
->>>> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
->>>> ---
->>>> v2:
->>>>  1. Changed dev_err() to dev_dbg()
->>>>  2. Changed static char array to static const char * const
->>>>  3. format changes
->>>>
->>>>  drivers/pci/dwc/pci-dra7xx.c | 48 ++++++++++++++++++++++++++++++++++++++++++++
->>>>  1 file changed, 48 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->>>> index 34427a6..0e70e77 100644
->>>> --- a/drivers/pci/dwc/pci-dra7xx.c
->>>> +++ b/drivers/pci/dwc/pci-dra7xx.c
->>>> @@ -98,6 +98,45 @@ struct dra7xx_pcie_of_data {
->>>>
->>>>  #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
->>>>
->>>> +static const char * const state[] = {
->>>> +	"DETECT_QUIET",
->> ...
->>>> +	"RCVRY_EQ3"
->>>> +};
->>>> +
->>>>  static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
->>>>  {
->>>>  	return readl(pcie->base + offset);
->>>> @@ -118,6 +157,15 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
->>>>  {
->>>>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
->>>>  	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
->>>> +	u32 cmd_reg;
->>>> +	u32 ltssm_state;
->>>> +
->>>> +	if (!(reg & LINK_UP)) {
->>>> +		cmd_reg = dra7xx_pcie_readl(dra7xx,
->>>> +					    PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
->>>> +		ltssm_state = (cmd_reg & GENMASK(7, 2)) >> 2;
->>>> +		dev_dbg(pci->dev, "Link state:%s\n", state[ltssm_state]);
->>
->> Hmmm... GENMASK leaves by hunting header files...> Why not (cmd_reg >> 2) & 63 and explicitly define state[64]
->> to guarantee that you never print anything worse than a NULL
->> pointer.
-> 
-> I'm not sure what you mean. Are you worried we might print something
-> outside the array bounds? How is this easier to decipher than GENMASK?
-> 
->>
->>>> +	}
->>>>
->>>>  	return !!(reg & LINK_UP);
->>>>  }
->>>>
->>>
->>> I missed David's comment in v1. Will submit a new version. Please ignore.
->>
->> I've a 'neat' trick for generating strings that match constants.
->> You can get the compiler to do all the work for you:
->> (Assuming I've typed it correctly)
->>
->> #define LTSSM_DEFS(x) \
->>   x(DETECT_QUIET) \
->>   x(DETECT_ACT) \
->> (continue for all the names)
->>
->> Define an enum with the named constants:
->> #define X(name) LTSSM_STATE_##name,
->> enum (LTSSM_DEFS(X) LTSSM_STATE_SIZE=64);
->> #undef X
->>
->> Array of strings:
->> #define X(name) [LTSSM_STATE_##name] = #name
->> static const char * const state_names[LTSSM_STATE_SIZE] = { LTSSM_DEFS(X) };
->> #undef X
->>
->> 	David
->>
-> 
-> So I implemented your idea and it looks like this:
-> http://pastebin.ubuntu.com/25821834/
-> 
-> I don't know how much we gained by adding the trick. I still had to be
-> careful not to be off by 1 when writing the list. Plus we are never
-> saying anything like printk("%s", state[LTSSM_STATE_DETECT_QUIET]. Its a
-> register read which is used to index the list array.
-> 
-> Thanks,
-> Faiz
-> 
+> +#define DT_PROP_DATA_TO_U32(b, offs) (fdt32_to_cpu(U8TOU32(b, offs)))
 
-Gentle Ping.
+And together with this it looks really whacky.  So you're converting
+from le to native first and then do another conversion from be to cpu?
+
+Something doesn't work out here.
+
+> +/* -------------------- Functions -------------------- */
+
+Please remove pointless comments like this one.
+
+> +
+> +/*
+> + * If the DT nodes are handy, determine which MEMC holds the specified
+> + * physical address.
+> + */
+> +#ifdef CONFIG_ARCH_BRCMSTB
+> +int __brcmstb_memory_phys_addr_to_memc(phys_addr_t pa, void __iomem *base)
+
+Please move this into the arm arch code.
+
+> +#elif defined(CONFIG_MIPS)
+
+And this into the mips arch code.
+
+> +EXPORT_SYMBOL(brcmstb_memory_phys_addr_to_memc);
+
+> +EXPORT_SYMBOL(brcmstb_memory_memc_size);
+
+Why is this exported?
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
