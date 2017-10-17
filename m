@@ -1,99 +1,189 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-Subject: [RFC PATCH v8 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci
- core
-Date: Thu, 26 Oct 2017 21:28:33 +0800
-Message-Id: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Heiko Stuebner <heiko@sntech.de>,
- Ganapathi Bhat <gbhat@marvell.com>, tony@atomide.com,
- Catalin Marinas <catalin.marinas@arm.com>, shawn.lin@rock-chips.com,
- Will Deacon <will.deacon@arm.com>, Amitkumar Karwar <amitkarwar@gmail.com>,
- Frank Rowand <frowand.list@gmail.com>, linux-rockchip@lists.infradead.org,
- briannorris@chromium.org, linux-acpi@vger.kernel.org,
- Matthias Kaehlcke <mka@chromium.org>, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, Len Brown <lenb@kernel.org>,
- devicetree@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
- linux-pm@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
- Nishant Sarmukadam <nishants@marvell.com>, Rob Herring <robh+dt@kernel.org>,
- Kalle Valo <kvalo@codeaurora.org>, rjw@rjwysocki.net, netdev@vger.kernel.org,
- linux-wireless@vger.kernel.org, dianders@chromium.org,
- Caesar Wang <wxt@rock-chips.com>
+Return-Path: <SRS0=N2Db=BQ=redhat.com=jcm@kernel.org>
+Return-Path: <SRS0=N2Db=BQ=redhat.com=jcm@kernel.org>
+Content-Type: multipart/alternative;
+	boundary=Apple-Mail-62D58F1F-67BA-45C7-98B2-C1D7394C7D39
+From: Jon Masters <jcm@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Subject: Re: [PATCH v4 pci 0/2] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot for X-Gene v1
+Message-Id: <E60298DD-B9DB-4182-8AFB-A2EE9A5B4A5B@redhat.com>
+Date: Tue, 17 Oct 2017 13:33:17 -0400 (EDT)
+References: <1506448161-30961-1-git-send-email-kdinh@apm.com> <20171017170529.GC5641@bhelgaas-glaptop.roam.corp.google.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+In-Reply-To: <20171017170529.GC5641@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Khuong Dinh <kdinh@apm.com>, lorenzo.pieralisi@arm.com,
+ marc.zyngier@arm.com, msalter@redhat.com, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, rjw@rjwysocki.net, patches@apm.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
+--Apple-Mail-62D58F1F-67BA-45C7-98B2-C1D7394C7D39
+Content-Type: text/plain;
+	charset=utf-8
+Content-Transfer-Encoding: base64
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
+UXVpY2sgcmVwbHkgLSB0aGlzIHBhdGNoIHNlcmllcyBoYXBwZW5lZCBhdCBteSByZXF1ZXN0IHRv
+IGVuc3VyZSB0aGF0IHVwc3RyZWFtIGlzIHRha2VuIGNhcmUgb2YgcHJvcGVybHkuIFgtR2VuZTEg
+aXMgU0JTQSBMZXZlbCAwIGFrYSB0aGV5IHdlcmUgdGhlIGZpcnN0IHZlbmRvciBhbmQgc28gd2Ug
+YWxsb3dlZCB0aGVtIHRvIGhhdmUgYSBub24tc3RhbmRhcmQgSVRTIChNU0kpIHNvbHV0aW9uLiBZ
+b3Ugd29u4oCZdCBzZWUgdGhpcyBpbiBhbnkgb3RoZXIgZnV0dXJlIEFybSBzZXJ2ZXIgU29DLCBl
+dmVuIGZyb20gQXBwbGllZE1pY3JvLiBJdOKAmXMgYSBvbmUgdGltZSBoaXN0b3JpY2FsIGFydGlm
+YWN0IGFuZCB3ZSBsb25nIHNpbmNlIHRvb2sgY2FyZSBvZiBoYXZpbmcgYSBzdGFuZGFyZCBNU0kg
+c29sdXRpb24gQlVUIHdlIHN0aWxsIGhlYXZpbHkgdXNlIFgtR2VuZTEgc3lzdGVtcyBhbmQgd2Fu
+dCB1cHN0cmVhbSBjbGVhbmVkIHVwLg0KDQpFeGN1c2UgdGVyc2UgUGhvbmUgcmVwbHkuDQoNCi0t
+IA0KQ29tcHV0ZXIgQXJjaGl0ZWN0IHwgU2VudCBmcm9tIG15IDY0LWJpdCAjQVJNIFBvd2VyZWQg
+cGhvbmUNCg0KPiBPbiBPY3QgMTcsIDIwMTcsIGF0IDEzOjA1LCBCam9ybiBIZWxnYWFzIDxoZWxn
+YWFzQGtlcm5lbC5vcmc+IHdyb3RlOg0KPiANCj4+IE9uIFR1ZSwgU2VwIDI2LCAyMDE3IGF0IDEx
+OjQ5OjE5QU0gLTA2MDAsIEtodW9uZyBEaW5oIHdyb3RlOg0KPj4gVGhpcyBwYXRjaCBzZXQgZW5h
+YmxlcyBBQ1BJIE1TSSBzdXBwb3J0IGZvciBYLUdlbmUgUENJZSB2MSBoYXJkd2FyZQ0KPj4gYW5k
+IHByb3ZpZGVzIHRoZSBwcm9wZXIgTVNJIGRyaXZlciBpbml0aWFsaXphdGlvbiBvcmRlcmluZy4N
+Cj4+IA0KPj4gU2lnbmVkLW9mZi1ieTogS2h1b25nIERpbmggPGtkaW5oQGFwbS5jb20+DQo+PiAt
+LS0NCj4+IHY0Og0KPj4gLSBSZW1vdmUgTWFyYyBaeW5naWVyIEFDSyBpbiB2Mg0KPj4gLSBVc2Ug
+YWNwaV9idXNfc2NhbiBvbiBNU0kgY29udHJvbGxlciBoYW5kbGUgd2hlbiBNU0kgZGV2aWNlIGlz
+IGZvdW5kDQo+PiAtIFJlZ2lzdGVyIEFDUEkgTVNJIGRyaXZlciB3aGVuIE1TSSBkZXZpY2UgaXMg
+Zm91bmQgaW5zdGVhZCBvZiB1c2luZw0KPj4gc3Vic3lzX2luaXRjYWxsDQo+PiAtIFNwbGl0IEFD
+UEkgTVNJIGRyaXZlciBzdXBwb3J0IGludG8gdHdvIHBhdGNoZXMgLSBvbmUgdG8gZW5hYmxlIE1T
+SQ0KPj4gc3VwcG9ydCBmb3IgWC1HZW5lIFBDSWUgdjEgaGFyZHdhcmUsIG9uZSB0byBlbmZvcmNl
+IE1TSSBkcml2ZXIgbG9hZGVkDQo+PiBiZWZvcmUgUENJZSBjb250cm9sbGVyIGRyaXZlciBpbiBB
+Q1BJIGJvb3QgbW9kZQ0KPj4gdjM6DQo+PiAtIElucHV0IFgtR2VuZSBNU0kgYmFzZSBhZGRyZXNz
+IGZvciBpcnFfZG9tYWluX2FsbG9jX2Z3bm9kZQ0KPj4gLSBBZGQgYSBob29rIHRvIGVuZm9yY2Ug
+WC1HZW5lIE1TSSBiZSBwcm9iZWQgcHJpb3IgYWNwaV9idXNfc2NhbiBoYXBwZW5zDQo+PiB2MjoN
+Cj4+IC0gVmVyaWZ5IHdpdGggQklPUyB2ZXJzaW9uIDMuMDYuMjUgYW5kIDMuMDcuMDkNCj4+IHYx
+Og0KPj4gLSBJbml0aWFsIHZlcnNpb24NCj4+IC0tLQ0KPj4gDQo+PiBLaHVvbmcgRGluaCAoMik6
+DQo+PiAgUENJL01TSTogcGNpLXhnZW5lLW1zaTogRW5hYmxlIE1TSSBzdXBwb3J0IGluIEFDUEkg
+Ym9vdCBmb3IgWC1HZW5lIHYxDQo+PiAgUENJL01TSTogRW5mb3JjZSBNU0kgZHJpdmVyIGxvYWRl
+ZCBiZWZvcmUgUENJZSBpbiBBQ1BJIGJvb3QNCj4+IA0KPj4gZHJpdmVycy9hY3BpL01ha2VmaWxl
+ICAgICAgICAgICAgfCAgICAyICstDQo+PiBkcml2ZXJzL2FjcGkvYWNwaV9tc2kuYyAgICAgICAg
+ICB8ICAgODYgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4+IGRyaXZl
+cnMvYWNwaS9hY3BpX3BsYXRmb3JtLmMgICAgIHwgICAgMyArLQ0KPj4gZHJpdmVycy9hY3BpL2lu
+dGVybmFsLmggICAgICAgICAgfCAgICAxICsNCj4+IGRyaXZlcnMvYWNwaS9zY2FuLmMgICAgICAg
+ICAgICAgIHwgICAgMSArDQo+PiBkcml2ZXJzL3BjaS9ob3N0L3BjaS14Z2VuZS1tc2kuYyB8ICAg
+NjAgKysrKysrKysrKysrKysrKysrKysrKysrLS0NCj4+IGluY2x1ZGUvbGludXgvYWNwaV9tc2ku
+aCAgICAgICAgIHwgICAzNyArKysrKysrKysrKysrKysrDQo+PiA3IGZpbGVzIGNoYW5nZWQsIDE4
+MyBpbnNlcnRpb25zKCspLCA3IGRlbGV0aW9ucygtKQ0KPj4gY3JlYXRlIG1vZGUgMTAwNjQ0IGRy
+aXZlcnMvYWNwaS9hY3BpX21zaS5jDQo+PiBjcmVhdGUgbW9kZSAxMDA2NDQgaW5jbHVkZS9saW51
+eC9hY3BpX21zaS5oDQo+IA0KPiBUaGUgY2hhbmdlbG9ncyBkb24ndCByZWFsbHkgZ2l2ZSB0aGUg
+bml0dHktZ3JpdHR5IGRldGFpbHMgb2YgdGhlDQo+IHByb2JsZW0sIGUuZy4sIGFwcGFyZW50bHkg
+dGhlIGhvc3QgYnJpZGdlIGFuZCB0aGUgTVNJIGNvbnRyb2xsZXIgYXJlDQo+IGVudW1lcmF0ZWQg
+YXMgdHdvIHNlcGFyYXRlIGRldmljZXMgYW5kIHRoZXJlJ3MgYW4gb3JkZXJpbmcgaXNzdWUgd2l0
+aA0KPiBiaW5kaW5nIGRyaXZlcnMgdG8gdGhlbS4NCj4gDQo+IFRoZXkgc2hvdWxkIGFsc28gY29u
+dHJhc3QgdGhlIFgtR2VuZSBzaXR1YXRpb24gd2l0aCBvdGhlciBzeXN0ZW1zIHNvIHdlDQo+IGNh
+biBzZWUgd2h5IFgtR2VuZSBoYXMgdGhpcyBwcm9ibGVtIHdoZW4gb3RoZXIgc3lzdGVtcyBkb24n
+dC4NCj4gDQo+IEknbSBub3QgdGhyaWxsZWQgYWJvdXQgYWxsIHRoZSBBQ1BJIGNvZGUgdGhpcyBh
+ZGRzLCBidXQgSSdtIGd1ZXNzaW5nDQo+IHRoZXJlJ2xsIGJlIHNvbWUgYmV0dGVyIHNvbHV0aW9u
+IGV2ZW50dWFsbHkuDQo+IA0KPiBJJ20gZ29pbmcgdG8gbWFyayB0aGVzZSBhcyAiY2hhbmdlcyBy
+ZXF1ZXN0ZWQiIGV2ZW4gdGhvdWdoIEkgaGF2ZW4ndA0KPiBhc2tlZCBmb3IgYW55dGhpbmcgc3Bl
+Y2lmaWMgdG8gYmUgY2hhbmdlZCBiZWNhdXNlIGl0IHNvdW5kcyBsaWtlDQo+IExvcmVuem8gZXQg
+YWwuIG1heSBoYXZlIG1vcmUgY29uY3JldGUgcHJvcG9zYWxzIHNvb24uDQo+IA0KPiBBcmUgdGhl
+cmUgY3VycmVudGx5IHN5c3RlbXMgdGhhdCBkbyBub3Qgd29yayBhbmQgbmVlZCB0byBiZSBmaXhl
+ZA0KPiBBU0FQPw0KPiANCj4gQmpvcm4NCg==
 
+--Apple-Mail-62D58F1F-67BA-45C7-98B2-C1D7394C7D39
+Content-Type: text/html;
+	charset=utf-8
+Content-Transfer-Encoding: base64
 
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Rewrite the commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Use "wakeup" instead of "wake"
-Rebase.
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (7):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  mwifiex: Disable wakeup irq handling for pcie
-  arm64: dts: rockchip: Handle PCIe WAKE# signal in pcie driver for Gru
-  of/irq: Adjust of pci irq parsing for multiple interrupts
-  PCI: Make pci_platform_pm_ops's callbacks optional
-  PCI / PM: Move acpi wakeup code to pci core
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-
- Documentation/devicetree/bindings/pci/pci.txt |   3 +
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  |  15 +--
- drivers/net/wireless/marvell/mwifiex/main.c   |   4 +
- drivers/of/of_pci_irq.c                       |  13 ++-
- drivers/pci/Makefile                          |   2 +-
- drivers/pci/pci-acpi.c                        | 121 +++++++++++------------
- drivers/pci/pci-driver.c                      |   9 ++
- drivers/pci/pci-of.c                          | 136 ++++++++++++++++++++++++++
- drivers/pci/pci.c                             | 112 +++++++++++++++++----
- drivers/pci/pci.h                             |  31 ++++--
- drivers/pci/probe.c                           |  12 ++-
- drivers/pci/remove.c                          |   2 +
- include/linux/pci.h                           |   2 +
- 13 files changed, 365 insertions(+), 97 deletions(-)
- create mode 100644 drivers/pci/pci-of.c
-
--- 
-2.11.0
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+PGh0bWw+PGhlYWQ+PG1ldGEgaHR0cC1lcXVpdj0iY29udGVudC10eXBlIiBjb250ZW50PSJ0ZXh0
+L2h0bWw7IGNoYXJzZXQ9dXRmLTgiPjwvaGVhZD48Ym9keSBkaXI9ImF1dG8iPlF1aWNrIHJlcGx5
+IC0gdGhpcyBwYXRjaCBzZXJpZXMgaGFwcGVuZWQgYXQgbXkgcmVxdWVzdCB0byBlbnN1cmUgdGhh
+dCB1cHN0cmVhbSBpcyB0YWtlbiBjYXJlIG9mIHByb3Blcmx5LiBYLUdlbmUxIGlzIFNCU0EgTGV2
+ZWwgMCBha2EgdGhleSB3ZXJlIHRoZSBmaXJzdCB2ZW5kb3IgYW5kIHNvIHdlIGFsbG93ZWQgdGhl
+bSB0byBoYXZlIGEgbm9uLXN0YW5kYXJkIElUUyAoTVNJKSBzb2x1dGlvbi4gWW91IHdvbuKAmXQg
+c2VlIHRoaXMgaW4gYW55IG90aGVyIGZ1dHVyZSBBcm0gc2VydmVyIFNvQywgZXZlbiBmcm9tIEFw
+cGxpZWRNaWNyby4gSXTigJlzIGEgb25lIHRpbWUgaGlzdG9yaWNhbCBhcnRpZmFjdCBhbmQgd2Ug
+bG9uZyBzaW5jZSB0b29rIGNhcmUgb2YgaGF2aW5nIGEgc3RhbmRhcmQgTVNJIHNvbHV0aW9uIEJV
+VCB3ZSBzdGlsbCBoZWF2aWx5IHVzZSBYLUdlbmUxIHN5c3RlbXMgYW5kIHdhbnQgdXBzdHJlYW0g
+Y2xlYW5lZCB1cC48ZGl2Pjxicj48L2Rpdj48ZGl2PkV4Y3VzZSB0ZXJzZSBQaG9uZSByZXBseS48
+YnI+PGJyPjxkaXYgaWQ9IkFwcGxlTWFpbFNpZ25hdHVyZSI+LS0mbmJzcDs8ZGl2PkNvbXB1dGVy
+IEFyY2hpdGVjdCB8IFNlbnQgZnJvbSBteSA2NC1iaXQgI0FSTSBQb3dlcmVkIHBob25lPC9kaXY+
+PC9kaXY+PGRpdj48YnI+T24gT2N0IDE3LCAyMDE3LCBhdCAxMzowNSwgQmpvcm4gSGVsZ2FhcyAm
+bHQ7PGEgaHJlZj0ibWFpbHRvOmhlbGdhYXNAa2VybmVsLm9yZyI+aGVsZ2Fhc0BrZXJuZWwub3Jn
+PC9hPiZndDsgd3JvdGU6PGJyPjxicj48L2Rpdj48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48ZGl2
+PjxzcGFuPk9uIFR1ZSwgU2VwIDI2LCAyMDE3IGF0IDExOjQ5OjE5QU0gLTA2MDAsIEtodW9uZyBE
+aW5oIHdyb3RlOjwvc3Bhbj48YnI+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+VGhpcyBw
+YXRjaCBzZXQgZW5hYmxlcyBBQ1BJIE1TSSBzdXBwb3J0IGZvciBYLUdlbmUgUENJZSB2MSBoYXJk
+d2FyZTwvc3Bhbj48YnI+PC9ibG9ja3F1b3RlPjxibG9ja3F1b3RlIHR5cGU9ImNpdGUiPjxzcGFu
+PmFuZCBwcm92aWRlcyB0aGUgcHJvcGVyIE1TSSBkcml2ZXIgaW5pdGlhbGl6YXRpb24gb3JkZXJp
+bmcuPC9zcGFuPjxicj48L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+
+PC9zcGFuPjxicj48L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+U2ln
+bmVkLW9mZi1ieTogS2h1b25nIERpbmggJmx0OzxhIGhyZWY9Im1haWx0bzprZGluaEBhcG0uY29t
+Ij5rZGluaEBhcG0uY29tPC9hPiZndDs8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48YmxvY2txdW90
+ZSB0eXBlPSJjaXRlIj48c3Bhbj4tLS08L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48YmxvY2txdW90
+ZSB0eXBlPSJjaXRlIj48c3Bhbj52NDo8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48YmxvY2txdW90
+ZSB0eXBlPSJjaXRlIj48c3Bhbj4gLSBSZW1vdmUgTWFyYyBaeW5naWVyIEFDSyBpbiB2Mjwvc3Bh
+bj48YnI+PC9ibG9ja3F1b3RlPjxibG9ja3F1b3RlIHR5cGU9ImNpdGUiPjxzcGFuPiAtIFVzZSBh
+Y3BpX2J1c19zY2FuIG9uIE1TSSBjb250cm9sbGVyIGhhbmRsZSB3aGVuIE1TSSBkZXZpY2UgaXMg
+Zm91bmQ8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bh
+bj4gLSBSZWdpc3RlciBBQ1BJIE1TSSBkcml2ZXIgd2hlbiBNU0kgZGV2aWNlIGlzIGZvdW5kIGlu
+c3RlYWQgb2YgdXNpbmc8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48YmxvY2txdW90ZSB0eXBlPSJj
+aXRlIj48c3Bhbj4gc3Vic3lzX2luaXRjYWxsPC9zcGFuPjxicj48L2Jsb2NrcXVvdGU+PGJsb2Nr
+cXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+IC0gU3BsaXQgQUNQSSBNU0kgZHJpdmVyIHN1cHBvcnQg
+aW50byB0d28gcGF0Y2hlcyAtIG9uZSB0byBlbmFibGUgTVNJPC9zcGFuPjxicj48L2Jsb2NrcXVv
+dGU+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+c3VwcG9ydCBmb3IgWC1HZW5lIFBDSWUg
+djEgaGFyZHdhcmUsIG9uZSB0byBlbmZvcmNlIE1TSSBkcml2ZXIgbG9hZGVkPC9zcGFuPjxicj48
+L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+YmVmb3JlIFBDSWUgY29u
+dHJvbGxlciBkcml2ZXIgaW4gQUNQSSBib290IG1vZGU8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48
+YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj52Mzo8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48
+YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4gLSBJbnB1dCBYLUdlbmUgTVNJIGJhc2UgYWRk
+cmVzcyBmb3IgaXJxX2RvbWFpbl9hbGxvY19md25vZGU8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48
+YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4gLSBBZGQgYSBob29rIHRvIGVuZm9yY2UgWC1H
+ZW5lIE1TSSBiZSBwcm9iZWQgcHJpb3IgYWNwaV9idXNfc2NhbiBoYXBwZW5zPC9zcGFuPjxicj48
+L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+djI6PC9zcGFuPjxicj48
+L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+IC0gVmVyaWZ5IHdpdGgg
+QklPUyB2ZXJzaW9uIDMuMDYuMjUgYW5kIDMuMDcuMDk8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48
+YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj52MTo8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48
+YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4gLSBJbml0aWFsIHZlcnNpb248L3NwYW4+PGJy
+PjwvYmxvY2txdW90ZT48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4tLS08L3NwYW4+PGJy
+PjwvYmxvY2txdW90ZT48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj48L3NwYW4+PGJyPjwv
+YmxvY2txdW90ZT48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj5LaHVvbmcgRGluaCAoMik6
+PC9zcGFuPjxicj48L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+ICZu
+YnNwO1BDSS9NU0k6IHBjaS14Z2VuZS1tc2k6IEVuYWJsZSBNU0kgc3VwcG9ydCBpbiBBQ1BJIGJv
+b3QgZm9yIFgtR2VuZSB2MTwvc3Bhbj48YnI+PC9ibG9ja3F1b3RlPjxibG9ja3F1b3RlIHR5cGU9
+ImNpdGUiPjxzcGFuPiAmbmJzcDtQQ0kvTVNJOiBFbmZvcmNlIE1TSSBkcml2ZXIgbG9hZGVkIGJl
+Zm9yZSBQQ0llIGluIEFDUEkgYm9vdDwvc3Bhbj48YnI+PC9ibG9ja3F1b3RlPjxibG9ja3F1b3Rl
+IHR5cGU9ImNpdGUiPjxzcGFuPjwvc3Bhbj48YnI+PC9ibG9ja3F1b3RlPjxibG9ja3F1b3RlIHR5
+cGU9ImNpdGUiPjxzcGFuPiBkcml2ZXJzL2FjcGkvTWFrZWZpbGUgJm5ic3A7Jm5ic3A7Jm5ic3A7
+Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7fCAmbmJzcDsm
+bmJzcDsmbmJzcDsyICstPC9zcGFuPjxicj48L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUgdHlwZT0i
+Y2l0ZSI+PHNwYW4+IGRyaXZlcnMvYWNwaS9hY3BpX21zaS5jICZuYnNwOyZuYnNwOyZuYnNwOyZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwO3wgJm5ic3A7Jm5ic3A7ODYgKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKys8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48
+YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4gZHJpdmVycy9hY3BpL2FjcGlfcGxhdGZvcm0u
+YyAmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDt8ICZuYnNwOyZuYnNwOyZuYnNwOzMgKy08L3NwYW4+
+PGJyPjwvYmxvY2txdW90ZT48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4gZHJpdmVycy9h
+Y3BpL2ludGVybmFsLmggJm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7
+Jm5ic3A7Jm5ic3A7fCAmbmJzcDsmbmJzcDsmbmJzcDsxICs8L3NwYW4+PGJyPjwvYmxvY2txdW90
+ZT48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4gZHJpdmVycy9hY3BpL3NjYW4uYyAmbmJz
+cDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsm
+bmJzcDsmbmJzcDsmbmJzcDt8ICZuYnNwOyZuYnNwOyZuYnNwOzEgKzwvc3Bhbj48YnI+PC9ibG9j
+a3F1b3RlPjxibG9ja3F1b3RlIHR5cGU9ImNpdGUiPjxzcGFuPiBkcml2ZXJzL3BjaS9ob3N0L3Bj
+aS14Z2VuZS1tc2kuYyB8ICZuYnNwOyZuYnNwOzYwICsrKysrKysrKysrKysrKysrKysrKysrKy0t
+PC9zcGFuPjxicj48L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUgdHlwZT0iY2l0ZSI+PHNwYW4+IGlu
+Y2x1ZGUvbGludXgvYWNwaV9tc2kuaCAmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJz
+cDsmbmJzcDsmbmJzcDt8ICZuYnNwOyZuYnNwOzM3ICsrKysrKysrKysrKysrKys8L3NwYW4+PGJy
+PjwvYmxvY2txdW90ZT48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4gNyBmaWxlcyBjaGFu
+Z2VkLCAxODMgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSk8L3NwYW4+PGJyPjwvYmxvY2tx
+dW90ZT48YmxvY2txdW90ZSB0eXBlPSJjaXRlIj48c3Bhbj4gY3JlYXRlIG1vZGUgMTAwNjQ0IGRy
+aXZlcnMvYWNwaS9hY3BpX21zaS5jPC9zcGFuPjxicj48L2Jsb2NrcXVvdGU+PGJsb2NrcXVvdGUg
+dHlwZT0iY2l0ZSI+PHNwYW4+IGNyZWF0ZSBtb2RlIDEwMDY0NCBpbmNsdWRlL2xpbnV4L2FjcGlf
+bXNpLmg8L3NwYW4+PGJyPjwvYmxvY2txdW90ZT48c3Bhbj48L3NwYW4+PGJyPjxzcGFuPlRoZSBj
+aGFuZ2Vsb2dzIGRvbid0IHJlYWxseSBnaXZlIHRoZSBuaXR0eS1ncml0dHkgZGV0YWlscyBvZiB0
+aGU8L3NwYW4+PGJyPjxzcGFuPnByb2JsZW0sIGUuZy4sIGFwcGFyZW50bHkgdGhlIGhvc3QgYnJp
+ZGdlIGFuZCB0aGUgTVNJIGNvbnRyb2xsZXIgYXJlPC9zcGFuPjxicj48c3Bhbj5lbnVtZXJhdGVk
+IGFzIHR3byBzZXBhcmF0ZSBkZXZpY2VzIGFuZCB0aGVyZSdzIGFuIG9yZGVyaW5nIGlzc3VlIHdp
+dGg8L3NwYW4+PGJyPjxzcGFuPmJpbmRpbmcgZHJpdmVycyB0byB0aGVtLjwvc3Bhbj48YnI+PHNw
+YW4+PC9zcGFuPjxicj48c3Bhbj5UaGV5IHNob3VsZCBhbHNvIGNvbnRyYXN0IHRoZSBYLUdlbmUg
+c2l0dWF0aW9uIHdpdGggb3RoZXIgc3lzdGVtcyBzbyB3ZTwvc3Bhbj48YnI+PHNwYW4+Y2FuIHNl
+ZSB3aHkgWC1HZW5lIGhhcyB0aGlzIHByb2JsZW0gd2hlbiBvdGhlciBzeXN0ZW1zIGRvbid0Ljwv
+c3Bhbj48YnI+PHNwYW4+PC9zcGFuPjxicj48c3Bhbj5JJ20gbm90IHRocmlsbGVkIGFib3V0IGFs
+bCB0aGUgQUNQSSBjb2RlIHRoaXMgYWRkcywgYnV0IEknbSBndWVzc2luZzwvc3Bhbj48YnI+PHNw
+YW4+dGhlcmUnbGwgYmUgc29tZSBiZXR0ZXIgc29sdXRpb24gZXZlbnR1YWxseS48L3NwYW4+PGJy
+PjxzcGFuPjwvc3Bhbj48YnI+PHNwYW4+SSdtIGdvaW5nIHRvIG1hcmsgdGhlc2UgYXMgImNoYW5n
+ZXMgcmVxdWVzdGVkIiBldmVuIHRob3VnaCBJIGhhdmVuJ3Q8L3NwYW4+PGJyPjxzcGFuPmFza2Vk
+IGZvciBhbnl0aGluZyBzcGVjaWZpYyB0byBiZSBjaGFuZ2VkIGJlY2F1c2UgaXQgc291bmRzIGxp
+a2U8L3NwYW4+PGJyPjxzcGFuPkxvcmVuem8gZXQgYWwuIG1heSBoYXZlIG1vcmUgY29uY3JldGUg
+cHJvcG9zYWxzIHNvb24uPC9zcGFuPjxicj48c3Bhbj48L3NwYW4+PGJyPjxzcGFuPkFyZSB0aGVy
+ZSBjdXJyZW50bHkgc3lzdGVtcyB0aGF0IGRvIG5vdCB3b3JrIGFuZCBuZWVkIHRvIGJlIGZpeGVk
+PC9zcGFuPjxicj48c3Bhbj5BU0FQPzwvc3Bhbj48YnI+PHNwYW4+PC9zcGFuPjxicj48c3Bhbj5C
+am9ybjwvc3Bhbj48YnI+PC9kaXY+PC9ibG9ja3F1b3RlPjwvZGl2PjwvYm9keT48L2h0bWw+
+--Apple-Mail-62D58F1F-67BA-45C7-98B2-C1D7394C7D39--
