@@ -1,136 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45212 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751348AbdJRQ3j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Oct 2017 12:29:39 -0400
-Date: Wed, 18 Oct 2017 11:29:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>, bhelgaas@google.com,
-        jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, mperttunen@nvidia.com
-Subject: Re: [PATCH V2 2/4] PCI: tegra: Add Tegra186 PCIe support
-Message-ID: <20171018162937.GA32397@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
- <1506513517-25870-3-git-send-email-mmaddireddy@nvidia.com>
- <20171017173428.GE5641@bhelgaas-glaptop.roam.corp.google.com>
- <20171017202749.GB10482@ulmo>
- <20171018132752.GO5641@bhelgaas-glaptop.roam.corp.google.com>
- <9ceb5f5c-7fcc-d729-e5d8-d13142bee8ed@nvidia.com>
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:46092 "EHLO
+        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764252AbdJQUZ4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 16:25:56 -0400
+Received: by mail-vk0-f66.google.com with SMTP id k123so1962155vkb.3
+        for <linux-pci@vger.kernel.org>; Tue, 17 Oct 2017 13:25:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9ceb5f5c-7fcc-d729-e5d8-d13142bee8ed@nvidia.com>
+In-Reply-To: <1508271773-17827-1-git-send-email-dmeyer@gigaio.com>
+References: <1508271773-17827-1-git-send-email-dmeyer@gigaio.com>
+From: Jon Mason <jdmason@kudzu.us>
+Date: Tue, 17 Oct 2017 16:25:54 -0400
+Message-ID: <CAPoiz9y-6kyjF1ypt7p+7K6E-m55_Fra5hgFYy--5YXz7V2PdQ@mail.gmail.com>
+Subject: Re: [PATCH] NTB: ntb_hw_switchtec: Fix peer BAR bug in switchtec_ntb_init_shared_mw
+To: D Meyer <dmeyer@gigaio.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        stephen.bates@microsemi.com, Logan Gunthorpe <logang@deltatee.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Hubbe, Allen" <Allen.Hubbe@emc.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        linux-ntb@googlegroups.com,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 18, 2017 at 07:44:12PM +0530, Manikanta Maddireddy wrote:
-> 
-> 
-> On 18-Oct-17 6:57 PM, Bjorn Helgaas wrote:
-> > On Tue, Oct 17, 2017 at 10:27:49PM +0200, Thierry Reding wrote:
-> >> On Tue, Oct 17, 2017 at 12:34:28PM -0500, Bjorn Helgaas wrote:
-> >>> On Wed, Sep 27, 2017 at 05:28:35PM +0530, Manikanta Maddireddy wrote:
-> >>>> UPHY programming is performed by BPMP, PHY enable calls are
-> >>>> not required for Tegra186 PCIe. Power partition ungate is
-> >>>> done by BPMP powergate driver.
-> >>>>
-> >>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> >>>> Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
-> >>>> Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
-> >>>> ---
-> >>>> V2: Add soc->program_uphy check for phy_exit call
-> >>>>  drivers/pci/host/pci-tegra.c | 132 +++++++++++++++++++++++++++++++++++--------
-> >>>>  1 file changed, 108 insertions(+), 24 deletions(-)
-> >>>
-> >>>> @@ -1012,10 +1016,12 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
-> >>>>  		afi_writel(pcie, value, AFI_FUSE);
-> >>>>  	}
-> >>>>  
-> >>>> -	err = tegra_pcie_phy_power_on(pcie);
-> >>>> -	if (err < 0) {
-> >>>> -		dev_err(dev, "failed to power on PHY(s): %d\n", err);
-> >>>> -		return err;
-> >>>> +	if (soc->program_uphy) {
-> >>>> +		err = tegra_pcie_phy_power_on(pcie);
-> >>>> +		if (err < 0) {
-> >>>> +			dev_err(dev, "failed to power on PHY(s): %d\n", err);
-> >>>> +			return err;
-> >>>> +		}
-> >>>
-> >>> This looks good: it's obvious that the previously-supported devices
-> >>> continue to work the same way because you set ".program_uphy = true"
-> >>> for them.  (It would be even more obvious if you changed the sense so
-> >>> that only the new device had to add this initializaer, but in general
-> >>> I prefer the positive logic as you have here, and I did verify that
-> >>> you added the initializer for all tegra_pcie_soc variants.)
-> >>>
-> >>>> @@ -1048,19 +1054,23 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
-> >>>>  static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-> >>>>  {
-> >>>>  	struct device *dev = pcie->dev;
-> >>>> +	const struct tegra_pcie_soc *soc = pcie->soc;
-> >>>>  	int err;
-> >>>>  
-> >>>>  	/* TODO: disable and unprepare clocks? */
-> >>>>  
-> >>>> -	err = tegra_pcie_phy_power_off(pcie);
-> >>>> -	if (err < 0)
-> >>>> -		dev_err(dev, "failed to power off PHY(s): %d\n", err);
-> >>>> +	if (soc->program_uphy) {
-> >>>> +		err = tegra_pcie_phy_power_off(pcie);
-> >>>> +		if (err < 0)
-> >>>> +			dev_err(dev, "failed to power off PHY(s): %d\n", err);
-> >>>> +	}
-> >>>>  
-> >>>>  	reset_control_assert(pcie->pcie_xrst);
-> >>>>  	reset_control_assert(pcie->afi_rst);
-> >>>>  	reset_control_assert(pcie->pex_rst);
-> >>>>  
-> >>>> -	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> >>>> +	if (!dev->pm_domain)
-> >>>> +		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> >>>
-> >>> But this one isn't obvious because nothing in your patch obviously
-> >>> affects dev->pm_domain, so I can't tell whether this is safe.  It's
-> >>> worth a changelog comment to help justify this.
-> >>
-> >> The last sentence in the commit message is what this is about. Maybe it
-> >> should be more verbose:
-> >>
-> >> 	Since the BPMP controls the powergates on Tegra186, there is no
-> >> 	need to manually power on and off the PCIe power partition. The
-> >> 	BPMP generic power domain driver takes care of it instead.
-> > 
-> > If you know Tegra intimately, maybe that clarifies it.  I don't, so my
-> > problem is that there's nothing in the patch that helps me verify
-> > this.  I infer that maybe there's something different in the DT that
-> > means dev->pm_domain will be set for Tegra186, but not for other
-> > variants?
-> > 
-> > There should be something that helps the reader connect the dots.
-> 
-> Till tegra210 pmc driver provides direct powergate power ON/OFF functions.
-> 
-> In tegra186.dtsi power-domains property is added in pcie@10003000 DT node. reference: https://patchwork.ozlabs.org/patch/819113/
-> powergate-bpmp.c is the pm domain provider for pcie powergate. 
-> Platform driver will look for pm domain provider of Tegra pcie host driver and sets dev->pm_domains.
-> powergate-bpmp.c driver registers powergate power ON/OFF functions to generic PD power_on/powerr_off callback functions.
-> Generic power domain will take care of calling power_on before Tegra PCIe probe.
-> 
-> So in this patch I used dev->pm_domain to skip pmc driver calls.
+On Tue, Oct 17, 2017 at 4:22 PM,  <dmeyer@gigaio.com> wrote:
+> From: Doug Meyer <dmeyer@gigaio.com>
+>
+> This resolves a bug which may incorrectly configure the peer host's
+> LUT for shared memory window access. The code was using the local
+> host's first BAR number, rather than the peer hosts's first BAR
+> number, to determine what peer NT control register to program.
+>
+> The bug will cause the Switchtec NTB link to work only if both peers
+> have the same first NTB BAR configured. In all other configurations,
+> the link will not come up, failing silently.
+>
+> When both hosts have the same first BAR, the configuration works only
+> because the first BAR numbers happent to be the same. When the hosts
+> do not have the same first BAR, then the LUT translation will not be
+> configured in the correct peer LUT and will not give the peer the
+> shared memory window access required for the link to operate.
+>
+> Signed-off-by: Doug Meyer <dmeyer@gigaio.com>
 
-Thanks, I updated the changelog as follows:
+Looks good to me.  I'd prefer to have a "Fixes: " here, but I can add
+it if there are no other objections to this patch.
 
+Thanks,
+Jon
 
-commit 9cea513d8cbc75ee26327d3d8971fe7b58288d8f
-Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Date:   Wed Sep 27 17:28:35 2017 +0530
-
-    PCI: tegra: Add Tegra186 PCIe support
-    
-    Add Tegra186 PCIe support.  UPHY programming is performed by BPMP; PHY
-    enable calls are not required for Tegra186 PCIe.
-    
-    Power partition ungate is done by BPMP powergate driver.  The Tegra186
-    DT description must include a "power-domains" property, which results in
-    dev->pm_domain being set.
+> ---
+>  drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> index afe8ed6..ca0334a 100644
+> --- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> +++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> @@ -964,7 +964,8 @@ static void switchtec_ntb_init_shared(struct switchtec_ntb *sndev)
+>  static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
+>  {
+>         struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
+> -       int bar = sndev->direct_mw_to_bar[0];
+> +       int self_bar = sndev->direct_mw_to_bar[0];
+> +       int peer_bar = sndev->peer_direct_mw_to_bar[0];
+>         u32 ctl_val;
+>         int rc;
+>
+> @@ -985,12 +986,12 @@ static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
+>         if (rc)
+>                 goto unalloc_and_exit;
+>
+> -       ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
+> +       ctl_val = ioread32(&ctl->bar_entry[peer_bar].ctl);
+>         ctl_val &= 0xFF;
+>         ctl_val |= NTB_CTRL_BAR_LUT_WIN_EN;
+>         ctl_val |= ilog2(LUT_SIZE) << 8;
+>         ctl_val |= (sndev->nr_lut_mw - 1) << 14;
+> -       iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
+> +       iowrite32(ctl_val, &ctl->bar_entry[peer_bar].ctl);
+>
+>         iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) |
+>                    sndev->self_shared_dma),
+> @@ -1009,7 +1010,7 @@ static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
+>                 goto unalloc_and_exit;
+>         }
+>
+> -       sndev->peer_shared = pci_iomap(sndev->stdev->pdev, bar, LUT_SIZE);
+> +       sndev->peer_shared = pci_iomap(sndev->stdev->pdev, self_bar, LUT_SIZE);
+>         if (!sndev->peer_shared) {
+>                 rc = -ENOMEM;
+>                 goto unalloc_and_exit;
+> --
+> 1.8.3.1
+>
