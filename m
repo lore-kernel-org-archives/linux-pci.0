@@ -1,35 +1,37 @@
-Return-Path: <SRS0=GJvY=BM=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=GJvY=BM=chromium.org=briannorris@kernel.org>
-Date: Thu, 12 Oct 2017 23:31:00 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>,
-	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-	shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
-	dianders@chromium.org, linux-rockchip@lists.infradead.org,
-	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 1/3] PCI: rockchip: Add support for pcie wake irq
-Message-ID: <20171013063100.GB56763@google.com>
-References: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
- <20170911151029.25185-2-jeffy.chen@rock-chips.com>
- <20171013015620.GA94568@google.com>
- <20171013023246.GZ25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:46490 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763667AbdJQWZd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 18:25:33 -0400
+Date: Tue, 17 Oct 2017 17:25:31 -0500
+From: Rob Herring <robh@kernel.org>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>, linux-arm-kernel@axis.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 10/10] PCI: dwc: artpec6: add support for the ARTPEC-7 SoC
+Message-ID: <20171017222531.svoanlsnpxr4pi7f@rob-hp-laptop>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-11-niklas.cassel@axis.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171013023246.GZ25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171013160914.3220-11-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 09:32:47PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 12, 2017 at 06:56:22PM -0700, Brian Norris wrote:
-> > Bjorn, were you planning to pick this up?
+On Fri, Oct 13, 2017 at 06:09:13PM +0200, Niklas Cassel wrote:
+> The ARTPEC-6 SoC and the ARTPEC-7 SoC are very similar.
+> Unfortunately, some fields in the PCIECFG and PCIESTAT
+> register have changed.
 > 
-> I had already applied this to pci/host-rockchip, but I must have gotten
-> interrupted before sending the email.
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   2 +
 
-You also hadn't merged it into your /next branch either, which is where
-I was looking (and basing my other patch set).
+Acked-by: Rob Herring <robh@kernel.org>
 
-> But now that you mention it, I looked at this again and have some
-> questions.  I'll respond to the original patch.
-
-Brian
+>  drivers/pci/dwc/pcie-artpec6.c                     | 162 ++++++++++++++++++++-
+>  2 files changed, 161 insertions(+), 3 deletions(-)
