@@ -1,97 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:49232 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752767AbdJTLfU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Oct 2017 07:35:20 -0400
-Date: Fri, 20 Oct 2017 13:35:27 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Dexuan Cui <decui@microsoft.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>
+CC: "x86@kernel.org" <x86@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [Update][PATCH v2 01/12] PM / core: Add NEVER_SKIP and
- SMART_PREPARE driver flags
-Message-ID: <20171020113527.GA699@kroah.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
- <11013815.Nxk07oyMGD@aspire.rjw.lan>
- <20171019073315.GB20787@kroah.com>
- <1564009.ulyn1Ag4Ad@aspire.rjw.lan>
+        Marc Zyngier <marc.zyngier@arm.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>
+Subject: RE: [patch 3/3] x86/vector/msi: Select
+ CONFIG_GENERIC_IRQ_RESERVATION_MODE
+Date: Tue, 17 Oct 2017 18:59:27 +0000
+Message-ID: <KL1P15301MB000624AF90FB90B39BE84160BF4C0@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+References: <20171017075456.694047687@linutronix.de>
+ <20171017075600.527569354@linutronix.de>
+In-Reply-To: <20171017075600.527569354@linutronix.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1564009.ulyn1Ag4Ad@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 01:11:22PM +0200, Rafael J. Wysocki wrote:
-> On Thursday, October 19, 2017 9:33:15 AM CEST Greg Kroah-Hartman wrote:
-> > On Thu, Oct 19, 2017 at 01:17:31AM +0200, Rafael J. Wysocki wrote:
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > 
-> > > The motivation for this change is to provide a way to work around
-> > > a problem with the direct-complete mechanism used for avoiding
-> > > system suspend/resume handling for devices in runtime suspend.
-> > > 
-> > > The problem is that some middle layer code (the PCI bus type and
-> > > the ACPI PM domain in particular) returns positive values from its
-> > > system suspend ->prepare callbacks regardless of whether the driver's
-> > > ->prepare returns a positive value or 0, which effectively prevents
-> > > drivers from being able to control the direct-complete feature.
-> > > Some drivers need that control, however, and the PCI bus type has
-> > > grown its own flag to deal with this issue, but since it is not
-> > > limited to PCI, it is better to address it by adding driver flags at
-> > > the core level.
-> > > 
-> > > To that end, add a driver_flags field to struct dev_pm_info for flags
-> > > that can be set by device drivers at the probe time to inform the PM
-> > > core and/or bus types, PM domains and so on on the capabilities and/or
-> > > preferences of device drivers.  Also add two static inline helpers
-> > > for setting that field and testing it against a given set of flags
-> > > and make the driver core clear it automatically on driver remove
-> > > and probe failures.
-> > > 
-> > > Define and document two PM driver flags related to the direct-
-> > > complete feature: NEVER_SKIP and SMART_PREPARE that can be used,
-> > > respectively, to indicate to the PM core that the direct-complete
-> > > mechanism should never be used for the device and to inform the
-> > > middle layer code (bus types, PM domains etc) that it can only
-> > > request the PM core to use the direct-complete mechanism for
-> > > the device (by returning a positive value from its ->prepare
-> > > callback) if it also has been requested by the driver.
-> > > 
-> > > While at it, make the core check pm_runtime_suspended() when
-> > > setting power.direct_complete so that it doesn't need to be
-> > > checked by ->prepare callbacks.
-> > > 
-> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
-> Thanks!
-> 
-> Does it also apply to the other patches in the series?
-> 
-> I'd like to queue up the core patches for 4.15 as they are specifically
-> designed to only affect the drivers that actually set the flags, so there
-> shouldn't be any regression resulting from them, and I'd like to be
-> able to start using the flags in drivers going forward.
+> From: Thomas Gleixner [mailto:tglx@linutronix.de]
+> Sent: Tuesday, October 17, 2017 12:55 AM
+> --- a/arch/x86/Kconfig
+> +++ b/arch/x86/Kconfig
+> @@ -95,7 +95,7 @@ config X86
+>  	select GENERIC_IRQ_MATRIX_ALLOCATOR	if X86_LOCAL_APIC
+>  	select GENERIC_IRQ_MIGRATION		if SMP
+>  	select GENERIC_IRQ_PROBE
+> -	select GENERIC_IRQ_SHOW
+> +	select GENERIC_IRQ_RESERVATION_MODE
+>  	select GENERIC_PENDING_IRQ		if SMP
+>  	select GENERIC_SMP_IDLE_THREAD
+>  	select GENERIC_STRNCPY_FROM_USER
 
-Yes, sorry, I thought I acked them, but you are right, I didn't:
+Hi Thomas,
+It looks you removed GENERIC_IRQ_SHOW by accident?
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+I got this build error:
+...
+  LD      vmlinux.o
+  MODPOST vmlinux.o
+fs/proc/interrupts.o:(.rodata+0x118): undefined reference to `show_interrup=
+ts'
+Makefile:1000: recipe for target 'vmlinux' failed
+make: *** [vmlinux] Error 1
 
-for all of them please.
+Adding GENERIC_IRQ_SHOW back can fix the build failure, and with the
+pachset Hyper-V PCI pass-through can work fine.
 
-thanks,
-
-greg k-h
+Thanks,
+-- Dexuan
