@@ -1,53 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46636 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751650AbdJMUAH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Oct 2017 16:00:07 -0400
-Date: Fri, 13 Oct 2017 15:00:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Thierry Reding <treding@nvidia.com>
-Subject: [GIT PULL] PCI fixes for v4.14
-Message-ID: <20171013200004.GA10475@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:42126 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932690AbdJQI2C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 04:28:02 -0400
+Date: Tue, 17 Oct 2017 10:28:09 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Robin Murphy <robin.murphy@arm.com>, robh+dt@kernel.org,
+        m.szyprowski@samsung.com, mperttunen@nvidia.com,
+        jonathanh@nvidia.com, thierry.reding@gmail.com, kishon@ti.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: Flag buses which demand DMA configuration
+Message-ID: <20171017082809.GA4947@kroah.com>
+References: <bd1c6061a6a16f720e992a0f12933bdee6591aea.1507823375.git.robin.murphy@arm.com>
+ <20171017081701.GB19475@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171017081701.GB19475@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
+On Tue, Oct 17, 2017 at 10:17:01AM +0200, Christoph Hellwig wrote:
+> Looks fine:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Greg, do you want to take this or should I queue it up in the
+> dma-mapping tree?
 
-  - revert Tegra MSI change that caused a regression on TrimSlice (Thierry
-    Reding)
+You can take it, thanks!
 
-  - finish Aardvark conversion to host bridge IRQ mapping.  We missed
-    Aardvark the first time around so it regressed (Thomas Petazzoni)
-
-
-The following changes since commit b1f9e5e355e909000fcccfd2bc31f7c1ded358ab:
-
-  ide: fix IRQ assignment for PCI bus order probing (2017-10-03 14:03:31 -0500)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.14-fixes-5
-
-for you to fetch changes up to 407dae1e4415acde2d9f48bb76361893c4653756:
-
-  PCI: aardvark: Move to struct pci_host_bridge IRQ mapping functions (2017-10-10 21:17:43 -0500)
-
-----------------------------------------------------------------
-pci-v4.14-fixes-5
-
-----------------------------------------------------------------
-Thierry Reding (1):
-      Revert "PCI: tegra: Do not allocate MSI target memory"
-
-Thomas Petazzoni (1):
-      PCI: aardvark: Move to struct pci_host_bridge IRQ mapping functions
-
- drivers/pci/host/pci-aardvark.c |  2 ++
- drivers/pci/host/pci-tegra.c    | 22 ++++++----------------
- 2 files changed, 8 insertions(+), 16 deletions(-)
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
