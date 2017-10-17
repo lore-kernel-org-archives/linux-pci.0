@@ -1,60 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:12091 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932312AbdJ0TbT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 15:31:19 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 08/12] PCI: tegra: Wait for DLLP to finish before entering L1 or L2
-Date: Sat, 28 Oct 2017 00:59:25 +0530
-Message-ID: <1509132569-9398-9-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
+        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
+        balbi@kernel.org, gregkh@linuxfoundation.org,
+        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2 09/15] ACPI: configfs: make config_item_type const
+Date: Tue, 17 Oct 2017 02:10:57 +0200
+Message-ID: <3026721.pYNdH8r6C9@aspire.rjw.lan>
+In-Reply-To: <1508167134-6243-10-git-send-email-bhumirks@gmail.com>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1508167134-6243-10-git-send-email-bhumirks@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set required bit to have LTSSM wait for DLLP to finish before entering L1
-or L2. This avoids truncation of PM messages which results in receiver
-errors.
+On Monday, October 16, 2017 5:18:48 PM CEST Bhumika Goyal wrote:
+> Make these structures const as they are either passed to the functions
+> having the argument as const or stored as a reference in the "ci_type"
+> const field of a config_item structure.
+> 
+> Done using Coccienlle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+> ---
+> * Changes in v2- Combine all the followup patches and the constification
+> patches into a series.
+> 
+>  drivers/acpi/acpi_configfs.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/acpi/acpi_configfs.c b/drivers/acpi/acpi_configfs.c
+> index 853bc7f..b588503 100644
+> --- a/drivers/acpi/acpi_configfs.c
+> +++ b/drivers/acpi/acpi_configfs.c
+> @@ -204,7 +204,7 @@ struct configfs_attribute *acpi_table_attrs[] = {
+>  	NULL,
+>  };
+>  
+> -static struct config_item_type acpi_table_type = {
+> +static const struct config_item_type acpi_table_type = {
+>  	.ct_owner = THIS_MODULE,
+>  	.ct_bin_attrs = acpi_table_bin_attrs,
+>  	.ct_attrs = acpi_table_attrs,
+> @@ -237,12 +237,12 @@ struct configfs_group_operations acpi_table_group_ops = {
+>  	.drop_item = acpi_table_drop_item,
+>  };
+>  
+> -static struct config_item_type acpi_tables_type = {
+> +static const struct config_item_type acpi_tables_type = {
+>  	.ct_owner = THIS_MODULE,
+>  	.ct_group_ops = &acpi_table_group_ops,
+>  };
+>  
+> -static struct config_item_type acpi_root_group_type = {
+> +static const struct config_item_type acpi_root_group_type = {
+>  	.ct_owner = THIS_MODULE,
+>  };
+>  
+> 
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index b8cac871712b..6028d5f3d5bb 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -217,6 +217,9 @@
- #define RP_VEND_CTL1	0xf48
- #define  RP_VEND_CTL1_ERPT	(1 << 13)
- 
-+#define RP_VEND_XP_BIST	0xf4c
-+#define  RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
-+
- #define RP_VEND_CTL2 0x00000fa8
- #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
- 
-@@ -2160,6 +2163,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
- 	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
- 	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
- 	writel(value, port->base + RP_VEND_XP);
-+
-+	/* LTSSM will wait for DLLP to finish before entering L1 or L2,
-+	 * to avoid truncation of PM messages which results in receiver errors
-+	 */
-+	value = readl(port->base + RP_VEND_XP_BIST);
-+	value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
-+	writel(value, port->base + RP_VEND_XP_BIST);
- }
- /*
-  * FIXME: If there are no PCIe cards attached, then calling this function
--- 
-2.1.4
+
