@@ -1,80 +1,127 @@
-Return-Path: <SRS0=ogav=BY=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=ogav=BY=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] PCI: endpoint: handle probable NULL pointer access
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Pankaj Dubey
-	<pankaj.dubey@samsung.com>
-References: <CGME20171012035806epcas1p16df484a0565cfe780416253710464a8f@epcas1p1.samsung.com>
- <1507780677-7983-1-git-send-email-pankaj.dubey@samsung.com>
- <20171024200200.GE21840@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <6ee65418-8589-01c1-2156-67fbf881260a@ti.com>
-Date: Wed, 25 Oct 2017 17:32:07 +0530
+Return-Path: <SRS0=alSj=BR=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=alSj=BR=gmail.com=ckoenig.leichtzumerken@kernel.org>
+From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors v5
+Date: Wed, 18 Oct 2017 15:58:20 +0200
+Message-Id: <20171018135821.3248-5-deathsimple@vodafone.de>
+In-Reply-To: <20171018135821.3248-1-deathsimple@vodafone.de>
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <20171024200200.GE21840@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Christian König <christian.koenig@amd.com>
 
-On Wednesday 25 October 2017 01:32 AM, Bjorn Helgaas wrote:
-> On Thu, Oct 12, 2017 at 09:27:57AM +0530, Pankaj Dubey wrote:
->> controller_group allocation in pci_ep_cfs_init function can fail
->> so we should have a check while using it in pci_ep_cfs_add_epc_group
->> for registering group, else we will hit NULL pointer access.
->>
->> This patch adds required check for the same and returns -EPROBE_DEFER,
->> so that endpoint controller driver probe can be reattempted later
->> in case controller_group is not allocated because pci_ep_cfs_init is
->> not yet called.
->>
->> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> 
-> Looking for Kishon's ack here.
-> 
->> ---
->>  drivers/pci/endpoint/pci-ep-cfs.c   | 7 ++++++-
->>  drivers/pci/endpoint/pci-epc-core.c | 4 ++++
->>  2 files changed, 10 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
->> index 424fdd6..3cac818 100644
->> --- a/drivers/pci/endpoint/pci-ep-cfs.c
->> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
->> @@ -172,7 +172,12 @@ struct config_group *pci_ep_cfs_add_epc_group(const char *name)
->>  	group = &epc_group->group;
->>  
->>  	config_group_init_type_name(group, name, &pci_epc_type);
->> -	ret = configfs_register_group(controllers_group, group);
->> +
->> +	if (controllers_group)
->> +		ret = configfs_register_group(controllers_group, group);
->> +	else
->> +		ret = -EPROBE_DEFER;
->> +
+Most BIOS don't enable this because of compatibility reasons.
 
-Do you ever face this issue? Ideally controllers_group should always be
-initialized if the dependencies are modeled properly.
->>  	if (ret) {
->>  		pr_err("failed to register configfs group for %s\n", name);
->>  		goto err_register_group;
->> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
->> index 42c2a11..d327a2a 100644
->> --- a/drivers/pci/endpoint/pci-epc-core.c
->> +++ b/drivers/pci/endpoint/pci-epc-core.c
->> @@ -518,6 +518,10 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
->>  		goto put_dev;
->>  
->>  	epc->group = pci_ep_cfs_add_epc_group(dev_name(dev));
->> +	if (IS_ERR(epc->group)) {
->> +		ret = -EPROBE_DEFER;
+Manually enable a 64bit BAR of 64GB size so that we have
+enough room for PCI devices.
 
-should use the return value of pci_ep_cfs_add_epc_group().
+v2: style cleanups, increase size, add resource name, set correct flags,
+    print message that windows was added
+v3: add defines for all the magic numbers, style cleanups
+v4: add some comment that the BIOS should actually allow this using
+    _PRS and _SRS.
+v5: only enable this if CONFIG_PHYS_ADDR_T_64BIT is set
 
-However I don't think this is required since drivers might not actually need cfs.
+Signed-off-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
+ arch/x86/pci/fixup.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
 
-Thanks
-Kishon
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 11e407489db0..7b6bd76713c5 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -618,3 +618,83 @@ static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
+ 		dev_info(dev, "can't work around MacBook Pro poweroff issue\n");
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
++
++#ifdef CONFIG_PHYS_ADDR_T_64BIT
++
++#define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
++#define AMD_141b_MMIO_BASE_RE_MASK		BIT(0)
++#define AMD_141b_MMIO_BASE_WE_MASK		BIT(1)
++#define AMD_141b_MMIO_BASE_MMIOBASE_MASK	GENMASK(31,8)
++
++#define AMD_141b_MMIO_LIMIT(x)	(0x84 + (x) * 0x8)
++#define AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK	GENMASK(31,8)
++
++#define AMD_141b_MMIO_HIGH(x)	(0x180 + (x) * 0x4)
++#define AMD_141b_MMIO_HIGH_MMIOBASE_MASK	GENMASK(7,0)
++#define AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT	16
++#define AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK	GENMASK(23,16)
++
++/*
++ * The PCI Firmware Spec, rev 3.2 notes that ACPI should optionally allow
++ * configuring host bridge windows using the _PRS and _SRS methods.
++ *
++ * But this is rarely implemented, so we manually enable a large 64bit BAR for
++ * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
++ */
++static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
++{
++	struct resource *res, *conflict;
++	u32 base, limit, high;
++	unsigned i;
++
++	for (i = 0; i < 8; ++i) {
++		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
++		pci_read_config_dword(dev, AMD_141b_MMIO_HIGH(i), &high);
++
++		/* Is this slot free? */
++		if (!(base & (AMD_141b_MMIO_BASE_RE_MASK |
++			      AMD_141b_MMIO_BASE_WE_MASK)))
++			break;
++
++		base >>= 8;
++		base |= high << 24;
++
++		/* Abort if a slot already configures a 64bit BAR. */
++		if (base > 0x10000)
++			return;
++	}
++	if (i == 8)
++		return;
++
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
++		return;
++
++	res->name = "PCI Bus 0000:00";
++	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
++		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
++	res->start = 0x100000000ull;
++	res->end = 0xfd00000000ull - 1;
++
++	/* Just grab the free area behind system memory for this */
++	while ((conflict = request_resource_conflict(&iomem_resource, res)))
++		res->start = conflict->end + 1;
++
++	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
++
++	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
++		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
++	limit = ((res->end + 1) >> 8) & AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK;
++	high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
++		((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
++		 & AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK);
++
++	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
++	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
++	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
++
++	pci_bus_add_resource(dev->bus, res, 0);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
++
++#endif
+-- 
+2.11.0
