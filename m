@@ -1,89 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=AO0a=BR=codeaurora.org=tbaicar@kernel.org>
+Return-Path: <SRS0=AO0a=BR=codeaurora.org=tbaicar@kernel.org>
+Subject: Re: [PATCH] PCI/AER: update AER status string print to match other
+ AER logs
+To: David Laight <David.Laight@ACULAB.COM>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "helgaas@kernel.org" <helgaas@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
+ <063D6719AE5E284EB5DD2968C1650D6DD0099999@AcuExch.aculab.com>
+ <afd74efa-96eb-3597-7323-a110f53e221b@codeaurora.org>
+ <063D6719AE5E284EB5DD2968C1650D6DD009A8FD@AcuExch.aculab.com>
+From: Tyler Baicar <tbaicar@codeaurora.org>
+Message-ID: <fb9df680-6b4a-89bb-4d04-d2a05f0fd93e@codeaurora.org>
+Date: Wed, 18 Oct 2017 14:23:58 -0400
 MIME-Version: 1.0
-In-Reply-To: <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
-References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
- <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Mon, 30 Oct 2017 15:07:58 +0100
-Message-ID: <CAOiHx=kYf0pOrSvRHuj6+cy6qzSuz23RfNbB8ADLy_dRwZhiAg@mail.gmail.com>
-Subject: Re: [PATCH 2/8] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
- device
-To: Jim Quinlan <jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Florian Fainelli <f.fainelli@gmail.com>,
- MIPS Mailing List <linux-mips@linux-mips.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD009A8FD@AcuExch.aculab.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 24 October 2017 at 20:15, Jim Quinlan <jim2101024@gmail.com> wrote:
-> The DT bindings description of the Brcmstb PCIe device is described.  This
-> node can be used by almost all Broadcom settop box chips, using
-> ARM, ARM64, or MIPS CPU architectures.
+On 10/18/2017 6:14 AM, David Laight wrote:
+> From: Tyler Baicar [mailto:tbaicar@codeaurora.org]
+>> Sent: 17 October 2017 18:14
+>> On 10/17/2017 12:00 PM, David Laight wrote:
+>>> From: Tyler Baicar
+>>>> Sent: 17 October 2017 16:42
+>>>> Currently the AER driver uses cper_print_bits() to print the AER status
+>>>> string. This causes the status string to not include the proper PCI device
+>>>> name prefix that the other AER prints include. Also, it has a different
+>>>> print level than all the other AER prints.
+>>>>
+>>>> Update the AER driver to print the AER status string with the proper string
+>>>> prefix and proper print level.
+>>>>
+>>>> Previous log example:
+>>>>
+>>>> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+>>>> Receiver Error, Bad TLP
+>>> ...
+>>>> New log:
+>>>>
+>>>> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+>>>> e1000e 0003:01:00.1: Receiver Error
+>>>> e1000e 0003:01:00.1: Bad TLP
+>>> Wouldn't it be better to manage to print the above all on 1 line?
+>   
+>> I broke them up into separate lines to simplify the code. If you look at
+>> cper_print_bits(),
+>> it is not a clean solution and involves some hard coded values to try to limit
+>> the lines to 80 characters.
+> I'm not sure the 80 char limit is needed.
 >
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> ---
->  .../devicetree/bindings/pci/brcmstb-pci.txt        | 63 ++++++++++++++++++++++
->  1 file changed, 63 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
 >
-> diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> new file mode 100644
-> index 0000000..49f9852
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> @@ -0,0 +1,63 @@
-> +Brcmstb PCIe Host Controller Device Tree Bindings
-> +
-> +Required Properties:
-> +- compatible
-> +  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
-> +  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
-> +  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
-> +      the 7278).
-> +  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
-> +
+> How about:
+> #define MAX_STR 32
+> void pr_bits(unsigned int val, const char *strs[], unsigned int num_str)
+> {
+>          const char *str[MAX_STR] = {};
+>          unsigned int i, num;
+>
+>          if (num_str > MAX_STR)
+>                  num_str = MAX_STR;
+>          for (i = 0, num = 0; i < num_str; i++) {
+>                  if (!(val & (1 << i)))
+>                          continue;
+>                  str[num++] = strs[i];
+>          }
+>          printf(" %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n" + (MAX_STR - num) * 3,
+>                  str[0], str[1], str[2], str[3],
+>                  str[4], str[5], str[6], str[7],
+>                  str[8], str[9], str[10], str[11],
+>                  str[12], str[13], str[14], str[15],
+>                  str[16], str[17], str[18], str[19],
+>                  str[20], str[21], str[22], str[23],
+>                  str[24], str[25], str[26], str[27],
+>                  str[28], str[29], str[30], str[31]);
+> }
+>
+> For kernel use you'd probably want to pass in 'dev' and a printf list
+> and use %pV to put the fixed text on the front of the line.
+>
+> All rather begging for a new %p? feature that is passed the value, strings
+> and separator.
+Hi David,
 
-(snip)
+This seems like a bad approach. This can make the print in the kernel logs and 
+the code both
+look pretty awful. I would prefer to have each error that occurred have it's own 
+print line in
+the logs rather than introduce this code for the sole purpose of keeping the 
+list on a single
+print line. I don't see any real downside to having a few additional print lines 
+in error
+scenarios.
 
-> +
-> +Example Node:
-> +
-> +pcie0: pcie@f0460000 {
-> +               reg = <0x0 0xf0460000 0x0 0x9310>;
-> +               interrupts = <0x0 0x0 0x4>;
-> +               compatible = "brcm,pci-plat-dev";
+Thanks,
+Tyler
 
-This is not one of the valid compatibles mentioned above.
-
-
-Regards
-Jonas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
