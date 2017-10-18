@@ -1,12 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: aardvark: Move to struct pci_host_bridge IRQ mapping
- functions
-Date: Mon,  9 Oct 2017 09:00:49 +0200
-Message-Id: <20171009070049.2684-1-thomas.petazzoni@free-electrons.com>
+MIME-Version: 1.0
+In-Reply-To: <20171017133807.GB948@red-moon>
+References: <1506448161-30961-1-git-send-email-kdinh@apm.com>
+ <CAAsHzqv-oQVNm-pNP4Q1KmiSmjaiFx1S4j8uCnij53Te3h8KKg@mail.gmail.com>
+ <20171017133807.GB948@red-moon>
+From: Khuong Dinh <kdinh@apm.com>
+Date: Tue, 17 Oct 2017 22:45:35 -0700
+Message-ID: <CAAsHzqsxMy8On5ThggTwYohqMCLEJTbA=b1LgUPiuKu9C+eHeQ@mail.gmail.com>
+Subject: Re: [PATCH v4 pci 0/2] PCI/MSI: pci-xgene-msi: Enable MSI support in
+ ACPI boot for X-Gene v1
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,65 +18,90 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>, Yehuda Yitschak <yehuday@marvell.com>,
- Jason Cooper <jason@lakedaemon.net>, Hanna Hawa <hannah@marvell.com>,
- stable@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>,
- Victor Gu <xigu@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-MIME-Version: 1.0
+Cc: rjw@rjwysocki.net, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci@vger.kernel.org, msalter@redhat.com, patches <patches@apm.com>,
+ linux-kernel@vger.kernel.org, jcm@redhat.com,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-struct pci_host_bridge gained hooks to map/swizzle IRQs, so that the
-IRQ mapping can be done automatically by PCI core code through the
-pci_assign_irq() function instead of resorting to arch-specific
-implementation callbacks to carry out the same task which force PCI
-host bridge drivers implementation to implement per-arch kludges to
-carry out a task that is inherently architecture agnostic.
+Hi Lorenzo,
 
-Commit 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from
-pcibios_alloc_irq()") was assuming all PCI host controller drivers had
-been converted to use ->map_irq(), but that wasn't the case:
-pci-aardvark had not been converted. Due to this, it broke the support
-for legacy PCI interrupts when using the pci-aardvark driver (used on
-Marvell Armada 3720 platforms).
+On Tue, Oct 17, 2017 at 6:38 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> Hi Khuong,
+>
+> On Mon, Oct 16, 2017 at 02:19:50PM -0700, Khuong Dinh wrote:
+>> Hi Lorenzo,
+>>   Do you have any comments for this patch?
+>
+> I'd have some comments but given that there are related issues with ACPI
+> probe ordering that Marc is trying to solve on his side - I will work
+> with him to see if we can accommodate changes that can solve this issue
+> too.
+>
+> Again - I recognize it is a complex problem (that is not even
+> contemplated by the current ACPI specs), we have to try to make
+> the solution as generic as we can to prevent reinventing the wheel
+> anytime a sligthly different issue (related to ACPI probe ordering)
+> comes up.
+>
+> Leave it to me (us) and I will get back to you on this.
 
-In order to fix this, we make sure the ->map_irq and ->swizzle_irq
-fields of pci_host_bridge are properly filled in.
+Thanks for helping to take care of the generic ACPI probe ordering issue.
+Given that the patch 'PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
+boot for X-Gene v1" adds only the ACPI ID, can you pull in this patch
+independently from the ACPI probe ordering issue?
 
-Fixes: 769b461fc0c0 ("arm64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()")
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: <stable@vger.kernel.org> # v4.13+
----
-Changes since v2:
- - Adjust commit title to match other commits doing the same change in
-   other drivers
- - Improve commit log.
----
- drivers/pci/host/pci-aardvark.c | 2 ++
- 1 file changed, 2 insertions(+)
+Best regards,
+Khuong Dinh
 
-diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-index 89f4e3d072d7..26ed0c08f209 100644
---- a/drivers/pci/host/pci-aardvark.c
-+++ b/drivers/pci/host/pci-aardvark.c
-@@ -935,6 +935,8 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	bridge->sysdata = pcie;
- 	bridge->busnr = 0;
- 	bridge->ops = &advk_pcie_ops;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
-+	bridge->swizzle_irq = pci_common_swizzle;
- 
- 	ret = pci_scan_root_bus_bridge(bridge);
- 	if (ret < 0) {
--- 
-2.13.6
-
+> Thanks,
+> Lorenzo
+>
+>> Best regards,
+>> Khuong Dinh
+>>
+>> On Tue, Sep 26, 2017 at 10:49 AM, Khuong Dinh <kdinh@apm.com> wrote:
+>> > This patch set enables ACPI MSI support for X-Gene PCIe v1 hardware
+>> > and provides the proper MSI driver initialization ordering.
+>> >
+>> > Signed-off-by: Khuong Dinh <kdinh@apm.com>
+>> > ---
+>> > v4:
+>> >  - Remove Marc Zyngier ACK in v2
+>> >  - Use acpi_bus_scan on MSI controller handle when MSI device is found
+>> >  - Register ACPI MSI driver when MSI device is found instead of using
+>> >  subsys_initcall
+>> >  - Split ACPI MSI driver support into two patches - one to enable MSI
+>> > support for X-Gene PCIe v1 hardware, one to enforce MSI driver loaded
+>> > before PCIe controller driver in ACPI boot mode
+>> > v3:
+>> >  - Input X-Gene MSI base address for irq_domain_alloc_fwnode
+>> >  - Add a hook to enforce X-Gene MSI be probed prior acpi_bus_scan happens
+>> > v2:
+>> >  - Verify with BIOS version 3.06.25 and 3.07.09
+>> > v1:
+>> >  - Initial version
+>> > ---
+>> >
+>> > Khuong Dinh (2):
+>> >   PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot for X-Gene v1
+>> >   PCI/MSI: Enforce MSI driver loaded before PCIe in ACPI boot
+>> >
+>> >  drivers/acpi/Makefile            |    2 +-
+>> >  drivers/acpi/acpi_msi.c          |   86 ++++++++++++++++++++++++++++++++++++++
+>> >  drivers/acpi/acpi_platform.c     |    3 +-
+>> >  drivers/acpi/internal.h          |    1 +
+>> >  drivers/acpi/scan.c              |    1 +
+>> >  drivers/pci/host/pci-xgene-msi.c |   60 ++++++++++++++++++++++++--
+>> >  include/linux/acpi_msi.h         |   37 ++++++++++++++++
+>> >  7 files changed, 183 insertions(+), 7 deletions(-)
+>> >  create mode 100644 drivers/acpi/acpi_msi.c
+>> >  create mode 100644 include/linux/acpi_msi.h
+>> >
 
 _______________________________________________
 linux-arm-kernel mailing list
