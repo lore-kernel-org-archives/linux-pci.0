@@ -1,37 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:43019 "EHLO smtp1.it.da.ut.ee"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932124AbdJYSBM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 25 Oct 2017 14:01:12 -0400
-Date: Wed, 25 Oct 2017 21:01:07 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-cc: linux-alpha@vger.kernel.org,
-        Linux Kernel list <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: alpha boot hang - 4.14-rc* regression
-In-Reply-To: <20171025151413.GA6499@red-moon>
-Message-ID: <alpine.LRH.2.21.1710252100080.16994@math.ut.ee>
-References: <alpine.LRH.2.21.1710251043170.7098@math.ut.ee> <alpine.LRH.2.21.1710251109150.7098@math.ut.ee> <alpine.LRH.2.21.1710251129520.7098@math.ut.ee> <20171025092159.GA14222@red-moon> <alpine.LRH.2.21.1710251511090.10071@math.ut.ee> <20171025133730.GA5487@red-moon>
- <alpine.LRH.2.21.1710251748170.10071@math.ut.ee> <20171025151413.GA6499@red-moon>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+Date: Wed, 18 Oct 2017 23:54:28 +0200
+Message-ID: <20665978.JlZ4Hgb5rF@aspire.rjw.lan>
+In-Reply-To: <CAPDyKFpNHL=tZYbQduDJqypz7rbwPwvW7sOymm-djbRSFgZ00g@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2745759.OYb9FSKnNE@aspire.rjw.lan> <CAPDyKFpNHL=tZYbQduDJqypz7rbwPwvW7sOymm-djbRSFgZ00g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> It is probably because I patched the wrong map_irq() function,
-> I am trying to detect which one you are _actually_ using, if
-> the patch below fails I will patch them all (which is what I
-> have to do anyway).
+On Wednesday, October 18, 2017 2:34:10 PM CEST Ulf Hansson wrote:
+> [...]
 > 
-> Please give this a go - this _has_ to make a difference, it is not
-> correct to leave map_irq() pointers as __init memory, IRQ routing
-> for modules can't work.
+> >> Are there any major reasons why the appended patch (obviously untested) won't
+> >> work, then?
+> >
+> > OK, there is a reason, which is the optimizations bundled into
+> > pm_runtime_force_*, because (a) the device may be left in runtime suspend
+> > by them (in which case amba_pm_suspend_early() in my patch should not run)
+> > and (b) pm_runtime_force_resume() may decide to leave it suspended (in which
+> > case amba_pm_suspend_late() in my patch should not run).
+> 
+> Exactly.
+> 
+> >
+> > [BTW, the "leave the device suspended" optimization in pm_runtime_force_*
+> > is potentially problematic too, because it requires the children to do
+> > the right thing, which effectively means that their drivers need to use
+> > pm_runtime_force_* too, but what if they don't want to reuse their
+> > runtime PM callbacks for system-wide PM?]
+> 
+> Deployment of pm_runtime_force_suspend() should generally be done for
+> children devices first.
+> 
+> If some reason that isn't the case, it's expected that the call to
+> pm_runtime_set_suspended() invoked from pm_runtime_force_suspend(),
+> for the parent, should fail and thus abort system suspend.
 
-This works for mainline git too.
+Well, generally what about drivers that need to do something significantly
+different for system suspend and runtime PM?  The whole picture seems to be
+falling apart if one of these is involved.
 
-If you have another round that fixes all subarches, I will try it on a 
-PC164 too.
+> >
+> > Honestly, I don't like the way this is designed.  IMO, it would be better
+> > to do the optimizations and all in the bus type middle-layer code instead
+> > of expecting drivers to use pm_runtime_force_* as their system-wide PM
+> > callbacks (and that expectation should at least be documented, which I'm
+> > not sure is the case now).  But whatever.
+> >
+> > It all should work the way it does now without pm_runtime_force_* if (a) the
+> > bus type's PM callbacks are changed like in the last patch and the drivers
+> > (b) point their system suspend callbacks to the runtime PM callback routines
+> > and (c) set DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED for the
+> > devices (if they need to do the PM in ->suspend and ->resume, they may set
+> > DPM_FLAG_AVOID_RPM too).
+> >
+> > And if you see a reason why that won't work, please let me know.
+> 
+> I will have look and try out the series by using my local "runtime PM
+> test driver".
+> 
+> I get back to you with an update on this.
 
--- 
-Meelis Roos (mroos@linux.ee)
+OK, thanks!
+
