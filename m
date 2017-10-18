@@ -1,75 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56456 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751330AbdJERZr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Oct 2017 13:25:47 -0400
-Date: Thu, 5 Oct 2017 12:25:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Andrew Lunn <andrew@lunn.ch>,
-        Yehuda Yitschak <yehuday@marvell.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Hanna Hawa <hannah@marvell.com>, stable@vger.kernel.org,
-        Nadav Haklai <nadavh@marvell.com>,
-        Victor Gu <xigu@marvell.com>,
-        =?iso-8859-1?Q?Miqu=E8l?= Raynal
-        <miquel.raynal@free-electrons.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        Antoine Tenart <antoine.tenart@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH v2 2/7] PCI: aardvark: set PIO_ADDR_LS correctly in
- advk_pcie_rd_conf()
-Message-ID: <20171005172545.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170928125838.11887-1-thomas.petazzoni@free-electrons.com>
- <20170928125838.11887-3-thomas.petazzoni@free-electrons.com>
+Return-Path: <SRS0=YcHh=BR=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=YcHh=BR=ozlabs.ru=aik@kernel.org>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+ seroyer@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, "Juan J . Alvarez" <jjalvare@us.ibm.com>,
+ jjalvare@linux.vnet.ibm.com
+References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
+ <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
+ <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
+ <87efq92ei6.fsf@concordia.ellerman.id.au>
+ <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
+ <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
+ <87r2u2jvfb.fsf@concordia.ellerman.id.au>
+ <3507ee2e-00ee-7bd0-36a3-292af5112734@linux.vnet.ibm.com>
+ <e5bc893a-03f7-4ca7-4e46-938421dfc1c5@ozlabs.ru>
+Message-ID: <5b7b8e8f-2d16-875f-ef53-ccf593064a53@ozlabs.ru>
+Date: Wed, 18 Oct 2017 12:36:30 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170928125838.11887-3-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <e5bc893a-03f7-4ca7-4e46-938421dfc1c5@ozlabs.ru>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 28, 2017 at 02:58:33PM +0200, Thomas Petazzoni wrote:
-> From: Victor Gu <xigu@marvell.com>
+On 18/10/17 12:01, Alexey Kardashevskiy wrote:
+> On 18/10/17 01:11, Bryant G. Ly wrote:
+>> Adding Juan back into the cc: jjalvare@linux.vnet.ibm.com
+>>
+>>
+>> On 10/16/17 10:38 PM, Michael Ellerman wrote:
+>>> "Bryant G. Ly" <bryantly@linux.vnet.ibm.com> writes:
+>>>> On 10/12/17 1:29 PM, Bjorn Helgaas wrote:
+>>> ...
+>>>>> If that's the case, how to you ever bind a driver to these VFs?  The
+>>>>> changelog says you don't want VF drivers to load *immediately*, so I
+>>>>> assume you do want them to load eventually.
+>>>>>
+>>>> The VF's that get dynamically created within the configure SR-IOV call, 
+>>>> on the Pseries Platform, wont be matched with a driver. - We do not
+>>>> want it to match.
+>>>>
+>>>> The Power Hypervisor will load the VFs. The VF's will get assigned(by 
+>>>> the user) > via the HMC or Novalink in this environment which will
+>>>> then trigger PHYP to load the VF device node to the device tree.
+>>> What about the other "Power Hypervisor"? ie. KVM running on Power.
+>> This path is only exercised when configuring SR-IOV for Pseries LPAR,
+>> therefore it will not affect PowerNV or KVM(opal).
 > 
-> When setting the PIO_ADDR_LS register during a configuration read, we
-> were properly passing the device number, function number and register
-> number, but not the bus number, causing issues when reading the
-> configuration of PCIe devices.
+> PowerNV KVM guest is a pseries machine so this code will execute there.
 > 
-> Fixes: 8c39d710363c1 ("PCI: aardvark: Add Aardvark PCI host controller driver")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Victor Gu <xigu@marvell.com>
-> Reviewed-by: Wilson Ding <dingwei@marvell.com>
-> Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-> [Thomas: tweak commit log.]
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/pci/host/pci-aardvark.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>> Which is the reason for
+>> the separation of calls to the machine dependent stuff.
+>>> We also use the pseries platform when running under KVM.
+>>>
+>>> cheers
+>>>
+>> If anyone plans to enable SR-IOV on Pseries platform, firmware must provide the
+>> resources to enable the VFs and map them with system resources.
 > 
-> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
-> index da2881ba7737..af7a9c4a61a4 100644
-> --- a/drivers/pci/host/pci-aardvark.c
-> +++ b/drivers/pci/host/pci-aardvark.c
-> @@ -459,7 +459,7 @@ static int advk_pcie_rd_conf(struct pci_bus *bus, u32 devfn,
->  	advk_writel(pcie, reg, PIO_CTRL);
->  
->  	/* Program the address registers */
-> -	reg = PCIE_BDF(devfn) | PCIE_CONF_REG(where);
-> +	reg = PCIE_CONF_ADDR(bus->number, devfn, where);
+> This is what the PowerNV platform does.
+> 
+>> A new version
+>> of the PAPR Document will be added to document these system resources.
+> 
+> The guest simply gets yet another PCI device, how is IOV different here?
+> 
+> In regard of EEH, the API does not change afaik, it is up to the hypervisor
+> (KVM+QEMU) to handle IOV case correctly.
+> 
+> 
+>> Lastly,
+>> we were not aware that there is an intention to enable SR-IOV in adapters assigned
+>> to a VM with Pseries running on KVM.
+> 
+> There is no any special enablement of IOV for a VM on powernv, once
+> configured in the powernv host, we can just pass VFs to QEMU and therefore
+> to a pseries guest, it is just a normal PCI device.
+> 
+> Do you assign a PF to a VM and create VFs from inside the VM? Or only pHyp
+> is allowed to do that? Sorry, I know nothing about pHyp on this matter.
+> 
 
-I think PCIE_BDF() is now unused and should be removed.
+Never mind this last question, I've just read the entire thread about this
+hosting partition thing.
 
->  	advk_writel(pcie, reg, PIO_ADDR_LS);
->  	advk_writel(pcie, 0, PIO_ADDR_MS);
->  
-> -- 
-> 2.13.5
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+
+-- 
+Alexey
