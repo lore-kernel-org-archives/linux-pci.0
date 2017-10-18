@@ -1,127 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:44928 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbdJaGZi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 02:25:38 -0400
-Subject: Re: [PATCH v2 07/17] PCI: dwc: dra7xx: Refactor Kconfig and Makefile
- handling for host/ep mode
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Tomasz Nowicki <tn@semihalf.com>, Duc Dang <dhdang@apm.com>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
- <20171030124221.20690-8-niklas.cassel@axis.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5cbc1231-736b-c5bd-8d3e-af0cb8fc4f0f@ti.com>
-Date: Tue, 31 Oct 2017 11:53:46 +0530
+Received: from mail.kernel.org ([198.145.29.99]:49386 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750926AbdJRRSr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Oct 2017 13:18:47 -0400
+Received: from mail-io0-f175.google.com (mail-io0-f175.google.com [209.85.223.175])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C24F121913
+        for <linux-pci@vger.kernel.org>; Wed, 18 Oct 2017 17:18:46 +0000 (UTC)
+Received: by mail-io0-f175.google.com with SMTP id m16so7050103iod.1
+        for <linux-pci@vger.kernel.org>; Wed, 18 Oct 2017 10:18:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20171030124221.20690-8-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <20171017133702.1b0e35bc@t450s.home> <MWHPR12MB16008EEBF251F321E9B48D41C84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAB=NE6U-1ytEbL9A2FeVjcOfN3VSNAJUa9JbsQH9UfjRfANKxw@mail.gmail.com> <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Date: Wed, 18 Oct 2017 10:18:25 -0700
+Message-ID: <CAB=NE6Xwj20hwX3XzW_bYEby+24c=gY_nQtXPOu1J_c7uRHRjA@mail.gmail.com>
+Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
+ drivers when VFs are attached to VMs ...
+To: Casey Leedom <leedom@chelsio.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
+        Komali Katari <komali@chelsio.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Oct 18, 2017 at 10:09 AM, Casey Leedom <leedom@chelsio.com> wrote:
+> | From: Luis R. Rodriguez <mcgrof@kernel.org>
+> | Sent: Tuesday, October 17, 2017 6:14:20 PM
+> |
+> | You referred to commit 2355869. What tree and more importantly what patch
+> | title?
+>
+>   Ah, my bad.  Sorry, I had the impression that git commit IDs were
+> preserved across repositories.  That's in Linus' main repository:
+>
+>   commit 235586939d7fe4833ada9e988f92af543ee6851f
+>   Author: Luis R. Rodriguez <mcgrof@kernel.org>
+>   Date:   Fri Sep 8 16:17:00 2017 -0700
+>
+>     kmod: split out umh code into its own file
+>
+>     Patch series "kmod: few code cleanups to split out umh code"
+>
+>     The usermode helper has a provenance from the old usb code which first
+>     required a usermode helper.  Eventually this was shoved into kmod.c and
+>     the kernel's modprobe calls was converted over eventually to share the
+>     same code.  Over time the list of usermode helpers in the kernel has grown
+>     -- so kmod is just but one user of the API.
+>     ...
+>
+> But, that was just a random guess since it was the largest recent change in
+> this area.  Komali tried to apply a reverse patch to see if that guess
+> worked out but that didn't apply cleanly and trying to reset to 2355869^ led
+> to other problems with systemd-udev.service running constantly reloading the
+> driver with a RHEL7 installation ... which may be a hint about what's going
+> on ...  I'm going to recommend that Komali do a bisect to see if she can
+> figure out where this new behavior started ...
 
+I'd recommend to do a full bisect, I *highly* doubt the above commit
+is the issue given it really should not have introduced any functional
+changes as its just a code shuffle, moving code from one file to
+another. Specially for the type of change you are describing, that
+requires significant changes. So save your time and just focus on a
+proper bisect.
 
-On Monday 30 October 2017 06:12 PM, Niklas Cassel wrote:
-> The previous handling was a bit unorthodox and would have been a bit
-> bloated once more DWC based controllers added support for ep mode.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> V2:
-> * New patch in this series.
-> 
->  drivers/pci/dwc/Kconfig  | 45 ++++++++++++++++++++++-----------------------
->  drivers/pci/dwc/Makefile |  4 +---
->  2 files changed, 23 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index 113e09440f85..3954353e3e2e 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -15,39 +15,38 @@ config PCIE_DW_EP
->  	select PCIE_DW
->  
->  config PCI_DRA7XX
-> -	bool "TI DRA7xx PCIe controller"
-> -	depends on SOC_DRA7XX || COMPILE_TEST
-> -	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
-> -	depends on OF && HAS_IOMEM && TI_PIPE3
-> -	help
-> -	 Enables support for the PCIe controller in the DRA7xx SoC. There
-> -	 are two instances of PCIe controller in DRA7xx. This controller can
-> -	 work either as EP or RC. In order to enable host-specific features
-> -	 PCI_DRA7XX_HOST must be selected and in order to enable device-
-> -	 specific features PCI_DRA7XX_EP must be selected. This uses
-> -	 the DesignWare core.
-> -
-> -if PCI_DRA7XX
-> +	bool
->  
->  config PCI_DRA7XX_HOST
-> -	bool "PCI DRA7xx Host Mode"
-> -	depends on PCI
-> -	depends on PCI_MSI_IRQ_DOMAIN
-> +	bool "TI DRA7xx PCIe controller Host Mode"
-> +	depends on SOC_DRA7XX || COMPILE_TEST
-> +	depends on PCI && PCI_MSI_IRQ_DOMAIN
-> +	depends on OF && HAS_IOMEM && TI_PIPE3
->  	select PCIE_DW_HOST
-> +	select PCI_DRA7XX
->  	default y
->  	help
-> -	 Enables support for the PCIe controller in the DRA7xx SoC to work in
-> -	 host mode.
-> +	  Enables support for the PCIe controller in the DRA7xx SoC to work in
-> +	  host mode. There are two instances of PCIe controller in DRA7xx.
-> +	  This controller can work either as EP or RC. In order to enable
-> +	  host-specific features PCI_DRA7XX_HOST must be selected and in order
-> +	  to enable device-specific features PCI_DRA7XX_EP must be selected.
-> +	  This uses the DesignWare core.
->  
->  config PCI_DRA7XX_EP
-> -	bool "PCI DRA7xx Endpoint Mode"
-> +	bool "TI DRA7xx PCIe controller Endpoint Mode"
-> +	depends on SOC_DRA7XX || COMPILE_TEST
->  	depends on PCI_ENDPOINT
-> +	depends on OF && HAS_IOMEM && TI_PIPE3
->  	select PCIE_DW_EP
-> +	select PCI_DRA7XX
->  	help
-> -	 Enables support for the PCIe controller in the DRA7xx SoC to work in
-> -	 endpoint mode.
-> -
-> -endif
-> +	  Enables support for the PCIe controller in the DRA7xx SoC to work in
-> +	  endpoint mode. There are two instances of PCIe controller in DRA7xx.
-> +	  This controller can work either as EP or RC. In order to enable
-> +	  host-specific features PCI_DRA7XX_HOST must be selected and in order
-> +	  to enable device-specific features PCI_DRA7XX_EP must be selected.
-> +	  This uses the DesignWare core.
->  
->  config PCIE_DW_PLAT
->  	bool "Platform bus based DesignWare PCIe Controller"
-> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-> index 54f56f6e9236..260589bd4e1d 100644
-> --- a/drivers/pci/dwc/Makefile
-> +++ b/drivers/pci/dwc/Makefile
-> @@ -2,9 +2,7 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
->  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
->  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
->  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
-> -ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
-> -        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
-> -endif
-> +obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
->  obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
->  obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
->  obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-> 
+  Luis
