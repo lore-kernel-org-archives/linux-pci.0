@@ -1,76 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-Subject: [PATCH v7 0/3] PCI: rockchip: Move PCIE_WAKE handling into pci core
-Date: Thu, 19 Oct 2017 19:10:04 +0800
-Message-Id: <20171019111007.25234-1-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Jeffy Chen <jeffy.chen@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
- Will Deacon <will.deacon@arm.com>, dianders@chromium.org,
- Rob Herring <robh+dt@kernel.org>, linux-rockchip@lists.infradead.org,
- Matthias Kaehlcke <mka@chromium.org>,
- Klaus Goger <klaus.goger@theobroma-systems.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- linux-arm-kernel@lists.infradead.org, Caesar Wang <wxt@rock-chips.com>
+Return-Path: <SRS0=Ab4q=BR=chromium.org=briannorris@kernel.org>
+Return-Path: <SRS0=Ab4q=BR=chromium.org=briannorris@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171017233904.GA65743@google.com>
+References: <20171012205220.130048-1-briannorris@chromium.org>
+ <20171012205220.130048-2-briannorris@chromium.org> <20171013165152.GE25517@bhelgaas-glaptop.roam.corp.google.com>
+ <20171017233904.GA65743@google.com>
+From: Brian Norris <briannorris@chromium.org>
+Date: Tue, 17 Oct 2017 17:56:32 -0700
+Message-ID: <CA+ASDXPNcoUE=F+TWsYpxw=e-NcPaqguSRb5fEYC+zoCCdvDvg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] Documentation/devicetree: Add pcie-reset-suspend property
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
+	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+	Frank Rowand <frowand.list@gmail.com>, Shawn Lin <shawn.lin@rock-chips.com>,
+	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>, linux-arm-kernel@lists.infradead.org,
+	Doug Anderson <dianders@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Oct 17, 2017 at 4:39 PM, Brian Norris <briannorris@chromium.org> wrote:
+> On Fri, Oct 13, 2017 at 11:51:52AM -0500, Bjorn Helgaas wrote:
+> > If so, I really don't want to get involved in that, because that's an
+> > issue that needs to be resolved by the vendors and the PCI-SIG.  If we
+>
+> Judging by conversations with these vendors, I can't really imagine them
+> proactively dealing with the PCI-SIG on this. Is that really what you
+> think will work best?
+>
+> I personally believe deferring (i.e., ignoring) the problem will not
+> cause any change; badly behaved vendors will just do whatever suits
+> them, and system designers will have to figure it out somehow -- ACPI
+> systems will have platform-specific behavior hidden in firmware; device
+> tree systems will do whatever they want out of tree; and the rare device
+> tree system that gets upstream support will either have suboptimal power
+> management, or have to have these sorts of conversations again. None of
+> that puts pressure on an endpoint vendor to talk to the PCI-SIG.
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
+I'll add a little more to my claim about ACPI systems. I chatted a
+little more with another engineer on my team who has dealt with ACPI
+firmware for a few generations of Intel platforms. Even among the
+latest two platforms he dealt with, there have been two different
+sorts of chipset bugs (at the host/root complex side, not just the
+endpoint) that have yielded different decisions on how to handle
+PERST#. This was opaque to Linux though, since that's how system
+firmware rolls :)
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
+I expect this will not be the last discrepancy on how to handle
+PERST#. And to my knowledge, none of the above initiated any
+discussion with the PCI-SIG.
 
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Rebase
-Move to pci.txt
-Use "wakeup" instead of "wake"
-
-Changes in v3:
-Fix error handling
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq
-        -- Suggested by Brian Norris <briannorris@chromium.com>
-
-Jeffy Chen (3):
-  PCI: Add support for wake irq
-  dt-bindings: PCI: Add definition of pcie wake irq
-  arm64: dts: rockchip: Handle pcie wake in pcie driver for Gru
-
- Documentation/devicetree/bindings/pci/pci.txt |  2 ++
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 15 +++++++-----
- drivers/pci/pci.c                             | 34 +++++++++++++++++++++++++--
- drivers/pci/probe.c                           | 32 +++++++++++++++++++++----
- drivers/pci/remove.c                          |  9 +++++++
- 5 files changed, 80 insertions(+), 12 deletions(-)
-
--- 
-2.11.0
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Brian
