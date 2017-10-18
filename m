@@ -1,143 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45850 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751418AbdJFWYi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Oct 2017 18:24:38 -0400
-Subject: [PATCH 2/2] vgaarb: Factor out EFI and fallback default device
- selection
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-pci@vger.kernel.org,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        dri-devel@lists.freedesktop.org,
-        Xinliang Liu <z.liuxinliang@hisilicon.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Rongrong Zou <zourongrong@gmail.com>,
-        Dave Airlie <airlied@redhat.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org,
-        Daniel Axtens <dja@axtens.net>
-Date: Fri, 06 Oct 2017 17:24:35 -0500
-Message-ID: <20171006222435.12211.54547.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=Ab4q=BR=chromium.org=briannorris@kernel.org>
+Return-Path: <SRS0=Ab4q=BR=chromium.org=briannorris@kernel.org>
+Date: Tue, 17 Oct 2017 18:03:14 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jeffy Chen <jeffy.chen@rock-chips.com>, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, shawn.lin@rock-chips.com,
+	dianders@chromium.org, Heiko Stuebner <heiko@sntech.de>,
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v6 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20171018010312.GB65743@google.com>
+References: <20171013195059.23865-1-jeffy.chen@rock-chips.com>
+ <20171013195059.23865-2-jeffy.chen@rock-chips.com>
+ <20171016200350.GH25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171016200350.GH25517@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Mon, Oct 16, 2017 at 03:03:50PM -0500, Bjorn Helgaas wrote:
+> On Sat, Oct 14, 2017 at 03:50:56AM +0800, Jeffy Chen wrote:
+> > Add support for PCIE_WAKE pin in rockchip pcie driver.
+> > 
+> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> > ---
+> > 
+> > Changes in v6:
+> > Fix device_init_wake error handling, and add some comments.
+> > 
+> > Changes in v5:
+> > Rebase
+> > 
+> > Changes in v3:
+> > Fix error handling
+> > 
+> > Changes in v2:
+> > Use dev_pm_set_dedicated_wake_irq
+> >         -- Suggested by Brian Norris <briannorris@chromium.com>
+> > 
+> >  drivers/pci/host/pcie-rockchip.c | 27 +++++++++++++++++++++------
+> >  1 file changed, 21 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> > index 9051c6c8fea4..268513b6c9c4 100644
+> > --- a/drivers/pci/host/pcie-rockchip.c
+> > +++ b/drivers/pci/host/pcie-rockchip.c
+...
+> > @@ -995,6 +996,17 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
+> >  		return err;
+> >  	}
+> >  
+> > +	irq = platform_get_irq_byname(pdev, "wakeup");
+> > +	if (irq >= 0) {
+> > +		/* Must init wakeup before setting dedicated wakeup irq. */
+> > +		device_init_wakeup(dev, true);
+> > +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
+> > +		if (err) {
+> > +			dev_err(dev, "failed to setup PCIe wakeup IRQ\n");
+> > +			device_init_wakeup(dev, false);
+> > +		}
+> > +	}
+> 
+> There's nothing Rockchip-specific here, so I'm hoping you can explore
+> putting this support in the PCI core, so any system that describes the
+> WAKE# connection in the DT can benefit.
 
-The default VGA device is normally set in vga_arbiter_add_pci_device() when
-we call it for the first enabled device that can be accessed with the
-legacy VGA resources ([mem 0xa0000-0xbffff], etc.)
+I guess it could work to look into pci_create_root_bus(), and
+do something like the following?
 
-That default device can be overridden by an EFI device that owns the boot
-framebuffer.  As a fallback, we can also select a VGA device that can't be
-accessed via legacy VGA resources, or a VGA device that isn't even enabled.
+	if (IS_ENABLED(CONFIG_OF) && parent && parent->of_node)
+		... do OF parsing for generic features like WAKE# ...
 
-Factor out this EFI and fallback selection from vga_arb_device_init() into
-a separate vga_arb_select_default_device() function.  This doesn't change
-any behavior, but it untangles the "bridge control possible" checking and
-messages from the default device selection.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/gpu/vga/vgaarb.c |   57 ++++++++++++++++++++++++++++------------------
- 1 file changed, 35 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index aeb41f793ed4..7803e35a3702 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -1402,29 +1402,14 @@ static struct miscdevice vga_arb_device = {
- 	MISC_DYNAMIC_MINOR, "vga_arbiter", &vga_arb_device_fops
- };
- 
--static int __init vga_arb_device_init(void)
-+static void __init vga_arb_select_default_device(void)
- {
--	int rc;
- 	struct pci_dev *pdev;
- 	struct vga_device *vgadev;
- 
--	rc = misc_register(&vga_arb_device);
--	if (rc < 0)
--		pr_err("error %d registering device\n", rc);
--
--	bus_register_notifier(&pci_bus_type, &pci_notifier);
--
--	/* We add all pci devices satisfying vga class in the arbiter by
--	 * default */
--	pdev = NULL;
--	while ((pdev =
--		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--			       PCI_ANY_ID, pdev)) != NULL)
--		vga_arbiter_add_pci_device(pdev);
--
-+#if defined(CONFIG_X86) || defined(CONFIG_IA64)
- 	list_for_each_entry(vgadev, &vga_list, list) {
- 		struct device *dev = &vgadev->pdev->dev;
--#if defined(CONFIG_X86) || defined(CONFIG_IA64)
- 		/*
- 		 * Override vga_arbiter_add_pci_device()'s I/O based detection
- 		 * as it may take the wrong device (e.g. on Apple system under
-@@ -1461,12 +1446,8 @@ static int __init vga_arb_device_init(void)
- 				vgaarb_info(dev, "overriding boot device\n");
- 			vga_set_default_device(vgadev->pdev);
- 		}
--#endif
--		if (vgadev->bridge_has_one_vga)
--			vgaarb_info(dev, "bridge control possible\n");
--		else
--			vgaarb_info(dev, "no bridge control possible\n");
- 	}
-+#endif
- 
- 	if (!vga_default_device()) {
- 		list_for_each_entry(vgadev, &vga_list, list) {
-@@ -1492,6 +1473,38 @@ static int __init vga_arb_device_init(void)
- 			vga_set_default_device(pdev);
- 		}
- 	}
-+}
-+
-+static int __init vga_arb_device_init(void)
-+{
-+	int rc;
-+	struct pci_dev *pdev;
-+	struct vga_device *vgadev;
-+
-+	rc = misc_register(&vga_arb_device);
-+	if (rc < 0)
-+		pr_err("error %d registering device\n", rc);
-+
-+	bus_register_notifier(&pci_bus_type, &pci_notifier);
-+
-+	/* We add all PCI devices satisfying VGA class in the arbiter by
-+	 * default */
-+	pdev = NULL;
-+	while ((pdev =
-+		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-+			       PCI_ANY_ID, pdev)) != NULL)
-+		vga_arbiter_add_pci_device(pdev);
-+
-+	list_for_each_entry(vgadev, &vga_list, list) {
-+		struct device *dev = &vgadev->pdev->dev;
-+
-+		if (vgadev->bridge_has_one_vga)
-+			vgaarb_info(dev, "bridge control possible\n");
-+		else
-+			vgaarb_info(dev, "no bridge control possible\n");
-+	}
-+
-+	vga_arb_select_default_device();
- 
- 	pr_info("loaded\n");
- 	return rc;
+Brian
