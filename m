@@ -1,115 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:35241 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752473AbdJ3KL0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Oct 2017 06:11:26 -0400
-Subject: Re: [PATCH V2 12/12] PCI: tegra: Update flow control threshold in
- Tegra210
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
- <1509337143-25963-13-git-send-email-mmaddireddy@nvidia.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <2ad37b27-efc9-7fd7-7837-31bf6b726b2b@kapsi.fi>
-Date: Mon, 30 Oct 2017 12:11:24 +0200
+Return-Path: <SRS0=9kuH=BR=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=9kuH=BR=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Tyler Baicar' <tbaicar@codeaurora.org>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "helgaas@kernel.org" <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] PCI/AER: update AER status string print to match other
+ AER logs
+Date: Wed, 18 Oct 2017 10:14:20 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD009A8FD@AcuExch.aculab.com>
+References: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
+ <063D6719AE5E284EB5DD2968C1650D6DD0099999@AcuExch.aculab.com>
+ <afd74efa-96eb-3597-7323-a110f53e221b@codeaurora.org>
+In-Reply-To: <afd74efa-96eb-3597-7323-a110f53e221b@codeaurora.org>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <1509337143-25963-13-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30.10.2017 06:19, Manikanta Maddireddy wrote:
-> Recommended update FC threshold in Tegra210 is 0x60 for best performance
-> of x1 link. Setting this to 0x60 provides the best balance between number
-> of UpdateFC and read data sent over the link.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
->
->  drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index afde9bfb867f..1adf9332560a 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -221,6 +221,7 @@
->  #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
->  #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
->  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
-> +#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
->
->  #define RP_VEND_CTL0	0xf44
->  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
-> @@ -321,6 +322,7 @@ struct tegra_pcie_soc {
->  	bool update_clamp_threshold;
->  	bool RAW_violation_fixup;
->  	bool program_deskew_time;
-> +	bool updateFC_threshold;
+From: Tyler Baicar [mailto:tbaicar@codeaurora.org]
+> Sent: 17 October 2017 18:14
+> On 10/17/2017 12:00 PM, David Laight wrote:
+> > From: Tyler Baicar
+> >> Sent: 17 October 2017 16:42
+> >> Currently the AER driver uses cper_print_bits() to print the AER statu=
+s
+> >> string. This causes the status string to not include the proper PCI de=
+vice
+> >> name prefix that the other AER prints include. Also, it has a differen=
+t
+> >> print level than all the other AER prints.
+> >>
+> >> Update the AER driver to print the AER status string with the proper s=
+tring
+> >> prefix and proper print level.
+> >>
+> >> Previous log example:
+> >>
+> >> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+> >> Receiver Error, Bad TLP
+> > ...
+> >> New log:
+> >>
+> >> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
+> >> e1000e 0003:01:00.1: Receiver Error
+> >> e1000e 0003:01:00.1: Bad TLP
 
-This needs to be "update_fc_threshold" or 
-"update_flow_control_threshold". Otherwise looks good.
+> > Wouldn't it be better to manage to print the above all on 1 line?
+=20
+> I broke them up into separate lines to simplify the code. If you look at
+> cper_print_bits(),
+> it is not a clean solution and involves some hard coded values to try to =
+limit
+> the lines to 80 characters.
 
->  };
->
->  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-> @@ -2229,6 +2231,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
->  		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
->  		writel(value, port->base + RP_VEND_CTL0);
->  	}
-> +
-> +	if (soc->updateFC_threshold) {
-> +		value = readl(port->base + RP_VEND_XP);
-> +		value &= ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
-> +		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
-> +		writel(value, port->base + RP_VEND_XP);
-> +	}
->  }
->  /*
->   * FIXME: If there are no PCIe cards attached, then calling this function
-> @@ -2368,6 +2377,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
->  	.update_clamp_threshold = false,
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
-> +	.updateFC_threshold = false,
->  };
->
->  static const struct tegra_pcie_soc tegra30_pcie = {
-> @@ -2388,6 +2398,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
->  	.update_clamp_threshold = false,
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
-> +	.updateFC_threshold = false,
->  };
->
->  static const struct tegra_pcie_soc tegra124_pcie = {
-> @@ -2407,6 +2418,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
->  	.update_clamp_threshold = true,
->  	.RAW_violation_fixup = true,
->  	.program_deskew_time = false,
-> +	.updateFC_threshold = false,
->  };
->
->  static const struct tegra_pcie_soc tegra210_pcie = {
-> @@ -2434,6 +2446,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
->  	.update_clamp_threshold = true,
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = true,
-> +	.updateFC_threshold = true,
->  };
->
->  static const struct tegra_pcie_soc tegra186_pcie = {
-> @@ -2454,6 +2467,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
->  	.update_clamp_threshold = false,
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
-> +	.updateFC_threshold = false,
->  };
->
->  static const struct of_device_id tegra_pcie_of_match[] = {
->
+I'm not sure the 80 char limit is needed.
+
+
+How about:
+#define MAX_STR 32
+void pr_bits(unsigned int val, const char *strs[], unsigned int num_str)
+{
+        const char *str[MAX_STR] =3D {};
+        unsigned int i, num;
+
+        if (num_str > MAX_STR)
+                num_str =3D MAX_STR;
+        for (i =3D 0, num =3D 0; i < num_str; i++) {
+                if (!(val & (1 << i)))
+                        continue;
+                str[num++] =3D strs[i];
+        }
+        printf(" %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %=
+s %s %s %s %s %s %s %s %s %s %s %s %s\n" + (MAX_STR - num) * 3,
+                str[0], str[1], str[2], str[3],
+                str[4], str[5], str[6], str[7],
+                str[8], str[9], str[10], str[11],
+                str[12], str[13], str[14], str[15],
+                str[16], str[17], str[18], str[19],
+                str[20], str[21], str[22], str[23],
+                str[24], str[25], str[26], str[27],
+                str[28], str[29], str[30], str[31]);
+}
+
+For kernel use you'd probably want to pass in 'dev' and a printf list
+and use %pV to put the fixed text on the front of the line.
+
+All rather begging for a new %p? feature that is passed the value, strings
+and separator.
+
+	David
