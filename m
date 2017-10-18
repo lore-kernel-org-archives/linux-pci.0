@@ -1,152 +1,275 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:48926 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751348AbdJLP4U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Oct 2017 11:56:20 -0400
-From: Robin Murphy <robin.murphy@arm.com>
-To: gregkh@linuxfoundation.org, hch@lst.de, robh+dt@kernel.org
-Cc: m.szyprowski@samsung.com, mperttunen@nvidia.com,
-        jonathanh@nvidia.com, thierry.reding@gmail.com, kishon@ti.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers: Flag buses which demand DMA configuration
-Date: Thu, 12 Oct 2017 16:56:14 +0100
-Message-Id: <bd1c6061a6a16f720e992a0f12933bdee6591aea.1507823375.git.robin.murphy@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Duc Dang <dhdang@apm.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-9-niklas.cassel@axis.com>
+CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <db0685b5-6078-1c6b-093d-f160f74e85bf@ti.com>
+Date: Wed, 18 Oct 2017 14:16:10 +0530
+MIME-Version: 1.0
+In-Reply-To: <20171013160914.3220-9-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We do not want the common dma_configure() pathway to apply
-indiscriminately to all devices, since there are plenty of buses which
-do not have DMA capability, and if their child devices were used for
-DMA API calls it would only be indicative of a driver bug. However,
-there are a number of buses for which DMA is implicitly expected even
-when not described by firmware - those we whitelist with an automatic
-opt-in to dma_configure(), assuming that the DMA address space and the
-physical address space are equivalent if not otherwise specified.
+Hi Niklas,
 
-Commit 723288836628 ("of: restrict DMA configuration") introduced a
-short-term fix by comparing explicit bus types, but this approach is far
-from pretty, doesn't scale well, and fails to cope at all with bus
-drivers which may be built as modules, like host1x. Let's refine things
-by making that opt-in a property of the bus type, which neatly addresses
-those problems and lets the decision of whether firmware description of
-DMA capability should be optional or mandatory stay internal to the bus
-drivers themselves.
+On Friday 13 October 2017 09:39 PM, Niklas Cassel wrote:
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
+>  drivers/pci/dwc/Kconfig                            |  41 +++--
+>  drivers/pci/dwc/Makefile                           |   4 +-
+>  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
+>  4 files changed, 233 insertions(+), 17 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> index 4e4aee4439ea..33eef7ae5a23 100644
+> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+>  and thus inherits all the common properties defined in designware-pcie.txt.
+>  
+>  Required properties:
+> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
+> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
 
-Acked-by: Thierry Reding <treding@nvidia.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
----
+If "snps,dw-pcie" is used for both RC and EP mode, how do we differentiate
+between the modes?
+>  - reg: base addresses and lengths of the PCIe controller (DBI),
+>  	the PHY controller, and configuration address space.
+>  - reg-names: Must include the following entries:
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 22ec82fcdea2..e333283fb1ed 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -14,6 +14,36 @@ config PCIE_DW_EP
+>  	depends on PCI_ENDPOINT
+>  	select PCIE_DW
+>  
+> +config PCIE_ARTPEC6
+> +	bool "Axis ARTPEC-6 PCIe controller"
+> +	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+> +	depends on MACH_ARTPEC6
+> +	help
+> +	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+> +	  SoCs.  This PCIe controller uses the DesignWare core.
+> +
+> +if PCIE_ARTPEC6
+> +
+> +config PCIE_ARTPEC6_HOST
+> +	bool "Axis ARTPEC-6 Host Mode"
+> +	depends on PCI
+> +	depends on PCI_MSI_IRQ_DOMAIN
+> +	select PCIEPORTBUS
+> +	select PCIE_DW_HOST
+> +	help
+> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
+> +	  host mode.
+> +
+> +config PCIE_ARTPEC6_EP
+> +	bool "Axis ARTPEC-6 Endpoint Mode"
+> +	depends on PCI_ENDPOINT
+> +	select PCIE_DW_EP
+> +	help
+> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
+> +	  endpoint mode.
+> +
+> +endif
+> +
+>  config PCI_DRA7XX
+>  	bool "TI DRA7xx PCIe controller"
+>  	depends on SOC_DRA7XX || COMPILE_TEST
+> @@ -148,17 +178,6 @@ config PCIE_ARMADA_8K
+>  	  DesignWare hardware and therefore the driver re-uses the
+>  	  DesignWare core functions to implement the driver.
+>  
+> -config PCIE_ARTPEC6
+> -	bool "Axis ARTPEC-6 PCIe controller"
+> -	depends on PCI
+> -	depends on MACH_ARTPEC6
+> -	depends on PCI_MSI_IRQ_DOMAIN
+> -	select PCIEPORTBUS
+> -	select PCIE_DW_HOST
+> -	help
+> -	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+> -	  SoCs.  This PCIe controller uses the DesignWare core.
+> -
+>  config PCIE_KIRIN
+>  	depends on OF && ARM64
+>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
+> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+> index c61be9738cce..ac98242b83a9 100644
+> --- a/drivers/pci/dwc/Makefile
+> +++ b/drivers/pci/dwc/Makefile
+> @@ -2,6 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+>  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+>  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+>  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+> +ifneq ($(filter y,$(CONFIG_PCIE_ARTPEC6_HOST) $(CONFIG_PCIE_ARTPEC6_EP)),)
+> +        obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+> +endif
+>  ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+>          obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+>  endif
+> @@ -12,7 +15,6 @@ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+>  obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+>  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+>  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+> -obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+>  obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+>  
+>  # The following drivers are for devices that use the generic ACPI
+> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+> index c5d7f98dc6b2..21ea9ffef784 100644
+> --- a/drivers/pci/dwc/pcie-artpec6.c
+> +++ b/drivers/pci/dwc/pcie-artpec6.c
+> @@ -13,6 +13,7 @@
+>  #include <linux/delay.h>
+>  #include <linux/kernel.h>
+>  #include <linux/init.h>
+> +#include <linux/of_device.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/resource.h>
+> @@ -30,8 +31,15 @@ struct artpec6_pcie {
+>  	struct dw_pcie		*pci;
+>  	struct regmap		*regmap;	/* DT axis,syscon-pcie */
+>  	void __iomem		*phy_base;	/* DT phy */
+> +	enum dw_pcie_device_mode mode;
+>  };
+>  
+> +struct artpec_pcie_of_data {
+> +	enum dw_pcie_device_mode mode;
+> +};
+> +
+> +static const struct of_device_id artpec6_pcie_of_match[];
+> +
+>  /* PCIe Port Logic registers (memory-mapped) */
+>  #define PL_OFFSET			0x700
+>  #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
+> @@ -42,6 +50,7 @@ struct artpec6_pcie {
+>  #define  PCIECFG_DBG_OEN		BIT(24)
+>  #define  PCIECFG_CORE_RESET_REQ		BIT(21)
+>  #define  PCIECFG_LTSSM_ENABLE		BIT(20)
+> +#define  PCIECFG_DEVICE_TYPE_MASK	GENMASK(19, 16)
+>  #define  PCIECFG_CLKREQ_B		BIT(11)
+>  #define  PCIECFG_REFCLK_ENABLE		BIT(10)
+>  #define  PCIECFG_PLL_ENABLE		BIT(9)
+> @@ -126,6 +135,16 @@ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+>  	} while (retries && !(val & PHY_COSPLLLOCK));
+>  }
+>  
+> +static void artpec6_pcie_stop_link(struct dw_pcie *pci)
+> +{
+> +	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+> +	u32 val;
+> +
+> +	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+> +	val &= ~PCIECFG_LTSSM_ENABLE;
+> +	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+> +}
+> +
+>  static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+>  {
+>  	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+> @@ -195,6 +214,136 @@ static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
+>  	return dw_handle_msi_irq(pp);
+>  }
+>  
+> +static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+> +{
+> +	u32 reg;
+> +
+> +	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+> +	dw_pcie_dbi_ro_wr_en(pci);
+> +	dw_pcie_writel_dbi2(pci, reg, 0x0);
+> +	dw_pcie_writel_dbi(pci, reg, 0x0);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+> +}
+> +
+> +static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+> +	enum pci_barno bar;
+> +
+> +	artpec6_pcie_assert_core_reset(artpec6_pcie);
+> +	artpec6_pcie_init_phy(artpec6_pcie);
+> +	artpec6_pcie_deassert_core_reset(artpec6_pcie);
+> +
+> +	for (bar = BAR_0; bar <= BAR_5; bar++)
+> +		dw_pcie_ep_reset_bar(pci, bar);
+> +}
+> +
+> +static int artpec6_pcie_raise_msi_irq(struct dw_pcie_ep *ep,
+> +				      u8 interrupt_num)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	struct pci_epc *epc = ep->epc;
+> +	u32 cap_addr, cap_value, cap_id, next_ptr, msg_ctrl, msg_data;
+> +	u32 msg_addr_lower, msg_addr_upper;
+> +	u64 msg_addr;
+> +	bool has_upper;
+> +	int ret;
+> +
+> +	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
+> +	cap_addr = dw_pcie_readl_dbi(pci, PCI_CAPABILITY_LIST);
+> +	while (1) {
+> +		cap_value = dw_pcie_readl_dbi(pci, cap_addr);
+> +		cap_id = cap_value & GENMASK(7, 0);
+> +		if (cap_id == PCI_CAP_ID_MSI)
+> +			break;
+> +		next_ptr = (cap_value & GENMASK(15, 8)) >> 8;
+> +		if (next_ptr == 0) {
+> +			dev_err(pci->dev, "No MSI cap found!\n");
+> +			return -EINVAL;
+> +		}
+> +		cap_addr = next_ptr;
+> +	}
 
-I've not included the pci_epf change here as it's dubious whether that's
-doing the right thing to begin with.
+The MSI capability always points to fixed offset in DesingWare. So I don't
+think this is necessary unless we move it to the generic endpoint layer.
+> +	msg_ctrl = (cap_value & GENMASK(31, 16)) >> 16;
+> +	has_upper = !!(msg_ctrl & BIT(7));
+> +	msg_addr_lower = dw_pcie_readl_dbi(pci, cap_addr + 0x4);
+> +	if (has_upper) {
+> +		msg_addr_upper = dw_pcie_readl_dbi(pci, cap_addr + 0x8);
+> +		msg_data = dw_pcie_readl_dbi(pci, cap_addr + 0xc) &
+> +			GENMASK(15, 0);
+> +	} else {
+> +		msg_addr_upper = 0;
+> +		msg_data = dw_pcie_readl_dbi(pci, cap_addr + 0x8) &
+> +			GENMASK(15, 0);
+> +	}
+> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+> +	ret = epc->ops->map_addr(epc, ep->msi_mem_phys, msg_addr, PAGE_SIZE);
+> +	if (ret)
+> +		return ret;
+> +
+> +	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
+> +
+> +	epc->ops->unmap_addr(epc, ep->msi_mem_phys);
+> +
+> +	return 0;
+> +}
 
-Robin.
+I think this entire function can also be made as a library function to be used
+by other drivers. (looks like only dra7xx has a shortcut to raise MSI irq).
 
- drivers/amba/bus.c       | 1 +
- drivers/base/platform.c  | 1 +
- drivers/gpu/host1x/bus.c | 1 +
- drivers/of/device.c      | 8 +-------
- drivers/pci/pci-driver.c | 1 +
- include/linux/device.h   | 4 ++++
- 6 files changed, 9 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/amba/bus.c b/drivers/amba/bus.c
-index e0f74ddc22b7..594c228d2f02 100644
---- a/drivers/amba/bus.c
-+++ b/drivers/amba/bus.c
-@@ -195,6 +195,7 @@ struct bus_type amba_bustype = {
- 	.match		= amba_match,
- 	.uevent		= amba_uevent,
- 	.pm		= &amba_pm,
-+	.force_dma	= true,
- };
- 
- static int __init amba_init(void)
-diff --git a/drivers/base/platform.c b/drivers/base/platform.c
-index d1bd99271066..9c95c8db00f8 100644
---- a/drivers/base/platform.c
-+++ b/drivers/base/platform.c
-@@ -1142,6 +1142,7 @@ struct bus_type platform_bus_type = {
- 	.match		= platform_match,
- 	.uevent		= platform_uevent,
- 	.pm		= &platform_dev_pm_ops,
-+	.force_dma	= true,
- };
- EXPORT_SYMBOL_GPL(platform_bus_type);
- 
-diff --git a/drivers/gpu/host1x/bus.c b/drivers/gpu/host1x/bus.c
-index f9cde03030fd..ed03b3243195 100644
---- a/drivers/gpu/host1x/bus.c
-+++ b/drivers/gpu/host1x/bus.c
-@@ -320,6 +320,7 @@ struct bus_type host1x_bus_type = {
- 	.name = "host1x",
- 	.match = host1x_device_match,
- 	.pm = &host1x_device_pm_ops,
-+	.force_dma = true,
- };
- 
- static void __host1x_device_del(struct host1x_device *device)
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 64b710265d39..25bddf9c9fe1 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -9,9 +9,7 @@
- #include <linux/module.h>
- #include <linux/mod_devicetable.h>
- #include <linux/slab.h>
--#include <linux/pci.h>
- #include <linux/platform_device.h>
--#include <linux/amba/bus.h>
- 
- #include <asm/errno.h>
- #include "of_private.h"
-@@ -101,11 +99,7 @@ int of_dma_configure(struct device *dev, struct device_node *np)
- 		 * DMA configuration regardless of whether "dma-ranges" is
- 		 * correctly specified or not.
- 		 */
--		if (!dev_is_pci(dev) &&
--#ifdef CONFIG_ARM_AMBA
--		    dev->bus != &amba_bustype &&
--#endif
--		    dev->bus != &platform_bus_type)
-+		if (!dev->bus->force_dma)
- 			return ret == -ENODEV ? 0 : ret;
- 
- 		dma_addr = offset = 0;
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 11bd267fc137..38bdb97b6dc6 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1466,6 +1466,7 @@ struct bus_type pci_bus_type = {
- 	.drv_groups	= pci_drv_groups,
- 	.pm		= PCI_PM_OPS_PTR,
- 	.num_vf		= pci_bus_num_vf,
-+	.force_dma	= true,
- };
- EXPORT_SYMBOL(pci_bus_type);
- 
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 1d2607923a24..357982fb85eb 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -97,6 +97,8 @@ extern void bus_remove_file(struct bus_type *, struct bus_attribute *);
-  * @p:		The private data of the driver core, only the driver core can
-  *		touch this.
-  * @lock_key:	Lock class key for use by the lock validator
-+ * @force_dma:	Assume devices on this bus should be set up by dma_configure()
-+ * 		even if DMA capability is not explicitly described by firmware.
-  *
-  * A bus is a channel between the processor and one or more devices. For the
-  * purposes of the device model, all devices are connected via a bus, even if
-@@ -135,6 +137,8 @@ struct bus_type {
- 
- 	struct subsys_private *p;
- 	struct lock_class_key lock_key;
-+
-+	bool force_dma;
- };
- 
- extern int __must_check bus_register(struct bus_type *bus);
--- 
-2.13.4.dirty
+Thanks
+Kishon
