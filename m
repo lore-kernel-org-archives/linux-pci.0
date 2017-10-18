@@ -1,250 +1,254 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <SRS0=alSj=BR=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=alSj=BR=gmail.com=ckoenig.leichtzumerken@kernel.org>
+From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v9 3/5] PCI: add functionality for resizing resources v7
+Date: Wed, 18 Oct 2017 15:58:19 +0200
+Message-Id: <20171018135821.3248-4-deathsimple@vodafone.de>
+In-Reply-To: <20171018135821.3248-1-deathsimple@vodafone.de>
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <4041983.hUlLtGrCgL@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <4337843.QuD5zygUhU@aspire.rjw.lan>
- <CAPDyKFqq9_ZbPFYn22s+6sxtxePWgnd0GJNodeqkCKF2+QkrNA@mail.gmail.com> <4041983.hUlLtGrCgL@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Fri, 20 Oct 2017 07:57:15 +0200
-Message-ID: <CAPDyKFoVsagf86ozVss4GcWWjmu_2uixPB=cJb+fktOdbtcXOw@mail.gmail.com>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20 October 2017 at 03:19, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Thursday, October 19, 2017 2:21:07 PM CEST Ulf Hansson wrote:
->> On 19 October 2017 at 00:12, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> > On Wednesday, October 18, 2017 4:11:33 PM CEST Ulf Hansson wrote:
->> >> [...]
->> >>
->> >> >>
->> >> >> The reason why pm_runtime_force_* needs to respects the hierarchy of
->> >> >> the RPM callbacks, is because otherwise it can't safely update the
->> >> >> runtime PM status of the device.
->> >> >
->> >> > I'm not sure I follow this requirement.  Why is that so?
->> >>
->> >> If the PM domain controls some resources for the device in its RPM
->> >> callbacks and the driver controls some other resources in its RPM
->> >> callbacks - then these resources needs to be managed together.
->> >
->> > Right, but that doesn't automatically make it necessary to use runtime PM
->> > callbacks in the middle layer.  Its system-wide PM callbacks may be
->> > suitable for that just fine.
->> >
->> > That is, at least in some cases, you can combine ->runtime_suspend from a
->> > driver and ->suspend_late from a middle layer with no problems, for example.
->> >
->> > That's why some middle layers allow drivers to point ->suspend_late and
->> > ->runtime_suspend to the same routine if they want to reuse that code.
->> >
->> >> This follows the behavior of when a regular call to
->> >> pm_runtime_get|put(), triggers the RPM callbacks to be invoked.
->> >
->> > But (a) it doesn't have to follow it and (b) in some cases it should not
->> > follow it.
->>
->> Of course you don't explicitly *have to* respect the hierarchy of the
->> RPM callbacks in pm_runtime_force_*.
->>
->> However, changing that would require some additional information
->> exchange between the driver and the middle-layer/PM domain, as to
->> instruct the middle-layer/PM domain of what to do during system-wide
->> PM. Especially in cases when the driver deals with wakeup, as in those
->> cases the instructions may change dynamically.
->
-> Well, if wakeup matters, drivers can't simply point their PM callbacks
-> to pm_runtime_force_* anyway.
->
-> If the driver itself deals with wakeups, it clearly needs different callback
-> routines for system-wide PM and for runtime PM, so it can't reuse its runtime
-> PM callbacks at all then.
+From: Christian König <christian.koenig@amd.com>
 
-It can still re-use its runtime PM callbacks, simply by calling
-pm_runtime_force_ from its system sleep callbacks.
+This allows device drivers to request resizing their BARs.
 
-Drivers already do that today, not only to deal with wakeups, but
-generally when they need to deal with some additional operations.
+The function only tries to reprogram the windows of the bridge directly above
+the requesting device and only the BAR of the same type (usually mem, 64bit,
+prefetchable). This is done to make sure not to disturb other drivers by
+changing the BARs of their devices.
 
->
-> If the middle layer deals with wakeups, different callbacks are needed at
-> that level and so pm_runtime_force_* are unsuitable too.
->
-> Really, invoking runtime PM callbacks from the middle layer in
-> pm_runtime_force_* is a not a idea at all and there's no general requirement
-> for it whatever.
->
->> [...]
->>
->> >> > In general, not if the wakeup settings are adjusted by the middle layer.
->> >>
->> >> Correct!
->> >>
->> >> To use pm_runtime_force* for these cases, one would need some
->> >> additional information exchange between the driver and the
->> >> middle-layer.
->> >
->> > Which pretty much defeats the purpose of the wrappers, doesn't it?
->>
->> Well, no matter if the wrappers are used or not, we need some kind of
->> information exchange between the driver and the middle-layers/PM
->> domains.
->
-> Right.
->
-> But if that information is exchanged, then why use wrappers *in* *addition*
-> to that?
+Drivers should use the following sequence to resize their BARs:
+1. Disable memory decoding of your device using the PCI cfg dword.
+2. Use pci_release_resource() to release all BARs which can move during the
+   resize. Including the one you want to resize.
+3. Call pci_resize_resource() for each BAR you want to resize.
+4. Call pci_assign_unassigned_bus_resources() to reassign new locations
+   for all BARs which are not resized, but could move.
+5. If everything worked as expected enable memory decoding in your device again
+   using the PCI cfg dword.
 
-If we can find a different method that both avoids both open coding
-and offers the optimize system-wide PM path at resume, I am open to
-that.
+v2: rebase on changes in rbar support
+v3: style cleanups, fail if memory decoding is enabled or resources
+    still allocated, resize all unused bridge BARs,
+    drop calling pci_reenable_device
+v4: print resources before releasing them, style cleanups,
+    use pci_rbar_size_to_bytes, use PCI_RES_TYPE_MASK
+v5: use next pointer to simplify loop
+v6: move reassigning resources on error to driver side
+v7: Document in the commit message how to use the new function.
 
->
->> Anyway, me personally think it's too early to conclude that using the
->> wrappers may not be useful going forward. At this point, they clearly
->> helps trivial cases to remain being trivial.
->
-> I'm not sure about that really.  So far I've seen more complexity resulting
-> from using them than being avoided by using them, but I guess the beauty is
-> in the eye of the beholder. :-)
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/pci/setup-bus.c | 98 +++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/setup-res.c | 58 +++++++++++++++++++++++++++++
+ include/linux/pci.h     |  3 ++
+ 3 files changed, 159 insertions(+)
 
-Hehe, yeah you may be right. :-)
-
->
->> >
->> >> >
->> >> >> Regarding hibernation, honestly that's not really my area of
->> >> >> expertise. Although, I assume the middle-layer and driver can treat
->> >> >> that as a separate case, so if it's not suitable to use
->> >> >> pm_runtime_force* for that case, then they shouldn't do it.
->> >> >
->> >> > Well, agreed.
->> >> >
->> >> > In some simple cases, though, driver callbacks can be reused for hibernation
->> >> > too, so it would be good to have a common way to do that too, IMO.
->> >>
->> >> Okay, that makes sense!
->> >>
->> >> >
->> >> >> >
->> >> >> > Also, quite so often other middle layers interact with PCI directly or
->> >> >> > indirectly (eg. a platform device may be a child or a consumer of a PCI
->> >> >> > device) and some optimizations need to take that into account (eg. parents
->> >> >> > generally need to be accessible when their childres are resumed and so on).
->> >> >>
->> >> >> A device's parent becomes informed when changing the runtime PM status
->> >> >> of the device via pm_runtime_force_suspend|resume(), as those calls
->> >> >> pm_runtime_set_suspended|active().
->> >> >
->> >> > This requires the parent driver or middle layer to look at the reference
->> >> > counter and understand it the same way as pm_runtime_force_*.
->> >> >
->> >> >> In case that isn't that sufficient, what else is needed? Perhaps you can
->> >> >> point me to an example so I can understand better?
->> >> >
->> >> > Say you want to leave the parent suspended after system resume, but the
->> >> > child drivers use pm_runtime_force_suspend|resume().  The parent would then
->> >> > need to use pm_runtime_force_suspend|resume() too, no?
->> >>
->> >> Actually no.
->> >>
->> >> Currently the other options of "deferring resume" (not using
->> >> pm_runtime_force_*), is either using the "direct_complete" path or
->> >> similar to the approach you took for the i2c designware driver.
->> >>
->> >> Both cases should play nicely in combination of a child being managed
->> >> by pm_runtime_force_*. That's because only when the parent device is
->> >> kept runtime suspended during system suspend, resuming can be
->> >> deferred.
->> >
->> > And because the parent remains in runtime suspend late enough in the
->> > system suspend path, its children also are guaranteed to be suspended.
->>
->> Yes.
->>
->> >
->> > But then all of them need to be left in runtime suspend during system
->> > resume too, which is somewhat restrictive, because some drivers may
->> > want their devices to be resumed then.
->>
->> Actually, this scenario is also addressed when using the pm_runtime_force_*.
->>
->> The driver for the child would only need to bump the runtime PM usage
->> count (pm_runtime_get_noresume()) before calling
->> pm_runtime_force_suspend() at system suspend. That then also
->> propagates to the parent, leading to that both the parent and the
->> child will be resumed when pm_runtime_force_resume() is called for
->> them.
->>
->> Of course, if the driver of the parent isn't using pm_runtime_force_,
->> we would have to assume that it's always being resumed at system
->> resume.
->
-> There may be other ways to avoid that, though.
->
-> BTW, I don't quite like using the RPM usage counter this way either, if
-> that hasn't been clear so far.
->
->> As at matter of fact, doesn't this scenario actually indicates that we
->> do need to involve the runtime PM core (updating RPM status according
->> to the HW state even during system-wide PM) to really get this right.
->> It's not enough to only use "driver PM flags"!?
->
-> I'm not sure what you are talking about.
->
-> For all devices with enabled runtime PM any state produced by system
-> suspend/resume has to be labeled either as RPM_SUSPENDED or as RPM_ACTIVE.
-> That has always been the case and hasn't involved any magic.
->
-> However, while runtime PM is disabled, the state of the device doesn't
-> need to be reflected by its RPM status and there's no need to track it then.
-> Moreover, in some cases it cannot be tracked even, because of the firmare
-> involvement (and we cannot track the firmware).
->
-> Besides, please really look at what happens in the patches I posted and
-> then we can talk.
-
-Yes, I will have look.
-
->
->> Seems like we need to create a list of all requirements, pitfalls,
->> good things vs bad things etc. :-)
->
-> We surely need to know what general cases need to be addressed.
->
->> >
->> > [BTW, our current documentation recommends resuming devices during
->> > system resume, actually, and gives a list of reasons why. :-)]
->>
->> Yes, but that too easy and to me not good enough. :-)
->
-> But the list of reasons why is kind of valid still.  There may be better
-> reasons for not doing that, but it really is a tradeoff and drivers
-> should be able to decide which way they want to go.
-
-Agree.
-
->
-> IOW, the "leave the device in runtime suspend throughout system
-> suspend" optimization doesn't have to be bundled with the "leave the
-> device in suspend throughout and after system resume" one.
-
-Agree.
-
-Kind regards
-Uffe
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 37450d9e1132..03af25b3eec4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1908,6 +1908,104 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+ 
++int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
++{
++	struct pci_dev_resource *dev_res;
++	struct pci_dev *next;
++	LIST_HEAD(saved);
++	LIST_HEAD(added);
++	LIST_HEAD(failed);
++	unsigned int i;
++	int ret;
++
++	/* Walk to the root hub, releasing bridge BARs when possible */
++	next = bridge;
++	do {
++		bridge = next;
++		for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END;
++		     i++) {
++			struct resource *res = &bridge->resource[i];
++
++			if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
++				continue;
++
++			/* Ignore BARs which are still in use */
++			if (res->child)
++				continue;
++
++			ret = add_to_list(&saved, bridge, res, 0, 0);
++			if (ret)
++				goto cleanup;
++
++			dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
++				 i, res);
++
++			if (res->parent)
++				release_resource(res);
++			res->start = 0;
++			res->end = 0;
++			break;
++		}
++		if (i == PCI_BRIDGE_RESOURCE_END)
++			break;
++
++		next = bridge->bus ? bridge->bus->self : NULL;
++	} while (next);
++
++	if (list_empty(&saved))
++		return -ENOENT;
++
++	__pci_bus_size_bridges(bridge->subordinate, &added);
++	__pci_bridge_assign_resources(bridge, &added, &failed);
++	BUG_ON(!list_empty(&added));
++
++	if (!list_empty(&failed)) {
++		ret = -ENOSPC;
++		goto cleanup;
++	}
++
++	list_for_each_entry(dev_res, &saved, list) {
++		/* Skip the bridge we just assigned resources for. */
++		if (bridge == dev_res->dev)
++			continue;
++
++		bridge = dev_res->dev;
++		pci_setup_bridge(bridge->subordinate);
++	}
++
++	free_list(&saved);
++	return 0;
++
++cleanup:
++	/* restore size and flags */
++	list_for_each_entry(dev_res, &failed, list) {
++		struct resource *res = dev_res->res;
++
++		res->start = dev_res->start;
++		res->end = dev_res->end;
++		res->flags = dev_res->flags;
++	}
++	free_list(&failed);
++
++	/* Revert to the old configuration */
++	list_for_each_entry(dev_res, &saved, list) {
++		struct resource *res = dev_res->res;
++
++		bridge = dev_res->dev;
++		i = res - bridge->resource;
++
++		res->start = dev_res->start;
++		res->end = dev_res->end;
++		res->flags = dev_res->flags;
++
++		pci_claim_resource(bridge, i);
++		pci_setup_bridge(bridge->subordinate);
++	}
++	free_list(&saved);
++
++	return ret;
++}
++
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 85774b7a316a..1d558e18270d 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -383,6 +383,64 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 	return 0;
+ }
+ 
++void pci_release_resource(struct pci_dev *dev, int resno)
++{
++	struct resource *res = dev->resource + resno;
++
++	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
++	release_resource(res);
++	res->end = resource_size(res) - 1;
++	res->start = 0;
++	res->flags |= IORESOURCE_UNSET;
++}
++EXPORT_SYMBOL(pci_release_resource);
++
++int pci_resize_resource(struct pci_dev *dev, int resno, int size)
++{
++	struct resource *res = dev->resource + resno;
++	int old, ret;
++	u32 sizes;
++	u16 cmd;
++
++	/* Make sure the resource isn't assigned before resizing it. */
++	if (!(res->flags & IORESOURCE_UNSET))
++		return -EBUSY;
++
++	pci_read_config_word(dev, PCI_COMMAND, &cmd);
++	if (cmd & PCI_COMMAND_MEMORY)
++		return -EBUSY;
++
++	sizes = pci_rbar_get_possible_sizes(dev, resno);
++	if (!sizes)
++		return -ENOTSUPP;
++
++	if (!(sizes & BIT(size)))
++		return -EINVAL;
++
++	old = pci_rbar_get_current_size(dev, resno);
++	if (old < 0)
++		return old;
++
++	ret = pci_rbar_set_size(dev, resno, size);
++	if (ret)
++		return ret;
++
++	res->end = res->start + pci_rbar_size_to_bytes(size) - 1;
++
++	/* Check if the new config works by trying to assign everything. */
++	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
++	if (ret)
++		goto error_resize;
++
++	return 0;
++
++error_resize:
++	pci_rbar_set_size(dev, resno, old);
++	res->end = res->start + pci_rbar_size_to_bytes(old) - 1;
++	return ret;
++}
++EXPORT_SYMBOL(pci_resize_resource);
++
+ int pci_enable_resources(struct pci_dev *dev, int mask)
+ {
+ 	u16 cmd, old_cmd;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a75c13673852..c21949a6ea65 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1081,6 +1081,8 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
++void pci_release_resource(struct pci_dev *dev, int resno);
++int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
+ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ bool pci_device_is_present(struct pci_dev *pdev);
+ void pci_ignore_hotplug(struct pci_dev *dev);
+@@ -1159,6 +1161,7 @@ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
++int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+-- 
+2.11.0
