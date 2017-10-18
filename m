@@ -1,105 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:36020 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752822AbdJTKsG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Oct 2017 06:48:06 -0400
-Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        "Mark Rutland" <mark.rutland@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "Xiaowei Song" <songxiaowei@hisilicon.com>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Duc Dang <dhdang@apm.com>
-CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-9-niklas.cassel@axis.com>
- <db0685b5-6078-1c6b-093d-f160f74e85bf@ti.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <2c2968eb-39f6-7b1e-0e6b-97e00c2e8cbf@axis.com>
-Date: Fri, 20 Oct 2017 12:48:00 +0200
+Return-Path: <SRS0=UTAc=BR=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=UTAc=BR=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH V4 1/2] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port
+ service drivers
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
+ <1507719178-112556-2-git-send-email-liudongdong3@huawei.com>
+ <20171017202505.GN5641@bhelgaas-glaptop.roam.corp.google.com>
+CC: <hch@lst.de>, <linux-pci@vger.kernel.org>, <stable@vger.kernel.org>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <b793f1b5-cf6d-dc52-09d8-0be6d58a72ab@huawei.com>
+Date: Wed, 18 Oct 2017 18:50:05 +0800
 MIME-Version: 1.0
-In-Reply-To: <db0685b5-6078-1c6b-093d-f160f74e85bf@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171017202505.GN5641@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/18/2017 10:46 AM, Kishon Vijay Abraham I wrote:
-> Hi Niklas,
-> 
-> On Friday 13 October 2017 09:39 PM, Niklas Cassel wrote:
->> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->> ---
->>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
->>  drivers/pci/dwc/Kconfig                            |  41 +++--
->>  drivers/pci/dwc/Makefile                           |   4 +-
->>  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
->>  4 files changed, 233 insertions(+), 17 deletions(-)
+Hi Bjorn
+在 2017/10/18 4:25, Bjorn Helgaas 写道:
+> On Wed, Oct 11, 2017 at 06:52:57PM +0800, Dongdong Liu wrote:
+>> After removing and adding back the PCI root port device,
+>> we see the PCIe port service drivers request irq failed.
+>> pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
+>> aer: probe of 0000:00:00.0:pcie002 failed with error -22
+>> pciehp 0000:00:00.0:pcie004: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd-
+>> PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+>> pciehp 0000:00:00.0:pcie004: Cannot get irq 20 for the hotplug controller
+>> pciehp 0000:00:00.0:pcie004: Notification initialization failed (-1)
+>> dpc 0000:00:00.0:pcie010: request IRQ22 failed: -22
+>> dpc: probe of 0000:00:00.0:pcie010 failed with error -22
 >>
->> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->> index 4e4aee4439ea..33eef7ae5a23 100644
->> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
->> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
->>  and thus inherits all the common properties defined in designware-pcie.txt.
->>  
->>  Required properties:
->> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
->> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
->> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
-> 
-> If "snps,dw-pcie" is used for both RC and EP mode, how do we differentiate
-> between the modes?
+>> The current code basically does this:
+>>
+>>   - allocate 32 vectors
+>>   - figure out vector used by PME and hotplug
+>>   - figure out vector used by AER
+>>   - figure out vector used by DPC
+>>   - free the 32 vectors we allocated
+>>   - allocate only as many vectors as we need
+>>
+>> but it is broken as calling pci_free_irq_vectors()
+>> invalidates the IRQ numbers returned before by pci_irq_vectors();
+>>
+>> The hardware works:
+>>   - PME and hotplug use the Interrupt Message Number from the PCIe
+>>     Capability register.
+>>
+>>   - AER uses the AER Interrupt Message Number from the AER Root Error
+>>     Status register.
+>>
+>>   - DPC uses the DPC Interrupt Message Number from the DPC Capability
+>>     register.
+>>
+>>   - FRS (not supported by Linux yet) uses the FRS Interrupt Message
+>>     Number from the FRS Queuing Capability register.
+>>
+>>   - That's a total of 4 possible MSI/MSI-X vectors used for PME,
+>>     hotplug, AER, DPC, and FRS, so there's no point in trying to
+>>     allocate more than 4 vectors (we currently start with 32).
+>>
+>>   - All these Interrupt Message Numbers are read-only to software but
+>>     are updated by hardware when software writes the Multiple Message
+>>     Enable field of the MSI Message Control register.  Thanks for
+>>     pointing this out; I didn't realize this before.
+>>
+>>   - Therefore, we must read the Interrupt Message Numbers *after* we
+>>     write Multiple Message Enable.
+>>
+>> Since we can use at most 4 vectors, this patch is to optimize the
+>> interrupt vector allocation strategy in pcie_port_enable_irq_vec().
+>> First figure out how many vectors we need,allocate them, and then fill
+>> in the slots in the irqs[] table.
+>>
+>> Cc: <stable@vger.kernel.org>
+>> Fixes: 3674cc49da9a ("PCI/portdrv: Use pci_irq_alloc_vectors()")
+>> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>
+> Thanks a lot for all your work on this.  This was a confusing issue
+> with code to match.  I tried to simplify the changelog as below;
+> please correct anything I messed up.
+>
+> A few hopefully last questions:
+>
+>   - Your subject suggested that this was a bug for both MSI and MSI-X,
+>     but I think it only affected MSI, because the spec says MSI-X
+>     Interrupt Message Numbers must remain constant.  What do you
+>     think?
 
-Hello Kishon,
+Yes, for a given MSI-X implementation, the entry must remain constant.
+But in fact, the bug PCIe port service drivers request irq failed does
+not relate with this. As we said in PATCH V2,
+The current code does:
 
-Most DWC core based PCIe controllers have the following text in their
-DT binding:
-"This PCIe host controller is based on the Synopsys DesignWare PCIe IP
-and thus inherits all the common properties defined in designware-pcie.txt."
+   pci_alloc_irq_vectors(dev, ...)
+   irqs[x] = pci_irq_vector(dev, entry)
+   pci_free_irq_vectors(dev)
+   pci_alloc_irq_vectors(dev, ...)
 
-It seems like DRA7xx is one of few DWC core based bindings that does
-not include this text.
+The problem is that the second pci_alloc_irq_vectors() call gets different
+vectors than the first one. For MSI-X, It maybe also have such bug.
 
-However, I can see that you've added "EP mode:" and "RC mode:" headings
-to designware-pcie.txt.
+>
+>   - I think the problem was probably exposed by a1d5f18cafe6
+>     ("PCI/portdrv: Support multiple interrupts for MSI as well as
+>     MSI-X"), not 3674cc49da9a, because prior to a1d5f18cafe6, we only
+>     used a single MSI vector, and we didn't do the "allocate vectors,
+>     see which ones were used, reallocate only the required number of
+>     vectors" dance.
 
-But still the top of the file says:
-Required properties:
-- compatible: should contain "snps,dw-pcie" to identify the core.
+Yes, 3674cc49da9a, for MSI, it should be work ok as it just use used a
+single MSI vector(not get the irq and free and alloc irq agian as MSI-X).
+But for MSI-X, I think it maybe still have a bug.
+>
+>     It looks like we only allocated a single vector, so all the
+>     Interrupt Message Numbers should have been zero.  Or did you
+>     actually bisect it to 3674cc49da9a?
 
+I think 3674cc49da9a is beeter as a1d5f18cafe6 maybe still have the bug for MSI-X.
+a1d5f18cafe6 PCI/portdrv: Support multiple interrupts for MSI as well as MSI-X
+3674cc49da9a PCI/portdrv: Use pci_irq_alloc_vectors().
 
+>
+> Bjorn
+>
+>
+> commit e402a536cf7122cda6b3bef420de36c22d2907e6
+> Author: Dongdong Liu <liudongdong3@huawei.com>
+> Date:   Wed Oct 11 18:52:57 2017 +0800
+>
+>     PCI/portdrv: Fix MSI multiple interrupt setup
+>
+>     When removing and adding back a PCIe Root Port device that uses MSI (not
+>     MSI-X), the port service driver IRQ request fails:
+>
+>       pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
+>       aer: probe of 0000:00:00.0:pcie002 failed with error -22
+>       pciehp 0000:00:00.0:pcie004: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+>       pciehp 0000:00:00.0:pcie004: Cannot get irq 20 for the hotplug controller
+>       pciehp 0000:00:00.0:pcie004: Notification initialization failed (-1)
+>       dpc 0000:00:00.0:pcie010: request IRQ22 failed: -22
+>       dpc: probe of 0000:00:00.0:pcie010 failed with error -22
+>
+>     The previous code basically did this:
+>
+>       - Write MSI Multiple Message Enable to enable 32 vectors
+>       - Read Interrupt Message Numbers for PME & hotplug, AER, and DPC
+>       - Rewrite MSI Multiple Message Enable to enable only as many vectors as
+>         we think we need
+>       - Assume the Interrupt Message Numbers are still valid
+>
+>     The problem is that when we change the Multiple Message Enable field to
+>     what we think is the minimal number of vectors required, the hardware may
+>     change which vectors it uses.  See the "Interrupt Message Number"
+>     discussion in PCIe r3.1, sec 7.8.2 (PME & hotplug), 7.10.10 (AER), 7.31.2
+>     (DPC).
+>
+>     Read the Interrupt Message Numbers *after* we write the Multiple Message
+>     Enable field so we use the correct IRQ vectors.
+>
+>     Note that we can't predict how hardware will select Interrupt Message
+>     Numbers, so even if we allocate as many vectors as there are interrupt
+>     sources, the hardware may still select Message Numbers that result in
+>     sharing a vector.  E.g., on HiSilicon hip08, if we have 3 sources
+>     (PME/hotplug, AER, DPC) and 4 MSI vectors, hardware selects Message
+>     Numbers 0 for PME/hotplug and 2 for AER and DPC.  That leaves vectors 1
+>     and 3 unused, while AER and DPC share vector 2.
+>
+>     Even though MSI-X doesn't have the issue with Interrupt Message Numbers
+>     changing, this patch may result in more IRQ sharing because we no longer
+>     read those Message Numbers and use them to determine how many MSI-X vectors
+>     to request.
+>
+>     Fixes: a1d5f18cafe6 ("PCI/portdrv: Support multiple interrupts for MSI as well as MSI-X")
+>     Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>     Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>     [bhelgaas: changelog]
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Cc: stable@vger.kernel.org      # v4.13+
+>
 
-However, I don't think there's necessarily any contradiction here,
-since axis,artpec6-pcie.txt says:
+The commit message looks good to me.
+I think Fixes: 3674cc49da9a ("PCI/portdrv: Use pci_irq_alloc_vectors()") is better as
+it still has a bug for MSI-X.
 
-compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
-compatible: "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
-
-And according to:
-https://elinux.org/Device_Tree_Usage#Understanding_the_compatible_Property
-
-The first string in the list specifies the exact device.
-The following strings represent other devices that the device is compatible
-with.
-
-Their example is:
-
-The compatible property for the MPC8349 serial device should therefore be:
-compatible = "fsl,mpc8349-uart", "ns16550".
-In this case, fsl,mpc8349-uart specifies the exact device, and ns16550 states
-that it is register-level compatible with a National Semiconductor 16550 UART.
-
-The exact device is "axis,artpec6-pcie-ep", but it is register compatible with
-"snps,dw-pcie".
-
-But perhaps Rob Herring could correct me if I'm wrong.
-
-
-Regards,
-Niklas
+Thanks,
+Dongdong
+> .
+>
