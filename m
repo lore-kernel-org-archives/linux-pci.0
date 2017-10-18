@@ -1,73 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:14502 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753421AbdJMDk1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 23:40:27 -0400
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20171013034025epoutp04982302bd573fd5440d3a9b91e5c4c981~tBClJxqyF1709117091epoutp04N
-        for <linux-pci@vger.kernel.org>; Fri, 13 Oct 2017 03:40:25 +0000 (GMT)
-Subject: Re: [PATCH] PCI: dwc: designware: don't sleep in atomic context
-To: David Laight <David.Laight@ACULAB.COM>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-Message-ID: <70cd34bd-01db-cd93-ddf7-d82114ccc61a@samsung.com>
-Date: Fri, 13 Oct 2017 09:10:38 +0530
+Return-Path: <SRS0=y0Ce=BR=oracle.com=james.puthukattukaran@kernel.org>
+Return-Path: <SRS0=y0Ce=BR=oracle.com=james.puthukattukaran@kernel.org>
+Message-ID: <59E7B802.5010907@oracle.com>
+Date: Wed, 18 Oct 2017 16:22:26 -0400
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD00924BC@AcuExch.aculab.com>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
-        <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
-        <063D6719AE5E284EB5DD2968C1650D6DD00924BC@AcuExch.aculab.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v7] PCI: Workaround wrong flags completions for IDT switch
+References: <59C02719.5050103@oracle.com> <9741d204-1dd6-2cc2-c133-2ef49c8a404b@codeaurora.org> <59CAB001.10207@oracle.com> <7084085b-89e7-80fa-d10b-06f121eb57be@codeaurora.org> <20171011192704.GN25517@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171011192704.GN25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 10/12/2017 04:09 PM, David Laight wrote:
-> From: Pankaj Dubey
->> Sent: 12 October 2017 08:55
->> In pcie-designware.c many places we are calling "usleep_range" which
->> are in atomic context. This patch fixes these potential BUGs and
->> replaces "usleep_range" with mdelay calls.
+On 10/11/2017 03:27 PM, Bjorn Helgaas wrote:
+> On Tue, Sep 26, 2017 at 04:03:13PM -0400, Sinan Kaya wrote:
+>> On 9/26/2017 3:52 PM, James Puthukattukaran wrote:
+>>>> I think you want to do the part above as part of a quirk that runs before
+>>>> the probe.
+>>>
+>>> I don't think there's a way to run this early enough?
 >>
->> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
->> ---
->>   drivers/pci/dwc/pcie-designware.c | 8 ++++----
->>   drivers/pci/dwc/pcie-designware.h | 3 +--
->>   2 files changed, 5 insertions(+), 6 deletions(-)
+>> Bjorn?
 >>
->> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
->> index 88abddd..35d19b9 100644
->> --- a/drivers/pci/dwc/pcie-designware.c
->> +++ b/drivers/pci/dwc/pcie-designware.c
->> @@ -138,7 +138,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
->>   		if (val & PCIE_ATU_ENABLE)
->>   			return;
->>
->> -		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
->> +		mdelay(LINK_WAIT_IATU_MIN);
->>   	}
-> Spinning for 9ms (possibly 10 times) isn't really a good idea.
+>> I have seen multiple quirk types in quirks.c some prefixed with EARLY and
+>> other LATE.
+>
+> I'm hoping an early quirk on the switch would be early enough, since
+> the workaround needs to be done for devices downstream from the
+> switch.
+>
 
-Yes. It may not be a good idea, however in our experiment it never hit 
-maximum retry count.
-I just converted usleep_range to mdelay keeping min time limitation as 
-it is, though I
-am not sure, how do we arrived on these numbers in original code, may be 
-Joao Pinto
-from Synopsys have some idea, I will try to do few experiment and try to 
-find out what
-is sufficient minimum time in our hardware for these mdelay.
-
-Thanks,
-Pankaj Dubey
-> 	David
->
->
->
->
+The problem is that this won't work for hotplug, which is where this bug 
+is exposed. The issue is really moot for boot time since the requester 
+id for down stream devices was "locked in" prior to enabling ACS  when 
+the BIOS probes the devices present. So, this issue is for when a device 
+is hotplugged downstream to this IDT switch.
+James
