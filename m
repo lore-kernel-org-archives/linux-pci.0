@@ -1,40 +1,45 @@
-Return-Path: <SRS0=y0Ce=BR=oracle.com=james.puthukattukaran@kernel.org>
-Return-Path: <SRS0=y0Ce=BR=oracle.com=james.puthukattukaran@kernel.org>
-Message-ID: <59E7B802.5010907@oracle.com>
-Date: Wed, 18 Oct 2017 16:22:26 -0400
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53270 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751224AbdJRSCv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Oct 2017 14:02:51 -0400
+Date: Wed, 18 Oct 2017 13:02:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Casey Leedom <leedom@chelsio.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v7] PCI: Workaround wrong flags completions for IDT switch
-References: <59C02719.5050103@oracle.com> <9741d204-1dd6-2cc2-c133-2ef49c8a404b@codeaurora.org> <59CAB001.10207@oracle.com> <7084085b-89e7-80fa-d10b-06f121eb57be@codeaurora.org> <20171011192704.GN25517@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171011192704.GN25517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+        Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
+        Komali Katari <komali@chelsio.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
+ drivers when VFs are attached to VMs ...
+Message-ID: <20171018180248.GB6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <20171017133702.1b0e35bc@t450s.home>
+ <MWHPR12MB16008EEBF251F321E9B48D41C84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAB=NE6U-1ytEbL9A2FeVjcOfN3VSNAJUa9JbsQH9UfjRfANKxw@mail.gmail.com>
+ <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/11/2017 03:27 PM, Bjorn Helgaas wrote:
-> On Tue, Sep 26, 2017 at 04:03:13PM -0400, Sinan Kaya wrote:
->> On 9/26/2017 3:52 PM, James Puthukattukaran wrote:
->>>> I think you want to do the part above as part of a quirk that runs before
->>>> the probe.
->>>
->>> I don't think there's a way to run this early enough?
->>
->> Bjorn?
->>
->> I have seen multiple quirk types in quirks.c some prefixed with EARLY and
->> other LATE.
->
-> I'm hoping an early quirk on the switch would be early enough, since
-> the workaround needs to be done for devices downstream from the
-> switch.
->
+On Wed, Oct 18, 2017 at 05:09:33PM +0000, Casey Leedom wrote:
+> | From: Luis R. Rodriguez <mcgrof@kernel.org>
+> | Sent: Tuesday, October 17, 2017 6:14:20 PM
+> |
+> | You referred to commit 2355869. What tree and more importantly what patch
+> | title?
+> 
+>   Ah, my bad.  Sorry, I had the impression that git commit IDs were
+> preserved across repositories.  That's in Linus' main repository:
+> 
+>   commit 235586939d7fe4833ada9e988f92af543ee6851f
 
-The problem is that this won't work for hotplug, which is where this bug 
-is exposed. The issue is really moot for boot time since the requester 
-id for down stream devices was "locked in" prior to enabling ACS  when 
-the BIOS probes the devices present. So, this issue is for when a device 
-is hotplugged downstream to this IDT switch.
-James
+Oh, sorry!  You *did* provide the git SHA1 already.  I just didn't
+recognize it because it as one because it happened to contain no hex
+digits (a-f) in the seven characters you quoted.  I wonder what the
+chances of that are.
