@@ -1,44 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: "Petrosyan, Ludwig" <ludwig.petrosyan@desy.de>
-Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Bridgman, John" <John.Bridgman@amd.com>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
- <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
- <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <85c98f79-e4b4-cbb5-feca-6944497c0c59@deltatee.com>
-Date: Sun, 22 Oct 2017 11:19:00 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55134 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752670AbdJRG4Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2017 02:56:16 -0400
+Date: Wed, 18 Oct 2017 08:56:24 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 01/12] PM / core: Add NEVER_SKIP and SMART_PREPARE driver
+ flags
+Message-ID: <20171018065624.GA22059@kroah.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
+ <6007227.iNoRbQyInB@aspire.rjw.lan>
+ <20171017071543.GB27293@kroah.com>
+ <79398495.qfC5mmSRrG@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <79398495.qfC5mmSRrG@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Oct 17, 2017 at 05:26:20PM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, October 17, 2017 9:15:43 AM CEST Greg Kroah-Hartman wrote:
+> > On Tue, Oct 17, 2017 at 12:05:11AM +0200, Rafael J. Wysocki wrote:
+> > > On Monday, October 16, 2017 8:28:52 AM CEST Greg Kroah-Hartman wrote:
+> > > > On Mon, Oct 16, 2017 at 03:29:02AM +0200, Rafael J. Wysocki wrote:
+> > > > >  struct dev_pm_info {
+> > > > >  	pm_message_t		power_state;
+> > > > >  	unsigned int		can_wakeup:1;
+> > > > > @@ -561,6 +580,7 @@ struct dev_pm_info {
+> > > > >  	bool			is_late_suspended:1;
+> > > > >  	bool			early_init:1;	/* Owned by the PM core */
+> > > > >  	bool			direct_complete:1;	/* Owned by the PM core */
+> > > > > +	unsigned int		driver_flags;
+> > > > 
+> > > > Minor nit, u32 or u64?
+> > > 
+> > > u32 I think, will update.
+> > > 
+> > > BTW, there's a mess in this struct overall and I'd like all of the bit fileds
+> > > to be the same type (and that shouldn't be bool IMO :-)).
+> > > 
+> > > Do you prefer u32 or unsinged int?
+> > 
+> > I always prefer an explicit size for variables, unless it's a "generic
+> > loop" type thing.  So I'll always say "u32" for this.
+> > 
+> > And cleaning up the structure would be great, it's grown over time in
+> > odd ways as you point out.
+> 
+> OK, but that will be separate from this work.
 
-On 22/10/17 12:13 AM, Petrosyan, Ludwig wrote:
-> But at first sight it has to be simple:
-> The PCIe Write transactions are address routed, so if in the packet header the other endpoint address is written the TLP has to be routed (by PCIe Switch to the endpoint), the DMA reading from the end point is really write transactions from the endpoint, usually (Xilinx core) to start DMA one has to write to the DMA control register of the endpoint the destination address. So I have change the device driver to set in this register the physical address of the other endpoint (get_resource start called to other endpoint, and it is the same address which I could see in lspci -vvvv -s bus-address of the switch port, memories behind bridge), so now the endpoint has to start send writes TLP with the other endpoint address in the TLP header.
-> But this is not working (I want to understand why ...), but I could see the first address of the destination endpoint is changed (with the wrong value 0xFF),
-> now I want to try prepare in the driver of one endpoint the DMA buffer , but using physical address of the other endpoint,
-> Could be it will never work, but I want to understand why, there is my error ...
-
-Hmm, well if I understand you correctly it sounds like, in theory, it
-should work. But there could be any number of reasons why it does not.
-You may need to get a hold of a PCIe analyzer to figure out what's
-actually going on.
-
-Logan
+Of course :)
