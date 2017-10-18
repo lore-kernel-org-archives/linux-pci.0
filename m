@@ -1,73 +1,136 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Oct 2017 07:58:19 +0200 (CEST)
-From: "Petrosyan, Ludwig" <ludwig.petrosyan@desy.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: David Laight <David.Laight@ACULAB.COM>,
-        Alexander Deucher <Alexander.Deucher@amd.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Linux-media <Linux-media@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        John Bridgman <John.Bridgman@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        Serguei Sagalovitch <Serguei.Sagalovitch@amd.com>,
-        Paul Blinzer <Paul.Blinzer@amd.com>,
-        Christian Koenig <Christian.Koenig@amd.com>,
-        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-        Ben Sander <ben.sander@amd.com>
-Message-ID: <1264390131.14701401.1508824699016.JavaMail.zimbra@desy.de>
-In-Reply-To: <d61b6829-0515-a809-2a43-c41add4b1594@deltatee.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com> <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de> <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com> <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de> <063D6719AE5E284EB5DD2968C1650D6DD00A04EA@AcuExch.aculab.com> <d61b6829-0515-a809-2a43-c41add4b1594@deltatee.com>
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45212 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751348AbdJRQ3j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 18 Oct 2017 12:29:39 -0400
+Date: Wed, 18 Oct 2017 11:29:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>, bhelgaas@google.com,
+        jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, mperttunen@nvidia.com
+Subject: Re: [PATCH V2 2/4] PCI: tegra: Add Tegra186 PCIe support
+Message-ID: <20171018162937.GA32397@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+ <1506513517-25870-3-git-send-email-mmaddireddy@nvidia.com>
+ <20171017173428.GE5641@bhelgaas-glaptop.roam.corp.google.com>
+ <20171017202749.GB10482@ulmo>
+ <20171018132752.GO5641@bhelgaas-glaptop.roam.corp.google.com>
+ <9ceb5f5c-7fcc-d729-e5d8-d13142bee8ed@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9ceb5f5c-7fcc-d729-e5d8-d13142bee8ed@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yes I agree it has to be started with the write transaction, according of PCIe standard all write transaction are address routed, and I agree with Logan:
-if in write transaction TLP the endpoint address written in header the TLP should not touch CPU, the PCIe Switch has to route it to endpoint.
-The idea was: in MTCA system there is PCIe Switch on MCH (MTCA crate HUB) this switch connects CPU to other Crate Slots, so one port is Upstream and others are Downstream  ports, DMA read from CPU is usual write on endpoint side, Xilinx DMA core has two registers Destination Address and Source Address,
-device driver to make DMA has to set up these registers,
-usually device driver to start DMA read from Board sets Source address as FPGA memory address and Destination address is DMA prepared system address,
-in case of testing p2p I set Destination address as physical address of other endpoint.
-More detailed:
-we have so called pcie universal driver: the idea behind is
-1. all pcie configuration staff, find enabled BARs, mapping BARs, usual read/write and common ioctl (get slot number, get driver version ...) implemented in universal driver and EXPORTed.
-2. if some system function in new kernel are changed we change it only in universal parts (easy support a big number of drivers )
-so the universal driver something like PCIe Driver API
-3. the universal driver provides read/writ functions so we have the same device access API for any PCIe device, we could use the same user application with any PCIe device
+On Wed, Oct 18, 2017 at 07:44:12PM +0530, Manikanta Maddireddy wrote:
+> 
+> 
+> On 18-Oct-17 6:57 PM, Bjorn Helgaas wrote:
+> > On Tue, Oct 17, 2017 at 10:27:49PM +0200, Thierry Reding wrote:
+> >> On Tue, Oct 17, 2017 at 12:34:28PM -0500, Bjorn Helgaas wrote:
+> >>> On Wed, Sep 27, 2017 at 05:28:35PM +0530, Manikanta Maddireddy wrote:
+> >>>> UPHY programming is performed by BPMP, PHY enable calls are
+> >>>> not required for Tegra186 PCIe. Power partition ungate is
+> >>>> done by BPMP powergate driver.
+> >>>>
+> >>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> >>>> Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+> >>>> Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
+> >>>> ---
+> >>>> V2: Add soc->program_uphy check for phy_exit call
+> >>>>  drivers/pci/host/pci-tegra.c | 132 +++++++++++++++++++++++++++++++++++--------
+> >>>>  1 file changed, 108 insertions(+), 24 deletions(-)
+> >>>
+> >>>> @@ -1012,10 +1016,12 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+> >>>>  		afi_writel(pcie, value, AFI_FUSE);
+> >>>>  	}
+> >>>>  
+> >>>> -	err = tegra_pcie_phy_power_on(pcie);
+> >>>> -	if (err < 0) {
+> >>>> -		dev_err(dev, "failed to power on PHY(s): %d\n", err);
+> >>>> -		return err;
+> >>>> +	if (soc->program_uphy) {
+> >>>> +		err = tegra_pcie_phy_power_on(pcie);
+> >>>> +		if (err < 0) {
+> >>>> +			dev_err(dev, "failed to power on PHY(s): %d\n", err);
+> >>>> +			return err;
+> >>>> +		}
+> >>>
+> >>> This looks good: it's obvious that the previously-supported devices
+> >>> continue to work the same way because you set ".program_uphy = true"
+> >>> for them.  (It would be even more obvious if you changed the sense so
+> >>> that only the new device had to add this initializaer, but in general
+> >>> I prefer the positive logic as you have here, and I did verify that
+> >>> you added the initializer for all tegra_pcie_soc variants.)
+> >>>
+> >>>> @@ -1048,19 +1054,23 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+> >>>>  static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+> >>>>  {
+> >>>>  	struct device *dev = pcie->dev;
+> >>>> +	const struct tegra_pcie_soc *soc = pcie->soc;
+> >>>>  	int err;
+> >>>>  
+> >>>>  	/* TODO: disable and unprepare clocks? */
+> >>>>  
+> >>>> -	err = tegra_pcie_phy_power_off(pcie);
+> >>>> -	if (err < 0)
+> >>>> -		dev_err(dev, "failed to power off PHY(s): %d\n", err);
+> >>>> +	if (soc->program_uphy) {
+> >>>> +		err = tegra_pcie_phy_power_off(pcie);
+> >>>> +		if (err < 0)
+> >>>> +			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+> >>>> +	}
+> >>>>  
+> >>>>  	reset_control_assert(pcie->pcie_xrst);
+> >>>>  	reset_control_assert(pcie->afi_rst);
+> >>>>  	reset_control_assert(pcie->pex_rst);
+> >>>>  
+> >>>> -	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+> >>>> +	if (!dev->pm_domain)
+> >>>> +		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+> >>>
+> >>> But this one isn't obvious because nothing in your patch obviously
+> >>> affects dev->pm_domain, so I can't tell whether this is safe.  It's
+> >>> worth a changelog comment to help justify this.
+> >>
+> >> The last sentence in the commit message is what this is about. Maybe it
+> >> should be more verbose:
+> >>
+> >> 	Since the BPMP controls the powergates on Tegra186, there is no
+> >> 	need to manually power on and off the PCIe power partition. The
+> >> 	BPMP generic power domain driver takes care of it instead.
+> > 
+> > If you know Tegra intimately, maybe that clarifies it.  I don't, so my
+> > problem is that there's nothing in the patch that helps me verify
+> > this.  I infer that maybe there's something different in the DT that
+> > means dev->pm_domain will be set for Tegra186, but not for other
+> > variants?
+> > 
+> > There should be something that helps the reader connect the dots.
+> 
+> Till tegra210 pmc driver provides direct powergate power ON/OFF functions.
+> 
+> In tegra186.dtsi power-domains property is added in pcie@10003000 DT node. reference: https://patchwork.ozlabs.org/patch/819113/
+> powergate-bpmp.c is the pm domain provider for pcie powergate. 
+> Platform driver will look for pm domain provider of Tegra pcie host driver and sets dev->pm_domains.
+> powergate-bpmp.c driver registers powergate power ON/OFF functions to generic PD power_on/powerr_off callback functions.
+> Generic power domain will take care of calling power_on before Tegra PCIe probe.
+> 
+> So in this patch I used dev->pm_domain to skip pmc driver calls.
 
-now. during BARs finding and mapping universal driver keeps pcie endpoint physical address in some internal structures, any top driver may get physical address
-of other pcie endpoint by slot number.
-in may case during get_resorce the physical address is 0xB2000000, I check lspci -H1 -vvvv -s psie switch port bus address (the endpoint connected to this port, checked by lspci -H1 -t) the same address (0xB200000) is the memory behind bridge, 
-I want to make p2p writes to offset 0x40000, so I set DMA destination address 0xB2400000
-is something wrong?
+Thanks, I updated the changelog as follows:
 
-thanks for help
-regards
 
-Ludwig
+commit 9cea513d8cbc75ee26327d3d8971fe7b58288d8f
+Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Date:   Wed Sep 27 17:28:35 2017 +0530
 
------ Original Message -----
-From: "Logan Gunthorpe" <logang@deltatee.com>
-To: "David Laight" <David.Laight@ACULAB.COM>, "Petrosyan, Ludwig" <ludwig.petrosyan@desy.de>
-Cc: "Alexander Deucher" <Alexander.Deucher@amd.com>, "linux-kernel" <linux-kernel@vger.kernel.org>, "linux-rdma" <linux-rdma@vger.kernel.org>, "linux-nvdimm" <linux-nvdimm@lists.01.org>, "Linux-media" <Linux-media@vger.kernel.org>, "dri-devel" <dri-devel@lists.freedesktop.org>, "linux-pci" <linux-pci@vger.kernel.org>, "John Bridgman" <John.Bridgman@amd.com>, "Felix Kuehling" <Felix.Kuehling@amd.com>, "Serguei Sagalovitch" <Serguei.Sagalovitch@amd.com>, "Paul Blinzer" <Paul.Blinzer@amd.com>, "Christian Koenig" <Christian.Koenig@amd.com>, "Suravee Suthikulpanit" <Suravee.Suthikulpanit@amd.com>, "Ben Sander" <ben.sander@amd.com>
-Sent: Tuesday, 24 October, 2017 00:04:26
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-
-On 23/10/17 10:08 AM, David Laight wrote:
-> It is also worth checking that the hardware actually supports p2p transfers.
-> Writes are more likely to be supported then reads.
-> ISTR that some intel cpus support some p2p writes, but there could easily
-> be errata against them.
-
-Ludwig mentioned a PCIe switch. The few switches I'm aware of support 
-P2P transfers. So if everything is setup correctly, the TLPs shouldn't 
-even touch the CPU.
-
-But, yes, generally it's a good idea to start with writes and see if 
-they work first.
-
-Logan
+    PCI: tegra: Add Tegra186 PCIe support
+    
+    Add Tegra186 PCIe support.  UPHY programming is performed by BPMP; PHY
+    enable calls are not required for Tegra186 PCIe.
+    
+    Power partition ungate is done by BPMP powergate driver.  The Tegra186
+    DT description must include a "power-domains" property, which results in
+    dev->pm_domain being set.
