@@ -1,28 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CACRpkdbv1ok6U-xOtH0t5esJ_SD0Sn_JDpxmZg6XViargOM99g@mail.gmail.com>
-References: <20171011140224.3770968-1-arnd@arndb.de> <CACRpkdbv1ok6U-xOtH0t5esJ_SD0Sn_JDpxmZg6XViargOM99g@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 11 Oct 2017 21:08:57 +0200
-Message-ID: <CAK8P3a2w-tgwvr-HcPiMN9hBwOvXJsbUM+iYtkpU1Zu_vhOeCg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: v3-semi: print resources using %pR format string
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <2745759.OYb9FSKnNE@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAPDyKFrMTSUHP86hnpHius2CDfv-ap4svGg=xgwAiH8pKj9Lvw@mail.gmail.com>
+ <1591167.zlNa3zLfmM@aspire.rjw.lan> <2745759.OYb9FSKnNE@aspire.rjw.lan>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Wed, 18 Oct 2017 14:34:10 +0200
+Message-ID: <CAPDyKFpNHL=tZYbQduDJqypz7rbwPwvW7sOymm-djbRSFgZ00g@mail.gmail.com>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 9:04 PM, Linus Walleij <linus.walleij@linaro.org> wrote:
-> On Wed, Oct 11, 2017 at 4:02 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->
-> Ah this again.
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
->
-> Sorry about it, is it that checkpatch doesn't warn for this?
+[...]
 
-I only find this during randconfig builds, I don't think there is an easy way
-for checkpatch to find it.
+>> Are there any major reasons why the appended patch (obviously untested) won't
+>> work, then?
+>
+> OK, there is a reason, which is the optimizations bundled into
+> pm_runtime_force_*, because (a) the device may be left in runtime suspend
+> by them (in which case amba_pm_suspend_early() in my patch should not run)
+> and (b) pm_runtime_force_resume() may decide to leave it suspended (in which
+> case amba_pm_suspend_late() in my patch should not run).
 
-       Arnd
+Exactly.
+
+>
+> [BTW, the "leave the device suspended" optimization in pm_runtime_force_*
+> is potentially problematic too, because it requires the children to do
+> the right thing, which effectively means that their drivers need to use
+> pm_runtime_force_* too, but what if they don't want to reuse their
+> runtime PM callbacks for system-wide PM?]
+
+Deployment of pm_runtime_force_suspend() should generally be done for
+children devices first.
+
+If some reason that isn't the case, it's expected that the call to
+pm_runtime_set_suspended() invoked from pm_runtime_force_suspend(),
+for the parent, should fail and thus abort system suspend.
+
+>
+> Honestly, I don't like the way this is designed.  IMO, it would be better
+> to do the optimizations and all in the bus type middle-layer code instead
+> of expecting drivers to use pm_runtime_force_* as their system-wide PM
+> callbacks (and that expectation should at least be documented, which I'm
+> not sure is the case now).  But whatever.
+>
+> It all should work the way it does now without pm_runtime_force_* if (a) the
+> bus type's PM callbacks are changed like in the last patch and the drivers
+> (b) point their system suspend callbacks to the runtime PM callback routines
+> and (c) set DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED for the
+> devices (if they need to do the PM in ->suspend and ->resume, they may set
+> DPM_FLAG_AVOID_RPM too).
+>
+> And if you see a reason why that won't work, please let me know.
+
+I will have look and try out the series by using my local "runtime PM
+test driver".
+
+I get back to you with an update on this.
+
+Kind regards
+Uffe
