@@ -1,10 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org
-Subject: PCI: brcmstb: Add Broadcom Settopbox PCIe support
-Date: Wed, 11 Oct 2017 18:34:20 -0400
-Message-Id: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+Date: Wed, 18 Oct 2017 08:53:16 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Jim Quinlan <jim2101024@gmail.com>
+Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
+Message-ID: <20171018065316.GA11183@lst.de>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
+ <589c04cb-061b-a453-3188-79324a02388e@arm.com>
+ <20171017081422.GA19475@lst.de>
+ <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,34 +21,48 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
  Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, Ralf Baechle <ralf@linux-mips.org>,
- Rob Herring <robh+dt@kernel.org>, bcm-kernel-feedback-list@broadcom.com,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, iommu@lists.linux-foundation.org,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
  Gregory Fong <gregory.0xf0@gmail.com>,
  Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
  Brian Norris <computersforpeace@gmail.com>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org,
+ Marek Szyprowski <m.szyprowski@samsung.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds support for the Broadcom Settopbox PCIe host
-controller.  It is targeted to Broadcom Settopbox chips running on ARM,
-ARM64, and MIPS platforms.  As the HW of the controller is intimately
-tied to the memory subsystem, there are some patches required that are
-not typical of a PCIe host controller driver.
+On Tue, Oct 17, 2017 at 12:11:55PM -0400, Jim Quinlan wrote:
+> My understanding is that dma_pfn_offset is that it is a single
+> constant offset from RAM, in our case, to map to PCIe space.
 
-pci-brcmstb.c -- is the core functionality of the RC driver.
-pci-brcmstb-msi.c -- provides the driver for the PCIe's built-in
-	MSI controller.
-pci-brcmstb-dma.c -- provides the non-standard mapping between
-	system memory and the PCIe address space.
-drivers/soc/bcm/brcmstb/memory.c -- provides a single call to inform
-	the PCIe controller about the size of populated memory in
-	the memory controllers.
+Yes.
 
+> But in
+> my commit message I detail how our PCIe controller presents memory
+> with multiple regions with multiple different offsets. If an EP device
+> maps to a region on the host memory, yes we can set the dma_pfn_offset
+> for that device for that location within that range,.  But if the
+> device then unmaps and allocates from another region with a different
+> offset, it won't work.  If  I set dma_pfn_offset I have to assume that
+> the device is using only one region of memory only, not more than one,
+> and that it is not unmapping that region and mapping another (with a
+> different offset).  Can I make those assumptions?
+
+No, we can't make that assumption unfortunately.  But how is your
+code going to work if the mapping spans multiple of your translation
+regions?
+
+Also I really don't think the stacking of dma_ops as in this patch
+is a good idea.  For MIPS you should do the variant suggested in
+the patch description and hook into dma_to_phys/phys_to_dma helpers,
+and for ARM/ARM64 you should talk to the maintainers on how they
+want the translation integrated.
 
 _______________________________________________
 linux-arm-kernel mailing list
