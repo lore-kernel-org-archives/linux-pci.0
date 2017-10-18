@@ -1,62 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:43988 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751106AbdJBOIt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Oct 2017 10:08:49 -0400
-Received: by mail-wm0-f49.google.com with SMTP id m72so7657856wmc.0
-        for <linux-pci@vger.kernel.org>; Mon, 02 Oct 2017 07:08:48 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: graeme.gregory@linaro.org, leif.lindholm@linaro.org,
-        daniel.thompson@Linaro.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH] PCI: aspm: deal with missing root ports in link state handling
-Date: Mon,  2 Oct 2017 15:08:40 +0100
-Message-Id: <20171002140840.7767-1-ard.biesheuvel@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=leV3=BR=nvidia.com=mmaddireddy@kernel.org>
+Return-Path: <SRS0=leV3=BR=nvidia.com=mmaddireddy@kernel.org>
+Subject: Re: [PATCH V2 0/4] Add Tegra186 PCIe support
+To: Thierry Reding <thierry.reding@gmail.com>, Bjorn Helgaas
+	<helgaas@kernel.org>
+CC: <bhelgaas@google.com>, <jonathanh@nvidia.com>,
+	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<mperttunen@nvidia.com>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+ <20171017173740.GF5641@bhelgaas-glaptop.roam.corp.google.com>
+ <20171017202814.GC10482@ulmo>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <c4c81f0f-eec7-654f-c76f-38afa4c39e3b@nvidia.com>
+Date: Wed, 18 Oct 2017 10:37:30 +0530
+MIME-Version: 1.0
+In-Reply-To: <20171017202814.GC10482@ulmo>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Even though it is unconventional, some PCIe host implementations omit
-the root ports entirely, and simply consist of a host bridge (which
-is not modeled as a device in the PCI hierarchy) and a link.
 
-When the downstream device is an endpoint, our current code does not
-seem to mind this unusual configuration. However, when PCIe switches
-are involved, the ASPM code assumes that any downstream switch port
-has a parent, and blindly derefences the bus->parent->self field of
-the pci_dev struct to chain the downstream link state to the link
-state of the root port. Given that the root port is missing, the link
-is not modeled at all, and nor is the link state, and attempting to
-access it results in a NULL pointer dereference and a crash.
 
-So let's avoid this by allowing the link state chain to terminate at
-the downstream port if no root port exists.
+On 18-Oct-17 1:58 AM, Thierry Reding wrote:
+> On Tue, Oct 17, 2017 at 12:37:40PM -0500, Bjorn Helgaas wrote:
+>> On Wed, Sep 27, 2017 at 05:28:33PM +0530, Manikanta Maddireddy wrote:
+>>> Tegra186 has three PCIe controllers which can be operated
+>>> in 401, 211 or 111 lane configurations. Tegra TX2 platform
+>>> has x4 and M.2 Key E PCIe slots, these patches enables
+>>> x4 slot. BPMP programs UPHY lane0 ownership to USB,
+>>> so M.2 Key E PCIe will not work.
+>>>
+>>> Testing: x4 slot is verified with PCIe based USB3.1 card.
+>>> PCIe link up, usb flash drive mounting and file copy are
+>>> verified. These patches are also verified by
+>>> Mikko Perttunen <mperttunen@nvidia.com> with an Intel 82574L
+>>> ethernet card.
+>>>
+>>> Patch V2 adds soc->program_uphy check for phy_exit call.
+>>>
+>>> Pasting PCIe link up logs below.
+>>>
+>>> [    1.452512] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
+>>> [    1.452723] tegra-pcie 10003000.pcie: Failed to get supply 'dvdd-pex': -517
+>>> [    1.561824] ehci-pci: EHCI PCI platform driver
+>>> [    1.591587] ohci-pci: OHCI PCI platform driver
+>>> [    3.072464] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
+>>> [    3.078989] tegra-pcie 10003000.pcie: probing port 0, using 4 lanes
+>>> [    3.087272] tegra-pcie 10003000.pcie: Slot present pin change, signature: 00000018
+>>> [    3.128818] tegra-pcie 10003000.pcie: PCI host bridge to bus 0000:00
+>>> [    3.135174] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>>> [    3.141352] pci_bus 0000:00: root bus resource [mem 0x50100000-0x57ffffff]
+>>> [    3.148221] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7fffffff pref]
+>>> [    3.155542] pci_bus 0000:00: root bus resource [bus 00-ff]
+>>> [    3.161173] pci 0000:00:01.0: [10de:10e5] type 01 class 0x060400
+>>> [    3.161188] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
+>>> [    3.170838] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
+>>> [    3.180532] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x52 may corrupt adjacent RW1C bits
+>>> [    3.190305] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3cold
+>>> [    3.190312] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4c may corrupt adjacent RW1C bits
+>>> [    3.200158] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+>>> [    3.208158] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
+>>> [    3.217918] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
+>>> [    3.227649] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
+>>> [    3.237382] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x6 may corrupt adjacent RW1C bits
+>>> [    3.247135] pci 0000:01:00.0: [1b21:1242] type 00 class 0x0c0330
+>>> [    3.247157] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
+>>> [    3.256807] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
+>>> [    3.266477] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 64bit]
+>>> [    3.266544] pci 0000:01:00.0: enabling Extended Tags
+>>> [    3.271622] pci 0000:01:00.0: PME# supported from D3hot D3cold
+>>> [    3.271775] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+>>> [    3.271798] pci 0000:00:01.0: BAR 14: assigned [mem 0x50100000-0x501fffff]
+>>> [    3.278671] pci 0000:01:00.0: BAR 0: assigned [mem 0x50100000-0x50107fff 64bit]
+>>> [    3.285993] pci 0000:00:01.0: PCI bridge to [bus 01]
+>>> [    3.290959] pci 0000:00:01.0:   bridge window [mem 0x50100000-0x501fffff]
+>>> [    3.297763] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host bridge
+>>> [    3.304784] pcieport 0000:00:01.0: enabling device (0000 -> 0002)
+>>> [    3.311014] pcieport 0000:00:01.0: Signaling PME with IRQ 57
+>>> [    3.316768] pci 0000:01:00.0: enabling device (0000 -> 0002)
+>>>
+>>>
+>>> Manikanta Maddireddy (4):
+>>>   dt-bindings: pci: tegra: Document Tegra186 PCIe DT
+>>>   PCI: tegra: Add Tegra186 PCIe support
+>>
+>> I applied these two with Thierry's tested-by and acks to
+>> pci/host-tegra for v4.15, thanks!  If you have a changelog update for
+>> the pm_domain question, I can fold that in.
+> 
+> Thanks!
+> 
+> Thierry
+> 
 
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
- drivers/pci/pcie/aspm.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Thank you Mikko, Thierry and Bjorn for testing and reviewing these patches.
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 1dfa10cc566b..0bea8498b5a5 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -802,10 +802,14 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 
- 	/*
- 	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
--	 * hierarchies.
-+	 * hierarchies.  Note that some PCIe host implementations omit
-+	 * the root ports entirely, in which case a downstream port on
-+	 * a switch may become the root of the link state chain for all
-+	 * its subordinate endpoints.
- 	 */
- 	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ||
--	    pci_pcie_type(pdev) == PCI_EXP_TYPE_PCIE_BRIDGE) {
-+	    pci_pcie_type(pdev) == PCI_EXP_TYPE_PCIE_BRIDGE ||
-+	    !pdev->bus->parent->self) {
- 		link->root = link;
- 	} else {
- 		struct pcie_link_state *parent;
--- 
-2.11.0
+Bjorn,
+
+Please let me know if Thierry's elaborate changelog update in [PATCH V2 2/4] clarified the pm_domain question or not?
+If that helps, please take that into changelog.
