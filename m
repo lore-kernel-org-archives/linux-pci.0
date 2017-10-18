@@ -1,134 +1,229 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Ludwig Petrosyan <ludwig.petrosyan@desy.de>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
-        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@lists.01.org>,
-        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
-        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
-        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Cc: "Bridgman, John" <John.Bridgman@amd.com>,
-        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
-        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
-        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-        "Sander, Ben" <ben.sander@amd.com>
-References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
- <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
-Date: Fri, 20 Oct 2017 09:48:58 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:56316 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751091AbdJRWVt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2017 18:21:49 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+Date: Thu, 19 Oct 2017 00:12:09 +0200
+Message-ID: <4337843.QuD5zygUhU@aspire.rjw.lan>
+In-Reply-To: <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2890181.vdGMMavi5M@aspire.rjw.lan> <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: Enabling peer to peer device transactions for PCIe devices
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ludwig,
+On Wednesday, October 18, 2017 4:11:33 PM CEST Ulf Hansson wrote:
+> [...]
+> 
+> >>
+> >> The reason why pm_runtime_force_* needs to respects the hierarchy of
+> >> the RPM callbacks, is because otherwise it can't safely update the
+> >> runtime PM status of the device.
+> >
+> > I'm not sure I follow this requirement.  Why is that so?
+> 
+> If the PM domain controls some resources for the device in its RPM
+> callbacks and the driver controls some other resources in its RPM
+> callbacks - then these resources needs to be managed together.
 
-P2P transactions are still *very* experimental at the moment and take a 
-lot of expertise to get working in a general setup. It will definitely 
-require changes to the kernel, including the drivers of all the devices 
-you are trying to make talk to eachother. If you're up for it you can 
-take a look at:
+Right, but that doesn't automatically make it necessary to use runtime PM
+callbacks in the middle layer.  Its system-wide PM callbacks may be
+suitable for that just fine.
 
-https://github.com/sbates130272/linux-p2pmem/
+That is, at least in some cases, you can combine ->runtime_suspend from a
+driver and ->suspend_late from a middle layer with no problems, for example.
 
-Which has our current rough work making NVMe fabrics use p2p transactions.
+That's why some middle layers allow drivers to point ->suspend_late and
+->runtime_suspend to the same routine if they want to reuse that code.
 
-Logan
+> This follows the behavior of when a regular call to
+> pm_runtime_get|put(), triggers the RPM callbacks to be invoked.
 
-On 10/20/2017 6:36 AM, Ludwig Petrosyan wrote:
-> Dear Linux kernel group
+But (a) it doesn't have to follow it and (b) in some cases it should not
+follow it.
+ 
+> >
+> >> And updating the runtime PM status of
+> >> the device is required to manage the optimized behavior during system
+> >> resume (avoiding to unnecessary resume devices).
+> >
+> > Well, OK.  The runtime PM status of the device after system resume should
+> > better reflect its physical state.
+> >
+> > [The physical state of the device may not be under the control of the
+> > kernel in some cases, like in S3 resume on some systems that reset
+> > devices in the firmware and so on, but let's set that aside.]
+> >
+> > However, for the runtime PM status of the device may still reflect its state
+> > if, say, a ->resume_early of the middle layer is called during resume along
+> > with a driver's ->runtime_resume.  That still can produce the right state
+> > of the device and all depends on the middle layer.
+> >
+> > On the other hand, as I said before, using a middle-layer ->runtime_suspend
+> > during a system sleep transition may be outright incorrect, say if device
+> > wakeup settings need to be adjusted by the middle layer (which is the
+> > case for some of them).
+> >
+> > Of course, if the middle layer expects the driver to point its
+> > system-wide PM callbacks to pm_runtime_force_*, then that's how it goes,
+> > but the drivers working with this particular middle layer generally
+> > won't work with other middle layers and may interact incorrectly
+> > with parents and/or children using the other middle layers.
+> >
+> > I guess the problem boils down to having a common set of expectations
+> > on the driver side and on the middle layer side allowing different
+> > combinations of these to work together.
 > 
-> my name is Ludwig Petrosyan I am working in DESY (Germany)
+> Yes!
 > 
-> we are responsible for the control system of  all accelerators in DESY.
+> >
+> >> Besides the AMBA case, I also realized that we are dealing with PM
+> >> clocks in the genpd case. For this, genpd relies on the that runtime
+> >> PM status of the device properly reflects the state of the HW, during
+> >> system-wide PM.
+> >>
+> >> In other words, if the driver would change the runtime PM status of
+> >> the device, without respecting the hierarchy of the runtime PM
+> >> callbacks, it would lead to that genpd starts taking wrong decisions
+> >> while managing the PM clocks during system-wide PM. So in case you
+> >> intend to change pm_runtime_force_* this needs to be addressed too.
+> >
+> > I've just looked at the genpd code and quite frankly I'm not sure how this
+> > works, but I'll figure this out. :-)
 > 
-> For a 7-8 years we have switched to MTCA.4 systems and using PCIe as a 
-> central Bus.
+> You may think of it as genpd's RPM callback controls some device
+> clocks, while the driver control some other device resources (pinctrl
+> for example) from its RPM callback.
 > 
-> I am mostly responsible for the Linux drivers of the AMC Cards (PCIe 
-> endpoints).
+> These resources needs to managed together, similar to as I described above.
+
+Which, again, doesn't mean that runtime PM callbacks from the middle layer
+have to be used for that.
+
+> [...]
 > 
-> The idea is start to use peer to peer transaction for PCIe endpoint (DMA 
-> and/or usual Read/Write)
+> >> Absolutely agree about the different wake-up settings. However, these
+> >> issues can be addressed also when using pm_runtime_force_*, at least
+> >> in general, but then not for PCI.
+> >
+> > Well, not for the ACPI PM domain too.
+> >
+> > In general, not if the wakeup settings are adjusted by the middle layer.
 > 
-> Could You please advise me where to start, is there some Documentation 
-> how to do it.
+> Correct!
 > 
+> To use pm_runtime_force* for these cases, one would need some
+> additional information exchange between the driver and the
+> middle-layer.
+
+Which pretty much defeats the purpose of the wrappers, doesn't it?
+
+> >
+> >> Regarding hibernation, honestly that's not really my area of
+> >> expertise. Although, I assume the middle-layer and driver can treat
+> >> that as a separate case, so if it's not suitable to use
+> >> pm_runtime_force* for that case, then they shouldn't do it.
+> >
+> > Well, agreed.
+> >
+> > In some simple cases, though, driver callbacks can be reused for hibernation
+> > too, so it would be good to have a common way to do that too, IMO.
 > 
-> with best regards
+> Okay, that makes sense!
 > 
+> >
+> >> >
+> >> > Also, quite so often other middle layers interact with PCI directly or
+> >> > indirectly (eg. a platform device may be a child or a consumer of a PCI
+> >> > device) and some optimizations need to take that into account (eg. parents
+> >> > generally need to be accessible when their childres are resumed and so on).
+> >>
+> >> A device's parent becomes informed when changing the runtime PM status
+> >> of the device via pm_runtime_force_suspend|resume(), as those calls
+> >> pm_runtime_set_suspended|active().
+> >
+> > This requires the parent driver or middle layer to look at the reference
+> > counter and understand it the same way as pm_runtime_force_*.
+> >
+> >> In case that isn't that sufficient, what else is needed? Perhaps you can
+> >> point me to an example so I can understand better?
+> >
+> > Say you want to leave the parent suspended after system resume, but the
+> > child drivers use pm_runtime_force_suspend|resume().  The parent would then
+> > need to use pm_runtime_force_suspend|resume() too, no?
 > 
-> Ludwig
+> Actually no.
 > 
+> Currently the other options of "deferring resume" (not using
+> pm_runtime_force_*), is either using the "direct_complete" path or
+> similar to the approach you took for the i2c designware driver.
+>
+> Both cases should play nicely in combination of a child being managed
+> by pm_runtime_force_*. That's because only when the parent device is
+> kept runtime suspended during system suspend, resuming can be
+> deferred.
+
+And because the parent remains in runtime suspend late enough in the
+system suspend path, its children also are guaranteed to be suspended.
+
+But then all of them need to be left in runtime suspend during system
+resume too, which is somewhat restrictive, because some drivers may
+want their devices to be resumed then.
+
+[BTW, our current documentation recommends resuming devices during
+system resume, actually, and gives a list of reasons why. :-)]
+
+> That means, if the resume of the parent is deferred, so will the also
+> the resume of the child.
 > 
-> On 11/21/2016 09:36 PM, Deucher, Alexander wrote:
->> This is certainly not the first time this has been brought up, but I'd 
->> like to try and get some consensus on the best way to move this 
->> forward.  Allowing devices to talk directly improves performance and 
->> reduces latency by avoiding the use of staging buffers in system 
->> memory.  Also in cases where both devices are behind a switch, it 
->> avoids the CPU entirely.  Most current APIs (DirectGMA, PeerDirect, 
->> CUDA, HSA) that deal with this are pointer based.  Ideally we'd be 
->> able to take a CPU virtual address and be able to get to a physical 
->> address taking into account IOMMUs, etc.  Having struct pages for the 
->> memory would allow it to work more generally and wouldn't require as 
->> much explicit support in drivers that wanted to use it.
->> Some use cases:
->> 1. Storage devices streaming directly to GPU device memory
->> 2. GPU device memory to GPU device memory streaming
->> 3. DVB/V4L/SDI devices streaming directly to GPU device memory
->> 4. DVB/V4L/SDI devices streaming directly to storage devices
->> Here is a relatively simple example of how this could work for 
->> testing.  This is obviously not a complete solution.
->> - Device memory will be registered with Linux memory sub-system by 
->> created corresponding struct page structures for device memory
->> - get_user_pages_fast() will  return corresponding struct pages when 
->> CPU address points to the device memory
->> - put_page() will deal with struct pages for device memory
->> Previously proposed solutions and related proposals:
->> 1.P2P DMA
->> DMA-API/PCI map_peer_resource support for peer-to-peer 
->> (http://www.spinics.net/lists/linux-pci/msg44560.html)
->> Pros: Low impact, already largely reviewed.
->> Cons: requires explicit support in all drivers that want to support 
->> it, doesn't handle S/G in device memory.
->> 2. ZONE_DEVICE IO
->> Direct I/O and DMA for persistent memory 
->> (https://lwn.net/Articles/672457/)
->> Add support for ZONE_DEVICE IO memory with struct pages. 
->> (https://patchwork.kernel.org/patch/8583221/)
->> Pro: Doesn't waste system memory for ZONE metadata
->> Cons: CPU access to ZONE metadata slow, may be lost, corrupted on 
->> device reset.
->> 3. DMA-BUF
->> RDMA subsystem DMA-BUF support 
->> (http://www.spinics.net/lists/linux-rdma/msg38748.html)
->> Pros: uses existing dma-buf interface
->> Cons: dma-buf is handle based, requires explicit dma-buf support in 
->> drivers.
->>
->> 4. iopmem
->> iopmem : A block device for PCIe memory 
->> (https://lwn.net/Articles/703895/)
->> 5. HMM
->> Heterogeneous Memory Management 
->> (http://lkml.iu.edu/hypermail/linux/kernel/1611.2/02473.html)
->>
->> 6. Some new mmap-like interface that takes a userptr and a length and 
->> returns a dma-buf and offset?
->> Alex
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> >> For a PCI consumer device those will of course have to play by the rules of PCI.
+> >>
+> >> >
+> >> > Moreover, the majority of the "other subsystems/middle-layers" you've talked
+> >> > about so far don't provide any PM callbacks to be invoked by pm_runtime_force_*,
+> >> > so question is how representative they really are.
+> >>
+> >> That's the point. We know pm_runtime_force_* works nicely for the
+> >> trivial middle-layer cases.
+> >
+> > In which cases the middle-layer callbacks don't exist, so it's just like
+> > reusing driver callbacks directly. :-)
+> >
+> >> For the more complex cases, we need something additional/different.
+> >
+> > Something different.
+> >
+> > But overall, as I said, this is about common expectations.
+> >
+> > Today, some middle layers expect drivers to point their callback pointers
+> > to the same routine in order to resue it (PCI, ACPI bus type), some of them
+> > expect pm_runtime_force_suspend|resume() to be used (AMBA, maybe genpd),
+> > and some of them have no expectations at all.
+> >
+> > There needs to be a common ground in that area for drivers to be able to
+> > work with different middle layers.
 > 
-> _______________________________________________
-> Linux-nvdimm mailing list
-> Linux-nvdimm@lists.01.org
-> https://lists.01.org/mailman/listinfo/linux-nvdimm
+> Yes, reaching that point would be great, we should definitively aim for that!
+
+Indeed.
+
+Thanks,
+Rafael
