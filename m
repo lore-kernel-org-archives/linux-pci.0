@@ -1,70 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:19669 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932312AbdJ0TbQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 15:31:16 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 04/12] PCI: tegra: Advertise AER capability
-Date: Sat, 28 Oct 2017 00:59:21 +0530
-Message-ID: <1509132569-9398-5-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+Date: Wed, 18 Oct 2017 23:48:20 +0200
+Message-ID: <2926646.NJduVklg7n@aspire.rjw.lan>
+In-Reply-To: <7b9c2a3e-2e88-938e-46a5-703de0080681@ti.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com> <7b9c2a3e-2e88-938e-46a5-703de0080681@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Default root port settings hide AER capability. This patch enables the
-advertisement of AER capability by root port.
+On Wednesday, October 18, 2017 9:45:11 PM CEST Grygorii Strashko wrote:
+> 
+> On 10/18/2017 09:11 AM, Ulf Hansson wrote:
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+[...]
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 15df60e13a14..c0cd88103e9e 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -187,6 +187,9 @@
- #define RP_VEND_XP	0x00000f00
- #define  RP_VEND_XP_DL_UP	(1 << 30)
- 
-+#define RP_VEND_CTL1	0xf48
-+#define  RP_VEND_CTL1_ERPT	(1 << 13)
-+
- #define RP_VEND_CTL2 0x00000fa8
- #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
- 
-@@ -2055,6 +2058,16 @@ static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
- 		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
- }
- 
-+static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
-+{
-+	unsigned long value;
-+
-+	/* Enable AER capability */
-+	value = readl(port->base + RP_VEND_CTL1);
-+	value |= RP_VEND_CTL1_ERPT;
-+	writel(value, port->base + RP_VEND_CTL1);
-+}
-+
- /*
-  * FIXME: If there are no PCIe cards attached, then calling this function
-  * can result in the increase of the bootup time as there are big timeout
-@@ -2119,6 +2132,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 			 port->index, port->lanes);
- 
- 		tegra_pcie_port_enable(port);
-+		tegra_pcie_enable_rp_features(port);
- 	}
- 
- 	/* take the PCIe interface module out of reset */
--- 
-2.1.4
+> >>> That's the point. We know pm_runtime_force_* works nicely for the
+> >>> trivial middle-layer cases.
+> >>
+> >> In which cases the middle-layer callbacks don't exist, so it's just like
+> >> reusing driver callbacks directly. :-)
+> 
+> I'd like to ask you clarify one point here and provide some info which I hope can be useful - 
+> what's exactly means  "trivial middle-layer cases"?
+> 
+> Is it when systems use "drivers/base/power/clock_ops.c - Generic clock
+> manipulation PM callbacks" as dev_pm_domain (arm davinci/keystone), or OMAP
+> device framework struct dev_pm_domain omap_device_pm_domain
+> (arm/mach-omap2/omap_device.c) or static const struct dev_pm_ops
+> tegra_aconnect_pm_ops?
+> 
+> if yes all above have PM runtime callbacks.
+
+Trivial ones don't actually do anything meaningful in their PM callbacks.
+
+Things like the platform bus type, spi bus type, i2c bus type and similar.
+
+If the middle-layer callbacks manipulate devices in a significant way, then
+they aren't trivial.
+
+Thanks,
+Rafael
