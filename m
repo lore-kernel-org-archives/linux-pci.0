@@ -1,57 +1,151 @@
-Return-Path: <SRS0=A4lV=BQ=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=A4lV=BQ=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-To: Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        seroyer@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>, jjalvare@linux.vnet.ibm.com
-References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
- <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
- <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
- <87efq92ei6.fsf@concordia.ellerman.id.au>
- <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
- <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
- <87r2u2jvfb.fsf@concordia.ellerman.id.au>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Tue, 17 Oct 2017 09:11:01 -0500
+Return-Path: <SRS0=czIE=BR=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=czIE=BR=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
+To: Bjorn Helgaas <helgaas@kernel.org>, Niklas Cassel <niklas.cassel@axis.com>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-9-niklas.cassel@axis.com>
+ <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
+CC: Niklas Cassel <niklass@axis.com>, Jesper Nilsson <jespern@axis.com>,
+        Bjorn
+ Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland
+	<mark.rutland@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Xiaowei Song
+	<songxiaowei@hisilicon.com>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Tomasz
+ Nowicki <tn@semihalf.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Duc Dang <dhdang@apm.com>, <linux-arm-kernel@axis.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <ebc64a29-4080-af88-c774-b3223115aef0@ti.com>
+Date: Wed, 18 Oct 2017 13:33:49 +0530
 MIME-Version: 1.0
-In-Reply-To: <87r2u2jvfb.fsf@concordia.ellerman.id.au>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <3507ee2e-00ee-7bd0-36a3-292af5112734@linux.vnet.ibm.com>
+In-Reply-To: <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding Juan back into the cc: jjalvare@linux.vnet.ibm.com
+Hi Bjorn,
 
-
-On 10/16/17 10:38 PM, Michael Ellerman wrote:
-> "Bryant G. Ly" <bryantly@linux.vnet.ibm.com> writes:
->> On 10/12/17 1:29 PM, Bjorn Helgaas wrote:
-> ...
->>> If that's the case, how to you ever bind a driver to these VFs?  The
->>> changelog says you don't want VF drivers to load *immediately*, so I
->>> assume you do want them to load eventually.
->>>
->> The VF's that get dynamically created within the configure SR-IOV call, 
->> on the Pseries Platform, wont be matched with a driver. - We do not
->> want it to match.
+On Tuesday 17 October 2017 05:13 AM, Bjorn Helgaas wrote:
+> On Fri, Oct 13, 2017 at 06:09:11PM +0200, Niklas Cassel wrote:
+>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+>> ---
+>>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
+>>  drivers/pci/dwc/Kconfig                            |  41 +++--
+>>  drivers/pci/dwc/Makefile                           |   4 +-
+>>  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
+>>  4 files changed, 233 insertions(+), 17 deletions(-)
 >>
->> The Power Hypervisor will load the VFs. The VF's will get assigned(by 
->> the user) > via the HMC or Novalink in this environment which will
->> then trigger PHYP to load the VF device node to the device tree.
-> What about the other "Power Hypervisor"? ie. KVM running on Power.
-This path is only exercised when configuring SR-IOV for Pseries LPAR,
-therefore it will not affect PowerNV or KVM(opal). Which is the reason for
-the separation of calls to the machine dependent stuff.
-> We also use the pseries platform when running under KVM.
->
-> cheers
->
-If anyone plans to enable SR-IOV on Pseries platform, firmware must provide the
-resources to enable the VFs and map them with system resources. A new version
-of the PAPR Document will be added to document these system resources. Lastly,
-we were not aware that there is an intention to enable SR-IOV in adapters assigned
-to a VM with Pseries running on KVM. Furthermore, this could be left as a todo
-for the future if this type of configuration is needed.
+>> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>> index 4e4aee4439ea..33eef7ae5a23 100644
+>> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+>>  and thus inherits all the common properties defined in designware-pcie.txt.
+>>  
+>>  Required properties:
+>> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
+>> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+>> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
+>>  - reg: base addresses and lengths of the PCIe controller (DBI),
+>>  	the PHY controller, and configuration address space.
+>>  - reg-names: Must include the following entries:
+>> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+>> index 22ec82fcdea2..e333283fb1ed 100644
+>> --- a/drivers/pci/dwc/Kconfig
+>> +++ b/drivers/pci/dwc/Kconfig
+>> @@ -14,6 +14,36 @@ config PCIE_DW_EP
+>>  	depends on PCI_ENDPOINT
+>>  	select PCIE_DW
+>>  
+>> +config PCIE_ARTPEC6
+>> +	bool "Axis ARTPEC-6 PCIe controller"
+>> +	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+>> +	depends on MACH_ARTPEC6
+>> +	help
+>> +	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+>> +	  SoCs.  This PCIe controller uses the DesignWare core.
+>> +
+>> +if PCIE_ARTPEC6
+>> +
+>> +config PCIE_ARTPEC6_HOST
+>> +	bool "Axis ARTPEC-6 Host Mode"
+>> +	depends on PCI
+>> +	depends on PCI_MSI_IRQ_DOMAIN
+>> +	select PCIEPORTBUS
+>> +	select PCIE_DW_HOST
+>> +	help
+>> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
+>> +	  host mode.
+>> +
+>> +config PCIE_ARTPEC6_EP
+>> +	bool "Axis ARTPEC-6 Endpoint Mode"
+>> +	depends on PCI_ENDPOINT
+>> +	select PCIE_DW_EP
+>> +	help
+>> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
+>> +	  endpoint mode.
+>> +
+>> +endif
+>> +
+>>  config PCI_DRA7XX
+>>  	bool "TI DRA7xx PCIe controller"
+>>  	depends on SOC_DRA7XX || COMPILE_TEST
+>> @@ -148,17 +178,6 @@ config PCIE_ARMADA_8K
+>>  	  DesignWare hardware and therefore the driver re-uses the
+>>  	  DesignWare core functions to implement the driver.
+>>  
+>> -config PCIE_ARTPEC6
+>> -	bool "Axis ARTPEC-6 PCIe controller"
+>> -	depends on PCI
+>> -	depends on MACH_ARTPEC6
+>> -	depends on PCI_MSI_IRQ_DOMAIN
+>> -	select PCIEPORTBUS
+>> -	select PCIE_DW_HOST
+>> -	help
+>> -	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+>> -	  SoCs.  This PCIe controller uses the DesignWare core.
+>> -
+>>  config PCIE_KIRIN
+>>  	depends on OF && ARM64
+>>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
+> 
+>> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+>> index c61be9738cce..ac98242b83a9 100644
+>> --- a/drivers/pci/dwc/Makefile
+>> +++ b/drivers/pci/dwc/Makefile
+>> @@ -2,6 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+>>  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+>>  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+>>  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+>> +ifneq ($(filter y,$(CONFIG_PCIE_ARTPEC6_HOST) $(CONFIG_PCIE_ARTPEC6_EP)),)
+>> +        obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+>> +endif
+> 
+> I see you're copying the DRA7XX style here, but I don't really
+> understand it.  I guess the idea is to build pcie-artpec6.o if either
+> CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
+> 
+> Is this really the simplest way to express that in Kconfig?  Both the
+> "if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
+> unusual.
+> 
+>>  ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+>>          obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+>>  endif
+> 
+>> +static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+> 
+> Looks funny to have this dw_*() function in pcie-artpec6.c.  Intended?
+> Or is this something other endpoint drivers could/should share?
 
--Bryant
+yeah, dw_pcie_ep_reset_bar is already present in pcie-designware-ep.c which
+should be made as library function to be used by other drivers. (pci-dra7xx.c
+has also added something like above which should also be fixed).
+
+Thanks
+Kishon
