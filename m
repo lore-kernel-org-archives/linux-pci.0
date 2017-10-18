@@ -1,133 +1,199 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:52390 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932279AbdJ0Wao (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 18:30:44 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Subject: [PATCH v2 3/6] PM / core: Add SMART_SUSPEND driver flag
-Date: Sat, 28 Oct 2017 00:22:34 +0200
-Message-ID: <5769060.47kJca3s00@aspire.rjw.lan>
-In-Reply-To: <16592954.7Zo1mAdIIH@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
+Return-Path: <SRS0=alSj=BR=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=alSj=BR=gmail.com=ckoenig.leichtzumerken@kernel.org>
+From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v9 2/5] PCI: add resizeable BAR infrastructure v5
+Date: Wed, 18 Oct 2017 15:58:18 +0200
+Message-Id: <20171018135821.3248-3-deathsimple@vodafone.de>
+In-Reply-To: <20171018135821.3248-1-deathsimple@vodafone.de>
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Christian König <christian.koenig@amd.com>
 
-Define and document a SMART_SUSPEND flag to instruct bus types and PM
-domains that the system suspend callbacks provided by the driver can
-cope with runtime-suspended devices, so from the driver's perspective
-it should be safe to leave devices in runtime suspend during system
-suspend.
+Just the defines and helper functions to read the possible sizes of a BAR and
+update it's size.
 
-Setting that flag may also cause middle-layer code (bus types,
-PM domains etc.) to skip invocations of the ->suspend_late and
-->suspend_noirq callbacks provided by the driver if the device
-is in runtime suspend at the beginning of the "late" phase of
-the system-wide suspend transition, in which case the driver's
-system-wide resume callbacks may be invoked back-to-back with
-its ->runtime_suspend callback, so the driver has to be able to
-cope with that too.
+See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf
+and PCIe r3.1, sec 7.22.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+This is useful for hardware with large local storage (mostly GFX) which only
+expose 256MB BARs initially to be compatible with 32bit systems.
+
+v2: provide read helper as well
+v3: improve function names, use unsigned values, add better comments.
+v4: move definition, improve commit message, s/bar/BAR/
+v5: split out helper to find ctrl reg pos, style fixes, comment fixes,
+    add pci_rbar_size_to_bytes as well
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 ---
+ drivers/pci/pci.c             | 104 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h             |   8 ++++
+ include/uapi/linux/pci_regs.h |  11 ++++-
+ 3 files changed, 121 insertions(+), 2 deletions(-)
 
--> v2: Drop the changes in main.c, as the logic implemented by them
-       previously is now going to be implemented in the PCI bus type
-       and the ACPI PM domain directly.
-
----
- Documentation/driver-api/pm/devices.rst |   20 ++++++++++++++++++++
- drivers/base/power/main.c               |    3 +++
- include/linux/pm.h                      |    8 ++++++++
- 3 files changed, 31 insertions(+)
-
-Index: linux-pm/Documentation/driver-api/pm/devices.rst
-===================================================================
---- linux-pm.orig/Documentation/driver-api/pm/devices.rst
-+++ linux-pm/Documentation/driver-api/pm/devices.rst
-@@ -766,6 +766,26 @@ the state of devices (possibly except fo
- from their ``->prepare`` and ``->suspend`` callbacks (or equivalent) *before*
- invoking device drivers' ``->suspend`` callbacks (or equivalent).
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b4b7eab29400..3aca7393c43c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2957,6 +2957,110 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ }
  
-+Some bus types and PM domains have a policy to resume all devices from runtime
-+suspend upfront in their ``->suspend`` callbacks, but that may not be really
-+necessary if the driver of the device can cope with runtime-suspended devices.
-+The driver can indicate that by setting ``DPM_FLAG_SMART_SUSPEND`` in
-+:c:member:`power.driver_flags` at the probe time, by passing it to the
-+:c:func:`dev_pm_set_driver_flags` helper.  That also may cause middle-layer code
-+(bus types, PM domains etc.) to skip the ``->suspend_late`` and
-+``->suspend_noirq`` callbacks provided by the driver if the device remains in
-+runtime suspend at the beginning of the ``suspend_late`` phase of system-wide
-+suspend (or in the ``poweroff_late`` phase of hibernation), when runtime PM
-+has been disabled for it, under the assumption that its state should not change
-+after that point until the system-wide transition is over.  If that happens, the
-+driver's system-wide resume callbacks, if present, may still be invoked during
-+the subsequent system-wide resume transition and the device's runtime power
-+management status may be set to "active" before enabling runtime PM for it,
-+so the driver must be prepared to cope with the invocation of its system-wide
-+resume callbacks back-to-back with its ``->runtime_suspend`` one (without the
-+intervening ``->runtime_resume`` and so on) and the final state of the device
-+must reflect the "active" status for runtime PM in that case.
-+
- During system-wide resume from a sleep state it's easiest to put devices into
- the full-power state, as explained in :file:`Documentation/power/runtime_pm.txt`.
- Refer to that document for more information regarding this particular issue as
-Index: linux-pm/drivers/base/power/main.c
-===================================================================
---- linux-pm.orig/drivers/base/power/main.c
-+++ linux-pm/drivers/base/power/main.c
-@@ -1652,6 +1652,9 @@ static int device_prepare(struct device
- 	if (dev->power.syscore)
- 		return 0;
- 
-+	WARN_ON(dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
-+		!pm_runtime_enabled(dev));
-+
- 	/*
- 	 * If a device's parent goes into runtime suspend at the wrong time,
- 	 * it won't be possible to resume the device.  To prevent this we
-Index: linux-pm/include/linux/pm.h
-===================================================================
---- linux-pm.orig/include/linux/pm.h
-+++ linux-pm/include/linux/pm.h
-@@ -558,6 +558,7 @@ struct pm_subsys_data {
-  *
-  * NEVER_SKIP: Do not skip system suspend/resume callbacks for the device.
-  * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
-+ * SMART_SUSPEND: No need to resume the device from runtime suspend.
-  *
-  * Setting SMART_PREPARE instructs bus types and PM domains which may want
-  * system suspend/resume callbacks to be skipped for the device to return 0 from
-@@ -565,9 +566,16 @@ struct pm_subsys_data {
-  * other words, the system suspend/resume callbacks can only be skipped for the
-  * device if its driver doesn't object against that).  This flag has no effect
-  * if NEVER_SKIP is set.
+ /**
++ * pci_rbar_find_pos - find position of resize ctrl reg for BAR
++ * @dev: PCI device
++ * @bar: BAR to find
 + *
-+ * Setting SMART_SUSPEND instructs bus types and PM domains which may want to
-+ * runtime resume the device upfront during system suspend that doing so is not
-+ * necessary from the driver's perspective.  It also may cause them to skip
-+ * invocations of the ->suspend_late and ->suspend_noirq callbacks provided by
-+ * the driver if they decide to leave the device in runtime suspend.
-  */
- #define DPM_FLAG_NEVER_SKIP	BIT(0)
- #define DPM_FLAG_SMART_PREPARE	BIT(1)
-+#define DPM_FLAG_SMART_SUSPEND	BIT(2)
++ * Helper to find the postion of the ctrl register for a BAR.
++ * Returns -ENOTSUPP of resizeable BARs are not supported at all.
++ * Returns -ENOENT if not ctrl register for the BAR could be found.
++ */
++static int pci_rbar_find_pos(struct pci_dev *pdev, int bar)
++{
++	unsigned int pos, nbars;
++	unsigned int i;
++	u32 ctrl;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return -ENOTSUPP;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx == bar)
++			return pos;
++	}
++
++	return -ENOENT;
++}
++
++/**
++ * pci_rbar_get_possible_sizes - get possible sizes for BAR
++ * @dev: PCI device
++ * @bar: BAR to query
++ *
++ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
++ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
++ */
++u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar)
++{
++	u32 cap;
++	int pos;
++
++	pos = pci_rbar_find_pos(pdev, bar);
++	if (pos < 0)
++		return 0;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
++	return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
++		PCI_REBAR_CTRL_SIZES_SHIFT;
++}
++
++/**
++ * pci_rbar_get_current_size - get the current size of a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ *
++ * Read the size of a BAR from the resizeable BAR config.
++ * Returns size if found or negative error code.
++ */
++int pci_rbar_get_current_size(struct pci_dev *pdev, int bar)
++{
++	u32 ctrl;
++	int pos;
++
++	pos = pci_rbar_find_pos(pdev, bar);
++	if (pos < 0)
++		return pos;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
++		PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++}
++
++/**
++ * pci_rbar_set_size - set a new size for a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ * @size: new size as defined in the spec (0=1MB, 19=512GB)
++ *
++ * Set the new size of a BAR as defined in the spec.
++ * Returns zero if resizing was successful, error code otherwise.
++ */
++int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
++{
++	u32 ctrl;
++	int pos;
++
++	pos = pci_rbar_find_pos(pdev, bar);
++	if (pos < 0)
++		return pos;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
++	ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++	pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
++	return 0;
++}
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5c475edc78c2..1681895366dc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -368,4 +368,12 @@ int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment,
+ 			  struct resource *res);
+ #endif
  
- struct dev_pm_info {
- 	pm_message_t		power_state;
++u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
++int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
++int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
++static inline u64 pci_rbar_size_to_bytes(int size)
++{
++	return 1ULL << (size + 20);
++}
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index c22d3ebaca20..d6a075de6d43 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -943,9 +943,16 @@
+ #define PCI_SATA_SIZEOF_LONG	16
+ 
+ /* Resizable BARs */
++#define PCI_REBAR_CAP		4	/* capability register */
++#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
++#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
+ #define PCI_REBAR_CTRL		8	/* control register */
+-#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
+-#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
++#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for BAR index */
++#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for BAR index */
++#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # BARs */
++#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # BARs */
++#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for BAR size */
++#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for BAR size */
+ 
+ /* Dynamic Power Allocation */
+ #define PCI_DPA_CAP		4	/* capability register */
+-- 
+2.11.0
