@@ -1,106 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 17/36] iommu/arm-smmu-v3: Support broadcast TLB maintenance
-Date: Fri,  6 Oct 2017 14:31:44 +0100
-Message-Id: <20171006133203.22803-18-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 18 Oct 2017 10:18:22 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default
+ device selection
+Message-ID: <20171018081822.pqmkj2xfgg6kb6xa@phenom.ffwll.local>
+References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <871sm2y1h9.fsf@linkitivity.dja.id.au>
+ <20171017120506.ervbnyjue55zn67b@phenom.ffwll.local>
+ <878tg9i9pw.fsf@linkitivity.dja.id.au>
+MIME-Version: 1.0
+In-Reply-To: <878tg9i9pw.fsf@linkitivity.dja.id.au>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Dave Airlie <airlied@redhat.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
+ Xinliang Liu <z.liuxinliang@hisilicon.com>,
+ Rongrong Zou <zourongrong@gmail.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Daniel Vetter <daniel@ffwll.ch>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Daniel Vetter <daniel.vetter@intel.com>, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The SMMUv3 can handle invalidation targeted at TLB entries with shared
-ASIDs.  If the implementation supports broadcast TLB maintenance, enable
-it and keep track of it in a feature bit. The SMMU will then take into
-account the following CPU instruction for ASIDs in the shared set:
+On Wed, Oct 18, 2017 at 11:24:43AM +1100, Daniel Axtens wrote:
+> Hi Daniel,
+> 
+> >> Initially I wondered if this info printk could be moved into
+> >> vga_arbiter_check_bridge_sharing(), but it's been separated out since
+> >> 3448a19da479b ("vgaarb: use bridges to control VGA routing where
+> >> possible."), and upon closer examination, it seems you can't be sure a
+> >> device doesn't share a bridge until the end of the process, so this is
+> >> indeed correct.
+> >> 
+> >> Everything else also looks good to me.
+> >> 
+> >> Reviewed-by: Daniel Axtens <dja@axtens.net>
+> >
+> > R-b for both patches? And ok with everyone if I pull this into drm-misc
+> > for 4.15 (deadline is end of this week for feature-y stuff)?
+> 
+> I had only intended it for patch 2, but I've now read over patch 1 to my
+> satisfaction, so it too is:
+> 
+> Reviewed-by: Daniel Axtens <dja@axtens.net>
 
-* TLBI VAE1IS(ASID, VA)
-* TLBI ASIDE1IS(ASID)
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 27376e1193c1..b23f69aa242e 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -64,6 +64,7 @@
- #define IDR0_ASID16			(1 << 12)
- #define IDR0_ATS			(1 << 10)
- #define IDR0_HYP			(1 << 9)
-+#define IDR0_BTM			(1 << 5)
- #define IDR0_COHACC			(1 << 4)
- #define IDR0_TTF_SHIFT			2
- #define IDR0_TTF_MASK			0x3
-@@ -659,6 +660,7 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_HYP		(1 << 12)
- #define ARM_SMMU_FEAT_STALL_FORCE	(1 << 13)
- #define ARM_SMMU_FEAT_E2H		(1 << 14)
-+#define ARM_SMMU_FEAT_BTM		(1 << 15)
- 	u32				features;
- 
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -2730,11 +2732,14 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
- 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR1);
- 
- 	/* CR2 (random crap) */
--	reg = CR2_PTM | CR2_RECINVSID;
-+	reg = CR2_RECINVSID;
- 
- 	if (smmu->features & ARM_SMMU_FEAT_E2H)
- 		reg |= CR2_E2H;
- 
-+	if (!(smmu->features & ARM_SMMU_FEAT_BTM))
-+		reg |= CR2_PTM;
-+
- 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR2);
- 
- 	/* Stream table */
-@@ -2837,6 +2842,7 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- {
- 	u32 reg;
- 	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
-+	bool vhe = cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN);
- 
- 	/* IDR0 */
- 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
-@@ -2886,11 +2892,20 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 
- 	if (reg & IDR0_HYP) {
- 		smmu->features |= ARM_SMMU_FEAT_HYP;
--		if (cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN))
-+		if (vhe)
- 			smmu->features |= ARM_SMMU_FEAT_E2H;
- 	}
- 
- 	/*
-+	 * If the CPU is using VHE, but the SMMU doesn't support it, the SMMU
-+	 * will create TLB entries for NH-EL1 world and will miss the
-+	 * broadcasted TLB invalidations that target EL2-E2H world. Don't enable
-+	 * BTM in that case.
-+	 */
-+	if (reg & IDR0_BTM && (!vhe || reg & IDR0_HYP))
-+		smmu->features |= ARM_SMMU_FEAT_BTM;
-+
-+	/*
- 	 * The coherency feature as set by FW is used in preference to the ID
- 	 * register, but warn on mismatch.
- 	 */
+Both applied for 4.15, thanks.
+-Daniel
 -- 
-2.13.3
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
