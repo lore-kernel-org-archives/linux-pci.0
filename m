@@ -1,112 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45670 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751514AbdJXSQn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 14:16:43 -0400
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Florian Fainelli <f.fainelli@gmail.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-        Gregory Fong <gregory.0xf0@gmail.com>,
-        Kevin Cernekee <cernekee@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>,
-        Jim Quinlan <jim2101024@gmail.com>
-Subject: [PATCH 2/8] PCI: host: brcmstb: add DT docs for Brcmstb PCIe device
-Date: Tue, 24 Oct 2017 14:15:43 -0400
-Message-Id: <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
-References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=czIE=BR=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=czIE=BR=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
+To: Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-9-niklas.cassel@axis.com>
+ <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
+ <ebc64a29-4080-af88-c774-b3223115aef0@ti.com>
+ <6a9b7221-1ed7-368d-f737-084e4a1519dc@axis.com>
+CC: Jesper Nilsson <jespern@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+        Jingoo
+ Han <jingoohan1@gmail.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Peter
+ Robinson <pbrobinson@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Gabriele
+ Paoloni <gabriele.paoloni@huawei.com>,
+        Duc Dang <dhdang@apm.com>, <linux-arm-kernel@axis.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <0d3f12b9-d8a1-701e-df88-788faa064f20@ti.com>
+Date: Wed, 18 Oct 2017 14:17:52 +0530
+MIME-Version: 1.0
+In-Reply-To: <6a9b7221-1ed7-368d-f737-084e4a1519dc@axis.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-The DT bindings description of the Brcmstb PCIe device is described.  This
-node can be used by almost all Broadcom settop box chips, using
-ARM, ARM64, or MIPS CPU architectures.
+Niklas,
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
----
- .../devicetree/bindings/pci/brcmstb-pci.txt        | 63 ++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+On Wednesday 18 October 2017 01:45 PM, Niklas Cassel wrote:
+> On 10/18/2017 10:03 AM, Kishon Vijay Abraham I wrote:
+>> Hi Bjorn,
+>>
+>> On Tuesday 17 October 2017 05:13 AM, Bjorn Helgaas wrote:
+>>> On Fri, Oct 13, 2017 at 06:09:11PM +0200, Niklas Cassel wrote:
+>>>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+>>>> ---
+>>>>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
+>>>>  drivers/pci/dwc/Kconfig                            |  41 +++--
+>>>>  drivers/pci/dwc/Makefile                           |   4 +-
+>>>>  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
+>>>>  4 files changed, 233 insertions(+), 17 deletions(-)
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>>>> index 4e4aee4439ea..33eef7ae5a23 100644
+>>>> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>>>> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>>>> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+>>>>  and thus inherits all the common properties defined in designware-pcie.txt.
+>>>>  
+>>>>  Required properties:
+>>>> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
+>>>> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+>>>> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
+>>>>  - reg: base addresses and lengths of the PCIe controller (DBI),
+>>>>  	the PHY controller, and configuration address space.
+>>>>  - reg-names: Must include the following entries:
+>>>> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+>>>> index 22ec82fcdea2..e333283fb1ed 100644
+>>>> --- a/drivers/pci/dwc/Kconfig
+>>>> +++ b/drivers/pci/dwc/Kconfig
+>>>> @@ -14,6 +14,36 @@ config PCIE_DW_EP
+>>>>  	depends on PCI_ENDPOINT
+>>>>  	select PCIE_DW
+>>>>  
+>>>> +config PCIE_ARTPEC6
+>>>> +	bool "Axis ARTPEC-6 PCIe controller"
+>>>> +	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+>>>> +	depends on MACH_ARTPEC6
+>>>> +	help
+>>>> +	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+>>>> +	  SoCs.  This PCIe controller uses the DesignWare core.
+>>>> +
+>>>> +if PCIE_ARTPEC6
+>>>> +
+>>>> +config PCIE_ARTPEC6_HOST
+>>>> +	bool "Axis ARTPEC-6 Host Mode"
+>>>> +	depends on PCI
+>>>> +	depends on PCI_MSI_IRQ_DOMAIN
+>>>> +	select PCIEPORTBUS
+>>>> +	select PCIE_DW_HOST
+>>>> +	help
+>>>> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
+>>>> +	  host mode.
+>>>> +
+>>>> +config PCIE_ARTPEC6_EP
+>>>> +	bool "Axis ARTPEC-6 Endpoint Mode"
+>>>> +	depends on PCI_ENDPOINT
+>>>> +	select PCIE_DW_EP
+>>>> +	help
+>>>> +	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
+>>>> +	  endpoint mode.
+>>>> +
+>>>> +endif
+>>>> +
+>>>>  config PCI_DRA7XX
+>>>>  	bool "TI DRA7xx PCIe controller"
+>>>>  	depends on SOC_DRA7XX || COMPILE_TEST
+>>>> @@ -148,17 +178,6 @@ config PCIE_ARMADA_8K
+>>>>  	  DesignWare hardware and therefore the driver re-uses the
+>>>>  	  DesignWare core functions to implement the driver.
+>>>>  
+>>>> -config PCIE_ARTPEC6
+>>>> -	bool "Axis ARTPEC-6 PCIe controller"
+>>>> -	depends on PCI
+>>>> -	depends on MACH_ARTPEC6
+>>>> -	depends on PCI_MSI_IRQ_DOMAIN
+>>>> -	select PCIEPORTBUS
+>>>> -	select PCIE_DW_HOST
+>>>> -	help
+>>>> -	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+>>>> -	  SoCs.  This PCIe controller uses the DesignWare core.
+>>>> -
+>>>>  config PCIE_KIRIN
+>>>>  	depends on OF && ARM64
+>>>>  	bool "HiSilicon Kirin series SoCs PCIe controllers"
+>>>
+>>>> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+>>>> index c61be9738cce..ac98242b83a9 100644
+>>>> --- a/drivers/pci/dwc/Makefile
+>>>> +++ b/drivers/pci/dwc/Makefile
+>>>> @@ -2,6 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+>>>>  obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+>>>>  obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+>>>>  obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+>>>> +ifneq ($(filter y,$(CONFIG_PCIE_ARTPEC6_HOST) $(CONFIG_PCIE_ARTPEC6_EP)),)
+>>>> +        obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+>>>> +endif
+>>>
+>>> I see you're copying the DRA7XX style here, but I don't really
+>>> understand it.  I guess the idea is to build pcie-artpec6.o if either
+>>> CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
+>>>
+>>> Is this really the simplest way to express that in Kconfig?  Both the
+>>> "if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
+>>> unusual.
+>>>
+>>>>  ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+>>>>          obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+>>>>  endif
+>>>
+>>>> +static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>>>
+>>> Looks funny to have this dw_*() function in pcie-artpec6.c.  Intended?
+>>> Or is this something other endpoint drivers could/should share?
+>>
+>> yeah, dw_pcie_ep_reset_bar is already present in pcie-designware-ep.c which
+>> should be made as library function to be used by other drivers. (pci-dra7xx.c
+>> has also added something like above which should also be fixed).
+>>
+> 
+> Hello Kishon,
+> 
+> I can remove the static keyword from dw_pcie_ep_reset_bar,
+> move the declaration to pcie-designware.h,
+> and make sure that both pcie-artpec6.c and pci-dra7xx.c uses it.
+> 
+> Will do this in the next version of the patch series if you
+> don't have any objection.
 
-diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-new file mode 100644
-index 0000000..49f9852
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-@@ -0,0 +1,63 @@
-+Brcmstb PCIe Host Controller Device Tree Bindings
-+
-+Required Properties:
-+- compatible
-+  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
-+  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
-+  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
-+      the 7278).
-+  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
-+
-+- reg -- the register start address and length for the PCIe reg block.
-+- interrupts -- two interrupts are specified; the first interrupt is for
-+     the PCI host controller and the second is for MSI if the built-in
-+     MSI controller is to be used.
-+- interrupt-names -- names of the interrupts (above): "pcie" and "msi".
-+- #address-cells -- set to <3>.
-+- #size-cells -- set to <2>.
-+- #interrupt-cells: set to <1>.
-+- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-+     mapping of the PCIe interface to interrupt numbers.
-+- ranges: ranges for the PCI memory and I/O regions.
-+- linux,pci-domain -- should be unique per host controller.
-+
-+Optional Properties:
-+- clocks -- phandle of pcie clock.
-+- clock-names -- set to "sw_pcie" if clocks is used.
-+- dma-ranges -- Specifies the inbound memory mapping regions when
-+     an "identity map" is not possible.
-+- msi-controller -- this property is typically specified to have the
-+     PCIe controller use its internal MSI controller.
-+- msi-parent -- set to use an external MSI interrupt controller.
-+- brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
-+- max-link-speed --  (integer) indicates desired generation of link:
-+     1 => 2.5 Gbps (gen1), 2 => 5.0 Gbps (gen2), 3 => 8.0 Gbps (gen3).
-+- xyz-supply -- set to a voltage regulator phandle  that the root
-+     complex should turn off/on/on on suspend/resume/boot.  Any property
-+     matching '-supply' will be added to an internal list of phandles.
-+
-+
-+Example Node:
-+
-+pcie0: pcie@f0460000 {
-+		reg = <0x0 0xf0460000 0x0 0x9310>;
-+		interrupts = <0x0 0x0 0x4>;
-+		compatible = "brcm,pci-plat-dev";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
-+			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &intc 0 47 3
-+				 0 0 0 2 &intc 0 48 3
-+				 0 0 0 3 &intc 0 49 3
-+				 0 0 0 4 &intc 0 50 3>;
-+		clocks = <&sw_pcie0>;
-+		clock-names = "sw_pcie";
-+		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
-+		msi-controller;         /* use PCIe's internal MSI controller */
-+		brcm,ssc;
-+		max-link-speed = <1>;
-+		linux,pci-domain = <0>;
-+	};
--- 
-1.9.0.138.g2de3478
+sure, thanks for doing it :-)
+
+-Kishon
