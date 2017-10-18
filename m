@@ -1,68 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:15959 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751315AbdJ3EVc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:21:32 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 01/12] PCI: tegra: Start LTSSM after programming root port
-Date: Mon, 30 Oct 2017 09:48:52 +0530
-Message-ID: <1509337143-25963-2-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Daniel Axtens <dja@axtens.net>
+To: Daniel Vetter <daniel@ffwll.ch>
+Subject: Re: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default device
+ selection
+In-Reply-To: <20171018081822.pqmkj2xfgg6kb6xa@phenom.ffwll.local>
+References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <871sm2y1h9.fsf@linkitivity.dja.id.au>
+ <20171017120506.ervbnyjue55zn67b@phenom.ffwll.local>
+ <878tg9i9pw.fsf@linkitivity.dja.id.au>
+ <20171018081822.pqmkj2xfgg6kb6xa@phenom.ffwll.local>
+Date: Wed, 18 Oct 2017 22:05:57 +1100
+Message-ID: <8760bciulm.fsf@linkitivity.dja.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Dave Airlie <airlied@redhat.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
+ Xinliang Liu <z.liuxinliang@hisilicon.com>,
+ Rongrong Zou <zourongrong@gmail.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Daniel Vetter <daniel@ffwll.ch>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Daniel Vetter <daniel.vetter@intel.com>, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
-after all the required root port register programming is completed.
+Daniel Vetter <daniel@ffwll.ch> writes:
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
+> On Wed, Oct 18, 2017 at 11:24:43AM +1100, Daniel Axtens wrote:
+>> Hi Daniel,
+>> 
+>> >> Initially I wondered if this info printk could be moved into
+>> >> vga_arbiter_check_bridge_sharing(), but it's been separated out since
+>> >> 3448a19da479b ("vgaarb: use bridges to control VGA routing where
+>> >> possible."), and upon closer examination, it seems you can't be sure a
+>> >> device doesn't share a bridge until the end of the process, so this is
+>> >> indeed correct.
+>> >> 
+>> >> Everything else also looks good to me.
+>> >> 
+>> >> Reviewed-by: Daniel Axtens <dja@axtens.net>
+>> >
+>> > R-b for both patches? And ok with everyone if I pull this into drm-misc
+>> > for 4.15 (deadline is end of this week for feature-y stuff)?
+>> 
+>> I had only intended it for patch 2, but I've now read over patch 1 to my
+>> satisfaction, so it too is:
+>> 
+>> Reviewed-by: Daniel Axtens <dja@axtens.net>
+>
+> Both applied for 4.15, thanks.
 
- drivers/pci/host/pci-tegra.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Cool - thanks!
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 96e8038c3019..b41c60c7414c 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 		}
- 	}
- 
--	/* take the PCIe interface module out of reset */
--	reset_control_deassert(pcie->pcie_xrst);
--
- 	/* finally enable PCIe */
- 	value = afi_readl(pcie, AFI_CONFIGURATION);
- 	value |= AFI_CONFIGURATION_EN_FPCI;
-@@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
- 			dev_err(dev, "failed to power off PHY(s): %d\n", err);
- 	}
- 
--	reset_control_assert(pcie->pcie_xrst);
- 	reset_control_assert(pcie->afi_rst);
- 	reset_control_assert(pcie->pex_rst);
- 
-@@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 			 port->index, port->lanes);
- 
- 		tegra_pcie_port_enable(port);
-+	}
- 
-+	/* take the PCIe interface module out of reset */
-+	reset_control_deassert(pcie->pcie_xrst);
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
- 		if (tegra_pcie_port_check_link(port))
- 			continue;
- 
--- 
-2.1.4
+A special thanks to Bjorn for persisting with this and coming up with a
+nice simple solution :)
+
+Regards,
+Daniel
+
+> -Daniel
+> -- 
+> Daniel Vetter
+> Software Engineer, Intel Corporation
+> http://blog.ffwll.ch
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
