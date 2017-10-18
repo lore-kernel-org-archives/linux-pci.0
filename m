@@ -1,162 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59410 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751579AbdJSL0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Oct 2017 07:26:48 -0400
-Date: Thu, 19 Oct 2017 06:26:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
-        Wilson.Snyder@cavium.com, robert.richter@cavium.com,
-        david.daney@cavium.com, mjaggi@caviumnetworks.com,
-        Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-Subject: Re: [PATCH v7 0/2] PCI: quirks: Cavium ThunderX ACS quirk update
-Message-ID: <20171019112645.GD6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:48213 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932918AbdJRKkP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2017 06:40:15 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Daniel Drake <drake@endlessm.com>
+Cc: Andy Shevchenko <andy@infradead.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+        x86@kernel.org,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        AceLan Kao <acelan.kao@canonical.com>
+Subject: Re: PCIe legacy interrupts blocked on Intel Apollo Lake platforms
+Date: Wed, 18 Oct 2017 12:30:37 +0200
+Message-ID: <2318168.Mp02DdCiFO@aspire.rjw.lan>
+In-Reply-To: <CAD8Lp47nOCt-93kBxmcJzUam=P7XRcm8vhwogoxXTJ_mwCH_Cg@mail.gmail.com>
+References: <CAD8Lp47nOCt-93kBxmcJzUam=P7XRcm8vhwogoxXTJ_mwCH_Cg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 05:47:37AM -0700, Vadim Lomovtsev wrote:
-> From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+On Wednesday, October 18, 2017 10:36:49 AM CEST Daniel Drake wrote:
+> [retitling and re-summarizing in hope of attention from Intel]
 > 
-> version 7:
-> - update patch description accordingly to review comments;
-> - split for two patches: for ACS mask change and device id match change;
-> - remove macro #define of ACS flags, put it back to quirk function;
-> - remove '__inline_' from device id matching function;
-> - wrap code comments to fit into 80 columns;
-> - comment fix: change 0xa00 to 0xf800 for matching function description;
+> Andy / Rafael,
 > 
-> version 6:
-> - comment typo fix: change 0xa00 to 0xa000;
+> Thomas Gleixner suggested that you might be able to help with a nasty
+> issue related to Intel Apollo Lake platforms - or you can put us in
+> contact with another relevant person at Intel.
 > 
-> version 5:
-> - update code comments accordingly to review comments;
+> On Thu, Oct 5, 2017 at 6:13 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> >> We have tried taking the mini-PCIe wifi module out of one of the affected
+> >> Acer products and moved it to another computer, where it is working fine
+> >> with legacy interrupts. So this suggests that the wifi module itself is OK,
+> >> but we are facing a hardware limitation or BIOS limitation on the affected
+> >> products. In the Dell thread it says "Some platform(BIOS) blocks legacy
+> >> interrupts (INTx)".
+> >>
+> >> If you have any suggestions for how we might solve this without getting into
+> >> the MSI mess then that would be much appreciated. If the BIOS blocks the
+> >> interrupts, can Linux unblock them?
+> >
+> > I'm pretty sure we can. Cc'ed Rafael and Andy. They might know, if not they
+> > certainly know whom to ask @Intel.
 > 
-> version 4:
-> - update ACS mask (remove TB and TD bits), update commit message (remove
->   ACS register printout);
+> To summarize the issue:
 > 
-> version 3:
-> - update subject: remove CN8XXX from subject line, replace it with ThunderX;
+> At least 8 new Acer consumer laptop products based on Intel Apollo
+> Lake are unable to deliver legacy interrupts from the ath9k miniPCIe
+> wifi card to the host. This results in wifi connectivity being
+> unusable on those systems.
 > 
-> version 2:
-> - update match function in order to filter only ThunderX devices by device
->   ids to properly filter CN8XXX devices, update subject & description with
->   ACS register info (v2 was rejected by maillist due to triple X in subject);
->   
-> Vadim Lomovtsev (2):
->   PCI: quirks: Set Cavium ACS capability quirk flags to assert
->     RR/CR/SV/UF.
->   PCI: quirks: Apply Cavium ThunderX ACS quirk only to Root Ports
+> This also seems to affect the 4 Dell systems included in this patch series:
+>   https://lkml.org/lkml/2017/9/26/55
+> at least 2 of which are also Apollo Lake (can't find specs for the other 2).
 > 
->  drivers/pci/quirks.c | 26 ++++++++++++++++++++------
->  1 file changed, 20 insertions(+), 6 deletions(-)
+> We know that the wifi module itself is OK, since we can take it to
+> another laptop and it delivers legacy interrupts just fine.
+> 
+> We know that this is not a fundamental limitation of Intel Apollo
+> Lake, since we have other Apollo Lake products in hand with ath9k wifi
+> modules and legacy interrupts work fine there.
+> 
+> We would like to switch to MSI interrupts instead, but unfortunately
+> ath9k seems to have a hardware bug in that it corrupts the MSI message
+> data, see:
+> 
+>   ath9k hardware corrupts MSI Message Data, raises wrong interrupt
+>   https://marc.info/?l=linux-pci&m=150238260826803&w=2
+> 
+> We have explored workarounds for this on the Linux side, but that has
+> turned out to be unattractive and impractical:
+> 
+>   [PATCH] PCI MSI: allow alignment restrictions on vector allocation
+>   https://marc.info/?t=150631283200001&r=1&w=2
+> 
+> Interrupt remapping could probably help us avoid this MSI problem, but
+> unfortunately that's not available on the affected platforms:
+> 
+>   DMAR table missing, Intel IOMMU not available
+>   https://lists.linuxfoundation.org/pipermail/iommu/2017-August/023717.html
+> 
+> So now, digging for other options, I would like to explore the theory
+> mentioned on the Dell thread that the BIOS is blocking legacy
+> interrupts on these platforms. The question for Intel is: if the BIOS
+> is blocking legacy interrupts, can Linux unblock them? (and how)
+> 
+> I have Apollo Lake platforms here which exhibit the issue, and also
+> other Apollo Lake platforms that work fine, so let me know where I can
+> help look for differences (register dumps etc)
 
-If I'm reading this correctly, the first patch is basically fixing a bug in
-the original Cavium ACS quirk (b404bcfbf035 ("PCI: Add ACS quirk for all
-Cavium devices")).  Right?
+Thanks for the very useful summary of the problem, I'll do my best to find
+out what can be done to address it.
 
-I put them on pci/virtualization for v4.15 as follows (patches unchanged,
-changelogs wordsmithed).
-
-You mentioned stable backports.  b404bcfbf035 ("PCI: Add ACS quirk for all
-Cavium devices") appeared in v4.6.  b77d537d00d0 ("PCI: Apply Cavium ACS
-quirk only to CN81xx/CN83xx/CN88xx devices") appeared in v4.12.  I assume
-you would ideally want all this backported as far as v4.6?  We'd have to
-figure out how to express that in stable tags.
-
-
-commit 60f6d5f7ebc4bba83d73115f58b805f2f2618667
-Author: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-Date:   Tue Oct 17 05:47:38 2017 -0700
-
-    PCI: Set Cavium ACS capability quirk flags to assert RR/CR/SV/UF
-    
-    The Cavium ThunderX (CN8XXX) family of PCIe Root Ports does not advertise
-    an ACS capability.  However, the RTL internally implements similar
-    protection as if ACS had Request Redirection, Completion Redirection,
-    Source Validation, and Upstream Forwarding features enabled.
-    
-    Change Cavium ACS capabilities quirk flags accordingly.
-    
-    Fixes: b404bcfbf035 ("PCI: Add ACS quirk for all Cavium devices")
-    Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index a4d33619a7bb..c23650cfd5a1 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4214,12 +4214,14 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
- static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- {
- 	/*
--	 * Cavium devices matching this quirk do not perform peer-to-peer
--	 * with other functions, allowing masking out these bits as if they
--	 * were unimplemented in the ACS capability.
-+	 * Cavium root ports don't advertise an ACS capability.  However,
-+	 * the RTL internally implements similar protection as if ACS had
-+	 * Request Redirection, Completion Redirection, Source Validation,
-+	 * and Upstream Forwarding features enabled.  Assert that the
-+	 * hardware implements and enables equivalent ACS functionality for
-+	 * these flags.
- 	 */
--	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
--		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-+	acs_flags &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF);
- 
- 	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
- 		return -ENOTTY;
-
-commit 35da518fcad24f7be515976238a4667b5ccd1711
-Author: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-Date:   Tue Oct 17 05:47:39 2017 -0700
-
-    PCI: Apply Cavium ThunderX ACS quirk to more Root Ports
-    
-    Extend the Cavium ThunderX ACS quirk to cover more device IDs and restrict
-    it to only Root Ports.
-    
-    Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-    [bhelgaas: changelog]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c23650cfd5a1..0e22cce05742 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4211,6 +4211,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
- #endif
- }
- 
-+static bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
-+{
-+	/*
-+	 * Effectively selects all downstream ports for whole ThunderX 1
-+	 * family by 0xf800 mask (which represents 8 SoCs), while the lower
-+	 * bits of device ID are used to indicate which subdevice is used
-+	 * within the SoC.
-+	 */
-+	return (pci_is_pcie(dev) &&
-+		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
-+		((dev->device & 0xf800) == 0xa000));
-+}
-+
- static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- {
- 	/*
-@@ -4223,7 +4236,7 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- 	 */
- 	acs_flags &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF);
- 
--	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
-+	if (!pci_quirk_cavium_acs_match(dev))
- 		return -ENOTTY;
- 
- 	return acs_flags ? 0 : 1;
+Thanks,
+Rafael
