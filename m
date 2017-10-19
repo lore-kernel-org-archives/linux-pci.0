@@ -1,116 +1,66 @@
-Return-Path: <SRS0=vWBP=BI=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=vWBP=BI=free.fr=slash.tmp@kernel.org>
-Subject: Re: [bugzilla-daemon@bugzilla.kernel.org: [Bug 197159] New: Xhci host
- controller not responding starting kernel 4.13]
-To: Bjorn Helgaas <helgaas@kernel.org>, Niklas <niklas@vividvisions.se>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
- linux-usb <linux-usb@vger.kernel.org>,
- Mathias Nyman <mathias.nyman@intel.com>, Lukas Wunner <lukas@wunner.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Felipe Balbi <felipe.balbi@linux.intel.com>,
- Alan Stern <stern@rowland.harvard.edu>
-References: <20171009170108.GK25517@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <50d880c5-f76b-cb15-0faa-af9fa617ea9a@free.fr>
-Date: Mon, 9 Oct 2017 22:45:39 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out4.electric.net ([192.162.216.185]:64658 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751501AbdJSN0G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Oct 2017 09:26:06 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Faiz Abbas' <faiz_abbas@ti.com>, "kishon@ti.com" <kishon@ti.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2] dwc: dra7xx: Print link state to console for debug
+Date: Thu, 19 Oct 2017 13:26:06 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD009C62B@AcuExch.aculab.com>
+References: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
+ <9378c5c9-381d-4c40-3290-f7e3720792ba@ti.com>
+In-Reply-To: <9378c5c9-381d-4c40-3290-f7e3720792ba@ti.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20171009170108.GK25517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/10/2017 19:01, Bjorn Helgaas wrote:
-
-> [+cc linux-pci, linux-usb, Mason, Mathias, Lukas, Greg, Felipe, Alan]
-> 
-> ----- Forwarded message from bugzilla-daemon@bugzilla.kernel.org -----
->>
->> Date: Sun, 08 Oct 2017 13:28:13 +0000
->> From: bugzilla-daemon@bugzilla.kernel.org
->> To: bugzilla.pci@gmail.com
->> Subject: [Bug 197159] New: Xhci host controller not responding starting kernel 4.13
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=197159
->>
->>             Bug ID: 197159
->>            Summary: Xhci host controller not responding starting kernel
->>                     4.13
->>            Product: Drivers
->>            Version: 2.5
->>     Kernel Version: 4.13
->>           Hardware: Intel
->>                 OS: Linux
->>               Tree: Mainline
->>             Status: NEW
->>           Severity: blocking
->>           Priority: P1
->>          Component: PCI
->>           Assignee: drivers_pci@kernel-bugs.osdl.org
->>           Reporter: niklas@vividvisions.se
->>         Regression: No
->>
->> When booting with a Expresscard USB 3.0 adapter (NEC UPD720202 Chip), the
->> following error is generated:
->>
->> "xhci_hcd 0000:05:00.0: xHCI host controller not responding, assumed dead"
->>
->> This card still works fine with kernel 4.9.
-> 
-> Thanks very much for the bug report, and sorry for the regression.
-> 
-> Can you please collect the complete dmesg log and "lspci -vv" output
-> and attach them to the bugzilla?
-> 
->> Additionally, for some reason this also interferes with LUKS on an LVM
->> partition; password does not work and computer becomes stuck at this point.
->> This works as normal if card is removed and computer is rebooted.
->>
->> Can we please have Expresscard USB 3.0 functionality back in the kernel?
->>
->> This problem has been described elsewhere, but couldn't find any kernel bug
->> report for it. See this link for further information:
->>
->> http://patchwork.ozlabs.org/patch/804867/
-
-Alternate links:
-https://www.spinics.net/lists/linux-pci/msg64202.html
-https://www.mail-archive.com/linux-usb@vger.kernel.org/msg93821.html
-
-> In that thread, Mason reported a regression that looks similar, but as
-> far as I can tell, we never identified a root cause.
-> 
->   1) The problem Mason reported was on a Tango platform, which has a
->      known hardware issue that corrupts data when simultaneous config
->      and MMIO accesses occur.  You're seeing the problem on a
->      different platform, which is very helpful.
-
-As mentioned here:
-https://www.mail-archive.com/linux-usb@vger.kernel.org/msg94020.html
-
-When I disable the AER driver, not a single config space access
-occurs when a USB drive is unplugged. So I'm 99.99% sure that
-the issue is NOT caused by tango's bad design. (I got the vibe
-that nobody cared about tango's issue because it was assumed
-that the design flaw was responsible for it.)
-
->   2) Mathias suggested d9f11ba9f107 ("xhci: Rework how we handle
->      unresponsive or hoptlug removed hosts"), which appeared in
->      v4.12-rc1, as a possible culprit, but I don't see a bisection
->      that definitively identifies this commit.
-> 
->      Is it possible for you to test both fe190ed0d602 ("xhci: Do not
->      halt the host until both HCD have disconnected their devices.")
->      and d9f11ba9f107 ("xhci: Rework how we handle unresponsive or
->      hoptlug removed hosts") so we can tell for sure whether
->      d9f11ba9f107 broke it?
-> 
->   3) Mason did report:
->        v4.11.12 OK
->        v4.12-rc1 KO
->      I assume "KO" means broken (unless that's a typo for "OK"?).  If
->      it means "broken", he did at least confirm that the problem first
->      appeared in v4.12-rc1.
-
-Yes, KO (as in boxing knockout) means "broken", "double-plus-ungood".
-It might be unfortunate to use OK and KO, as you point out.
-
-Regards.
+RnJvbTogRmFpeiBBYmJhcw0KPiBTZW50OiAxOSBPY3RvYmVyIDIwMTcgMTQ6MDkNCj4gT24gVGh1
+cnNkYXkgMTkgT2N0b2JlciAyMDE3IDA2OjEzIFBNLCBGYWl6IEFiYmFzIHdyb3RlOg0KPiA+IEVu
+YWJsZSBzdXBwb3J0IGZvciBwcmludGluZyB0aGUgTFRTU00gbGluayBzdGF0ZSBmb3IgZGVidWdn
+aW5nIFBDSQ0KPiA+IHdoZW4gbGluayBpcyBkb3duLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTog
+RmFpeiBBYmJhcyA8ZmFpel9hYmJhc0B0aS5jb20+DQo+ID4gLS0tDQo+ID4gdjI6DQo+ID4gIDEu
+IENoYW5nZWQgZGV2X2VycigpIHRvIGRldl9kYmcoKQ0KPiA+ICAyLiBDaGFuZ2VkIHN0YXRpYyBj
+aGFyIGFycmF5IHRvIHN0YXRpYyBjb25zdCBjaGFyICogY29uc3QNCj4gPiAgMy4gZm9ybWF0IGNo
+YW5nZXMNCj4gPg0KPiA+ICBkcml2ZXJzL3BjaS9kd2MvcGNpLWRyYTd4eC5jIHwgNDggKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPiAgMSBmaWxlIGNoYW5n
+ZWQsIDQ4IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9k
+d2MvcGNpLWRyYTd4eC5jIGIvZHJpdmVycy9wY2kvZHdjL3BjaS1kcmE3eHguYw0KPiA+IGluZGV4
+IDM0NDI3YTYuLjBlNzBlNzcgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaS1k
+cmE3eHguYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktZHJhN3h4LmMNCj4gPiBAQCAt
+OTgsNiArOTgsNDUgQEAgc3RydWN0IGRyYTd4eF9wY2llX29mX2RhdGEgew0KPiA+DQo+ID4gICNk
+ZWZpbmUgdG9fZHJhN3h4X3BjaWUoeCkJZGV2X2dldF9kcnZkYXRhKCh4KS0+ZGV2KQ0KPiA+DQo+
+ID4gK3N0YXRpYyBjb25zdCBjaGFyICogY29uc3Qgc3RhdGVbXSA9IHsNCj4gPiArCSJERVRFQ1Rf
+UVVJRVQiLA0KLi4uDQo+ID4gKwkiUkNWUllfRVEzIg0KPiA+ICt9Ow0KPiA+ICsNCj4gPiAgc3Rh
+dGljIGlubGluZSB1MzIgZHJhN3h4X3BjaWVfcmVhZGwoc3RydWN0IGRyYTd4eF9wY2llICpwY2ll
+LCB1MzIgb2Zmc2V0KQ0KPiA+ICB7DQo+ID4gIAlyZXR1cm4gcmVhZGwocGNpZS0+YmFzZSArIG9m
+ZnNldCk7DQo+ID4gQEAgLTExOCw2ICsxNTcsMTUgQEAgc3RhdGljIGludCBkcmE3eHhfcGNpZV9s
+aW5rX3VwKHN0cnVjdCBkd19wY2llICpwY2kpDQo+ID4gIHsNCj4gPiAgCXN0cnVjdCBkcmE3eHhf
+cGNpZSAqZHJhN3h4ID0gdG9fZHJhN3h4X3BjaWUocGNpKTsNCj4gPiAgCXUzMiByZWcgPSBkcmE3
+eHhfcGNpZV9yZWFkbChkcmE3eHgsIFBDSUVDVFJMX0RSQTdYWF9DT05GX1BIWV9DUyk7DQo+ID4g
+Kwl1MzIgY21kX3JlZzsNCj4gPiArCXUzMiBsdHNzbV9zdGF0ZTsNCj4gPiArDQo+ID4gKwlpZiAo
+IShyZWcgJiBMSU5LX1VQKSkgew0KPiA+ICsJCWNtZF9yZWcgPSBkcmE3eHhfcGNpZV9yZWFkbChk
+cmE3eHgsDQo+ID4gKwkJCQkJICAgIFBDSUVDVFJMX0RSQTdYWF9DT05GX0RFVklDRV9DTUQpOw0K
+PiA+ICsJCWx0c3NtX3N0YXRlID0gKGNtZF9yZWcgJiBHRU5NQVNLKDcsIDIpKSA+PiAyOw0KPiA+
+ICsJCWRldl9kYmcocGNpLT5kZXYsICJMaW5rIHN0YXRlOiVzXG4iLCBzdGF0ZVtsdHNzbV9zdGF0
+ZV0pOw0KDQpIbW1tLi4uIEdFTk1BU0sgbGVhdmVzIGJ5IGh1bnRpbmcgaGVhZGVyIGZpbGVzLi4u
+DQpXaHkgbm90IChjbWRfcmVnID4+IDIpICYgNjMgYW5kIGV4cGxpY2l0bHkgZGVmaW5lIHN0YXRl
+WzY0XQ0KdG8gZ3VhcmFudGVlIHRoYXQgeW91IG5ldmVyIHByaW50IGFueXRoaW5nIHdvcnNlIHRo
+YW4gYSBOVUxMDQpwb2ludGVyLg0KDQo+ID4gKwl9DQo+ID4NCj4gPiAgCXJldHVybiAhIShyZWcg
+JiBMSU5LX1VQKTsNCj4gPiAgfQ0KPiA+DQo+IA0KPiBJIG1pc3NlZCBEYXZpZCdzIGNvbW1lbnQg
+aW4gdjEuIFdpbGwgc3VibWl0IGEgbmV3IHZlcnNpb24uIFBsZWFzZSBpZ25vcmUuDQoNCkkndmUg
+YSAnbmVhdCcgdHJpY2sgZm9yIGdlbmVyYXRpbmcgc3RyaW5ncyB0aGF0IG1hdGNoIGNvbnN0YW50
+cy4NCllvdSBjYW4gZ2V0IHRoZSBjb21waWxlciB0byBkbyBhbGwgdGhlIHdvcmsgZm9yIHlvdToN
+CihBc3N1bWluZyBJJ3ZlIHR5cGVkIGl0IGNvcnJlY3RseSkNCg0KI2RlZmluZSBMVFNTTV9ERUZT
+KHgpIFwNCiAgeChERVRFQ1RfUVVJRVQpIFwNCiAgeChERVRFQ1RfQUNUKSBcDQooY29udGludWUg
+Zm9yIGFsbCB0aGUgbmFtZXMpDQoNCkRlZmluZSBhbiBlbnVtIHdpdGggdGhlIG5hbWVkIGNvbnN0
+YW50czoNCiNkZWZpbmUgWChuYW1lKSBMVFNTTV9TVEFURV8jI25hbWUsDQplbnVtIChMVFNTTV9E
+RUZTKFgpIExUU1NNX1NUQVRFX1NJWkU9NjQpOw0KI3VuZGVmIFgNCg0KQXJyYXkgb2Ygc3RyaW5n
+czoNCiNkZWZpbmUgWChuYW1lKSBbTFRTU01fU1RBVEVfIyNuYW1lXSA9ICNuYW1lDQpzdGF0aWMg
+Y29uc3QgY2hhciAqIGNvbnN0IHN0YXRlX25hbWVzW0xUU1NNX1NUQVRFX1NJWkVdID0geyBMVFNT
+TV9ERUZTKFgpIH07DQojdW5kZWYgWA0KDQoJRGF2aWQNCg0K
