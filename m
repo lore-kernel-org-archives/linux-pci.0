@@ -1,102 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([88.99.104.3]:59777 "EHLO pokefinder.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932416AbdJZUlm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 26 Oct 2017 16:41:42 -0400
-Date: Thu, 26 Oct 2017 22:41:40 +0200
-From: Wolfram Sang <wsa@the-dreams.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 11/12] PM: i2c-designware-platdrv: Optimize power
- management
-Message-ID: <20171026204140.wzrq4lronz4nu6la@ninjato>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
- <2298462.BTY6P2Oy1l@aspire.rjw.lan>
+Return-Path: <SRS0=KCwd=BS=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=KCwd=BS=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Bjorn Helgaas' <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Martin Mares
+	<mj@ucw.cz>
+Subject: RE: lspci reports 'stale' BAR info after a card reset
+Date: Thu, 19 Oct 2017 09:08:45 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD009C04A@AcuExch.aculab.com>
+References: <063D6719AE5E284EB5DD2968C1650D6DD009AD46@AcuExch.aculab.com>
+ <20171018170429.GA6332@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171018170429.GA6332@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="p4od3itvpvopd5d5"
-In-Reply-To: <2298462.BTY6P2Oy1l@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
---p4od3itvpvopd5d5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Oct 16, 2017 at 03:31:17AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Bjorn Helgaas
+> Sent: 18 October 2017 18:04
+> [+cc Martin]
 >=20
-> Optimize the power management in i2c-designware-platdrv by making it
-> set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
-> allows some code to be dropped from its PM callbacks.
+> On Wed, Oct 18, 2017 at 01:23:53PM +0000, David Laight wrote:
+> > I'm doing some experiments that generate errors on a PCIe link.
+> > (I'd like to get AER reporting things - but that is a different
+> > problem.)
+> >
+> > If I force 'link down' (by shorting the TX lines with a screwdriver!)
+> > the card side resets everything to do with the PCIe links including
+> > all of config space - particularly the BARs.
+> >
+> > The kernel doesn't know this has happened, so the bridge is left
+> > configured and the device driver (hopefully) doesn't crash the
+> > kernel when it gets 0xffffffff back from reads!
+> >
+> > If I then run 'lspci -vx' I get:
+> > 09:00.0 Class 0004: Device 12d9:001e (rev 01) (prog-if 02)
+> >         Subsystem: Device 12d9:0001
+> >         Flags: fast devsel, IRQ 16, NUMA node 0
+> >         [virtual] Memory at fa200000 (32-bit, non-prefetchable) [size=
+=3D1M]
+> >         [virtual] Memory at fa100000 (32-bit, non-prefetchable) [size=
+=3D1M]
+> >         [virtual] Memory at fa300000 (32-bit, non-prefetchable) [size=
+=3D8K]
+> >         ...
+> > 00: d9 12 1e 00 00 00 10 00 01 02 04 00 00 00 00 00
+> > 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> > 20: 00 00 00 00 00 00 00 00 00 00 00 00 d9 12 01 00
+> > 30: 00 00 00 00 50 00 00 00 00 00 00 00 00 01 00 00
+> >
+> > Note that the hexdump shows the BARs as all zero, but the text shows th=
+e
+> > values that the kernel thinks are being used.
+> > This doesn't make it obvious that something has gone badly wrong.
+> >
+> > AFAICT most of the info lspci outputs comes from decoding config space.
+> > I suspect it is getting the BAR info from the kernel (linux 4.14.0-rc4 =
+ish)
+> > in order to print the size.
+> > It would be better if it reported the inconsistency.
 >=20
-> First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
-> to avoid resuming i2c-designware-platdrv devices in its ->prepare
-> callback, so they can stay in runtime suspend after that point even
-> if the direct-complete feature is not used for them.
->=20
-> It also causes the PM core to avoid invoking "late" and "noirq"
-> suspend callbacks for these devices if they are in runtime suspend
-> at the beginning of the "late" phase of device suspend during
-> system suspend.  That guarantees dw_i2c_plat_suspend() to be
-> called for a device only if it is not in runtime suspend.
-> Moreover, it also causes the PM core to set the device's runtime
-> PM status to "active" after calling dw_i2c_plat_resume() for
-> it, so the driver doesn't need internal flags to avoid invoking
-> either dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in
-> a row.
->=20
-> Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
-> allowing the device to stay suspended after system resume under
-> suitable conditions, so again the driver doesn't need to take
-> care of that by itself.
->=20
-> Accordingly, the internal "suspended" and "skip_resume" flags
-> used by the driver are not necessary any more, so drop them and
-> simplify the driver's PM callbacks.
->=20
-> Additionally, notice that dw_i2c_plat_complete() only needs
-> to schedule runtime PM for the device if platform firmware
-> has been involved in resuming the system, so make it call
-> pm_resume_via_firmware() to check that.
->=20
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> I agree, it does seem odd that the hexdump reflects the hardware but
+> the text does not.  I don't know whether that's intentional; maybe
+> Martin does.
+...
 
-So, if the designware maintainers ack it, I will, too.
+Actually, looking at the lspci code, the "[virtual]" is output
+when the value read from the BAR is zero.
+I'm not sure what this is supposed to mean.
+It won't be output for an unconfigured IO address (low bit set)
+and it is technically valid to map a BAR to address zero.
 
-
---p4od3itvpvopd5d5
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlnySIQACgkQFA3kzBSg
-KbZqfg//eepQ7dfIR99euQ0zyI993jzfRLKBz6UAy5kdpVCo6Hl2E2QcJNecTwFU
-eyNRbrPW6EpXZvE2QqVASNHVVqYCQXSK1mJtopwDmZJHPq1WL1fQ7LlXvk4fPc8S
-KaiPqvZ4s3leeseUgOCkEW8Ee8g2V5k6mZUmotDjL9lGdi80sKcycm4BJ3nWZLaH
-/6KwYYHy7UKTw7LlXgoTQ4qeqLKjngHh6/tv7U/qkeD9Ai9ia21x6x6hzHcshfnS
-QUNPdKMAqJdHJgdXxBQB8aOdupkKj1lV0AXMw+v+CmMh/8gDfsSET5HWt1teVPVR
-2SBZv9bw/AFuZrnAM5vlLvxeBFs91VfP7C/RzjKT+vfHxmiiOfJMgGY2aCY3JsOe
-SqfhT/5gdemKcn3lcPvLjMA+0g4woZI59VOaeSETdSvXPHxfe4Y0D4LtNEKtubc/
-4vw8Kkh5XDLv6WtI1zDjoHcxcdwyQ7tluK/2jUGN2ekm0lnCHjUtKAkQSpZnWSE0
-MXQhqdwatY8GXi5wGxlPu/eAqcgt471/qi1yHvFf1DdKlmcLNRQcF3a7/xW+u2Ct
-qK1w7Y8GElRdzacu0so2bfRMEYPh3tH3JKbFAH/PpmoYIi9+83zi5kLohOPdQ/WI
-9ALXn8cRYaKM0zpFotULZ75sZqEoJqta974bnGTP14m4zLHnkGo=
-=JoV4
------END PGP SIGNATURE-----
-
---p4od3itvpvopd5d5--
+	David
