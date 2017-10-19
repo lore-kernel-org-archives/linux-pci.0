@@ -1,142 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44362 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753427AbdJMDrc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Oct 2017 23:47:32 -0400
-Subject: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default device
- selection
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-pci@vger.kernel.org,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        dri-devel@lists.freedesktop.org,
-        Xinliang Liu <z.liuxinliang@hisilicon.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Rongrong Zou <zourongrong@gmail.com>,
-        Dave Airlie <airlied@redhat.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org,
-        Daniel Axtens <dja@axtens.net>
-Date: Thu, 12 Oct 2017 22:47:29 -0500
-Message-ID: <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 19 Oct 2017 13:50:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+        Wilson.Snyder@cavium.com, robert.richter@cavium.com,
+        david.daney@cavium.com, mjaggi@caviumnetworks.com,
+        Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+Subject: Re: [PATCH v7 0/2] PCI: quirks: Cavium ThunderX ACS quirk update
+Message-ID: <20171019185010.GE6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20171019112645.GD6332@bhelgaas-glaptop.roam.corp.google.com>
+ <20171019115921.GA6199@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171019115921.GA6199@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The default VGA device is normally set in vga_arbiter_add_pci_device() when
-we call it for the first enabled device that can be accessed with the
-legacy VGA resources ([mem 0xa0000-0xbffff], etc.)
+On Thu, Oct 19, 2017 at 04:59:21AM -0700, Vadim Lomovtsev wrote:
+> On Thu, Oct 19, 2017 at 06:26:45AM -0500, Bjorn Helgaas wrote:
+> > On Tue, Oct 17, 2017 at 05:47:37AM -0700, Vadim Lomovtsev wrote:
+> > > From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+> > > 
+> > > version 7:
+> > > - update patch description accordingly to review comments;
+> > > - split for two patches: for ACS mask change and device id match change;
+> > > - remove macro #define of ACS flags, put it back to quirk function;
+> > > - remove '__inline_' from device id matching function;
+> > > - wrap code comments to fit into 80 columns;
+> > > - comment fix: change 0xa00 to 0xf800 for matching function description;
+> > > 
+> > > version 6:
+> > > - comment typo fix: change 0xa00 to 0xa000;
+> > > 
+> > > version 5:
+> > > - update code comments accordingly to review comments;
+> > > 
+> > > version 4:
+> > > - update ACS mask (remove TB and TD bits), update commit message (remove
+> > >   ACS register printout);
+> > > 
+> > > version 3:
+> > > - update subject: remove CN8XXX from subject line, replace it with ThunderX;
+> > > 
+> > > version 2:
+> > > - update match function in order to filter only ThunderX devices by device
+> > >   ids to properly filter CN8XXX devices, update subject & description with
+> > >   ACS register info (v2 was rejected by maillist due to triple X in subject);
+> > >   
+> > > Vadim Lomovtsev (2):
+> > >   PCI: quirks: Set Cavium ACS capability quirk flags to assert
+> > >     RR/CR/SV/UF.
+> > >   PCI: quirks: Apply Cavium ThunderX ACS quirk only to Root Ports
+> > > 
+> > >  drivers/pci/quirks.c | 26 ++++++++++++++++++++------
+> > >  1 file changed, 20 insertions(+), 6 deletions(-)
+> > 
+> > If I'm reading this correctly, the first patch is basically fixing a bug in
+> > the original Cavium ACS quirk (b404bcfbf035 ("PCI: Add ACS quirk for all
+> > Cavium devices")).  Right?
+> 
+> Yes, first patch fixes improper ACS flags in the patch you mentioned.
+> 
+> The second one fixes devid check from another patch
+> (b77d537d00d0 PCI: Apply Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices).
+> 
+> > 
+> > I put them on pci/virtualization for v4.15 as follows (patches unchanged,
+> > changelogs wordsmithed).
+> >
+> 
+> Good, thank you.
+> 
+> > You mentioned stable backports.  b404bcfbf035 ("PCI: Add ACS quirk for all
+> > Cavium devices") appeared in v4.6.  b77d537d00d0 ("PCI: Apply Cavium ACS
+> > quirk only to CN81xx/CN83xx/CN88xx devices") appeared in v4.12.  I assume
+> > you would ideally want all this backported as far as v4.6?  We'd have to
+> > figure out how to express that in stable tags.
+> 
+> Ideally yes, I think we would need to have them backported onto stable(s),
+> but so far I didn't see any bug-reports which could require these fixes.
+> 
+> Anyway, in term of backporting them - are there anything I can help with ?
 
-That default device can be overridden by an EFI device that owns the boot
-framebuffer.  As a fallback, we can also select a VGA device that can't be
-accessed via legacy VGA resources, or a VGA device that isn't even enabled.
+I added the following tags, which I *think* should be sufficient:
 
-Factor out this EFI and fallback selection from vga_arb_device_init() into
-a separate vga_arb_select_default_device() function.  This doesn't change
-any behavior, but it untangles the "bridge control possible" checking and
-messages from the default device selection.
+  PCI: Set Cavium ACS capability quirk flags to assert RR/CR/SV/UF
+  Cc: stable@vger.kernel.org      # v4.6+: b77d537d00d0: PCI: Apply Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices
 
-Tested-by: Zhou Wang <wangzhou1@hisilicon.com>  # D05 Hisi Hip07, Hip08
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/gpu/vga/vgaarb.c |   57 ++++++++++++++++++++++++++++------------------
- 1 file changed, 35 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 8035e38d5110..d35d6d271f3f 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -1402,29 +1402,14 @@ static struct miscdevice vga_arb_device = {
- 	MISC_DYNAMIC_MINOR, "vga_arbiter", &vga_arb_device_fops
- };
- 
--static int __init vga_arb_device_init(void)
-+static void __init vga_arb_select_default_device(void)
- {
--	int rc;
- 	struct pci_dev *pdev;
- 	struct vga_device *vgadev;
- 
--	rc = misc_register(&vga_arb_device);
--	if (rc < 0)
--		pr_err("error %d registering device\n", rc);
--
--	bus_register_notifier(&pci_bus_type, &pci_notifier);
--
--	/* We add all pci devices satisfying vga class in the arbiter by
--	 * default */
--	pdev = NULL;
--	while ((pdev =
--		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--			       PCI_ANY_ID, pdev)) != NULL)
--		vga_arbiter_add_pci_device(pdev);
--
-+#if defined(CONFIG_X86) || defined(CONFIG_IA64)
- 	list_for_each_entry(vgadev, &vga_list, list) {
- 		struct device *dev = &vgadev->pdev->dev;
--#if defined(CONFIG_X86) || defined(CONFIG_IA64)
- 		/*
- 		 * Override vga_arbiter_add_pci_device()'s I/O based detection
- 		 * as it may take the wrong device (e.g. on Apple system under
-@@ -1461,12 +1446,8 @@ static int __init vga_arb_device_init(void)
- 				vgaarb_info(dev, "overriding boot device\n");
- 			vga_set_default_device(vgadev->pdev);
- 		}
--#endif
--		if (vgadev->bridge_has_one_vga)
--			vgaarb_info(dev, "bridge control possible\n");
--		else
--			vgaarb_info(dev, "no bridge control possible\n");
- 	}
-+#endif
- 
- 	if (!vga_default_device()) {
- 		list_for_each_entry(vgadev, &vga_list, list) {
-@@ -1492,6 +1473,38 @@ static int __init vga_arb_device_init(void)
- 			vga_set_default_device(vgadev->pdev);
- 		}
- 	}
-+}
-+
-+static int __init vga_arb_device_init(void)
-+{
-+	int rc;
-+	struct pci_dev *pdev;
-+	struct vga_device *vgadev;
-+
-+	rc = misc_register(&vga_arb_device);
-+	if (rc < 0)
-+		pr_err("error %d registering device\n", rc);
-+
-+	bus_register_notifier(&pci_bus_type, &pci_notifier);
-+
-+	/* We add all PCI devices satisfying VGA class in the arbiter by
-+	 * default */
-+	pdev = NULL;
-+	while ((pdev =
-+		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-+			       PCI_ANY_ID, pdev)) != NULL)
-+		vga_arbiter_add_pci_device(pdev);
-+
-+	list_for_each_entry(vgadev, &vga_list, list) {
-+		struct device *dev = &vgadev->pdev->dev;
-+
-+		if (vgadev->bridge_has_one_vga)
-+			vgaarb_info(dev, "bridge control possible\n");
-+		else
-+			vgaarb_info(dev, "no bridge control possible\n");
-+	}
-+
-+	vga_arb_select_default_device();
- 
- 	pr_info("loaded\n");
- 	return rc;
+  PCI: Apply Cavium ThunderX ACS quirk to more Root Ports
+  Cc: stable@vger.kernel.org      # v4.12+
