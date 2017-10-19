@@ -1,167 +1,88 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 17 Oct 2017 14:05:06 +0200
-From: Daniel Vetter <daniel@ffwll.ch>
-To: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default
- device selection
-Message-ID: <20171017120506.ervbnyjue55zn67b@phenom.ffwll.local>
-References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <871sm2y1h9.fsf@linkitivity.dja.id.au>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <871sm2y1h9.fsf@linkitivity.dja.id.au>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Dave Airlie <airlied@redhat.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
- Xinliang Liu <z.liuxinliang@hisilicon.com>,
- Rongrong Zou <zourongrong@gmail.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Daniel Vetter <daniel.vetter@intel.com>, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1769d82f-07d3-14c9-c06a-d6afec20fa0e@ti.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
+ <7b9c2a3e-2e88-938e-46a5-703de0080681@ti.com> <2926646.NJduVklg7n@aspire.rjw.lan>
+ <CAPDyKFrFbdXrZqtvwm=xmJSqQckfGzs7XNn7AOCTbOjwP4iAFQ@mail.gmail.com> <1769d82f-07d3-14c9-c06a-d6afec20fa0e@ti.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 19 Oct 2017 20:04:36 +0200
+Message-ID: <CAPDyKFoAKguKiwnJu6zQF7F-w5AQ+mQoQq_XbNOQrys+c54Jhw@mail.gmail.com>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+To: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 01:03:46PM +1100, Daniel Axtens wrote:
-> Bjorn Helgaas <bhelgaas@google.com> writes:
-> 
-> > The default VGA device is normally set in vga_arbiter_add_pci_device() when
-> > we call it for the first enabled device that can be accessed with the
-> > legacy VGA resources ([mem 0xa0000-0xbffff], etc.)
-> >
-> > That default device can be overridden by an EFI device that owns the boot
-> > framebuffer.  As a fallback, we can also select a VGA device that can't be
-> > accessed via legacy VGA resources, or a VGA device that isn't even enabled.
-> >
-> > Factor out this EFI and fallback selection from vga_arb_device_init() into
-> > a separate vga_arb_select_default_device() function.  This doesn't change
-> > any behavior, but it untangles the "bridge control possible" checking and
-> > messages from the default device selection.
-> >
-> > Tested-by: Zhou Wang <wangzhou1@hisilicon.com>  # D05 Hisi Hip07, Hip08
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  drivers/gpu/vga/vgaarb.c |   57 ++++++++++++++++++++++++++++------------------
-> >  1 file changed, 35 insertions(+), 22 deletions(-)
-> >
-> > diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> > index 8035e38d5110..d35d6d271f3f 100644
-> > --- a/drivers/gpu/vga/vgaarb.c
-> > +++ b/drivers/gpu/vga/vgaarb.c
-> > @@ -1402,29 +1402,14 @@ static struct miscdevice vga_arb_device = {
-> >  	MISC_DYNAMIC_MINOR, "vga_arbiter", &vga_arb_device_fops
-> >  };
-> >  
-> > -static int __init vga_arb_device_init(void)
-> > +static void __init vga_arb_select_default_device(void)
-> >  {
-> > -	int rc;
-> >  	struct pci_dev *pdev;
-> >  	struct vga_device *vgadev;
-> >  
-> > -	rc = misc_register(&vga_arb_device);
-> > -	if (rc < 0)
-> > -		pr_err("error %d registering device\n", rc);
-> > -
-> > -	bus_register_notifier(&pci_bus_type, &pci_notifier);
-> > -
-> > -	/* We add all pci devices satisfying vga class in the arbiter by
-> > -	 * default */
-> > -	pdev = NULL;
-> > -	while ((pdev =
-> > -		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-> > -			       PCI_ANY_ID, pdev)) != NULL)
-> > -		vga_arbiter_add_pci_device(pdev);
-> > -
-> > +#if defined(CONFIG_X86) || defined(CONFIG_IA64)
-> >  	list_for_each_entry(vgadev, &vga_list, list) {
-> >  		struct device *dev = &vgadev->pdev->dev;
-> > -#if defined(CONFIG_X86) || defined(CONFIG_IA64)
-> >  		/*
-> >  		 * Override vga_arbiter_add_pci_device()'s I/O based detection
-> >  		 * as it may take the wrong device (e.g. on Apple system under
-> > @@ -1461,12 +1446,8 @@ static int __init vga_arb_device_init(void)
-> >  				vgaarb_info(dev, "overriding boot device\n");
-> >  			vga_set_default_device(vgadev->pdev);
-> >  		}
-> > -#endif
-> > -		if (vgadev->bridge_has_one_vga)
-> > -			vgaarb_info(dev, "bridge control possible\n");
-> > -		else
-> > -			vgaarb_info(dev, "no bridge control possible\n");
-> >  	}
-> > +#endif
-> >  
-> >  	if (!vga_default_device()) {
-> >  		list_for_each_entry(vgadev, &vga_list, list) {
-> > @@ -1492,6 +1473,38 @@ static int __init vga_arb_device_init(void)
-> >  			vga_set_default_device(vgadev->pdev);
-> >  		}
-> >  	}
-> > +}
-> > +
-> > +static int __init vga_arb_device_init(void)
-> > +{
-> > +	int rc;
-> > +	struct pci_dev *pdev;
-> > +	struct vga_device *vgadev;
-> > +
-> > +	rc = misc_register(&vga_arb_device);
-> > +	if (rc < 0)
-> > +		pr_err("error %d registering device\n", rc);
-> > +
-> > +	bus_register_notifier(&pci_bus_type, &pci_notifier);
-> > +
-> > +	/* We add all PCI devices satisfying VGA class in the arbiter by
-> > +	 * default */
-> > +	pdev = NULL;
-> > +	while ((pdev =
-> > +		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-> > +			       PCI_ANY_ID, pdev)) != NULL)
-> > +		vga_arbiter_add_pci_device(pdev);
-> > +
-> > +	list_for_each_entry(vgadev, &vga_list, list) {
-> > +		struct device *dev = &vgadev->pdev->dev;
-> > +
-> > +		if (vgadev->bridge_has_one_vga)
-> > +			vgaarb_info(dev, "bridge control possible\n");
-> > +		else
-> > +			vgaarb_info(dev, "no bridge control possible\n");
-> > +	}
-> 
-> Initially I wondered if this info printk could be moved into
-> vga_arbiter_check_bridge_sharing(), but it's been separated out since
-> 3448a19da479b ("vgaarb: use bridges to control VGA routing where
-> possible."), and upon closer examination, it seems you can't be sure a
-> device doesn't share a bridge until the end of the process, so this is
-> indeed correct.
-> 
-> Everything else also looks good to me.
-> 
-> Reviewed-by: Daniel Axtens <dja@axtens.net>
+On 19 October 2017 at 19:21, Grygorii Strashko <grygorii.strashko@ti.com> wrote:
+>
+>
+> On 10/19/2017 03:33 AM, Ulf Hansson wrote:
+>> On 18 October 2017 at 23:48, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>>> On Wednesday, October 18, 2017 9:45:11 PM CEST Grygorii Strashko wrote:
+>>>>
+>>>> On 10/18/2017 09:11 AM, Ulf Hansson wrote:
+>>>
+>>> [...]
+>>>
+>>>>>>> That's the point. We know pm_runtime_force_* works nicely for the
+>>>>>>> trivial middle-layer cases.
+>>>>>>
+>>>>>> In which cases the middle-layer callbacks don't exist, so it's just like
+>>>>>> reusing driver callbacks directly. :-)
+>>>>
+>>>> I'd like to ask you clarify one point here and provide some info which I hope can be useful -
+>>>> what's exactly means  "trivial middle-layer cases"?
+>>>>
+>>>> Is it when systems use "drivers/base/power/clock_ops.c - Generic clock
+>>>> manipulation PM callbacks" as dev_pm_domain (arm davinci/keystone), or OMAP
+>>>> device framework struct dev_pm_domain omap_device_pm_domain
+>>>> (arm/mach-omap2/omap_device.c) or static const struct dev_pm_ops
+>>>> tegra_aconnect_pm_ops?
+>>>>
+>>>> if yes all above have PM runtime callbacks.
+>>>
+>>> Trivial ones don't actually do anything meaningful in their PM callbacks.
+>>>
+>>> Things like the platform bus type, spi bus type, i2c bus type and similar.
+>>>
+>>> If the middle-layer callbacks manipulate devices in a significant way, then
+>>> they aren't trivial.
+>>
+>> I fully agree with Rafael's description above, but let me also clarify
+>> one more thing.
+>>
+>> We have also been discussing PM domains as being trivial and
+>> non-trivial. In some statements I even think the PM domain has been a
+>> part the middle-layer terminology, which may have been a bit
+>> confusing.
+>>
+>> In this regards as we consider genpd being a trivial PM domain, those
+>> examples your bring up above is too me also examples of trivial PM
+>> domains. Especially because they don't deal with wakeups, as that is
+>> taken care of by the drivers, right!?
+>
+> Not directly, for example, omap device framework has noirq callback implemented
+> which forcibly disable all devices which are not PM runtime suspended.
+> while doing this it calls drivers PM .runtime_suspend() which may return
+> non 0 value and in this case device will be left enabled (powered) at suspend for
+> wake up purposes (see _od_suspend_noirq()).
+>
 
-R-b for both patches? And ok with everyone if I pull this into drm-misc
-for 4.15 (deadline is end of this week for feature-y stuff)?
+Yeah, I had that feeling that omap has some trickyness going on. :-)
 
-Thanks, Daniel
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I sure that can be fixed in the omap PM domain, although
