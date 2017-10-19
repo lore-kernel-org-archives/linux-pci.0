@@ -1,38 +1,101 @@
-Return-Path: <SRS0=Rdd+=BT=lst.de=hch@kernel.org>
-Return-Path: <SRS0=Rdd+=BT=lst.de=hch@kernel.org>
-Date: Fri, 20 Oct 2017 15:37:36 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Dongdong Liu <liudongdong3@huawei.com>,
-	Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 2/3] PCI/portdrv: Remove excessive comments
-Message-ID: <20171020133736.GA29368@lst.de>
-References: <20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com> <20171019230115.17806.52138.stgit@bhelgaas-glaptop.roam.corp.google.com> <20171020070731.GD11101@lst.de> <20171020133143.GG6332@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171020133143.GG6332@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <CAPDyKFoAKguKiwnJu6zQF7F-w5AQ+mQoQq_XbNOQrys+c54Jhw@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
+ <7b9c2a3e-2e88-938e-46a5-703de0080681@ti.com> <2926646.NJduVklg7n@aspire.rjw.lan>
+ <CAPDyKFrFbdXrZqtvwm=xmJSqQckfGzs7XNn7AOCTbOjwP4iAFQ@mail.gmail.com>
+ <1769d82f-07d3-14c9-c06a-d6afec20fa0e@ti.com> <CAPDyKFoAKguKiwnJu6zQF7F-w5AQ+mQoQq_XbNOQrys+c54Jhw@mail.gmail.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 19 Oct 2017 20:11:08 +0200
+Message-ID: <CAPDyKFrtQO_rowO8q=7Lsb25x8+bQAJyc1yUYVRgiguG-2W0tA@mail.gmail.com>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+To: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 08:31:43AM -0500, Bjorn Helgaas wrote:
-> On Fri, Oct 20, 2017 at 09:07:31AM +0200, Christoph Hellwig wrote:
-> > On Thu, Oct 19, 2017 at 06:01:15PM -0500, Bjorn Helgaas wrote:
-> > > From: Bjorn Helgaas <bhelgaas@google.com>
-> > > 
-> > > Remove some wordy and repetitive comments so we can see the code better.
-> > > The register field #defines should be enough of a hook to find relevant
-> > > descriptions in the spec.  No functional change.
-> > > 
-> > > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > Of course my comments were actually useful ;-)
-> 
-> Oops, I thought I was mainly removing stuff I had added myself :)
-> I added back this single comment in place of the three essentially
-> similar ones:
+On 19 October 2017 at 20:04, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+> On 19 October 2017 at 19:21, Grygorii Strashko <grygorii.strashko@ti.com> wrote:
+>>
+>>
+>> On 10/19/2017 03:33 AM, Ulf Hansson wrote:
+>>> On 18 October 2017 at 23:48, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>>>> On Wednesday, October 18, 2017 9:45:11 PM CEST Grygorii Strashko wrote:
+>>>>>
+>>>>> On 10/18/2017 09:11 AM, Ulf Hansson wrote:
+>>>>
+>>>> [...]
+>>>>
+>>>>>>>> That's the point. We know pm_runtime_force_* works nicely for the
+>>>>>>>> trivial middle-layer cases.
+>>>>>>>
+>>>>>>> In which cases the middle-layer callbacks don't exist, so it's just like
+>>>>>>> reusing driver callbacks directly. :-)
+>>>>>
+>>>>> I'd like to ask you clarify one point here and provide some info which I hope can be useful -
+>>>>> what's exactly means  "trivial middle-layer cases"?
+>>>>>
+>>>>> Is it when systems use "drivers/base/power/clock_ops.c - Generic clock
+>>>>> manipulation PM callbacks" as dev_pm_domain (arm davinci/keystone), or OMAP
+>>>>> device framework struct dev_pm_domain omap_device_pm_domain
+>>>>> (arm/mach-omap2/omap_device.c) or static const struct dev_pm_ops
+>>>>> tegra_aconnect_pm_ops?
+>>>>>
+>>>>> if yes all above have PM runtime callbacks.
+>>>>
+>>>> Trivial ones don't actually do anything meaningful in their PM callbacks.
+>>>>
+>>>> Things like the platform bus type, spi bus type, i2c bus type and similar.
+>>>>
+>>>> If the middle-layer callbacks manipulate devices in a significant way, then
+>>>> they aren't trivial.
+>>>
+>>> I fully agree with Rafael's description above, but let me also clarify
+>>> one more thing.
+>>>
+>>> We have also been discussing PM domains as being trivial and
+>>> non-trivial. In some statements I even think the PM domain has been a
+>>> part the middle-layer terminology, which may have been a bit
+>>> confusing.
+>>>
+>>> In this regards as we consider genpd being a trivial PM domain, those
+>>> examples your bring up above is too me also examples of trivial PM
+>>> domains. Especially because they don't deal with wakeups, as that is
+>>> taken care of by the drivers, right!?
+>>
+>> Not directly, for example, omap device framework has noirq callback implemented
+>> which forcibly disable all devices which are not PM runtime suspended.
+>> while doing this it calls drivers PM .runtime_suspend() which may return
+>> non 0 value and in this case device will be left enabled (powered) at suspend for
+>> wake up purposes (see _od_suspend_noirq()).
+>>
+>
+> Yeah, I had that feeling that omap has some trickyness going on. :-)
+>
+> I sure that can be fixed in the omap PM domain, although
 
-I don't think we need these - it's pretty clear that you need to
-spec for those.
+...slipped with my fingers.. here is the rest of the reply...
 
-It was just intended as a snarky comment that you basically kept mine,
-just rewritten to be a little more clear.  Sorry for the confusion.
+..of course that require us to use another way for drivers to signal
+to the omap PM domain that it needs to stay powered as to deal with
+wakeup.
+
+I can have a look at that more closely, to see if it makes sense to change.
+
+Kind regards
+Uffe
