@@ -1,89 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 17 Oct 2017 12:05:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Khuong Dinh <kdinh@apm.com>
-Subject: Re: [PATCH v4 pci 0/2] PCI/MSI: pci-xgene-msi: Enable MSI support in
- ACPI boot for X-Gene v1
-Message-ID: <20171017170529.GC5641@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506448161-30961-1-git-send-email-kdinh@apm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1506448161-30961-1-git-send-email-kdinh@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, marc.zyngier@arm.com, linux-pci@vger.kernel.org,
- msalter@redhat.com, rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
- patches@apm.com, jcm@redhat.com, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <2926646.NJduVklg7n@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
+ <7b9c2a3e-2e88-938e-46a5-703de0080681@ti.com> <2926646.NJduVklg7n@aspire.rjw.lan>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 19 Oct 2017 10:33:47 +0200
+Message-ID: <CAPDyKFrFbdXrZqtvwm=xmJSqQckfGzs7XNn7AOCTbOjwP4iAFQ@mail.gmail.com>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+To: Grygorii Strashko <grygorii.strashko@ti.com>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 26, 2017 at 11:49:19AM -0600, Khuong Dinh wrote:
-> This patch set enables ACPI MSI support for X-Gene PCIe v1 hardware
-> and provides the proper MSI driver initialization ordering.
-> 
-> Signed-off-by: Khuong Dinh <kdinh@apm.com>
-> ---
-> v4:
->  - Remove Marc Zyngier ACK in v2
->  - Use acpi_bus_scan on MSI controller handle when MSI device is found
->  - Register ACPI MSI driver when MSI device is found instead of using
->  subsys_initcall
->  - Split ACPI MSI driver support into two patches - one to enable MSI
-> support for X-Gene PCIe v1 hardware, one to enforce MSI driver loaded
-> before PCIe controller driver in ACPI boot mode
-> v3:
->  - Input X-Gene MSI base address for irq_domain_alloc_fwnode
->  - Add a hook to enforce X-Gene MSI be probed prior acpi_bus_scan happens
-> v2:
->  - Verify with BIOS version 3.06.25 and 3.07.09
-> v1:
->  - Initial version
-> ---
-> 
-> Khuong Dinh (2):
->   PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot for X-Gene v1
->   PCI/MSI: Enforce MSI driver loaded before PCIe in ACPI boot
-> 
->  drivers/acpi/Makefile            |    2 +-
->  drivers/acpi/acpi_msi.c          |   86 ++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/acpi_platform.c     |    3 +-
->  drivers/acpi/internal.h          |    1 +
->  drivers/acpi/scan.c              |    1 +
->  drivers/pci/host/pci-xgene-msi.c |   60 ++++++++++++++++++++++++--
->  include/linux/acpi_msi.h         |   37 ++++++++++++++++
->  7 files changed, 183 insertions(+), 7 deletions(-)
->  create mode 100644 drivers/acpi/acpi_msi.c
->  create mode 100644 include/linux/acpi_msi.h
+On 18 October 2017 at 23:48, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Wednesday, October 18, 2017 9:45:11 PM CEST Grygorii Strashko wrote:
+>>
+>> On 10/18/2017 09:11 AM, Ulf Hansson wrote:
+>
+> [...]
+>
+>> >>> That's the point. We know pm_runtime_force_* works nicely for the
+>> >>> trivial middle-layer cases.
+>> >>
+>> >> In which cases the middle-layer callbacks don't exist, so it's just like
+>> >> reusing driver callbacks directly. :-)
+>>
+>> I'd like to ask you clarify one point here and provide some info which I hope can be useful -
+>> what's exactly means  "trivial middle-layer cases"?
+>>
+>> Is it when systems use "drivers/base/power/clock_ops.c - Generic clock
+>> manipulation PM callbacks" as dev_pm_domain (arm davinci/keystone), or OMAP
+>> device framework struct dev_pm_domain omap_device_pm_domain
+>> (arm/mach-omap2/omap_device.c) or static const struct dev_pm_ops
+>> tegra_aconnect_pm_ops?
+>>
+>> if yes all above have PM runtime callbacks.
+>
+> Trivial ones don't actually do anything meaningful in their PM callbacks.
+>
+> Things like the platform bus type, spi bus type, i2c bus type and similar.
+>
+> If the middle-layer callbacks manipulate devices in a significant way, then
+> they aren't trivial.
 
-The changelogs don't really give the nitty-gritty details of the
-problem, e.g., apparently the host bridge and the MSI controller are
-enumerated as two separate devices and there's an ordering issue with
-binding drivers to them.
+I fully agree with Rafael's description above, but let me also clarify
+one more thing.
 
-They should also contrast the X-Gene situation with other systems so we
-can see why X-Gene has this problem when other systems don't.
+We have also been discussing PM domains as being trivial and
+non-trivial. In some statements I even think the PM domain has been a
+part the middle-layer terminology, which may have been a bit
+confusing.
 
-I'm not thrilled about all the ACPI code this adds, but I'm guessing
-there'll be some better solution eventually.
+In this regards as we consider genpd being a trivial PM domain, those
+examples your bring up above is too me also examples of trivial PM
+domains. Especially because they don't deal with wakeups, as that is
+taken care of by the drivers, right!?
 
-I'm going to mark these as "changes requested" even though I haven't
-asked for anything specific to be changed because it sounds like
-Lorenzo et al. may have more concrete proposals soon.
-
-Are there currently systems that do not work and need to be fixed
-ASAP?
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Kind regards
+Uffe
