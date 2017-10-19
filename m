@@ -1,193 +1,162 @@
-Return-Path: <SRS0=UTAc=BR=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=UTAc=BR=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH V4 1/2] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port
- service drivers
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1507719178-112556-1-git-send-email-liudongdong3@huawei.com>
- <1507719178-112556-2-git-send-email-liudongdong3@huawei.com>
- <20171017202505.GN5641@bhelgaas-glaptop.roam.corp.google.com>
-CC: <hch@lst.de>, <linux-pci@vger.kernel.org>, <stable@vger.kernel.org>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <b793f1b5-cf6d-dc52-09d8-0be6d58a72ab@huawei.com>
-Date: Wed, 18 Oct 2017 18:50:05 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59410 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751579AbdJSL0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 19 Oct 2017 07:26:48 -0400
+Date: Thu, 19 Oct 2017 06:26:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+        Wilson.Snyder@cavium.com, robert.richter@cavium.com,
+        david.daney@cavium.com, mjaggi@caviumnetworks.com,
+        Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+Subject: Re: [PATCH v7 0/2] PCI: quirks: Cavium ThunderX ACS quirk update
+Message-ID: <20171019112645.GD6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <20171017202505.GN5641@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
-在 2017/10/18 4:25, Bjorn Helgaas 写道:
-> On Wed, Oct 11, 2017 at 06:52:57PM +0800, Dongdong Liu wrote:
->> After removing and adding back the PCI root port device,
->> we see the PCIe port service drivers request irq failed.
->> pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
->> aer: probe of 0000:00:00.0:pcie002 failed with error -22
->> pciehp 0000:00:00.0:pcie004: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd-
->> PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
->> pciehp 0000:00:00.0:pcie004: Cannot get irq 20 for the hotplug controller
->> pciehp 0000:00:00.0:pcie004: Notification initialization failed (-1)
->> dpc 0000:00:00.0:pcie010: request IRQ22 failed: -22
->> dpc: probe of 0000:00:00.0:pcie010 failed with error -22
->>
->> The current code basically does this:
->>
->>   - allocate 32 vectors
->>   - figure out vector used by PME and hotplug
->>   - figure out vector used by AER
->>   - figure out vector used by DPC
->>   - free the 32 vectors we allocated
->>   - allocate only as many vectors as we need
->>
->> but it is broken as calling pci_free_irq_vectors()
->> invalidates the IRQ numbers returned before by pci_irq_vectors();
->>
->> The hardware works:
->>   - PME and hotplug use the Interrupt Message Number from the PCIe
->>     Capability register.
->>
->>   - AER uses the AER Interrupt Message Number from the AER Root Error
->>     Status register.
->>
->>   - DPC uses the DPC Interrupt Message Number from the DPC Capability
->>     register.
->>
->>   - FRS (not supported by Linux yet) uses the FRS Interrupt Message
->>     Number from the FRS Queuing Capability register.
->>
->>   - That's a total of 4 possible MSI/MSI-X vectors used for PME,
->>     hotplug, AER, DPC, and FRS, so there's no point in trying to
->>     allocate more than 4 vectors (we currently start with 32).
->>
->>   - All these Interrupt Message Numbers are read-only to software but
->>     are updated by hardware when software writes the Multiple Message
->>     Enable field of the MSI Message Control register.  Thanks for
->>     pointing this out; I didn't realize this before.
->>
->>   - Therefore, we must read the Interrupt Message Numbers *after* we
->>     write Multiple Message Enable.
->>
->> Since we can use at most 4 vectors, this patch is to optimize the
->> interrupt vector allocation strategy in pcie_port_enable_irq_vec().
->> First figure out how many vectors we need,allocate them, and then fill
->> in the slots in the irqs[] table.
->>
->> Cc: <stable@vger.kernel.org>
->> Fixes: 3674cc49da9a ("PCI/portdrv: Use pci_irq_alloc_vectors()")
->> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
->> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->
-> Thanks a lot for all your work on this.  This was a confusing issue
-> with code to match.  I tried to simplify the changelog as below;
-> please correct anything I messed up.
->
-> A few hopefully last questions:
->
->   - Your subject suggested that this was a bug for both MSI and MSI-X,
->     but I think it only affected MSI, because the spec says MSI-X
->     Interrupt Message Numbers must remain constant.  What do you
->     think?
+On Tue, Oct 17, 2017 at 05:47:37AM -0700, Vadim Lomovtsev wrote:
+> From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+> 
+> version 7:
+> - update patch description accordingly to review comments;
+> - split for two patches: for ACS mask change and device id match change;
+> - remove macro #define of ACS flags, put it back to quirk function;
+> - remove '__inline_' from device id matching function;
+> - wrap code comments to fit into 80 columns;
+> - comment fix: change 0xa00 to 0xf800 for matching function description;
+> 
+> version 6:
+> - comment typo fix: change 0xa00 to 0xa000;
+> 
+> version 5:
+> - update code comments accordingly to review comments;
+> 
+> version 4:
+> - update ACS mask (remove TB and TD bits), update commit message (remove
+>   ACS register printout);
+> 
+> version 3:
+> - update subject: remove CN8XXX from subject line, replace it with ThunderX;
+> 
+> version 2:
+> - update match function in order to filter only ThunderX devices by device
+>   ids to properly filter CN8XXX devices, update subject & description with
+>   ACS register info (v2 was rejected by maillist due to triple X in subject);
+>   
+> Vadim Lomovtsev (2):
+>   PCI: quirks: Set Cavium ACS capability quirk flags to assert
+>     RR/CR/SV/UF.
+>   PCI: quirks: Apply Cavium ThunderX ACS quirk only to Root Ports
+> 
+>  drivers/pci/quirks.c | 26 ++++++++++++++++++++------
+>  1 file changed, 20 insertions(+), 6 deletions(-)
 
-Yes, for a given MSI-X implementation, the entry must remain constant.
-But in fact, the bug PCIe port service drivers request irq failed does
-not relate with this. As we said in PATCH V2,
-The current code does:
+If I'm reading this correctly, the first patch is basically fixing a bug in
+the original Cavium ACS quirk (b404bcfbf035 ("PCI: Add ACS quirk for all
+Cavium devices")).  Right?
 
-   pci_alloc_irq_vectors(dev, ...)
-   irqs[x] = pci_irq_vector(dev, entry)
-   pci_free_irq_vectors(dev)
-   pci_alloc_irq_vectors(dev, ...)
+I put them on pci/virtualization for v4.15 as follows (patches unchanged,
+changelogs wordsmithed).
 
-The problem is that the second pci_alloc_irq_vectors() call gets different
-vectors than the first one. For MSI-X, It maybe also have such bug.
+You mentioned stable backports.  b404bcfbf035 ("PCI: Add ACS quirk for all
+Cavium devices") appeared in v4.6.  b77d537d00d0 ("PCI: Apply Cavium ACS
+quirk only to CN81xx/CN83xx/CN88xx devices") appeared in v4.12.  I assume
+you would ideally want all this backported as far as v4.6?  We'd have to
+figure out how to express that in stable tags.
 
->
->   - I think the problem was probably exposed by a1d5f18cafe6
->     ("PCI/portdrv: Support multiple interrupts for MSI as well as
->     MSI-X"), not 3674cc49da9a, because prior to a1d5f18cafe6, we only
->     used a single MSI vector, and we didn't do the "allocate vectors,
->     see which ones were used, reallocate only the required number of
->     vectors" dance.
 
-Yes, 3674cc49da9a, for MSI, it should be work ok as it just use used a
-single MSI vector(not get the irq and free and alloc irq agian as MSI-X).
-But for MSI-X, I think it maybe still have a bug.
->
->     It looks like we only allocated a single vector, so all the
->     Interrupt Message Numbers should have been zero.  Or did you
->     actually bisect it to 3674cc49da9a?
+commit 60f6d5f7ebc4bba83d73115f58b805f2f2618667
+Author: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+Date:   Tue Oct 17 05:47:38 2017 -0700
 
-I think 3674cc49da9a is beeter as a1d5f18cafe6 maybe still have the bug for MSI-X.
-a1d5f18cafe6 PCI/portdrv: Support multiple interrupts for MSI as well as MSI-X
-3674cc49da9a PCI/portdrv: Use pci_irq_alloc_vectors().
+    PCI: Set Cavium ACS capability quirk flags to assert RR/CR/SV/UF
+    
+    The Cavium ThunderX (CN8XXX) family of PCIe Root Ports does not advertise
+    an ACS capability.  However, the RTL internally implements similar
+    protection as if ACS had Request Redirection, Completion Redirection,
+    Source Validation, and Upstream Forwarding features enabled.
+    
+    Change Cavium ACS capabilities quirk flags accordingly.
+    
+    Fixes: b404bcfbf035 ("PCI: Add ACS quirk for all Cavium devices")
+    Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
->
-> Bjorn
->
->
-> commit e402a536cf7122cda6b3bef420de36c22d2907e6
-> Author: Dongdong Liu <liudongdong3@huawei.com>
-> Date:   Wed Oct 11 18:52:57 2017 +0800
->
->     PCI/portdrv: Fix MSI multiple interrupt setup
->
->     When removing and adding back a PCIe Root Port device that uses MSI (not
->     MSI-X), the port service driver IRQ request fails:
->
->       pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
->       aer: probe of 0000:00:00.0:pcie002 failed with error -22
->       pciehp 0000:00:00.0:pcie004: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
->       pciehp 0000:00:00.0:pcie004: Cannot get irq 20 for the hotplug controller
->       pciehp 0000:00:00.0:pcie004: Notification initialization failed (-1)
->       dpc 0000:00:00.0:pcie010: request IRQ22 failed: -22
->       dpc: probe of 0000:00:00.0:pcie010 failed with error -22
->
->     The previous code basically did this:
->
->       - Write MSI Multiple Message Enable to enable 32 vectors
->       - Read Interrupt Message Numbers for PME & hotplug, AER, and DPC
->       - Rewrite MSI Multiple Message Enable to enable only as many vectors as
->         we think we need
->       - Assume the Interrupt Message Numbers are still valid
->
->     The problem is that when we change the Multiple Message Enable field to
->     what we think is the minimal number of vectors required, the hardware may
->     change which vectors it uses.  See the "Interrupt Message Number"
->     discussion in PCIe r3.1, sec 7.8.2 (PME & hotplug), 7.10.10 (AER), 7.31.2
->     (DPC).
->
->     Read the Interrupt Message Numbers *after* we write the Multiple Message
->     Enable field so we use the correct IRQ vectors.
->
->     Note that we can't predict how hardware will select Interrupt Message
->     Numbers, so even if we allocate as many vectors as there are interrupt
->     sources, the hardware may still select Message Numbers that result in
->     sharing a vector.  E.g., on HiSilicon hip08, if we have 3 sources
->     (PME/hotplug, AER, DPC) and 4 MSI vectors, hardware selects Message
->     Numbers 0 for PME/hotplug and 2 for AER and DPC.  That leaves vectors 1
->     and 3 unused, while AER and DPC share vector 2.
->
->     Even though MSI-X doesn't have the issue with Interrupt Message Numbers
->     changing, this patch may result in more IRQ sharing because we no longer
->     read those Message Numbers and use them to determine how many MSI-X vectors
->     to request.
->
->     Fixes: a1d5f18cafe6 ("PCI/portdrv: Support multiple interrupts for MSI as well as MSI-X")
->     Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
->     Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->     Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->     [bhelgaas: changelog]
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Cc: stable@vger.kernel.org      # v4.13+
->
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a4d33619a7bb..c23650cfd5a1 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4214,12 +4214,14 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+ {
+ 	/*
+-	 * Cavium devices matching this quirk do not perform peer-to-peer
+-	 * with other functions, allowing masking out these bits as if they
+-	 * were unimplemented in the ACS capability.
++	 * Cavium root ports don't advertise an ACS capability.  However,
++	 * the RTL internally implements similar protection as if ACS had
++	 * Request Redirection, Completion Redirection, Source Validation,
++	 * and Upstream Forwarding features enabled.  Assert that the
++	 * hardware implements and enables equivalent ACS functionality for
++	 * these flags.
+ 	 */
+-	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+-		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
++	acs_flags &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF);
+ 
+ 	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+ 		return -ENOTTY;
 
-The commit message looks good to me.
-I think Fixes: 3674cc49da9a ("PCI/portdrv: Use pci_irq_alloc_vectors()") is better as
-it still has a bug for MSI-X.
+commit 35da518fcad24f7be515976238a4667b5ccd1711
+Author: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+Date:   Tue Oct 17 05:47:39 2017 -0700
 
-Thanks,
-Dongdong
-> .
->
+    PCI: Apply Cavium ThunderX ACS quirk to more Root Ports
+    
+    Extend the Cavium ThunderX ACS quirk to cover more device IDs and restrict
+    it to only Root Ports.
+    
+    Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+    [bhelgaas: changelog]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c23650cfd5a1..0e22cce05742 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4211,6 +4211,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
+ }
+ 
++static bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
++{
++	/*
++	 * Effectively selects all downstream ports for whole ThunderX 1
++	 * family by 0xf800 mask (which represents 8 SoCs), while the lower
++	 * bits of device ID are used to indicate which subdevice is used
++	 * within the SoC.
++	 */
++	return (pci_is_pcie(dev) &&
++		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
++		((dev->device & 0xf800) == 0xa000));
++}
++
+ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+ {
+ 	/*
+@@ -4223,7 +4236,7 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+ 	 */
+ 	acs_flags &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF);
+ 
+-	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
++	if (!pci_quirk_cavium_acs_match(dev))
+ 		return -ENOTTY;
+ 
+ 	return acs_flags ? 0 : 1;
