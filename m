@@ -1,90 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:55118 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932143AbdJWSAX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 14:00:23 -0400
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v14 3/5] net: e100: Replace PCI pool old API
-Date: Mon, 23 Oct 2017 19:59:56 +0200
-Message-Id: <20171023175958.8327-4-romain.perier@gmail.com>
-In-Reply-To: <20171023175958.8327-1-romain.perier@gmail.com>
-References: <20171023175958.8327-1-romain.perier@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2] dwc: dra7xx: Print link state to console for debug
+To: <kishon@ti.com>
+CC: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
+From: Faiz Abbas <faiz_abbas@ti.com>
+Message-ID: <9378c5c9-381d-4c40-3290-f7e3720792ba@ti.com>
+Date: Thu, 19 Oct 2017 18:38:54 +0530
+MIME-Version: 1.0
+In-Reply-To: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/net/ethernet/intel/e100.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+On Thursday 19 October 2017 06:13 PM, Faiz Abbas wrote:
+> Enable support for printing the LTSSM link state for debugging PCI
+> when link is down.
+> 
+> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
+> ---
+> v2:
+>  1. Changed dev_err() to dev_dbg()
+>  2. Changed static char array to static const char * const
+>  3. format changes
+> 
+>  drivers/pci/dwc/pci-dra7xx.c | 48 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 48 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 34427a6..0e70e77 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -98,6 +98,45 @@ struct dra7xx_pcie_of_data {
+>  
+>  #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
+>  
+> +static const char * const state[] = {
+> +	"DETECT_QUIET",
+> +	"DETECT_ACT",
+> +	"POLL_ACTIVE",
+> +	"POLL_COMPLIANCE",
+> +	"POLL_CONFIG",
+> +	"PRE_DETECT_QUIET",
+> +	"DETECT_WAIT",
+> +	"CFG_LINKWD_START",
+> +	"CFG_LINKWD_ACEPT",
+> +	"CFG_LANENUM_WAIT",
+> +	"CFG_LANENUM_ACEPT",
+> +	"CFG_COMPLETE",
+> +	"CFG_IDLE",
+> +	"RCVRY_LOCK",
+> +	"RCVRY_SPEED",
+> +	"RCVRY_RCVRCFG",
+> +	"RCVRY_IDLE",
+> +	"L0",
+> +	"L0S",
+> +	"L123_SEND_EIDLE",
+> +	"L1_IDLE",
+> +	"L2_IDLE",
+> +	"L2_WAKE",
+> +	"DISABLED_ENTRY",
+> +	"DISABLED_IDLE",
+> +	"DISABLED",
+> +	"LPBK_ENTRY",
+> +	"LPBK_ACTIVE",
+> +	"LPBK_EXIT",
+> +	"LPBK_EXIT_TIMEOUT",
+> +	"HOT_RESET_ENTRY",
+> +	"HOT_RESET",
+> +	"RCVRY_EQ0",
+> +	"RCVRY_EQ1",
+> +	"RCVRY_EQ2",
+> +	"RCVRY_EQ3"
+> +};
+> +
+>  static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
+>  {
+>  	return readl(pcie->base + offset);
+> @@ -118,6 +157,15 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
+>  {
+>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+>  	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
+> +	u32 cmd_reg;
+> +	u32 ltssm_state;
+> +
+> +	if (!(reg & LINK_UP)) {
+> +		cmd_reg = dra7xx_pcie_readl(dra7xx,
+> +					    PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+> +		ltssm_state = (cmd_reg & GENMASK(7, 2)) >> 2;
+> +		dev_dbg(pci->dev, "Link state:%s\n", state[ltssm_state]);
+> +	}
+>  
+>  	return !!(reg & LINK_UP);
+>  }
+> 
 
-diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
-index 184f11242f56..ba52475b9ff0 100644
---- a/drivers/net/ethernet/intel/e100.c
-+++ b/drivers/net/ethernet/intel/e100.c
-@@ -607,7 +607,7 @@ struct nic {
- 	struct mem *mem;
- 	dma_addr_t dma_addr;
- 
--	struct pci_pool *cbs_pool;
-+	struct dma_pool *cbs_pool;
- 	dma_addr_t cbs_dma_addr;
- 	u8 adaptive_ifs;
- 	u8 tx_threshold;
-@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
- 			nic->cb_to_clean = nic->cb_to_clean->next;
- 			nic->cbs_avail++;
- 		}
--		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
-+		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
- 		nic->cbs = NULL;
- 		nic->cbs_avail = 0;
- 	}
-@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
- 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
- 	nic->cbs_avail = 0;
- 
--	nic->cbs = pci_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
-+	nic->cbs = dma_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
- 				   &nic->cbs_dma_addr);
- 	if (!nic->cbs)
- 		return -ENOMEM;
-@@ -2960,8 +2960,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
- 		goto err_out_free;
- 	}
--	nic->cbs_pool = pci_pool_create(netdev->name,
--			   nic->pdev,
-+	nic->cbs_pool = dma_pool_create(netdev->name,
-+			   &nic->pdev->dev,
- 			   nic->params.cbs.max * sizeof(struct cb),
- 			   sizeof(u32),
- 			   0);
-@@ -3001,7 +3001,7 @@ static void e100_remove(struct pci_dev *pdev)
- 		unregister_netdev(netdev);
- 		e100_free(nic);
- 		pci_iounmap(pdev, nic->csr);
--		pci_pool_destroy(nic->cbs_pool);
-+		dma_pool_destroy(nic->cbs_pool);
- 		free_netdev(netdev);
- 		pci_release_regions(pdev);
- 		pci_disable_device(pdev);
--- 
-2.14.1
+I missed David's comment in v1. Will submit a new version. Please ignore.
+
+Thanks,
+Faiz
