@@ -1,65 +1,89 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+To: Ulf Hansson <ulf.hansson@linaro.org>
+CC: Linux PM <linux-pm@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
+ <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
+ <7b9c2a3e-2e88-938e-46a5-703de0080681@ti.com>
+ <2926646.NJduVklg7n@aspire.rjw.lan>
+ <CAPDyKFrFbdXrZqtvwm=xmJSqQckfGzs7XNn7AOCTbOjwP4iAFQ@mail.gmail.com>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <1769d82f-07d3-14c9-c06a-d6afec20fa0e@ti.com>
+Date: Thu, 19 Oct 2017 12:21:08 -0500
 MIME-Version: 1.0
-In-Reply-To: <20171017081422.GA19475@lst.de>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
- <589c04cb-061b-a453-3188-79324a02388e@arm.com>
- <20171017081422.GA19475@lst.de>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Tue, 17 Oct 2017 12:11:55 -0400
-Message-ID: <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
-Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
-To: Christoph Hellwig <hch@lst.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
- Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, iommu@lists.linux-foundation.org,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAPDyKFrFbdXrZqtvwm=xmJSqQckfGzs7XNn7AOCTbOjwP4iAFQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 4:14 AM, Christoph Hellwig <hch@lst.de> wrote:
-> Just took a quick look over this and I basically agree with the comments
-> from Robin.
->
-> What I don't understand is why you're even trying to do all these
-> hacky things.
->
-> It seems like the controller should simply set dma_pfn_offset for
-> each device hanging off it, and all the supported architectures
-> should be updated to obey that if they don't do so yet, and
-> you're done without needing this giant mess.
 
-My understanding is that dma_pfn_offset is that it is a single
-constant offset from RAM, in our case, to map to PCIe space.  But in
-my commit message I detail how our PCIe controller presents memory
-with multiple regions with multiple different offsets. If an EP device
-maps to a region on the host memory, yes we can set the dma_pfn_offset
-for that device for that location within that range,.  But if the
-device then unmaps and allocates from another region with a different
-offset, it won't work.  If  I set dma_pfn_offset I have to assume that
-the device is using only one region of memory only, not more than one,
-and that it is not unmapping that region and mapping another (with a
-different offset).  Can I make those assumptions?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 10/19/2017 03:33 AM, Ulf Hansson wrote:
+> On 18 October 2017 at 23:48, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> On Wednesday, October 18, 2017 9:45:11 PM CEST Grygorii Strashko wrote:
+>>>
+>>> On 10/18/2017 09:11 AM, Ulf Hansson wrote:
+>>
+>> [...]
+>>
+>>>>>> That's the point. We know pm_runtime_force_* works nicely for the
+>>>>>> trivial middle-layer cases.
+>>>>>
+>>>>> In which cases the middle-layer callbacks don't exist, so it's just like
+>>>>> reusing driver callbacks directly. :-)
+>>>
+>>> I'd like to ask you clarify one point here and provide some info which I hope can be useful -
+>>> what's exactly means  "trivial middle-layer cases"?
+>>>
+>>> Is it when systems use "drivers/base/power/clock_ops.c - Generic clock
+>>> manipulation PM callbacks" as dev_pm_domain (arm davinci/keystone), or OMAP
+>>> device framework struct dev_pm_domain omap_device_pm_domain
+>>> (arm/mach-omap2/omap_device.c) or static const struct dev_pm_ops
+>>> tegra_aconnect_pm_ops?
+>>>
+>>> if yes all above have PM runtime callbacks.
+>>
+>> Trivial ones don't actually do anything meaningful in their PM callbacks.
+>>
+>> Things like the platform bus type, spi bus type, i2c bus type and similar.
+>>
+>> If the middle-layer callbacks manipulate devices in a significant way, then
+>> they aren't trivial.
+> 
+> I fully agree with Rafael's description above, but let me also clarify
+> one more thing.
+> 
+> We have also been discussing PM domains as being trivial and
+> non-trivial. In some statements I even think the PM domain has been a
+> part the middle-layer terminology, which may have been a bit
+> confusing.
+> 
+> In this regards as we consider genpd being a trivial PM domain, those
+> examples your bring up above is too me also examples of trivial PM
+> domains. Especially because they don't deal with wakeups, as that is
+> taken care of by the drivers, right!?
+
+Not directly, for example, omap device framework has noirq callback implemented
+which forcibly disable all devices which are not PM runtime suspended.
+while doing this it calls drivers PM .runtime_suspend() which may return
+non 0 value and in this case device will be left enabled (powered) at suspend for
+wake up purposes (see _od_suspend_noirq()).
+
+
+-- 
+regards,
+-grygorii
