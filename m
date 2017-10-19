@@ -1,367 +1,232 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41190 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750718AbdJKXcr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 19:32:47 -0400
-Date: Wed, 11 Oct 2017 18:32:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] PCI: Distribute available buses to hotplug capable
- PCIe downstream ports
-Message-ID: <20171011233243.GX25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
- <20170926141720.25067-4-mika.westerberg@linux.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 2/9] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
+ device
+To: Rob Herring <robh@kernel.org>, Jim Quinlan <jim2101024@gmail.com>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-3-git-send-email-jim2101024@gmail.com>
+ <20171017202418.ykve2o4zvuwxjdgj@rob-hp-laptop>
+ <CANCKTBt_gUF8qAEuhS1336Uce+WdP_98ApZhv1sxZgJsWGoiGQ@mail.gmail.com>
+ <CAL_JsqLoqB0GF201ofJrjdYH8B-Ca=hGBtE4=VcrBxS7M52mVQ@mail.gmail.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <9fae640f-a9da-90bf-01d2-c62131611ef9@gmail.com>
+Date: Thu, 19 Oct 2017 14:58:55 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170926141720.25067-4-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAL_JsqLoqB0GF201ofJrjdYH8B-Ca=hGBtE4=VcrBxS7M52mVQ@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Ralf Baechle <ralf@linux-mips.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 26, 2017 at 05:17:16PM +0300, Mika Westerberg wrote:
-> System BIOS sometimes allocates extra bus space for hotplug capable PCIe
-> root/downstream ports. This space is needed if the device plugged to the
-> port will have more hotplug capable downstream ports. A good example of
-> this is Thunderbolt. Each Thunderbolt device contains a PCIe switch and
-> one or more hotplug capable PCIe downstream ports where the daisy chain
-> can be extended.
+On 10/19/2017 02:49 PM, Rob Herring wrote:
+> On Tue, Oct 17, 2017 at 5:42 PM, Jim Quinlan <jim2101024@gmail.com> wrote:
+>> On Tue, Oct 17, 2017 at 4:24 PM, Rob Herring <robh@kernel.org> wrote:
+>>> On Wed, Oct 11, 2017 at 06:34:22PM -0400, Jim Quinlan wrote:
+>>>> The DT bindings description of the Brcmstb PCIe device is described.  This
+>>>> node can be used by almost all Broadcom settop box chips, using
+>>>> ARM, ARM64, or MIPS CPU architectures.
+>>>>
+>>>> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+>>>> ---
+>>>>  .../devicetree/bindings/pci/brcmstb-pci.txt        | 106 +++++++++++++++++++++
+>>>>  1 file changed, 106 insertions(+)
+>>>>  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+>>>> new file mode 100644
+>>>> index 0000000..2f699da
+>>>> --- /dev/null
+>>>> +++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+>>>> @@ -0,0 +1,106 @@
+>>>> +Brcmstb PCIe Host Controller Device Tree Bindings
+>>>> +We don't; this line is erroneous.
+>>>> +Introduction:
+>>>> +  The brcmstb host controller closely follows the example set in
+>>>> +
+>>>> +     [1] http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+>>>> +
+>>>> +  The rest of this document explains some added customizations and
+>>>> +  offers an example Brcmstb PCIe host controller DT node.
+>>>> +
+>>>> +Required Properties:
+>>>> +  reg -- the register start address and length for the PCIe block.
+>>>> +      Additional start,length pairs may be specified for clock addresses.
+>>>
+>>> Kind of vague and why do you need clock addresses and the clock binding?
+>>>
+>> We don't;  this line is erroneous and will be removed.
+>>
+>>> Also, typically the config space is defined here? Is that missing or you
+>>> don't support memory mapped config space?
+>>>
+>> We do not support memory mapped config space.
+>>
+>>>> +  interrupts -- two interrupts are specified; the first interrupt is for
+>>>> +      the PCI host controller and the second is for MSI if the built-in
+>>>> +      MSI controller is to be used.
+>>>> +  interrupt-names -- names of the interrupts (above): "pcie" and "msi".
+>>>> +  compatible -- must be one of: "brcm,bcm7425-pcie", "brcm,bcm7435-pcie",
+>>>> +      or "brcm,bcm7278-pcie".
+>>>
+>>> One compatible per line.
+>>>
+>> Will fix.
+>>
+>>>> +  #address-cells -- the number of address cells for PCI-space.
+>>>> +  #size-cells -- the number of size cells for PCI-space.
+>>>> +  ranges -- See [1]; a specification of the outbound windows for the host
+>>>> +      controller.  Each outbound window is described by a n-tuple:
+>>>> +          (3 cells) -- PCIe space start address; one cell for attributes
+>>>> +                       and two cells for the 64-bit PCIe address.
+>>>> +          (x cells) -- CPU/System start address, number of cells is determined
+>>>> +                       by the parent node's #address-cells.
+>>>> +          (y cells) -- Size of region, number of cells determined by the
+>>>> +                       parent node's #size-cells.
+>>>> +      Due to hardware limitations, there may be a maximum of four
+>>>> +      non-contiguous ranges specified.We don't; this line is erroneous.
+>>>> +  #interrupt-cells -- number of cells used to describe the interrupt.
+>>>
+>>> How many cells?
+>>>
+>> This line will be removed.
 > 
-> Currently Linux only allocates minimal bus space to make sure all the
-> enumerated devices barely fit there. The BIOS reserved extra space is
-> not taken into consideration at all. Because of this we run out of bus
-> space pretty quickly when more PCIe devices are attached to hotplug
-> downstream ports in order to extend the chain.
+> Humm, why? You need it to have interrupt-map. You just need to say
+> what the value is, not what the property is.
 > 
-> This modifies PCI core so that we distribute the available BIOS
-> allocated bus space equally between hotplug capable PCIe downstream
-> ports to make sure there is enough bus space for extending the
-> hierarchy later on.
-
-I think this makes sense in general.  It's a fairly complicated patch,
-so my comments here are just a first pass.
-
-Why do you limit it to PCIe?  Isn't it conceivable that one could
-hot-add a conventional PCI card that contained a bridge leading to
-another hotplug slot?  E.g., a PCI card with PCMCIA slot or something
-on it?
-
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/hotplug-pci.c |  13 +++++-
->  drivers/pci/probe.c       | 114 ++++++++++++++++++++++++++++++++++++++--------
->  include/linux/pci.h       |  19 ++++++--
->  3 files changed, 123 insertions(+), 23 deletions(-)
+>>>> +  interrupt-map-mask -- see [1]; four cells, the first three are zero
+>>>> +      for our uses and the fourth cell is the mask (val = 0x7) for
+>>>> +      the legacy interrupt number [1..4].
+>>>> +  interrupt-map -- See [1]; there are four interrupts (INTA, INTB,
+>>>> +      INTC, and INTD) to be mapped; each interrupt requires 5 cells
+>>>> +      plus the size of the interrupt specifier.
+>>>> +  linux,pci-domain -- the domain of the host controller.
+>>>> +
+>>>> +Optional Properties:
+>>>> +  clocks -- list of clock phandles.  If specified, this should list one
+>>>> +      clock.
+>>>> +  clock-names -- the "local" names of the clocks specified in 'clocks'.  Note
+>>>> +      that if the 'clocks' property is given, 'clock-names' is mandatory,
+>>>> +      and the name of the clock is expected to be "sw_pcie".
+>>>> +  dma-ranges -- Similar in structure to ranges, each dma region is
+>>>> +      specified with a n-tuple.  Dma-regions describe the inbound
+>>>> +      accesses from EP to RC; it translates the pci address that the
+>>>> +      EP "sees" to the CPU address in memory.  This property is needed
+>>>> +      because the design of the Brcmstb memory subsystem often precludes
+>>>> +      idenity-mapping between CPU address space and PCIe address space.
+>>>> +      Each range is described by a n-tuple:
+>>>> +          (3 cells) -- PCIe space start address; one cell for attributes
+>>>> +                       and two cells for the 64-bit PCIe address.
+>>>> +          (x cells) -- CPU/System start address, number of cells is determined
+>>>> +                       by the parent node's #address-cells.
+>>>> +          (y cells) -- Size of region, number of cells determined by the
+>>>> +                       parent node's #size-cells.
+>>>
+>>> There's no need to describe standard properties. Just put whatever is
+>>> specific to your platform. That applies throughout this doc.
+>>>
+>> Will fix.
+>>
+>>>> +  msi-parent -- if MSI is to be used, this must be a phandle to the
+>>>> +      msi-parent.  If this prop is set to the phandle of the PCIe
+>>>> +      node, or if the msi-parent prop is missing, the PCIE controller
+>>>> +      will attempt to use its built in MSI controller.
+>>>> +  msi-controller -- this property should only be specified if the
+>>>> +      PCIe controller is using its internal MSI controller.
+>>>> +  brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
+>>>> +  brcm,gen --  (integer) indicates desired generation of link:
+>>>> +      1 => 2.5 Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps.
+>>>
+>>> We have a standard property for this IIRC.
+>>>
+>> Yes, BrianN pointed that out and it will be fixed.
+>>
+>>>> +  supply-names -- the names of voltage regulators that the root
+>>>> +      complex should turn off/on/on on suspend/resume/boot.  This
+>>>> +      is a string list.
+>>>> +  supplies -- A collection of phandles to a regulator nodes, see
+>>>> +      Documentation/devicetree/bindings/regulator/ for specificWe don't; this line is erroneous.
+>>>> +      bindings. The number and order of phandles must match
+>>>> +      exactly the number of strings in the "supply-names" property.
+>>>
+>>> This is not the regulator binding. Use the standard binding.
+>>>
+>> The reason we do it this way is because the PCIe controller does not
+>> know or care what the names of the supplies are, or how many there
+>> will be.  The list of regulators can be different for each board we
+>> support, as these regulators turn on/off the downstream EP device.
+>> All the PCIe controller does is turn on/off this list of regulators
+>> when booting,resuming/suspending.
+>>
+>> An alternative would have the node specifying the standard properties
+>>
+>> xyz-supply = <&xyz_reg>;
+>> abc-supply = <&abc_reg>;
+>> pdq-supply = <&pdq_reg>;
+>> ...
+>>
+>> and then have this driver search all of the properties in the PCIe
+>> node for names matching /-supply$/, and then create a list of phandles
+>> from that.  Is that what you would like?
 > 
-> diff --git a/drivers/pci/hotplug-pci.c b/drivers/pci/hotplug-pci.c
-> index c68366cee6b7..deb06fe22b26 100644
-> --- a/drivers/pci/hotplug-pci.c
-> +++ b/drivers/pci/hotplug-pci.c
-> @@ -8,6 +8,7 @@ int pci_hp_add_bridge(struct pci_dev *dev)
->  {
->  	struct pci_bus *parent = dev->bus;
->  	int pass, busnr, start = parent->busn_res.start;
-> +	unsigned int available_buses = 0;
->  	int end = parent->busn_res.end;
->  
->  	for (busnr = start; busnr <= end; busnr++) {
-> @@ -19,8 +20,18 @@ int pci_hp_add_bridge(struct pci_dev *dev)
->  				pci_name(dev));
->  		return -1;
->  	}
-> +
-> +	/*
-> +	 * In case of PCIe the hierarchy can be extended through hotplug
-> +	 * capable downstream ports. Distribute the available bus
-> +	 * numbers between them to make extending the chain possible.
-> +	 */
-> +	if (pci_is_pcie(dev))
-> +		available_buses = end - busnr;
-> +
->  	for (pass = 0; pass < 2; pass++)
-> -		busnr = pci_scan_bridge(parent, dev, busnr, pass);
-> +		busnr = pci_scan_bridge_extend(parent, dev, busnr,
-> +					       available_buses, pass);
->  	if (!dev->subordinate)
->  		return -1;
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index f285cd74088e..ae0bf3c807f5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -960,6 +960,17 @@ static void pci_enable_crs(struct pci_dev *pdev)
->  }
->  
->  /*
-> + * pci_scan_bridge_extend() - Scan buses behind a bridge
-> + * @bus: Parent bus the bridge is on
-> + * @dev: Bridge itself
-> + * @max: Starting subordinate number of buses behind this bridge
-> + * @available_buses: Total number of buses available for this bridge and
-> + *		     the devices below. After the minimal bus space has
-> + *		     been allocated the remaining buses will be
-> + *		     distributed equally between hotplug capable bridges.
-> + * @pass: Either %0 (scan already configured bridges) or %1 (scan bridges
-> + *        that need to be reconfigured.
-> + *
->   * If it's a bridge, configure it and scan the bus behind it.
->   * For CardBus bridges, we don't scan behind as the devices will
->   * be handled by the bridge driver itself.
-> @@ -969,7 +980,8 @@ static void pci_enable_crs(struct pci_dev *pdev)
->   * them, we proceed to assigning numbers to the remaining buses in
->   * order to avoid overlaps between old and new bus numbers.
->   */
-> -int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
-> +int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev, int max,
-> +			   unsigned int available_buses, int pass)
->  {
->  	struct pci_bus *child;
->  	int is_cardbus = (dev->hdr_type == PCI_HEADER_TYPE_CARDBUS);
-> @@ -1080,6 +1092,9 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->  						bus->busn_res.end);
->  		}
->  		max++;
-> +		if (available_buses)
-> +			available_buses--;
-> +
->  		buses = (buses & 0xff000000)
->  		      | ((unsigned int)(child->primary)     <<  0)
->  		      | ((unsigned int)(child->busn_res.start)   <<  8)
-> @@ -1101,7 +1116,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->  
->  		if (!is_cardbus) {
->  			child->bridge_ctl = bctl;
-> -			max = pci_scan_child_bus(child);
-> +			max = pci_scan_child_bus_extend(child, available_buses);
->  		} else {
->  			/*
->  			 * For CardBus bridges, we leave 4 bus numbers
-> @@ -1169,7 +1184,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->  
->  	return max;
->  }
-> -EXPORT_SYMBOL(pci_scan_bridge);
-> +EXPORT_SYMBOL(pci_scan_bridge_extend);
->  
->  /*
->   * Read interrupt line and base address registers.
-> @@ -2397,9 +2412,24 @@ void __weak pcibios_fixup_bus(struct pci_bus *bus)
->         /* nothing to do, expected to be removed in the future */
->  }
->  
-> -unsigned int pci_scan_child_bus(struct pci_bus *bus)
-> +/**
-> + * pci_scan_child_bus_extend() - Scan devices below a bus
-> + * @bus: Bus to scan for devices
-> + * @available_buses: Total number of buses available (%0 does not try to
-> + *		     extend beyond the minimal)
+> Really, you should have child nodes of the PCIe devices and have the
+> supplies in there.
 
-What does "%0" mean?  Is that kernel-doc for something?  0?
+While that would be technically more correct this poses a number of issues:
 
-> + * Scans devices below @bus including subordinate buses. Returns new
-> + * subordinate number including all the found devices. Passing
-> + * @available_buses causes the remaining bus space to be distributed
-> + * equally between hotplug capable bridges to allow future extension of
-> + * the hierarchy.
-> + */
-> +unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-> +				       unsigned int available_buses)
->  {
-> -	unsigned int devfn, pass, max = bus->busn_res.start;
-> +	unsigned int used_buses, hotplug_bridges = 0;
-> +	unsigned int start = bus->busn_res.start;
-> +	unsigned int devfn, cmax, max = start;
->  	struct pci_dev *dev;
->  
->  	dev_dbg(&bus->dev, "scanning bus\n");
-> @@ -2409,7 +2439,8 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
->  		pci_scan_slot(bus, devfn);
->  
->  	/* Reserve buses for SR-IOV capability. */
-> -	max += pci_iov_bus_range(bus);
-> +	used_buses = pci_iov_bus_range(bus);
-> +	max += used_buses;
->  
->  	/*
->  	 * After performing arch-dependent fixup of the bus, look behind
-> @@ -2421,23 +2452,68 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
->  		bus->is_added = 1;
->  	}
->  
-> -	for (pass = 0; pass < 2; pass++)
-> -		list_for_each_entry(dev, &bus->devices, bus_list) {
-> -			if (pci_is_bridge(dev))
-> -				max = pci_scan_bridge(bus, dev, max, pass);
+- there is precedence in that area, and you already Acked binding
+documents proposing the same thing:
+	* Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt (commit
+c26ebe98a103479dae9284fe0a86a95af4a5cd46)
+	* Documentation/devicetree/bindings/pci/rockchip-pcie.txt (commit
+828bdcfbdb98eeb97facb05fe6c96ba0aed65c4a and before)
 
-Thanks for getting rid of this "for (pass = 0; ...)" loop.  Much nicer
-to just have it spelled out.  It might even be worth pulling this
-looping change into a separate patch to simplify *this* patch a little
-bit.
+(which may indicate those should also be corrected, at the possible
+expense of creating incompatibilities)
 
-I'd be happy if you did the same for the similar loop in
-pci_hp_add_bridge().
+- there is a chicken and egg problem, you can't detect the EP without
+turning its regulator on, and if you can't create a pci_device, you
+certainly won't be able to associate it with an device_node counterpart
 
-> +	/*
-> +	 * First pass. Bridges that are already configured. We don't touch
-> +	 * these unless they are misconfigured (which we will do in second
-> +	 * pass).
-> +	 */
-> +	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		if (pci_is_bridge(dev)) {
-> +			/*
-> +			 * Calculate how many hotplug bridges there are on
-> +			 * this bus. We will distribute the additional
-> +			 * available buses between them.
-> +			 */
-> +			if (dev->is_hotplug_bridge)
-> +				hotplug_bridges++;
+- PCIe being dynamic by nature, can you have "wildcard" PCIE EP DT node
+that would be guaranteed to match any physically attached PCIE EP which
+is discovered by the PCI bus layer (and then back to issue #2)
 
-Maybe pull this out into a third list traversal, since it's not
-related to the "scan bridge" functionality?
+If we can solve #2 and #3, it would be reasonable to move the regulator
+to a PCIE EP node. Ideally, we may want the generic PCI layer to be
+responsible for managing regulators within pci_enable_device() and
+pci_disable_device() for instance?
 
-> +
-> +			cmax = max;
-> +			max = pci_scan_bridge_extend(bus, dev, max, 0, 0);
-> +			used_buses += cmax - max;
-> +		}
-> +	}
-
-I'm trying to relate the "Bridges that are already configured" comment
-to this code.  I don't see any test here for whether the bridge is
-already configured.  Oh, I see -- the last parameter (0) to
-pci_scan_bridge_extend() means this is the first pass, and it
-basically just checks for secondary and subordinate being set.
-I thought "first pass" was related to the list_for_each_entry() loop
-here, but it's actually related to the internals of
-pci_scan_bridge_extend().  I think maybe rewording the comment can
-address this.
-
-
-> +	/* Second pass. Bridges that need to be configured. */
-> +	list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		if (pci_is_bridge(dev)) {
-> +			unsigned int buses = 0;
-> +
-> +			if (pcie_upstream_port(dev)) {
-> +				/* Upstream port gets all available buses */
-> +				buses = available_buses;
-
-I guess this relies on the assumption that there can only be one
-upstream port on a bus?  Is that true?  Typically a switch only has a
-function 0 upstream port, but something niggles at me like the spec
-admits the possibility of a switch with multiple functions of upstream
-ports?  I don't know where that is right now (or if it exists), but
-I'll try to find it.
-
-> +			} else if (dev->is_hotplug_bridge) {
-> +				/*
-> +				 * Distribute the extra buses between
-> +				 * hotplug bridges if any.
-> +				 */
-> +				buses = available_buses / hotplug_bridges;
-> +				buses = min(buses, available_buses - used_buses);
-> +			}
-> +
-> +			cmax = max;
-> +			max = pci_scan_bridge_extend(bus, dev, cmax, buses, 1);
-> +			used_buses += max - cmax;
->  		}
-> +	}
->  
->  	/*
->  	 * Make sure a hotplug bridge has at least the minimum requested
-> -	 * number of buses.
-> +	 * number of buses but allow it to grow up to the maximum available
-> +	 * bus number of there is room.
->  	 */
-> -	if (bus->self && bus->self->is_hotplug_bridge && pci_hotplug_bus_size) {
-> -		if (max - bus->busn_res.start < pci_hotplug_bus_size - 1)
-> -			max = bus->busn_res.start + pci_hotplug_bus_size - 1;
-> -
-> -		/* Do not allocate more buses than we have room left */
-> -		if (max > bus->busn_res.end)
-> -			max = bus->busn_res.end;
-> +	if (bus->self && bus->self->is_hotplug_bridge) {
-> +		used_buses = max_t(unsigned int, available_buses,
-> +				   pci_hotplug_bus_size - 1);
-> +		if (max - start < used_buses) {
-> +			max = start + used_buses;
-> +
-> +			/* Do not allocate more buses than we have room left */
-> +			if (max > bus->busn_res.end)
-> +				max = bus->busn_res.end;
-> +
-> +			dev_dbg(&bus->dev, "%pR extended by %#02x\n",
-> +				&bus->busn_res, max - start);
-> +		}
->  	}
->  
->  	/*
-> @@ -2450,7 +2526,7 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
->  	dev_dbg(&bus->dev, "bus scan returning with max=%02x\n", max);
->  	return max;
->  }
-> -EXPORT_SYMBOL_GPL(pci_scan_child_bus);
-> +EXPORT_SYMBOL_GPL(pci_scan_child_bus_extend);
-
-Does this need to be exported?  The only callers I see are
-pci_scan_bridge_extend() (already in the same module) and
-pci_scan_child_bus() (now an inline in linux/pci.h).
-
-I'd rather move pci_scan_child_bus() back to probe.c and make
-pci_scan_child_bus_extend() static.
-
-Same with pci_scan_bridge_extend(), although that looks harder because
-it's called from hotplug-pci.c.  Really, I'm not sure hotplug-pci.c
-deserves to exist.  I think the whole file (one function) could be
-folded into pci/probe.c (as a separate patch all by itself).
-
->  /**
->   * pcibios_root_bridge_prepare - Platform-specific host bridge setup.
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 4397692be538..c9b34c2de0fb 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -909,7 +909,14 @@ static inline void pci_dev_assign_slot(struct pci_dev *dev) { }
->  int pci_scan_slot(struct pci_bus *bus, int devfn);
->  struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
-> -unsigned int pci_scan_child_bus(struct pci_bus *bus);
-> +unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
-> +				       unsigned int available_buses);
-> +
-> +static inline unsigned int pci_scan_child_bus(struct pci_bus *bus)
-> +{
-> +	return pci_scan_child_bus_extend(bus, 0);
-> +}
-> +
->  void pci_bus_add_device(struct pci_dev *dev);
->  void pci_read_bridge_bases(struct pci_bus *child);
->  struct resource *pci_find_parent_resource(const struct pci_dev *dev,
-> @@ -1292,8 +1299,14 @@ int pci_add_dynid(struct pci_driver *drv,
->  		  unsigned long driver_data);
->  const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
->  					 struct pci_dev *dev);
-> -int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
-> -		    int pass);
-> +int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev, int max,
-> +			   unsigned int available_buses, int pass);
-> +
-> +static inline int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev,
-> +				  int max, int pass)
-> +{
-> +	return pci_scan_bridge_extend(bus, dev, max, 0, pass);
-> +}
->  
->  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->  		  void *userdata);
-> -- 
-> 2.14.1
 > 
+> The driver could do what you describe, but you've still got to define
+> the names here.
+> 
+> Rob
+> 
+
+
+-- 
+Florian
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
