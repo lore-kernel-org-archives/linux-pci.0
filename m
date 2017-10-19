@@ -1,92 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49252 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752275AbdJKUF1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 16:05:27 -0400
-Date: Wed, 11 Oct 2017 15:05:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        mpe@ellerman.id.au, seroyer@linux.vnet.ibm.com,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-Message-ID: <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
- <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
+Return-Path: <SRS0=BYVQ=BS=bombadil.srs.infradead.org=BATV+a28bd260a4ecf58d2edb+5170+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=BYVQ=BS=bombadil.srs.infradead.org=BATV+a28bd260a4ecf58d2edb+5170+infradead.org+hch@kernel.org>
+Date: Thu, 19 Oct 2017 00:59:12 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Niklas Cassel <niklas.cassel@axis.com>,
+	Niklas Cassel <niklass@axis.com>, Jesper Nilsson <jespern@axis.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Xiaowei Song <songxiaowei@hisilicon.com>,
+	Peter Robinson <pbrobinson@gmail.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Duc Dang <dhdang@apm.com>, linux-arm-kernel@axis.com,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
+Message-ID: <20171019075912.GA10089@infradead.org>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-9-niklas.cassel@axis.com>
+ <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:
-> This patch adds the machine dependent call for
-> pcibios_bus_add_device, since the previous patch
-> separated the calls out between the PowerNV and PowerVM.
+On Mon, Oct 16, 2017 at 06:43:26PM -0500, Bjorn Helgaas wrote:
+> understand it.  I guess the idea is to build pcie-artpec6.o if either
+> CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
 > 
-> The difference here is that for the PowerVM environment
-> we do not want match_driver set because in this environment
-> we do not want the VF device drivers to load immediately, due to
-> firmware loading the device node when VF device is assigned to the
-> logical partition.
-> 
-> This patch will depend on the patch linked below, which is under
-> review.
-> 
-> https://patchwork.kernel.org/patch/9882915/
-> 
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
-> ---
->  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
-> 
-> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> index 6b812ad990e4..45946ee90985 100644
-> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> @@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
->  static DEFINE_SPINLOCK(slot_errbuf_lock);
->  static int eeh_error_buf_size;
->  
-> +void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
-> +{
-> +	struct pci_dn *pdn = pci_get_pdn(pdev);
-> +
-> +	if (!pdev->is_virtfn)
-> +		return;
-> +
-> +	pdn->device_id  =  pdev->device;
-> +	pdn->vendor_id  =  pdev->vendor;
-> +	pdn->class_code =  pdev->class;
-> +
-> +	/*
-> +	 * The following operations will fail if VF's sysfs files
-> +	 * aren't created or its resources aren't finalized.
-> +	 */
-> +	eeh_add_device_early(pdn);
-> +	eeh_add_device_late(pdev);
-> +	eeh_sysfs_add_device(pdev);
-> +	pdev->match_driver = -1;
+> Is this really the simplest way to express that in Kconfig?  Both the
+> "if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
+> unusual.
 
-match_driver is a bool, which should be assigned "true" or "false".
-
-> +}
-> +
->  /**
->   * pseries_eeh_init - EEH platform dependent initialization
->   *
-> @@ -120,6 +141,9 @@ static int pseries_eeh_init(void)
->  	/* Set EEH probe mode */
->  	eeh_add_flag(EEH_PROBE_MODE_DEVTREE | EEH_ENABLE_IO_FOR_LOG);
->  
-> +	/* Set EEH machine dependent code */
-> +	ppc_md.pcibios_bus_add_device = pseries_pcibios_bus_add_device;
-> +
->  	return 0;
->  }
->  
-> -- 
-> 2.11.0 (Apple Git-81)
-> 
+I thĳnk the right style is to make PCIE_ARTPEC6 a hidden kconfig
+symbol without help text, and then have PCIE_ARTPEC6_HOST and
+PCIE_ARTPEC6_EP select it.
