@@ -1,47 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:2240 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932284AbdJWOhk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 10:37:40 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH V2 4/7] ARM: tegra: limit PCIe config space mapping to 4K for T124
-Date: Mon, 23 Oct 2017 20:05:09 +0530
-Message-ID: <1508769312-12465-5-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
-References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr,
+        rjw@rjwysocki.net, lenb@kernel.org,
+        alexander.shishkin@linux.intel.com, jic23@kernel.org,
+        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
+        dledford@redhat.com, sean.hefty@intel.com,
+        hal.rosenstock@gmail.com, sagi@grimberg.me, kishon@ti.com,
+        bhelgaas@google.com, nab@linux-iscsi.org, balbi@kernel.org,
+        gregkh@linuxfoundation.org, jlbec@evilplan.org,
+        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v2 02/15] usb: gadget: make config_item_type structures const
+Date: Thu, 19 Oct 2017 18:05:29 +0300
+Message-ID: <6348630.r2z9ev4yl2@avalon>
+In-Reply-To: <20171019140657.GA22233@lst.de>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1985905.z83BJQzMUS@avalon> <20171019140657.GA22233@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-reduces PCIe config space mapping size from its current 256MB
-to 4K to have only 4K of virtual memory mapping and to be
-in line with driver implementation
+Hi Christoph,
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V2:
-* no changes in this patch
+On Thursday, 19 October 2017 17:06:57 EEST Christoph Hellwig wrote:
+> > Now we have 9 const instances of the config_item_type structure that are
+> > identical, with only the .ct_owner field set. Should they be all merged
+> > into a single structure ?
+> 
+> I think that's a good idea.
+> 
+> But I'm about to slurp up this whole series into my tree, how about making
+> that an incremental patch?
 
- arch/arm/boot/dts/tegra124.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'm fine with that.
 
-diff --git a/arch/arm/boot/dts/tegra124.dtsi b/arch/arm/boot/dts/tegra124.dtsi
-index 8baf00b89efb..e3cd9dca57cb 100644
---- a/arch/arm/boot/dts/tegra124.dtsi
-+++ b/arch/arm/boot/dts/tegra124.dtsi
-@@ -19,7 +19,7 @@
- 		device_type = "pci";
- 		reg = <0x0 0x01003000 0x0 0x00000800   /* PADS registers */
- 		       0x0 0x01003800 0x0 0x00000800   /* AFI registers */
--		       0x0 0x02000000 0x0 0x10000000>; /* configuration space */
-+		       0x0 0x11FFF000 0x0 0x00001000>; /* configuration space */
- 		reg-names = "pads", "afi", "cs";
- 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
- 			     <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
+Bhumika, would you like to submit an incremental patch, or should I do it ?
+
 -- 
-2.7.4
+Regards,
+
+Laurent Pinchart
+
