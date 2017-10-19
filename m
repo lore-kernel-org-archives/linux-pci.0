@@ -1,127 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-To: "David S. Miller" <davem@davemloft.net>,
-        Guenter Roeck <linux@roeck-us.net>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>
-Subject: Re: [PATCH v2] drivers/ide/pci: Fix legacy IRQ assignment
-Date: Tue, 03 Oct 2017 14:10:11 +0200
-Message-id: <3245235.QGEOI6Flcd@amdc3058>
-In-reply-to: <4605844.iOhxHctWQT@amdc3058>
-MIME-version: 1.0
-Content-type: text/plain; charset="us-ascii"
-References: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
-        <4605844.iOhxHctWQT@amdc3058>
-        <CGME20171003121013epcas2p31c8ad6c89249a6e135c030e26f833496@epcas2p3.samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:45971 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751892AbdJSKtY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Oct 2017 06:49:24 -0400
+Date: Thu, 19 Oct 2017 12:49:21 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, jonathanh@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        mperttunen@nvidia.com
+Subject: Re: [PATCH V2 4/4] arm64: tegra: Enable PCIe on Jetson TX2
+Message-ID: <20171019104921.GK9005@ulmo>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+ <1506513517-25870-5-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="yr6OvWOSyJed8q4v"
+In-Reply-To: <1506513517-25870-5-git-send-email-mmaddireddy@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
-On Tuesday, October 03, 2017 11:39:55 AM Bartlomiej Zolnierkiewicz wrote:
-> On Monday, October 02, 2017 11:52:47 AM Lorenzo Pieralisi wrote:
-> > Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
-> > possible to define IRQ mapping functions on a per PCI host bridge basis.
-> > 
-> > Actual IRQ allocation is carried out by the pci_assign_irq() function in
-> > pci_device_probe() - to make sure a device is assigned an IRQ only if it
-> > is probed (ie match a driver); it retrieves a struct pci_host_bridge*
-> > for a given PCI device and through {map/swizzle}_irq() it carries out
-> > the PCI IRQ allocation.
-> > 
-> > The code conversion to struct pci_host_bridge {map/swizzle}_irq() hooks
-> > and pci_assign_irq() to deal with legacy IRQs in
-> > 
-> > commit 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
-> > pci_device_probe()")
-> > 
-> > did not take into account that the IDE subsystem relies on a special
-> > purpose IDE PCI layer, configured by CONFIG_IDEPCI_PCIBUS_ORDER to force
-> > devices probe ordering by sidestepping the core PCI bus layer entirely
-> > (and therefore pci_device_probe()) by executing the registered IDE PCI
-> > drivers probe routines (ie registered with ide_pci_register_driver())
-> > through ide_scan_pcidev().
-> > 
-> > Since this IDE PCI specific probe mechanism bypasses the PCI core
-> > code generic probing (ie pci_device_probe()) it also misses the
-> > pci_assign_irq() call (among other PCI initialization functions);
-> > this triggers IDE PCI devices initialization failures caused
-> > by the missing IRQ allocation:
-> > 
-> > ide0: disabled, no IRQ
-> > ide0: failed to initialize IDE interface
-> > ide0: disabling port
-> > cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
-> > CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
-> > cmd64x 0000:00:02.0: can't reserve resources
-> > CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
-> > ide_generic: please use "probe_mask=0x3f" module parameter for probing
-> > all legacy ISA IDE ports
-> > ------------[ cut here ]------------
-> > WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
-> > sysfs: cannot create duplicate filename '/class/ide_port/ide0'
-> > ...
-> > 
-> > Trace:
-> > [<fffffc00003308a0>] __warn+0x160/0x190
-> > [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-> > [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
-> > [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-> > [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
-> > [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-> > [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-> > [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
-> > [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
-> > [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
-> > [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
-> > [<fffffc00005ba690>] device_create+0x50/0x70
-> > [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
-> > [<fffffc00005df330>] ide_host_register+0x450/0xa00
-> > [<fffffc00005ba2a0>] device_register+0x20/0x50
-> > [<fffffc00005df330>] ide_host_register+0x450/0xa00
-> > [<fffffc00005df944>] ide_host_add+0x64/0xe0
-> > [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
-> > [<fffffc0000310288>] do_one_initcall+0x68/0x260
-> > [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
-> > [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-> > [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
-> > [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-> > 
-> > ---[ end trace 24a70433c3e4d374 ]---
-> > ide0: disabling port
-> > 
-> > Fix the IRQ allocation issue by adding a pci_assign_irq() call in the
-> > ide_scan_pcidev() function before probing the IDE PCI drivers, so that
-> > IRQs for a given PCI device are allocated for the IDE PCI drivers to
-> > use them for device configuration.
-> > 
-> > Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in pci_device_probe()")
-> > Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Reported-by: Guenter Roeck <linux@roeck-us.net>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Richard Henderson <rth@twiddle.net>
-> > Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-> > Cc: David S. Miller <davem@davemloft.net>
-> > Cc: Guenter Roeck <linux@roeck-us.net>
-> > Cc: Matt Turner <mattst88@gmail.com>
-> 
-> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+--yr6OvWOSyJed8q4v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-IDE specific problems uncovered by pci_assign_irq() change have been
-addressed in separate patches, please see:
+On Wed, Sep 27, 2017 at 05:28:37PM +0530, Manikanta Maddireddy wrote:
+> Enable x4 PCIe slot on Jetson TX2.
+>=20
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+> Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
+> ---
+> V2: No change in this patch
+>  arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi | 24 ++++++++++++++++++++=
+++++
+>  1 file changed, 24 insertions(+)
+>=20
+> diff --git a/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi b/arch/arm64/=
+boot/dts/nvidia/tegra186-p3310.dtsi
+> index cf84d7046ad5..a4d96b2a23b4 100644
+> --- a/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi
+> +++ b/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi
+> @@ -378,4 +378,28 @@
+>  			vin-supply =3D <&vdd_1v8>;
+>  		};
+>  	};
+> +
+> +	pcie@10003000 {
+> +		status =3D "okay";
+> +
+> +		dvdd-pex-supply =3D <&vdd_pex>;
+> +		hvdd-pex-pll-supply =3D <&vdd_1v8>;
+> +		hvdd-pex-supply =3D <&vdd_1v8>;
+> +		vddio-pexctl-aud-supply =3D <&vdd_1v8>;
+> +
+> +		pci@1,0 {
+> +			nvidia,num-lanes =3D <4>;
+> +			status =3D "okay";
+> +		};
+> +
+> +		pci@2,0 {
+> +			nvidia,num-lanes =3D <0>;
+> +			status =3D "disabled";
+> +		};
+> +
+> +		pci@3,0 {
+> +			nvidia,num-lanes =3D <1>;
+> +			status =3D "disabled";
+> +		};
+> +	};
 
-http://patchwork.ozlabs.org/patch/820859/
-http://patchwork.ozlabs.org/patch/820870/
+I moved this to tegra186-p2771-0000.dts because it exposes connectors
+that are on the carrier board rather than the processor module.
 
-Guenter, could you please verify them (I have only compile tested
-them)? [ Just revert Lorenzo's fix and apply both my patches. ]
+Applied to for-4.15/arm64/dt, thanks.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Thierry
+
+--yr6OvWOSyJed8q4v
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlnogzEACgkQ3SOs138+
+s6F5sQ//aZJGwodFjaaoLKTd/tAxbiMAbAk87kl0ueseEXBcMPN1Vm8RP5n+3Kjv
+j0dDSvTHhenAdZFm3LK3ExpF7XYbsbOnKGA6wvXmJjbTiiL4X8WbkoyAt3uFnXoS
+Ks0HCwIGBTKr6uAT7Lth/jYy6EGGaQ2dnTGzTS1ja3CVKKytqqhK7/5RZRD3+bNS
+rKgq56MhCvLmM/Jg7M1bzs/+EMhCMBg2l8lH2Kb44roQRa09/Sd8r6VeDE20cOVB
+s7cm02d/AkywzPcnv+yK+H0JUz6KCQm8O9PCofZD1tYv5LGN8cZxPr0/mA5PvcrJ
+aJ+I65c/sKPGrDjXirk07exwqHs83NIywJgWaHxlbcWbwZU761m46EmWVyEDA1AP
+vrMOrph0tuSWHfdvLpekk/7JY3+KrB7BkRewAWs3qoxaSC3bS05VcDrtXevk4eEw
+fnY7HRv1KpxX7STREv6JHrIdVlb+cJqrvE/XtpPdjXgZ1vcpcl1dUguBI7PE57i1
+V5CQGEO6adevW8AF0HSurL3en8X5uwsPN2mA+TNYI8yWXISzez2f4wcEh5jQzd1j
+uJkjLMfDQxw8t2x/+V5OL+E1gU0llSpbEwQnBI9L7uljGbxCeWu9K7/7ysG2WXUl
+Nhxduq/NW1xsBSgKYFtgWCCBMniPbLHQbPR6NOwLevuxaSbNsfg=
+=YZao
+-----END PGP SIGNATURE-----
+
+--yr6OvWOSyJed8q4v--
