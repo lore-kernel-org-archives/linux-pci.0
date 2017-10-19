@@ -1,51 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33778 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750908AbdJXToj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Oct 2017 15:44:39 -0400
-Date: Tue, 24 Oct 2017 14:44:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?=
-        <ckoenig.leichtzumerken@gmail.com>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org
-Subject: Re: Resizable PCI BAR support V9
-Message-ID: <20171024194438.GB21840@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171018135821.3248-1-deathsimple@vodafone.de>
+Return-Path: <SRS0=zFL7=BS=axis.com=niklas.cassel@kernel.org>
+Return-Path: <SRS0=zFL7=BS=axis.com=niklas.cassel@kernel.org>
+Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
+To: Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>
+CC: Jesper Nilsson <jespern@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+	"Kishon Vijay Abraham I" <kishon@ti.com>, Jingoo Han <jingoohan1@gmail.com>,
+	"Xiaowei Song" <songxiaowei@hisilicon.com>, Peter Robinson
+	<pbrobinson@gmail.com>, Tomasz Nowicki <tn@semihalf.com>, Gabriele Paoloni
+	<gabriele.paoloni@huawei.com>, Duc Dang <dhdang@apm.com>,
+	<linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-9-niklas.cassel@axis.com>
+ <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
+ <20171019075912.GA10089@infradead.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <9a294a12-4f9e-74cf-b7c0-7e45a9ca91f5@axis.com>
+Date: Thu, 19 Oct 2017 12:57:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20171018135821.3248-1-deathsimple@vodafone.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171019075912.GA10089@infradead.org>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 18, 2017 at 03:58:16PM +0200, Christian König wrote:
-> Hi everyone,
+On 10/19/2017 09:59 AM, Christoph Hellwig wrote:
+> On Mon, Oct 16, 2017 at 06:43:26PM -0500, Bjorn Helgaas wrote:
+>> understand it.  I guess the idea is to build pcie-artpec6.o if either
+>> CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
+>>
+>> Is this really the simplest way to express that in Kconfig?  Both the
+>> "if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
+>> unusual.
 > 
-> This is the ninth and hopefully last incarnation of this set of patches. It
-> enables device drivers to resize and most likely also relocate the PCI BAR of
-> devices they manage to allow the CPU to access all of the device local memory
-> at once.
+> I thÄ³nk the right style is to make PCIE_ARTPEC6 a hidden kconfig
+> symbol without help text, and then have PCIE_ARTPEC6_HOST and
+> PCIE_ARTPEC6_EP select it.
 > 
-> This is very useful for GFX device drivers where the default PCI BAR is only
-> about 256MB in size for compatibility reasons, but the device easily have
-> multiple gigabyte of local memory.
-> 
-> Some changes since the last version:
-> 1. Rebased on drm-next, so should be ready to be merged for 4.15.
-> 2. The fixup of the 64bit root window on AMD Family 15h CPUs/APUs is only
->    enabled when we compile a kernel supporting that hw.
-> 3. Some minor error handling improvements for the amdgpu side. We now
->    gracefully abort driver loading in case of a critical error instead of
->    calling BUG().
-> 
-> Bjorn any more comments or can we finally get this into 4.15? I will remove the
-> version tags from the patches when I send you a pull request if you want this.
-> 
-> I only work on this as a background task, so sorry for the ~3 month delay
-> between each version of the patchset.
 
-I put these (except for the last) on pci/resource for v4.15.  I'd be
-happy to merge the last as well if you like.  My tree does not include
-drm-next, so there would be a minor conflict when merging upstream.
-
-Bjorn
+Thanks for the suggestion Christoph!
+I will make this change for both pci-dra7xx and pcie-artpec6 in
+the next version of the patch series, and then Kishon can ACK/NACK.
