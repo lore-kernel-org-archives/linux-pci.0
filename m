@@ -1,109 +1,178 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:4507 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751304AbdJWRQW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 13:16:22 -0400
-Subject: Re: [PATCH V2 0/7] Tegra PCIe end point config space map code
- refactoring
-To: Mikko Perttunen <cyndis@kapsi.fi>, Rob Herring <robh+dt@kernel.org>
-CC: Thierry Reding <treding@nvidia.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
- <CAL_Jsq+3UAwk5gNgh=s6O1f-MadyGCtADX7pyzX8eUfBqboRfA@mail.gmail.com>
- <fba4fe22-1401-1653-0985-e1ffafb29ded@nvidia.com>
- <1c898f3e-582f-27fe-7e01-f52a8b8ad538@kapsi.fi>
-From: Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <6f7e9d04-6355-3cc8-fc37-8eb6f482f443@nvidia.com>
-Date: Mon, 23 Oct 2017 22:43:04 +0530
+Return-Path: <SRS0=1WPo=BS=cavium.com=Vadim.Lomovtsev@kernel.org>
+Return-Path: <SRS0=1WPo=BS=cavium.com=Vadim.Lomovtsev@kernel.org>
+Date: Thu, 19 Oct 2017 04:59:21 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+	Wilson.Snyder@cavium.com, robert.richter@cavium.com,
+	david.daney@cavium.com, mjaggi@caviumnetworks.com,
+	Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+Subject: Re: [PATCH v7 0/2] PCI: quirks: Cavium ThunderX ACS quirk update
+Message-ID: <20171019115921.GA6199@localhost.localdomain>
+References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20171019112645.GD6332@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1c898f3e-582f-27fe-7e01-f52a8b8ad538@kapsi.fi>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171019112645.GD6332@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Oct 19, 2017 at 06:26:45AM -0500, Bjorn Helgaas wrote:
+> On Tue, Oct 17, 2017 at 05:47:37AM -0700, Vadim Lomovtsev wrote:
+> > From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+> > 
+> > version 7:
+> > - update patch description accordingly to review comments;
+> > - split for two patches: for ACS mask change and device id match change;
+> > - remove macro #define of ACS flags, put it back to quirk function;
+> > - remove '__inline_' from device id matching function;
+> > - wrap code comments to fit into 80 columns;
+> > - comment fix: change 0xa00 to 0xf800 for matching function description;
+> > 
+> > version 6:
+> > - comment typo fix: change 0xa00 to 0xa000;
+> > 
+> > version 5:
+> > - update code comments accordingly to review comments;
+> > 
+> > version 4:
+> > - update ACS mask (remove TB and TD bits), update commit message (remove
+> >   ACS register printout);
+> > 
+> > version 3:
+> > - update subject: remove CN8XXX from subject line, replace it with ThunderX;
+> > 
+> > version 2:
+> > - update match function in order to filter only ThunderX devices by device
+> >   ids to properly filter CN8XXX devices, update subject & description with
+> >   ACS register info (v2 was rejected by maillist due to triple X in subject);
+> >   
+> > Vadim Lomovtsev (2):
+> >   PCI: quirks: Set Cavium ACS capability quirk flags to assert
+> >     RR/CR/SV/UF.
+> >   PCI: quirks: Apply Cavium ThunderX ACS quirk only to Root Ports
+> > 
+> >  drivers/pci/quirks.c | 26 ++++++++++++++++++++------
+> >  1 file changed, 20 insertions(+), 6 deletions(-)
+> 
+> If I'm reading this correctly, the first patch is basically fixing a bug in
+> the original Cavium ACS quirk (b404bcfbf035 ("PCI: Add ACS quirk for all
+> Cavium devices")).  Right?
 
+Yes, first patch fixes improper ACS flags in the patch you mentioned.
 
-On Monday 23 October 2017 09:46 PM, Mikko Perttunen wrote:
-> On 10/23/2017 06:24 PM, Vidya Sagar wrote:
->>
->>
->> On Monday 23 October 2017 08:40 PM, Rob Herring wrote:
->>> On Mon, Oct 23, 2017 at 9:35 AM, Vidya Sagar <vidyas@nvidia.com> wrote:
->>>> PCIe host controller in Tegra SoCs has 1GB of aperture available
->>>> for mapping end points config space, IO and BARs. In that, currently
->>>> 256MB is being reserved for mapping end points configuration space
->>>> which leaves less memory space available for mapping end points BARs
->>>> on some of the platforms.
->>>> This patch series attempts to use only 4K space from 1GB aperture to
->>>> access end points configuration space.
->>>>
->>>> Currently, this change benefits T20 and T186 in saving (i.e. 
->>>> repurposed
->>>> to use for BAR mapping) physical space as well as kernel virtual 
->>>> mapping space,
->>>> it saves only kernel virtual address space in T30, T124, T132 and 
->>>> T210.
->>>>
->>>> NOTE: Both driver and DT changes are inter-dependent and hence need 
->>>> to go together
->>> You are breaking compatibility with any other OS.
->>>
->>> Can't this easily be solved within the kernel by adjusting the
->>> resource size? To save the virtual space, you only need patch 1 and
->>> don't need the DT change. The DT change is just for phys address space
->>> for BARs.
->> In case of T20 & T186, DT change is required to re-purpose address 
->> space which otherwise
->> is used for config space mapping to map BARs. In case of other chips, 
->> DT changes
->> are also required because the 4K being used for mapping config space 
->> is taken from the
->> last 4K chunk of 256MB instead of first 4K chunk to align with driver 
->> change.
+The second one fixes devid check from another patch
+(b77d537d00d0 PCI: Apply Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices).
+
+> 
+> I put them on pci/virtualization for v4.15 as follows (patches unchanged,
+> changelogs wordsmithed).
 >
-> The kernel must continue to work with older device trees. This is a 
-> pretty hard rule.
-I think I can come up with a change only in driver to take care of this, 
-although, to start with, I may not
-be able to give more space for BAR mapping, but we can have a DT-only 
-change later on for that.
->
-> Mikko
->
->>>> Testing Done on T124, T210 & T186:
->>>>   Enumeration and basic functionality of immediate devices
->>>>   Enumeration of devices behind a PCIe switch
->>>>   Complete 4K configuration space access
->>>>
->>>> Vidya Sagar (7):
->>>>    PCI: tegra: refactor config space mapping code
->>>>    ARM: tegra: limit PCIe config space mapping to 4K for T20
->>>>    ARM: tegra: limit PCIe config space mapping to 4K for T30
->>>>    ARM: tegra: limit PCIe config space mapping to 4K for T124
->>>>    ARM64: tegra: limit PCIe config space mapping to 4K for T132
->>>>    ARM64: tegra: limit PCIe config space mapping to 4K for T210
->>>>    ARM64: tegra: limit PCIe config space mapping to 4K for T186
->>>>
->>>>   arch/arm/boot/dts/tegra124.dtsi          |   2 +-
->>>>   arch/arm/boot/dts/tegra20.dtsi           |   8 +--
->>>>   arch/arm/boot/dts/tegra30.dtsi           |   2 +-
->>>>   arch/arm64/boot/dts/nvidia/tegra132.dtsi |   2 +-
->>>>   arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +--
->>>>   arch/arm64/boot/dts/nvidia/tegra210.dtsi |   2 +-
->>>>   drivers/pci/host/pci-tegra.c             | 109 
->>>> +++++++++----------------------
->>>>   7 files changed, 42 insertions(+), 91 deletions(-)
->>>>
->>>> -- 
->>>> 2.7.4
->>>>
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe 
->> linux-tegra" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
+
+Good, thank you.
+
+> You mentioned stable backports.  b404bcfbf035 ("PCI: Add ACS quirk for all
+> Cavium devices") appeared in v4.6.  b77d537d00d0 ("PCI: Apply Cavium ACS
+> quirk only to CN81xx/CN83xx/CN88xx devices") appeared in v4.12.  I assume
+> you would ideally want all this backported as far as v4.6?  We'd have to
+> figure out how to express that in stable tags.
+
+Ideally yes, I think we would need to have them backported onto stable(s),
+but so far I didn't see any bug-reports which could require these fixes.
+
+Anyway, in term of backporting them - are there anything I can help with ?
+
+WBR,
+Vadim
+
+> 
+> 
+> commit 60f6d5f7ebc4bba83d73115f58b805f2f2618667
+> Author: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+> Date:   Tue Oct 17 05:47:38 2017 -0700
+> 
+>     PCI: Set Cavium ACS capability quirk flags to assert RR/CR/SV/UF
+>     
+>     The Cavium ThunderX (CN8XXX) family of PCIe Root Ports does not advertise
+>     an ACS capability.  However, the RTL internally implements similar
+>     protection as if ACS had Request Redirection, Completion Redirection,
+>     Source Validation, and Upstream Forwarding features enabled.
+>     
+>     Change Cavium ACS capabilities quirk flags accordingly.
+>     
+>     Fixes: b404bcfbf035 ("PCI: Add ACS quirk for all Cavium devices")
+>     Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index a4d33619a7bb..c23650cfd5a1 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4214,12 +4214,14 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+>  static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+>  {
+>  	/*
+> -	 * Cavium devices matching this quirk do not perform peer-to-peer
+> -	 * with other functions, allowing masking out these bits as if they
+> -	 * were unimplemented in the ACS capability.
+> +	 * Cavium root ports don't advertise an ACS capability.  However,
+> +	 * the RTL internally implements similar protection as if ACS had
+> +	 * Request Redirection, Completion Redirection, Source Validation,
+> +	 * and Upstream Forwarding features enabled.  Assert that the
+> +	 * hardware implements and enables equivalent ACS functionality for
+> +	 * these flags.
+>  	 */
+> -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> +	acs_flags &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF);
+>  
+>  	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+>  		return -ENOTTY;
+> 
+> commit 35da518fcad24f7be515976238a4667b5ccd1711
+> Author: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+> Date:   Tue Oct 17 05:47:39 2017 -0700
+> 
+>     PCI: Apply Cavium ThunderX ACS quirk to more Root Ports
+>     
+>     Extend the Cavium ThunderX ACS quirk to cover more device IDs and restrict
+>     it to only Root Ports.
+>     
+>     Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+>     [bhelgaas: changelog]
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index c23650cfd5a1..0e22cce05742 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4211,6 +4211,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+>  #endif
+>  }
+>  
+> +static bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+> +{
+> +	/*
+> +	 * Effectively selects all downstream ports for whole ThunderX 1
+> +	 * family by 0xf800 mask (which represents 8 SoCs), while the lower
+> +	 * bits of device ID are used to indicate which subdevice is used
+> +	 * within the SoC.
+> +	 */
+> +	return (pci_is_pcie(dev) &&
+> +		(pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT) &&
+> +		((dev->device & 0xf800) == 0xa000));
+> +}
+> +
+>  static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+>  {
+>  	/*
+> @@ -4223,7 +4236,7 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+>  	 */
+>  	acs_flags &= ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_SV | PCI_ACS_UF);
+>  
+> -	if (!((dev->device >= 0xa000) && (dev->device <= 0xa0ff)))
+> +	if (!pci_quirk_cavium_acs_match(dev))
+>  		return -ENOTTY;
+>  
+>  	return acs_flags ? 0 : 1;
