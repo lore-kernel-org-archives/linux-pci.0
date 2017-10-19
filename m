@@ -1,42 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38335 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750999AbdJ2GQu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 02:16:50 -0400
-Date: Sat, 28 Oct 2017 23:16:46 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: "Duyck, Alexander H" <alexander.h.duyck@intel.com>
-Cc: "Wang, Liang-min" <liang-min.wang@intel.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
-Message-ID: <20171029061646.GA28105@infradead.org>
-References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
- <20171024234351.0af0ff4a@t450s.home>
- <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
- <20171025000654.7621b84e@t450s.home>
- <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
- <20171028001907.7b8fa60d@t450s.home>
- <1509146439.11655.60.camel@intel.com>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:64458 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751348AbdJSJqe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Oct 2017 05:46:34 -0400
+Subject: Re: [PATCH 1/2] PCI: dwc: dra7xx: Create functional dependency
+ between PCIe and PHY
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
+References: <20171009090338.26033-1-kishon@ti.com>
+ <20171009090338.26033-2-kishon@ti.com>
+ <f258c2f0-11a2-60ac-3919-dcc0badfa870@ti.com>
+ <ac5b3f42-19a1-3f8d-3bb6-37d63c3574de@ti.com>
+ <9dce2e30-a245-460d-a808-a733eaf7ffec@ti.com>
+ <2375dfac-b68c-4a94-89ed-fb850ba5579f@ti.com>
+From: Roger Quadros <rogerq@ti.com>
+Message-ID: <60244e26-474f-7c80-87ef-348861c24406@ti.com>
+Date: Thu, 19 Oct 2017 12:46:27 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1509146439.11655.60.camel@intel.com>
+In-Reply-To: <2375dfac-b68c-4a94-89ed-fb850ba5579f@ti.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 27, 2017 at 11:20:41PM +0000, Duyck, Alexander H wrote:
-> I don't see this so much as a security problem per-se. It all depends
-> on the hardware setup. If I recall correctly, there are devices where
-> the PF function doesn't really do much other than act as a bit more
-> heavy-weight VF, and the actual logic is handled by a firmware engine
-> on the device.
+Hi,
 
-Can you cite an example?  While those surely could exist in theory,
-I can't think of a practical example.
+On 18/10/17 15:12, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> On Tuesday 10 October 2017 01:29 PM, Roger Quadros wrote:
+>> On 10/10/17 10:42, Kishon Vijay Abraham I wrote:
+>>> Roger,
+>>>
+>>> On Tuesday 10 October 2017 12:49 PM, Roger Quadros wrote:
+>>>> On 09/10/17 12:03, Kishon Vijay Abraham I wrote:
+>>>>> PCI core access configuration space registers in resume_noirq callbacks.
+>>>>> In the case of dra7xx, PIPE3 PHY connected to PCIe controller has to be
+>>>>> enabled before accessing configuration space registers. Since
+>>>>> PIPE3 PHY is enabled by only configuring control module registers, no
+>>>>> aborts has been observed so far (though during noirq stage, interface
+>>>>> clock of PIPE3 PHY is not enabled).
+>>>>>
+>>>>> With new TRM updates, PIPE3 PHY has to be initialized (PIPE3 PHY
+>>>>> registers has to be accessed) as well which requires the interface
+>>>>> clock of PIPE3 PHY to be enabled. The interface clock of PIPE3 PHY is
+>>>>> derived from OCP2SCP and hence PCIe PHY is modeled as a child of
+>>>>> OCP2SCP. Since pm_runtime is not enabled during noirq stage,
+>>>>> pm_runtime_get_sync done in phy_init doesn't enable
+>>>>> OCP2SCP clocks resulting in abort when PIPE3 PHY registers are
+>>>>> accessed.
+>>>>
+>>>> This could be the case not only with PCIe but even with USB and SATA?
+>>>
+>>> right, if USB/SATA driver has no_irq callbacks then the same issue might occur.
+>>
+>> OK. Is this something that we should document in Documentation/phy.txt?
+> 
+> Yeah it could be but the dependency is not required for a lot of phy consumer
+> drivers.
 
-Maybe we can start with the practical use case for this patch.  That
-is what device is this intended for?
+But they could add a no_irq callback in the future and then things break.
+
+> Do you think it makes sense to create functional dependency between phy and
+> it's consumers in phy_get?
+
+I think making it generic makes more sense without placing restrictions on users.
+
+> 
+> Thanks
+> Kishon
+> 
+
+-- 
+cheers,
+-roger
+
+Texas Instruments Finland Oy, Porkkalankatu 22, 00180 Helsinki. Y-tunnus/Business ID: 0615521-4. Kotipaikka/Domicile: Helsinki
