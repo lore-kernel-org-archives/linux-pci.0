@@ -1,63 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35396 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752099AbdJKLrm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 07:47:42 -0400
-Date: Wed, 11 Oct 2017 06:47:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ilia Mirkin <imirkin@alum.mit.edu>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Ben Skeggs <bskeggs@redhat.com>
-Subject: Re: Dynamically adding a PCI subfunction
-Message-ID: <20171011114735.GE25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171019091644.GA14983@lst.de>
+References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
+ <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
+ <589c04cb-061b-a453-3188-79324a02388e@arm.com>
+ <20171017081422.GA19475@lst.de>
+ <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
+ <20171018065316.GA11183@lst.de>
+ <CANCKTBv+yiCNsrnx3m+W9wPqC4NdKPZ2p=zLtSa8fX6v1rPcYQ@mail.gmail.com>
+ <20171019091644.GA14983@lst.de>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Thu, 19 Oct 2017 18:47:45 -0400
+Message-ID: <CANCKTBuaTD29My77QfOeUmtZfLAmmJXUYe6QvBW+uoH2Kb+tAQ@mail.gmail.com>
+Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
+To: Christoph Hellwig <hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, iommu@lists.linux-foundation.org,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 09, 2017 at 10:41:38AM -0400, Ilia Mirkin wrote:
-> Hello,
-> 
-> As a bit of background, all NVIDIA GPUs since GT215 have an audio
-> subfunction for HDMI(/DP) audio to be sent to the sink. This generally
-> works.
-> 
-> However some, especially laptop, devices come up with that function
-> disabled. We have a quirk to enable it when coming back from runpm,
-> but that doesn't help the init case. Basically we have to write a bit
-> to the PCI config space:
-> 
-> https://github.com/torvalds/linux/blob/v4.12/drivers/gpu/drm/nouveau/nouveau_drm.c#L783
-> 
-> (MMIO 0x88000 is an alias for the PCI config space)
+On Thu, Oct 19, 2017 at 5:16 AM, Christoph Hellwig <hch@lst.de> wrote:
+> On Wed, Oct 18, 2017 at 10:41:17AM -0400, Jim Quinlan wrote:
+>> That's what brcm_to_{pci,cpu} are for -- they keep a list of the
+>> dma-ranges given in the PCIe DT node, and translate from system memory
+>> addresses to pci-space addresses, and vice versa.  As long as people
+>> are using the DMA API it should work.  It works for all of the ARM,
+>> ARM64, and MIPS Broadcom systems I've tested, using eight different EP
+>> devices.  Note that I am not thrilled to be advocating this mechanism
+>> but it seemed the best alternative.
+>
+> Say we are using your original example ranges:
+>
+>  memc0-a@[        0....3fffffff] <=> pci@[        0....3fffffff]
+>  memc0-b@[100000000...13fffffff] <=> pci@[ 40000000....7fffffff]
+>  memc1-a@[ 40000000....7fffffff] <=> pci@[ 80000000....bfffffff]
+>  memc1-b@[300000000...33fffffff] <=> pci@[ c0000000....ffffffff]
+>  memc2-a@[ 80000000....bfffffff] <=> pci@[100000000...13fffffff]
+>  memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
+>
+> and now you get a dma mapping request for physical addresses
+> 3fffff00 to 4000000f, which would span two of your ranges.  How
+> is this going to work?
 
-  /* do magic */
-  nvif_mask(&device->object, 0x088488, (1 << 25), (1 << 25));
+The only way to prevent this is to reserve a single page at the end of
+the first memory region of any pair that are adjacent in physical
+memory.  A hack, yes, but I don't see an easier way out of this.  Many
+if not most of our boards do not have adjacent regions and would not
+need this.
 
-Wow, that *is* inscrutable magic.  I gave up trying to convince myself
-that this turns into pci_write_config_word() eventually.
+Overriding phys_to_dma/dma_to_phys comes with the same overlap problem
+(MIPS solution and possible ARM/ARM64 solution).
 
-0x88000 is way too big for an offset into PCI config space (it's only
-4096 bytes per device at most), so I don't know what sort of alias it
-could be.  It doesn't look like a MMCONFIG address (which the driver
-shouldn't be using directly anyway).
+>
+>> I would prefer that the same code work for all three architectures.
+>> What I would like from ARM/ARM64 is the ability to override
+>> phys_to_dma() and dma_to_phys(); I thought the chances of that being
+>> accepted would be slim.  But you are right, I should ask the
+>> maintainers.
+>
+> It is still better than trying to stack dma ops, which is a receipe
+> for problems down the road.
 
-> This works for runtime pm resume, since the device was originally
-> there and we just have to make sure the underlying device agrees with
-> it, but when it's missing on boot, we have to convince linux that it
-> exists, bind a driver, etc.
-> 
-> What's the best way of going about doing that?
+Let me send out V2 of my patchset and also send it to the ARM/ARM64
+maintainers as you suggested; perhaps there is an alternative.
 
-If you make an early quirk for the GPU device, we'll run the quirk
-while enumerating it.  If it can enable the audio device, and if the
-audio device is at a higher device number, the PCI core should try to
-enumerate it later.  But there might be wrinkles if setting the bit
-turns a single-function device into a multi-function one, because the
-core might have already decided it didn't need to scan for more
-functions.  DECLARE_PCI_FIXUP_CLASS_EARLY() is the place to start.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
