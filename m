@@ -1,50 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47190 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753115AbdJTQV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Oct 2017 12:21:58 -0400
-Subject: [PATCH v6 0/4] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port service
- drivers
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
-        Christoph Hellwig <hch@lst.de>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        linux-pci@vger.kernel.org
-Date: Fri, 20 Oct 2017 11:21:54 -0500
-Message-ID: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAPDyKFqq9_ZbPFYn22s+6sxtxePWgnd0GJNodeqkCKF2+QkrNA@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2890181.vdGMMavi5M@aspire.rjw.lan>
+ <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
+ <4337843.QuD5zygUhU@aspire.rjw.lan> <CAPDyKFqq9_ZbPFYn22s+6sxtxePWgnd0GJNodeqkCKF2+QkrNA@mail.gmail.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 19 Oct 2017 20:01:05 +0200
+Message-ID: <CAPDyKFo2u3KDz-HbUOESPcEcqi-+K6AB8R4Yg_NfDg0nw4+4tQ@mail.gmail.com>
+Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is based on Dongdong's series:
-  v3: http://lkml.kernel.org/r/1507553167-27833-1-git-send-email-liudongdong3@huawei.com
-  v4: http://lkml.kernel.org/r/1507719178-112556-1-git-send-email-liudongdong3@huawei.com
-  v5: http://lkml.kernel.org/r/20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com
+[...]
 
-The main idea is to fix IRQ issues when removing and adding back a Root
-Port.  The problem is that when we allocate, free, and reallocate MSI/MSI-X
-vectors for the device, we may not get the same vectors the second time,
-but we saved IRQs based on the first set of vectors.
+>>> > Say you want to leave the parent suspended after system resume, but the
+>>> > child drivers use pm_runtime_force_suspend|resume().  The parent would then
+>>> > need to use pm_runtime_force_suspend|resume() too, no?
+>>>
+>>> Actually no.
+>>>
+>>> Currently the other options of "deferring resume" (not using
+>>> pm_runtime_force_*), is either using the "direct_complete" path or
+>>> similar to the approach you took for the i2c designware driver.
+>>>
+>>> Both cases should play nicely in combination of a child being managed
+>>> by pm_runtime_force_*. That's because only when the parent device is
+>>> kept runtime suspended during system suspend, resuming can be
+>>> deferred.
+>>
+>> And because the parent remains in runtime suspend late enough in the
+>> system suspend path, its children also are guaranteed to be suspended.
+>
+> Yes.
+>
+>>
+>> But then all of them need to be left in runtime suspend during system
+>> resume too, which is somewhat restrictive, because some drivers may
+>> want their devices to be resumed then.
+>
+> Actually, this scenario is also addressed when using the pm_runtime_force_*.
+>
+> The driver for the child would only need to bump the runtime PM usage
+> count (pm_runtime_get_noresume()) before calling
+> pm_runtime_force_suspend() at system suspend. That then also
+> propagates to the parent, leading to that both the parent and the
+> child will be resumed when pm_runtime_force_resume() is called for
+> them.
 
-Changes in v5:
-  - add back a general Interrupt Message Number comment
-  - factor out Interrupt Message Number helper separately
+I need to correct myself here. The above currently only works if the
+child is runtime resumed while pm_runtime_force_suspend() is called.
 
-This is on pci/msi for v4.15.
+The logic in pm_runtime_force_* needs to be improved to take care of
+such scenarios. However I think that should be rather easy to fix, if
+we want that.
 
----
+[...]
 
-Bjorn Helgaas (3):
-      PCI/portdrv: Consolidate comments
-      PCI/portdrv: Factor out Interrupt Message Number lookup
-      PCI/portdrv: Compute MSI/MSI-X IRQ vectors after final allocation
-
-Dongdong Liu (1):
-      PCI/portdrv: Add #defines for AER and DPC Interrupt Message Number masks
-
-
- drivers/pci/pcie/portdrv_core.c |  171 +++++++++++++++++----------------------
- include/uapi/linux/pci_regs.h   |    2 
- 2 files changed, 77 insertions(+), 96 deletions(-)
+Kind regards
+Uffe
