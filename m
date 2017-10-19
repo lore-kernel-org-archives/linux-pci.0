@@ -1,66 +1,138 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 10/15] nullb: make config_item_type const
-Date: Mon, 16 Oct 2017 17:18:49 +0200
-Message-Id: <1508167134-6243-11-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <SRS0=b9IC=BS=nvidia.com=mmaddireddy@kernel.org>
+Return-Path: <SRS0=b9IC=BS=nvidia.com=mmaddireddy@kernel.org>
+Subject: Re: [PATCH V2 2/4] PCI: tegra: Add Tegra186 PCIe support
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Thierry Reding <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+	<jonathanh@nvidia.com>, <linux-tegra@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <mperttunen@nvidia.com>
+References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+ <1506513517-25870-3-git-send-email-mmaddireddy@nvidia.com>
+ <20171017173428.GE5641@bhelgaas-glaptop.roam.corp.google.com>
+ <20171017202749.GB10482@ulmo>
+ <20171018132752.GO5641@bhelgaas-glaptop.roam.corp.google.com>
+ <9ceb5f5c-7fcc-d729-e5d8-d13142bee8ed@nvidia.com>
+ <20171018162937.GA32397@bhelgaas-glaptop.roam.corp.google.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <a353d627-0155-a9b7-05f7-e689eddcdff3@nvidia.com>
+Date: Thu, 19 Oct 2017 12:21:27 +0530
+MIME-Version: 1.0
+In-Reply-To: <20171018162937.GA32397@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Make these structures const as they are either passed to the functions
-having the argument as const or stored as a reference in the "ci_type"
-const field of a config_item structure.
 
-Done using Coccienlle.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
-
- drivers/block/null_blk.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/block/null_blk.c b/drivers/block/null_blk.c
-index bf2c8ca..46b6008 100644
---- a/drivers/block/null_blk.c
-+++ b/drivers/block/null_blk.c
-@@ -480,7 +480,7 @@ static void nullb_device_release(struct config_item *item)
- 	.release	= nullb_device_release,
- };
- 
--static struct config_item_type nullb_device_type = {
-+static const struct config_item_type nullb_device_type = {
- 	.ct_item_ops	= &nullb_device_ops,
- 	.ct_attrs	= nullb_device_attrs,
- 	.ct_owner	= THIS_MODULE,
-@@ -532,7 +532,7 @@ static ssize_t memb_group_features_show(struct config_item *item, char *page)
- 	.drop_item	= nullb_group_drop_item,
- };
- 
--static struct config_item_type nullb_group_type = {
-+static const struct config_item_type nullb_group_type = {
- 	.ct_group_ops	= &nullb_group_ops,
- 	.ct_attrs	= nullb_group_attrs,
- 	.ct_owner	= THIS_MODULE,
--- 
-1.9.1
-
+On 18-Oct-17 9:59 PM, Bjorn Helgaas wrote:
+> On Wed, Oct 18, 2017 at 07:44:12PM +0530, Manikanta Maddireddy wrote:
+>>
+>>
+>> On 18-Oct-17 6:57 PM, Bjorn Helgaas wrote:
+>>> On Tue, Oct 17, 2017 at 10:27:49PM +0200, Thierry Reding wrote:
+>>>> On Tue, Oct 17, 2017 at 12:34:28PM -0500, Bjorn Helgaas wrote:
+>>>>> On Wed, Sep 27, 2017 at 05:28:35PM +0530, Manikanta Maddireddy wrote:
+>>>>>> UPHY programming is performed by BPMP, PHY enable calls are
+>>>>>> not required for Tegra186 PCIe. Power partition ungate is
+>>>>>> done by BPMP powergate driver.
+>>>>>>
+>>>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>>>>>> Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+>>>>>> Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
+>>>>>> ---
+>>>>>> V2: Add soc->program_uphy check for phy_exit call
+>>>>>>  drivers/pci/host/pci-tegra.c | 132 +++++++++++++++++++++++++++++++++++--------
+>>>>>>  1 file changed, 108 insertions(+), 24 deletions(-)
+>>>>>
+>>>>>> @@ -1012,10 +1016,12 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>>>>>>  		afi_writel(pcie, value, AFI_FUSE);
+>>>>>>  	}
+>>>>>>  
+>>>>>> -	err = tegra_pcie_phy_power_on(pcie);
+>>>>>> -	if (err < 0) {
+>>>>>> -		dev_err(dev, "failed to power on PHY(s): %d\n", err);
+>>>>>> -		return err;
+>>>>>> +	if (soc->program_uphy) {
+>>>>>> +		err = tegra_pcie_phy_power_on(pcie);
+>>>>>> +		if (err < 0) {
+>>>>>> +			dev_err(dev, "failed to power on PHY(s): %d\n", err);
+>>>>>> +			return err;
+>>>>>> +		}
+>>>>>
+>>>>> This looks good: it's obvious that the previously-supported devices
+>>>>> continue to work the same way because you set ".program_uphy = true"
+>>>>> for them.  (It would be even more obvious if you changed the sense so
+>>>>> that only the new device had to add this initializaer, but in general
+>>>>> I prefer the positive logic as you have here, and I did verify that
+>>>>> you added the initializer for all tegra_pcie_soc variants.)
+>>>>>
+>>>>>> @@ -1048,19 +1054,23 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>>>>>>  static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+>>>>>>  {
+>>>>>>  	struct device *dev = pcie->dev;
+>>>>>> +	const struct tegra_pcie_soc *soc = pcie->soc;
+>>>>>>  	int err;
+>>>>>>  
+>>>>>>  	/* TODO: disable and unprepare clocks? */
+>>>>>>  
+>>>>>> -	err = tegra_pcie_phy_power_off(pcie);
+>>>>>> -	if (err < 0)
+>>>>>> -		dev_err(dev, "failed to power off PHY(s): %d\n", err);
+>>>>>> +	if (soc->program_uphy) {
+>>>>>> +		err = tegra_pcie_phy_power_off(pcie);
+>>>>>> +		if (err < 0)
+>>>>>> +			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+>>>>>> +	}
+>>>>>>  
+>>>>>>  	reset_control_assert(pcie->pcie_xrst);
+>>>>>>  	reset_control_assert(pcie->afi_rst);
+>>>>>>  	reset_control_assert(pcie->pex_rst);
+>>>>>>  
+>>>>>> -	tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+>>>>>> +	if (!dev->pm_domain)
+>>>>>> +		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+>>>>>
+>>>>> But this one isn't obvious because nothing in your patch obviously
+>>>>> affects dev->pm_domain, so I can't tell whether this is safe.  It's
+>>>>> worth a changelog comment to help justify this.
+>>>>
+>>>> The last sentence in the commit message is what this is about. Maybe it
+>>>> should be more verbose:
+>>>>
+>>>> 	Since the BPMP controls the powergates on Tegra186, there is no
+>>>> 	need to manually power on and off the PCIe power partition. The
+>>>> 	BPMP generic power domain driver takes care of it instead.
+>>>
+>>> If you know Tegra intimately, maybe that clarifies it.  I don't, so my
+>>> problem is that there's nothing in the patch that helps me verify
+>>> this.  I infer that maybe there's something different in the DT that
+>>> means dev->pm_domain will be set for Tegra186, but not for other
+>>> variants?
+>>>
+>>> There should be something that helps the reader connect the dots.
+>>
+>> Till tegra210 pmc driver provides direct powergate power ON/OFF functions.
+>>
+>> In tegra186.dtsi power-domains property is added in pcie@10003000 DT node. reference: https://patchwork.ozlabs.org/patch/819113/
+>> powergate-bpmp.c is the pm domain provider for pcie powergate. 
+>> Platform driver will look for pm domain provider of Tegra pcie host driver and sets dev->pm_domains.
+>> powergate-bpmp.c driver registers powergate power ON/OFF functions to generic PD power_on/powerr_off callback functions.
+>> Generic power domain will take care of calling power_on before Tegra PCIe probe.
+>>
+>> So in this patch I used dev->pm_domain to skip pmc driver calls.
+> 
+> Thanks, I updated the changelog as follows:
+> 
+> 
+> commit 9cea513d8cbc75ee26327d3d8971fe7b58288d8f
+> Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Date:   Wed Sep 27 17:28:35 2017 +0530
+> 
+>     PCI: tegra: Add Tegra186 PCIe support
+>     
+>     Add Tegra186 PCIe support.  UPHY programming is performed by BPMP; PHY
+>     enable calls are not required for Tegra186 PCIe.
+>     
+>     Power partition ungate is done by BPMP powergate driver.  The Tegra186
+>     DT description must include a "power-domains" property, which results in
+>     dev->pm_domain being set.
+> 
+Thank you Bjorn
