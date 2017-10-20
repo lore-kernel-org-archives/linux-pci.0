@@ -1,43 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.182]:59732 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932189AbdJ3P6U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 11:58:20 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Manikanta Maddireddy' <mmaddireddy@nvidia.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>
-CC: "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "vidyas@nvidia.com" <vidyas@nvidia.com>,
-        "kthota@nvidia.com" <kthota@nvidia.com>
-Subject: RE: [PATCH 07/12] PCI: tegra: Disable AFI dynamic clock gating
-Date: Mon, 30 Oct 2017 15:58:36 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A90B0@AcuExch.aculab.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
- <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset="Windows-1252"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171020145752.GA4694@lst.de>
+References: <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
+ <589c04cb-061b-a453-3188-79324a02388e@arm.com> <20171017081422.GA19475@lst.de>
+ <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
+ <20171018065316.GA11183@lst.de>
+ <CANCKTBv+yiCNsrnx3m+W9wPqC4NdKPZ2p=zLtSa8fX6v1rPcYQ@mail.gmail.com>
+ <20171019091644.GA14983@lst.de>
+ <CANCKTBuaTD29My77QfOeUmtZfLAmmJXUYe6QvBW+uoH2Kb+tAQ@mail.gmail.com>
+ <20171020073730.GA12937@lst.de>
+ <CANCKTBsRRkwNMrxWjtgxbyZqT6NOxPX0NHDbnEO2BMjj8oVtpg@mail.gmail.com>
+ <20171020145752.GA4694@lst.de>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Fri, 20 Oct 2017 11:27:41 -0400
+Message-ID: <CANCKTBtxp9gSdndKAZ7xGA+VozQsn2PX_-9P8A22_5Matbb7-w@mail.gmail.com>
+Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
+To: Christoph Hellwig <hch@lst.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, iommu@lists.linux-foundation.org,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Manikanta Maddireddy
-> Sent: 27 October 2017 20:29
-> When there are 32 outstanding writes from AFI to memory, the outstanding
-> write counter overflows and indicates that there are "0" outstanding write
-> transactions. This outstanding write counter is used to generate IDLE
-> signal to dynamically gate the AFI clock.
-> 
-> When memory controller is under heavy load, its possible that write
-> completions will come back to AFI after long delay and AFI write counter
-> overflows. AFI clock gets gated even when there are outstanding
-> transactions towards memory controller resutling in system hang.
-> 
-> Disable dynamic clock gating of AFI clock to avoid system hang.
+On Fri, Oct 20, 2017 at 10:57 AM, Christoph Hellwig <hch@lst.de> wrote:
+> On Fri, Oct 20, 2017 at 10:41:56AM -0400, Jim Quinlan wrote:
+>> I am not sure I understand your comment -- the size of the request
+>> shouldn't be a factor.  Let's look at your example of the DMA request
+>> of 3fffff00 to 4000000f (physical memory).  Lets say it is for 15
+>> pages.  If we block out  the last page [0x3ffff000..0x3fffffff] from
+>> what is available, there is no 15 page span that can happen across the
+>> 0x40000000 boundary.  For SG, there can be no merge that connects a
+>> page from one region to another region.  Can you give an example of
+>> the scenario you are thinking of?
+>
+> What prevents a merge from say the regions of
+> 0....3fffffff and 40000000....7fffffff?
 
-At least some of the above really ought to be comments in the code.
-(and with the earlier fix for limiting the number of writes.)
+Huh? [0x3ffff000...x3ffffff] is not available to be used. Drawing from
+the original example, we now have to tell Linux that these are now our
+effective memory regions:
 
-	David
+      memc0-a@[        0....3fffefff] <=> pci@[        0....3fffefff]
+      memc0-b@[100000000...13fffefff] <=> pci@[ 40000000....7fffefff]
+      memc1-a@[ 40000000....7fffefff] <=> pci@[ 80000000....bfffefff]
+      memc1-b@[300000000...33fffefff] <=> pci@[ c0000000....ffffefff]
+      memc2-a@[ 80000000....bfffefff] <=> pci@[100000000...13fffefff]
+      memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
+
+This leaves a one-page gap between phsyical memory regions which would
+normally be contiguous. One cannot have a dma alloc that spans any two
+regions.  This is a drastic step, but I don't see an alternative.
+Perhaps  I may be missing what you are saying...
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
