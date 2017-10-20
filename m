@@ -1,60 +1,55 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 17 Oct 2017 09:15:43 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
+Date: Fri, 20 Oct 2017 18:01:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Dexuan Cui <decui@microsoft.com>, x86@kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 01/12] PM / core: Add NEVER_SKIP and SMART_PREPARE driver
- flags
-Message-ID: <20171017071543.GB27293@kroah.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
- <1998650.Q52BuGQTI4@aspire.rjw.lan>
- <20171016062852.GA28732@kroah.com>
- <6007227.iNoRbQyInB@aspire.rjw.lan>
+        Marc Zyngier <marc.zyngier@arm.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        linux-pci@vger.kernel.org, devel@linuxdriverproject.org,
+        Josh Poulson <jopoulso@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        Saeed Mahameed <saeedm@mellanox.com>,
+        Mihai Costache <v-micos@microsoft.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>
+Subject: Re: [patch 0/3] x86/PCI/MSI: Make sure that irq reservation mode
+ works everywhere
+Message-ID: <20171020230127.GW6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171017075456.694047687@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6007227.iNoRbQyInB@aspire.rjw.lan>
+In-Reply-To: <20171017075456.694047687@linutronix.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 12:05:11AM +0200, Rafael J. Wysocki wrote:
-> On Monday, October 16, 2017 8:28:52 AM CEST Greg Kroah-Hartman wrote:
-> > On Mon, Oct 16, 2017 at 03:29:02AM +0200, Rafael J. Wysocki wrote:
-> > >  struct dev_pm_info {
-> > >  	pm_message_t		power_state;
-> > >  	unsigned int		can_wakeup:1;
-> > > @@ -561,6 +580,7 @@ struct dev_pm_info {
-> > >  	bool			is_late_suspended:1;
-> > >  	bool			early_init:1;	/* Owned by the PM core */
-> > >  	bool			direct_complete:1;	/* Owned by the PM core */
-> > > +	unsigned int		driver_flags;
-> > 
-> > Minor nit, u32 or u64?
+On Tue, Oct 17, 2017 at 09:54:56AM +0200, Thomas Gleixner wrote:
+> Dexuan reported that the recent rework of the vector allocation mode in x86
+> broke HyperV PCI passtrough because the rework missed to add the
+> MSI_FLAG_MUST_REACTIVATE flag to the HyperV/PCI interrupt domain info.
 > 
-> u32 I think, will update.
+> The simple solution would be to set the flag in the HyperV/PCI driver but
+> it's better to make this generic and let the PCI/MSI core code set the flag
+> when reservation mode is enabled. That ensures that future users of this
+> wont trip over the same problem.
 > 
-> BTW, there's a mess in this struct overall and I'd like all of the bit fileds
-> to be the same type (and that shouldn't be bool IMO :-)).
+> Thanks,
 > 
-> Do you prefer u32 or unsinged int?
+> 	tglx
+> 
+> ---
+>  arch/x86/Kconfig           |    2 +-
+>  arch/x86/kernel/apic/msi.c |    5 ++---
+>  drivers/pci/msi.c          |    2 ++
+>  kernel/irq/Kconfig         |    3 +++
+>  4 files changed, 8 insertions(+), 4 deletions(-)
 
-I always prefer an explicit size for variables, unless it's a "generic
-loop" type thing.  So I'll always say "u32" for this.
+This mentions 4900be83602b ("x86/vector/msi: Switch to global reservation
+mode"), which I don't have, so I assume it's an x86 thing.  So I guess
+you'll probably merge this via the same tree?
 
-And cleaning up the structure would be great, it's grown over time in
-odd ways as you point out.
+Here's my ack for the PCI part:
 
-thanks,
-
-greg k-h
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
