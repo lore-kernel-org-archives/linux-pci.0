@@ -1,145 +1,143 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        "David S. Miller" <davem@davemloft.net>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Matt Turner <mattst88@gmail.com>
-Subject: [PATCH v2] drivers/ide/pci: Fix legacy IRQ assignment
-Date: Mon,  2 Oct 2017 11:52:47 +0100
-Message-Id: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47344 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752661AbdJTQWO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 12:22:14 -0400
+Subject: [PATCH v6 2/4] PCI/portdrv: Consolidate comments
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
+        Christoph Hellwig <hch@lst.de>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        linux-pci@vger.kernel.org
+Date: Fri, 20 Oct 2017 11:22:11 -0500
+Message-ID: <20171020162211.6391.34085.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
-possible to define IRQ mapping functions on a per PCI host bridge basis.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Actual IRQ allocation is carried out by the pci_assign_irq() function in
-pci_device_probe() - to make sure a device is assigned an IRQ only if it
-is probed (ie match a driver); it retrieves a struct pci_host_bridge*
-for a given PCI device and through {map/swizzle}_irq() it carries out
-the PCI IRQ allocation.
+Consolidate some repetitive comments so we can see the code better.  No
+functional change.
 
-The code conversion to struct pci_host_bridge {map/swizzle}_irq() hooks
-and pci_assign_irq() to deal with legacy IRQs in
-
-commit 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
-pci_device_probe()")
-
-did not take into account that the IDE subsystem relies on a special
-purpose IDE PCI layer, configured by CONFIG_IDEPCI_PCIBUS_ORDER to force
-devices probe ordering by sidestepping the core PCI bus layer entirely
-(and therefore pci_device_probe()) by executing the registered IDE PCI
-drivers probe routines (ie registered with ide_pci_register_driver())
-through ide_scan_pcidev().
-
-Since this IDE PCI specific probe mechanism bypasses the PCI core
-code generic probing (ie pci_device_probe()) it also misses the
-pci_assign_irq() call (among other PCI initialization functions);
-this triggers IDE PCI devices initialization failures caused
-by the missing IRQ allocation:
-
-ide0: disabled, no IRQ
-ide0: failed to initialize IDE interface
-ide0: disabling port
-cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
-CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
-cmd64x 0000:00:02.0: can't reserve resources
-CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
-ide_generic: please use "probe_mask=0x3f" module parameter for probing
-all legacy ISA IDE ports
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
-sysfs: cannot create duplicate filename '/class/ide_port/ide0'
-...
-
-Trace:
-[<fffffc00003308a0>] __warn+0x160/0x190
-[<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-[<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
-[<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-[<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
-[<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-[<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-[<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
-[<fffffc00005b9d64>] device_add+0x2a4/0x7c0
-[<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
-[<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
-[<fffffc00005ba690>] device_create+0x50/0x70
-[<fffffc00005df36c>] ide_host_register+0x48c/0xa00
-[<fffffc00005df330>] ide_host_register+0x450/0xa00
-[<fffffc00005ba2a0>] device_register+0x20/0x50
-[<fffffc00005df330>] ide_host_register+0x450/0xa00
-[<fffffc00005df944>] ide_host_add+0x64/0xe0
-[<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
-[<fffffc0000310288>] do_one_initcall+0x68/0x260
-[<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
-[<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-[<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
-[<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-
----[ end trace 24a70433c3e4d374 ]---
-ide0: disabling port
-
-Fix the IRQ allocation issue by adding a pci_assign_irq() call in the
-ide_scan_pcidev() function before probing the IDE PCI drivers, so that
-IRQs for a given PCI device are allocated for the IDE PCI drivers to
-use them for device configuration.
-
-Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in pci_device_probe()")
-Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reported-by: Guenter Roeck <linux@roeck-us.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Henderson <rth@twiddle.net>
-Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: Guenter Roeck <linux@roeck-us.net>
-Cc: Matt Turner <mattst88@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
-v1->v2
+ drivers/pci/pcie/portdrv_core.c |   63 ++++++---------------------------------
+ 1 file changed, 9 insertions(+), 54 deletions(-)
 
-- Moved fix from PCI core code to IDE subsystem following further
-  debugging and mailing list discussions
-- Rebased against v4.14-rc3
-
- drivers/ide/ide-scan-pci.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
-index 86aa88a..acf8748 100644
---- a/drivers/ide/ide-scan-pci.c
-+++ b/drivers/ide/ide-scan-pci.c
-@@ -56,6 +56,7 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 72fcbe5567dd..accd16082348 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -56,40 +56,27 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
  {
- 	struct list_head *l;
- 	struct pci_driver *d;
-+	int ret;
+ 	int nr_entries, entry, nvec = 0;
  
- 	list_for_each(l, &ide_pci_drivers) {
- 		d = list_entry(l, struct pci_driver, node);
-@@ -63,10 +64,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
- 			const struct pci_device_id *id =
- 				pci_match_id(d->id_table, dev);
+-	/*
+-	 * Allocate as many entries as the port wants, so that we can check
+-	 * which of them will be useful.  Moreover, if nr_entries is correctly
+-	 * equal to the number of entries this port actually uses, we'll happily
+-	 * go through without any tricks.
+-	 */
++	/* Allocate the maximum possible number of MSI/MSI-X vectors */
+ 	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSI_ENTRIES,
+ 			PCI_IRQ_MSIX | PCI_IRQ_MSI);
+ 	if (nr_entries < 0)
+ 		return nr_entries;
  
--			if (id != NULL && d->probe(dev, id) >= 0) {
--				dev->driver = d;
--				pci_dev_get(dev);
--				return 1;
-+			if (id != NULL) {
-+				pci_assign_irq(dev);
-+				ret = d->probe(dev, id);
-+				if (ret >= 0) {
-+					dev->driver = d;
-+					pci_dev_get(dev);
-+					return 1;
-+				}
- 			}
- 		}
++	/*
++	 * The Interrupt Message Number indicates which vector is used, i.e.,
++	 * the MSI-X table entry or the MSI offset between the base Message
++	 * Data and the generated interrupt message.  See PCIe r3.1, sec
++	 * 7.8.2, 7.10.10, 7.31.2.
++	 */
+ 	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
+ 		u16 reg16;
+ 
+-		/*
+-		 * Per PCIe r3.1, sec 6.1.6, "PME and Hot-Plug Event
+-		 * interrupts (when both are implemented) always share the
+-		 * same MSI or MSI-X vector, as indicated by the Interrupt
+-		 * Message Number field in the PCI Express Capabilities
+-		 * register".
+-		 *
+-		 * Per sec 7.8.2, "For MSI, the [Interrupt Message Number]
+-		 * indicates the offset between the base Message Data and
+-		 * the interrupt message that is generated."
+-		 *
+-		 * "For MSI-X, the [Interrupt Message Number] indicates
+-		 * which MSI-X Table entry is used to generate the
+-		 * interrupt message."
+-		 */
+ 		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+ 		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+ 		if (entry >= nr_entries)
+ 			goto out_free_irqs;
+ 
++		/* PME and hotplug share an MSI/MSI-X vector */
+ 		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, entry);
+ 		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pci_irq_vector(dev, entry);
+ 
+@@ -99,19 +86,6 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 	if (mask & PCIE_PORT_SERVICE_AER) {
+ 		u32 reg32, pos;
+ 
+-		/*
+-		 * Per PCIe r3.1, sec 7.10.10, the Advanced Error Interrupt
+-		 * Message Number in the Root Error Status register
+-		 * indicates which MSI/MSI-X vector is used for AER.
+-		 *
+-		 * "For MSI, the [Advanced Error Interrupt Message Number]
+-		 * indicates the offset between the base Message Data and
+-		 * the interrupt message that is generated."
+-		 *
+-		 * "For MSI-X, the [Advanced Error Interrupt Message
+-		 * Number] indicates which MSI-X Table entry is used to
+-		 * generate the interrupt message."
+-		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+ 		entry = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
+@@ -126,19 +100,6 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 	if (mask & PCIE_PORT_SERVICE_DPC) {
+ 		u16 reg16, pos;
+ 
+-		/*
+-		 * Per PCIe r4.0 (v0.9), sec 7.9.15.2, the DPC Interrupt
+-		 * Message Number in the DPC Capability register indicates
+-		 * which MSI/MSI-X vector is used for DPC.
+-		 *
+-		 * "For MSI, the [DPC Interrupt Message Number] indicates
+-		 * the offset between the base Message Data and the
+-		 * interrupt message that is generated."
+-		 *
+-		 * "For MSI-X, the [DPC Interrupt Message Number] indicates
+-		 * which MSI-X Table entry is used to generate the
+-		 * interrupt message."
+-		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
+ 		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
+ 		entry = reg16 & PCI_EXP_DPC_IRQ;
+@@ -150,16 +111,10 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		nvec = max(nvec, entry + 1);
  	}
--- 
-2.4.12
+ 
+-	/*
+-	 * If nvec is equal to the allocated number of entries, we can just use
+-	 * what we have.  Otherwise, the port has some extra entries not for the
+-	 * services we know and we need to work around that.
+-	 */
++	/* If we allocated more than we need, free them and allocate fewer */
+ 	if (nvec != nr_entries) {
+-		/* Drop the temporary MSI-X setup */
+ 		pci_free_irq_vectors(dev);
+ 
+-		/* Now allocate the MSI-X vectors for real */
+ 		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
+ 				PCI_IRQ_MSIX | PCI_IRQ_MSI);
+ 		if (nr_entries < 0)
