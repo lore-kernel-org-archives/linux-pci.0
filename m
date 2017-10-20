@@ -1,72 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:13022 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750950AbdJ2JnE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 05:43:04 -0400
-Subject: Re: [PATCH 07/12] PCI: tegra: Disable AFI dynamic clock gating
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
- <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
-From: Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <171c265a-c1f9-913c-54e5-02b325a7487c@nvidia.com>
-Date: Sun, 29 Oct 2017 15:12:32 +0530
+Received: from bastet.se.axis.com ([195.60.68.11]:36020 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752822AbdJTKsG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Oct 2017 06:48:06 -0400
+Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        "Mark Rutland" <mark.rutland@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "Xiaowei Song" <songxiaowei@hisilicon.com>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Duc Dang <dhdang@apm.com>
+CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20171013160914.3220-1-niklas.cassel@axis.com>
+ <20171013160914.3220-9-niklas.cassel@axis.com>
+ <db0685b5-6078-1c6b-093d-f160f74e85bf@ti.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <2c2968eb-39f6-7b1e-0e6b-97e00c2e8cbf@axis.com>
+Date: Fri, 20 Oct 2017 12:48:00 +0200
 MIME-Version: 1.0
-In-Reply-To: <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <db0685b5-6078-1c6b-093d-f160f74e85bf@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 10/18/2017 10:46 AM, Kishon Vijay Abraham I wrote:
+> Hi Niklas,
+> 
+> On Friday 13 October 2017 09:39 PM, Niklas Cassel wrote:
+>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+>> ---
+>>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   3 +-
+>>  drivers/pci/dwc/Kconfig                            |  41 +++--
+>>  drivers/pci/dwc/Makefile                           |   4 +-
+>>  drivers/pci/dwc/pcie-artpec6.c                     | 202 ++++++++++++++++++++-
+>>  4 files changed, 233 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>> index 4e4aee4439ea..33eef7ae5a23 100644
+>> --- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+>> @@ -4,7 +4,8 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+>>  and thus inherits all the common properties defined in designware-pcie.txt.
+>>  
+>>  Required properties:
+>> -- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
+>> +- compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+>> +	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
+> 
+> If "snps,dw-pcie" is used for both RC and EP mode, how do we differentiate
+> between the modes?
+
+Hello Kishon,
+
+Most DWC core based PCIe controllers have the following text in their
+DT binding:
+"This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+and thus inherits all the common properties defined in designware-pcie.txt."
+
+It seems like DRA7xx is one of few DWC core based bindings that does
+not include this text.
+
+However, I can see that you've added "EP mode:" and "RC mode:" headings
+to designware-pcie.txt.
+
+But still the top of the file says:
+Required properties:
+- compatible: should contain "snps,dw-pcie" to identify the core.
 
 
-On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
-> When there are 32 outstanding writes from AFI to memory, the outstanding
-> write counter overflows and indicates that there are "0" outstanding write
-> transactions. This outstanding write counter is used to generate IDLE
-> signal to dynamically gate the AFI clock.
->
-> When memory controller is under heavy load, its possible that write
-> completions will come back to AFI after long delay and AFI write counter
-> overflows. AFI clock gets gated even when there are outstanding
-> transactions towards memory controller resutling in system hang.
->
-> Disable dynamic clock gating of AFI clock to avoid system hang.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
->   drivers/pci/host/pci-tegra.c | 10 ++++++----
->   1 file changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 27a8211c48b2..b8cac871712b 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -103,8 +103,9 @@
->   #define AFI_MSI_EN_VEC6		0xa4
->   #define AFI_MSI_EN_VEC7		0xa8
->   
-> -#define AFI_CONFIGURATION		0xac
-> -#define  AFI_CONFIGURATION_EN_FPCI	(1 << 0)
-> +#define AFI_CONFIGURATION			0xac
-> +#define  AFI_CONFIGURATION_EN_FPCI		(1 << 0)
-> +#define  AFI_CONFIGURATION_CLKEN_OVERRIDE	(1 << 31)
-BIT macro is preferred here.
->   
->   #define AFI_FPCI_ERROR_MASKS	0xb0
->   
-> @@ -1057,9 +1058,10 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->   		}
->   	}
->   
-> -	/* finally enable PCIe */
-> +	/* Disable AFI dynamic clock gating and enable PCIe */
->   	value = afi_readl(pcie, AFI_CONFIGURATION);
-> -	value |= AFI_CONFIGURATION_EN_FPCI;
-> +	value |= (AFI_CONFIGURATION_EN_FPCI |
-> +			AFI_CONFIGURATION_CLKEN_OVERRIDE);
->   	afi_writel(pcie, value, AFI_CONFIGURATION);
->   
->   	value = AFI_INTR_EN_INI_SLVERR | AFI_INTR_EN_INI_DECERR |
+
+However, I don't think there's necessarily any contradiction here,
+since axis,artpec6-pcie.txt says:
+
+compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+compatible: "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
+
+And according to:
+https://elinux.org/Device_Tree_Usage#Understanding_the_compatible_Property
+
+The first string in the list specifies the exact device.
+The following strings represent other devices that the device is compatible
+with.
+
+Their example is:
+
+The compatible property for the MPC8349 serial device should therefore be:
+compatible = "fsl,mpc8349-uart", "ns16550".
+In this case, fsl,mpc8349-uart specifies the exact device, and ns16550 states
+that it is register-level compatible with a National Semiconductor 16550 UART.
+
+The exact device is "axis,artpec6-pcie-ep", but it is register compatible with
+"snps,dw-pcie".
+
+But perhaps Rob Herring could correct me if I'm wrong.
+
+
+Regards,
+Niklas
