@@ -1,68 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 25 Oct 2017 15:21:21 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-cc: linux-alpha@vger.kernel.org,
-        Linux Kernel list <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: alpha boot hang - 4.14-rc* regression
-In-Reply-To: <20171025092159.GA14222@red-moon>
-Message-ID: <alpine.LRH.2.21.1710251511090.10071@math.ut.ee>
-References: <alpine.LRH.2.21.1710251043170.7098@math.ut.ee> <alpine.LRH.2.21.1710251109150.7098@math.ut.ee> <alpine.LRH.2.21.1710251129520.7098@math.ut.ee> <20171025092159.GA14222@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56852 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752418AbdJTVpq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 17:45:46 -0400
+Date: Fri, 20 Oct 2017 16:45:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-pcmcia@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1] pcmcia: convert to use for_each_pci_bridge() helper
+Message-ID: <20171020214544.GT6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171013165352.25550-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171013165352.25550-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > (Added linux-pci to CC)
-> > 
-> > > > I run Gentoo Linux on my alphas, with latest git kernels for test. 
-> > > > 4.13.0 worked well on 3 alphas but 4.13.0-09217-g5969d1bb3082 hangs on 
-> > > > boot on all 3 of them. Tried bisecting on PC164, got into unrelated 
-> > > > stuff, so probably it does not trigger always. Retried bisecting on 
-> > > > DS10L. On the first try I got that the same keel where I first saw bad 
-> > > > was the culprit, another bisect led me to 
-> > > > 0e4c2eeb758a91e68b9eaf7a4bee9bd5ed97ff2b which looks more related.
-> > > > 
-> > > > This is how the crash looks on console:
-> > > > 
-> > > >  * Starting udev ...
-> > > > starting version 225
-> > > >  [ ok ]
-> > > >  * Generating a rule to create a /dev/root symlink ...
-> > > >  [ ok ]
-> > > >  * Populating /dev with existing devices through uevents ...
-> > > >  [ ok ]
-> > > > 
-> > > > halted CPU 0
-> > > > 
-> > > > halt code = 5
-> > > > HALT instruction executed
-> > > > PC = fffffc00009bf914
-> > > > boot failure
-> > > > >>>
-> > > > 
-> > > > What else can I do to debug this?
-> > > 
-> > > Booting with debug ignore_loglevel I get also this:
-> > [...]
-> > > So maybe it is related pcspkr loading, or the just loaded libata or 
-> > > floppy...
-> > 
-> > removing libata modules and rebooting fixes it - so it seems to be 
-> > loading of libata.
+On Fri, Oct 13, 2017 at 07:53:52PM +0300, Andy Shevchenko wrote:
+> ...which makes code slightly cleaner.
 > 
-> Can you please cherry-pick:
+> Requires: d43f59ce6c50 ("PCI: Add for_each_pci_bridge() helper")
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+I folded this into the original commit, since it hasn't been merged
+anywhere.  Note that I moved that commit from pci/misc to pci/hotplug
+since Mika's series depends on it.  Thanks!
+
+> ---
+>  drivers/pcmcia/cardbus.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
 > 
-> commit b1f9e5e355e9 ("ide: fix IRQ assignment for PCI bus order probing")
+> diff --git a/drivers/pcmcia/cardbus.c b/drivers/pcmcia/cardbus.c
+> index 4fe4cc4ae19a..5c0170597037 100644
+> --- a/drivers/pcmcia/cardbus.c
+> +++ b/drivers/pcmcia/cardbus.c
+> @@ -77,9 +77,8 @@ int __ref cb_alloc(struct pcmcia_socket *s)
+>  
+>  	max = bus->busn_res.start;
+>  	for (pass = 0; pass < 2; pass++)
+> -		list_for_each_entry(dev, &bus->devices, bus_list)
+> -			if (pci_is_bridge(dev))
+> -				max = pci_scan_bridge(bus, dev, max, pass);
+> +		for_each_pci_bridge(dev, bus)
+> +			max = pci_scan_bridge(bus, dev, max, pass);
+>  
+>  	/*
+>  	 * Size all resources below the CardBus controller.
+> -- 
+> 2.14.2
 > 
-> from mainline and let us know if that solves the issue ?
-
-No, still breaks the same way (b1f9e5e355e9 patched on top of 
-0e4c2eeb758a).
-
-4.14.0-rc5-00095-g1c9fec470b81 was also still broken the same way (tried 
-on Sunday).
-
--- 
-Meelis Roos (mroos@linux.ee)
