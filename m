@@ -1,121 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41800 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:47296 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750951AbdJDWMB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Oct 2017 18:12:01 -0400
-Date: Wed, 4 Oct 2017 17:11:57 -0500
+        id S1752726AbdJTQWF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 12:22:05 -0400
+Subject: [PATCH v6 1/4] PCI/portdrv: Add #defines for AER and DPC Interrupt
+ Message Number masks
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Qiang Zheng <zhengqiang10@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        gabriele.paoloni@huawei.com, linuxarm@huawei.com
-Subject: Re: [PATCH V2] Bug fix for PME interrupt handler, add Root Status
- check
-Message-ID: <20171004221157.GL25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506737526-94266-1-git-send-email-zhengqiang10@huawei.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
+        Christoph Hellwig <hch@lst.de>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        linux-pci@vger.kernel.org
+Date: Fri, 20 Oct 2017 11:22:03 -0500
+Message-ID: <20171020162203.6391.74119.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506737526-94266-1-git-send-email-zhengqiang10@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 30, 2017 at 10:12:06AM +0800, Qiang Zheng wrote:
-> PCIe PME and hot plug share same interrupt number. In some special case,
-> Link down event cause hot plug interrupt, devices is not disconnected,
-> But read config will return 0xff.
-> 
-> In that case, PME work function will run and not return Because
-> Root Status PME bit always 1 and can not be cleared.
-> 
-> This patch add Root Status check in PME interrupt handler,
-> Just do same as pciehp isr Slot status check.
-> 
-> Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
-> ---
->  drivers/pci/pcie/pme.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index fafdb16..2ff2e57 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -273,7 +273,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
->  	spin_lock_irqsave(&data->lock, flags);
->  	pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
->  
-> -	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
-> +	if (rtsta == U32_MAX || !(rtsta & PCI_EXP_RTSTA_PME)) {
->  		spin_unlock_irqrestore(&data->lock, flags);
->  		return IRQ_NONE;
->  	}
-> 
+From: Dongdong Liu <liudongdong3@huawei.com>
 
-I applied the patch below to pci/misc for v4.15.
+In the AER case, the mask isn't strictly necessary because there are no
+higher-order bits above the Interrupt Message Number, but using a #define
+will make it possible to grep for it.
 
-I think we need a similar test in pcie_pme_work_fn() itself.  Without
-it, I think there's a race: if we get a legitimate PME, enter
-pcie_pme_work_fn(), and the link goes down, we could still get
-0xffffffff the next time we read PCI_EXP_RTSTA.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/pcie/portdrv_core.c |    4 ++--
+ include/uapi/linux/pci_regs.h   |    2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-I also used "(u32) ~0" instead of U32_MAX because that's the style
-used elsewhere.  It might be clunkier than necessary, but U32_MAX
-suggests a limit, and that's not really the concept here.
-
-I didn't add your reviewed-by, Rafael, since I made non-trivial
-changes to the patch.
-
-Bjorn
-
-
-
-commit 303029d6d55ba10a37c82c31a89eb5550cde77ec
-Author: Qiang <zhengqiang10@huawei.com>
-Date:   Thu Sep 28 11:54:34 2017 +0800
-
-    PCI/PME: Handle invalid data when reading Root Status
-    
-    PCIe PME and native hotplug share the same interrupt number, so hotplug
-    interrupts are also processed by PME.  In some cases, e.g., a Link Down
-    interrupt, a device may be present but unreachable, so when we try to
-    read its Root Status register, the read fails and we get all ones data
-    (0xffffffff).
-    
-    Previously, we interpreted that data as PCI_EXP_RTSTA_PME being set, i.e.,
-    "some device has asserted PME," so we scheduled pcie_pme_work_fn().  This
-    caused an infinite loop because pcie_pme_work_fn() tried to handle PME
-    requests until PCI_EXP_RTSTA_PME is cleared, but with the link down,
-    PCI_EXP_RTSTA_PME can't be cleared.
-    
-    Check for the invalid 0xffffffff data everywhere we read the Root Status
-    register.
-    
-    1469d17dd341 ("PCI: pciehp: Handle invalid data when reading from
-    non-existent devices") added similar checks in the hotplug driver.
-    
-    Signed-off-by: Qiang Zheng <zhengqiang10@huawei.com>
-    [bhelgaas: changelog, also check in pcie_pme_work_fn(), use "~0" to follow
-    other similar checks]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index fafdb165dd2e..df290aa58dce 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -226,6 +226,9 @@ static void pcie_pme_work_fn(struct work_struct *work)
- 			break;
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 313a21df1692..72fcbe5567dd 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -114,7 +114,7 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+-		entry = reg32 >> 27;
++		entry = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
+ 		if (entry >= nr_entries)
+ 			goto out_free_irqs;
  
- 		pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
-+		if (rtsta == (u32) ~0)
-+			break;
-+
- 		if (rtsta & PCI_EXP_RTSTA_PME) {
- 			/*
- 			 * Clear PME status of the port.  If there are other
-@@ -273,7 +276,7 @@ static irqreturn_t pcie_pme_irq(int irq, void *context)
- 	spin_lock_irqsave(&data->lock, flags);
- 	pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+@@ -141,7 +141,7 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
+ 		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
+-		entry = reg16 & 0x1f;
++		entry = reg16 & PCI_EXP_DPC_IRQ;
+ 		if (entry >= nr_entries)
+ 			goto out_free_irqs;
  
--	if (!(rtsta & PCI_EXP_RTSTA_PME)) {
-+	if (rtsta == (u32) ~0 || !(rtsta & PCI_EXP_RTSTA_PME)) {
- 		spin_unlock_irqrestore(&data->lock, flags);
- 		return IRQ_NONE;
- 	}
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f8d58045926f..f7c09a4c494a 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -746,6 +746,7 @@
+ #define PCI_ERR_ROOT_FIRST_FATAL	0x00000010 /* First UNC is Fatal */
+ #define PCI_ERR_ROOT_NONFATAL_RCV	0x00000020 /* Non-Fatal Received */
+ #define PCI_ERR_ROOT_FATAL_RCV		0x00000040 /* Fatal Received */
++#define PCI_ERR_ROOT_AER_IRQ		0xf8000000 /* Advanced Error Interrupt Message Number */
+ #define PCI_ERR_ROOT_ERR_SRC	52	/* Error Source Identification */
+ 
+ /* Virtual Channel */
+@@ -960,6 +961,7 @@
+ 
+ /* Downstream Port Containment */
+ #define PCI_EXP_DPC_CAP			4	/* DPC Capability */
++#define PCI_EXP_DPC_IRQ			0x1f	/* DPC Interrupt Message Number */
+ #define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
+ #define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
+ #define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
