@@ -1,103 +1,134 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Ludwig Petrosyan <ludwig.petrosyan@desy.de>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+        "'linux-rdma@vger.kernel.org'" <linux-rdma@vger.kernel.org>,
+        "'linux-nvdimm@lists.01.org'" <linux-nvdimm@lists.01.org>,
+        "'Linux-media@vger.kernel.org'" <Linux-media@vger.kernel.org>,
+        "'dri-devel@lists.freedesktop.org'" <dri-devel@lists.freedesktop.org>,
+        "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Cc: "Bridgman, John" <John.Bridgman@amd.com>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
+Date: Fri, 20 Oct 2017 09:48:58 -0600
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD009F05A@AcuExch.aculab.com>
-References: <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
- <589c04cb-061b-a453-3188-79324a02388e@arm.com> <20171017081422.GA19475@lst.de>
- <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
- <20171018065316.GA11183@lst.de>
- <CANCKTBv+yiCNsrnx3m+W9wPqC4NdKPZ2p=zLtSa8fX6v1rPcYQ@mail.gmail.com>
- <20171019091644.GA14983@lst.de>
- <CANCKTBuaTD29My77QfOeUmtZfLAmmJXUYe6QvBW+uoH2Kb+tAQ@mail.gmail.com>
- <20171020073730.GA12937@lst.de>
- <CANCKTBsRRkwNMrxWjtgxbyZqT6NOxPX0NHDbnEO2BMjj8oVtpg@mail.gmail.com>
- <20171020145752.GA4694@lst.de>
- <CANCKTBtxp9gSdndKAZ7xGA+VozQsn2PX_-9P8A22_5Matbb7-w@mail.gmail.com>
- <063D6719AE5E284EB5DD2968C1650D6DD009F05A@AcuExch.aculab.com>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Tue, 24 Oct 2017 14:08:12 -0400
-Message-ID: <CANCKTBu6H6thuK9F_6HBGhStaXSto7fwWv4V5oH8EdWQD0-1kQ@mail.gmail.com>
-Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
-To: David Laight <David.Laight@aculab.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
- Florian Fainelli <f.fainelli@gmail.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Ralf Baechle <ralf@linux-mips.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 23, 2017 at 5:06 AM, David Laight <David.Laight@aculab.com> wrote:
-> From: Jim Quinlan
->> Sent: 20 October 2017 16:28
->> On Fri, Oct 20, 2017 at 10:57 AM, Christoph Hellwig <hch@lst.de> wrote:
->> > On Fri, Oct 20, 2017 at 10:41:56AM -0400, Jim Quinlan wrote:
->> >> I am not sure I understand your comment -- the size of the request
->> >> shouldn't be a factor.  Let's look at your example of the DMA request
->> >> of 3fffff00 to 4000000f (physical memory).  Lets say it is for 15
->> >> pages.  If we block out  the last page [0x3ffff000..0x3fffffff] from
->> >> what is available, there is no 15 page span that can happen across the
->> >> 0x40000000 boundary.  For SG, there can be no merge that connects a
->> >> page from one region to another region.  Can you give an example of
->> >> the scenario you are thinking of?
->> >
->> > What prevents a merge from say the regions of
->> > 0....3fffffff and 40000000....7fffffff?
->>
->> Huh? [0x3ffff000...x3ffffff] is not available to be used. Drawing from
->> the original example, we now have to tell Linux that these are now our
->> effective memory regions:
->>
->>       memc0-a@[        0....3fffefff] <=> pci@[        0....3fffefff]
->>       memc0-b@[100000000...13fffefff] <=> pci@[ 40000000....7fffefff]
->>       memc1-a@[ 40000000....7fffefff] <=> pci@[ 80000000....bfffefff]
->>       memc1-b@[300000000...33fffefff] <=> pci@[ c0000000....ffffefff]
->>       memc2-a@[ 80000000....bfffefff] <=> pci@[100000000...13fffefff]
->>       memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
->>
->> This leaves a one-page gap between phsyical memory regions which would
->> normally be contiguous. One cannot have a dma alloc that spans any two
->> regions.  This is a drastic step, but I don't see an alternative.
->> Perhaps  I may be missing what you are saying...
->
-> Isn't this all unnecessary?
-> Both kmalloc() and dma_alloc() are constrained to allocate memory
-> that doesn't cross an address boundary that is larger than the size.
-> So if you allocate 16k it won't cross a 16k physical address boundary.
->
->         David
->
-Hi David,  Christoph was also concerned about this:
+Hi Ludwig,
 
-"For the block world take a look at __blk_segment_map_sg which does the merging
-of contiguous pages into a single SG segment.  You'd have to override
-BIOVEC_PHYS_MERGEABLE to prevent this from happening in your supported
-architectures for the block layer."
+P2P transactions are still *very* experimental at the moment and take a 
+lot of expertise to get working in a general setup. It will definitely 
+require changes to the kernel, including the drivers of all the devices 
+you are trying to make talk to eachother. If you're up for it you can 
+take a look at:
 
-Do you consider this a non-issue as well or can this happen and span
-memory regions?
+https://github.com/sbates130272/linux-p2pmem/
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Which has our current rough work making NVMe fabrics use p2p transactions.
+
+Logan
+
+On 10/20/2017 6:36 AM, Ludwig Petrosyan wrote:
+> Dear Linux kernel group
+> 
+> my name is Ludwig Petrosyan I am working in DESY (Germany)
+> 
+> we are responsible for the control system of  all accelerators in DESY.
+> 
+> For a 7-8 years we have switched to MTCA.4 systems and using PCIe as a 
+> central Bus.
+> 
+> I am mostly responsible for the Linux drivers of the AMC Cards (PCIe 
+> endpoints).
+> 
+> The idea is start to use peer to peer transaction for PCIe endpoint (DMA 
+> and/or usual Read/Write)
+> 
+> Could You please advise me where to start, is there some Documentation 
+> how to do it.
+> 
+> 
+> with best regards
+> 
+> 
+> Ludwig
+> 
+> 
+> On 11/21/2016 09:36 PM, Deucher, Alexander wrote:
+>> This is certainly not the first time this has been brought up, but I'd 
+>> like to try and get some consensus on the best way to move this 
+>> forward.  Allowing devices to talk directly improves performance and 
+>> reduces latency by avoiding the use of staging buffers in system 
+>> memory.  Also in cases where both devices are behind a switch, it 
+>> avoids the CPU entirely.  Most current APIs (DirectGMA, PeerDirect, 
+>> CUDA, HSA) that deal with this are pointer based.  Ideally we'd be 
+>> able to take a CPU virtual address and be able to get to a physical 
+>> address taking into account IOMMUs, etc.  Having struct pages for the 
+>> memory would allow it to work more generally and wouldn't require as 
+>> much explicit support in drivers that wanted to use it.
+>> Some use cases:
+>> 1. Storage devices streaming directly to GPU device memory
+>> 2. GPU device memory to GPU device memory streaming
+>> 3. DVB/V4L/SDI devices streaming directly to GPU device memory
+>> 4. DVB/V4L/SDI devices streaming directly to storage devices
+>> Here is a relatively simple example of how this could work for 
+>> testing.  This is obviously not a complete solution.
+>> - Device memory will be registered with Linux memory sub-system by 
+>> created corresponding struct page structures for device memory
+>> - get_user_pages_fast() will  return corresponding struct pages when 
+>> CPU address points to the device memory
+>> - put_page() will deal with struct pages for device memory
+>> Previously proposed solutions and related proposals:
+>> 1.P2P DMA
+>> DMA-API/PCI map_peer_resource support for peer-to-peer 
+>> (http://www.spinics.net/lists/linux-pci/msg44560.html)
+>> Pros: Low impact, already largely reviewed.
+>> Cons: requires explicit support in all drivers that want to support 
+>> it, doesn't handle S/G in device memory.
+>> 2. ZONE_DEVICE IO
+>> Direct I/O and DMA for persistent memory 
+>> (https://lwn.net/Articles/672457/)
+>> Add support for ZONE_DEVICE IO memory with struct pages. 
+>> (https://patchwork.kernel.org/patch/8583221/)
+>> Pro: Doesn't waste system memory for ZONE metadata
+>> Cons: CPU access to ZONE metadata slow, may be lost, corrupted on 
+>> device reset.
+>> 3. DMA-BUF
+>> RDMA subsystem DMA-BUF support 
+>> (http://www.spinics.net/lists/linux-rdma/msg38748.html)
+>> Pros: uses existing dma-buf interface
+>> Cons: dma-buf is handle based, requires explicit dma-buf support in 
+>> drivers.
+>>
+>> 4. iopmem
+>> iopmem : A block device for PCIe memory 
+>> (https://lwn.net/Articles/703895/)
+>> 5. HMM
+>> Heterogeneous Memory Management 
+>> (http://lkml.iu.edu/hypermail/linux/kernel/1611.2/02473.html)
+>>
+>> 6. Some new mmap-like interface that takes a userptr and a length and 
+>> returns a dma-buf and offset?
+>> Alex
+>>
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> _______________________________________________
+> Linux-nvdimm mailing list
+> Linux-nvdimm@lists.01.org
+> https://lists.01.org/mailman/listinfo/linux-nvdimm
