@@ -1,34 +1,54 @@
-Return-Path: <SRS0=UV2D=BU=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=UV2D=BU=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-Path: <SRS0=vfPS=BT=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=vfPS=BT=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH v5 0/3] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port
+ service drivers
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, LKML <linux-kernel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, Linux Documentation <linux-doc@vger.kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Ulf Hansson <ulf.hansson@linaro.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Kevin Hilman <khilman@kernel.org>, Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-Date: Sat, 21 Oct 2017 03:04:39 +0200
-Message-ID: <9866321.2BgCJKj5ti@aspire.rjw.lan>
-In-Reply-To: <20171020204607.GQ6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <20171020204607.GQ6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com>
+CC: Charles Chenxin <charles.chenxin@huawei.com>, <linuxarm@huawei.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Gabriele Paoloni
+	<gabriele.paoloni@huawei.com>,
+        <linux-pci@vger.kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <4ef5470d-b3b1-618a-8449-d67e69587141@huawei.com>
+Date: Fri, 20 Oct 2017 16:20:27 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 20, 2017 10:46:07 PM CEST Bjorn Helgaas wrote:
-> On Mon, Oct 16, 2017 at 03:12:35AM +0200, Rafael J. Wysocki wrote:
-> > Hi All,
-> > 
-> > Well, this took more time than expected, as I tried to cover everything I had
-> > in mind regarding PM flags for drivers.
-> 
-> For the parts that touch PCI,
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Hi Bjorn
 
-Thank you!
-
-> I doubt there'll be conflicts with changes in my tree, but let me know if
-> you trip over any so I can watch for them when merging.
-
-Well, if there are any conflicts, we'll see them in linux-next I guess. :-)
+Many thanks for your work on the patchset.
+The pachset looks good to me.
+It works ok on HiSilicon hip08 platform.
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
 
 Thanks,
-Rafael
+Dongdong
+在 2017/10/20 7:01, Bjorn Helgaas 写道:
+> This is based on Dongdong's series:
+>   v3: http://lkml.kernel.org/r/1507553167-27833-1-git-send-email-liudongdong3@huawei.com
+>   v4: http://lkml.kernel.org/r/1507719178-112556-1-git-send-email-liudongdong3@huawei.com
+>
+> The main idea is to fix IRQ issues when removing and adding back a Root
+> Port.  The problem is that when we allocate, free, and reallocate MSI/MSI-X
+> vectors for the device, we may not get the same vectors the second time,
+> but we saved IRQs based on the first set of vectors.
+>
+> ---
+>
+> Bjorn Helgaas (2):
+>       PCI/portdrv: Remove excessive comments
+>       PCI/portdrv: Compute MSI/MSI-X IRQ vectors after final allocation
+>
+> Dongdong Liu (1):
+>       PCI/portdrv: Add #defines for AER and DPC Interrupt Message Number masks
+>
+>
+>  drivers/pci/pcie/portdrv_core.c |  162 ++++++++++++++++-----------------------
+>  include/uapi/linux/pci_regs.h   |    2
+>  2 files changed, 70 insertions(+), 94 deletions(-)
+>
+> .
+>
