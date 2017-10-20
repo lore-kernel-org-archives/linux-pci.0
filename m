@@ -1,323 +1,180 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:43151 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752316AbdJ3Mnz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:43:55 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 17/17] PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
-Date: Mon, 30 Oct 2017 13:42:20 +0100
-Message-Id: <20171030124221.20690-18-niklas.cassel@axis.com>
-In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
+Received: from mail.kernel.org ([198.145.29.99]:47374 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752065AbdJTQWW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 12:22:22 -0400
+Subject: [PATCH v6 3/4] PCI/portdrv: Factor out Interrupt Message Number
+ lookup
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
+        Christoph Hellwig <hch@lst.de>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        linux-pci@vger.kernel.org
+Date: Fri, 20 Oct 2017 11:22:19 -0500
+Message-ID: <20171020162219.6391.26729.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ARTPEC-6 SoC and the ARTPEC-7 SoC are very similar.
-Unfortunately, some fields in the PCIECFG and PCIESTAT
-register have changed.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Factor out Interrupt Message Number lookup from the MSI/MSI-X interrupt
+setup.  One side effect is that we only have to check once to see if we
+have enough vectors for all the services.  No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-V2:
-* DT binding change is now in a separate commit.
-* Changed the order of the functions to be more logical.
+ drivers/pci/pcie/portdrv_core.c |  110 ++++++++++++++++++++++-----------------
+ 1 file changed, 62 insertions(+), 48 deletions(-)
 
- drivers/pci/dwc/pcie-artpec6.c | 162 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 159 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index ef8815ea4776..679874794a51 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -27,14 +27,21 @@
- 
- #define to_artpec6_pcie(x)	dev_get_drvdata((x)->dev)
- 
-+enum artpec_pcie_variants {
-+	ARTPEC6,
-+	ARTPEC7,
-+};
-+
- struct artpec6_pcie {
- 	struct dw_pcie		*pci;
- 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
- 	void __iomem		*phy_base;	/* DT phy */
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- };
- 
- struct artpec_pcie_of_data {
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- };
- 
-@@ -45,6 +52,13 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
- 
-+#define ACK_F_ASPM_CTRL_OFF		(PL_OFFSET + 0xc)
-+#define ACK_N_FTS_MASK			GENMASK(15, 8)
-+#define ACK_N_FTS(x)			(((x) << 8) & ACK_N_FTS_MASK)
-+
-+#define FAST_TRAINING_SEQ_MASK		GENMASK(7, 0)
-+#define FAST_TRAINING_SEQ(x)		(((x) << 0) & FAST_TRAINING_SEQ_MASK)
-+
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
- #define  PCIECFG_DBG_OEN		BIT(24)
-@@ -59,6 +73,13 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
- #define  PCIECFG_CISRREN		BIT(2)
- #define  PCIECFG_MACRO_ENABLE		BIT(0)
-+/* ARTPEC-7 specific fields */
-+#define  PCIECFG_REFCLKSEL		BIT(23)
-+#define  PCIECFG_NOC_RESET		BIT(3)
-+
-+#define PCIESTAT			0x1c
-+/* ARTPEC-7 specific fields */
-+#define  PCIESTAT_EXTREFCLK		BIT(3)
- 
- #define NOCCFG				0x40
- #define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
-@@ -69,6 +90,12 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define PHY_STATUS			0x118
- #define  PHY_COSPLLLOCK			BIT(0)
- 
-+#define PHY_TX_ASIC_OUT			0x1014
-+#define  PHY_TX_ASIC_OUT_TX_ACK		BIT(0)
-+
-+#define PHY_RX_ASIC_OUT			0x101b
-+#define  PHY_RX_ASIC_OUT_ACK		BIT(0)
-+
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
- 	u32 val;
-@@ -127,7 +154,7 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- 	.stop_link = artpec6_pcie_stop_link,
- };
- 
--static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+static void artpec6_pcie_init_phy_a6(struct artpec6_pcie *artpec6_pcie)
- {
- 	u32 val;
- 	unsigned int retries;
-@@ -173,12 +200,109 @@ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
- 	} while (retries && !(val & PHY_COSPLLLOCK));
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index accd16082348..102f5c5fcfe0 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -43,6 +43,53 @@ static void release_pcie_device(struct device *dev)
+ 	kfree(to_pcie_device(dev));
  }
  
-+static void artpec6_pcie_init_phy_a7(struct artpec6_pcie *artpec6_pcie)
++/*
++ * Fill in *pme, *aer, *dpc with the relevant Interrupt Message Numbers if
++ * services are enabled in "mask".  Return the number of MSI/MSI-X vectors
++ * required to accommodate the largest Message Number.
++ */
++static int pcie_message_numbers(struct pci_dev *dev, int mask,
++				u32 *pme, u32 *aer, u32 *dpc)
 +{
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	u32 val;
-+	u16 phy_status_tx, phy_status_rx;
-+	unsigned int retries;
-+	bool extrefclk;
-+
-+	/* Check if external reference clock is connected */
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIESTAT);
-+	extrefclk = !!(val & PCIESTAT_EXTREFCLK);
-+	dev_dbg(pci->dev, "Using reference clock: %s\n",
-+		extrefclk ? "external" : "internal");
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
-+	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
-+		PCIECFG_PCLK_ENABLE;
-+	if (extrefclk)
-+		val |= PCIECFG_REFCLKSEL;
-+	else
-+		val &= ~PCIECFG_REFCLKSEL;
-+	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
-+	usleep_range(10, 20);
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+	val |= NOCCFG_ENABLE_CLK_PCIE;
-+	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
-+	usleep_range(20, 30);
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+	val &= ~NOCCFG_POWER_PCIE_IDLEREQ;
-+	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
-+
-+	retries = 50;
-+	do {
-+		usleep_range(1000, 2000);
-+		val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+		retries--;
-+	} while (retries &&
-+		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
-+
-+	retries = 50;
-+	do {
-+		usleep_range(1000, 2000);
-+		phy_status_tx = readw(artpec6_pcie->phy_base + PHY_TX_ASIC_OUT);
-+		phy_status_rx = readw(artpec6_pcie->phy_base + PHY_RX_ASIC_OUT);
-+		retries--;
-+	} while (retries && ((phy_status_tx & PHY_TX_ASIC_OUT_TX_ACK) ||
-+				(phy_status_rx & PHY_RX_ASIC_OUT_ACK)));
-+}
-+
-+static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+{
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		artpec6_pcie_init_phy_a6(artpec6_pcie);
-+		break;
-+	case ARTPEC7:
-+		artpec6_pcie_init_phy_a7(artpec6_pcie);
-+		break;
-+	}
-+}
-+
-+static void artpec6_pcie_set_nfts(struct artpec6_pcie *artpec6_pcie)
-+{
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	u32 val;
-+
-+	if (artpec6_pcie->variant != ARTPEC7)
-+		return;
++	u32 nvec = 0, pos, reg32;
++	u16 reg16;
 +
 +	/*
-+	 * Increase the N_FTS (Number of Fast Training Sequences)
-+	 * to be transmitted when transitioning from L0s to L0.
++	 * The Interrupt Message Number indicates which vector is used, i.e.,
++	 * the MSI-X table entry or the MSI offset between the base Message
++	 * Data and the generated interrupt message.  See PCIe r3.1, sec
++	 * 7.8.2, 7.10.10, 7.31.2.
 +	 */
-+	val = dw_pcie_readl_dbi(pci, ACK_F_ASPM_CTRL_OFF);
-+	val &= ~ACK_N_FTS_MASK;
-+	val |= ACK_N_FTS(180);
-+	dw_pcie_writel_dbi(pci, ACK_F_ASPM_CTRL_OFF, val);
 +
-+	/*
-+	 * Set the Number of Fast Training Sequences that the core
-+	 * advertises as its N_FTS during Gen2 or Gen3 link training.
-+	 */
-+	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val &= ~FAST_TRAINING_SEQ_MASK;
-+	val |= FAST_TRAINING_SEQ(180);
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
++		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
++		*pme = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
++		nvec = *pme + 1;
++	}
++
++	if (mask & PCIE_PORT_SERVICE_AER) {
++		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
++		if (pos) {
++			pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS,
++					      &reg32);
++			*aer = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
++			nvec = max(nvec, *aer + 1);
++		}
++	}
++
++	if (mask & PCIE_PORT_SERVICE_DPC) {
++		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
++		if (pos) {
++			pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP,
++					     &reg16);
++			*dpc = reg16 & PCI_EXP_DPC_IRQ;
++			nvec = max(nvec, *dpc + 1);
++		}
++	}
++
++	return nvec;
 +}
 +
- static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
+ /**
+  * pcie_port_enable_irq_vec - try to set up MSI-X or MSI as interrupt mode
+  * for given port
+@@ -54,7 +101,8 @@ static void release_pcie_device(struct device *dev)
+  */
+ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
  {
- 	u32 val;
+-	int nr_entries, entry, nvec = 0;
++	int nr_entries, nvec;
++	u32 pme = 0, aer = 0, dpc = 0;
  
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_CORE_RESET_REQ;
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		val |= PCIECFG_CORE_RESET_REQ;
-+		break;
-+	case ARTPEC7:
-+		val &= ~PCIECFG_NOC_RESET;
-+		break;
-+	}
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ 	/* Allocate the maximum possible number of MSI/MSI-X vectors */
+ 	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSI_ENTRIES,
+@@ -62,54 +110,24 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+ 
+-	/*
+-	 * The Interrupt Message Number indicates which vector is used, i.e.,
+-	 * the MSI-X table entry or the MSI offset between the base Message
+-	 * Data and the generated interrupt message.  See PCIe r3.1, sec
+-	 * 7.8.2, 7.10.10, 7.31.2.
+-	 */
+-	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
+-		u16 reg16;
+-
+-		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+-		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+-		if (entry >= nr_entries)
+-			goto out_free_irqs;
+-
+-		/* PME and hotplug share an MSI/MSI-X vector */
+-		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, entry);
+-		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pci_irq_vector(dev, entry);
+-
+-		nvec = max(nvec, entry + 1);
++	/* See how many and which Interrupt Message Numbers we actually use */
++	nvec = pcie_message_numbers(dev, mask, &pme, &aer, &dpc);
++	if (nvec > nr_entries) {
++		pci_free_irq_vectors(dev);
++		return -EIO;
+ 	}
+ 
+-	if (mask & PCIE_PORT_SERVICE_AER) {
+-		u32 reg32, pos;
+-
+-		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+-		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+-		entry = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
+-		if (entry >= nr_entries)
+-			goto out_free_irqs;
+-
+-		irqs[PCIE_PORT_SERVICE_AER_SHIFT] = pci_irq_vector(dev, entry);
+-
+-		nvec = max(nvec, entry + 1);
++	/* PME and hotplug share an MSI/MSI-X vector */
++	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
++		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, pme);
++		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pci_irq_vector(dev, pme);
+ 	}
+ 
+-	if (mask & PCIE_PORT_SERVICE_DPC) {
+-		u16 reg16, pos;
+-
+-		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
+-		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
+-		entry = reg16 & PCI_EXP_DPC_IRQ;
+-		if (entry >= nr_entries)
+-			goto out_free_irqs;
+-
+-		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
++	if (mask & PCIE_PORT_SERVICE_AER)
++		irqs[PCIE_PORT_SERVICE_AER_SHIFT] = pci_irq_vector(dev, aer);
+ 
+-		nvec = max(nvec, entry + 1);
+-	}
++	if (mask & PCIE_PORT_SERVICE_DPC)
++		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, dpc);
+ 
+ 	/* If we allocated more than we need, free them and allocate fewer */
+ 	if (nvec != nr_entries) {
+@@ -122,10 +140,6 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 	}
+ 
+ 	return 0;
+-
+-out_free_irqs:
+-	pci_free_irq_vectors(dev);
+-	return -EIO;
  }
  
-@@ -187,7 +311,14 @@ static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
- 	u32 val;
- 
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val &= ~PCIECFG_CORE_RESET_REQ;
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		val &= ~PCIECFG_CORE_RESET_REQ;
-+		break;
-+	case ARTPEC7:
-+		val |= PCIECFG_NOC_RESET;
-+		break;
-+	}
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- 	usleep_range(100, 200);
- }
-@@ -210,6 +341,7 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	artpec6_pcie_assert_core_reset(artpec6_pcie);
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-+	artpec6_pcie_set_nfts(artpec6_pcie);
- 	dw_pcie_setup_rc(pp);
- 	artpec6_pcie_establish_link(pci);
- 	dw_pcie_wait_for_link(pci);
-@@ -279,6 +411,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- 	artpec6_pcie_assert_core_reset(artpec6_pcie);
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-+	artpec6_pcie_set_nfts(artpec6_pcie);
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++)
- 		dw_pcie_ep_reset_bar(pci, bar);
-@@ -351,6 +484,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	int ret;
- 	const struct of_device_id *match;
- 	const struct artpec_pcie_of_data *data;
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- 
- 	match = of_match_device(artpec6_pcie_of_match, dev);
-@@ -358,6 +492,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 
- 	data = (struct artpec_pcie_of_data *)match->data;
-+	variant = (enum artpec_pcie_variants)data->variant;
- 	mode = (enum dw_pcie_device_mode)data->mode;
- 
- 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
-@@ -372,6 +507,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &dw_pcie_ops;
- 
- 	artpec6_pcie->pci = pci;
-+	artpec6_pcie->variant = variant;
- 	artpec6_pcie->mode = mode;
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-@@ -422,12 +558,24 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 
- #ifdef CONFIG_PCIE_ARTPEC6_HOST
- static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
-+	.variant = ARTPEC6,
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct artpec_pcie_of_data artpec7_pcie_rc_of_data = {
-+	.variant = ARTPEC7,
- 	.mode = DW_PCIE_RC_TYPE,
- };
- #endif
- 
- #ifdef CONFIG_PCIE_ARTPEC6_EP
- static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
-+	.variant = ARTPEC6,
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
-+static const struct artpec_pcie_of_data artpec7_pcie_ep_of_data = {
-+	.variant = ARTPEC7,
- 	.mode = DW_PCIE_EP_TYPE,
- };
- #endif
-@@ -438,12 +586,20 @@ static const struct of_device_id artpec6_pcie_of_match[] = {
- 		.compatible = "axis,artpec6-pcie",
- 		.data = &artpec6_pcie_rc_of_data,
- 	},
-+	{
-+		.compatible = "axis,artpec7-pcie",
-+		.data = &artpec7_pcie_rc_of_data,
-+	},
- #endif
- #ifdef CONFIG_PCIE_ARTPEC6_EP
- 	{
- 		.compatible = "axis,artpec6-pcie-ep",
- 		.data = &artpec6_pcie_ep_of_data,
- 	},
-+	{
-+		.compatible = "axis,artpec7-pcie-ep",
-+		.data = &artpec7_pcie_ep_of_data,
-+	},
- #endif
- 	{},
- };
--- 
-2.14.2
+ /**
