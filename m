@@ -1,106 +1,71 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bodo-Merle Sandor <esndbod@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: iproc: Allow allocation of multiple MSIs
-Date: Sat,  7 Oct 2017 14:08:44 +0200
-Message-Id: <20171007120851.20230-1-sbodomerle@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- Bjorn Helgaas <bhelgaas@google.com>, Sandor Bodo-Merle <sbodomerle@gmail.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53728 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753269AbdJTRar (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 13:30:47 -0400
+Date: Fri, 20 Oct 2017 12:30:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Ben Dooks <ben.dooks@codethink.co.uk>,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: PCI: rcar: Correct example to match reality
+Message-ID: <20171020173044.GJ6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <1507729813-21501-1-git-send-email-geert+renesas@glider.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1507729813-21501-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sandor Bodo-Merle <sbodomerle@gmail.com>
+On Wed, Oct 11, 2017 at 03:50:13PM +0200, Geert Uytterhoeven wrote:
+> Correct the USB subnodes in the example, cfr. commit f7d569c1e6a6fa73
+> ("ARM: dts: r8a779x: Fix PCI bus dtc warnings"):
+>   1. Drop the bogus 'device_type = "pci"' properties,
+>   2. Correct the unit addresses.
+> 
+> Update other bits in the example to match real use:
+>   1. Rename the USB subnodes from "pci" to "usb",
+>   2. Update the "phys" property.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Add support for allocating multiple MSIs at the same time, so that the
-MSI_FLAG_MULTI_PCI_MSI flag can be added to the msi_domain_info
-structure.
+Applied with acks from Sergei and Rob to pci/host-rcar for v4.15, thanks!
 
-Avoid storing the hwirq in the low 5 bits of the message data, as it is
-used by the device. Also fix an endianness problem by using readl().
-
-Signed-off-by: Sandor Bodo-Merle <sbodomerle@gmail.com>
----
- drivers/pci/host/pcie-iproc-msi.c | 19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/host/pcie-iproc-msi.c
-index 2d0f535a2f69..990fc906d73d 100644
---- a/drivers/pci/host/pcie-iproc-msi.c
-+++ b/drivers/pci/host/pcie-iproc-msi.c
-@@ -179,7 +179,7 @@ static struct irq_chip iproc_msi_irq_chip = {
- 
- static struct msi_domain_info iproc_msi_domain_info = {
- 	.flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--		MSI_FLAG_PCI_MSIX,
-+		MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
- 	.chip = &iproc_msi_irq_chip,
- };
- 
-@@ -237,7 +237,7 @@ static void iproc_msi_irq_compose_msi_msg(struct irq_data *data,
- 	addr = msi->msi_addr + iproc_msi_addr_offset(msi, data->hwirq);
- 	msg->address_lo = lower_32_bits(addr);
- 	msg->address_hi = upper_32_bits(addr);
--	msg->data = data->hwirq;
-+	msg->data = data->hwirq << 5;
- }
- 
- static struct irq_chip iproc_msi_bottom_irq_chip = {
-@@ -251,7 +251,7 @@ static int iproc_msi_irq_domain_alloc(struct irq_domain *domain,
- 				      void *args)
- {
- 	struct iproc_msi *msi = domain->host_data;
--	int hwirq;
-+	int hwirq, i;
- 
- 	mutex_lock(&msi->bitmap_lock);
- 
-@@ -267,10 +267,14 @@ static int iproc_msi_irq_domain_alloc(struct irq_domain *domain,
- 
- 	mutex_unlock(&msi->bitmap_lock);
- 
--	irq_domain_set_info(domain, virq, hwirq, &iproc_msi_bottom_irq_chip,
--			    domain->host_data, handle_simple_irq, NULL, NULL);
-+	for (i = 0; i < nr_irqs; i++) {
-+		irq_domain_set_info(domain, virq + i, hwirq + i,
-+				    &iproc_msi_bottom_irq_chip,
-+				    domain->host_data, handle_simple_irq,
-+				    NULL, NULL);
-+	}
- 
--	return 0;
-+	return hwirq;
- }
- 
- static void iproc_msi_irq_domain_free(struct irq_domain *domain,
-@@ -302,7 +306,8 @@ static inline u32 decode_msi_hwirq(struct iproc_msi *msi, u32 eq, u32 head)
- 
- 	offs = iproc_msi_eq_offset(msi, eq) + head * sizeof(u32);
- 	msg = (u32 *)(msi->eq_cpu + offs);
--	hwirq = *msg & IPROC_MSI_EQ_MASK;
-+	hwirq = readl(msg);
-+	hwirq = (hwirq >> 5) + (hwirq & 0x1f);
- 
- 	/*
- 	 * Since we have multiple hwirq mapped to a single MSI vector,
--- 
-2.15.0.rc0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> index 3d038638612b8ec2..9fe7e12a7bf37b7c 100644
+> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> @@ -60,17 +60,15 @@ Example SoC configuration:
+>  				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
+>  				 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
+>  
+> -		pci@0,1 {
+> +		usb@1,0 {
+>  			reg = <0x800 0 0 0 0>;
+> -			device_type = "pci";
+> -			phys = <&usbphy 0 0>;
+> +			phys = <&usb0 0>;
+>  			phy-names = "usb";
+>  		};
+>  
+> -		pci@0,2 {
+> +		usb@2,0 {
+>  			reg = <0x1000 0 0 0 0>;
+> -			device_type = "pci";
+> -			phys = <&usbphy 0 0>;
+> +			phys = <&usb0 0>;
+>  			phy-names = "usb";
+>  		};
+>  	};
+> -- 
+> 2.7.4
+> 
