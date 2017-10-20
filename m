@@ -1,93 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34250 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1763517AbdJQRhm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Oct 2017 13:37:42 -0400
-Date: Tue, 17 Oct 2017 12:37:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, thierry.reding@gmail.com,
-        jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, mperttunen@nvidia.com
-Subject: Re: [PATCH V2 0/4] Add Tegra186 PCIe support
-Message-ID: <20171017173740.GF5641@bhelgaas-glaptop.roam.corp.google.com>
-References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 20 Oct 2017 18:17:19 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Jim Quinlan <jim2101024@gmail.com>
+Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
+Message-ID: <20171020161719.GA6247@lst.de>
+References: <20171017081422.GA19475@lst.de>
+ <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
+ <20171018065316.GA11183@lst.de>
+ <CANCKTBv+yiCNsrnx3m+W9wPqC4NdKPZ2p=zLtSa8fX6v1rPcYQ@mail.gmail.com>
+ <20171019091644.GA14983@lst.de>
+ <CANCKTBuaTD29My77QfOeUmtZfLAmmJXUYe6QvBW+uoH2Kb+tAQ@mail.gmail.com>
+ <20171020073730.GA12937@lst.de>
+ <CANCKTBsRRkwNMrxWjtgxbyZqT6NOxPX0NHDbnEO2BMjj8oVtpg@mail.gmail.com>
+ <20171020145752.GA4694@lst.de>
+ <CANCKTBtxp9gSdndKAZ7xGA+VozQsn2PX_-9P8A22_5Matbb7-w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CANCKTBtxp9gSdndKAZ7xGA+VozQsn2PX_-9P8A22_5Matbb7-w@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
+ Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, iommu@lists.linux-foundation.org,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 27, 2017 at 05:28:33PM +0530, Manikanta Maddireddy wrote:
-> Tegra186 has three PCIe controllers which can be operated
-> in 401, 211 or 111 lane configurations. Tegra TX2 platform
-> has x4 and M.2 Key E PCIe slots, these patches enables
-> x4 slot. BPMP programs UPHY lane0 ownership to USB,
-> so M.2 Key E PCIe will not work.
+On Fri, Oct 20, 2017 at 11:27:41AM -0400, Jim Quinlan wrote:
+>       memc0-a@[        0....3fffefff] <=> pci@[        0....3fffefff]
+>       memc0-b@[100000000...13fffefff] <=> pci@[ 40000000....7fffefff]
+>       memc1-a@[ 40000000....7fffefff] <=> pci@[ 80000000....bfffefff]
+>       memc1-b@[300000000...33fffefff] <=> pci@[ c0000000....ffffefff]
+>       memc2-a@[ 80000000....bfffefff] <=> pci@[100000000...13fffefff]
+>       memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
 > 
-> Testing: x4 slot is verified with PCIe based USB3.1 card.
-> PCIe link up, usb flash drive mounting and file copy are
-> verified. These patches are also verified by
-> Mikko Perttunen <mperttunen@nvidia.com> with an Intel 82574L
-> ethernet card.
-> 
-> Patch V2 adds soc->program_uphy check for phy_exit call.
-> 
-> Pasting PCIe link up logs below.
-> 
-> [    1.452512] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
-> [    1.452723] tegra-pcie 10003000.pcie: Failed to get supply 'dvdd-pex': -517
-> [    1.561824] ehci-pci: EHCI PCI platform driver
-> [    1.591587] ohci-pci: OHCI PCI platform driver
-> [    3.072464] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
-> [    3.078989] tegra-pcie 10003000.pcie: probing port 0, using 4 lanes
-> [    3.087272] tegra-pcie 10003000.pcie: Slot present pin change, signature: 00000018
-> [    3.128818] tegra-pcie 10003000.pcie: PCI host bridge to bus 0000:00
-> [    3.135174] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-> [    3.141352] pci_bus 0000:00: root bus resource [mem 0x50100000-0x57ffffff]
-> [    3.148221] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7fffffff pref]
-> [    3.155542] pci_bus 0000:00: root bus resource [bus 00-ff]
-> [    3.161173] pci 0000:00:01.0: [10de:10e5] type 01 class 0x060400
-> [    3.161188] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
-> [    3.170838] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
-> [    3.180532] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x52 may corrupt adjacent RW1C bits
-> [    3.190305] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3cold
-> [    3.190312] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4c may corrupt adjacent RW1C bits
-> [    3.200158] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> [    3.208158] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-> [    3.217918] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-> [    3.227649] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
-> [    3.237382] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x6 may corrupt adjacent RW1C bits
-> [    3.247135] pci 0000:01:00.0: [1b21:1242] type 00 class 0x0c0330
-> [    3.247157] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
-> [    3.256807] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
-> [    3.266477] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 64bit]
-> [    3.266544] pci 0000:01:00.0: enabling Extended Tags
-> [    3.271622] pci 0000:01:00.0: PME# supported from D3hot D3cold
-> [    3.271775] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-> [    3.271798] pci 0000:00:01.0: BAR 14: assigned [mem 0x50100000-0x501fffff]
-> [    3.278671] pci 0000:01:00.0: BAR 0: assigned [mem 0x50100000-0x50107fff 64bit]
-> [    3.285993] pci 0000:00:01.0: PCI bridge to [bus 01]
-> [    3.290959] pci 0000:00:01.0:   bridge window [mem 0x50100000-0x501fffff]
-> [    3.297763] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host bridge
-> [    3.304784] pcieport 0000:00:01.0: enabling device (0000 -> 0002)
-> [    3.311014] pcieport 0000:00:01.0: Signaling PME with IRQ 57
-> [    3.316768] pci 0000:01:00.0: enabling device (0000 -> 0002)
-> 
-> 
-> Manikanta Maddireddy (4):
->   dt-bindings: pci: tegra: Document Tegra186 PCIe DT
->   PCI: tegra: Add Tegra186 PCIe support
+> This leaves a one-page gap between phsyical memory regions which would
+> normally be contiguous. One cannot have a dma alloc that spans any two
+> regions.  This is a drastic step, but I don't see an alternative.
+> Perhaps  I may be missing what you are saying...
 
-I applied these two with Thierry's tested-by and acks to
-pci/host-tegra for v4.15, thanks!  If you have a changelog update for
-the pm_domain question, I can fold that in.
+Ok, IFF we are guranteed to always have a gap between physical memory
+locations we are fine indeed.
 
->   arm64: tegra: Add PCIe node for Tegra186
->   arm64: tegra: Enable PCIe on Jetson TX2
-> 
->  .../bindings/pci/nvidia,tegra20-pcie.txt           | 134 ++++++++++++++++++++-
->  arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi     |  24 ++++
->  arch/arm64/boot/dts/nvidia/tegra186.dtsi           |  82 +++++++++++++
->  drivers/pci/host/pci-tegra.c                       | 132 ++++++++++++++++----
->  4 files changed, 344 insertions(+), 28 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
