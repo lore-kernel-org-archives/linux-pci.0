@@ -1,84 +1,95 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Jim Quinlan' <jim2101024@gmail.com>
-Subject: RE: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
-Date: Wed, 25 Oct 2017 09:36:37 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A24FC@AcuExch.aculab.com>
-References: <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
- <589c04cb-061b-a453-3188-79324a02388e@arm.com>
- <20171017081422.GA19475@lst.de>
- <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
- <20171018065316.GA11183@lst.de>
- <CANCKTBv+yiCNsrnx3m+W9wPqC4NdKPZ2p=zLtSa8fX6v1rPcYQ@mail.gmail.com>
- <20171019091644.GA14983@lst.de>
- <CANCKTBuaTD29My77QfOeUmtZfLAmmJXUYe6QvBW+uoH2Kb+tAQ@mail.gmail.com>
- <20171020073730.GA12937@lst.de>
- <CANCKTBsRRkwNMrxWjtgxbyZqT6NOxPX0NHDbnEO2BMjj8oVtpg@mail.gmail.com>
- <20171020145752.GA4694@lst.de>
- <CANCKTBtxp9gSdndKAZ7xGA+VozQsn2PX_-9P8A22_5Matbb7-w@mail.gmail.com>
- <063D6719AE5E284EB5DD2968C1650D6DD009F05A@AcuExch.aculab.com>
- <CANCKTBu6H6thuK9F_6HBGhStaXSto7fwWv4V5oH8EdWQD0-1kQ@mail.gmail.com>
-In-Reply-To: <CANCKTBu6H6thuK9F_6HBGhStaXSto7fwWv4V5oH8EdWQD0-1kQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53448 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751498AbdJTVPE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 17:15:04 -0400
+Date: Fri, 20 Oct 2017 16:15:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 8/8] PCI: pciehp: Check that the device is really
+ present before touching it
+Message-ID: <20171020211502.GR6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
+ <20171013183548.68283-9-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
- Florian Fainelli <f.fainelli@gmail.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Kevin
- Cernekee <cernekee@gmail.com>, Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Ralf
- Baechle <ralf@linux-mips.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>, Gregory
- Fong <gregory.0xf0@gmail.com>, Catalin Marinas <catalin.marinas@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171013183548.68283-9-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jim Quinla
-> Sent: 24 October 2017 19:08
-...
-> Hi David,  Christoph was also concerned about this:
+On Fri, Oct 13, 2017 at 09:35:48PM +0300, Mika Westerberg wrote:
+> During surprise hot-unplug the device is not there anymore. When that
+> happens we read 0xffffffff from the registers and pciehp_unconfigure_device()
+> inadvertently thinks the device is a display device because bridge
+> control register returns 0xff refusing to remove it:
 > 
-> "For the block world take a look at __blk_segment_map_sg which does the merging
-> of contiguous pages into a single SG segment.  You'd have to override
-> BIOVEC_PHYS_MERGEABLE to prevent this from happening in your supported
-> architectures for the block layer."
+>   pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
+>   pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
+>   pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
 > 
-> Do you consider this a non-issue as well or can this happen and span
-> memory regions?
+> This causes the hotplug functionality to leave the hierarcy untouched
+> preventing further hotplug operations.
+> 
+> To fix this verify presence of a device by calling pci_device_is_present()
+> for it before we touch it any further.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/hotplug/pciehp_pci.c | 12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+> index 2a1ca020cf5a..fb4333168e23 100644
+> --- a/drivers/pci/hotplug/pciehp_pci.c
+> +++ b/drivers/pci/hotplug/pciehp_pci.c
+> @@ -100,8 +100,14 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>  	 */
+>  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+>  					 bus_list) {
+> +		bool present;
+> +
+>  		pci_dev_get(dev);
+> -		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
+> +
+> +		/* Check if the device is really there anymore */
+> +		present = presence ? pci_device_is_present(dev) : false;
+> +
+> +		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && present) {
+>  			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
 
-Probably easiest to have an architecture limit on the addresses that
-can be merged.
+I don't like this fix because it's still racy.  We always have to be deal
+with a config read that returns 0xffffffff, even if we previously checked
+pci_device_is_present().  The device might have disappeared in the interim.
 
-My guess is that this code only really ever merges pages that were
-allocated contiguously, but have got converted to a list of VA.
-So stopping merging over even 1MB boundaries would have minimal effect
-(even if done unconditionally).
-
-I even wonder if the merging is actually worthwhile at all?
-Maybe if any code has limits on the SG list length.
-(or reducing the number of cache lines the get dirtied...)
-
-	David
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  			if (bctl & PCI_BRIDGE_CTL_VGA) {
+>  				ctrl_err(ctrl,
+> @@ -112,7 +118,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>  				break;
+>  			}
+>  		}
+> -		if (!presence) {
+> +		if (!present) {
+>  			pci_dev_set_disconnected(dev, NULL);
+>  			if (pci_has_subordinate(dev))
+>  				pci_walk_bus(dev->subordinate,
+> @@ -123,7 +129,7 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>  		 * Ensure that no new Requests will be generated from
+>  		 * the device.
+>  		 */
+> -		if (presence) {
+> +		if (present) {
+>  			pci_read_config_word(dev, PCI_COMMAND, &command);
+>  			command &= ~(PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
+>  			command |= PCI_COMMAND_INTX_DISABLE;
+> -- 
+> 2.14.2
+> 
