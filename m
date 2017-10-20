@@ -1,99 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43468 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753635AbdJQSwn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Oct 2017 14:52:43 -0400
-Date: Tue, 17 Oct 2017 13:52:42 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 20 Oct 2017 17:52:48 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
-Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Steven Royer <seroyer@linux.vnet.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com,
-        benh@kernel.crashing.org, paulus@samba.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>,
-        Bodong Wang <bodong@mellanox.com>,
-        Eli Cohen <eli@mellanox.com>,
-        Saeed Mahameed <saeedm@mellanox.com>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-Message-ID: <20171017185242.GG5641@bhelgaas-glaptop.roam.corp.google.com>
-References: <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
- <20171013033456.GC25517@bhelgaas-glaptop.roam.corp.google.com>
- <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
- <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
- <20171013120558.1a129183@t450s.home>
- <24fdec01-8df4-f027-0b3c-0472a2d73946@linux.vnet.ibm.com>
- <20171017135123.GA5641@bhelgaas-glaptop.roam.corp.google.com>
- <7e23c703-750b-b4f8-f252-0c872a40ae8a@linux.vnet.ibm.com>
- <20171017162621.GB5641@bhelgaas-glaptop.roam.corp.google.com>
- <f8fbbd56-f165-0a17-a24a-2b021f7fa238@linux.vnet.ibm.com>
+To: Shawn Guo <shawnguo@kernel.org>
+Subject: Re: [PATCH] PCI: hisi: add PCIe driver support for HiSilicon STB SoCs
+Message-ID: <20171020225248.GV6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <1508043971-23216-1-git-send-email-shawnguo@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <f8fbbd56-f165-0a17-a24a-2b021f7fa238@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1508043971-23216-1-git-send-email-shawnguo@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Jianguo Sun <sunjianguo1@huawei.com>,
+ Jiancheng Xue <xuejiancheng@hisilicon.com>, Rob Herring <robh+dt@kernel.org>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Shawn Guo <shawn.guo@linaro.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 12:23:01PM -0500, Juan Alvarez wrote:
-> On 10/17/17 11:26 AM, Bjorn Helgaas wrote:
-> > To pop back up to the top of the stack, I think the main point of this
-> > patch is to keep from binding a driver to the VFs in the kernel that
-> > set PCI_SRIOV_CTRL_VFE.  This patch does that by setting
-> > pdev->match_driver to -1 in powerpc-specific code.
-> Correct, to add to your comment, we will only add to the PSeries platform
->  (in PowerPC)  configure SR-IOV path.
-> > I think all systems, not just powerpc, want to prevent this VF driver
-> > binding, so I hope there's a generic solution that everybody can use.
-> The patch that we made this change dependent on:
+On Sun, Oct 15, 2017 at 01:06:11PM +0800, Shawn Guo wrote:
+> From: Jianguo Sun <sunjianguo1@huawei.com>
 > 
-> https://patchwork.kernel.org/patch/9882915/
-> 
-> Is a generic form of not binding a pci device to a device driver
-> and can be used in another environment if needed.
+> Add PCIe controller driver for HiSilicon STB SoCs,
+> the controller is based on the DesignWare's PCIe core.
 
-Right.  But that patch isn't really on the path to inclusion (mainly
-because it's test framework and doesn't fix a bug or add support for
-new hardware or features).
+s/DesignWare's/DesignWare/
 
-I'm suggesting that maybe there should be a generic way to prevent
-binding to VF devices that works for everybody and doesn't require any
-arch-specific code at all.
+> Signed-off-by: Jianguo Sun <sunjianguo1@huawei.com>
+> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+> ---
+>  .../bindings/pci/hisilicon-histb-pcie.txt          |  66 +++
+>  drivers/pci/dwc/Kconfig                            |  10 +
+>  drivers/pci/dwc/Makefile                           |   1 +
+>  drivers/pci/dwc/pcie-histb.c                       | 469 +++++++++++++++++++++
+>  4 files changed, 546 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+>  create mode 100644 drivers/pci/dwc/pcie-histb.c
 
-> >>>> So like existing way of enabling SRIOV we still rely on the PF driver to
-> >>>> enable VFs - but in this case the attachment phase is done via a user
-> >>>> action via a management console in our case (novalink or hmc) triggered
-> >>>> event that will essentially act like a hotplug.
-> >>>>
-> >>>> So in the fine details of that user triggered action the system
-> >>>> firmware will bind the VFs, allowing resources to be allocated to
-> >>>> the VF.  - Which essentially does all the attaching as we know it
-> >>>> today but is managed by PHYP not by the kernel.
-> >>> What exactly does "firmware binding the VFs" mean?  I guess this must
-> >>> mean assigning a VF to a partition, injecting a hotplug add event to
-> >>> that partition, and making the VF visible in config space?
-> >> Firmware basically adds a device node to the device tree as defined
-> >> in the (PAPR) Power Architecture Platform Requirements document.
-> > From the point of view of the kernel that consumes this device tree
-> > and owns the VF, I guess this looks like a hot-add.  
-> Correct, this is intended. We want to minimize change and only focus
-> on configure SR-IOV path in the PF on PSeries platform.
-> > It would be nice
-> > if this could be exposed to that kernel by having the firmware inject
-> > a normal PCIe hotplug interrupt, but I'm guessing it's not that
-> > simple.
->
-> I don't understand entirely your suggestion. However, in the case of
-> interrupts PHYP owns all the resources and will be associated accordingly
-> with a partitionable endpoint (PE).
+Looks beautiful overall!
 
-Assume you have a Linux kernel, and PHYP assigns a VF to it.  What
-happens in that Linux kernel?  How does it discover this new device?
+This needs a MAINTAINERS update so "./scripts/get_maintainer.pl -f" prints
+something useful.
 
-I'm suggesting that it would be cool if that kernel received a hotplug
-interrupt from the Downstream Port leading to the new VF, and the
-pciehp driver could read the Slot Status register and see that
-"Presence Detect Changed" was set.  If that happened, the pciehp
-driver should automatically enumerate the new device and there
-wouldn't be much if any powerpc-specific code in the path.
+A few minor nits below that I would fix myself, but since you need to
+supply the MAINTAINERS update anyway, I'll let you do it :)
 
-Bjorn
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> new file mode 100644
+> index 000000000000..9474ad9bc36c
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> @@ -0,0 +1,66 @@
+> +HiSilicon STB PCIe host bridge DT description
+> +
+> +HiSilicon STB PCIe host controller is based on Designware PCI core.
+> +It shares common functions with PCIe Designware core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pcie.txt.
+
+s/Designware/DesignWare/ in English text above (not in filenames,
+function names, etc).
+
+s/PCI/PCIe/
+
+> +static u32 histb_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
+> +				u32 reg, size_t size)
+
+These should be lined up exactly ("u32" should line up with "struct"
+above it).  They are currently off by one.  Similarly for
+histb_pcie_write_dbi(), histb_pcie_rd_own_conf(),
+histb_pcie_wr_own_conf().
+
+> +	hipcie->aux_clk = devm_clk_get(dev, "aux");
+> +	if (IS_ERR(hipcie->aux_clk)) {
+> +		dev_err(dev, "Failed to get pcie aux clk\n");
+
+s/pcie/PCIe/ in this message and the ones below.  Also in
+histb_pcie_host_enable() comment.
+
+> +		return PTR_ERR(hipcie->aux_clk);
+> +	}
+> +
+> +	hipcie->pipe_clk = devm_clk_get(dev, "pipe");
+> +	if (IS_ERR(hipcie->pipe_clk)) {
+> +		dev_err(dev, "Failed to get pcie pipe clk\n");
+> +		return PTR_ERR(hipcie->pipe_clk);
+
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+> +		if (pp->msi_irq < 0) {
+> +			dev_err(dev, "Failed to get msi irq\n");
+> +			return pp->msi_irq;
+> +		}
+> +
+> +		ret = devm_request_irq(dev, pp->msi_irq,
+> +				       histb_pcie_msi_irq_handler,
+> +				       IRQF_SHARED, "histb-pcie-msi", pp);
+> +		if (ret) {
+> +			dev_err(dev, "cannot request msi irq\n");
+
+s/msi irq/MSI IRQ/ in the error message.  Also a few lines above.
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
