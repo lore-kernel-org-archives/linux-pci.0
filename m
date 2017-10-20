@@ -1,72 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48712 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751994AbdJKNHn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 09:07:43 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20171011080041.12918-1-kishon@ti.com>
-References: <20171011080041.12918-1-kishon@ti.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Wed, 11 Oct 2017 08:07:21 -0500
-Message-ID: <CAL_JsqLLgCt+wS5uFmLXB5Z-_vb-akme0hXjemtc_gzQwpwPYA@mail.gmail.com>
-Subject: Re: [PATCH] of: Devices with pci_epf_bus_type require DMA configuration
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sekhar Nori <nsekhar@ti.com>
+In-Reply-To: <6348630.r2z9ev4yl2@avalon>
+References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
+ <1985905.z83BJQzMUS@avalon> <20171019140657.GA22233@lst.de> <6348630.r2z9ev4yl2@avalon>
+From: Bhumika Goyal <bhumirks@gmail.com>
+Date: Fri, 20 Oct 2017 10:13:11 +0200
+Message-ID: <CAOH+1jFxhiF8j6MM9txfcs1SHOAuYihq=GZWmVb+wUR5aUCsnQ@mail.gmail.com>
+Subject: Re: [PATCH v2 02/15] usb: gadget: make config_item_type structures const
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+        Julia Lawall <julia.lawall@lip6.fr>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Jonathan Cameron <jic23@kernel.org>, knaack.h@gmx.de,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Peter Meerwald-Stadler <pmeerw@pmeerw.net>,
+        dledford@redhat.com, sean.hefty@intel.com,
+        Hal Rosenstock <hal.rosenstock@gmail.com>, sagi@grimberg.me,
+        kishon@ti.com, Bjorn Helgaas <bhelgaas@google.com>,
+        nab@linux-iscsi.org, balbi@kernel.org,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Joel Becker <jlbec@evilplan.org>, ccaulfie@redhat.com,
+        teigland@redhat.com, mfasheh@versity.com,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
+        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 3:00 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> pci-epc-core.c invokes of_dma_configure in order to configure
-> the coherent_dma_mask/dma_mask of endpoint function device. This is
-> required for dma_alloc_coherent to succeed in pci function driver
-> (pci-epf-test.c). However after
-> commit 723288836628bc1c08 ("of: restrict DMA configuration"),
-> of_dma_configure doesn't configure the coherent_dma_mask/dma_mask
-> of endpoint function device (since it doesn't have dma-ranges
-> property), resulting in dma_alloc_coherent in pci endpoint function
-> driver to to fail. Fix it by making sure of_dma_configure configures
-> coherent_dma_mask/dma_mask irrespective of whether the node has
-> dma-ranges property or not.
+On Thu, Oct 19, 2017 at 5:05 PM, Laurent Pinchart
+<laurent.pinchart@ideasonboard.com> wrote:
+> Hi Christoph,
 >
-> Fixes: 723288836628bc1c08 ("of: restrict DMA configuration")
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/of/device.c                 | 4 +++-
->  drivers/pci/endpoint/pci-epf-core.c | 3 +--
->  include/linux/pci-epf.h             | 1 +
->  3 files changed, 5 insertions(+), 3 deletions(-)
+> On Thursday, 19 October 2017 17:06:57 EEST Christoph Hellwig wrote:
+>> > Now we have 9 const instances of the config_item_type structure that are
+>> > identical, with only the .ct_owner field set. Should they be all merged
+>> > into a single structure ?
+>>
+>> I think that's a good idea.
+>>
+>> But I'm about to slurp up this whole series into my tree, how about making
+>> that an incremental patch?
 >
-> diff --git a/drivers/of/device.c b/drivers/of/device.c
-> index 64b710265d39..881cf80a3d69 100644
-> --- a/drivers/of/device.c
-> +++ b/drivers/of/device.c
-> @@ -10,6 +10,7 @@
->  #include <linux/mod_devicetable.h>
->  #include <linux/slab.h>
->  #include <linux/pci.h>
-> +#include <linux/pci-epf.h>
->  #include <linux/platform_device.h>
->  #include <linux/amba/bus.h>
+> I'm fine with that.
 >
-> @@ -105,7 +106,8 @@ int of_dma_configure(struct device *dev, struct device_node *np)
->  #ifdef CONFIG_ARM_AMBA
->                     dev->bus != &amba_bustype &&
->  #endif
-> -                   dev->bus != &platform_bus_type)
-> +                   dev->bus != &platform_bus_type &&
-> +                   dev->bus != &pci_epf_bus_type)
+> Bhumika, would you like to submit an incremental patch, or should I do it ?
+>
 
-This is going to fail when this PCI is disabled. There's some
-restructuring of this code proposed that will help you that I copied
-you on.
+I will submit a patch for merging these structures.
+But should I make a separate patch for this particular change or send
+a v3 for the whole series?
 
-Rob
+Thanks,
+Bhumika
+
+> --
+> Regards,
+>
+> Laurent Pinchart
+>
