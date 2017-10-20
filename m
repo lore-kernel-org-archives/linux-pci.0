@@ -1,75 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:33796 "EHLO mail.kapsi.fi"
+Received: from mail.kernel.org ([198.145.29.99]:59430 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752141AbdJ3KAD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 30 Oct 2017 06:00:03 -0400
-Subject: Re: [PATCH V2 07/12] PCI: tegra: Disable AFI dynamic clock gating
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
- <1509337143-25963-8-git-send-email-mmaddireddy@nvidia.com>
-Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <7414bac3-6643-048d-cc34-77b95681274f@kapsi.fi>
-Date: Mon, 30 Oct 2017 12:00:01 +0200
+        id S1752274AbdJTSTU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 14:19:20 -0400
+Date: Fri, 20 Oct 2017 13:19:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Pankaj Dubey <pankaj.dubey@samsung.com>
+Cc: David Laight <David.Laight@ACULAB.COM>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH] PCI: dwc: designware: don't sleep in atomic context
+Message-ID: <20171020181917.GL6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
+ <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD00924BC@AcuExch.aculab.com>
+ <70cd34bd-01db-cd93-ddf7-d82114ccc61a@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <1509337143-25963-8-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <70cd34bd-01db-cd93-ddf7-d82114ccc61a@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30.10.2017 06:18, Manikanta Maddireddy wrote:
-> When there are 32 outstanding writes from AFI to memory, the outstanding
-> write counter overflows and indicates that there are "0" outstanding write
-> transactions. This outstanding write counter is used to generate IDLE
-> signal to dynamically gate the AFI clock.
->
-> When memory controller is under heavy load, its possible that write
-> completions will come back to AFI after long delay and AFI write counter
-> overflows. AFI clock gets gated even when there are outstanding
-> transactions towards memory controller resutling in system hang.
->
-> Disable dynamic clock gating of AFI clock to avoid system hang.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
->
->  drivers/pci/host/pci-tegra.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index bf615c5e6b78..75b408b32b8b 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -103,8 +103,9 @@
->  #define AFI_MSI_EN_VEC6		0xa4
->  #define AFI_MSI_EN_VEC7		0xa8
->
-> -#define AFI_CONFIGURATION		0xac
-> -#define  AFI_CONFIGURATION_EN_FPCI	(1 << 0)
-> +#define AFI_CONFIGURATION			0xac
-> +#define  AFI_CONFIGURATION_EN_FPCI		(1 << 0)
-> +#define  AFI_CONFIGURATION_CLKEN_OVERRIDE	(1 << 31)
->
->  #define AFI_FPCI_ERROR_MASKS	0xb0
->
-> @@ -1057,9 +1058,10 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  		}
->  	}
->
-> -	/* finally enable PCIe */
-> +	/* Disable AFI dynamic clock gating and enable PCIe */
->  	value = afi_readl(pcie, AFI_CONFIGURATION);
-> -	value |= AFI_CONFIGURATION_EN_FPCI;
-> +	value |= (AFI_CONFIGURATION_EN_FPCI |
-> +			AFI_CONFIGURATION_CLKEN_OVERRIDE);
->  	afi_writel(pcie, value, AFI_CONFIGURATION);
->
->  	value = AFI_INTR_EN_INI_SLVERR | AFI_INTR_EN_INI_DECERR |
->
+On Fri, Oct 13, 2017 at 09:10:38AM +0530, Pankaj Dubey wrote:
+> 
+> 
+> On 10/12/2017 04:09 PM, David Laight wrote:
+> >From: Pankaj Dubey
+> >>Sent: 12 October 2017 08:55
+> >>In pcie-designware.c many places we are calling "usleep_range" which
+> >>are in atomic context. This patch fixes these potential BUGs and
+> >>replaces "usleep_range" with mdelay calls.
+> >>
+> >>Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+> >>---
+> >>  drivers/pci/dwc/pcie-designware.c | 8 ++++----
+> >>  drivers/pci/dwc/pcie-designware.h | 3 +--
+> >>  2 files changed, 5 insertions(+), 6 deletions(-)
+> >>
+> >>diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> >>index 88abddd..35d19b9 100644
+> >>--- a/drivers/pci/dwc/pcie-designware.c
+> >>+++ b/drivers/pci/dwc/pcie-designware.c
+> >>@@ -138,7 +138,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
+> >>  		if (val & PCIE_ATU_ENABLE)
+> >>  			return;
+> >>
+> >>-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> >>+		mdelay(LINK_WAIT_IATU_MIN);
+> >>  	}
+> >Spinning for 9ms (possibly 10 times) isn't really a good idea.
+> 
+> Yes. It may not be a good idea, however in our experiment it never
+> hit maximum retry count.  I just converted usleep_range to mdelay
+> keeping min time limitation as it is, though I am not sure, how do
+> we arrived on these numbers in original code, may be Joao Pinto from
+> Synopsys have some idea, I will try to do few experiment and try to
+> find out what is sufficient minimum time in our hardware for these
+> mdelay.
 
-Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+Just based on the preceding comment, it looks like the wait is
+essential because subsequent config and I/O accesses won't work
+correctly until the ATU enable takes effect.
+
+If we timeout here, I suspect it's because something is seriously
+wrong in the hardware, so I doubt there's any point in trying to
+minimize the timeout period.  If something is that broken, it doesn't
+matter whether we wait 9ms or 900ms.
+
+Maybe the message should be more strident or maybe we should even
+return failure so the caller can do something, e.g., fail an access,
+instead of just printing an error and continuing on.
+
+I'm also looking for an ack from Joao and/or Jingoo.
+
+Bjorn
