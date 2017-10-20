@@ -1,103 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53004 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751369AbdJEVMM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 5 Oct 2017 17:12:12 -0400
-Date: Thu, 5 Oct 2017 16:12:10 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 20 Oct 2017 12:41:08 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH] pci/ehp_hpc: Convert timers to use timer_setup()
-Message-ID: <20171005211210.GY25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171005005348.GA23838@beast>
+To: Pankaj Dubey <pankaj.dubey@samsung.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH] PCI: designware: move dw_pcie_iatu_unroll_enabled to
+ pcie-designware.c
+Message-ID: <20171020174108.GK6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20171012044055epcas1p44b2e6b7cc21d42319529a518197aca9f@epcas1p4.samsung.com>
+ <1507783268-9022-1-git-send-email-pankaj.dubey@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171005005348.GA23838@beast>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1507783268-9022-1-git-send-email-pankaj.dubey@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 04, 2017 at 05:53:48PM -0700, Kees Cook wrote:
-> In preparation for unconditionally passing the struct timer_list pointer to
-> all timer callbacks, switch to using the new timer_setup() and from_timer()
-> to pass the timer pointer explicitly. This fixes what appears to be a bug
-> in passing the wrong pointer to the timer handler (address of ctrl pointer
-> instead of ctrl pointer).
+On Thu, Oct 12, 2017 at 10:11:08AM +0530, Pankaj Dubey wrote:
+> IATU unroll feature can be enabled in EP mode as well, so we need to
+> have this check in pcie-designware-ep.c, so instead of making this
+> function as static in pcie-desigware-host.c, let's move this in
+> pcie-designware.c so that both pcie-designware-host.c and
+> pcie-designware-ep.c can use it.
 > 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
 
-Applied to pci/hotplug for v4.15, thanks!
+This is fine with me but I'm looking for an ack from Jingoo and/or Joao.
 
 > ---
-> This requires commit 686fef928bba ("timer: Prepare to change timer
-> callback argument type") in v4.14-rc3, but should be otherwise
-> stand-alone.
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
+>  drivers/pci/dwc/pcie-designware-ep.c   |  4 ++++
+>  drivers/pci/dwc/pcie-designware-host.c | 11 -----------
+>  drivers/pci/dwc/pcie-designware.c      | 11 +++++++++++
+>  drivers/pci/dwc/pcie-designware.h      |  1 +
+>  4 files changed, 16 insertions(+), 11 deletions(-)
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index e5d5ce9e3010..ba5055c5115c 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -50,14 +50,13 @@ static irqreturn_t pcie_isr(int irq, void *dev_id);
->  static void start_int_poll_timer(struct controller *ctrl, int sec);
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index d53d5f1..64803a9 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -314,6 +314,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>  	if (ep->ops->ep_init)
+>  		ep->ops->ep_init(ep);
 >  
->  /* This is the interrupt polling timeout function. */
-> -static void int_poll_timeout(unsigned long data)
-> +static void int_poll_timeout(struct timer_list *t)
->  {
-> -	struct controller *ctrl = (struct controller *)data;
-> +	struct controller *ctrl = from_timer(ctrl, t, poll_timer);
+> +	pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
+> +	dev_dbg(dev, "iATU unroll: %s\n",
+> +		pci->iatu_unroll_enabled ? "enabled" : "disabled");
+> +
+>  	epc = devm_pci_epc_create(dev, &epc_ops);
+>  	if (IS_ERR(epc)) {
+>  		dev_err(dev, "failed to create epc device\n");
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 81e2157..d3f579e 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -574,17 +574,6 @@ static struct pci_ops dw_pcie_ops = {
+>  	.write = dw_pcie_wr_conf,
+>  };
 >  
->  	/* Poll for interrupt events.  regs == NULL => polling */
->  	pcie_isr(0, ctrl);
->  
-> -	init_timer(&ctrl->poll_timer);
->  	if (!pciehp_poll_time)
->  		pciehp_poll_time = 2; /* default polling interval is 2 sec */
->  
-> @@ -71,8 +70,6 @@ static void start_int_poll_timer(struct controller *ctrl, int sec)
->  	if ((sec <= 0) || (sec > 60))
->  		sec = 2;
->  
-> -	ctrl->poll_timer.function = &int_poll_timeout;
-> -	ctrl->poll_timer.data = (unsigned long)ctrl;
->  	ctrl->poll_timer.expires = jiffies + sec * HZ;
->  	add_timer(&ctrl->poll_timer);
->  }
-> @@ -83,7 +80,7 @@ static inline int pciehp_request_irq(struct controller *ctrl)
->  
->  	/* Install interrupt polling timer. Start with 10 sec delay */
->  	if (pciehp_poll_mode) {
-> -		init_timer(&ctrl->poll_timer);
-> +		timer_setup(&ctrl->poll_timer, int_poll_timeout, 0);
->  		start_int_poll_timer(ctrl, 10);
->  		return 0;
->  	}
-> @@ -764,8 +761,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
->  	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->  		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
->  	if (pciehp_poll_mode)
-> -		int_poll_timeout(ctrl->poll_timer.data);
+> -static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+> -{
+> -	u32 val;
 > -
-> +		int_poll_timeout(&ctrl->poll_timer);
->  	return 0;
+> -	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
+> -	if (val == 0xffffffff)
+> -		return 1;
+> -
+> -	return 0;
+> -}
+> -
+>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>  {
+>  	u32 val;
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> index 88abddd..f15da90 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -92,6 +92,17 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+>  		dev_err(pci->dev, "write DBI address failed\n");
 >  }
 >  
+> +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+
+I know this is just moved verbatim, but it's more conventional to simply
+return an int (or possibly bool) for a predicate like this.  There's really
+no point in going out of your way to specify "u8" for the return type.
+
+> +{
+> +	u32 val;
+> +
+> +	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
+> +	if (val == 0xffffffff)
+> +		return 1;
+> +
+> +	return 0;
+> +}
+> +
+>  static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+>  {
+>  	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index e5d9d77..8d6829c 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -242,6 +242,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
+>  void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
+>  			 enum dw_pcie_region_type type);
+>  void dw_pcie_setup(struct dw_pcie *pci);
+> +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci);
+>  
+>  static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
+>  {
 > -- 
 > 2.7.4
 > 
-> 
-> -- 
-> Kees Cook
-> Pixel Security
