@@ -1,93 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v14 4/5] hinic: Replace PCI pool old API
-Date: Mon, 23 Oct 2017 19:59:57 +0200
-Message-Id: <20171023175958.8327-5-romain.perier@gmail.com>
-In-Reply-To: <20171023175958.8327-1-romain.perier@gmail.com>
-References: <20171023175958.8327-1-romain.perier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47190 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753115AbdJTQV6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 12:21:58 -0400
+Subject: [PATCH v6 0/4] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port service
+ drivers
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
+        Christoph Hellwig <hch@lst.de>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        linux-pci@vger.kernel.org
+Date: Fri, 20 Oct 2017 11:21:54 -0500
+Message-ID: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
+This is based on Dongdong's series:
+  v3: http://lkml.kernel.org/r/1507553167-27833-1-git-send-email-liudongdong3@huawei.com
+  v4: http://lkml.kernel.org/r/1507719178-112556-1-git-send-email-liudongdong3@huawei.com
+  v5: http://lkml.kernel.org/r/20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+The main idea is to fix IRQ issues when removing and adding back a Root
+Port.  The problem is that when we allocate, free, and reallocate MSI/MSI-X
+vectors for the device, we may not get the same vectors the second time,
+but we saved IRQs based on the first set of vectors.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
+Changes in v5:
+  - add back a general Interrupt Message Number comment
+  - factor out Interrupt Message Number helper separately
+
+This is on pci/msi for v4.15.
+
 ---
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++++-----
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-index 7d95f0866fb0..28a81ac97af5 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-@@ -143,7 +143,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
- 	struct hinic_hwif *hwif = cmdqs->hwif;
- 	struct pci_dev *pdev = hwif->pdev;
- 
--	cmdq_buf->buf = pci_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
-+	cmdq_buf->buf = dma_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
- 				       &cmdq_buf->dma_addr);
- 	if (!cmdq_buf->buf) {
- 		dev_err(&pdev->dev, "Failed to allocate cmd from the pool\n");
-@@ -161,7 +161,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
- void hinic_free_cmdq_buf(struct hinic_cmdqs *cmdqs,
- 			 struct hinic_cmdq_buf *cmdq_buf)
- {
--	pci_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
-+	dma_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
- }
- 
- static unsigned int cmdq_wqe_size_from_bdlen(enum bufdesc_len len)
-@@ -875,7 +875,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
- 	int err;
- 
- 	cmdqs->hwif = hwif;
--	cmdqs->cmdq_buf_pool = pci_pool_create("hinic_cmdq", pdev,
-+	cmdqs->cmdq_buf_pool = dma_pool_create("hinic_cmdq", &pdev->dev,
- 					       HINIC_CMDQ_BUF_SIZE,
- 					       HINIC_CMDQ_BUF_SIZE, 0);
- 	if (!cmdqs->cmdq_buf_pool)
-@@ -916,7 +916,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
- 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
- 
- err_saved_wqs:
--	pci_pool_destroy(cmdqs->cmdq_buf_pool);
-+	dma_pool_destroy(cmdqs->cmdq_buf_pool);
- 	return err;
- }
- 
-@@ -942,5 +942,5 @@ void hinic_free_cmdqs(struct hinic_cmdqs *cmdqs)
- 
- 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
- 
--	pci_pool_destroy(cmdqs->cmdq_buf_pool);
-+	dma_pool_destroy(cmdqs->cmdq_buf_pool);
- }
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-index b35583400cb6..23f8d39eab68 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-@@ -157,7 +157,7 @@ struct hinic_cmdq {
- struct hinic_cmdqs {
- 	struct hinic_hwif       *hwif;
- 
--	struct pci_pool         *cmdq_buf_pool;
-+	struct dma_pool         *cmdq_buf_pool;
- 
- 	struct hinic_wq         *saved_wqs;
- 
--- 
-2.14.1
+Bjorn Helgaas (3):
+      PCI/portdrv: Consolidate comments
+      PCI/portdrv: Factor out Interrupt Message Number lookup
+      PCI/portdrv: Compute MSI/MSI-X IRQ vectors after final allocation
+
+Dongdong Liu (1):
+      PCI/portdrv: Add #defines for AER and DPC Interrupt Message Number masks
+
+
+ drivers/pci/pcie/portdrv_core.c |  171 +++++++++++++++++----------------------
+ include/uapi/linux/pci_regs.h   |    2 
+ 2 files changed, 77 insertions(+), 96 deletions(-)
