@@ -1,47 +1,115 @@
-Return-Path: <SRS0=B7sc=BY=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=B7sc=BY=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH] PCI: rework error checking in the reset path
-To: Alex Williamson <alex.williamson@redhat.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-References: <1508794608-15310-1-git-send-email-okaya@codeaurora.org>
- <20171025134511.GL21840@bhelgaas-glaptop.roam.corp.google.com>
- <20171025232805.163ccaad@t450s.home>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <47146df8-b4e1-595d-9664-3830d770eecf@codeaurora.org>
-Date: Wed, 25 Oct 2017 17:42:24 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53440 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753131AbdJTRYr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 13:24:47 -0400
+Date: Fri, 20 Oct 2017 12:24:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: v3-semi: print resources using %pR format string
+Message-ID: <20171020172444.GI6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171011140224.3770968-1-arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <20171025232805.163ccaad@t450s.home>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171011140224.3770968-1-arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/25/2017 5:28 PM, Alex Williamson wrote:
->> Previously, we only tried the next reset method if one method failed
->> with -ENOTTY.  With this patch, we'll try the next reset method if one
->> method fails for any reason, not just -ENOTTY.
-> Hmm, I thought the return codes were pretty consistent.  -ENOTTY means
-> that the reset callback doesn't handle the device, move on.  Many
-> ioctls use the same return code to indicate an unknown ioctl.  This
-> allows us to differentiate success vs error vs unhandled.  In the code
-> below we lose the ability to, for instance, have a device specific
-> reset that returns -EINVAL to prevent the PCI core for triggering
-> further reset mechanisms which might be broken on the device.  So, I
-> don't see that this patch specifically fixes anything, but it does
-> remove what seems like useful functionality...  I'd veto it.  Thanks,
+On Wed, Oct 11, 2017 at 04:02:09PM +0200, Arnd Bergmann wrote:
+> A resource_size_t can be 32 or 64 bit on arm32, causing a number
+> of warnings for incorrect format strings:
 > 
+> In file included from include/linux/printk.h:327:0,
+>                  from include/linux/kernel.h:13,
+>                  from include/linux/interrupt.h:5,
+>                  from drivers/pci/host/pci-v3-semi.c:19:
+> drivers/pci/host/pci-v3-semi.c: In function 'v3_pci_setup_resource':
+> drivers/pci/host/pci-v3-semi.c:536:4: error: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'phys_addr_t {aka long long unsigned int}' [-Werror=format=]
+>     "I/O window start %08x, bus addr %08x, size %08x\n",
+> drivers/pci/host/pci-v3-semi.c:536:4: error: format '%x' expects argument of type 'unsigned int', but argument 6 has type 'resource_size_t {aka long long unsigned int}' [-Werror=format=]
+> 
+> The best way to print this instead is to pass the resource itself
+> to printk as a pointerm, using the special '%pR' format string
+> for pretty-printing the range.
+> 
+> For the bus address, we use %pap, respectively.
+> 
+> Fixes: 132d10e24ff3 ("PCI: v3-semi: Add V3 Semiconductor PCI host driver")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-OK, It was not obvious how the EINVAL and ENOTTY used by code inspection.
+I folded this into Linus' original patch, since it hasn't been sent
+upstream yet.  Thanks!
 
-Thank your very much for the clarification. I'm dropping the patch unless
-Bjorn has another idea.
-
-> Alex
+> ---
+>  drivers/pci/host/pci-v3-semi.c | 24 +++++++++---------------
+>  1 file changed, 9 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
+> index a544d722aef1..02f6e1e3a421 100644
+> --- a/drivers/pci/host/pci-v3-semi.c
+> +++ b/drivers/pci/host/pci-v3-semi.c
+> @@ -532,10 +532,8 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
+>  		io->name = "V3 PCI I/O";
+>  		v3->io_mem = io_base;
+>  		v3->io_bus_addr = io->start - win->offset;
+> -		dev_dbg(dev,
+> -			"I/O window start %08x, bus addr %08x, size %08x\n",
+> -			v3->io_mem, v3->io_bus_addr,
+> -			resource_size(io));
+> +		dev_dbg(dev, "I/O window %pR, bus addr %pap\n",
+> +			io, &v3->io_bus_addr);
+>  		ret = pci_remap_iospace(io, io_base);
+>  		if (ret) {
+>  			dev_warn(dev,
+> @@ -556,9 +554,8 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
+>  			mem->name = "V3 PCI PRE-MEM";
+>  			v3->pre_mem = mem->start;
+>  			v3->pre_bus_addr = mem->start - win->offset;
+> -			dev_dbg(dev, "PREFETCHABLE MEM window start %08x, bus addr %08x, size %08x\n",
+> -				v3->pre_mem, v3->pre_bus_addr,
+> -				resource_size(mem));
+> +			dev_dbg(dev, "PREFETCHABLE MEM window %pR, bus addr %pap\n",
+> +				mem, &v3->pre_bus_addr);
+>  			if (resource_size(mem) != SZ_256M) {
+>  				dev_err(dev, "prefetchable memory range is not 256MB\n");
+>  				return -EINVAL;
+> @@ -582,10 +579,8 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
+>  			mem->name = "V3 PCI NON-PRE-MEM";
+>  			v3->non_pre_mem = mem->start;
+>  			v3->non_pre_bus_addr = mem->start - win->offset;
+> -			dev_dbg(dev,
+> -				"NON-PREFETCHABLE MEM window start %08x, bus addr %08x, size %08x\n",
+> -				v3->non_pre_mem, v3->non_pre_bus_addr,
+> -				resource_size(mem));
+> +			dev_dbg(dev, "NON-PREFETCHABLE MEM window %pR, bus addr %pap\n",
+> +				mem, &v3->non_pre_bus_addr);
+>  			if (resource_size(mem) != SZ_256M) {
+>  				dev_err(dev,
+>  					"non-prefetchable memory range is not 256MB\n");
+> @@ -602,7 +597,7 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
+>  		}
+>  		break;
+>  	case IORESOURCE_BUS:
+> -		dev_dbg(dev, "BUS %d\n", win->res->start);
+> +		dev_dbg(dev, "BUS %pR\n", win->res);
+>  		host->busnr = win->res->start;
+>  		break;
+>  	default:
+> @@ -781,9 +776,8 @@ static int v3_pci_probe(struct platform_device *pdev)
+>  	 * as the physical memory we've remapped it from.
+>  	 */
+>  	if (readl(v3->base + V3_LB_IO_BASE) != (regs->start >> 16))
+> -		dev_err(dev, "V3_LB_IO_BASE = %08x but device is @%08x\n",
+> -			readl(v3->base + V3_LB_IO_BASE),
+> -			regs->start);
+> +		dev_err(dev, "V3_LB_IO_BASE = %08x but device is @%pR\n",
+> +			readl(v3->base + V3_LB_IO_BASE), regs);
 >  
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+>  	/* Configuration space is 16MB directly mapped */
+>  	regs = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> -- 
+> 2.9.0
+> 
