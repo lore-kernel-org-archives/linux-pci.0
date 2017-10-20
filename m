@@ -1,93 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:54985 "EHLO mga05.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:57524 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750923AbdJYLaq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 25 Oct 2017 07:30:46 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4] PCI: pciehp: Drop checking of PCI_BRIDGE_CONTROL in pciehp_unconfigure_device()
-Date: Wed, 25 Oct 2017 14:29:40 +0300
-Message-Id: <20171025112940.77890-1-mika.westerberg@linux.intel.com>
+        id S1751733AbdJTNbs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 20 Oct 2017 09:31:48 -0400
+Date: Fri, 20 Oct 2017 08:31:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dongdong Liu <liudongdong3@huawei.com>,
+        Charles Chenxin <charles.chenxin@huawei.com>,
+        linuxarm@huawei.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 2/3] PCI/portdrv: Remove excessive comments
+Message-ID: <20171020133143.GG6332@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171019230115.17806.52138.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171020070731.GD11101@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171020070731.GD11101@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During surprise hot-unplug the device is not accessible anymore and
-register reads return 0xffffffff. When that happens pciehp_unconfigure_device()
-may inadvertently think the device below the bridge may be a display
-device of somesort as reading PCI_BRIDGE_CONTROL register also returns
-0xff. This results failure of the remove operation:
+On Fri, Oct 20, 2017 at 09:07:31AM +0200, Christoph Hellwig wrote:
+> On Thu, Oct 19, 2017 at 06:01:15PM -0500, Bjorn Helgaas wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > Remove some wordy and repetitive comments so we can see the code better.
+> > The register field #defines should be enough of a hook to find relevant
+> > descriptions in the spec.  No functional change.
+> > 
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Of course my comments were actually useful ;-)
 
-  pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
-  pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
-  pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
+Oops, I thought I was mainly removing stuff I had added myself :)
+I added back this single comment in place of the three essentially
+similar ones:
 
-Because of this the hierarchy is left untouched preventing further
-hotplug operations.
 
-Now, it is not clear why the check is there in the first place and why
-we would like to prevent removing a bridge if it has PCI_BRIDGE_CTL_VGA
-set. In case of surprise hot-unplug, it would not even be possible to
-prevent the removal. It may be due to the fact that pciehp_pci.c pretty
-much copies similar implementation from shpchp_pci.c and this check was
-just left there in the code without further thinking if it is actually
-needed at all.
++	/*
++	 * The Interrupt Message Number indicates which vector is used, i.e.,
++	 * the MSI-X table entry or the MSI offset between the base Message
++	 * Data and the generated interrupt message.  See PCIe r3.1, sec
++	 * 7.8.2, 7.10.10, 7.31.2.
++	 */
+ 	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
+ 		u16 reg16;
+ 
+-		/*
+-		 * Per PCIe r3.1, sec 6.1.6, "PME and Hot-Plug Event
+-		 * interrupts (when both are implemented) always share the
+-		 * same MSI or MSI-X vector, as indicated by the Interrupt
+-		 * Message Number field in the PCI Express Capabilities
+-		 * register".
+-		 *
+-		 * Per sec 7.8.2, "For MSI, the [Interrupt Message Number]
+-		 * indicates the offset between the base Message Data and
+-		 * the interrupt message that is generated."
+-		 *
+-		 * "For MSI-X, the [Interrupt Message Number] indicates
+-		 * which MSI-X Table entry is used to generate the
+-		 * interrupt message."
+-		 */
+ 		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+ 		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+ 		if (entry >= nr_entries)
 
-Given this and the issue described above, I think it makes sense to drop
-the whole PCI_BRIDGE_CONTROL check from pciehp_unconfigure_device()
-which is what this patch does.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
-The previous version of the patch can be found here:
-
-  https://patchwork.kernel.org/patch/10024145/
-
-Changes from the previous version:
-
-  * Drop the whole PCI_BRIDGE_CONTROL check
-  * Update patch subject to reflect that
-
- drivers/pci/hotplug/pciehp_pci.c | 12 ------------
- 1 file changed, 12 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 2a1ca020cf5a..acc360d1a1fb 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -79,7 +79,6 @@ int pciehp_configure_device(struct slot *p_slot)
- int pciehp_unconfigure_device(struct slot *p_slot)
- {
- 	int rc = 0;
--	u8 bctl = 0;
- 	u8 presence = 0;
- 	struct pci_dev *dev, *temp;
- 	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
-@@ -101,17 +100,6 @@ int pciehp_unconfigure_device(struct slot *p_slot)
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
- 					 bus_list) {
- 		pci_dev_get(dev);
--		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
--			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
--			if (bctl & PCI_BRIDGE_CTL_VGA) {
--				ctrl_err(ctrl,
--					 "Cannot remove display device %s\n",
--					 pci_name(dev));
--				pci_dev_put(dev);
--				rc = -EINVAL;
--				break;
--			}
--		}
- 		if (!presence) {
- 			pci_dev_set_disconnected(dev, NULL);
- 			if (pci_has_subordinate(dev))
--- 
-2.14.2
+...
