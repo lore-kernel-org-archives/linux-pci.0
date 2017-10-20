@@ -1,78 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39940 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752393AbdJSXBK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 19 Oct 2017 19:01:10 -0400
-Subject: [PATCH v5 1/3] PCI/portdrv: Add #defines for AER and DPC Interrupt
- Message Number masks
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
-        Christoph Hellwig <hch@lst.de>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        linux-pci@vger.kernel.org
-Date: Thu, 19 Oct 2017 18:01:08 -0500
-Message-ID: <20171019230108.17806.42471.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFCv2 PATCH 01/36] iommu: Keep track of processes and PASIDs
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-2-jean-philippe.brucker@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <29100eb4-ab8a-a10e-f23b-356658d9a925@codeaurora.org>
+Date: Fri, 20 Oct 2017 19:32:47 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171006133203.22803-2-jean-philippe.brucker@arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dongdong Liu <liudongdong3@huawei.com>
+few nits below.
 
-In the AER case, the mask isn't strictly necessary because there are no
-higher-order bits above the Interrupt Message Number, but using a #define
-will make it possible to grep for it.
+> +/*
+> + * Allocate a iommu_process structure for the given task.
+> + *
+> + * Ideally we shouldn't need the domain parameter, since iommu_process is
+> + * system-wide, but we use it to retrieve the driver's allocation ops and a
+> + * PASID range.
+> + */
+> +static struct iommu_process *
+> +iommu_process_alloc(struct iommu_domain *domain, struct task_struct *task)
+> +{
+> +	int err;
+> +	int pasid;
+> +	struct iommu_process *process;
+> +
+> +	if (WARN_ON(!domain->ops->process_alloc || !domain->ops->process_free))
+> +		return ERR_PTR(-ENODEV);
+> +
+> +	process = domain->ops->process_alloc(task);
+> +	if (IS_ERR(process))
+> +		return process;
+> +	if (!process)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	process->pid		= get_task_pid(task, PIDTYPE_PID);
+> +	process->release	= domain->ops->process_free;
+> +	INIT_LIST_HEAD(&process->domains);
+> +	kref_init(&process->kref);
+> +
+nit, I think you should place this check right after the pid assignment.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/portdrv_core.c |    4 ++--
- include/uapi/linux/pci_regs.h   |    2 ++
- 2 files changed, 4 insertions(+), 2 deletions(-)
+> +	if (!process->pid) {
+> +		err = -EINVAL;
+> +		goto err_free_process;
+> +	}
+> +
+> +	idr_preload(GFP_KERNEL);
+> +	spin_lock(&iommu_process_lock);
+> +	pasid = idr_alloc_cyclic(&iommu_process_idr, process, domain->min_pasid,
+> +				 domain->max_pasid + 1, GFP_ATOMIC);
+> +	process->pasid = pasid;
+> +	spin_unlock(&iommu_process_lock);
+> +	idr_preload_end();
+> +
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 313a21df1692..72fcbe5567dd 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -114,7 +114,7 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 		 */
- 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
--		entry = reg32 >> 27;
-+		entry = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
- 		if (entry >= nr_entries)
- 			goto out_free_irqs;
- 
-@@ -141,7 +141,7 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 		 */
- 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
- 		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
--		entry = reg16 & 0x1f;
-+		entry = reg16 & PCI_EXP_DPC_IRQ;
- 		if (entry >= nr_entries)
- 			goto out_free_irqs;
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 2763e4f9615d..0c4c362c3d9a 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -746,6 +746,7 @@
- #define PCI_ERR_ROOT_FIRST_FATAL	0x00000010 /* First UNC is Fatal */
- #define PCI_ERR_ROOT_NONFATAL_RCV	0x00000020 /* Non-Fatal Received */
- #define PCI_ERR_ROOT_FATAL_RCV		0x00000040 /* Fatal Received */
-+#define PCI_ERR_ROOT_AER_IRQ		0xf8000000 /* Advanced Error Interrupt Message Number */
- #define PCI_ERR_ROOT_ERR_SRC	52	/* Error Source Identification */
- 
- /* Virtual Channel */
-@@ -960,6 +961,7 @@
- 
- /* Downstream Port Containment */
- #define PCI_EXP_DPC_CAP			4	/* DPC Capability */
-+#define PCI_EXP_DPC_IRQ			0x1f	/* DPC Interrupt Message Number */
- #define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
- #define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
- #define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
+nit, You can maybe return here if pasid is not negative.
+
+> +	if (pasid < 0) {
+> +		err = pasid;
+> +		goto err_put_pid;
+> +	}
+> +
+> +	return process;
+> +
+> +err_put_pid:
+> +	put_pid(process->pid);
+> +
+> +err_free_process:
+> +	domain->ops->process_free(process);
+> +
+> +	return ERR_PTR(err);
+> +}
+> +
+> +static void iommu_process_release(struct kref *kref)
+> +{
+> +	struct iommu_process *process;
+> +	void (*release)(struct iommu_process *);
+> +
+> +	assert_spin_locked(&iommu_process_lock);
+> +
+> +	process = container_of(kref, struct iommu_process, kref);
+
+if we are concerned about things going wrong (assert above), we should
+also add some pointer check here (WARN) for process and release pointers as well.
+
+> +	release = process->release;
+> +
+> +	WARN_ON(!list_empty(&process->domains));
+> +
+> +	idr_remove(&iommu_process_idr, process->pasid);
+> +	put_pid(process->pid);
+> +	release(process);
+> +}
+> +
+> +/*
+> + * Returns non-zero if a reference to the process was successfully taken.
+> + * Returns zero if the process is being freed and should not be used.
+> + */
+> +static int iommu_process_get_locked(struct iommu_process *process)
+> +{
+> +	assert_spin_locked(&iommu_process_lock);
+> +
+> +	if (process)
+> +		return kref_get_unless_zero(&process->kref);
+> +
+> +	return 0;
+> +}
+> +
+> +static void iommu_process_put_locked(struct iommu_process *process)
+> +{
+> +	assert_spin_locked(&iommu_process_lock);
+> +
+> +	kref_put(&process->kref, iommu_process_release);
+> +}
+> +
+> +static int iommu_process_attach(struct iommu_domain *domain, struct device *dev,
+> +				struct iommu_process *process)
+> +{
+> +	int err;
+> +	int pasid = process->pasid;
+> +	struct iommu_context *context;
+> +
+> +	if (WARN_ON(!domain->ops->process_attach || !domain->ops->process_detach))
+> +		return -ENODEV;
+> +
+> +	if (pasid > domain->max_pasid || pasid < domain->min_pasid)
+> +		return -ENOSPC;
+> +
+> +	context = kzalloc(sizeof(*context), GFP_KERNEL);
+> +	if (!context)
+> +		return -ENOMEM;
+> +
+
+devm_kzalloc maybe?
+
+> +	context->process	= process;
+> +	context->domain		= domain;
+> +	refcount_set(&context->ref, 1);
+> +
+> +	spin_lock(&iommu_process_lock);
+> +	err = domain->ops->process_attach(domain, dev, process, true);
+> +	if (err) {
+> +		kfree(context);
+> +		spin_unlock(&iommu_process_lock);
+> +		return err;
+> +	}
+> +
+> +	list_add(&context->process_head, &process->domains);
+> +	list_add(&context->domain_head, &domain->processes);
+> +	spin_unlock(&iommu_process_lock);
+> +
+> +	return 0;
+> +}
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
