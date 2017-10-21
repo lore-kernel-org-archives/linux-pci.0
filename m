@@ -1,89 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 25 Oct 2017 08:45:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI: rework error checking in the reset path
-Message-ID: <20171025134511.GL21840@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508794608-15310-1-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=JRhQ=BU=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=JRhQ=BU=linutronix.de=tglx@kernel.org>
+Date: Sat, 21 Oct 2017 09:19:24 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: LKML <linux-kernel@vger.kernel.org>, Dexuan Cui <decui@microsoft.com>,
+    x86@kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+    Marc Zyngier <marc.zyngier@arm.com>, KY Srinivasan <kys@microsoft.com>,
+    Stephen Hemminger <sthemmin@microsoft.com>, linux-pci@vger.kernel.org,
+    devel@linuxdriverproject.org, Josh Poulson <jopoulso@microsoft.com>,
+    Haiyang Zhang <haiyangz@microsoft.com>, Simon Xiao <sixiao@microsoft.com>,
+    Saeed Mahameed <saeedm@mellanox.com>,
+    Mihai Costache <v-micos@microsoft.com>,
+    Jork Loeser <Jork.Loeser@microsoft.com>
+Subject: Re: [patch 0/3] x86/PCI/MSI: Make sure that irq reservation mode
+ works everywhere
+In-Reply-To: <20171020230127.GW6332@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.20.1710210918270.3428@nanos>
+References: <20171017075456.694047687@linutronix.de> <20171020230127.GW6332@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1508794608-15310-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
-
-On Mon, Oct 23, 2017 at 05:36:48PM -0400, Sinan Kaya wrote:
-> The return codes from various reset types are not consistent. The code is
-> assuming that all reset types will return -ENOTTY when things go wrong.
-> Instead of relying on negative error status, let's bail out if the
-> operation is successful instead.
-
-I like this (no surprise since I suggested something similar at
-http://lkml.kernel.org/r/20171011210057.GU25517@bhelgaas-glaptop.roam.corp.google.com),
-but I'd like Alex's opinion before merging it.
-
-Previously, we only tried the next reset method if one method failed
-with -ENOTTY.  With this patch, we'll try the next reset method if one
-method fails for any reason, not just -ENOTTY.
-
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pci.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+On Fri, 20 Oct 2017, Bjorn Helgaas wrote:
+> On Tue, Oct 17, 2017 at 09:54:56AM +0200, Thomas Gleixner wrote:
+> > Dexuan reported that the recent rework of the vector allocation mode in x86
+> > broke HyperV PCI passtrough because the rework missed to add the
+> > MSI_FLAG_MUST_REACTIVATE flag to the HyperV/PCI interrupt domain info.
+> > 
+> > The simple solution would be to set the flag in the HyperV/PCI driver but
+> > it's better to make this generic and let the PCI/MSI core code set the flag
+> > when reservation mode is enabled. That ensures that future users of this
+> > wont trip over the same problem.
+> > 
+> > Thanks,
+> > 
+> > 	tglx
+> > 
+> > ---
+> >  arch/x86/Kconfig           |    2 +-
+> >  arch/x86/kernel/apic/msi.c |    5 ++---
+> >  drivers/pci/msi.c          |    2 ++
+> >  kernel/irq/Kconfig         |    3 +++
+> >  4 files changed, 8 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 6078dfc..a753e07 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4200,20 +4200,20 @@ int __pci_reset_function_locked(struct pci_dev *dev)
->  	might_sleep();
->  
->  	rc = pci_dev_specific_reset(dev, 0);
-> -	if (rc != -ENOTTY)
-> +	if (!rc)
->  		return rc;
->  	if (pcie_has_flr(dev)) {
->  		pcie_flr(dev);
->  		return 0;
->  	}
->  	rc = pci_af_flr(dev, 0);
-> -	if (rc != -ENOTTY)
-> +	if (!rc)
->  		return rc;
->  	rc = pci_pm_reset(dev, 0);
-> -	if (rc != -ENOTTY)
-> +	if (!rc)
->  		return rc;
->  	rc = pci_dev_reset_slot_function(dev, 0);
-> -	if (rc != -ENOTTY)
-> +	if (!rc)
->  		return rc;
->  	return pci_parent_bus_reset(dev, 0);
->  }
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> This mentions 4900be83602b ("x86/vector/msi: Switch to global reservation
+> mode"), which I don't have, so I assume it's an x86 thing.  So I guess
+> you'll probably merge this via the same tree?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yes, it's in tip/x86/apic branch and the fixups are applied there now as well.
+
+Thanks,
+
+	tglx
