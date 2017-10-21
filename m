@@ -1,82 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us-smtp-delivery-107.mimecast.com ([216.205.24.107]:38406 "EHLO
-        us-smtp-delivery-107.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751501AbdJPJLB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 05:11:01 -0400
-Subject: Re: [PATCH 4/5] PCI: tango: Fix platform_get_irq() error handling
-To: Fabio Estevam <festevam@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci <linux-pci@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Mason <slash.tmp@free.fr>
-References: <1508018851-9272-1-git-send-email-festevam@gmail.com>
- <1508018851-9272-4-git-send-email-festevam@gmail.com>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Message-ID: <169eac7a-4dd1-f164-6342-9bac8b7dbf3a@sigmadesigns.com>
-Date: Mon, 16 Oct 2017 11:09:15 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to and
+ from devices
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
+        iommu@lists.linux-foundation.org
+Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        robin.murphy@arm.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
+        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
+        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
+        rfranz@cavium.com, dwmw2@infradead.org,
+        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
+        ashok.raj@intel.com, robdclark@gmail.com
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-6-jean-philippe.brucker@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <683a518d-0e22-c855-2416-2e097ec3291d@codeaurora.org>
+Date: Sat, 21 Oct 2017 11:47:53 -0400
 MIME-Version: 1.0
-In-Reply-To: <1508018851-9272-4-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171006133203.22803-6-jean-philippe.brucker@arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+ gkh, maz, tglx, linus w
+Just some improvement suggestions.
 
-On 15/10/2017 00:07, Fabio Estevam wrote:
+On 10/6/2017 9:31 AM, Jean-Philippe Brucker wrote:
+> +	spin_lock(&iommu_process_lock);
+> +	idr_for_each_entry(&iommu_process_idr, process, i) {
+> +		if (process->pid != pid)
+> +			continue;
+if you see this construct a lot, this could be a for_each_iommu_process.
 
-> When platform_get_irq() fails we should propagate the real error value
-> instead of always returning -ENXIO.
-> 
-> Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> Signed-off-by: Fabio Estevam <festevam@gmail.com>
-> ---
->  drivers/pci/host/pcie-tango.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-> index e23f738..5196583 100644
-> --- a/drivers/pci/host/pcie-tango.c
-> +++ b/drivers/pci/host/pcie-tango.c
-> @@ -272,9 +272,9 @@ static int tango_pcie_probe(struct platform_device *pdev)
->  		writel_relaxed(0, pcie->base + SMP8759_ENABLE + offset);
->  
->  	virq = platform_get_irq(pdev, 1);
-> -	if (virq <= 0) {
-> +	if (virq < 0) {
->  		dev_err(dev, "Failed to map IRQ\n");
-> -		return -ENXIO;
-> +		return virq;
->  	}
->  
->  	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &dom_ops, pcie);
+> +
+> +		if (!iommu_process_get_locked(process)) {
+> +			/* Process is defunct, create a new one */
+> +			process = NULL;
+> +			break;
+> +		}
+> +
+> +		/* Great, is it also bound to this domain? */
+> +		list_for_each_entry(cur_context, &process->domains,
+> +				    process_head) {
+> +			if (cur_context->domain != domain)
+> +				continue;
+if you see this construct a lot, this could be a for_each_iommu_process_domain.
 
-Hello Fabio,
+> +
+> +			context = cur_context;
+> +			*pasid = process->pasid;
+> +
+> +			/* Splendid, tell the driver and increase the ref */
+> +			err = iommu_process_attach_locked(context, dev);
+> +			if (err)
+> +				iommu_process_put_locked(process);
+> +
+> +			break;
+> +		}
+> +		break;
+> +	}
+> +	spin_unlock(&iommu_process_lock);
+> +	put_pid(pid);
+> +
+> +	if (context)
+> +		return err;
 
-I don't think this patch is correct.
+I think you should make the section above a independent function and return here when the
+context is found.
 
-AFAIU, on all but legacy platforms, when platform_get_irq() returns 0,
-it is to signal an error condition.
-
-Marc Z pointed out this discussion:
-http://yarchive.net/comp/linux/zero.html
-
-Looking more closely at the platform_get_irq implementation, and ignoring
-the CONFIG_SPARC special-case, the return value is either:
-
-* a valid virq > 0, or
-* -EPROBE_DEFER, or
-* some error code < 0, in the ACPI case, or
-* -ENXIO, or
-* res->start (an unsigned type, so >= 0)
-
-
-I suppose it would be slightly nicer to write:
-
-	virq = platform_get_irq(pdev, 1);
-	if (virq <= 0)
-		return virq ? virq : -ENODEV;
-
-Regards.
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
