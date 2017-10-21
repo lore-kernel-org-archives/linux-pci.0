@@ -1,60 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:9993 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750863AbdJXGrA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 02:47:00 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH V3 2/2] ARM64: tegra: limit PCIe config space mapping to 4K for T186
-Date: Tue, 24 Oct 2017 12:14:49 +0530
-Message-ID: <1508827489-10842-3-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1508827489-10842-1-git-send-email-vidyas@nvidia.com>
-References: <1508827489-10842-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <SRS0=Qe2T=BU=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=Qe2T=BU=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH v6 0/4] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port
+ service drivers
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+CC: Charles Chenxin <charles.chenxin@huawei.com>, <linuxarm@huawei.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Gabriele Paoloni
+	<gabriele.paoloni@huawei.com>,
+        <linux-pci@vger.kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <2db2ba34-8f65-0eb2-3a00-587618e4144b@huawei.com>
+Date: Sat, 21 Oct 2017 10:22:41 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-reduces PCIe config space mapping size from its current 256MB
-to 4K to have only 4K of virtual memory mapping and to be
-in line with driver implementation
+Hi Bjorn.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V3:
-* no change in this patch
+The patch v6 looks good to me.
+It works ok on HiSilicon hip08 platform.
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
 
- arch/arm64/boot/dts/nvidia/tegra186.dtsi | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/nvidia/tegra186.dtsi b/arch/arm64/boot/dts/nvidia/tegra186.dtsi
-index 7c3a2bdd4644..c64550c32d72 100644
---- a/arch/arm64/boot/dts/nvidia/tegra186.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra186.dtsi
-@@ -361,7 +361,7 @@
- 		device_type = "pci";
- 		reg = <0x0 0x10003000 0x0 0x00000800   /* PADS registers */
- 		       0x0 0x10003800 0x0 0x00000800   /* AFI registers */
--		       0x0 0x40000000 0x0 0x10000000>; /* configuration space */
-+		       0x0 0x40000000 0x0 0x00001000>; /* configuration space */
- 		reg-names = "pads", "afi", "cs";
- 
- 		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
-@@ -379,9 +379,9 @@
- 		ranges = <0x82000000 0 0x10000000 0x0 0x10000000 0 0x00001000   /* port 0 configuration space */
- 			  0x82000000 0 0x10001000 0x0 0x10001000 0 0x00001000   /* port 1 configuration space */
- 			  0x82000000 0 0x10004000 0x0 0x10004000 0 0x00001000   /* port 2 configuration space */
--			  0x81000000 0 0x0        0x0 0x50000000 0 0x00010000   /* downstream I/O (64 KiB) */
--			  0x82000000 0 0x50100000 0x0 0x50100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
--			  0xc2000000 0 0x58000000 0x0 0x58000000 0 0x28000000>; /* prefetchable memory (640 MiB) */
-+			  0x81000000 0 0x0        0x0 0x40001000 0 0x00010000   /* downstream I/O (64 KiB) */
-+			  0x82000000 0 0x40100000 0x0 0x40100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
-+			  0xc2000000 0 0x48000000 0x0 0x48000000 0 0x38000000>; /* prefetchable memory (896 MiB) */
- 
- 		clocks = <&bpmp TEGRA186_CLK_AFI>,
- 			 <&bpmp TEGRA186_CLK_PCIE>,
--- 
-2.7.4
+在 2017/10/21 0:21, Bjorn Helgaas 写道:
+> This is based on Dongdong's series:
+>   v3: http://lkml.kernel.org/r/1507553167-27833-1-git-send-email-liudongdong3@huawei.com
+>   v4: http://lkml.kernel.org/r/1507719178-112556-1-git-send-email-liudongdong3@huawei.com
+>   v5: http://lkml.kernel.org/r/20171019225726.17806.62380.stgit@bhelgaas-glaptop.roam.corp.google.com
+>
+> The main idea is to fix IRQ issues when removing and adding back a Root
+> Port.  The problem is that when we allocate, free, and reallocate MSI/MSI-X
+> vectors for the device, we may not get the same vectors the second time,
+> but we saved IRQs based on the first set of vectors.
+>
+> Changes in v5:
+>   - add back a general Interrupt Message Number comment
+>   - factor out Interrupt Message Number helper separately
+>
+> This is on pci/msi for v4.15.
+>
+> ---
+>
+> Bjorn Helgaas (3):
+>       PCI/portdrv: Consolidate comments
+>       PCI/portdrv: Factor out Interrupt Message Number lookup
+>       PCI/portdrv: Compute MSI/MSI-X IRQ vectors after final allocation
+>
+> Dongdong Liu (1):
+>       PCI/portdrv: Add #defines for AER and DPC Interrupt Message Number masks
+>
+>
+>  drivers/pci/pcie/portdrv_core.c |  171 +++++++++++++++++----------------------
+>  include/uapi/linux/pci_regs.h   |    2
+>  2 files changed, 77 insertions(+), 96 deletions(-)
+>
+> .
+>
