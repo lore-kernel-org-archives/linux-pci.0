@@ -1,56 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54354 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750984AbdJBX3o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Oct 2017 19:29:44 -0400
-Date: Mon, 2 Oct 2017 18:29:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-Subject: Re: [PATCH] PCI / PM: Add dev_dbg() to print device suspend power
- states
-Message-ID: <20171002232941.GF5407@bhelgaas-glaptop.roam.corp.google.com>
-References: <8776535.A6PtrVU7Ea@aspire.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: "Petrosyan, Ludwig" <ludwig.petrosyan@desy.de>
+Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
+ <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
+ <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <85c98f79-e4b4-cbb5-feca-6944497c0c59@deltatee.com>
+Date: Sun, 22 Oct 2017 11:19:00 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8776535.A6PtrVU7Ea@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 30, 2017 at 01:31:15AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> It sometimes is useful to know what power states the kernel thinks
-> it puts PCI devices into during system suspend, so add a dev_dbg()
-> statement for that.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On 22/10/17 12:13 AM, Petrosyan, Ludwig wrote:
+> But at first sight it has to be simple:
+> The PCIe Write transactions are address routed, so if in the packet header the other endpoint address is written the TLP has to be routed (by PCIe Switch to the endpoint), the DMA reading from the end point is really write transactions from the endpoint, usually (Xilinx core) to start DMA one has to write to the DMA control register of the endpoint the destination address. So I have change the device driver to set in this register the physical address of the other endpoint (get_resource start called to other endpoint, and it is the same address which I could see in lspci -vvvv -s bus-address of the switch port, memories behind bridge), so now the endpoint has to start send writes TLP with the other endpoint address in the TLP header.
+> But this is not working (I want to understand why ...), but I could see the first address of the destination endpoint is changed (with the wrong value 0xFF),
+> now I want to try prepare in the driver of one endpoint the DMA buffer , but using physical address of the other endpoint,
+> Could be it will never work, but I want to understand why, there is my error ...
 
-I think you have other pending changes in this path, so can you take
-this one as well?
+Hmm, well if I understand you correctly it sounds like, in theory, it
+should work. But there could be any number of reasons why it does not.
+You may need to get a hold of a PCIe analyzer to figure out what's
+actually going on.
 
-> ---
->  drivers/pci/pci-driver.c |    3 +++
->  1 file changed, 3 insertions(+)
-> 
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -798,6 +798,9 @@ static int pci_pm_suspend_noirq(struct d
->  			pci_prepare_to_sleep(pci_dev);
->  	}
->  
-> +	dev_dbg(dev, "PCI PM: Suspend power state: %s\n",
-> +		pci_power_name(pci_dev->current_state));
-> +
->  	pci_pm_set_unknown_state(pci_dev);
->  
->  	/*
-> 
+Logan
