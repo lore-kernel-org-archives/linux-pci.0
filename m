@@ -1,143 +1,193 @@
-Return-Path: <SRS0=kucU=BF=gmail.com=richard.weiyang@kernel.org>
-Return-Path: <SRS0=kucU=BF=gmail.com=richard.weiyang@kernel.org>
-Date: Fri, 6 Oct 2017 09:11:00 +0800
-From: Wei Yang <richard.weiyang@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Wei Yang <richard.weiyang@gmail.com>,
-	Govindarajulu Varadarajan <gvaradar@cisco.com>, benve@cisco.com,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	jlbec@evilplan.org, hch@lst.de, Ingo Molnar <mingo@redhat.com>,
-	peterz@infradead.org, okaya@codeaurora.org,
-	Alexander Duyck <alexander.h.duyck@intel.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH V2] PCI: AER: fix deadlock in do_recovery
-Message-ID: <20171006011100.GA43201@WeideMacBook-Pro.local>
-Reply-To: Wei Yang <richard.weiyang@gmail.com>
-References: <20170930054938.43271-1-gvaradar@cisco.com>
- <20171003211537.GH25517@bhelgaas-glaptop.roam.corp.google.com>
- <CADZGycacDiu8O6kzqyrXMFCtsj4Xm2Mb5r=EnEJBXE3p80iQaA@mail.gmail.com>
- <20171005184209.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-o-3.desy.de ([131.169.56.156]:53271 "EHLO smtp-o-3.desy.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751120AbdJVGNv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 22 Oct 2017 02:13:51 -0400
+Received: from smtp-map-3.desy.de (smtp-map-3.desy.de [131.169.56.68])
+        by smtp-o-3.desy.de (DESY-O-3) with ESMTP id 805242805E9
+        for <linux-pci@vger.kernel.org>; Sun, 22 Oct 2017 08:13:49 +0200 (CEST)
+Date: Sun, 22 Oct 2017 08:13:45 +0200 (CEST)
+From: "Petrosyan, Ludwig" <ludwig.petrosyan@desy.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "Linux-media@vger.kernel.org" <Linux-media@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Bridgman, John" <John.Bridgman@amd.com>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>,
+        "Blinzer, Paul" <Paul.Blinzer@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Sander, Ben" <ben.sander@amd.com>
+Message-ID: <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
+In-Reply-To: <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com> <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de> <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171005184209.GV25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 05, 2017 at 01:42:09PM -0500, Bjorn Helgaas wrote:
->On Thu, Oct 05, 2017 at 11:05:12PM +0800, Wei Yang wrote:
->> On Wed, Oct 4, 2017 at 5:15 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > [+cc Alex, Gavin, Wei]
->> >
->> > On Fri, Sep 29, 2017 at 10:49:38PM -0700, Govindarajulu Varadarajan wrote:
->> >> CPU0                                  CPU1
->> >> ---------------------------------------------------------------------
->> >> __driver_attach()
->> >> device_lock(&dev->mutex) <--- device mutex lock here
->> >> driver_probe_device()
->> >> pci_enable_sriov()
->> >> pci_iov_add_virtfn()
->> >> pci_device_add()
->> >>                                       aer_isr()               <--- pci aer error
->> >>                                       do_recovery()
->> >>                                       broadcast_error_message()
->> >>                                       pci_walk_bus()
->> >>                                       down_read(&pci_bus_sem) <--- rd sem
->> >> down_write(&pci_bus_sem) <-- stuck on wr sem
->> >>                                       report_error_detected()
->> >>                                       device_lock(&dev->mutex)<--- DEAD LOCK
->> >>
->> >> This can also happen when aer error occurs while pci_dev->sriov_config() is
->> >> called.
->> >>
->> >> This patch does a pci_bus_walk and adds all the devices to a list. After
->> >> unlocking (up_read) &pci_bus_sem, we go through the list and call
->> >> err_handler of the devices with devic_lock() held. This way, we dont try
->> >> to hold both locks at same time.
->> >
->> > I feel like we're working too hard to come up with an ad hoc solution
->> > for this lock ordering problem: the __driver_attach() path acquires
->> > the device lock, then the pci_bus_sem; the AER path acquires
->> > pci_bus_sem, then the device lock.
->> >
->> > To me, the pci_bus_sem, then device lock order seems natural.  The
->> > pci_bus_sem protects all the bus device lists, so it makes sense to
->> > hold it while iterating over those lists.  And if we're operating on
->> > one of those devices while we're iterating, it makes sense to acquire
->> > the device lock.
->> >
->> > The pci_enable_sriov() path is the one that feels strange to me.
->> > We're in a driver probe method, and, surprise!, brand-new devices show
->> > up and we basically ask the PCI core to enumerate them synchronously
->> > while still in the probe method.
->> >
->> > Is there some reason this enumeration has to be done synchronously?
->> > I wonder if we can get that piece out of the driver probe path, e.g.,
->> > by queuing up the pci_iov_add_virtfn() part to be done later, in a
->> > path where we're not holding a device lock?
->> >
->> 
->> Hi, Bjorn,
->> 
->> First let me catch up with the thread.
->> 
->> We have two locking sequence:
->> 1. pci_bus_sem -> device lock, which is natural
->> 2. device lock -> pci_bus_sem, which is not
->
->Right.  Or at least, that's my assertion :)  I could be convinced
->otherwise.
->
->> pci_enable_sriov() sits in class #2 and your suggestion is to move the
->> pci_iov_add_virtfn() to some queue which will avoid case #2.
->> 
->> If we want to implement your suggestion, one thing unclear to me is
->> how would we handle the error path? Add a notification for the
->> failure? This would be easy for the core kernel, while some big change
->> for those drivers.
->
->My suggestion was for discussion.  It's entirely possible it will turn
->out not to be feasible.
->
->We're only talking about errors from pci_iov_add_virtfn() here.  We
->can still return all the other existing errors from sriov_enable(),
->which the driver can see.  These errors seem more directly related to
->the PF itself.
->
->The pci_iov_add_virtfn() errors are enumeration-type errors (failure
->to add a bus, failure to read config space of a VF, etc.)  These
->feel more like PCI core issues to me.  The driver isn't going to be
->able to do anything about them.
->
+Hello Logan
 
-Ideally, PF and VF has their own probe function and they don't interfere each
-other. From this point of view, I agree these failures are not handled by
-drivers.
+Thank You very much for respond.
+Could be I have done is stupid...
+But at first sight it has to be simple:
+The PCIe Write transactions are address routed, so if in the packet header =
+the other endpoint address is written the TLP has to be routed (by PCIe Swi=
+tch to the endpoint), the DMA reading from the end point is really write tr=
+ansactions from the endpoint, usually (Xilinx core) to start DMA one has to=
+ write to the DMA control register of the endpoint the destination address.=
+ So I have change the device driver to set in this register the physical ad=
+dress of the other endpoint (get_resource start called to other endpoint, a=
+nd it is the same address which I could see in lspci -vvvv -s bus-address o=
+f the switch port, memories behind bridge), so now the endpoint has to star=
+t send writes TLP with the other endpoint address in the TLP header.
+But this is not working (I want to understand why ...), but I could see the=
+ first address of the destination endpoint is changed (with the wrong value=
+ 0xFF),
+now I want to try prepare in the driver of one endpoint the DMA buffer , bu=
+t using physical address of the other endpoint,
+Could be it will never work, but I want to understand why, there is my erro=
+r ...
 
-While in the real implementation, I am not 100% for sure the PF driver
-operates without the knowledge of enabled VFs.
+with best regards
 
->The end result would likely be that a VF is enabled in the hardware
->but not added as a PCI device.  The same errors can occur during
->boot-time or hotplug-time enumeration of non-SR-IOV devices.
->
->Are these sort of errors important to the PF driver?  If the PF driver
->can get along without them, maybe we can use the same strategy as when
->we enumerate all other devices, i.e., log something in dmesg and
->continue on without the device.
->
+Ludwig
 
-Besides the functionality, I have another concern on the behavior change.
+----- Original Message -----
+From: "Logan Gunthorpe" <logang@deltatee.com>
+To: "Ludwig Petrosyan" <ludwig.petrosyan@desy.de>, "Deucher, Alexander" <Al=
+exander.Deucher@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger=
+.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "l=
+inux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>, "Linux-media@vger.ke=
+rnel.org" <Linux-media@vger.kernel.org>, "dri-devel@lists.freedesktop.org" =
+<dri-devel@lists.freedesktop.org>, "linux-pci@vger.kernel.org" <linux-pci@v=
+ger.kernel.org>
+Cc: "Bridgman, John" <John.Bridgman@amd.com>, "Kuehling, Felix" <Felix.Kueh=
+ling@amd.com>, "Sagalovitch, Serguei" <Serguei.Sagalovitch@amd.com>, "Blinz=
+er, Paul" <Paul.Blinzer@amd.com>, "Koenig, Christian" <Christian.Koenig@amd=
+.com>, "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>, "Sander, B=
+en" <ben.sander@amd.com>
+Sent: Friday, 20 October, 2017 17:48:58
+Subject: Re: Enabling peer to peer device transactions for PCIe devices
 
-Current behavior is the VFs will be enabled ALL or NONE, which we will add a
-third condition PARTIAL.
+Hi Ludwig,
 
-For example, the sys admin wants to enable 5 VFs while leads to 3 enabled at
-last.
+P2P transactions are still *very* experimental at the moment and take a=20
+lot of expertise to get working in a general setup. It will definitely=20
+require changes to the kernel, including the drivers of all the devices=20
+you are trying to make talk to eachother. If you're up for it you can=20
+take a look at:
 
-Hmm, not a big deal, while need to inform the users.
+https://github.com/sbates130272/linux-p2pmem/
 
->Bjorn
+Which has our current rough work making NVMe fabrics use p2p transactions.
 
--- 
-Wei Yang
-Help you, Help me
+Logan
+
+On 10/20/2017 6:36 AM, Ludwig Petrosyan wrote:
+> Dear Linux kernel group
+>=20
+> my name is Ludwig Petrosyan I am working in DESY (Germany)
+>=20
+> we are responsible for the control system of=C2=A0 all accelerators in DE=
+SY.
+>=20
+> For a 7-8 years we have switched to MTCA.4 systems and using PCIe as a=20
+> central Bus.
+>=20
+> I am mostly responsible for the Linux drivers of the AMC Cards (PCIe=20
+> endpoints).
+>=20
+> The idea is start to use peer to peer transaction for PCIe endpoint (DMA=
+=20
+> and/or usual Read/Write)
+>=20
+> Could You please advise me where to start, is there some Documentation=20
+> how to do it.
+>=20
+>=20
+> with best regards
+>=20
+>=20
+> Ludwig
+>=20
+>=20
+> On 11/21/2016 09:36 PM, Deucher, Alexander wrote:
+>> This is certainly not the first time this has been brought up, but I'd=
+=20
+>> like to try and get some consensus on the best way to move this=20
+>> forward.=C2=A0 Allowing devices to talk directly improves performance an=
+d=20
+>> reduces latency by avoiding the use of staging buffers in system=20
+>> memory.=C2=A0 Also in cases where both devices are behind a switch, it=
+=20
+>> avoids the CPU entirely.=C2=A0 Most current APIs (DirectGMA, PeerDirect,=
+=20
+>> CUDA, HSA) that deal with this are pointer based.=C2=A0 Ideally we'd be=
+=20
+>> able to take a CPU virtual address and be able to get to a physical=20
+>> address taking into account IOMMUs, etc.=C2=A0 Having struct pages for t=
+he=20
+>> memory would allow it to work more generally and wouldn't require as=20
+>> much explicit support in drivers that wanted to use it.
+>> Some use cases:
+>> 1. Storage devices streaming directly to GPU device memory
+>> 2. GPU device memory to GPU device memory streaming
+>> 3. DVB/V4L/SDI devices streaming directly to GPU device memory
+>> 4. DVB/V4L/SDI devices streaming directly to storage devices
+>> Here is a relatively simple example of how this could work for=20
+>> testing.=C2=A0 This is obviously not a complete solution.
+>> - Device memory will be registered with Linux memory sub-system by=20
+>> created corresponding struct page structures for device memory
+>> - get_user_pages_fast() will=C2=A0 return corresponding struct pages whe=
+n=20
+>> CPU address points to the device memory
+>> - put_page() will deal with struct pages for device memory
+>> Previously proposed solutions and related proposals:
+>> 1.P2P DMA
+>> DMA-API/PCI map_peer_resource support for peer-to-peer=20
+>> (http://www.spinics.net/lists/linux-pci/msg44560.html)
+>> Pros: Low impact, already largely reviewed.
+>> Cons: requires explicit support in all drivers that want to support=20
+>> it, doesn't handle S/G in device memory.
+>> 2. ZONE_DEVICE IO
+>> Direct I/O and DMA for persistent memory=20
+>> (https://lwn.net/Articles/672457/)
+>> Add support for ZONE_DEVICE IO memory with struct pages.=20
+>> (https://patchwork.kernel.org/patch/8583221/)
+>> Pro: Doesn't waste system memory for ZONE metadata
+>> Cons: CPU access to ZONE metadata slow, may be lost, corrupted on=20
+>> device reset.
+>> 3. DMA-BUF
+>> RDMA subsystem DMA-BUF support=20
+>> (http://www.spinics.net/lists/linux-rdma/msg38748.html)
+>> Pros: uses existing dma-buf interface
+>> Cons: dma-buf is handle based, requires explicit dma-buf support in=20
+>> drivers.
+>>
+>> 4. iopmem
+>> iopmem : A block device for PCIe memory=20
+>> (https://lwn.net/Articles/703895/)
+>> 5. HMM
+>> Heterogeneous Memory Management=20
+>> (http://lkml.iu.edu/hypermail/linux/kernel/1611.2/02473.html)
+>>
+>> 6. Some new mmap-like interface that takes a userptr and a length and=20
+>> returns a dma-buf and offset?
+>> Alex
+>>
+>> --=20
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at=C2=A0 http://vger.kernel.org/majordomo-info.html
+>=20
+> _______________________________________________
+> Linux-nvdimm mailing list
+> Linux-nvdimm@lists.01.org
+> https://lists.01.org/mailman/listinfo/linux-nvdimm
