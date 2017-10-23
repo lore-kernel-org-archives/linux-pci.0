@@ -1,152 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:55368 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751287AbdJPMIg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 08:08:36 -0400
-Subject: Re: [PATCH 01/10] PCI: dwc: use DMA-API for allocating MSI data
-To: Jingoo Han <jingoohan1@gmail.com>,
-        'Joao Pinto' <Joao.Pinto@synopsys.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-2-niklas.cassel@axis.com>
- <000001d34442$640e85c0$2c2b9140$@gmail.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <f7e99774-192b-5362-c6c5-dc8324499f45@axis.com>
-Date: Mon, 16 Oct 2017 14:08:33 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 23 Oct 2017 09:04:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Faiz Abbas <faiz_abbas@ti.com>
+Cc: kishon@ti.com, bhelgaas@google.com, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] dwc: dra7xx: Print link state to console for debug
+Message-ID: <20171023140411.GB9092@bhelgaas-glaptop.roam.corp.google.com>
+References: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
+ <20171020230952.GZ6332@bhelgaas-glaptop.roam.corp.google.com>
+ <3692fbeb-bf8a-6de6-898b-551d899e9e55@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <000001d34442$640e85c0$2c2b9140$@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3692fbeb-bf8a-6de6-898b-551d899e9e55@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/13/2017 06:43 PM, Jingoo Han wrote:
-> On Friday, October 13, 2017 12:09 PM, Niklas Cassel wrote:
->>
->> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
->> to write to this location, the proper way to get the address to this this
->> location is really to use the DMA API, rather than virt_to_phys.
->>
->> Using virt_to_phys might work on some systems, but by using the DMA API,
->> we know that it will work on all systems.
->>
->> This is essentially the same thing as allocating a buffer in a driver,
->> to which the endpoint will write to. To do this, we use the DMA API.
+On Mon, Oct 23, 2017 at 03:59:49PM +0530, Faiz Abbas wrote:
+> On Saturday 21 October 2017 04:39 AM, Bjorn Helgaas wrote:
+> > On Thu, Oct 19, 2017 at 06:13:29PM +0530, Faiz Abbas wrote:
+> >> Enable support for printing the LTSSM link state for debugging PCI
+> >> when link is down.
+> >>
+> >> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
+> >> ---
+> >> v2:
+> >>  1. Changed dev_err() to dev_dbg()
+> >>  2. Changed static char array to static const char * const
+> >>  3. format changes
+> > 
+> > I'm not really sure how much debug help we want to carry around in the
+> > mainline kernel.  End users aren't going to use this; it seems like
+> > more of a lab tool, and in situations like that you usually end up
+> > carrying around some out-of-tree patches for a while anyway.  But I
+> > can probably be convinced either way.
 > 
+> It'll be easier to support customers if they can tell us what the state
+> of the link is by just changing the log level. We won't have to send a
+> debug patch to the customer to find that out.
 
-Hello Jingoo.
+That still sounds like a lab debug situation to me.  Regular customers
+do not debug things at the level of the link state.  I'm not aware of
+any other drivers that do this, so including this hints that this
+driver/hardware is not very mature.
 
-> I have no objection. However, did you test your patch?
+Printing text certainly *looks* nice, but it adds a lot of code and
+I'm not sure how much actual value they add.  Just printing a hex
+value might be more reliable in terms of communicating it accurately
+back to you.  E.g., it might be easier to lose the distinction between
+DISABLED_ENTRY and DISABLED_IDLE than between 0x745f and 0x7463,
+especially in a phone situation.
 
-I've tested the patch on the ARTPEC-6 and the ARTPEC-7 SoC,
-one which has a 64-bit dma_addr_t, one which has a 32-bit dma_addr_t.
+Anyway, if Kishon acks this, I'll apply it.  One nit: please do the
+"link up" test once, e.g.,
 
-However, since device drivers use dma_map_page all the time,
-for this exact purpose, I don't think there should be a problem.
-(Famous last words..)
+  link_up = !!(reg & LINK_UP);
 
-> In my opinion, your company does not handle DWC PCIe controller, right?
+  if (!link_up) {
+    cmd_reg = dra7xx_pcie_readl(...);
+    dev_dbg(...);
+  }
 
-Right, we are not Synopsys ;)
-
-> If so, you need to get tested-by from other people.
-
-I agree, a couple of Tested-by would be a good idea.
-
-Joao and Kishon, if you have the time, could you please help me
-out and see MSI still works on your platform with this patch?
-
-
-Regards,
-Niklas
-
-
-> 
-> Best regards,
-> Jingoo Han
-> 
->>
->> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->> ---
->>  drivers/pci/dwc/pcie-designware-host.c | 23 ++++++++++++++++-------
->>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
->>  2 files changed, 18 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pcie-designware-host.c
->> b/drivers/pci/dwc/pcie-designware-host.c
->> index 81e2157a7cfb..f6d152ea2a03 100644
->> --- a/drivers/pci/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/dwc/pcie-designware-host.c
->> @@ -83,16 +83,25 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->>
->>  void dw_pcie_msi_init(struct pcie_port *pp)
->>  {
->> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->> +	struct device *dev = pci->dev;
->> +	struct page *page;
->>  	u64 msi_target;
->>
->> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
->> -	msi_target = virt_to_phys((void *)pp->msi_data);
->> +	page = alloc_page(GFP_KERNEL | GFP_DMA32);
->> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE,
->> DMA_FROM_DEVICE);
->> +	if (dma_mapping_error(dev, pp->msi_data)) {
->> +		dev_err(dev, "failed to map msi data\n");
->> +		__free_page(page);
->> +		return;
->> +	}
->> +	msi_target = (u64)pp->msi_data;
->>
->>  	/* program the msi_data */
->>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
->> -			    (u32)(msi_target & 0xffffffff));
->> +			    lower_32_bits(msi_target));
->>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
->> -			    (u32)(msi_target >> 32 & 0xffffffff));
->> +			    upper_32_bits(msi_target));
->>  }
->>
->>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
->> @@ -187,10 +196,10 @@ static void dw_msi_setup_msg(struct pcie_port *pp,
->> unsigned int irq, u32 pos)
->>  	if (pp->ops->get_msi_addr)
->>  		msi_target = pp->ops->get_msi_addr(pp);
->>  	else
->> -		msi_target = virt_to_phys((void *)pp->msi_data);
->> +		msi_target = (u64)pp->msi_data;
->>
->> -	msg.address_lo = (u32)(msi_target & 0xffffffff);
->> -	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
->> +	msg.address_lo = lower_32_bits(msi_target);
->> +	msg.address_hi = upper_32_bits(msi_target);
->>
->>  	if (pp->ops->get_msi_data)
->>  		msg.data = pp->ops->get_msi_data(pp, pos);
->> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-
->> designware.h
->> index e5d9d77b778e..547352a317f8 100644
->> --- a/drivers/pci/dwc/pcie-designware.h
->> +++ b/drivers/pci/dwc/pcie-designware.h
->> @@ -17,6 +17,7 @@
->>  #include <linux/irq.h>
->>  #include <linux/msi.h>
->>  #include <linux/pci.h>
->> +#include <linux/dma-mapping.h>
->>
->>  #include <linux/pci-epc.h>
->>  #include <linux/pci-epf.h>
->> @@ -168,7 +169,7 @@ struct pcie_port {
->>  	const struct dw_pcie_host_ops *ops;
->>  	int			msi_irq;
->>  	struct irq_domain	*irq_domain;
->> -	unsigned long		msi_data;
->> +	dma_addr_t		msi_data;
->>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->>  };
->>
->> --
->> 2.11.0
-> 
-> 
+  return link_up;
