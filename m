@@ -1,166 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34260 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751188AbdJCTs6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Oct 2017 15:48:58 -0400
-Date: Tue, 3 Oct 2017 14:48:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Sironi, Filippo" <sironi@amazon.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] pci: Expose offset, stride, and VF device ID via
- sysfs
-Message-ID: <20171003194855.GG25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503927530-26076-1-git-send-email-sironi@amazon.de>
- <1503927530-26076-2-git-send-email-sironi@amazon.de>
- <20170925185523.GF15970@bhelgaas-glaptop.roam.corp.google.com>
- <922D0B9C-4900-4226-9FB3-1BF3EA103708@amazon.de>
- <20171003193114.GE25517@bhelgaas-glaptop.roam.corp.google.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:11637 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932396AbdJWOgl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 10:36:41 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH V2 6/7] ARM64: tegra: limit PCIe config space mapping to 4K for T210
+Date: Mon, 23 Oct 2017 20:05:11 +0530
+Message-ID: <1508769312-12465-7-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171003193114.GE25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 03, 2017 at 02:31:14PM -0500, Bjorn Helgaas wrote:
-> On Fri, Sep 29, 2017 at 07:53:31AM +0000, Sironi, Filippo wrote:
-> > 
-> > Hi Bjorn,
-> > 
-> > > On 25. Sep 2017, at 20:55, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > 
-> > > Hi Filippo,
-> > > 
-> > > On Mon, Aug 28, 2017 at 03:38:50PM +0200, Filippo Sironi wrote:
-> > >> +static ssize_t sriov_vf_did_show(struct device *dev,
-> > >> +				 struct device_attribute *attr,
-> > >> +				 char *buf)
-> > >> +{
-> > >> +	struct pci_dev *pdev = to_pci_dev(dev);
-> > >> +
-> > >> +	return sprintf(buf, "%x\n", pdev->sriov->vf_did);
-> > >> +}
-> > > 
-> > > What does the vf_did part look like in sysfs?  Do we have a directory with
-> > > both "device" and "vf_did" in it?  If so, why do we have both and do we
-> > > need both?  Could we put the vf_did in the "device" file?
-> > 
-> > On my machine:
-> > 
-> > /sys/bus/pci/devices/0000:03:00.0# ls -l  # this is the PF
-> > total 0
-> > -rw-r--r-- 1 root root    4096 Sep 28 19:41 broken_parity_status
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 class
-> > -rw-r--r-- 1 root root    4096 Sep 28 19:41 config
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 consistent_dma_mask_bits
-> > -rw-r--r-- 1 root root    4096 Sep 28 19:41 d3cold_allowed
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 device
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 dma_mask_bits
-> > lrwxrwxrwx 1 root root       0 Sep 28 19:41 driver -> ../../../../bus/pci/drivers/igb
-> > -rw-r--r-- 1 root root    4096 Sep 28 19:41 driver_override
-> > -rw-r--r-- 1 root root    4096 Sep 28 19:41 enable
-> > lrwxrwxrwx 1 root root       0 Sep 28 19:41 firmware_node -> ../../../LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:4b/device:4c
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 irq
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 local_cpulist
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 local_cpus
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 modalias
-> > -rw-r--r-- 1 root root    4096 Sep 28 19:41 msi_bus
-> > drwxr-xr-x 2 root root       0 Sep 29 09:44 msi_irqs
-> > drwxr-xr-x 3 root root       0 Sep 28 19:41 net
-> > -rw-r--r-- 1 root root    4096 Sep 28 19:41 numa_node
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 offset  # this is new
-> > drwxr-xr-x 2 root root       0 Sep 28 19:41 power
-> > drwxr-xr-x 3 root root       0 Sep 28 19:41 ptp
-> > --w--w---- 1 root root    4096 Sep 28 19:41 remove
-> > --w--w---- 1 root root    4096 Sep 28 19:41 rescan
-> > --w------- 1 root root    4096 Sep 28 19:41 reset
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 resource
-> > -rw------- 1 root root  131072 Sep 28 19:41 resource0
-> > -rw------- 1 root root 4194304 Sep 28 19:41 resource1
-> > -rw------- 1 root root      32 Sep 28 19:41 resource2
-> > -rw------- 1 root root   16384 Sep 28 19:41 resource3
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 revision
-> > -rw-rw-r-- 1 root root    4096 Sep 29 09:44 sriov_numvfs
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 sriov_totalvfs
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 stride  # this is new
-> > lrwxrwxrwx 1 root root       0 Sep 28 19:41 subsystem -> ../../../../bus/pci
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 subsystem_device
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 subsystem_vendor
-> > -rw-r--r-- 1 root root    4096 Sep 28 19:41 uevent
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 vendor
-> > -r--r--r-- 1 root root    4096 Sep 28 19:41 vf_did  # this is new
-> > lrwxrwxrwx 1 root root       0 Sep 29 09:44 virtfn0 -> ../0000:03:10.0
-> > 
-> > nothing changes on for VFs.
-> > Then:
-> > 
-> > /sys/bus/pci/devices/0000:03:00.0# cat device 
-> > 0x10c9
-> > 
-> > /sys/bus/pci/devices/0000:03:00.0# cat vf_did
-> > 0x10ca
-> > 
-> > Putting the VF device ID in the PF device file would be a change of
-> > that we expose to userspace.  Something might break.
-> 
-> Oh, sorry, I misunderstood!  I was thinking that you were adding
-> "vf_did" to the VF directory, not the PF directory.
-> 
-> Then I guess my only issue is that "vf_did" doesn't match the pattern
-> of other names.  I think "virtfn_device" would give more of a hint and
-> would match "device" and "subsystem_device".
+reduces PCIe config space mapping size from its current 256MB
+to 4K to have only 4K of virtual memory mapping and to be
+in line with driver implementation
 
-I was going to just make this tweak myself, but realized I'd actually
-propose these changes as well:
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+V2:
+* no changes in this patch
 
-  offset -> sriov_offset
-  stride -> sriov_stride
-  vf_did -> virtfn_device (could be sriov_device as well)
+ arch/arm64/boot/dts/nvidia/tegra210.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-and I can't really test it to make sure I get all the details right.
-Can you update those and repost this?
-
-Bjorn
-
-> > vf_did provides a easy way to retrieve the VF device ID without reading
-> > the PF config (looking up the SR-IOV capability and reading it) or without
-> > enabling SR-IOV to read for example virtfn0/device.
-> > 
-> > Similar considerations (ease of access) apply to offset and stride.
-> > 
-> > 
-> > >> static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
-> > >> 					    struct device_attribute *attr,
-> > >> 					    char *buf)
-> > >> @@ -676,6 +703,9 @@ static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
-> > >> static struct device_attribute sriov_numvfs_attr =
-> > >> 		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
-> > >> 		       sriov_numvfs_show, sriov_numvfs_store);
-> > >> +static struct device_attribute sriov_offset_attr = __ATTR_RO(sriov_offset);
-> > >> +static struct device_attribute sriov_stride_attr = __ATTR_RO(sriov_stride);
-> > >> +static struct device_attribute sriov_vf_did_attr = __ATTR_RO(sriov_vf_did);
-> > >> static struct device_attribute sriov_drivers_autoprobe_attr =
-> > >> 		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
-> > >> 		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
-> > >> @@ -1744,6 +1774,9 @@ static struct attribute_group pci_dev_hp_attr_group = {
-> > >> static struct attribute *sriov_dev_attrs[] = {
-> > >> 	&sriov_totalvfs_attr.attr,
-> > >> 	&sriov_numvfs_attr.attr,
-> > >> +	&sriov_offset_attr.attr,
-> > >> +	&sriov_stride_attr.attr,
-> > >> +	&sriov_vf_did_attr.attr,
-> > >> 	&sriov_drivers_autoprobe_attr.attr,
-> > >> 	NULL,
-> > >> };
-> > >> -- 
-> > >> 2.7.4
-> > >> 
-> > > 
-> > 
-> > Amazon Development Center Germany GmbH
-> > Berlin - Dresden - Aachen
-> > main office: Krausenstr. 38, 10117 Berlin
-> > Geschaeftsfuehrer: Dr. Ralf Herbrich, Christian Schlaeger
-> > Ust-ID: DE289237879
-> > Eingetragen am Amtsgericht Charlottenburg HRB 149173 B
-> > 
+diff --git a/arch/arm64/boot/dts/nvidia/tegra210.dtsi b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
+index 29f471e0f22a..8cad2516597b 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra210.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
+@@ -16,7 +16,7 @@
+ 		device_type = "pci";
+ 		reg = <0x0 0x01003000 0x0 0x00000800   /* PADS registers */
+ 		       0x0 0x01003800 0x0 0x00000800   /* AFI registers */
+-		       0x0 0x02000000 0x0 0x10000000>; /* configuration space */
++		       0x0 0x11FFF000 0x0 0x00001000>; /* configuration space */
+ 		reg-names = "pads", "afi", "cs";
+ 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
+ 			     <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
+-- 
+2.7.4
