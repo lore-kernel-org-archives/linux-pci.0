@@ -1,81 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:43052 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752173AbdJ3MnX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:43:23 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 11/17] PCI: dwc: artpec6: Use BIT and GENMASK macros
-Date: Mon, 30 Oct 2017 13:42:14 +0100
-Message-Id: <20171030124221.20690-12-niklas.cassel@axis.com>
-In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v14 4/5] hinic: Replace PCI pool old API
+Date: Mon, 23 Oct 2017 19:59:57 +0200
+Message-Id: <20171023175958.8327-5-romain.perier@gmail.com>
+In-Reply-To: <20171023175958.8327-1-romain.perier@gmail.com>
+References: <20171023175958.8327-1-romain.perier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This greatly improves readability.
+From: Romain Perier <romain.perier@collabora.com>
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
+
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
 ---
-V2:
-* No change.
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++++-----
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
- drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 4b8ef266dc2f..18075e0fab80 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -39,28 +39,28 @@ struct artpec6_pcie {
+diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
+index 7d95f0866fb0..28a81ac97af5 100644
+--- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
++++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
+@@ -143,7 +143,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ 	struct hinic_hwif *hwif = cmdqs->hwif;
+ 	struct pci_dev *pdev = hwif->pdev;
  
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
--#define  PCIECFG_DBG_OEN		(1 << 24)
--#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
--#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
--#define  PCIECFG_CLKREQ_B		(1 << 11)
--#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
--#define  PCIECFG_PLL_ENABLE		(1 << 9)
--#define  PCIECFG_PCLK_ENABLE		(1 << 8)
--#define  PCIECFG_RISRCREN		(1 << 4)
--#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
--#define  PCIECFG_CISRREN		(1 << 2)
--#define  PCIECFG_MACRO_ENABLE		(1 << 0)
-+#define  PCIECFG_DBG_OEN		BIT(24)
-+#define  PCIECFG_CORE_RESET_REQ		BIT(21)
-+#define  PCIECFG_LTSSM_ENABLE		BIT(20)
-+#define  PCIECFG_CLKREQ_B		BIT(11)
-+#define  PCIECFG_REFCLK_ENABLE		BIT(10)
-+#define  PCIECFG_PLL_ENABLE		BIT(9)
-+#define  PCIECFG_PCLK_ENABLE		BIT(8)
-+#define  PCIECFG_RISRCREN		BIT(4)
-+#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
-+#define  PCIECFG_CISRREN		BIT(2)
-+#define  PCIECFG_MACRO_ENABLE		BIT(0)
- 
- #define NOCCFG				0x40
--#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
--#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
--#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
--#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
-+#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
-+#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
-+#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
-+#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
- 
- #define PHY_STATUS			0x118
--#define PHY_COSPLLLOCK			(1 << 0)
-+#define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
-+#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
- 
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+-	cmdq_buf->buf = pci_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
++	cmdq_buf->buf = dma_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
+ 				       &cmdq_buf->dma_addr);
+ 	if (!cmdq_buf->buf) {
+ 		dev_err(&pdev->dev, "Failed to allocate cmd from the pool\n");
+@@ -161,7 +161,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ void hinic_free_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ 			 struct hinic_cmdq_buf *cmdq_buf)
  {
+-	pci_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
++	dma_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
+ }
+ 
+ static unsigned int cmdq_wqe_size_from_bdlen(enum bufdesc_len len)
+@@ -875,7 +875,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
+ 	int err;
+ 
+ 	cmdqs->hwif = hwif;
+-	cmdqs->cmdq_buf_pool = pci_pool_create("hinic_cmdq", pdev,
++	cmdqs->cmdq_buf_pool = dma_pool_create("hinic_cmdq", &pdev->dev,
+ 					       HINIC_CMDQ_BUF_SIZE,
+ 					       HINIC_CMDQ_BUF_SIZE, 0);
+ 	if (!cmdqs->cmdq_buf_pool)
+@@ -916,7 +916,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
+ 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
+ 
+ err_saved_wqs:
+-	pci_pool_destroy(cmdqs->cmdq_buf_pool);
++	dma_pool_destroy(cmdqs->cmdq_buf_pool);
+ 	return err;
+ }
+ 
+@@ -942,5 +942,5 @@ void hinic_free_cmdqs(struct hinic_cmdqs *cmdqs)
+ 
+ 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
+ 
+-	pci_pool_destroy(cmdqs->cmdq_buf_pool);
++	dma_pool_destroy(cmdqs->cmdq_buf_pool);
+ }
+diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
+index b35583400cb6..23f8d39eab68 100644
+--- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
++++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
+@@ -157,7 +157,7 @@ struct hinic_cmdq {
+ struct hinic_cmdqs {
+ 	struct hinic_hwif       *hwif;
+ 
+-	struct pci_pool         *cmdq_buf_pool;
++	struct dma_pool         *cmdq_buf_pool;
+ 
+ 	struct hinic_wq         *saved_wqs;
+ 
 -- 
-2.14.2
+2.14.1
