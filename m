@@ -1,76 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAPDyKFqq9_ZbPFYn22s+6sxtxePWgnd0GJNodeqkCKF2+QkrNA@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2890181.vdGMMavi5M@aspire.rjw.lan>
- <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
- <4337843.QuD5zygUhU@aspire.rjw.lan> <CAPDyKFqq9_ZbPFYn22s+6sxtxePWgnd0GJNodeqkCKF2+QkrNA@mail.gmail.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Thu, 19 Oct 2017 20:01:05 +0200
-Message-ID: <CAPDyKFo2u3KDz-HbUOESPcEcqi-+K6AB8R4Yg_NfDg0nw4+4tQ@mail.gmail.com>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:55118 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932143AbdJWSAX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 14:00:23 -0400
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v14 3/5] net: e100: Replace PCI pool old API
+Date: Mon, 23 Oct 2017 19:59:56 +0200
+Message-Id: <20171023175958.8327-4-romain.perier@gmail.com>
+In-Reply-To: <20171023175958.8327-1-romain.perier@gmail.com>
+References: <20171023175958.8327-1-romain.perier@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[...]
+From: Romain Perier <romain.perier@collabora.com>
 
->>> > Say you want to leave the parent suspended after system resume, but the
->>> > child drivers use pm_runtime_force_suspend|resume().  The parent would then
->>> > need to use pm_runtime_force_suspend|resume() too, no?
->>>
->>> Actually no.
->>>
->>> Currently the other options of "deferring resume" (not using
->>> pm_runtime_force_*), is either using the "direct_complete" path or
->>> similar to the approach you took for the i2c designware driver.
->>>
->>> Both cases should play nicely in combination of a child being managed
->>> by pm_runtime_force_*. That's because only when the parent device is
->>> kept runtime suspended during system suspend, resuming can be
->>> deferred.
->>
->> And because the parent remains in runtime suspend late enough in the
->> system suspend path, its children also are guaranteed to be suspended.
->
-> Yes.
->
->>
->> But then all of them need to be left in runtime suspend during system
->> resume too, which is somewhat restrictive, because some drivers may
->> want their devices to be resumed then.
->
-> Actually, this scenario is also addressed when using the pm_runtime_force_*.
->
-> The driver for the child would only need to bump the runtime PM usage
-> count (pm_runtime_get_noresume()) before calling
-> pm_runtime_force_suspend() at system suspend. That then also
-> propagates to the parent, leading to that both the parent and the
-> child will be resumed when pm_runtime_force_resume() is called for
-> them.
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
 
-I need to correct myself here. The above currently only works if the
-child is runtime resumed while pm_runtime_force_suspend() is called.
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
+Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+---
+ drivers/net/ethernet/intel/e100.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-The logic in pm_runtime_force_* needs to be improved to take care of
-such scenarios. However I think that should be rather easy to fix, if
-we want that.
-
-[...]
-
-Kind regards
-Uffe
+diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
+index 184f11242f56..ba52475b9ff0 100644
+--- a/drivers/net/ethernet/intel/e100.c
++++ b/drivers/net/ethernet/intel/e100.c
+@@ -607,7 +607,7 @@ struct nic {
+ 	struct mem *mem;
+ 	dma_addr_t dma_addr;
+ 
+-	struct pci_pool *cbs_pool;
++	struct dma_pool *cbs_pool;
+ 	dma_addr_t cbs_dma_addr;
+ 	u8 adaptive_ifs;
+ 	u8 tx_threshold;
+@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
+ 			nic->cb_to_clean = nic->cb_to_clean->next;
+ 			nic->cbs_avail++;
+ 		}
+-		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
++		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
+ 		nic->cbs = NULL;
+ 		nic->cbs_avail = 0;
+ 	}
+@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
+ 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
+ 	nic->cbs_avail = 0;
+ 
+-	nic->cbs = pci_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
++	nic->cbs = dma_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
+ 				   &nic->cbs_dma_addr);
+ 	if (!nic->cbs)
+ 		return -ENOMEM;
+@@ -2960,8 +2960,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
+ 		goto err_out_free;
+ 	}
+-	nic->cbs_pool = pci_pool_create(netdev->name,
+-			   nic->pdev,
++	nic->cbs_pool = dma_pool_create(netdev->name,
++			   &nic->pdev->dev,
+ 			   nic->params.cbs.max * sizeof(struct cb),
+ 			   sizeof(u32),
+ 			   0);
+@@ -3001,7 +3001,7 @@ static void e100_remove(struct pci_dev *pdev)
+ 		unregister_netdev(netdev);
+ 		e100_free(nic);
+ 		pci_iounmap(pdev, nic->csr);
+-		pci_pool_destroy(nic->cbs_pool);
++		dma_pool_destroy(nic->cbs_pool);
+ 		free_netdev(netdev);
+ 		pci_release_regions(pdev);
+ 		pci_disable_device(pdev);
+-- 
+2.14.1
