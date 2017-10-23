@@ -1,88 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:47424 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751121AbdJWEui (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 00:50:38 -0400
+Received: by mail-oi0-f46.google.com with SMTP id h200so28752123oib.4
+        for <linux-pci@vger.kernel.org>; Sun, 22 Oct 2017 21:50:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1769d82f-07d3-14c9-c06a-d6afec20fa0e@ti.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAPDyKFozJtSHxxBEFtC+ofJ4XUyQjqUundPs81JATT=WfjXoYA@mail.gmail.com>
- <7b9c2a3e-2e88-938e-46a5-703de0080681@ti.com> <2926646.NJduVklg7n@aspire.rjw.lan>
- <CAPDyKFrFbdXrZqtvwm=xmJSqQckfGzs7XNn7AOCTbOjwP4iAFQ@mail.gmail.com> <1769d82f-07d3-14c9-c06a-d6afec20fa0e@ti.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Thu, 19 Oct 2017 20:04:36 +0200
-Message-ID: <CAPDyKFoAKguKiwnJu6zQF7F-w5AQ+mQoQq_XbNOQrys+c54Jhw@mail.gmail.com>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-To: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+In-Reply-To: <CAHp75VfiE7Xi76d58adttQPnsP1OyHguhdUnQcU=Drd674qp=w@mail.gmail.com>
+References: <CAD8Lp47nOCt-93kBxmcJzUam=P7XRcm8vhwogoxXTJ_mwCH_Cg@mail.gmail.com>
+ <CAHp75VfiE7Xi76d58adttQPnsP1OyHguhdUnQcU=Drd674qp=w@mail.gmail.com>
+From: Daniel Drake <drake@endlessm.com>
+Date: Mon, 23 Oct 2017 12:50:36 +0800
+Message-ID: <CAD8Lp45aUcSHK5yDWSHhtXkP6WF9Xzbb44cMDsD0u4hyD9wAcg@mail.gmail.com>
+Subject: Re: PCIe legacy interrupts blocked on Intel Apollo Lake platforms
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Andy Shevchenko <andy@infradead.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
         LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "x86@kernel.org" <x86@kernel.org>,
+        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Linux Upstreaming Team <linux@endlessm.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        AceLan Kao <acelan.kao@canonical.com>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19 October 2017 at 19:21, Grygorii Strashko <grygorii.strashko@ti.com> wrote:
->
->
-> On 10/19/2017 03:33 AM, Ulf Hansson wrote:
->> On 18 October 2017 at 23:48, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>> On Wednesday, October 18, 2017 9:45:11 PM CEST Grygorii Strashko wrote:
->>>>
->>>> On 10/18/2017 09:11 AM, Ulf Hansson wrote:
->>>
->>> [...]
->>>
->>>>>>> That's the point. We know pm_runtime_force_* works nicely for the
->>>>>>> trivial middle-layer cases.
->>>>>>
->>>>>> In which cases the middle-layer callbacks don't exist, so it's just like
->>>>>> reusing driver callbacks directly. :-)
->>>>
->>>> I'd like to ask you clarify one point here and provide some info which I hope can be useful -
->>>> what's exactly means  "trivial middle-layer cases"?
->>>>
->>>> Is it when systems use "drivers/base/power/clock_ops.c - Generic clock
->>>> manipulation PM callbacks" as dev_pm_domain (arm davinci/keystone), or OMAP
->>>> device framework struct dev_pm_domain omap_device_pm_domain
->>>> (arm/mach-omap2/omap_device.c) or static const struct dev_pm_ops
->>>> tegra_aconnect_pm_ops?
->>>>
->>>> if yes all above have PM runtime callbacks.
->>>
->>> Trivial ones don't actually do anything meaningful in their PM callbacks.
->>>
->>> Things like the platform bus type, spi bus type, i2c bus type and similar.
->>>
->>> If the middle-layer callbacks manipulate devices in a significant way, then
->>> they aren't trivial.
->>
->> I fully agree with Rafael's description above, but let me also clarify
->> one more thing.
->>
->> We have also been discussing PM domains as being trivial and
->> non-trivial. In some statements I even think the PM domain has been a
->> part the middle-layer terminology, which may have been a bit
->> confusing.
->>
->> In this regards as we consider genpd being a trivial PM domain, those
->> examples your bring up above is too me also examples of trivial PM
->> domains. Especially because they don't deal with wakeups, as that is
->> taken care of by the drivers, right!?
->
-> Not directly, for example, omap device framework has noirq callback implemented
-> which forcibly disable all devices which are not PM runtime suspended.
-> while doing this it calls drivers PM .runtime_suspend() which may return
-> non 0 value and in this case device will be left enabled (powered) at suspend for
-> wake up purposes (see _od_suspend_noirq()).
->
+Hi,
 
-Yeah, I had that feeling that omap has some trickyness going on. :-)
+On Wed, Oct 18, 2017 at 7:54 PM, Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
+> While Rafael is looking for a solution, can you in meantime gather the
+> following on the affected hardware and share it via some resource on
+> Internet?
+>
+> 1. % acpidump -o tables.dat # tables.dat is point of interest
 
-I sure that can be fixed in the omap PM domain, although
+https://gist.githubusercontent.com/dsd/ef9b9da4c634f57de89f917c43703272/raw/391db13df07ceab78ccc2ca1d5f4e5ccd3fb10d8/acpi%2520tables
+
+> 2. % lspci -vv -nk # output of the command
+
+https://gist.githubusercontent.com/dsd/ef9b9da4c634f57de89f917c43703272/raw/391db13df07ceab78ccc2ca1d5f4e5ccd3fb10d8/pci
+
+> 3. % dmidecode # output of the command
+
+https://gist.githubusercontent.com/dsd/ef9b9da4c634f57de89f917c43703272/raw/391db13df07ceab78ccc2ca1d5f4e5ccd3fb10d8/dmidecode
+
+> 4. % grep -H 15 /sys/bus/acpi/devices/*/status # output of the command
+
+https://gist.githubusercontent.com/dsd/ef9b9da4c634f57de89f917c43703272/raw/391db13df07ceab78ccc2ca1d5f4e5ccd3fb10d8/grep%2520-H%252015%2520acpi%2520status
+
+> 5. % dmesg # when kernel command line has the 'ignore_loglevel
+> initcall_debug' added
+
+https://gist.githubusercontent.com/dsd/ef9b9da4c634f57de89f917c43703272/raw/391db13df07ceab78ccc2ca1d5f4e5ccd3fb10d8/dmesg
+
+
+All above files in a zip:
+https://gist.github.com/dsd/ef9b9da4c634f57de89f917c43703272/archive/391db13df07ceab78ccc2ca1d5f4e5ccd3fb10d8.zip
+
+Please let me know how we can help further!
+
+Daniel
