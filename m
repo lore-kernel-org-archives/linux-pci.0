@@ -1,105 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:33780 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752967AbdJMSf5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 13 Oct 2017 14:35:57 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 6/8] PCI: pciehp: Fix race condition handling surprise link down
-Date: Fri, 13 Oct 2017 21:35:46 +0300
-Message-Id: <20171013183548.68283-7-mika.westerberg@linux.intel.com>
-In-Reply-To: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=4VT3=BW=ti.com=faiz_abbas@kernel.org>
+Return-Path: <SRS0=4VT3=BW=ti.com=faiz_abbas@kernel.org>
+Subject: Re: [PATCH v2] dwc: dra7xx: Print link state to console for debug
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <kishon@ti.com>, <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
+ <20171020230952.GZ6332@bhelgaas-glaptop.roam.corp.google.com>
+From: Faiz Abbas <faiz_abbas@ti.com>
+Message-ID: <3692fbeb-bf8a-6de6-898b-551d899e9e55@ti.com>
+Date: Mon, 23 Oct 2017 15:59:49 +0530
+MIME-Version: 1.0
+In-Reply-To: <20171020230952.GZ6332@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-A surprise link down may retrain very quickly causing the same slot
-generate a link up event before handling the link down event completes.
+Hi Bjorn,
 
-Since the link is active, the power off work queued from the first link
-down will cause a second down event when power is disabled. However, the
-link up event sets the slot state to POWERON_STATE before the event to
-handle this is enqueued, making the second down event believe it needs
-to do something.
+On Saturday 21 October 2017 04:39 AM, Bjorn Helgaas wrote:
+> On Thu, Oct 19, 2017 at 06:13:29PM +0530, Faiz Abbas wrote:
+>> Enable support for printing the LTSSM link state for debugging PCI
+>> when link is down.
+>>
+>> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
+>> ---
+>> v2:
+>>  1. Changed dev_err() to dev_dbg()
+>>  2. Changed static char array to static const char * const
+>>  3. format changes
+> 
+> I'm not really sure how much debug help we want to carry around in the
+> mainline kernel.  End users aren't going to use this; it seems like
+> more of a lab tool, and in situations like that you usually end up
+> carrying around some out-of-tree patches for a while anyway.  But I
+> can probably be convinced either way.
+> 
 
-This creates constant link up and down event cycle.
+It'll be easier to support customers if they can tell us what the state
+of the link is by just changing the log level. We won't have to send a
+debug patch to the customer to find that out.
 
-To prevent this it is better to handle each event at the time in order
-it occurred, so change the driver to use ordered workqueue instead.
-
-A normal device hotplug triggers two events (presense detect and link
-up) that are already handled properly in the driver but we currently log
-an error if we find an existing device in the slot. Since this is not an
-error change the log level to be debug instead to avoid scaring users.
-
-This is based on the original work by Ashok Raj.
-
-Link: https://patchwork.kernel.org/patch/9469023
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/pciehp_ctrl.c | 7 ++++---
- drivers/pci/hotplug/pciehp_hpc.c  | 2 +-
- drivers/pci/hotplug/pciehp_pci.c  | 6 +++++-
- 3 files changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index ec0b4c11ccd9..83f3d4af3677 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -113,10 +113,11 @@ static int board_added(struct slot *p_slot)
- 
- 	retval = pciehp_configure_device(p_slot);
- 	if (retval) {
--		ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
--			 pci_domain_nr(parent), parent->number);
--		if (retval != -EEXIST)
-+		if (retval != -EEXIST) {
-+			ctrl_err(ctrl, "Cannot add device at %04x:%02x:00\n",
-+				 pci_domain_nr(parent), parent->number);
- 			goto err_exit;
-+		}
- 	}
- 
- 	pciehp_green_led_on(p_slot);
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index e5d5ce9e3010..83c93f9da65a 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -795,7 +795,7 @@ static int pcie_init_slot(struct controller *ctrl)
- 	if (!slot)
- 		return -ENOMEM;
- 
--	slot->wq = alloc_workqueue("pciehp-%u", 0, 0, PSN(ctrl));
-+	slot->wq = alloc_ordered_workqueue("pciehp-%u", 0, PSN(ctrl));
- 	if (!slot->wq)
- 		goto abort;
- 
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index c3af027ee1a6..2a1ca020cf5a 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -46,7 +46,11 @@ int pciehp_configure_device(struct slot *p_slot)
- 
- 	dev = pci_get_slot(parent, PCI_DEVFN(0, 0));
- 	if (dev) {
--		ctrl_err(ctrl, "Device %s already exists at %04x:%02x:00, cannot hot-add\n",
-+		/*
-+		 * The device is already there. Either configured by the
-+		 * boot firmware or a previous hotplug event.
-+		 */
-+		ctrl_dbg(ctrl, "Device %s already exists at %04x:%02x:00, skipping hot-add\n",
- 			 pci_name(dev), pci_domain_nr(parent), parent->number);
- 		pci_dev_put(dev);
- 		ret = -EEXIST;
--- 
-2.14.2
+Thanks,
+Faiz
