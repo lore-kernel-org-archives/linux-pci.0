@@ -1,39 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 19 Oct 2017 16:06:57 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Bhumika Goyal <bhumirks@gmail.com>, julia.lawall@lip6.fr,
-        rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2 02/15] usb: gadget: make config_item_type structures
-        const
-Message-ID: <20171019140657.GA22233@lst.de>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com> <1508167134-6243-3-git-send-email-bhumirks@gmail.com> <1985905.z83BJQzMUS@avalon>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 23 Oct 2017 14:32:25 +0800
+From: Shawn Guo <shawnguo@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH] PCI: hisi: add PCIe driver support for HiSilicon STB SoCs
+Message-ID: <20171023063224.GI8700@dragon>
+References: <1508043971-23216-1-git-send-email-shawnguo@kernel.org>
+ <CAKv+Gu9rY-UuVLGBUoVJqbqMR9Gz1Pcw37W4gnfMPmGAdDE=_A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1985905.z83BJQzMUS@avalon>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAKv+Gu9rY-UuVLGBUoVJqbqMR9Gz1Pcw37W4gnfMPmGAdDE=_A@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Jianguo Sun <sunjianguo1@huawei.com>,
+ Jiancheng Xue <xuejiancheng@hisilicon.com>, Rob Herring <robh+dt@kernel.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Shawn Guo <shawn.guo@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Ard,
+
+On Sun, Oct 22, 2017 at 10:36:47AM +0100, Ard Biesheuvel wrote:
+> > +Example:
+> > +       pcie@f9860000 {
+> > +               compatible = "hisilicon,hi3798cv200-pcie";
+> > +               reg = <0xf9860000 0x1000>,
+> > +                     <0xf0000000 0x2000>,
+> > +                     <0xf2000000 0x01000000>;
+> > +               reg-names = "control", "rc-dbi", "config";
+> > +               #address-cells = <3>;
+> > +               #size-cells = <2>;
+> > +               device_type = "pci";
+> > +               bus-range = <0 15>;
+> > +               num-lanes = <1>;
+> > +               ranges=<0x81000000 0 0 0xf4000000 0 0x00010000
+> > +                       0x82000000 0 0xf3000000 0xf3000000 0 0x01000000>;
+> > +               interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>;
+> > +               interrupt-names = "msi";
+> > +               #interrupt-cells = <1>;
+> > +               interrupt-map-mask = <0 0 0 7>;
+> > +               interrupt-map = <0 0 0 1 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
 > 
-> Now we have 9 const instances of the config_item_type structure that are 
-> identical, with only the .ct_owner field set. Should they be all merged into a 
-> single structure ?
+> I know this is just the example, but this looks wrong to me: this only
+> covers INTA, so any multi-function devices that rely on legacy
+> interrupts (such as Nvidia GFX cards with HDMI audio device that are
+> blacklisted for MSI support) will fail to work. What I /think/ you
+> need is:
+> 
+> interrupt-map-mask = <0 0 0 0>;
+> interrupt-map = <0 0 0 0 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
 
-I think that's a good idea.
+I really appreciate the comment.  Yes, all 4 legacy interrupts should be
+mapped to this IRQ.  I will get it fixed.  Thanks again.
 
-But I'm about to slurp up this whole series into my tree, how about making
-that an incremental patch?  
+Shawn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
