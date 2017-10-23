@@ -1,292 +1,228 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:57211 "EHLO
-        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752003AbdJWTBU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 15:01:20 -0400
-Received: by mail-io0-f173.google.com with SMTP id m81so21214811ioi.13
-        for <linux-pci@vger.kernel.org>; Mon, 23 Oct 2017 12:01:20 -0700 (PDT)
+Return-Path: <SRS0=L8SO=BW=nvidia.com=vidyas@kernel.org>
+Return-Path: <SRS0=L8SO=BW=nvidia.com=vidyas@kernel.org>
+Subject: Re: [PATCH 1/6] PCI: tegra: refactor config space mapping code
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <treding@nvidia.com>, <bhelgaas@google.com>,
+	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<kthota@nvidia.com>
+References: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
+ <1507834211-24922-2-git-send-email-vidyas@nvidia.com>
+ <20171020190824.GN6332@bhelgaas-glaptop.roam.corp.google.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <873cc043-d567-d648-1c6e-0ed962edd953@nvidia.com>
+Date: Mon, 23 Oct 2017 11:09:50 +0530
 MIME-Version: 1.0
-In-Reply-To: <2481137.OYGUrPQscL@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2481137.OYGUrPQscL@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Mon, 23 Oct 2017 21:01:19 +0200
-Message-ID: <CAPDyKFqZxzKeXdM_Li_hj5F_M0CpnW-Ow=y51UZ3y8mefuExLg@mail.gmail.com>
-Subject: Re: [PATCH 04/12] PM / core: Add SMART_SUSPEND driver flag
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171020190824.GN6332@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16 October 2017 at 03:29, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Define and document a SMART_SUSPEND flag to instruct bus types and PM
-> domains that the system suspend callbacks provided by the driver can
-> cope with runtime-suspended devices, so from the driver's perspective
-> it should be safe to leave devices in runtime suspend during system
-> suspend.
 
 
-
+On Saturday 21 October 2017 12:38 AM, Bjorn Helgaas wrote:
+> On Fri, Oct 13, 2017 at 12:20:06AM +0530, Vidya Sagar wrote:
+>> use only 4K space from available 1GB PCIe aperture to access
+>> end points configuration space by dynamically moving AFI_AXI_BAR
+>> base address and always making sure that the desired location
+>> to be accessed for generating required config space access falls
+>> in the 4K space reserved for this purpose. This would give more
+>> space for mapping end point device's BARs on some of Tegra platforms
+> Do you now have a revlock issue between this driver change and the
+> corresponding DT changes?  I.e., what happens when you run this driver
+> change with an older DT that specifies a 256MB config aperture?  What
+> happens if you run the older driver with a new DT that only specifies
+> a 4KB config aperture?
+Yes. Both driver and DT changes must go together. New driver and old DT (or)
+Old driver and new DT would break config space access.
 >
-> Setting that flag also causes the PM core to skip the "late" and
-> "noirq" phases of device suspend for devices that remain in runtime
-> suspend at the beginning of the "late" phase (when runtime PM has
-> been disabled for them) under the assumption that their state cannot
-> (and should not) change after that point until the system suspend
-> transition is complete.  Moreover, the PM core prevents runtime PM
-> from acting on devices with DPM_FLAG_SMART_SUSPEND during system
-> resume by setting their runtime PM status to "active" at the end of
-> the "early" phase (right prior to enabling runtime PM for them).
-> That allows system resume callbacks to do whatever is necessary to
-> resume the device without worrying about runtime PM possibly
-> running in parallel with them.
-
-Could you explain in some detail of why the second part makes sense?
-
-To me it seems more clever to leave the decision to the driver,
-whether it wants to resume the device during system resume or if
-rather wants to defer that to later, via runtime PM.
-
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>>   drivers/pci/host/pci-tegra.c | 85 ++++++++++++--------------------------------
+>>   1 file changed, 23 insertions(+), 62 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index 9c40da54f88a..ebdcfca10e17 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -269,6 +269,8 @@ struct tegra_pcie {
+>>   	struct list_head buses;
+>>   	struct resource *cs;
+>>   
+>> +	void __iomem *cfg_va_base;
+>> +
+>>   	struct resource io;
+>>   	struct resource pio;
+>>   	struct resource mem;
+>> @@ -317,7 +319,6 @@ struct tegra_pcie_port {
+>>   };
+>>   
+>>   struct tegra_pcie_bus {
+>> -	struct vm_struct *area;
+>>   	struct list_head list;
+>>   	unsigned int nr;
+>>   };
+>> @@ -357,34 +358,16 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
+>>    *
+>>    * Mapping the whole extended configuration space would require 256 MiB of
+>>    * virtual address space, only a small part of which will actually be used.
+>> - * To work around this, a 1 MiB of virtual addresses are allocated per bus
+>> - * when the bus is first accessed. When the physical range is mapped, the
+>> - * the bus number bits are hidden so that the extended register number bits
+>> - * appear as bits [19:16]. Therefore the virtual mapping looks like this:
+>> - *
+>> - *    [19:16] extended register number
+>> - *    [15:11] device number
+>> - *    [10: 8] function number
+>> - *    [ 7: 0] register number
+>> - *
+>> - * This is achieved by stitching together 16 chunks of 64 KiB of physical
+>> - * address space via the MMU.
+>> + * To work around this, a 4K of region is used to generate required
+>> + * configuration transaction with relevant B:D:F values. This is achieved by
+>> + * dynamically programming base address and size of AFI_AXI_BAR used for
+>> + * end point config space mapping to make sure that the address (access to
+>> + * which generates correct config transaction) falls in this 4K region
+>>    */
+>> -static unsigned long tegra_pcie_conf_offset(unsigned int devfn, int where)
+>> -{
+>> -	return ((where & 0xf00) << 8) | (PCI_SLOT(devfn) << 11) |
+>> -	       (PCI_FUNC(devfn) << 8) | (where & 0xfc);
+>> -}
+>> -
+>>   static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
+>>   						   unsigned int busnr)
+>>   {
+>> -	struct device *dev = pcie->dev;
+>> -	pgprot_t prot = pgprot_noncached(PAGE_KERNEL);
+>> -	phys_addr_t cs = pcie->cs->start;
+>>   	struct tegra_pcie_bus *bus;
+>> -	unsigned int i;
+>> -	int err;
+>>   
+>>   	bus = kzalloc(sizeof(*bus), GFP_KERNEL);
+>>   	if (!bus)
+>> @@ -393,33 +376,16 @@ static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
+>>   	INIT_LIST_HEAD(&bus->list);
+>>   	bus->nr = busnr;
+>>   
+>> -	/* allocate 1 MiB of virtual addresses */
+>> -	bus->area = get_vm_area(SZ_1M, VM_IOREMAP);
+>> -	if (!bus->area) {
+>> -		err = -ENOMEM;
+>> -		goto free;
+>> -	}
+>> -
+>> -	/* map each of the 16 chunks of 64 KiB each */
+>> -	for (i = 0; i < 16; i++) {
+>> -		unsigned long virt = (unsigned long)bus->area->addr +
+>> -				     i * SZ_64K;
+>> -		phys_addr_t phys = cs + i * SZ_16M + busnr * SZ_64K;
+>> -
+>> -		err = ioremap_page_range(virt, virt + SZ_64K, phys, prot);
+>> -		if (err < 0) {
+>> -			dev_err(dev, "ioremap_page_range() failed: %d\n", err);
+>> -			goto unmap;
+>> +	if (!pcie->cfg_va_base) {
+>> +		pcie->cfg_va_base = ioremap(pcie->cs->start, SZ_4K);
+>> +		if (!pcie->cfg_va_base) {
+>> +			dev_err(pcie->dev, "failed to ioremap config space\n");
+>> +			kfree(bus);
+>> +			bus = (struct tegra_pcie_bus *)-ENOMEM;
+> tegra_pcie_bus_alloc() used to do some bus-specific work -- it allocated VM
+> space and mapped it.  This pcie->cfg_va_base ioremap() is not bus-specific,
+> so I don't think it fits here.  It looks like something that should be done
+> in the tegra_pcie_probe() path instead.
 >
-> However, that doesn't apply to transitions involving ->thaw_noirq,
-> ->thaw_early and ->thaw callbacks during hibernation, as they
-> generally are not expected to change the power states of devices.
-> Consequently, if a device is in runtime suspend at the beginning
-> of such a transition, it must stay in runtime suspend until the
-> "complete" phase of it (since the callbacks may not change its
-> power state).
-
-The above seems reasonable, but on the other hand it makes it more
-difficult to understand how the DPM_FLAG_SMART_SUSPEND is going to be
-used.
-
-Perhaps we should simply have a separate flag for the resume path?
-
+> If you move that, then I think you might as well inline the kzalloc() stuff
+> into tegra_pcie_add_bus().
+I'll take care of it in next patch.
+>>   		}
+>>   	}
+>>   
+>>   	return bus;
+>> -
+>> -unmap:
+>> -	vunmap(bus->area->addr);
+>> -free:
+>> -	kfree(bus);
+>> -	return ERR_PTR(err);
+>>   }
+>>   
+>>   static int tegra_pcie_add_bus(struct pci_bus *bus)
+>> @@ -445,12 +411,12 @@ static void tegra_pcie_remove_bus(struct pci_bus *child)
+>>   
+>>   	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
+>>   		if (bus->nr == child->number) {
+>> -			vunmap(bus->area->addr);
+>>   			list_del(&bus->list);
+>>   			kfree(bus);
+>>   			break;
+>>   		}
+>>   	}
+>> +	iounmap(pcie->cfg_va_base);
+>>   }
+>>   
+>>   static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+>> @@ -459,8 +425,8 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+>>   {
+>>   	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+>>   	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+>> -	struct device *dev = pcie->dev;
+>>   	void __iomem *addr = NULL;
+>> +	u32 val = 0;
+>>   
+>>   	if (bus->number == 0) {
+>>   		unsigned int slot = PCI_SLOT(devfn);
+>> @@ -473,19 +439,14 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+>>   			}
+>>   		}
+>>   	} else {
+>> -		struct tegra_pcie_bus *b;
+>> -
+>> -		list_for_each_entry(b, &pcie->buses, list)
+>> -			if (b->nr == bus->number)
+>> -				addr = (void __iomem *)b->area->addr;
+>> -
+>> -		if (!addr) {
+>> -			dev_err(dev, "failed to map cfg. space for bus %u\n",
+>> -				bus->number);
+>> -			return NULL;
+>> -		}
+>> -
+>> -		addr += tegra_pcie_conf_offset(devfn, where);
+>> +		addr = pcie->cfg_va_base;
+>> +		val = ((((u32)where & 0xf00) >> 8) << 24) |
+>> +		      (bus->number << 16) | (PCI_SLOT(devfn) << 11) |
+>> +		      (PCI_FUNC(devfn) << 8) | (where & 0xff);
+> I think it would be useful to keep tegra_pcie_conf_offset() (extending
+> it to take the bus number) near the comment describing the mapping.
+I'll take care of it in next patch.
 >
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  Documentation/driver-api/pm/devices.rst |   17 ++++++++
->  drivers/base/power/main.c               |   63 ++++++++++++++++++++++++++++----
->  include/linux/pm.h                      |    9 ++++
->  3 files changed, 82 insertions(+), 7 deletions(-)
+>> +		addr = (val & (SZ_4K - 1)) + addr;
+>> +		val = val & ~(SZ_4K - 1);
+>    val &= ~(SZ_4K - 1);
 >
-> Index: linux-pm/Documentation/driver-api/pm/devices.rst
-> ===================================================================
-> --- linux-pm.orig/Documentation/driver-api/pm/devices.rst
-> +++ linux-pm/Documentation/driver-api/pm/devices.rst
-> @@ -766,6 +766,23 @@ the state of devices (possibly except fo
->  from their ``->prepare`` and ``->suspend`` callbacks (or equivalent) *before*
->  invoking device drivers' ``->suspend`` callbacks (or equivalent).
+> I *think* what you're doing is computing a config space offset and
+> mapping the 4KB window that contains it.
 >
-> +Some bus types and PM domains have a policy to resume all devices from runtime
-> +suspend upfront in their ``->suspend`` callbacks, but that may not be really
-> +necessary if the system suspend-resume callbacks provided by the device's
-> +driver can cope with runtime-suspended devices.  The driver can indicate that
-> +by setting ``DPM_FLAG_SMART_SUSPEND`` in :c:member:`power.driver_flags` at the
-> +probe time, by passing it to the :c:func:`dev_pm_set_driver_flags` helper.  That
-> +also causes the PM core to skip the ``suspend_late`` and ``suspend_noirq``
-> +phases of device suspend for the device if it remains in runtime suspend at the
-> +beginning of the ``suspend_late`` phase (when runtime PM has been disabled for
-> +it) under the assumption that its state cannot (and should not) change after
-> +that point until the system-wide transition is over.  Moreover, the PM core
-> +updates the runtime power management status of devices with
-> +``DPM_FLAG_SMART_SUSPEND`` set to "active" at the end of the ``resume_early``
-> +phase of device resume (right prior to enabling runtime PM for them) in order
-> +to prevent runtime PM from acting on them before the ``complete`` phase, which
-> +means that they should be put into the full-power state before that phase.
-> +
->  During system-wide resume from a sleep state it's easiest to put devices into
->  the full-power state, as explained in :file:`Documentation/power/runtime_pm.txt`.
->  Refer to that document for more information regarding this particular issue as
-> Index: linux-pm/include/linux/pm.h
-> ===================================================================
-> --- linux-pm.orig/include/linux/pm.h
-> +++ linux-pm/include/linux/pm.h
-> @@ -558,6 +558,7 @@ struct pm_subsys_data {
->   *
->   * NEVER_SKIP: Do not skip system suspend/resume callbacks for the device.
->   * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
-> + * SMART_SUSPEND: No need to resume the device from runtime suspend.
->   *
->   * Setting SMART_PREPARE instructs bus types and PM domains which may want
->   * system suspend/resume callbacks to be skipped for the device to return 0 from
-> @@ -565,9 +566,17 @@ struct pm_subsys_data {
->   * other words, the system suspend/resume callbacks can only be skipped for the
->   * device if its driver doesn't object against that).  This flag has no effect
->   * if NEVER_SKIP is set.
-> + *
-> + * Setting SMART_SUSPEND instructs bus types and PM domains which may want to
-> + * runtime resume the device upfront during system suspend that doing so is not
-> + * necessary from the driver's perspective.  It also causes the PM core to skip
-> + * the "late" and "noirq" phases of device suspend for the device if it remains
-> + * in runtime suspend at the beginning of the "late" phase (when runtime PM has
-> + * been disabled for it).
->   */
->  #define DPM_FLAG_NEVER_SKIP    BIT(0)
->  #define DPM_FLAG_SMART_PREPARE BIT(1)
-> +#define DPM_FLAG_SMART_SUSPEND BIT(2)
+> "addr" is not used at all in the AFI_AXI_BAR0 programming, so this
+> would be clearer as:
 >
->  struct dev_pm_info {
->         pm_message_t            power_state;
-> Index: linux-pm/drivers/base/power/main.c
-> ===================================================================
-> --- linux-pm.orig/drivers/base/power/main.c
-> +++ linux-pm/drivers/base/power/main.c
-> @@ -551,6 +551,18 @@ static int device_resume_noirq(struct de
->         if (!dev->power.is_noirq_suspended)
->                 goto Out;
+>      val = ...
+>      afi_writel(...)
+>      afi_writel(...)
 >
-> +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
-> +           pm_runtime_status_suspended(dev) && (state.event == PM_EVENT_THAW ||
-> +           state.event == PM_EVENT_RECOVER)) {
-> +               /*
-> +                * The device has to stay in runtime suspend, because the
-> +                * subsequent callbacks may not try to change its power state.
-> +                */
-> +               dev->power.is_suspended = false;
-> +               dev->power.is_late_suspended = false;
-> +               goto Skip;
-> +       }
-> +
->         dpm_wait_for_superior(dev, async);
+>      addr = pcie->cfg_va_base + (val & (SZ_4K - 1));
+but, addr is using the intermediate 'val' i.e. before 'val &= ~(SZ_4K - 
+1)' operation is performed on it.
+>    }
 >
->         if (dev->pm_domain) {
-> @@ -573,9 +585,11 @@ static int device_resume_noirq(struct de
->         }
+>    return addr;
 >
->         error = dpm_run_callback(callback, dev, state, info);
-> +
-> +Skip:
->         dev->power.is_noirq_suspended = false;
->
-> - Out:
-> +Out:
->         complete_all(&dev->power.completion);
->         TRACE_RESUME(error);
->         return error;
-> @@ -715,6 +729,14 @@ static int device_resume_early(struct de
->         error = dpm_run_callback(callback, dev, state, info);
->         dev->power.is_late_suspended = false;
->
-> +       /*
-> +        * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
-> +        * during system suspend, so update their runtime PM status to "active"
-> +        * to prevent runtime PM from acting on them before device_complete().
-> +        */
-> +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND))
-> +               pm_runtime_set_active(dev);
-
-Please check the return value from pm_runtime_set_active(), else we
-might not know if something went wrong. For example, the parent may
-not be active.
-
-Moreover, as stated above, perhaps this should be controlled by a separate flag?
-
-> +
->   Out:
->         TRACE_RESUME(error);
->
-> @@ -1107,6 +1129,15 @@ static int __device_suspend_noirq(struct
->         if (dev->power.syscore || dev->power.direct_complete)
->                 goto Complete;
->
-> +       /*
-> +        * The state of devices with DPM_FLAG_SMART_SUSPEND set that remain in
-> +        * runtime suspend at this point cannot change going forward, so skip
-> +        * the callback invocation for them.
-> +        */
-> +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
-> +           pm_runtime_status_suspended(dev))
-> +               goto Skip;
-> +
->         if (dev->pm_domain) {
->                 info = "noirq power domain ";
->                 callback = pm_noirq_op(&dev->pm_domain->ops, state);
-> @@ -1127,10 +1158,13 @@ static int __device_suspend_noirq(struct
->         }
->
->         error = dpm_run_callback(callback, dev, state, info);
-> -       if (!error)
-> -               dev->power.is_noirq_suspended = true;
-> -       else
-> +       if (error) {
->                 async_error = error;
-> +               goto Complete;
-> +       }
-> +
-> +Skip:
-> +       dev->power.is_noirq_suspended = true;
->
->  Complete:
->         complete_all(&dev->power.completion);
-> @@ -1268,6 +1302,15 @@ static int __device_suspend_late(struct
->         if (dev->power.syscore || dev->power.direct_complete)
->                 goto Complete;
->
-> +       /*
-> +        * The state of devices with DPM_FLAG_SMART_SUSPEND set that remain in
-> +        * runtime suspend at this point cannot change going forward, so skip
-> +        * the callback invocation for them.
-> +        */
-> +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
-> +           pm_runtime_status_suspended(dev))
-> +               goto Skip;
-> +
->         if (dev->pm_domain) {
->                 info = "late power domain ";
->                 callback = pm_late_early_op(&dev->pm_domain->ops, state);
-> @@ -1288,10 +1331,13 @@ static int __device_suspend_late(struct
->         }
->
->         error = dpm_run_callback(callback, dev, state, info);
-> -       if (!error)
-> -               dev->power.is_late_suspended = true;
-> -       else
-> +       if (error) {
->                 async_error = error;
-> +               goto Complete;
-> +       }
-> +
-> +Skip:
-> +       dev->power.is_late_suspended = true;
->
->  Complete:
->         TRACE_SUSPEND(error);
-> @@ -1652,6 +1698,9 @@ static int device_prepare(struct device
->         if (dev->power.syscore)
->                 return 0;
->
-> +       WARN_ON(dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
-> +               !pm_runtime_enabled(dev));
-> +
->         /*
->          * If a device's parent goes into runtime suspend at the wrong time,
->          * it won't be possible to resume the device.  To prevent this we
->
->
-
-My overall comment/concern with this flag is that I would like a more
-straightforward approach, else people want understand how to use of
-it.
-
-Moreover doesn't this flag actually overlap quite closely with what
-the direct_complete path is already doing? Except for the resume path
-- of course.
-
-Kind regards
-Uffe
+>> +		afi_writel(pcie, pcie->cs->start - val, AFI_AXI_BAR0_START);
+>> +		afi_writel(pcie, (val + SZ_4K) >> 12, AFI_AXI_BAR0_SZ);
+>>   	}
+>>   
+>>   	return addr;
+>> -- 
+>> 2.7.4
+>>
