@@ -1,176 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 11 Oct 2017 17:55:20 -0700
-From: Brian Norris <computersforpeace@gmail.com>
-To: Jim Quinlan <jim2101024@gmail.com>
-Subject: Re: [PATCH 2/9] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
- device
-Message-ID: <20171012005520.GA111185@google.com>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-3-git-send-email-jim2101024@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:58256 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932240AbdJWNdj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Oct 2017 09:33:39 -0400
+Date: Mon, 23 Oct 2017 08:33:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: treding@nvidia.com, bhelgaas@google.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com, Rob Herring <robh+dt@kernel.org>,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/6] PCI: tegra: refactor config space mapping code
+Message-ID: <20171023133336.GA9092@bhelgaas-glaptop.roam.corp.google.com>
+References: <1507834211-24922-1-git-send-email-vidyas@nvidia.com>
+ <1507834211-24922-2-git-send-email-vidyas@nvidia.com>
+ <20171020190824.GN6332@bhelgaas-glaptop.roam.corp.google.com>
+ <873cc043-d567-d648-1c6e-0ed962edd953@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1507761269-7017-3-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
- Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <873cc043-d567-d648-1c6e-0ed962edd953@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jim,
+[+cc Rob, devicetree list]
 
-On Wed, Oct 11, 2017 at 06:34:22PM -0400, Jim Quinlan wrote:
-> The DT bindings description of the Brcmstb PCIe device is described.  This
-> node can be used by almost all Broadcom settop box chips, using
-> ARM, ARM64, or MIPS CPU architectures.
+On Mon, Oct 23, 2017 at 11:09:50AM +0530, Vidya Sagar wrote:
+> On Saturday 21 October 2017 12:38 AM, Bjorn Helgaas wrote:
+> >On Fri, Oct 13, 2017 at 12:20:06AM +0530, Vidya Sagar wrote:
+> >>use only 4K space from available 1GB PCIe aperture to access
+> >>end points configuration space by dynamically moving AFI_AXI_BAR
+> >>base address and always making sure that the desired location
+> >>to be accessed for generating required config space access falls
+> >>in the 4K space reserved for this purpose. This would give more
+> >>space for mapping end point device's BARs on some of Tegra platforms
+> >
+> >Do you now have a revlock issue between this driver change and the
+> >corresponding DT changes?  I.e., what happens when you run this driver
+> >change with an older DT that specifies a 256MB config aperture?  What
+> >happens if you run the older driver with a new DT that only specifies
+> >a 4KB config aperture?
+>
+> Yes. Both driver and DT changes must go together. New driver and old DT (or)
+> Old driver and new DT would break config space access.
+
+This revlock sounds like a pretty major issue.  I don't know if the DT
+conventions even allow for this.  If they do, it definitely needs to
+be mentioned in the changelog.
+
+Looking for acks from Thierry and Rob.
+
+> >>-		addr += tegra_pcie_conf_offset(devfn, where);
+> >>+		addr = pcie->cfg_va_base;
+> >>+		val = ((((u32)where & 0xf00) >> 8) << 24) |
+> >>+		      (bus->number << 16) | (PCI_SLOT(devfn) << 11) |
+> >>+		      (PCI_FUNC(devfn) << 8) | (where & 0xff);
+> >I think it would be useful to keep tegra_pcie_conf_offset() (extending
+> >it to take the bus number) near the comment describing the mapping.
+> I'll take care of it in next patch.
+> >
+> >>+		addr = (val & (SZ_4K - 1)) + addr;
+> >>+		val = val & ~(SZ_4K - 1);
+> >   val &= ~(SZ_4K - 1);
+> >
+> >I *think* what you're doing is computing a config space offset and
+> >mapping the 4KB window that contains it.
+> >
+> >"addr" is not used at all in the AFI_AXI_BAR0 programming, so this
+> >would be clearer as:
+> >
+> >     val = ...
+> >     afi_writel(...)
+> >     afi_writel(...)
+> >
+> >     addr = pcie->cfg_va_base + (val & (SZ_4K - 1));
+> but, addr is using the intermediate 'val' i.e. before 'val &=
+> ~(SZ_4K - 1)' operation is performed on it.
+
+Ah, right.  I think adding another temporary variable here would make
+it clearer.
+
+> >   }
+> >
+> >   return addr;
+> >
+> >>+		afi_writel(pcie, pcie->cs->start - val, AFI_AXI_BAR0_START);
+> >>+		afi_writel(pcie, (val + SZ_4K) >> 12, AFI_AXI_BAR0_SZ);
+> >>  	}
+> >>  	return addr;
+> >>-- 
+> >>2.7.4
+> >>
 > 
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> ---
->  .../devicetree/bindings/pci/brcmstb-pci.txt        | 106 +++++++++++++++++++++
->  1 file changed, 106 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> new file mode 100644
-> index 0000000..2f699da
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> @@ -0,0 +1,106 @@
-> +Brcmstb PCIe Host Controller Device Tree Bindings
-> +
-> +Introduction:
-> +  The brcmstb host controller closely follows the example set in
-> +
-> +	[1] http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
-> +
-> +  The rest of this document explains some added customizations and
-> +  offers an example Brcmstb PCIe host controller DT node.
-> +
-> +Required Properties:
-> +  reg -- the register start address and length for the PCIe block.
-> +      Additional start,length pairs may be specified for clock addresses.
-> +  interrupts -- two interrupts are specified; the first interrupt is for
-> +      the PCI host controller and the second is for MSI if the built-in
-> +      MSI controller is to be used.
-> +  interrupt-names -- names of the interrupts (above): "pcie" and "msi".
-> +  compatible -- must be one of: "brcm,bcm7425-pcie", "brcm,bcm7435-pcie",
-> +      or "brcm,bcm7278-pcie".
-> +  #address-cells -- the number of address cells for PCI-space.
-> +  #size-cells -- the number of size cells for PCI-space.
-> +  ranges -- See [1]; a specification of the outbound windows for the host
-> +      controller.  Each outbound window is described by a n-tuple:
-> +          (3 cells) -- PCIe space start address; one cell for attributes
-> +                       and two cells for the 64-bit PCIe address.
-> +          (x cells) -- CPU/System start address, number of cells is determined
-> +                       by the parent node's #address-cells.
-> +          (y cells) -- Size of region, number of cells determined by the
-> +                       parent node's #size-cells.
-> +      Due to hardware limitations, there may be a maximum of four
-> +      non-contiguous ranges specified.
-> +  #interrupt-cells -- number of cells used to describe the interrupt.
-> +  interrupt-map-mask -- see [1]; four cells, the first three are zero
-> +      for our uses and the fourth cell is the mask (val = 0x7) for
-> +      the legacy interrupt number [1..4].
-> +  interrupt-map -- See [1]; there are four interrupts (INTA, INTB,
-> +      INTC, and INTD) to be mapped; each interrupt requires 5 cells
-> +      plus the size of the interrupt specifier.
-> +  linux,pci-domain -- the domain of the host controller.
-> +
-> +Optional Properties:
-> +  clocks -- list of clock phandles.  If specified, this should list one
-> +      clock.
-> +  clock-names -- the "local" names of the clocks specified in 'clocks'.  Note
-> +      that if the 'clocks' property is given, 'clock-names' is mandatory,
-> +      and the name of the clock is expected to be "sw_pcie".
-> +  dma-ranges -- Similar in structure to ranges, each dma region is
-> +      specified with a n-tuple.  Dma-regions describe the inbound
-> +      accesses from EP to RC; it translates the pci address that the
-> +      EP "sees" to the CPU address in memory.  This property is needed
-> +      because the design of the Brcmstb memory subsystem often precludes
-> +      idenity-mapping between CPU address space and PCIe address space.
-> +      Each range is described by a n-tuple:
-> +          (3 cells) -- PCIe space start address; one cell for attributes
-> +                       and two cells for the 64-bit PCIe address.
-> +          (x cells) -- CPU/System start address, number of cells is determined
-> +                       by the parent node's #address-cells.
-> +          (y cells) -- Size of region, number of cells determined by the
-> +                       parent node's #size-cells.
-> +  msi-parent -- if MSI is to be used, this must be a phandle to the
-> +      msi-parent.  If this prop is set to the phandle of the PCIe
-> +      node, or if the msi-parent prop is missing, the PCIE controller
-> +      will attempt to use its built in MSI controller.
-> +  msi-controller -- this property should only be specified if the
-> +      PCIe controller is using its internal MSI controller.
-> +  brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
-> +  brcm,gen --  (integer) indicates desired generation of link:
-> +      1 => 2.5 Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps.
-
-Does this differ from the 'max-link-speed' now documented in
-Documentation/devicetree/bindings/pci/pci.txt? If not, might as well use
-it, and of_pci_get_max_link_speed().
-
-> +  supply-names -- the names of voltage regulators that the root
-> +      complex should turn off/on/on on suspend/resume/boot.  This
-> +      is a string list.
-> +  supplies -- A collection of phandles to a regulator nodes, see
-> +      Documentation/devicetree/bindings/regulator/ for specific
-> +      bindings. The number and order of phandles must match
-> +      exactly the number of strings in the "supply-names" property.
-> +
-> +Example Node:
-> +
-> +pcie0:	pcie@f0460000 {
-
-^^ You've got a tab after the colon. Makes this look funky in my
-vim/mutt :)
-
-Brian
-
-> +		reg = <0x0 0xf0460000 0x0 0x9310>;
-> +		interrupts = <0x0 0x0 0x4>;
-> +		compatible = "brcm,pci-plat-dev";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
-> +			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0 0 0 1 &intc 0 47 3
-> +				 0 0 0 2 &intc 0 48 3
-> +				 0 0 0 3 &intc 0 49 3
-> +				 0 0 0 4 &intc 0 50 3>;
-> +		interrupt-names = "pcie_0_inta",
-> +				  "pcie_0_intb",
-> +				  "pcie_0_intc",
-> +				  "pcie_0_intd";
-> +		clocks = <&sw_pcie0>;
-> +		clock-names = "sw_pcie";
-> +		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
-> +		msi-controller;         /* use PCIe's internal MSI controller */
-> +		brcm,ssc;
-> +		brcm,gen = <1>;
-> +		supply-names = "vreg-wifi-pwr";
-> +		supplies = <&vreg-wifi-pwr>;
-> +		linux,pci-domain = <0>;
-> +	};
-> -- 
-> 1.9.0.138.g2de3478
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
