@@ -1,102 +1,279 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:45971 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751892AbdJSKtY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Oct 2017 06:49:24 -0400
-Date: Thu, 19 Oct 2017 12:49:21 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, jonathanh@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        mperttunen@nvidia.com
-Subject: Re: [PATCH V2 4/4] arm64: tegra: Enable PCIe on Jetson TX2
-Message-ID: <20171019104921.GK9005@ulmo>
-References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
- <1506513517-25870-5-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="yr6OvWOSyJed8q4v"
-In-Reply-To: <1506513517-25870-5-git-send-email-mmaddireddy@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1571653.x1WQWp6nIP@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <1571653.x1WQWp6nIP@aspire.rjw.lan>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 23 Oct 2017 21:38:20 +0200
+Message-ID: <CAPDyKFrCUr9=atgr1n=QTfZbO04ZFuPo+uEwCr6_rMDWwGwSQQ@mail.gmail.com>
+Subject: Re: [PATCH 10/12] PM / core: Add LEAVE_SUSPENDED driver flag
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 16 October 2017 at 03:30, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
+> instruct the PM core that it is desirable to leave the device in
+> runtime suspend after system resume (for example, the device may be
+> slow to resume and it may be better to avoid resuming it right away
+> for this reason).
+>
+> Setting that flag causes the PM core to skip the ->resume_noirq,
+> ->resume_early and ->resume callbacks for the device (like in the
+> direct-complete optimization case) if (1) the wakeup settings of it
+> are compatible with runtime PM (that is, either the device is
+> configured to wake up the system from sleep or it cannot generate
+> wakeup signals at all), and it will not be used for resuming any of
+> its children or consumers.
 
---yr6OvWOSyJed8q4v
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+As you state above, this looks like the direct_complete path, if being
+used in conjunction with the DPM_SMART_SUSPEND flag.
 
-On Wed, Sep 27, 2017 at 05:28:37PM +0530, Manikanta Maddireddy wrote:
-> Enable x4 PCIe slot on Jetson TX2.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
-> Tested-by: Mikko Perttunen <mperttunen@nvidia.com>
+Taking both these flags into account, what it seems to boils done is
+that you need one flag, instructing the PM core to sometimes resume
+the devices when it runs the direct_complete path, as isn't the case
+today.
+
+Wouldn't that be an alternative solution, which may be a bit simpler?
+
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > ---
-> V2: No change in this patch
->  arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi | 24 ++++++++++++++++++++=
-++++
->  1 file changed, 24 insertions(+)
->=20
-> diff --git a/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi b/arch/arm64/=
-boot/dts/nvidia/tegra186-p3310.dtsi
-> index cf84d7046ad5..a4d96b2a23b4 100644
-> --- a/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi
-> +++ b/arch/arm64/boot/dts/nvidia/tegra186-p3310.dtsi
-> @@ -378,4 +378,28 @@
->  			vin-supply =3D <&vdd_1v8>;
->  		};
->  	};
+>  Documentation/driver-api/pm/devices.rst |   20 +++++++
+>  drivers/base/power/main.c               |   81 ++++++++++++++++++++++++++++++--
+>  include/linux/pm.h                      |   12 +++-
+>  3 files changed, 104 insertions(+), 9 deletions(-)
+>
+> Index: linux-pm/include/linux/pm.h
+> ===================================================================
+> --- linux-pm.orig/include/linux/pm.h
+> +++ linux-pm/include/linux/pm.h
+> @@ -559,6 +559,7 @@ struct pm_subsys_data {
+>   * NEVER_SKIP: Do not skip system suspend/resume callbacks for the device.
+>   * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
+>   * SMART_SUSPEND: No need to resume the device from runtime suspend.
+> + * LEAVE_SUSPENDED: Avoid resuming the device during system resume if possible.
+>   *
+>   * Setting SMART_PREPARE instructs bus types and PM domains which may want
+>   * system suspend/resume callbacks to be skipped for the device to return 0 from
+> @@ -573,10 +574,14 @@ struct pm_subsys_data {
+>   * the "late" and "noirq" phases of device suspend for the device if it remains
+>   * in runtime suspend at the beginning of the "late" phase (when runtime PM has
+>   * been disabled for it).
+> + *
+> + * Setting LEAVE_SUSPENDED informs the PM core and middle layer code that the
+> + * driver prefers the device to be left in runtime suspend after system resume.
+>   */
+> -#define DPM_FLAG_NEVER_SKIP    BIT(0)
+> -#define DPM_FLAG_SMART_PREPARE BIT(1)
+> -#define DPM_FLAG_SMART_SUSPEND BIT(2)
+> +#define DPM_FLAG_NEVER_SKIP            BIT(0)
+> +#define DPM_FLAG_SMART_PREPARE         BIT(1)
+> +#define DPM_FLAG_SMART_SUSPEND         BIT(2)
+> +#define DPM_FLAG_LEAVE_SUSPENDED       BIT(3)
+
+I would appreciate if you could reformat the patches such that you
+only have to add one line here.
+
+It makes it easier when I later runs a "git blame" to understand what
+commit that introduced each flag. :-)
+
+>
+>  struct dev_pm_info {
+>         pm_message_t            power_state;
+> @@ -598,6 +603,7 @@ struct dev_pm_info {
+>         bool                    wakeup_path:1;
+>         bool                    syscore:1;
+>         bool                    no_pm_callbacks:1;      /* Owned by the PM core */
+> +       unsigned int            must_resume:1;  /* Owned by the PM core */
+>  #else
+>         unsigned int            should_wakeup:1;
+>  #endif
+> Index: linux-pm/drivers/base/power/main.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/main.c
+> +++ linux-pm/drivers/base/power/main.c
+> @@ -705,6 +705,12 @@ static int device_resume_early(struct de
+>         if (!dev->power.is_late_suspended)
+>                 goto Out;
+>
+> +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED) &&
+> +           !dev->power.must_resume) {
+> +               pm_runtime_set_suspended(dev);
+> +               goto Out;
+> +       }
 > +
-> +	pcie@10003000 {
-> +		status =3D "okay";
+>         dpm_wait_for_superior(dev, async);
+>
+>         if (dev->pm_domain) {
+> @@ -1098,6 +1104,32 @@ static pm_message_t resume_event(pm_mess
+>         return PMSG_ON;
+>  }
+>
+> +static void dpm_suppliers_set_must_resume(struct device *dev)
+> +{
+> +       struct device_link *link;
+> +       int idx;
 > +
-> +		dvdd-pex-supply =3D <&vdd_pex>;
-> +		hvdd-pex-pll-supply =3D <&vdd_1v8>;
-> +		hvdd-pex-supply =3D <&vdd_1v8>;
-> +		vddio-pexctl-aud-supply =3D <&vdd_1v8>;
+> +       idx = device_links_read_lock();
 > +
-> +		pci@1,0 {
-> +			nvidia,num-lanes =3D <4>;
-> +			status =3D "okay";
-> +		};
+> +       list_for_each_entry_rcu(link, &dev->links.suppliers, c_node)
+> +               link->supplier->power.must_resume = true;
 > +
-> +		pci@2,0 {
-> +			nvidia,num-lanes =3D <0>;
-> +			status =3D "disabled";
-> +		};
+> +       device_links_read_unlock(idx);
+> +}
 > +
-> +		pci@3,0 {
-> +			nvidia,num-lanes =3D <1>;
-> +			status =3D "disabled";
-> +		};
-> +	};
+> +static void dpm_leave_suspended(struct device *dev)
+> +{
+> +       pm_runtime_set_suspended(dev);
+> +       dev->power.is_suspended = false;
+> +       dev->power.is_late_suspended = false;
+> +       /*
+> +        * This tells middle layer code to schedule runtime resume of the device
+> +        * from its ->complete callback to update the device's power state in
+> +        * case the platform firmware has been involved in resuming the system.
+> +        */
+> +       dev->power.direct_complete = true;
+> +}
+> +
+>  /**
+>   * __device_suspend_noirq - Execute a "noirq suspend" callback for given device.
+>   * @dev: Device to handle.
+> @@ -1135,8 +1167,20 @@ static int __device_suspend_noirq(struct
+>          * the callback invocation for them.
+>          */
+>         if (dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
+> -           pm_runtime_status_suspended(dev))
+> -               goto Skip;
+> +           pm_runtime_status_suspended(dev)) {
+> +               /*
+> +                * The device may be left suspended during system resume if
+> +                * that is preferred by its driver and it will not be used for
+> +                * resuming any of its children or consumers.
+> +                */
+> +               if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED) &&
+> +                   !dev->power.must_resume) {
+> +                       dpm_leave_suspended(dev);
+> +                       goto Complete;
+> +               } else {
+> +                       goto Skip;
+> +               }
+> +       }
+>
+>         if (dev->pm_domain) {
+>                 info = "noirq power domain ";
+> @@ -1163,6 +1207,28 @@ static int __device_suspend_noirq(struct
+>                 goto Complete;
+>         }
+>
+> +       /*
+> +        * The device may be left suspended during system resume if that is
+> +        * preferred by its driver and its wakeup configuration is compatible
+> +        * with runtime PM, and it will not be used for resuming any of its
+> +        * children or consumers.
+> +        */
+> +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED) &&
+> +           (device_may_wakeup(dev) || !device_can_wakeup(dev)) &&
+> +           !dev->power.must_resume) {
+> +               dpm_leave_suspended(dev);
+> +               goto Complete;
+> +       }
+> +
+> +       /*
+> +        * The parent and suppliers will be necessary to resume the device
+> +        * during system resume, so avoid leaving them in runtime suspend.
+> +        */
+> +       if (dev->parent)
+> +               dev->parent->power.must_resume = true;
+> +
+> +       dpm_suppliers_set_must_resume(dev);
+> +
+>  Skip:
+>         dev->power.is_noirq_suspended = true;
+>
+> @@ -1698,8 +1764,9 @@ static int device_prepare(struct device
+>         if (dev->power.syscore)
+>                 return 0;
+>
+> -       WARN_ON(dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
+> -               !pm_runtime_enabled(dev));
+> +       WARN_ON(!pm_runtime_enabled(dev) &&
+> +               dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND |
+> +                                             DPM_FLAG_LEAVE_SUSPENDED));
+>
+>         /*
+>          * If a device's parent goes into runtime suspend at the wrong time,
+> @@ -1712,6 +1779,12 @@ static int device_prepare(struct device
+>         device_lock(dev);
+>
+>         dev->power.wakeup_path = device_may_wakeup(dev);
+> +       /*
+> +        * Avoid leaving devices in suspend after transitions that don't really
+> +        * suspend them in general.
+> +        */
+> +       dev->power.must_resume = state.event == PM_EVENT_FREEZE ||
+> +                               state.event == PM_EVENT_QUIESCE;
+>
+>         if (dev->power.no_pm_callbacks) {
+>                 ret = 1;        /* Let device go direct_complete */
+> Index: linux-pm/Documentation/driver-api/pm/devices.rst
+> ===================================================================
+> --- linux-pm.orig/Documentation/driver-api/pm/devices.rst
+> +++ linux-pm/Documentation/driver-api/pm/devices.rst
+> @@ -785,6 +785,22 @@ means that they should be put into the f
+>
+>  During system-wide resume from a sleep state it's easiest to put devices into
+>  the full-power state, as explained in :file:`Documentation/power/runtime_pm.txt`.
+> -Refer to that document for more information regarding this particular issue as
+> +[Refer to that document for more information regarding this particular issue as
+>  well as for information on the device runtime power management framework in
+> -general.
+> +general.]
+> +
+> +However, it may be desirable to leave some devices in runtime suspend after
+> +system resume and device drivers can use the ``DPM_FLAG_LEAVE_SUSPENDED`` flag
+> +to indicate to the PM core that this is the case.  If that flag is set for a
+> +device and the wakeup settings of it are compatible with runtime PM (that is,
+> +either the device is configured to wake up the system from sleep or it cannot
+> +generate wakeup signals at all), and it will not be used for resuming any of its
+> +children or consumers, the PM core will skip all of the system resume callbacks
+> +in the ``resume_noirq``, ``resume_early`` and ``resume`` phases for it and its
+> +runtime power management status will be set to "suspended".
+> +
+> +Still, if the platform firmware is involved in the handling of system resume, it
+> +may change the state of devices in unpredictable ways, so in that case the
+> +middle layer code (for example, a bus type or PM domain) the driver works with
+> +should update the device's power state and schedule runtime resume of it to
+> +align its power settings with the expectations of the runtime PM framework.
+>
+>
 
-I moved this to tegra186-p2771-0000.dts because it exposes connectors
-that are on the carrier board rather than the processor module.
+Regarding the DPM_NEVER_SKIP flag, is that flag only to prevent
+direct_complete, and thus it ought not to be used with these other
+driver PM flags that you add in this series?
 
-Applied to for-4.15/arm64/dt, thanks.
+Have you considered that DPM_NEVER_SKIP also propagates to parents
+etc? Just to make sure one you won't skip invoking some system sleep
+callbacks, even if they should because a child requires it?
 
-Thierry
+Or maybe I am just tired and should continue to review with a more
+fresh mind. :-)
 
---yr6OvWOSyJed8q4v
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlnogzEACgkQ3SOs138+
-s6F5sQ//aZJGwodFjaaoLKTd/tAxbiMAbAk87kl0ueseEXBcMPN1Vm8RP5n+3Kjv
-j0dDSvTHhenAdZFm3LK3ExpF7XYbsbOnKGA6wvXmJjbTiiL4X8WbkoyAt3uFnXoS
-Ks0HCwIGBTKr6uAT7Lth/jYy6EGGaQ2dnTGzTS1ja3CVKKytqqhK7/5RZRD3+bNS
-rKgq56MhCvLmM/Jg7M1bzs/+EMhCMBg2l8lH2Kb44roQRa09/Sd8r6VeDE20cOVB
-s7cm02d/AkywzPcnv+yK+H0JUz6KCQm8O9PCofZD1tYv5LGN8cZxPr0/mA5PvcrJ
-aJ+I65c/sKPGrDjXirk07exwqHs83NIywJgWaHxlbcWbwZU761m46EmWVyEDA1AP
-vrMOrph0tuSWHfdvLpekk/7JY3+KrB7BkRewAWs3qoxaSC3bS05VcDrtXevk4eEw
-fnY7HRv1KpxX7STREv6JHrIdVlb+cJqrvE/XtpPdjXgZ1vcpcl1dUguBI7PE57i1
-V5CQGEO6adevW8AF0HSurL3en8X5uwsPN2mA+TNYI8yWXISzez2f4wcEh5jQzd1j
-uJkjLMfDQxw8t2x/+V5OL+E1gU0llSpbEwQnBI9L7uljGbxCeWu9K7/7ysG2WXUl
-Nhxduq/NW1xsBSgKYFtgWCCBMniPbLHQbPR6NOwLevuxaSbNsfg=
-=YZao
------END PGP SIGNATURE-----
-
---yr6OvWOSyJed8q4v--
+Kind regards
+Uffe
