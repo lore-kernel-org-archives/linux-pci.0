@@ -1,70 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 18 Oct 2017 08:53:16 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Jim Quinlan <jim2101024@gmail.com>
-Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
-Message-ID: <20171018065316.GA11183@lst.de>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
- <589c04cb-061b-a453-3188-79324a02388e@arm.com>
- <20171017081422.GA19475@lst.de>
- <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:3548 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932236AbdJWOim (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 10:38:42 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH V2 7/7] ARM64: tegra: limit PCIe config space mapping to 4K for T186
+Date: Mon, 23 Oct 2017 20:05:12 +0530
+Message-ID: <1508769312-12465-8-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
- Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, iommu@lists.linux-foundation.org,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 17, 2017 at 12:11:55PM -0400, Jim Quinlan wrote:
-> My understanding is that dma_pfn_offset is that it is a single
-> constant offset from RAM, in our case, to map to PCIe space.
+reduces PCIe config space mapping size from its current 256MB
+to 4K to have only 4K of virtual memory mapping and to be
+in line with driver implementation
 
-Yes.
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+ arch/arm64/boot/dts/nvidia/tegra186.dtsi | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-> But in
-> my commit message I detail how our PCIe controller presents memory
-> with multiple regions with multiple different offsets. If an EP device
-> maps to a region on the host memory, yes we can set the dma_pfn_offset
-> for that device for that location within that range,.  But if the
-> device then unmaps and allocates from another region with a different
-> offset, it won't work.  If  I set dma_pfn_offset I have to assume that
-> the device is using only one region of memory only, not more than one,
-> and that it is not unmapping that region and mapping another (with a
-> different offset).  Can I make those assumptions?
-
-No, we can't make that assumption unfortunately.  But how is your
-code going to work if the mapping spans multiple of your translation
-regions?
-
-Also I really don't think the stacking of dma_ops as in this patch
-is a good idea.  For MIPS you should do the variant suggested in
-the patch description and hook into dma_to_phys/phys_to_dma helpers,
-and for ARM/ARM64 you should talk to the maintainers on how they
-want the translation integrated.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/arch/arm64/boot/dts/nvidia/tegra186.dtsi b/arch/arm64/boot/dts/nvidia/tegra186.dtsi
+index 7c3a2bdd4644..c64550c32d72 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra186.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra186.dtsi
+@@ -361,7 +361,7 @@
+ 		device_type = "pci";
+ 		reg = <0x0 0x10003000 0x0 0x00000800   /* PADS registers */
+ 		       0x0 0x10003800 0x0 0x00000800   /* AFI registers */
+-		       0x0 0x40000000 0x0 0x10000000>; /* configuration space */
++		       0x0 0x40000000 0x0 0x00001000>; /* configuration space */
+ 		reg-names = "pads", "afi", "cs";
+ 
+ 		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
+@@ -379,9 +379,9 @@
+ 		ranges = <0x82000000 0 0x10000000 0x0 0x10000000 0 0x00001000   /* port 0 configuration space */
+ 			  0x82000000 0 0x10001000 0x0 0x10001000 0 0x00001000   /* port 1 configuration space */
+ 			  0x82000000 0 0x10004000 0x0 0x10004000 0 0x00001000   /* port 2 configuration space */
+-			  0x81000000 0 0x0        0x0 0x50000000 0 0x00010000   /* downstream I/O (64 KiB) */
+-			  0x82000000 0 0x50100000 0x0 0x50100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
+-			  0xc2000000 0 0x58000000 0x0 0x58000000 0 0x28000000>; /* prefetchable memory (640 MiB) */
++			  0x81000000 0 0x0        0x0 0x40001000 0 0x00010000   /* downstream I/O (64 KiB) */
++			  0x82000000 0 0x40100000 0x0 0x40100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
++			  0xc2000000 0 0x48000000 0x0 0x48000000 0 0x38000000>; /* prefetchable memory (896 MiB) */
+ 
+ 		clocks = <&bpmp TEGRA186_CLK_AFI>,
+ 			 <&bpmp TEGRA186_CLK_PCIE>,
+-- 
+2.7.4
