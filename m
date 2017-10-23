@@ -1,152 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 11/12] PM: i2c-designware-platdrv: Optimize power management
-Date: Mon, 16 Oct 2017 03:31:17 +0200
-Message-ID: <2298462.BTY6P2Oy1l@aspire.rjw.lan>
-In-Reply-To: <3806130.B2KCK0tvef@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:3479 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932284AbdJWOiM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 10:38:12 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH V2 0/7] Tegra PCIe end point config space map code refactoring
+Date: Mon, 23 Oct 2017 20:05:05 +0530
+Message-ID: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+PCIe host controller in Tegra SoCs has 1GB of aperture available
+for mapping end points config space, IO and BARs. In that, currently
+256MB is being reserved for mapping end points configuration space
+which leaves less memory space available for mapping end points BARs
+on some of the platforms.
+This patch series attempts to use only 4K space from 1GB aperture to
+access end points configuration space.
 
-Optimize the power management in i2c-designware-platdrv by making it
-set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
-allows some code to be dropped from its PM callbacks.
+Currently, this change benefits T20 and T186 in saving (i.e. repurposed
+to use for BAR mapping) physical space as well as kernel virtual mapping space,
+it saves only kernel virtual address space in T30, T124, T132 and T210.
 
-First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
-to avoid resuming i2c-designware-platdrv devices in its ->prepare
-callback, so they can stay in runtime suspend after that point even
-if the direct-complete feature is not used for them.
+NOTE: Both driver and DT changes are inter-dependent and hence need to go together
 
-It also causes the PM core to avoid invoking "late" and "noirq"
-suspend callbacks for these devices if they are in runtime suspend
-at the beginning of the "late" phase of device suspend during
-system suspend.  That guarantees dw_i2c_plat_suspend() to be
-called for a device only if it is not in runtime suspend.
-Moreover, it also causes the PM core to set the device's runtime
-PM status to "active" after calling dw_i2c_plat_resume() for
-it, so the driver doesn't need internal flags to avoid invoking
-either dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in
-a row.
+Testing Done on T124, T210 & T186:
+ Enumeration and basic functionality of immediate devices
+ Enumeration of devices behind a PCIe switch
+ Complete 4K configuration space access
 
-Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
-allowing the device to stay suspended after system resume under
-suitable conditions, so again the driver doesn't need to take
-care of that by itself.
+Vidya Sagar (7):
+  PCI: tegra: refactor config space mapping code
+  ARM: tegra: limit PCIe config space mapping to 4K for T20
+  ARM: tegra: limit PCIe config space mapping to 4K for T30
+  ARM: tegra: limit PCIe config space mapping to 4K for T124
+  ARM64: tegra: limit PCIe config space mapping to 4K for T132
+  ARM64: tegra: limit PCIe config space mapping to 4K for T210
+  ARM64: tegra: limit PCIe config space mapping to 4K for T186
 
-Accordingly, the internal "suspended" and "skip_resume" flags
-used by the driver are not necessary any more, so drop them and
-simplify the driver's PM callbacks.
+ arch/arm/boot/dts/tegra124.dtsi          |   2 +-
+ arch/arm/boot/dts/tegra20.dtsi           |   8 +--
+ arch/arm/boot/dts/tegra30.dtsi           |   2 +-
+ arch/arm64/boot/dts/nvidia/tegra132.dtsi |   2 +-
+ arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +--
+ arch/arm64/boot/dts/nvidia/tegra210.dtsi |   2 +-
+ drivers/pci/host/pci-tegra.c             | 109 +++++++++----------------------
+ 7 files changed, 42 insertions(+), 91 deletions(-)
 
-Additionally, notice that dw_i2c_plat_complete() only needs
-to schedule runtime PM for the device if platform firmware
-has been involved in resuming the system, so make it call
-pm_resume_via_firmware() to check that.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/i2c/busses/i2c-designware-core.h    |    2 --
- drivers/i2c/busses/i2c-designware-platdrv.c |   25 ++++++-------------------
- 2 files changed, 6 insertions(+), 21 deletions(-)
-
-Index: linux-pm/drivers/i2c/busses/i2c-designware-core.h
-===================================================================
---- linux-pm.orig/drivers/i2c/busses/i2c-designware-core.h
-+++ linux-pm/drivers/i2c/busses/i2c-designware-core.h
-@@ -280,8 +280,6 @@ struct dw_i2c_dev {
- 	int			(*acquire_lock)(struct dw_i2c_dev *dev);
- 	void			(*release_lock)(struct dw_i2c_dev *dev);
- 	bool			pm_disabled;
--	bool			suspended;
--	bool			skip_resume;
- 	void			(*disable)(struct dw_i2c_dev *dev);
- 	void			(*disable_int)(struct dw_i2c_dev *dev);
- 	int			(*init)(struct dw_i2c_dev *dev);
-Index: linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
-===================================================================
---- linux-pm.orig/drivers/i2c/busses/i2c-designware-platdrv.c
-+++ linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
-@@ -42,6 +42,7 @@
- #include <linux/reset.h>
- #include <linux/sched.h>
- #include <linux/slab.h>
-+#include <linux/suspend.h>
- 
- #include "i2c-designware-core.h"
- 
-@@ -370,7 +371,10 @@ static int dw_i2c_plat_probe(struct plat
- 	ACPI_COMPANION_SET(&adap->dev, ACPI_COMPANION(&pdev->dev));
- 	adap->dev.of_node = pdev->dev.of_node;
- 
--	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
-+	dev_pm_set_driver_flags(&pdev->dev,
-+				DPM_FLAG_SMART_PREPARE |
-+				DPM_FLAG_SMART_SUSPEND |
-+				DPM_FLAG_LEAVE_SUSPENDED);
- 
- 	/* The code below assumes runtime PM to be disabled. */
- 	WARN_ON(pm_runtime_enabled(&pdev->dev));
-@@ -446,7 +450,7 @@ static int dw_i2c_plat_prepare(struct de
- 
- static void dw_i2c_plat_complete(struct device *dev)
- {
--	if (dev->power.direct_complete)
-+	if (dev->power.direct_complete && pm_resume_via_firmware())
- 		pm_request_resume(dev);
- }
- #else
-@@ -459,16 +463,9 @@ static int dw_i2c_plat_suspend(struct de
- {
- 	struct dw_i2c_dev *i_dev = dev_get_drvdata(dev);
- 
--	if (i_dev->suspended) {
--		i_dev->skip_resume = true;
--		return 0;
--	}
--
- 	i_dev->disable(i_dev);
- 	i2c_dw_plat_prepare_clk(i_dev, false);
- 
--	i_dev->suspended = true;
--
- 	return 0;
- }
- 
-@@ -476,19 +473,9 @@ static int dw_i2c_plat_resume(struct dev
- {
- 	struct dw_i2c_dev *i_dev = dev_get_drvdata(dev);
- 
--	if (!i_dev->suspended)
--		return 0;
--
--	if (i_dev->skip_resume) {
--		i_dev->skip_resume = false;
--		return 0;
--	}
--
- 	i2c_dw_plat_prepare_clk(i_dev, true);
- 	i_dev->init(i_dev);
- 
--	i_dev->suspended = false;
--
- 	return 0;
- }
- 
-
+-- 
+2.7.4
