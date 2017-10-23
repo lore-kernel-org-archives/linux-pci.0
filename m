@@ -1,18 +1,18 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:9935 "EHLO
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:11706 "EHLO
         hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750863AbdJXGqT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 02:46:19 -0400
+        with ESMTP id S932396AbdJWOhM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 10:37:12 -0400
 From: Vidya Sagar <vidyas@nvidia.com>
 To: <treding@nvidia.com>, <bhelgaas@google.com>
 CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
         <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH V3 1/2] PCI: tegra: refactor config space mapping code
-Date: Tue, 24 Oct 2017 12:14:48 +0530
-Message-ID: <1508827489-10842-2-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1508827489-10842-1-git-send-email-vidyas@nvidia.com>
-References: <1508827489-10842-1-git-send-email-vidyas@nvidia.com>
+Subject: [PATCH V2 1/7] PCI: tegra: refactor config space mapping code
+Date: Mon, 23 Oct 2017 20:05:06 +0530
+Message-ID: <1508769312-12465-2-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
@@ -27,30 +27,19 @@ space for mapping end point device's BARs on some of Tegra platforms
 
 Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
-V3:
-* added a new soc_data entry 'use_4k_conf_space' to decide whether to use first 4K chunk (T20, T186)
-* or last 4K chunk (T30, T124, T132 and T210) of the available 256MB region
 V2:
 * restored tegra_pcie_conf_offset() after extending it to include bus number
 * removed tegra_pcie_bus_alloc() and merged some of its contents with tegra_pcie_add_bus()
 * replaced ioremap() with devm_ioremap()
 
- drivers/pci/host/pci-tegra.c | 125 ++++++++++++++-----------------------------
- 1 file changed, 40 insertions(+), 85 deletions(-)
+ drivers/pci/host/pci-tegra.c | 109 ++++++++++++-------------------------------
+ 1 file changed, 30 insertions(+), 79 deletions(-)
 
 diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index af8b05614f87..aac484518fb8 100644
+index af8b05614f87..d080adeb8540 100644
 --- a/drivers/pci/host/pci-tegra.c
 +++ b/drivers/pci/host/pci-tegra.c
-@@ -257,6 +257,7 @@ struct tegra_pcie_soc {
- 	bool has_gen2;
- 	bool force_pca_enable;
- 	bool program_uphy;
-+	bool use_4k_conf_space;
- };
- 
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -274,6 +275,8 @@ struct tegra_pcie {
+@@ -274,6 +274,8 @@ struct tegra_pcie {
  	struct list_head buses;
  	struct resource *cs;
  
@@ -59,7 +48,7 @@ index af8b05614f87..aac484518fb8 100644
  	struct resource io;
  	struct resource pio;
  	struct resource mem;
-@@ -322,7 +325,6 @@ struct tegra_pcie_port {
+@@ -322,7 +324,6 @@ struct tegra_pcie_port {
  };
  
  struct tegra_pcie_bus {
@@ -67,7 +56,7 @@ index af8b05614f87..aac484518fb8 100644
  	struct list_head list;
  	unsigned int nr;
  };
-@@ -362,69 +364,17 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
+@@ -362,69 +363,17 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
   *
   * Mapping the whole extended configuration space would require 256 MiB of
   * virtual address space, only a small part of which will actually be used.
@@ -146,7 +135,7 @@ index af8b05614f87..aac484518fb8 100644
  }
  
  static int tegra_pcie_add_bus(struct pci_bus *bus)
-@@ -433,10 +383,13 @@ static int tegra_pcie_add_bus(struct pci_bus *bus)
+@@ -433,10 +382,13 @@ static int tegra_pcie_add_bus(struct pci_bus *bus)
  	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
  	struct tegra_pcie_bus *b;
  
@@ -162,7 +151,7 @@ index af8b05614f87..aac484518fb8 100644
  	list_add_tail(&b->list, &pcie->buses);
  
  	return 0;
-@@ -450,7 +403,6 @@ static void tegra_pcie_remove_bus(struct pci_bus *child)
+@@ -450,7 +402,6 @@ static void tegra_pcie_remove_bus(struct pci_bus *child)
  
  	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
  		if (bus->nr == child->number) {
@@ -170,7 +159,7 @@ index af8b05614f87..aac484518fb8 100644
  			list_del(&bus->list);
  			kfree(bus);
  			break;
-@@ -464,8 +416,9 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+@@ -464,8 +415,9 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
  {
  	struct pci_host_bridge *host = pci_find_host_bridge(bus);
  	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
@@ -181,7 +170,7 @@ index af8b05614f87..aac484518fb8 100644
  
  	if (bus->number == 0) {
  		unsigned int slot = PCI_SLOT(devfn);
-@@ -478,19 +431,11 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+@@ -478,19 +430,11 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
  			}
  		}
  	} else {
@@ -206,36 +195,7 @@ index af8b05614f87..aac484518fb8 100644
  	}
  
  	return addr;
-@@ -724,10 +669,6 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
- 
- 	/* Bar 0: type 1 extended configuration space */
- 	fpci_bar = 0xfe100000;
--	size = resource_size(pcie->cs);
--	axi_address = pcie->cs->start;
--	afi_writel(pcie, axi_address, AFI_AXI_BAR0_START);
--	afi_writel(pcie, size >> 12, AFI_AXI_BAR0_SZ);
- 	afi_writel(pcie, fpci_bar, AFI_FPCI_BAR0);
- 
- 	/* Bar 1: downstream IO bar */
-@@ -1284,6 +1225,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct resource *pads, *afi, *res;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
-+	u32 axi_addr = 0;
- 	int err;
- 
- 	err = tegra_pcie_clocks_get(pcie);
-@@ -1333,13 +1275,21 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 		goto poweroff;
- 	}
- 
--	pcie->cs = devm_request_mem_region(dev, res->start,
--					   resource_size(res), res->name);
-+	axi_addr = pcie->soc->use_4k_conf_space ?
-+		   res->start : res->end - SZ_4K + 1;
-+	pcie->cs = devm_request_mem_region(dev, axi_addr, SZ_4K, res->name);
- 	if (!pcie->cs) {
- 		err = -EADDRNOTAVAIL;
+@@ -1340,6 +1284,13 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
  		goto poweroff;
  	}
  
@@ -249,45 +209,5 @@ index af8b05614f87..aac484518fb8 100644
  	/* request interrupt */
  	err = platform_get_irq_byname(pdev, "intr");
  	if (err < 0) {
-@@ -2130,6 +2080,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.has_gen2 = false,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-+	.use_4k_conf_space = true,
- };
- 
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2146,6 +2097,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.has_gen2 = false,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-+	.use_4k_conf_space = false,
- };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2161,6 +2113,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.has_gen2 = true,
- 	.force_pca_enable = false,
- 	.program_uphy = true,
-+	.use_4k_conf_space = false,
- };
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
-@@ -2176,6 +2129,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.has_gen2 = true,
- 	.force_pca_enable = true,
- 	.program_uphy = true,
-+	.use_4k_conf_space = false,
- };
- 
- static const struct tegra_pcie_soc tegra186_pcie = {
-@@ -2192,6 +2146,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.has_gen2 = true,
- 	.force_pca_enable = false,
- 	.program_uphy = false,
-+	.use_4k_conf_space = true,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
 2.7.4
