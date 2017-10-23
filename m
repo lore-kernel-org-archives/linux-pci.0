@@ -1,83 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Daniel Axtens <dja@axtens.net>
-To: Daniel Vetter <daniel@ffwll.ch>
-Subject: Re: [PATCH v2 2/2] vgaarb: Factor out EFI and fallback default device
- selection
-In-Reply-To: <20171018081822.pqmkj2xfgg6kb6xa@phenom.ffwll.local>
-References: <20171013034338.14630.4766.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171013034729.14630.30419.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <871sm2y1h9.fsf@linkitivity.dja.id.au>
- <20171017120506.ervbnyjue55zn67b@phenom.ffwll.local>
- <878tg9i9pw.fsf@linkitivity.dja.id.au>
- <20171018081822.pqmkj2xfgg6kb6xa@phenom.ffwll.local>
-Date: Wed, 18 Oct 2017 22:05:57 +1100
-Message-ID: <8760bciulm.fsf@linkitivity.dja.id.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kapsi.fi ([91.232.154.25]:52819 "EHLO mail.kapsi.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751277AbdJWQQg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Oct 2017 12:16:36 -0400
+Subject: Re: [PATCH V2 0/7] Tegra PCIe end point config space map code
+ refactoring
+To: Vidya Sagar <vidyas@nvidia.com>, Rob Herring <robh+dt@kernel.org>
+Cc: Thierry Reding <treding@nvidia.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        kthota@nvidia.com, mmaddireddy@nvidia.com,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+ <CAL_Jsq+3UAwk5gNgh=s6O1f-MadyGCtADX7pyzX8eUfBqboRfA@mail.gmail.com>
+ <fba4fe22-1401-1653-0985-e1ffafb29ded@nvidia.com>
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <1c898f3e-582f-27fe-7e01-f52a8b8ad538@kapsi.fi>
+Date: Mon, 23 Oct 2017 19:16:30 +0300
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Dave Airlie <airlied@redhat.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org,
- Xinliang Liu <z.liuxinliang@hisilicon.com>,
- Rongrong Zou <zourongrong@gmail.com>,
- Alex Williamson <alex.williamson@redhat.com>, Daniel Vetter <daniel@ffwll.ch>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Daniel Vetter <daniel.vetter@intel.com>, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <fba4fe22-1401-1653-0985-e1ffafb29ded@nvidia.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Daniel Vetter <daniel@ffwll.ch> writes:
+On 10/23/2017 06:24 PM, Vidya Sagar wrote:
+> 
+> 
+> On Monday 23 October 2017 08:40 PM, Rob Herring wrote:
+>> On Mon, Oct 23, 2017 at 9:35 AM, Vidya Sagar <vidyas@nvidia.com> wrote:
+>>> PCIe host controller in Tegra SoCs has 1GB of aperture available
+>>> for mapping end points config space, IO and BARs. In that, currently
+>>> 256MB is being reserved for mapping end points configuration space
+>>> which leaves less memory space available for mapping end points BARs
+>>> on some of the platforms.
+>>> This patch series attempts to use only 4K space from 1GB aperture to
+>>> access end points configuration space.
+>>>
+>>> Currently, this change benefits T20 and T186 in saving (i.e. repurposed
+>>> to use for BAR mapping) physical space as well as kernel virtual 
+>>> mapping space,
+>>> it saves only kernel virtual address space in T30, T124, T132 and T210.
+>>>
+>>> NOTE: Both driver and DT changes are inter-dependent and hence need 
+>>> to go together
+>> You are breaking compatibility with any other OS.
+>>
+>> Can't this easily be solved within the kernel by adjusting the
+>> resource size? To save the virtual space, you only need patch 1 and
+>> don't need the DT change. The DT change is just for phys address space
+>> for BARs.
+> In case of T20 & T186, DT change is required to re-purpose address space 
+> which otherwise
+> is used for config space mapping to map BARs. In case of other chips, DT 
+> changes
+> are also required because the 4K being used for mapping config space is 
+> taken from the
+> last 4K chunk of 256MB instead of first 4K chunk to align with driver 
+> change.
 
-> On Wed, Oct 18, 2017 at 11:24:43AM +1100, Daniel Axtens wrote:
->> Hi Daniel,
->> 
->> >> Initially I wondered if this info printk could be moved into
->> >> vga_arbiter_check_bridge_sharing(), but it's been separated out since
->> >> 3448a19da479b ("vgaarb: use bridges to control VGA routing where
->> >> possible."), and upon closer examination, it seems you can't be sure a
->> >> device doesn't share a bridge until the end of the process, so this is
->> >> indeed correct.
->> >> 
->> >> Everything else also looks good to me.
->> >> 
->> >> Reviewed-by: Daniel Axtens <dja@axtens.net>
->> >
->> > R-b for both patches? And ok with everyone if I pull this into drm-misc
->> > for 4.15 (deadline is end of this week for feature-y stuff)?
->> 
->> I had only intended it for patch 2, but I've now read over patch 1 to my
->> satisfaction, so it too is:
->> 
->> Reviewed-by: Daniel Axtens <dja@axtens.net>
->
-> Both applied for 4.15, thanks.
+The kernel must continue to work with older device trees. This is a 
+pretty hard rule.
 
-Cool - thanks!
+Mikko
 
-A special thanks to Bjorn for persisting with this and coming up with a
-nice simple solution :)
-
-Regards,
-Daniel
-
-> -Daniel
+>>> Testing Done on T124, T210 & T186:
+>>>   Enumeration and basic functionality of immediate devices
+>>>   Enumeration of devices behind a PCIe switch
+>>>   Complete 4K configuration space access
+>>>
+>>> Vidya Sagar (7):
+>>>    PCI: tegra: refactor config space mapping code
+>>>    ARM: tegra: limit PCIe config space mapping to 4K for T20
+>>>    ARM: tegra: limit PCIe config space mapping to 4K for T30
+>>>    ARM: tegra: limit PCIe config space mapping to 4K for T124
+>>>    ARM64: tegra: limit PCIe config space mapping to 4K for T132
+>>>    ARM64: tegra: limit PCIe config space mapping to 4K for T210
+>>>    ARM64: tegra: limit PCIe config space mapping to 4K for T186
+>>>
+>>>   arch/arm/boot/dts/tegra124.dtsi          |   2 +-
+>>>   arch/arm/boot/dts/tegra20.dtsi           |   8 +--
+>>>   arch/arm/boot/dts/tegra30.dtsi           |   2 +-
+>>>   arch/arm64/boot/dts/nvidia/tegra132.dtsi |   2 +-
+>>>   arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +--
+>>>   arch/arm64/boot/dts/nvidia/tegra210.dtsi |   2 +-
+>>>   drivers/pci/host/pci-tegra.c             | 109 
+>>> +++++++++----------------------
+>>>   7 files changed, 42 insertions(+), 91 deletions(-)
+>>>
+>>> -- 
+>>> 2.7.4
+>>>
+> 
 > -- 
-> Daniel Vetter
-> Software Engineer, Intel Corporation
-> http://blog.ffwll.ch
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
