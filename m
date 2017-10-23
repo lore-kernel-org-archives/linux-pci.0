@@ -1,42 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:32506 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751398AbdJJKQR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2017 06:16:17 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <nsekhar@ti.com>
-Subject: [PATCH 0/4] PCI: dwc: pci-dra7: Support PCIe x2 lane mode
-Date: Tue, 10 Oct 2017 15:46:02 +0530
-Message-ID: <20171010101606.15951-1-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH] PCI: rework error checking in the reset path
+Date: Mon, 23 Oct 2017 17:36:48 -0400
+Message-Id: <1508794608-15310-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch series adds support to enable x2 lane mode in dra74/dra76
-based boards in pci-dra7xx driver. It introduces new compatible strings
-in order to enable x2 lane mode support.
+The return codes from various reset types are not consistent. The code is
+assuming that all reset types will return -ENOTTY when things go wrong.
+Instead of relying on negative error status, let's bail out if the
+operation is successful instead.
 
-x2 lane mode support for dra72 based boards will be added in a later
-series.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pci.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-patch series is created on top of https://lkml.org/lkml/2017/10/9/133.
-
-Kishon Vijay Abraham I (4):
-  dt-bindings: PCI: dra7xx: Add SoC specific compatible strings
-  dt-bindings: PCI: dra7xx: Add properties to enable x2 lane in dra7
-  PCI: dwc: dra7xx: Add support for SoC specific compatible strings
-  PCI: dwc: pci-dra7xx: Enable x2 mode support
-
- Documentation/devicetree/bindings/pci/ti-pci.txt | 12 +++-
- drivers/pci/dwc/pci-dra7xx.c                     | 80 ++++++++++++++++++++++++
- 2 files changed, 90 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6078dfc..a753e07 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4200,20 +4200,20 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+ 	might_sleep();
+ 
+ 	rc = pci_dev_specific_reset(dev, 0);
+-	if (rc != -ENOTTY)
++	if (!rc)
+ 		return rc;
+ 	if (pcie_has_flr(dev)) {
+ 		pcie_flr(dev);
+ 		return 0;
+ 	}
+ 	rc = pci_af_flr(dev, 0);
+-	if (rc != -ENOTTY)
++	if (!rc)
+ 		return rc;
+ 	rc = pci_pm_reset(dev, 0);
+-	if (rc != -ENOTTY)
++	if (!rc)
+ 		return rc;
+ 	rc = pci_dev_reset_slot_function(dev, 0);
+-	if (rc != -ENOTTY)
++	if (!rc)
+ 		return rc;
+ 	return pci_parent_bus_reset(dev, 0);
+ }
 -- 
-2.11.0
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
