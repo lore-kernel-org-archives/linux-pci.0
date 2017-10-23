@@ -1,166 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v14 1/5] block: DAC960: Replace PCI pool old API
-Date: Mon, 23 Oct 2017 19:59:54 +0200
-Message-Id: <20171023175958.8327-2-romain.perier@gmail.com>
-In-Reply-To: <20171023175958.8327-1-romain.perier@gmail.com>
-References: <20171023175958.8327-1-romain.perier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:11771 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932230AbdJWOiC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 10:38:02 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH V2 5/7] ARM64: tegra: limit PCIe config space mapping to 4K for T132
+Date: Mon, 23 Oct 2017 20:05:10 +0530
+Message-ID: <1508769312-12465-6-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
+reduces PCIe config space mapping size from its current 256MB
+to 4K to have only 4K of virtual memory mapping and to be
+in line with driver implementation
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
-
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
- drivers/block/DAC960.c | 38 ++++++++++++++++++--------------------
- drivers/block/DAC960.h |  4 ++--
- 2 files changed, 20 insertions(+), 22 deletions(-)
+V2:
+* no changes in this patch
 
-diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
-index 255591ab3716..2a8950ee382c 100644
---- a/drivers/block/DAC960.c
-+++ b/drivers/block/DAC960.c
-@@ -268,17 +268,17 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
-   void *AllocationPointer = NULL;
-   void *ScatterGatherCPU = NULL;
-   dma_addr_t ScatterGatherDMA;
--  struct pci_pool *ScatterGatherPool;
-+  struct dma_pool *ScatterGatherPool;
-   void *RequestSenseCPU = NULL;
-   dma_addr_t RequestSenseDMA;
--  struct pci_pool *RequestSensePool = NULL;
-+  struct dma_pool *RequestSensePool = NULL;
- 
-   if (Controller->FirmwareType == DAC960_V1_Controller)
-     {
-       CommandAllocationLength = offsetof(DAC960_Command_T, V1.EndMarker);
-       CommandAllocationGroupSize = DAC960_V1_CommandAllocationGroupSize;
--      ScatterGatherPool = pci_pool_create("DAC960_V1_ScatterGather",
--		Controller->PCIDevice,
-+      ScatterGatherPool = dma_pool_create("DAC960_V1_ScatterGather",
-+		&Controller->PCIDevice->dev,
- 	DAC960_V1_ScatterGatherLimit * sizeof(DAC960_V1_ScatterGatherSegment_T),
- 	sizeof(DAC960_V1_ScatterGatherSegment_T), 0);
-       if (ScatterGatherPool == NULL)
-@@ -290,18 +290,18 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
-     {
-       CommandAllocationLength = offsetof(DAC960_Command_T, V2.EndMarker);
-       CommandAllocationGroupSize = DAC960_V2_CommandAllocationGroupSize;
--      ScatterGatherPool = pci_pool_create("DAC960_V2_ScatterGather",
--		Controller->PCIDevice,
-+      ScatterGatherPool = dma_pool_create("DAC960_V2_ScatterGather",
-+		&Controller->PCIDevice->dev,
- 	DAC960_V2_ScatterGatherLimit * sizeof(DAC960_V2_ScatterGatherSegment_T),
- 	sizeof(DAC960_V2_ScatterGatherSegment_T), 0);
-       if (ScatterGatherPool == NULL)
- 	    return DAC960_Failure(Controller,
- 			"AUXILIARY STRUCTURE CREATION (SG)");
--      RequestSensePool = pci_pool_create("DAC960_V2_RequestSense",
--		Controller->PCIDevice, sizeof(DAC960_SCSI_RequestSense_T),
-+      RequestSensePool = dma_pool_create("DAC960_V2_RequestSense",
-+		&Controller->PCIDevice->dev, sizeof(DAC960_SCSI_RequestSense_T),
- 		sizeof(int), 0);
-       if (RequestSensePool == NULL) {
--	    pci_pool_destroy(ScatterGatherPool);
-+	    dma_pool_destroy(ScatterGatherPool);
- 	    return DAC960_Failure(Controller,
- 			"AUXILIARY STRUCTURE CREATION (SG)");
-       }
-@@ -335,16 +335,16 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
-       Command->Next = Controller->FreeCommands;
-       Controller->FreeCommands = Command;
-       Controller->Commands[CommandIdentifier-1] = Command;
--      ScatterGatherCPU = pci_pool_alloc(ScatterGatherPool, GFP_ATOMIC,
-+      ScatterGatherCPU = dma_pool_alloc(ScatterGatherPool, GFP_ATOMIC,
- 							&ScatterGatherDMA);
-       if (ScatterGatherCPU == NULL)
- 	  return DAC960_Failure(Controller, "AUXILIARY STRUCTURE CREATION");
- 
-       if (RequestSensePool != NULL) {
--  	  RequestSenseCPU = pci_pool_alloc(RequestSensePool, GFP_ATOMIC,
-+  	  RequestSenseCPU = dma_pool_alloc(RequestSensePool, GFP_ATOMIC,
- 						&RequestSenseDMA);
-   	  if (RequestSenseCPU == NULL) {
--                pci_pool_free(ScatterGatherPool, ScatterGatherCPU,
-+                dma_pool_free(ScatterGatherPool, ScatterGatherCPU,
-                                 ScatterGatherDMA);
-     		return DAC960_Failure(Controller,
- 					"AUXILIARY STRUCTURE CREATION");
-@@ -379,8 +379,8 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
- static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
- {
-   int i;
--  struct pci_pool *ScatterGatherPool = Controller->ScatterGatherPool;
--  struct pci_pool *RequestSensePool = NULL;
-+  struct dma_pool *ScatterGatherPool = Controller->ScatterGatherPool;
-+  struct dma_pool *RequestSensePool = NULL;
-   void *ScatterGatherCPU;
-   dma_addr_t ScatterGatherDMA;
-   void *RequestSenseCPU;
-@@ -411,9 +411,9 @@ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
- 	  RequestSenseDMA = Command->V2.RequestSenseDMA;
-       }
-       if (ScatterGatherCPU != NULL)
--          pci_pool_free(ScatterGatherPool, ScatterGatherCPU, ScatterGatherDMA);
-+          dma_pool_free(ScatterGatherPool, ScatterGatherCPU, ScatterGatherDMA);
-       if (RequestSenseCPU != NULL)
--          pci_pool_free(RequestSensePool, RequestSenseCPU, RequestSenseDMA);
-+          dma_pool_free(RequestSensePool, RequestSenseCPU, RequestSenseDMA);
- 
-       if ((Command->CommandIdentifier
- 	   % Controller->CommandAllocationGroupSize) == 1) {
-@@ -437,13 +437,11 @@ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
-       Controller->CurrentStatusBuffer = NULL;
-     }
- 
--  if (ScatterGatherPool != NULL)
--  	pci_pool_destroy(ScatterGatherPool);
-+  dma_pool_destroy(ScatterGatherPool);
-   if (Controller->FirmwareType == DAC960_V1_Controller)
-   	return;
- 
--  if (RequestSensePool != NULL)
--	pci_pool_destroy(RequestSensePool);
-+  dma_pool_destroy(RequestSensePool);
- 
-   for (i = 0; i < DAC960_MaxLogicalDrives; i++) {
- 	kfree(Controller->V2.LogicalDeviceInformation[i]);
-diff --git a/drivers/block/DAC960.h b/drivers/block/DAC960.h
-index 85fa9bb63759..47d7d698ece2 100644
---- a/drivers/block/DAC960.h
-+++ b/drivers/block/DAC960.h
-@@ -2316,7 +2316,7 @@ typedef struct DAC960_Controller
-   bool SuppressEnclosureMessages;
-   struct timer_list MonitoringTimer;
-   struct gendisk *disks[DAC960_MaxLogicalDrives];
--  struct pci_pool *ScatterGatherPool;
-+  struct dma_pool *ScatterGatherPool;
-   DAC960_Command_T *FreeCommands;
-   unsigned char *CombinedStatusBuffer;
-   unsigned char *CurrentStatusBuffer;
-@@ -2429,7 +2429,7 @@ typedef struct DAC960_Controller
-       bool NeedDeviceSerialNumberInformation;
-       bool StartLogicalDeviceInformationScan;
-       bool StartPhysicalDeviceInformationScan;
--      struct pci_pool *RequestSensePool;
-+      struct dma_pool *RequestSensePool;
- 
-       dma_addr_t	FirstCommandMailboxDMA;
-       DAC960_V2_CommandMailbox_T *FirstCommandMailbox;
+ arch/arm64/boot/dts/nvidia/tegra132.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/nvidia/tegra132.dtsi b/arch/arm64/boot/dts/nvidia/tegra132.dtsi
+index c2f0f2743578..2f0ff087112e 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra132.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra132.dtsi
+@@ -17,7 +17,7 @@
+ 		device_type = "pci";
+ 		reg = <0x0 0x01003000 0x0 0x00000800   /* PADS registers */
+ 		       0x0 0x01003800 0x0 0x00000800   /* AFI registers */
+-		       0x0 0x02000000 0x0 0x10000000>; /* configuration space */
++		       0x0 0x11FFF000 0x0 0x00001000>; /* configuration space */
+ 		reg-names = "pads", "afi", "cs";
+ 		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
+ 			     <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
 -- 
-2.14.1
+2.7.4
