@@ -1,60 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <3825270.mro2tgMB2C@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <3825270.mro2tgMB2C@aspire.rjw.lan>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 23 Oct 2017 18:40:24 +0200
+Message-ID: <CAPDyKFrzW5ZJ5WE=utoT6PZUwEfv1xryw0M4zXsdD8SBJPEe5Q@mail.gmail.com>
+Subject: Re: [PATCH 02/12] PCI / PM: Use the NEVER_SKIP driver flag
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 7/8] PCI: pciehp: Do not clear Presence Detect Changed during initialization
-Date: Fri, 13 Oct 2017 21:35:47 +0300
-Message-Id: <20171013183548.68283-8-mika.westerberg@linux.intel.com>
-In-Reply-To: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-References: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible that the hotplug event has already happened before the
-driver is attached to a PCIe hotplug downstream port. If we just clear
-the status we never get the hotplug interrupt and thus the event will be
-missed.
+On 16 October 2017 at 03:29, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Replace the PCI-specific flag PCI_DEV_FLAGS_NEEDS_RESUME with the
+> PM core's DPM_FLAG_NEVER_SKIP one everywhere and drop it.
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-To make sure that does not happen, we leave Presence Detect Changed bit
-untouched during initialization. Then once the event is unmasked we get
-an interrupt and handle the hotplug event properly.
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 83c93f9da65a..bc1622aa7a05 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -862,11 +862,16 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	if (link_cap & PCI_EXP_LNKCAP_DLLLARC)
- 		ctrl->link_active_reporting = 1;
- 
--	/* Clear all remaining event bits in Slot Status register */
-+	/*
-+	 * Clear all remaining event bits in Slot Status register except
-+	 * Presence Detect Changed. We want to make sure possible
-+	 * hotplug event is triggered when the interrupt is unmasked so
-+	 * that we don't lose that event.
-+	 */
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
- 		PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
--		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
--		PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
-+		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
-+		PCI_EXP_SLTSTA_DLLSC);
- 
- 	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c\n",
- 		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
--- 
-2.14.2
+> ---
+>  drivers/gpu/drm/i915/i915_drv.c |    2 +-
+>  drivers/misc/mei/pci-me.c       |    2 +-
+>  drivers/misc/mei/pci-txe.c      |    2 +-
+>  drivers/pci/pci.c               |    3 +--
+>  include/linux/pci.h             |    7 +------
+>  5 files changed, 5 insertions(+), 11 deletions(-)
+>
+> Index: linux-pm/include/linux/pci.h
+> ===================================================================
+> --- linux-pm.orig/include/linux/pci.h
+> +++ linux-pm/include/linux/pci.h
+> @@ -205,13 +205,8 @@ enum pci_dev_flags {
+>         PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT = (__force pci_dev_flags_t) (1 << 9),
+>         /* Do not use FLR even if device advertises PCI_AF_CAP */
+>         PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
+> -       /*
+> -        * Resume before calling the driver's system suspend hooks, disabling
+> -        * the direct_complete optimization.
+> -        */
+> -       PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
+>         /* Don't use Relaxed Ordering for TLPs directed at this device */
+> -       PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
+> +       PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
+>  };
+>
+>  enum pci_irq_reroute_variant {
+> Index: linux-pm/drivers/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci.c
+> +++ linux-pm/drivers/pci/pci.c
+> @@ -2166,8 +2166,7 @@ bool pci_dev_keep_suspended(struct pci_d
+>
+>         if (!pm_runtime_suspended(dev)
+>             || pci_target_state(pci_dev, wakeup) != pci_dev->current_state
+> -           || platform_pci_need_resume(pci_dev)
+> -           || (pci_dev->dev_flags & PCI_DEV_FLAGS_NEEDS_RESUME))
+> +           || platform_pci_need_resume(pci_dev))
+>                 return false;
+>
+>         /*
+> Index: linux-pm/drivers/gpu/drm/i915/i915_drv.c
+> ===================================================================
+> --- linux-pm.orig/drivers/gpu/drm/i915/i915_drv.c
+> +++ linux-pm/drivers/gpu/drm/i915/i915_drv.c
+> @@ -1304,7 +1304,7 @@ int i915_driver_load(struct pci_dev *pde
+>          * becaue the HDA driver may require us to enable the audio power
+>          * domain during system suspend.
+>          */
+> -       pdev->dev_flags |= PCI_DEV_FLAGS_NEEDS_RESUME;
+> +       dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
+>
+>         ret = i915_driver_init_early(dev_priv, ent);
+>         if (ret < 0)
+> Index: linux-pm/drivers/misc/mei/pci-txe.c
+> ===================================================================
+> --- linux-pm.orig/drivers/misc/mei/pci-txe.c
+> +++ linux-pm/drivers/misc/mei/pci-txe.c
+> @@ -141,7 +141,7 @@ static int mei_txe_probe(struct pci_dev
+>          * MEI requires to resume from runtime suspend mode
+>          * in order to perform link reset flow upon system suspend.
+>          */
+> -       pdev->dev_flags |= PCI_DEV_FLAGS_NEEDS_RESUME;
+> +       dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
+>
+>         /*
+>         * For not wake-able HW runtime pm framework
+> Index: linux-pm/drivers/misc/mei/pci-me.c
+> ===================================================================
+> --- linux-pm.orig/drivers/misc/mei/pci-me.c
+> +++ linux-pm/drivers/misc/mei/pci-me.c
+> @@ -223,7 +223,7 @@ static int mei_me_probe(struct pci_dev *
+>          * MEI requires to resume from runtime suspend mode
+>          * in order to perform link reset flow upon system suspend.
+>          */
+> -       pdev->dev_flags |= PCI_DEV_FLAGS_NEEDS_RESUME;
+> +       dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
+>
+>         /*
+>         * For not wake-able HW runtime pm framework
+>
