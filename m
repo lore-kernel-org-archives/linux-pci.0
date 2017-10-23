@@ -1,85 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:52259 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753923AbdJaWj4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:39:56 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 03/17] PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be writable
-Date: Tue, 31 Oct 2017 23:39:21 +0100
-Message-Id: <20171031223936.27549-4-niklas.cassel@axis.com>
-In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:7735 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932141AbdJWP2D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2017 11:28:03 -0400
+Subject: Re: [PATCH V2 0/7] Tegra PCIe end point config space map code
+ refactoring
+To: Rob Herring <robh+dt@kernel.org>
+CC: Thierry Reding <treding@nvidia.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+ <CAL_Jsq+3UAwk5gNgh=s6O1f-MadyGCtADX7pyzX8eUfBqboRfA@mail.gmail.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <fba4fe22-1401-1653-0985-e1ffafb29ded@nvidia.com>
+Date: Mon, 23 Oct 2017 20:54:53 +0530
+MIME-Version: 1.0
+In-Reply-To: <CAL_Jsq+3UAwk5gNgh=s6O1f-MadyGCtADX7pyzX8eUfBqboRfA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain registers that pcie-designware-ep tries to write are read-only
-registers. However, these registers can become read/write if we first
-enable the DBI_RO_WR_EN bit.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V3:
-* No change.
 
- drivers/pci/dwc/pcie-designware-ep.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index c92ab87fd660..3fb34be99715 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -35,8 +35,10 @@ static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- 	u32 reg;
- 
- 	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writel_dbi2(pci, reg, 0x0);
- 	dw_pcie_writel_dbi(pci, reg, 0x0);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
- static int dw_pcie_ep_write_header(struct pci_epc *epc,
-@@ -45,6 +47,7 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc,
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, hdr->vendorid);
- 	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, hdr->deviceid);
- 	dw_pcie_writeb_dbi(pci, PCI_REVISION_ID, hdr->revid);
-@@ -58,6 +61,7 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc,
- 	dw_pcie_writew_dbi(pci, PCI_SUBSYSTEM_ID, hdr->subsys_id);
- 	dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PIN,
- 			   hdr->interrupt_pin);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
- }
-@@ -142,8 +146,10 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
- 	if (ret)
- 		return ret;
- 
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writel_dbi2(pci, reg, size - 1);
- 	dw_pcie_writel_dbi(pci, reg, flags);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
- }
-@@ -223,7 +229,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
- 	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
- 	val &= ~MSI_CAP_MMC_MASK;
- 	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
- }
--- 
-2.14.2
+On Monday 23 October 2017 08:40 PM, Rob Herring wrote:
+> On Mon, Oct 23, 2017 at 9:35 AM, Vidya Sagar <vidyas@nvidia.com> wrote:
+>> PCIe host controller in Tegra SoCs has 1GB of aperture available
+>> for mapping end points config space, IO and BARs. In that, currently
+>> 256MB is being reserved for mapping end points configuration space
+>> which leaves less memory space available for mapping end points BARs
+>> on some of the platforms.
+>> This patch series attempts to use only 4K space from 1GB aperture to
+>> access end points configuration space.
+>>
+>> Currently, this change benefits T20 and T186 in saving (i.e. repurposed
+>> to use for BAR mapping) physical space as well as kernel virtual mapping space,
+>> it saves only kernel virtual address space in T30, T124, T132 and T210.
+>>
+>> NOTE: Both driver and DT changes are inter-dependent and hence need to go together
+> You are breaking compatibility with any other OS.
+>
+> Can't this easily be solved within the kernel by adjusting the
+> resource size? To save the virtual space, you only need patch 1 and
+> don't need the DT change. The DT change is just for phys address space
+> for BARs.
+In case of T20 & T186, DT change is required to re-purpose address space 
+which otherwise
+is used for config space mapping to map BARs. In case of other chips, DT 
+changes
+are also required because the 4K being used for mapping config space is 
+taken from the
+last 4K chunk of 256MB instead of first 4K chunk to align with driver 
+change.
+>> Testing Done on T124, T210 & T186:
+>>   Enumeration and basic functionality of immediate devices
+>>   Enumeration of devices behind a PCIe switch
+>>   Complete 4K configuration space access
+>>
+>> Vidya Sagar (7):
+>>    PCI: tegra: refactor config space mapping code
+>>    ARM: tegra: limit PCIe config space mapping to 4K for T20
+>>    ARM: tegra: limit PCIe config space mapping to 4K for T30
+>>    ARM: tegra: limit PCIe config space mapping to 4K for T124
+>>    ARM64: tegra: limit PCIe config space mapping to 4K for T132
+>>    ARM64: tegra: limit PCIe config space mapping to 4K for T210
+>>    ARM64: tegra: limit PCIe config space mapping to 4K for T186
+>>
+>>   arch/arm/boot/dts/tegra124.dtsi          |   2 +-
+>>   arch/arm/boot/dts/tegra20.dtsi           |   8 +--
+>>   arch/arm/boot/dts/tegra30.dtsi           |   2 +-
+>>   arch/arm64/boot/dts/nvidia/tegra132.dtsi |   2 +-
+>>   arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +--
+>>   arch/arm64/boot/dts/nvidia/tegra210.dtsi |   2 +-
+>>   drivers/pci/host/pci-tegra.c             | 109 +++++++++----------------------
+>>   7 files changed, 42 insertions(+), 91 deletions(-)
+>>
+>> --
+>> 2.7.4
+>>
