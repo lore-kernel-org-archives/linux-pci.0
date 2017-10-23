@@ -1,56 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:55012 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751937AbdJLS7U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 14:59:20 -0400
-Date: Thu, 12 Oct 2017 11:59:19 -0700 (PDT)
-Message-Id: <20171012.115919.1264476300111721032.davem@davemloft.net>
-To: jiri@resnulli.us
-Cc: roopa@cumulusnetworks.com, steven.lin1@broadcom.com,
-        netdev@vger.kernel.org, jiri@mellanox.com,
-        michael.chan@broadcom.com, linux-pci@vger.kernel.org,
-        linville@tuxdriver.com, gospo@broadcom.com
-Subject: Re: [RFC 0/3] Adding config get/set to devlink
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20171012144032.GG14672@nanopsycho>
-References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
-        <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com>
-        <20171012144032.GG14672@nanopsycho>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.kernel.org ([198.145.29.99]:37268 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751198AbdJWPLB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Oct 2017 11:11:01 -0400
+MIME-Version: 1.0
+In-Reply-To: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+References: <1508769312-12465-1-git-send-email-vidyas@nvidia.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Mon, 23 Oct 2017 10:10:39 -0500
+Message-ID: <CAL_Jsq+3UAwk5gNgh=s6O1f-MadyGCtADX7pyzX8eUfBqboRfA@mail.gmail.com>
+Subject: Re: [PATCH V2 0/7] Tegra PCIe end point config space map code refactoring
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: Thierry Reding <treding@nvidia.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        kthota@nvidia.com, mmaddireddy@nvidia.com,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jiri Pirko <jiri@resnulli.us>
-Date: Thu, 12 Oct 2017 16:40:32 +0200
+On Mon, Oct 23, 2017 at 9:35 AM, Vidya Sagar <vidyas@nvidia.com> wrote:
+> PCIe host controller in Tegra SoCs has 1GB of aperture available
+> for mapping end points config space, IO and BARs. In that, currently
+> 256MB is being reserved for mapping end points configuration space
+> which leaves less memory space available for mapping end points BARs
+> on some of the platforms.
+> This patch series attempts to use only 4K space from 1GB aperture to
+> access end points configuration space.
+>
+> Currently, this change benefits T20 and T186 in saving (i.e. repurposed
+> to use for BAR mapping) physical space as well as kernel virtual mapping space,
+> it saves only kernel virtual address space in T30, T124, T132 and T210.
+>
+> NOTE: Both driver and DT changes are inter-dependent and hence need to go together
 
-> Thu, Oct 12, 2017 at 04:35:10PM CEST, roopa@cumulusnetworks.com wrote:
->>On Thu, Oct 12, 2017 at 6:34 AM, Steve Lin <steven.lin1@broadcom.com> wrote:
->>> Adds a devlink command for getting & setting device configuration
->>> parameters, and enumerates a bunch of those parameters as devlink
->>> attributes.  Also introduces an attribute that can be set by a
->>> driver to indicate that the config change doesn't take effect
->>> until the next restart (as in the case of the bnxt driver changes
->>> in this patchset, for which all the configuration changes affect NVM
->>> only, and aren't loaded until the next restart.)
->>>
->>> bnxt driver patches make use of these new devlink cmds/attributes.
->>>
->>> Steve Lin (3):
->>>   devlink: Add config parameter get/set operations
->>>   bnxt: Move generic devlink code to new file
->>>   bnxt: Add devlink support for config get/set
->>>
->>
->>Is the goal here to move all ethtool operations to devlink (I saw some
->>attrs related to speed etc). ?.
->>We do need to move ethtool attrs to netlink and devlink is a good
->>place (and of-course leave the current ethtool api around for backward
->>compatibility).
-> 
-> We need to make sure we are not moving things to devlink which don't
-> belong there. All options that use "netdev" as a handle should go into
-> rtnetlink instead.
+You are breaking compatibility with any other OS.
 
-I agree.  Let's keep devlink what is was created for, which is situations
-where we don't have a netdev as the object to work upon.
+Can't this easily be solved within the kernel by adjusting the
+resource size? To save the virtual space, you only need patch 1 and
+don't need the DT change. The DT change is just for phys address space
+for BARs.
+
+>
+> Testing Done on T124, T210 & T186:
+>  Enumeration and basic functionality of immediate devices
+>  Enumeration of devices behind a PCIe switch
+>  Complete 4K configuration space access
+>
+> Vidya Sagar (7):
+>   PCI: tegra: refactor config space mapping code
+>   ARM: tegra: limit PCIe config space mapping to 4K for T20
+>   ARM: tegra: limit PCIe config space mapping to 4K for T30
+>   ARM: tegra: limit PCIe config space mapping to 4K for T124
+>   ARM64: tegra: limit PCIe config space mapping to 4K for T132
+>   ARM64: tegra: limit PCIe config space mapping to 4K for T210
+>   ARM64: tegra: limit PCIe config space mapping to 4K for T186
+>
+>  arch/arm/boot/dts/tegra124.dtsi          |   2 +-
+>  arch/arm/boot/dts/tegra20.dtsi           |   8 +--
+>  arch/arm/boot/dts/tegra30.dtsi           |   2 +-
+>  arch/arm64/boot/dts/nvidia/tegra132.dtsi |   2 +-
+>  arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +--
+>  arch/arm64/boot/dts/nvidia/tegra210.dtsi |   2 +-
+>  drivers/pci/host/pci-tegra.c             | 109 +++++++++----------------------
+>  7 files changed, 42 insertions(+), 91 deletions(-)
+>
+> --
+> 2.7.4
+>
