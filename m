@@ -1,115 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53440 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753131AbdJTRYr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Oct 2017 13:24:47 -0400
-Date: Fri, 20 Oct 2017 12:24:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: v3-semi: print resources using %pR format string
-Message-ID: <20171020172444.GI6332@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171011140224.3770968-1-arnd@arndb.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171011140224.3770968-1-arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4017204.UeppN1BopX@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <4017204.UeppN1BopX@aspire.rjw.lan>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 23 Oct 2017 18:57:42 +0200
+Message-ID: <CAPDyKFpB-+8kECDkGQ+-xPvSE308wyE7Qn7WLYu6xjvDq0y6QQ@mail.gmail.com>
+Subject: Re: [PATCH 03/12] PM: i2c-designware-platdrv: Use DPM_FLAG_SMART_PREPARE
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 04:02:09PM +0200, Arnd Bergmann wrote:
-> A resource_size_t can be 32 or 64 bit on arm32, causing a number
-> of warnings for incorrect format strings:
-> 
-> In file included from include/linux/printk.h:327:0,
->                  from include/linux/kernel.h:13,
->                  from include/linux/interrupt.h:5,
->                  from drivers/pci/host/pci-v3-semi.c:19:
-> drivers/pci/host/pci-v3-semi.c: In function 'v3_pci_setup_resource':
-> drivers/pci/host/pci-v3-semi.c:536:4: error: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'phys_addr_t {aka long long unsigned int}' [-Werror=format=]
->     "I/O window start %08x, bus addr %08x, size %08x\n",
-> drivers/pci/host/pci-v3-semi.c:536:4: error: format '%x' expects argument of type 'unsigned int', but argument 6 has type 'resource_size_t {aka long long unsigned int}' [-Werror=format=]
-> 
-> The best way to print this instead is to pass the resource itself
-> to printk as a pointerm, using the special '%pR' format string
-> for pretty-printing the range.
-> 
-> For the bus address, we use %pap, respectively.
-> 
-> Fixes: 132d10e24ff3 ("PCI: v3-semi: Add V3 Semiconductor PCI host driver")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-I folded this into Linus' original patch, since it hasn't been sent
-upstream yet.  Thanks!
-
+On 16 October 2017 at 03:29, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Modify i2c-designware-platdrv to set DPM_FLAG_SMART_PREPARE for its
+> devices and return 0 from the system suspend ->prepare callback
+> if the device has an ACPI companion object in order to tell the PM
+> core and middle layers to avoid skipping system suspend/resume
+> callbacks for the device in that case (which may be problematic,
+> because the device may be accessed during suspend and resume of
+> other devices via I2C operation regions then).
+>
+> Also the pm_runtime_suspended() check in dw_i2c_plat_prepare()
+> is not necessary any more, because the core does it when setting
+> power.direct_complete for the device, so drop it.
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > ---
->  drivers/pci/host/pci-v3-semi.c | 24 +++++++++---------------
->  1 file changed, 9 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
-> index a544d722aef1..02f6e1e3a421 100644
-> --- a/drivers/pci/host/pci-v3-semi.c
-> +++ b/drivers/pci/host/pci-v3-semi.c
-> @@ -532,10 +532,8 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
->  		io->name = "V3 PCI I/O";
->  		v3->io_mem = io_base;
->  		v3->io_bus_addr = io->start - win->offset;
-> -		dev_dbg(dev,
-> -			"I/O window start %08x, bus addr %08x, size %08x\n",
-> -			v3->io_mem, v3->io_bus_addr,
-> -			resource_size(io));
-> +		dev_dbg(dev, "I/O window %pR, bus addr %pap\n",
-> +			io, &v3->io_bus_addr);
->  		ret = pci_remap_iospace(io, io_base);
->  		if (ret) {
->  			dev_warn(dev,
-> @@ -556,9 +554,8 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
->  			mem->name = "V3 PCI PRE-MEM";
->  			v3->pre_mem = mem->start;
->  			v3->pre_bus_addr = mem->start - win->offset;
-> -			dev_dbg(dev, "PREFETCHABLE MEM window start %08x, bus addr %08x, size %08x\n",
-> -				v3->pre_mem, v3->pre_bus_addr,
-> -				resource_size(mem));
-> +			dev_dbg(dev, "PREFETCHABLE MEM window %pR, bus addr %pap\n",
-> +				mem, &v3->pre_bus_addr);
->  			if (resource_size(mem) != SZ_256M) {
->  				dev_err(dev, "prefetchable memory range is not 256MB\n");
->  				return -EINVAL;
-> @@ -582,10 +579,8 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
->  			mem->name = "V3 PCI NON-PRE-MEM";
->  			v3->non_pre_mem = mem->start;
->  			v3->non_pre_bus_addr = mem->start - win->offset;
-> -			dev_dbg(dev,
-> -				"NON-PREFETCHABLE MEM window start %08x, bus addr %08x, size %08x\n",
-> -				v3->non_pre_mem, v3->non_pre_bus_addr,
-> -				resource_size(mem));
-> +			dev_dbg(dev, "NON-PREFETCHABLE MEM window %pR, bus addr %pap\n",
-> +				mem, &v3->non_pre_bus_addr);
->  			if (resource_size(mem) != SZ_256M) {
->  				dev_err(dev,
->  					"non-prefetchable memory range is not 256MB\n");
-> @@ -602,7 +597,7 @@ static int v3_pci_setup_resource(struct v3_pci *v3,
->  		}
->  		break;
->  	case IORESOURCE_BUS:
-> -		dev_dbg(dev, "BUS %d\n", win->res->start);
-> +		dev_dbg(dev, "BUS %pR\n", win->res);
->  		host->busnr = win->res->start;
->  		break;
->  	default:
-> @@ -781,9 +776,8 @@ static int v3_pci_probe(struct platform_device *pdev)
->  	 * as the physical memory we've remapped it from.
->  	 */
->  	if (readl(v3->base + V3_LB_IO_BASE) != (regs->start >> 16))
-> -		dev_err(dev, "V3_LB_IO_BASE = %08x but device is @%08x\n",
-> -			readl(v3->base + V3_LB_IO_BASE),
-> -			regs->start);
-> +		dev_err(dev, "V3_LB_IO_BASE = %08x but device is @%pR\n",
-> +			readl(v3->base + V3_LB_IO_BASE), regs);
->  
->  	/* Configuration space is 16MB directly mapped */
->  	regs = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> -- 
-> 2.9.0
-> 
+>  drivers/i2c/busses/i2c-designware-platdrv.c |   10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+>
+> Index: linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+> ===================================================================
+> --- linux-pm.orig/drivers/i2c/busses/i2c-designware-platdrv.c
+> +++ linux-pm/drivers/i2c/busses/i2c-designware-platdrv.c
+> @@ -370,6 +370,8 @@ static int dw_i2c_plat_probe(struct plat
+>         ACPI_COMPANION_SET(&adap->dev, ACPI_COMPANION(&pdev->dev));
+>         adap->dev.of_node = pdev->dev.of_node;
+>
+> +       dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
+> +
+>         /* The code below assumes runtime PM to be disabled. */
+>         WARN_ON(pm_runtime_enabled(&pdev->dev));
+>
+> @@ -433,7 +435,13 @@ MODULE_DEVICE_TABLE(of, dw_i2c_of_match)
+>  #ifdef CONFIG_PM_SLEEP
+>  static int dw_i2c_plat_prepare(struct device *dev)
+>  {
+> -       return pm_runtime_suspended(dev);
+> +       /*
+> +        * If the ACPI companion device object is present for this device, it
+> +        * may be accessed during suspend and resume of other devices via I2C
+> +        * operation regions, so tell the PM core and middle layers to avoid
+> +        * skipping system suspend/resume callbacks for it in that case.
+> +        */
+
+The above scenario can also happens for non-acpi companion devices.
+That makes this comment a bit confusing to me.
+
+> +       return !has_acpi_companion(dev);
+
+I understand it still works by always returning 1 for the non-acpi
+case, because the PM core deals with it for the direct_complete path.
+However it looks rather odd, especially due to the comment above.
+
+Perhaps returning pm_runtime_suspended() in the other case make this
+more clear? Or perhaps clarifying the comment somehow? :-)
+
+>  }
+>
+>  static void dw_i2c_plat_complete(struct device *dev)
+>
+>
+
+Kind regards
+Uffe
