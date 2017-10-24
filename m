@@ -1,79 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:64458 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751348AbdJSJqe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Oct 2017 05:46:34 -0400
-Subject: Re: [PATCH 1/2] PCI: dwc: dra7xx: Create functional dependency
- between PCIe and PHY
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
-References: <20171009090338.26033-1-kishon@ti.com>
- <20171009090338.26033-2-kishon@ti.com>
- <f258c2f0-11a2-60ac-3919-dcc0badfa870@ti.com>
- <ac5b3f42-19a1-3f8d-3bb6-37d63c3574de@ti.com>
- <9dce2e30-a245-460d-a808-a733eaf7ffec@ti.com>
- <2375dfac-b68c-4a94-89ed-fb850ba5579f@ti.com>
-From: Roger Quadros <rogerq@ti.com>
-Message-ID: <60244e26-474f-7c80-87ef-348861c24406@ti.com>
-Date: Thu, 19 Oct 2017 12:46:27 +0300
-MIME-Version: 1.0
-In-Reply-To: <2375dfac-b68c-4a94-89ed-fb850ba5579f@ti.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45812 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751997AbdJXSQ6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 14:16:58 -0400
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Florian Fainelli <f.fainelli@gmail.com>
+Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Kevin Cernekee <cernekee@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>,
+        Jim Quinlan <jim2101024@gmail.com>
+Subject: [PATCH 8/8] MIPS: BMIPS: enable PCI
+Date: Tue, 24 Oct 2017 14:15:49 -0400
+Message-Id: <1508868949-16652-9-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
+References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Adds the Kconfig hooks to enable the Broadcom STB PCIe root complex
+driver for Broadcom MIPS systems.
 
-On 18/10/17 15:12, Kishon Vijay Abraham I wrote:
-> Hi,
-> 
-> On Tuesday 10 October 2017 01:29 PM, Roger Quadros wrote:
->> On 10/10/17 10:42, Kishon Vijay Abraham I wrote:
->>> Roger,
->>>
->>> On Tuesday 10 October 2017 12:49 PM, Roger Quadros wrote:
->>>> On 09/10/17 12:03, Kishon Vijay Abraham I wrote:
->>>>> PCI core access configuration space registers in resume_noirq callbacks.
->>>>> In the case of dra7xx, PIPE3 PHY connected to PCIe controller has to be
->>>>> enabled before accessing configuration space registers. Since
->>>>> PIPE3 PHY is enabled by only configuring control module registers, no
->>>>> aborts has been observed so far (though during noirq stage, interface
->>>>> clock of PIPE3 PHY is not enabled).
->>>>>
->>>>> With new TRM updates, PIPE3 PHY has to be initialized (PIPE3 PHY
->>>>> registers has to be accessed) as well which requires the interface
->>>>> clock of PIPE3 PHY to be enabled. The interface clock of PIPE3 PHY is
->>>>> derived from OCP2SCP and hence PCIe PHY is modeled as a child of
->>>>> OCP2SCP. Since pm_runtime is not enabled during noirq stage,
->>>>> pm_runtime_get_sync done in phy_init doesn't enable
->>>>> OCP2SCP clocks resulting in abort when PIPE3 PHY registers are
->>>>> accessed.
->>>>
->>>> This could be the case not only with PCIe but even with USB and SATA?
->>>
->>> right, if USB/SATA driver has no_irq callbacks then the same issue might occur.
->>
->> OK. Is this something that we should document in Documentation/phy.txt?
-> 
-> Yeah it could be but the dependency is not required for a lot of phy consumer
-> drivers.
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+---
+ arch/mips/Kconfig | 3 +++
+ 1 file changed, 3 insertions(+)
 
-But they could add a no_irq callback in the future and then things break.
-
-> Do you think it makes sense to create functional dependency between phy and
-> it's consumers in phy_get?
-
-I think making it generic makes more sense without placing restrictions on users.
-
-> 
-> Thanks
-> Kishon
-> 
-
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index cb7fcc4..83ba54d 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -209,6 +209,9 @@ config BMIPS_GENERIC
+ 	select BOOT_RAW
+ 	select NO_EXCEPT_FILL
+ 	select USE_OF
++	select HW_HAS_PCI
++	select PCI_DRIVERS_GENERIC
++	select PCI
+ 	select CEVT_R4K
+ 	select CSRC_R4K
+ 	select SYNC_R4K
 -- 
-cheers,
--roger
-
-Texas Instruments Finland Oy, Porkkalankatu 22, 00180 Helsinki. Y-tunnus/Business ID: 0615521-4. Kotipaikka/Domicile: Helsinki
+1.9.0.138.g2de3478
