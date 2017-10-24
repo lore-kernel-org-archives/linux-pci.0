@@ -1,109 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ua0-f174.google.com ([209.85.217.174]:51991 "EHLO
-        mail-ua0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751600AbdJLQFX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 12:05:23 -0400
-Received: by mail-ua0-f174.google.com with SMTP id 47so3378433uas.8
-        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 09:05:23 -0700 (PDT)
+Return-Path: <SRS0=ONfx=BX=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=ONfx=BX=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [RFC PATCH] PCI/portdrv: Fix switch devctrl error report enable.
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1507885320-122365-1-git-send-email-liudongdong3@huawei.com>
+ <20171020193800.GO6332@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <7143aa2e-e8f0-cbb0-be56-953768a10443@huawei.com>
+Date: Tue, 24 Oct 2017 16:29:34 +0800
 MIME-Version: 1.0
-In-Reply-To: <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
-References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
- <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com>
- <20171012144032.GG14672@nanopsycho> <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
- <20171012150419.GI14672@nanopsycho> <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
-From: Roopa Prabhu <roopa@cumulusnetworks.com>
-Date: Thu, 12 Oct 2017 09:05:22 -0700
-Message-ID: <CAJieiUhQsL14W5DTst=BRDcjMCavZPNRJf=9i2yOAfB6cLUeyg@mail.gmail.com>
-Subject: Re: [RFC 0/3] Adding config get/set to devlink
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: Jiri Pirko <jiri@resnulli.us>,
-        Steve Lin <steven.lin1@broadcom.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Jiri Pirko <jiri@mellanox.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        Michael Chan <michael.chan@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        "John W. Linville" <linville@tuxdriver.com>,
-        Andy Gospodarek <gospo@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171020193800.GO6332@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 8:43 AM, Florian Fainelli <f.fainelli@gmail.com> wr=
-ote:
-> On October 12, 2017 8:04:19 AM PDT, Jiri Pirko <jiri@resnulli.us> wrote:
->>Thu, Oct 12, 2017 at 04:46:24PM CEST, roopa@cumulusnetworks.com wrote:
->>>On Thu, Oct 12, 2017 at 7:40 AM, Jiri Pirko <jiri@resnulli.us> wrote:
->>>> Thu, Oct 12, 2017 at 04:35:10PM CEST, roopa@cumulusnetworks.com
->>wrote:
->>>>>On Thu, Oct 12, 2017 at 6:34 AM, Steve Lin
->><steven.lin1@broadcom.com> wrote:
->>>>>> Adds a devlink command for getting & setting device configuration
->>>>>> parameters, and enumerates a bunch of those parameters as devlink
->>>>>> attributes.  Also introduces an attribute that can be set by a
->>>>>> driver to indicate that the config change doesn't take effect
->>>>>> until the next restart (as in the case of the bnxt driver changes
->>>>>> in this patchset, for which all the configuration changes affect
->>NVM
->>>>>> only, and aren't loaded until the next restart.)
->>>>>>
->>>>>> bnxt driver patches make use of these new devlink cmds/attributes.
->>>>>>
->>>>>> Steve Lin (3):
->>>>>>   devlink: Add config parameter get/set operations
->>>>>>   bnxt: Move generic devlink code to new file
->>>>>>   bnxt: Add devlink support for config get/set
->>>>>>
->>>>>
->>>>>Is the goal here to move all ethtool operations to devlink (I saw
->>some
->>>>>attrs related to speed etc). ?.
->>>>>We do need to move ethtool attrs to netlink and devlink is a good
->>>>>place (and of-course leave the current ethtool api around for
->>backward
->>>>>compatibility).
->>>>
->>>> We need to make sure we are not moving things to devlink which don't
->>>> belong there. All options that use "netdev" as a handle should go
->>into
->>>> rtnetlink instead.
->>>>
->>>
->>>Any reason you want to keep that restriction ?.
->>>FWIS, devlink is a driver api just like ethtool is.
->>>and ethtool needs to move to netlink soon...and It would be better to
->>>not put the rtnl_lock burden on ethtool driver operations. Instead of
->>>adding yet another driver api, extending devlink seems like a great
->>>fit to me.
+Hi Bjorn
+
+Many thanks for your review.
+
+在 2017/10/21 3:38, Bjorn Helgaas 写道:
+> On Fri, Oct 13, 2017 at 05:02:00PM +0800, Dongdong Liu wrote:
+>> Current code has a bug, switch upstream/downstream port error report
+>> is disabled.
 >>
->>Hmm, the original purpose of devlink was to obtain iface for things
->>that
->>could not use "netdev" as a handle. I try to stick with it as we
->>already
->>have iface for things that could use "netdev" as a handle - rtnetlink.
+>> DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>> -[0000:00]-+-00.0-[01]--
+>>            \-08.0-[02-07]----00.0-[03-07]--+-04.0-[04]--
+>>                                            +-05.0-[05]--
+>>                                            +-08.0-[06]--
+>>                                            \-09.0-[07]--
+>> portdrv_pci.c
+>> pcie_portdrv_probe
+>> 	--->pcie_port_device_register
+>> 		--->get_port_device_capability
+>> 			--->pci_disable_pcie_error_reporting
 >>
->>Not sure we want to go this way and add "netdev"-handle things into
->>devlink. Thoughts?
+>> aerdrv.c
+>> aer_probe
+>> 	--->aer_enable_rootport
+>> 		--->set_downstream_devices_error_reporting
+>>
+>> But current code RP AER driver probe is before switch UP/DP portdrv probe.
+>> This is a RFC PATCH for discussing.
 >
-> In the current situation where we have ethtool and devlink operating sepa=
-rately on different objects as entry points to the kernel, I agree with tha=
-t design.
+> OK, I think I see the issue you're pointing out.  aer_probe() only
+> binds to root ports (".port_type = PCI_EXP_TYPE_ROOT_PORT" in the
+> aerdriver struct).
 >
-> Once we move ethtool (or however we name its successor) over to netlink t=
-here is an opportunity for accessing objects that do and do not have a netd=
-evice representor today (e.g: management ports on switches) with the same i=
-nterface, and devlink could be used for that.
+> We call aer_probe() for a root port, and it enables AER reporting for
+> the root port and any downstream devices:
 >
-> In terms of compatibility though we should have a pseudo generic layer th=
-at can take ethtool ioctl() and transform that into a netlink message and t=
-hen call back down to drivers with the existing ethtool_ops that are implem=
-ented. It is reasonably simple to use coccinelle to update these ethtool_op=
-s with possibly updated signatures to support netlink attributes and whatno=
-t,
+>   aer_probe(root port)                        # only binds to root ports
+>     aer_enable_rootport
+>       set_downstream_devices_error_reporting(root, true)
+>         set_device_error_reporting(root, true)
+>           pci_enable_pcie_error_reporting
+>             pcie_capability_set_word(root, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
+>         pci_walk_bus(root->subordinate set_device_error_reporting, true)
+>           set_device_error_reporting(dev, true)
+>             pci_enable_pcie_error_reporting
+>               pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
+>
+> We later call pcie_portdrv_probe() for every downstream bridge (it
+> matches PCI_CLASS_BRIDGE_PCI devices, then discards any non-PCIe
+> devices), and it *disables* AER reporting:
+>
+>   pcie_portdrv_probe(switch port)
+>     pcie_port_device_register
+>       get_port_device_capability
+>         pci_disable_pcie_error_reporting
+>           pcie_capability_clear_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
+>
+> The result is that we first enable AER for the downstream switch
+> ports, then we disable it again.
 
-ack, that sounds like a good approach.
+Yes, that is the reason why upstream/downstream port error report
+is disabled.
 
-> but forcing drivers to quit doing ethtool_ops entitely and implement new =
-sets of "ethtool over netlink" ops is a non starter IMHO.
+>
+> I agree, that looks like a problem.  I think aer_enable_rootport() is
+> broken because it binds to one device and it also configures other
+> downstream devices.  That opens the door to concurrency issues and
+> makes it really hard to ensure that hotplug works correctly.
+>
+> I think the aer_probe() path should only touch the device it is
+> binding, i.e., it should not use pci_walk_bus().  If we need to
+> configure another device, that should be done in the enumeration path
+> for *that device*.
 
-correct, nobody disagrees with that point.
+It seems that ACPI _HPX can set PCI_EXP_DEVCTL to enable error report
+and ensure that hotplug works correctly.
+But we still need the RFC PATCH as the pcie_portdrv_probe() is after _HPX setting.
+OK, I will also modify aer_probe() code to make sure that the aer_probe() path
+should only touch the device it is binding in PATCH V2.
+
+Thanks,
+Dongdong
+
+>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> ---
+>>  drivers/pci/pcie/portdrv_core.c | 4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+>> index 313a21d..6bb89ce 100644
+>> --- a/drivers/pci/pcie/portdrv_core.c
+>> +++ b/drivers/pci/pcie/portdrv_core.c
+>> @@ -261,7 +261,9 @@ static int get_port_device_capability(struct pci_dev *dev)
+>>  		 * Disable AER on this port in case it's been enabled by the
+>>  		 * BIOS (the AER service driver will enable it when necessary).
+>>  		 */
+>> -		pci_disable_pcie_error_reporting(dev);
+>> +		if((pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
+>> +		   (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
+>> +			pci_disable_pcie_error_reporting(dev);
+>>  	}
+>>  	/* VC support */
+>>  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VC))
+>> --
+>> 1.9.1
+>>
+>
+> .
+>
