@@ -1,72 +1,50 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:17639 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750863AbdJXGqM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 02:46:12 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH V3 0/2] Tegra PCIe end point config space map code refactoring
+Date: Tue, 24 Oct 2017 12:14:47 +0530
+Message-ID: <1508827489-10842-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <a8fa87e4-4d70-eb60-f1c5-94071d6394aa@arm.com>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-5-git-send-email-jim2101024@gmail.com>
- <a8fa87e4-4d70-eb60-f1c5-94071d6394aa@arm.com>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Thu, 12 Oct 2017 14:15:30 -0400
-Message-ID: <CANCKTBuerHizxzY7BL-jP7L=z4g0=+2tfeafJnEJVkZ1zV+z-w@mail.gmail.com>
-Subject: Re: [PATCH 4/9] arm64: dma-mapping: export symbol arch_setup_dma_ops
-To: Robin Murphy <robin.murphy@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org,
- Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org,
- linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 1:06 PM, Robin Murphy <robin.murphy@arm.com> wrote:
-> On 11/10/17 23:34, Jim Quinlan wrote:
->> The BrcmSTB driver needs to get ahold of a pointer to swiotlb_dma_ops.
->> However, that variable is defined as static.  Instead, we use
->> arch_setup_dma_ops() to get the pointer to swiotlb_dma_ops.  Since
->> we also want our driver to be a separate module, we need to
->> export this function.
->
-> NAK. Retrieve the platform-assigned ops from the device via
-> get_dma_ops() and stash them in your drvdata or wherever before you
-> replace them. Don't go poking around arch code internals directly from a
-> driver.
-Will fix (and drop the commit).
+PCIe host controller in Tegra SoCs has 1GB of aperture available
+for mapping end points config space, IO and BARs. In that, currently
+256MB is being reserved for mapping end points configuration space
+which leaves less memory space available for mapping end points BARs
+on some of the platforms.
+This patch series attempts to map only 4K space from 1GB aperture to
+access end points configuration space.
 
->
-> Robin.
->
->> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
->> ---
->>  arch/arm64/mm/dma-mapping.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
->> index 614af88..dae572f 100644
->> --- a/arch/arm64/mm/dma-mapping.c
->> +++ b/arch/arm64/mm/dma-mapping.c
->> @@ -936,3 +936,4 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
->>       }
->>  #endif
->>  }
->> +EXPORT_SYMBOL(arch_setup_dma_ops);
->>
->
+Currently, this change can benefit T20 and T186 in saving (i.e. repurposed
+to use for BAR mapping) physical space as well as kernel virtual mapping space,
+it saves only kernel virtual address space in T30, T124, T132 and T210.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+NOTE: Since T186 PCIe DT entry is not yet present in main line (it is currently
+merged to 'for-4.15/arm64/dt' branch), nothing gets broken with this change for T186.
+For older platforms (T20, T30, T124, T132, T210), this change works fine without any
+DT modifications
+
+Testing Done on T124, T210 & T186:
+ Enumeration and basic functionality of immediate devices
+ Enumeration of devices behind a PCIe switch
+ Complete 4K configuration space access
+
+Vidya Sagar (2):
+  PCI: tegra: refactor config space mapping code
+  ARM64: tegra: limit PCIe config space mapping to 4K for T186
+
+ arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +-
+ drivers/pci/host/pci-tegra.c             | 125 ++++++++++---------------------
+ 2 files changed, 44 insertions(+), 89 deletions(-)
+
+-- 
+2.7.4
