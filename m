@@ -1,18 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-To: Robin Murphy <robin.murphy@arm.com>, Will Deacon <will.deacon@arm.com>
-Subject: RE: [PATCH v9 2/4] iommu/dma: Add a helper function to reserve HW
- MSI address regions for IOMMU drivers
-Date: Wed, 18 Oct 2017 14:23:31 +0000
-Message-ID: <5FC3163CFD30C246ABAA99954A238FA838448A48@FRAEML521-MBX.china.huawei.com>
-References: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
- <20171006140450.89652-3-shameerali.kolothum.thodi@huawei.com>
- <20171013192350.GA32130@arm.com>
- <5FC3163CFD30C246ABAA99954A238FA83844672A@FRAEML521-MBX.china.huawei.com>
- <1d49243a-4746-f189-7c5d-4b98937115fb@arm.com>
-In-Reply-To: <1d49243a-4746-f189-7c5d-4b98937115fb@arm.com>
+Date: Tue, 24 Oct 2017 14:53:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Guo <shawnguo@kernel.org>
+Subject: Re: [PATCH v2] PCI: hisi: add PCIe driver support for HiSilicon STB
+ SoCs
+Message-ID: <20171024195348.GC21840@bhelgaas-glaptop.roam.corp.google.com>
+References: <1508757470-22631-1-git-send-email-shawnguo@kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <1508757470-22631-1-git-send-email-shawnguo@kernel.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,161 +16,651 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "joro@8bytes.org" <joro@8bytes.org>, John Garry <john.garry@huawei.com>,
- Linuxarm <linuxarm@huawei.com>, "sudeep.holla@arm.com" <sudeep.holla@arm.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "Wangzhou \(B\)" <wangzhou1@hisilicon.com>, "Guohanjun \(Hanjun
- Guo\)" <guohanjun@huawei.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "devel@acpica.org" <devel@acpica.org>
+Cc: devicetree@vger.kernel.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ linux-pci@vger.kernel.org, Jiancheng Xue <xuejiancheng@hisilicon.com>,
+ Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Shawn Guo <shawn.guo@linaro.org>, Jianguo Sun <sunjianguo1@huawei.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Robin Murphy [mailto:robin.murphy@arm.com]
-> Sent: Wednesday, October 18, 2017 1:34 PM
-> To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>;
-> Will Deacon <will.deacon@arm.com>
-> Cc: lorenzo.pieralisi@arm.com; Gabriele Paoloni
-> <gabriele.paoloni@huawei.com>; marc.zyngier@arm.com; linux-
-> pci@vger.kernel.org; joro@8bytes.org; John Garry <john.garry@huawei.com>;
-> Guohanjun (Hanjun Guo) <guohanjun@huawei.com>; Linuxarm
-> <linuxarm@huawei.com>; linux-acpi@vger.kernel.org; iommu@lists.linux-
-> foundation.org; Wangzhou (B) <wangzhou1@hisilicon.com>;
-> sudeep.holla@arm.com; bhelgaas@google.com; linux-arm-
-> kernel@lists.infradead.org; devel@acpica.org
-> Subject: Re: [PATCH v9 2/4] iommu/dma: Add a helper function to reserve HW
-> MSI address regions for IOMMU drivers
+On Mon, Oct 23, 2017 at 07:17:50PM +0800, Shawn Guo wrote:
+> From: Jianguo Sun <sunjianguo1@huawei.com>
 > 
-> On 16/10/17 17:09, Shameerali Kolothum Thodi wrote:
-> > Hi Robin,
-> >
-> >> -----Original Message-----
-> >> From: Will Deacon [mailto:will.deacon@arm.com]
-> >> Sent: Friday, October 13, 2017 8:24 PM
-> >> To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-> >> Cc: lorenzo.pieralisi@arm.com; marc.zyngier@arm.com;
-> >> sudeep.holla@arm.com; robin.murphy@arm.com; joro@8bytes.org;
-> >> bhelgaas@google.com; Gabriele Paoloni <gabriele.paoloni@huawei.com>;
-> >> John Garry <john.garry@huawei.com>; iommu@lists.linux-foundation.org;
-> >> linux-arm-kernel@lists.infradead.org; linux-acpi@vger.kernel.org; linux-
-> >> pci@vger.kernel.org; devel@acpica.org; Linuxarm
-> <linuxarm@huawei.com>;
-> >> Wangzhou (B) <wangzhou1@hisilicon.com>; Guohanjun (Hanjun Guo)
-> >> <guohanjun@huawei.com>
-> >> Subject: Re: [PATCH v9 2/4] iommu/dma: Add a helper function to reserve
-> HW
-> >> MSI address regions for IOMMU drivers
-> >>
-> >> On Fri, Oct 06, 2017 at 03:04:48PM +0100, Shameer Kolothum wrote:
-> >>> IOMMU drivers can use this to implement their .get_resv_regions callback
-> >>> for HW MSI specific reservations(e.g. ARM GICv3 ITS MSI region).
-> >>>
-> >>> Signed-off-by: Shameer Kolothum
-> <shameerali.kolothum.thodi@huawei.com>
-> >>> ---
-> >>>  drivers/iommu/dma-iommu.c | 20 ++++++++++++++++++++
-> >>>  include/linux/dma-iommu.h |  7 +++++++
-> >>>  2 files changed, 27 insertions(+)
-> >>
-> >> I'd like to see Robin's Ack on this, because this is his code and he had
-> >> ideas on ways to solve this problem properly.
-> >
-> > Please let us know if it is ok to go ahead with ACPI support for now.
-> > It will help our customers to start using pass-through for PCIe.
-> >
-> > Thanks,
-> > Shameer
-> >
-> >>
-> >> Will
-> >>
-> >>> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-> >>> index 9d1cebe..bae677e 100644
-> >>> --- a/drivers/iommu/dma-iommu.c
-> >>> +++ b/drivers/iommu/dma-iommu.c
-> >>> @@ -19,6 +19,7 @@
-> >>>   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-> >>>   */
-> >>>
-> >>> +#include <linux/acpi_iort.h>
-> >>>  #include <linux/device.h>
-> >>>  #include <linux/dma-iommu.h>
-> >>>  #include <linux/gfp.h>
-> >>> @@ -27,6 +28,7 @@
-> >>>  #include <linux/iova.h>
-> >>>  #include <linux/irq.h>
-> >>>  #include <linux/mm.h>
-> >>> +#include <linux/of_iommu.h>
-> >>>  #include <linux/pci.h>
-> >>>  #include <linux/scatterlist.h>
-> >>>  #include <linux/vmalloc.h>
-> >>> @@ -198,6 +200,24 @@ void iommu_dma_get_resv_regions(struct device
-> >> *dev, struct list_head *list)
-> >>>  }
-> >>>  EXPORT_SYMBOL(iommu_dma_get_resv_regions);
-> >>>
-> >>> +/**
-> >>> + * iommu_dma_get_msi_resv_regions - Reserved region driver helper
-> >>> + * @dev: Device from iommu_get_resv_regions()
-> >>> + * @list: Reserved region list from iommu_get_resv_regions()
-> >>> + *
-> >>> + * IOMMU drivers can use this to implement their .get_resv_regions
-> >>> + * callback for HW MSI specific reservations. For now, this only
+> Add PCIe controller driver for HiSilicon STB SoCs,
+> the controller is based on the DesignWare PCIe core.
 > 
-> This doesn't make an awful lot of sense - there's only one reserved
-> region callback, so iommu-dma shouldn't be offering two separate and
-> non-overlapping implementations.
+> Signed-off-by: Jianguo Sun <sunjianguo1@huawei.com>
+> Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
+
+Applied to pci/host-hisi for v4.15, thanks!
+
+> ---
+> Changes for v2:
+>  - Add a MAINTAINERS entry for the driver.
+>  - Unify the spell of DesignWare and PCIe in text and messages.
+>  - Use "MSI IRQ" in message output.
+>  - Fix the indentation of function parameters on newline.
+>  - Fix interrupt-map for legacy interrupts in bindings example.
 > 
-> >>> + * covers ITS MSI region reservation using ACPI IORT helper function.
-> >>> + */
-> >>> +int iommu_dma_get_msi_resv_regions(struct device *dev, struct
-> list_head
-> >> *list)
-> >>> +{
-> >>> +	if (!is_of_node(dev->iommu_fwspec->iommu_fwnode))
-> >>> +		return iort_iommu_msi_get_resv_regions(dev, list);
+>  .../bindings/pci/hisilicon-histb-pcie.txt          |  68 +++
+>  MAINTAINERS                                        |   8 +
+>  drivers/pci/dwc/Kconfig                            |  10 +
+>  drivers/pci/dwc/Makefile                           |   1 +
+>  drivers/pci/dwc/pcie-histb.c                       | 469 +++++++++++++++++++++
+>  5 files changed, 556 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+>  create mode 100644 drivers/pci/dwc/pcie-histb.c
 > 
-> Either this call knows how to do the right thing for any platform and
-> should be made from iommu_dma_get_reserved_regions() directly, or it's
-> tightly coupled to the HiSilicon quirk in the SMMUv3 driver and
-> iommu-dma doesn't need to know - the middle ground presented here is
-> surely the worst of both worlds.
-
-Right. I think we have discussed this earlier[1] and had a v4 based on invoking
-the iort_iommu_its_get_resv_regions() within the iommu_dma_get_resv_regions().
-But later as you rightly pointed out, we were not checking for platforms which
-requires this quirk inside the iort code and that will break the platforms which are 
-happy with MSI translations. Hence moved to the current implementation in v6
-after this discussion here[2]
- 
-And earlier I think in the v3 version we had the function called from smmu driver
-directly and the feedback was that it should be abstracted from the driver.
-
-May be it is still possible to move the function call inside the 
-iommu_dma_get_resv_regions() and do the smmu model check inside
- the iort helper function and selectively apply the HW MSI reservations.
-
-But I think it is much neater if we can invoke the iort_get_msi_regions() directly
-from SMMUv3 based on the model.
-
-Thoughts?
-
-Thanks,
-Shameer
-1. https://patches.linaro.org/patch/106268/
-2. https://www.spinics.net/lists/arm-kernel/msg599162.html
-
-
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> new file mode 100644
+> index 000000000000..e4d79d03214b
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> @@ -0,0 +1,68 @@
+> +HiSilicon STB PCIe host bridge DT description
+> +
+> +HiSilicon STB PCIe host controller is based on DesignWare PCIe core.
+> +It shares common functions with PCIe DesignWare core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pcie.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties
+> +- compatible: Should be one of the following strings:
+> +		"hisilicon,hi3798cv200-pcie"
+> +- reg: Should contain sysctl, rc_dbi, config registers location and length.
+> +- reg-names: Must include the following entries:
+> +  "control": control registers of PCIe controller;
+> +  "rc-dbi": configuration space of PCIe controller;
+> +  "config": configuration transaction space of PCIe controller.
+> +- bus-range: PCI bus numbers covered.
+> +- interrupts: MSI interrupt.
+> +- interrupt-names: Must include "msi" entries.
+> +- clocks: List of phandle and clock specifier pairs as listed in clock-names
+> +  property.
+> +- clock-name: Must include the following entries:
+> +  "aux": auxiliary gate clock;
+> +  "pipe": pipe gate clock;
+> +  "sys": sys gate clock;
+> +  "bus": bus gate clock.
+> +- resets: List of phandle and reset specifier pairs as listed in reset-names
+> +  property.
+> +- reset-names: Must include the following entries:
+> +  "soft": soft reset;
+> +  "sys": sys reset;
+> +  "bus": bus reset.
+> +
+> +Optional properties:
+> +- reset-gpios: The gpio to generate PCIe PERST# assert and deassert signal.
+> +- phys: List of phandle and phy mode specifier, should be 0.
+> +- phy-names: Must be "phy".
+> +
+> +Example:
+> +	pcie@f9860000 {
+> +		compatible = "hisilicon,hi3798cv200-pcie";
+> +		reg = <0xf9860000 0x1000>,
+> +		      <0xf0000000 0x2000>,
+> +		      <0xf2000000 0x01000000>;
+> +		reg-names = "control", "rc-dbi", "config";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		bus-range = <0 15>;
+> +		num-lanes = <1>;
+> +		ranges=<0x81000000 0 0 0xf4000000 0 0x00010000
+> +			0x82000000 0 0xf3000000 0xf3000000 0 0x01000000>;
+> +		interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>;
+> +		interrupt-names = "msi";
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 0>;
+> +		interrupt-map = <0 0 0 0 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
+> +		clocks = <&crg PCIE_AUX_CLK>,
+> +			 <&crg PCIE_PIPE_CLK>,
+> +			 <&crg PCIE_SYS_CLK>,
+> +			 <&crg PCIE_BUS_CLK>;
+> +		clock-names = "aux", "pipe", "sys", "bus";
+> +		resets = <&crg 0x18c 6>, <&crg 0x18c 5>, <&crg 0x18c 4>;
+> +		reset-names = "soft", "sys", "bus";
+> +		phys = <&combphy1 PHY_TYPE_PCIE>;
+> +		phy-names = "phy";
+> +	};
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index a74227ad082e..2520bf02bc12 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -10487,6 +10487,14 @@ S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/pcie-kirin.txt
+>  F:	drivers/pci/dwc/pcie-kirin.c
+>  
+> +PCIE DRIVER FOR HISILICON STB
+> +M:	Jianguo Sun <sunjianguo1@huawei.com>
+> +M:	Shawn Guo <shawn.guo@linaro.org>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	Documentation/devicetree/bindings/pci/hisilicon-histb-pcie.txt
+> +F:	drivers/pci/dwc/pcie-histb.c
+> +
+>  PCIE DRIVER FOR MEDIATEK
+>  M:	Ryder Lee <ryder.lee@mediatek.com>
+>  L:	linux-pci@vger.kernel.org
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index 22ec82fcdea2..113e09440f85 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -169,4 +169,14 @@ config PCIE_KIRIN
+>  	  Say Y here if you want PCIe controller support
+>  	  on HiSilicon Kirin series SoCs.
+>  
+> +config PCIE_HISI_STB
+> +	bool "HiSilicon STB SoCs PCIe controllers"
+> +	depends on ARCH_HISI
+> +	depends on PCI
+> +	depends on PCI_MSI_IRQ_DOMAIN
+> +	select PCIEPORTBUS
+> +	select PCIE_DW_HOST
+> +	help
+> +          Say Y here if you want PCIe controller support on HiSilicon STB SoCs
+> +
+>  endmenu
+> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+> index c61be9738cce..54f56f6e9236 100644
+> --- a/drivers/pci/dwc/Makefile
+> +++ b/drivers/pci/dwc/Makefile
+> @@ -14,6 +14,7 @@ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+>  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+>  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+>  obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+> +obj-$(CONFIG_PCIE_HISI_STB) += pcie-histb.o
+>  
+>  # The following drivers are for devices that use the generic ACPI
+>  # pci_root.c driver but don't support standard ECAM config access.
+> diff --git a/drivers/pci/dwc/pcie-histb.c b/drivers/pci/dwc/pcie-histb.c
+> new file mode 100644
+> index 000000000000..d41ed01e3415
+> --- /dev/null
+> +++ b/drivers/pci/dwc/pcie-histb.c
+> @@ -0,0 +1,469 @@
+> +/*
+> + * PCIe host controller driver for HiSilicon STB SoCs
+> + *
+> + * Copyright (C) 2016-2017 HiSilicon Co., Ltd. http://www.hisilicon.com
+> + *
+> + * Authors: Ruqiang Ju <juruqiang@hisilicon.com>
+> + *          Jianguo Sun <sunjianguo1@huawei.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +#include <linux/clk.h>
+> +#include <linux/delay.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of.h>
+> +#include <linux/of_gpio.h>
+> +#include <linux/pci.h>
+> +#include <linux/phy/phy.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +#include <linux/reset.h>
+> +
+> +#include "pcie-designware.h"
+> +
+> +#define to_histb_pcie(x)	dev_get_drvdata((x)->dev)
+> +
+> +#define PCIE_SYS_CTRL0			0x0000
+> +#define PCIE_SYS_CTRL1			0x0004
+> +#define PCIE_SYS_CTRL7			0x001C
+> +#define PCIE_SYS_CTRL13			0x0034
+> +#define PCIE_SYS_CTRL15			0x003c
+> +#define PCIE_SYS_CTRL16			0x0040
+> +#define PCIE_SYS_CTRL17			0x0044
+> +
+> +#define PCIE_SYS_STAT0			0x0100
+> +#define PCIE_SYS_STAT4			0x0110
+> +
+> +#define PCIE_RDLH_LINK_UP		BIT(5)
+> +#define PCIE_XMLH_LINK_UP		BIT(15)
+> +#define PCIE_ELBI_SLV_DBI_ENABLE	BIT(21)
+> +#define PCIE_APP_LTSSM_ENABLE		BIT(11)
+> +
+> +#define PCIE_DEVICE_TYPE_MASK		GENMASK(31, 28)
+> +#define PCIE_WM_EP			0
+> +#define PCIE_WM_LEGACY			BIT(1)
+> +#define PCIE_WM_RC			BIT(30)
+> +
+> +#define PCIE_LTSSM_STATE_MASK		GENMASK(5, 0)
+> +#define PCIE_LTSSM_STATE_ACTIVE		0x11
+> +
+> +struct histb_pcie {
+> +	struct dw_pcie *pci;
+> +	struct clk *aux_clk;
+> +	struct clk *pipe_clk;
+> +	struct clk *sys_clk;
+> +	struct clk *bus_clk;
+> +	struct phy *phy;
+> +	struct reset_control *soft_reset;
+> +	struct reset_control *sys_reset;
+> +	struct reset_control *bus_reset;
+> +	void __iomem *ctrl;
+> +	int reset_gpio;
+> +};
+> +
+> +static u32 histb_pcie_readl(struct histb_pcie *histb_pcie, u32 reg)
+> +{
+> +	return readl(histb_pcie->ctrl + reg);
+> +}
+> +
+> +static void histb_pcie_writel(struct histb_pcie *histb_pcie, u32 reg, u32 val)
+> +{
+> +	writel(val, histb_pcie->ctrl + reg);
+> +}
+> +
+> +static void histb_pcie_dbi_w_mode(struct pcie_port *pp, bool enable)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct histb_pcie *hipcie = to_histb_pcie(pci);
+> +	u32 val;
+> +
+> +	val = histb_pcie_readl(hipcie, PCIE_SYS_CTRL0);
+> +	if (enable)
+> +		val |= PCIE_ELBI_SLV_DBI_ENABLE;
+> +	else
+> +		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+> +	histb_pcie_writel(hipcie, PCIE_SYS_CTRL0, val);
+> +}
+> +
+> +static void histb_pcie_dbi_r_mode(struct pcie_port *pp, bool enable)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct histb_pcie *hipcie = to_histb_pcie(pci);
+> +	u32 val;
+> +
+> +	val = histb_pcie_readl(hipcie, PCIE_SYS_CTRL1);
+> +	if (enable)
+> +		val |= PCIE_ELBI_SLV_DBI_ENABLE;
+> +	else
+> +		val &= ~PCIE_ELBI_SLV_DBI_ENABLE;
+> +	histb_pcie_writel(hipcie, PCIE_SYS_CTRL1, val);
+> +}
+> +
+> +static u32 histb_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
+> +			       u32 reg, size_t size)
+> +{
+> +	u32 val;
+> +
+> +	histb_pcie_dbi_r_mode(&pci->pp, true);
+> +	dw_pcie_read(base + reg, size, &val);
+> +	histb_pcie_dbi_r_mode(&pci->pp, false);
+> +
+> +	return val;
+> +}
+> +
+> +static void histb_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+> +				 u32 reg, size_t size, u32 val)
+> +{
+> +	histb_pcie_dbi_w_mode(&pci->pp, true);
+> +	dw_pcie_write(base + reg, size, val);
+> +	histb_pcie_dbi_w_mode(&pci->pp, false);
+> +}
+> +
+> +static int histb_pcie_rd_own_conf(struct pcie_port *pp, int where,
+> +				  int size, u32 *val)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	int ret;
+> +
+> +	histb_pcie_dbi_r_mode(pp, true);
+> +	ret = dw_pcie_read(pci->dbi_base + where, size, val);
+> +	histb_pcie_dbi_r_mode(pp, false);
+> +
+> +	return ret;
+> +}
+> +
+> +static int histb_pcie_wr_own_conf(struct pcie_port *pp, int where,
+> +				  int size, u32 val)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	int ret;
+> +
+> +	histb_pcie_dbi_w_mode(pp, true);
+> +	ret = dw_pcie_write(pci->dbi_base + where, size, val);
+> +	histb_pcie_dbi_w_mode(pp, false);
+> +
+> +	return ret;
+> +}
+> +
+> +static int histb_pcie_link_up(struct dw_pcie *pci)
+> +{
+> +	struct histb_pcie *hipcie = to_histb_pcie(pci);
+> +	u32 regval;
+> +	u32 status;
+> +
+> +	regval = histb_pcie_readl(hipcie, PCIE_SYS_STAT0);
+> +	status = histb_pcie_readl(hipcie, PCIE_SYS_STAT4);
+> +	status &= PCIE_LTSSM_STATE_MASK;
+> +	if ((regval & PCIE_XMLH_LINK_UP) && (regval & PCIE_RDLH_LINK_UP) &&
+> +	    (status == PCIE_LTSSM_STATE_ACTIVE))
+> +		return 1;
+> +
+> +	return 0;
+> +}
+> +
+> +static int histb_pcie_establish_link(struct pcie_port *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct histb_pcie *hipcie = to_histb_pcie(pci);
+> +	u32 regval;
+> +
+> +	if (dw_pcie_link_up(pci)) {
+> +		dev_info(pci->dev, "Link already up\n");
+> +		return 0;
+> +	}
+> +
+> +	/* PCIe RC work mode */
+> +	regval = histb_pcie_readl(hipcie, PCIE_SYS_CTRL0);
+> +	regval &= ~PCIE_DEVICE_TYPE_MASK;
+> +	regval |= PCIE_WM_RC;
+> +	histb_pcie_writel(hipcie, PCIE_SYS_CTRL0, regval);
+> +
+> +	/* setup root complex */
+> +	dw_pcie_setup_rc(pp);
+> +
+> +	/* assert LTSSM enable */
+> +	regval = histb_pcie_readl(hipcie, PCIE_SYS_CTRL7);
+> +	regval |= PCIE_APP_LTSSM_ENABLE;
+> +	histb_pcie_writel(hipcie, PCIE_SYS_CTRL7, regval);
+> +
+> +	return dw_pcie_wait_for_link(pci);
+> +}
+> +
+> +static int histb_pcie_host_init(struct pcie_port *pp)
+> +{
+> +	histb_pcie_establish_link(pp);
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		dw_pcie_msi_init(pp);
+> +
+> +	return 0;
+> +}
+> +
+> +static struct dw_pcie_host_ops histb_pcie_host_ops = {
+> +	.rd_own_conf = histb_pcie_rd_own_conf,
+> +	.wr_own_conf = histb_pcie_wr_own_conf,
+> +	.host_init = histb_pcie_host_init,
+> +};
+> +
+> +static irqreturn_t histb_pcie_msi_irq_handler(int irq, void *arg)
+> +{
+> +	struct pcie_port *pp = arg;
+> +
+> +	return dw_handle_msi_irq(pp);
+> +}
+> +
+> +static void histb_pcie_host_disable(struct histb_pcie *hipcie)
+> +{
+> +	reset_control_assert(hipcie->soft_reset);
+> +	reset_control_assert(hipcie->sys_reset);
+> +	reset_control_assert(hipcie->bus_reset);
+> +
+> +	clk_disable_unprepare(hipcie->aux_clk);
+> +	clk_disable_unprepare(hipcie->pipe_clk);
+> +	clk_disable_unprepare(hipcie->sys_clk);
+> +	clk_disable_unprepare(hipcie->bus_clk);
+> +
+> +	if (gpio_is_valid(hipcie->reset_gpio))
+> +		gpio_set_value_cansleep(hipcie->reset_gpio, 0);
+> +}
+> +
+> +static int histb_pcie_host_enable(struct pcie_port *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct histb_pcie *hipcie = to_histb_pcie(pci);
+> +	struct device *dev = pci->dev;
+> +	int ret;
+> +
+> +	/* power on PCIe device if have */
+> +	if (gpio_is_valid(hipcie->reset_gpio))
+> +		gpio_set_value_cansleep(hipcie->reset_gpio, 1);
+> +
+> +	ret = clk_prepare_enable(hipcie->bus_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable bus clk\n");
+> +		goto err_bus_clk;
+> +	}
+> +
+> +	ret = clk_prepare_enable(hipcie->sys_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable sys clk\n");
+> +		goto err_sys_clk;
+> +	}
+> +
+> +	ret = clk_prepare_enable(hipcie->pipe_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable pipe clk\n");
+> +		goto err_pipe_clk;
+> +	}
+> +
+> +	ret = clk_prepare_enable(hipcie->aux_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable aux clk\n");
+> +		goto err_aux_clk;
+> +	}
+> +
+> +	reset_control_assert(hipcie->soft_reset);
+> +	reset_control_deassert(hipcie->soft_reset);
+> +
+> +	reset_control_assert(hipcie->sys_reset);
+> +	reset_control_deassert(hipcie->sys_reset);
+> +
+> +	reset_control_assert(hipcie->bus_reset);
+> +	reset_control_deassert(hipcie->bus_reset);
+> +
+> +	return 0;
+> +
+> +err_aux_clk:
+> +	clk_disable_unprepare(hipcie->aux_clk);
+> +err_pipe_clk:
+> +	clk_disable_unprepare(hipcie->pipe_clk);
+> +err_sys_clk:
+> +	clk_disable_unprepare(hipcie->sys_clk);
+> +err_bus_clk:
+> +	clk_disable_unprepare(hipcie->bus_clk);
+> +
+> +	return ret;
+> +}
+> +
+> +static const struct dw_pcie_ops dw_pcie_ops = {
+> +	.read_dbi = histb_pcie_read_dbi,
+> +	.write_dbi = histb_pcie_write_dbi,
+> +	.link_up = histb_pcie_link_up,
+> +};
+> +
+> +static int histb_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct histb_pcie *hipcie;
+> +	struct dw_pcie *pci;
+> +	struct pcie_port *pp;
+> +	struct resource *res;
+> +	struct device_node *np = pdev->dev.of_node;
+> +	struct device *dev = &pdev->dev;
+> +	enum of_gpio_flags of_flags;
+> +	unsigned long flag = GPIOF_DIR_OUT;
+> +	int ret;
+> +
+> +	hipcie = devm_kzalloc(dev, sizeof(*hipcie), GFP_KERNEL);
+> +	if (!hipcie)
+> +		return -ENOMEM;
+> +
+> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> +	if (!pci)
+> +		return -ENOMEM;
+> +
+> +	hipcie->pci = pci;
+> +	pp = &pci->pp;
+> +	pci->dev = dev;
+> +	pci->ops = &dw_pcie_ops;
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "control");
+> +	hipcie->ctrl = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(hipcie->ctrl)) {
+> +		dev_err(dev, "cannot get control reg base\n");
+> +		return PTR_ERR(hipcie->ctrl);
+> +	}
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc-dbi");
+> +	pci->dbi_base = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(pci->dbi_base)) {
+> +		dev_err(dev, "cannot get rc-dbi base\n");
+> +		return PTR_ERR(pci->dbi_base);
+> +	}
+> +
+> +	hipcie->reset_gpio = of_get_named_gpio_flags(np,
+> +				"reset-gpios", 0, &of_flags);
+> +	if (of_flags & OF_GPIO_ACTIVE_LOW)
+> +		flag |= GPIOF_ACTIVE_LOW;
+> +	if (gpio_is_valid(hipcie->reset_gpio)) {
+> +		ret = devm_gpio_request_one(dev, hipcie->reset_gpio,
+> +				flag, "PCIe device power control");
+> +		if (ret) {
+> +			dev_err(dev, "unable to request gpio\n");
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	hipcie->aux_clk = devm_clk_get(dev, "aux");
+> +	if (IS_ERR(hipcie->aux_clk)) {
+> +		dev_err(dev, "Failed to get PCIe aux clk\n");
+> +		return PTR_ERR(hipcie->aux_clk);
+> +	}
+> +
+> +	hipcie->pipe_clk = devm_clk_get(dev, "pipe");
+> +	if (IS_ERR(hipcie->pipe_clk)) {
+> +		dev_err(dev, "Failed to get PCIe pipe clk\n");
+> +		return PTR_ERR(hipcie->pipe_clk);
+> +	}
+> +
+> +	hipcie->sys_clk = devm_clk_get(dev, "sys");
+> +	if (IS_ERR(hipcie->sys_clk)) {
+> +		dev_err(dev, "Failed to get PCIEe sys clk\n");
+> +		return PTR_ERR(hipcie->sys_clk);
+> +	}
+> +
+> +	hipcie->bus_clk = devm_clk_get(dev, "bus");
+> +	if (IS_ERR(hipcie->bus_clk)) {
+> +		dev_err(dev, "Failed to get PCIe bus clk\n");
+> +		return PTR_ERR(hipcie->bus_clk);
+> +	}
+> +
+> +	hipcie->soft_reset = devm_reset_control_get(dev, "soft");
+> +	if (IS_ERR(hipcie->soft_reset)) {
+> +		dev_err(dev, "couldn't get soft reset\n");
+> +		return PTR_ERR(hipcie->soft_reset);
+> +	}
+> +
+> +	hipcie->sys_reset = devm_reset_control_get(dev, "sys");
+> +	if (IS_ERR(hipcie->sys_reset)) {
+> +		dev_err(dev, "couldn't get sys reset\n");
+> +		return PTR_ERR(hipcie->sys_reset);
+> +	}
+> +
+> +	hipcie->bus_reset = devm_reset_control_get(dev, "bus");
+> +	if (IS_ERR(hipcie->bus_reset)) {
+> +		dev_err(dev, "couldn't get bus reset\n");
+> +		return PTR_ERR(hipcie->bus_reset);
+> +	}
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+> +		if (pp->msi_irq < 0) {
+> +			dev_err(dev, "Failed to get MSI IRQ\n");
+> +			return pp->msi_irq;
+> +		}
+> +
+> +		ret = devm_request_irq(dev, pp->msi_irq,
+> +				       histb_pcie_msi_irq_handler,
+> +				       IRQF_SHARED, "histb-pcie-msi", pp);
+> +		if (ret) {
+> +			dev_err(dev, "cannot request MSI IRQ\n");
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	hipcie->phy = devm_phy_get(dev, "phy");
+> +	if (IS_ERR(hipcie->phy)) {
+> +		dev_info(dev, "no pcie-phy found\n");
+> +		hipcie->phy = NULL;
+> +		/* fall through here!
+> +		 * if no pcie-phy found, phy init
+> +		 * should be done under boot!
+> +		 */
+> +	} else {
+> +		phy_init(hipcie->phy);
+> +	}
+> +
+> +	pp->root_bus_nr = -1;
+> +	pp->ops = &histb_pcie_host_ops;
+> +
+> +	platform_set_drvdata(pdev, hipcie);
+> +
+> +	ret = histb_pcie_host_enable(pp);
+> +	if (ret) {
+> +		dev_err(dev, "failed to enable host\n");
+> +		return ret;
+> +	}
+> +
+> +	ret = dw_pcie_host_init(pp);
+> +	if (ret) {
+> +		dev_err(dev, "failed to initialize host\n");
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int histb_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct histb_pcie *hipcie = platform_get_drvdata(pdev);
+> +
+> +	histb_pcie_host_disable(hipcie);
+> +
+> +	if (hipcie->phy)
+> +		phy_exit(hipcie->phy);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id histb_pcie_of_match[] = {
+> +	{ .compatible = "hisilicon,hi3798cv200-pcie", },
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(of, histb_pcie_of_match);
+> +
+> +static struct platform_driver histb_pcie_platform_driver = {
+> +	.probe	= histb_pcie_probe,
+> +	.remove	= histb_pcie_remove,
+> +	.driver = {
+> +		.name = "histb-pcie",
+> +		.of_match_table = histb_pcie_of_match,
+> +	},
+> +};
+> +module_platform_driver(histb_pcie_platform_driver);
+> +
+> +MODULE_DESCRIPTION("HiSilicon STB PCIe host controller driver");
+> +MODULE_LICENSE("GPL v2");
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
 _______________________________________________
 linux-arm-kernel mailing list
