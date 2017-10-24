@@ -1,107 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:4878 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932182AbdJ3LG2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 07:06:28 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
-        <yinghai@kernel.org>, <david.daney@cavium.com>,
-        <Julia.Lawall@lip6.fr>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH 2/4] PCI: tegra: Enable ASPM-L1 capability advertisement
-Date: Mon, 30 Oct 2017 16:33:03 +0530
-Message-ID: <1509361385-21224-3-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
-References: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+        Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 04/12] PM / core: Add SMART_SUSPEND driver flag
+Date: Tue, 24 Oct 2017 10:55:14 +0200
+Message-ID: <2295745.hKSUUfvB5u@aspire.rjw.lan>
+In-Reply-To: <CAPDyKFopE6Pv8fH1U1mhY4io76BbtdNLTJ2b5f-vyfG=rnksvw@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2481137.OYGUrPQscL@aspire.rjw.lan> <CAPDyKFopE6Pv8fH1U1mhY4io76BbtdNLTJ2b5f-vyfG=rnksvw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enables advertisement of ASPM-L1 support in capability
-registers of applicable Tegra chips
+On Tuesday, October 24, 2017 7:22:25 AM CEST Ulf Hansson wrote:
+> On 16 October 2017 at 03:29, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Define and document a SMART_SUSPEND flag to instruct bus types and PM
+> > domains that the system suspend callbacks provided by the driver can
+> > cope with runtime-suspended devices, so from the driver's perspective
+> > it should be safe to leave devices in runtime suspend during system
+> > suspend.
+> >
+> > Setting that flag also causes the PM core to skip the "late" and
+> > "noirq" phases of device suspend for devices that remain in runtime
+> > suspend at the beginning of the "late" phase (when runtime PM has
+> > been disabled for them) under the assumption that their state cannot
+> > (and should not) change after that point until the system suspend
+> > transition is complete.  Moreover, the PM core prevents runtime PM
+> > from acting on devices with DPM_FLAG_SMART_SUSPEND during system
+> > resume by setting their runtime PM status to "active" at the end of
+> > the "early" phase (right prior to enabling runtime PM for them).
+> > That allows system resume callbacks to do whatever is necessary to
+> > resume the device without worrying about runtime PM possibly
+> > running in parallel with them.
+> 
+> After some sleep, I woke up and realized that the hole thing of making
+> the PM core skip invoking system sleep callbacks, is not compatible
+> with devices being attached to the genpd. Sorry.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+That's OK. :-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index adae03d671ab..e1526cc5d381 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -226,6 +226,9 @@
- #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
- #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
- 
-+#define RP_VEND_XP1	0xf04
-+#define RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT	BIT(21)
-+
- #define RP_VEND_CTL0	0xf44
- #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
- #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
-@@ -327,6 +330,7 @@ struct tegra_pcie_soc {
- 	bool RAW_violation_fixup;
- 	bool program_deskew_time;
- 	bool updateFC_threshold;
-+	bool has_aspm_l1;
- };
- 
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -2188,6 +2192,13 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
- 	value = readl(port->base + RP_VEND_CTL1);
- 	value |= RP_VEND_CTL1_ERPT;
- 	writel(value, port->base + RP_VEND_CTL1);
-+
-+	if (port->pcie->soc->has_aspm_l1) {
-+		/* Advertise ASPM-L1 state capability*/
-+		value = readl(port->base + RP_VEND_XP1);
-+		value |= RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT;
-+		writel(value, port->base + RP_VEND_XP1);
-+	}
- }
- 
- static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
-@@ -2391,6 +2402,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = false,
- };
- 
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2412,6 +2424,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2432,6 +2445,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.RAW_violation_fixup = true,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- };
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
-@@ -2460,6 +2474,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = true,
- 	.updateFC_threshold = true,
-+	.has_aspm_l1 = true,
- };
- 
- static const struct tegra_pcie_soc tegra186_pcie = {
-@@ -2481,6 +2496,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
--- 
-2.7.4
+It just means I need to move that logic up to the concerned middle layers.
+
+I was going to do that to start with, but then I thought I would do it in
+the core to avoid duplicated checks.  I overlooked the genpd case, however.
+
+> The reason is because genpd may not power off the PM domain, even if
+> all devices attached to it are runtime suspended. For example, due to
+> a subdomain holding it powered or because a PM QoS constraints
+> prevents to power off it in runtime. Then to understand whether it
+> shall power off/on the PM domain, during system-wide PM it requires
+> the system sleep callbacks to be invoked.
+> 
+> So, even if the driver can cope with the behavior from
+> DPM_FLAG_SMART_SUSPEND, then what happens when the PM domain (genpd)
+> can not?
+> 
+> Taking this into account, this feels like solution entirely specific
+> to ACPI and PCI. That is fine by me, however then we still have those
+> cross SoC drivers, the i2c-designware driver, which may have its
+> device attached to an ACPI PM domain or perhaps a genpd.
+
+Yes, that should be fine if the logic above goes to the PCI bus type
+and ACPI PM domain.  Then, setting the flag will have no effect on
+genpd at all, but that's OK.
+
+Thanks,
+Rafael
+
