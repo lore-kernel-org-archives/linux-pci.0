@@ -1,56 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
- Brian Norris <computersforpeace@gmail.com>,
- Russell King <rmk+kernel@armlinux.org.uk>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- Florian Fainelli <f.fainelli@gmail.com>
-Subject: Subject: PCI: brcmstb: Add Broadcom Settopbox PCIe support (V2)
-Date: Tue, 24 Oct 2017 14:15:41 -0400
-Message-Id: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
- Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:33356 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751291AbdJXQ2Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Oct 2017 12:28:24 -0400
+Date: Tue, 24 Oct 2017 11:28:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: pciehp: Check for valid PCI_BRIDGE_CONTROL in
+ pciehp_unconfigure_device()
+Message-ID: <20171024162822.GA21840@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171024110914.53612-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171024110914.53612-1-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds support for the Broadcom Settopbox PCIe host
-controller.  It is targeted to Broadcom Settopbox chips running on
-ARM, ARM64, and MIPS platforms.
+On Tue, Oct 24, 2017 at 02:09:14PM +0300, Mika Westerberg wrote:
+> During surprise hot-unplug the device is not there anymore. When that
+> happens we read 0xffffffff from the registers and pciehp_unconfigure_device()
+> might inadvertently think the device is a display device because bridge
+> control register returns 0xff refusing to remove it:
+> 
+>   pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
+>   pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
+>   pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
+> 
+> This causes the hotplug functionality to leave the hierarcy untouched
+> preventing further hotplug operations.
+> 
+> Fix this so that we first compare the read bctl value against 0xffff
+> (device is not present anymore) before determining whether the device is
+> a display or not.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+> Hi Bjorn,
+> 
+> This is an updated version of the patch 8/8 in my "PCI: Improvements for
+> native PCIe hotplug" patch series and applies on top of pci.git/pci/hotplug.
+> 
+> We now just check bctl against 0xffff before preventing removal of the
+> "display" device.
+> 
+> I'm inclined to remove the whole check of "display" device because I don't
+> see any reason for it to be there in the first place. This code is pretty
+> much duplicated from shpchp_pci.c where it might make some sense.
 
-Changes from V1:
+Yeah, I don't understand this at all.  If the device is gone, it's
+gone, and complaining about it being a display device isn't going to
+make it come back.  I don't know the history of that check, but I
+agree that it might make sense to remove it altogether.
 
-* Patch brcmstb-add-memory-API:
-  - fix DT_PROP_DATA_TO_U32 macro.
-  - dropped one EXPORT_SYMBOL, changed the other to GPL.
-* Patch DT-docs-for-Brcmstb-PCIe:
-  - change 'brcm,gen' prop to standard 'max-link-speed'. 
-  - rewrite bindings commit to omit standard prop defs.
-  - change props "supplies", "supply-names" to "xyz-supply"
-* Patch removed: export-symbol-arch_setup_dma_ops [4/9] 
-* Patch brcmstb-add-dma-ranges:
-  - use get_dma_ops(); also use a const dma_map_ops structure.
-  - rewrite map_sg(), unmap_sg(), other calls like syng_sg_*()
-  - omit brcm_mapping_error(), but added code in brcm_dma_supported()
-  - put all of the notifier code in one compilation unit.
+The message (and consequently your changelog) also seem misleading
+because we're removing *dev*, which in this case is a bridge that
+might lead to a display device.  But it's not a display device itself.
 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  drivers/pci/hotplug/pciehp_pci.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+> index 2a1ca020cf5a..5225b12c5a75 100644
+> --- a/drivers/pci/hotplug/pciehp_pci.c
+> +++ b/drivers/pci/hotplug/pciehp_pci.c
+> @@ -79,7 +79,6 @@ int pciehp_configure_device(struct slot *p_slot)
+>  int pciehp_unconfigure_device(struct slot *p_slot)
+>  {
+>  	int rc = 0;
+> -	u8 bctl = 0;
+>  	u8 presence = 0;
+>  	struct pci_dev *dev, *temp;
+>  	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
+> @@ -102,8 +101,10 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+>  					 bus_list) {
+>  		pci_dev_get(dev);
+>  		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
+> -			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
+> -			if (bctl & PCI_BRIDGE_CTL_VGA) {
+> +			u16 bctl = 0;
+> +
+> +			pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &bctl);
+> +			if (bctl != 0xffff && (bctl & PCI_BRIDGE_CTL_VGA)) {
+>  				ctrl_err(ctrl,
+>  					 "Cannot remove display device %s\n",
+>  					 pci_name(dev));
+> -- 
+> 2.14.2
+> 
