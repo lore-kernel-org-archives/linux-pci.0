@@ -1,124 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:7950 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751550AbdJIKlb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Oct 2017 06:41:31 -0400
-Subject: Re: [RFC PATCH] PCI: Fix prefetchable range broken in
- pci_bridge_check_ranges
-To: Yinghai Lu <yinghai@kernel.org>
-References: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
- <20171002041700.GA3834@localhost.localdomain>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <59DB5207.7070309@hisilicon.com>
-Date: Mon, 9 Oct 2017 18:40:07 +0800
+Received: from smtp-out4.electric.net ([192.162.216.194]:53852 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751398AbdJXO6O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 10:58:14 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: "'Petrosyan, Ludwig'" <ludwig.petrosyan@desy.de>,
+        Logan Gunthorpe <logang@deltatee.com>
+CC: Alexander Deucher <Alexander.Deucher@amd.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux-media <Linux-media@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        John Bridgman <John.Bridgman@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        Serguei Sagalovitch <Serguei.Sagalovitch@amd.com>,
+        Paul Blinzer <Paul.Blinzer@amd.com>,
+        "Christian Koenig" <Christian.Koenig@amd.com>,
+        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+        Ben Sander <ben.sander@amd.com>
+Subject: RE: Enabling peer to peer device transactions for PCIe devices
+Date: Tue, 24 Oct 2017 14:58:24 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A19B9@AcuExch.aculab.com>
+References: <MWHPR12MB169484839282E2D56124FA02F7B50@MWHPR12MB1694.namprd12.prod.outlook.com>
+ <7f5e0303-f4ea-781a-8dec-74b30990d54f@desy.de>
+ <be9f2dee-bb37-9e8f-af72-6ee1127ba8d4@deltatee.com>
+ <1381807327.12461494.1508652825239.JavaMail.zimbra@desy.de>
+ <063D6719AE5E284EB5DD2968C1650D6DD00A04EA@AcuExch.aculab.com>
+ <d61b6829-0515-a809-2a43-c41add4b1594@deltatee.com>
+ <1264390131.14701401.1508824699016.JavaMail.zimbra@desy.de>
+In-Reply-To: <1264390131.14701401.1508824699016.JavaMail.zimbra@desy.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20171002041700.GA3834@localhost.localdomain>
-Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/10/2 12:17, Yinghai Lu wrote:
-> On Sat, Sep 23, 2017 at 03:24:42PM +0800, Zhou Wang wrote:
->>                                         -> pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, 0xffffffff)
->>
->> This will change the prefetch range of 00:00.0 in a time slot, so traffic of
->> 01:00.0 or 01:00.1 may be broken.
->>
->> In fact, we can get if one bridge supports 64bit range by the bottom 4bits of
->> prefetchable memory base/limit. Honestly speaking, I don't know why 1f82de10d6b1
->> ("PCI/86: don't assume prefetchable ranges are 64bit") has added the double
->> check code.
-> 
-> some chip even that flags say that 64bit is support from that bits, but its upper 32 bits
-> actually can not be changed.
-> 
->>
->> So Can we remove the double checking of prefetchable range to avoid this problem?
->>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->> ---
->>  drivers/pci/setup-bus.c | 14 --------------
->>  1 file changed, 14 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 958da7d..23010a9 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -778,20 +778,6 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->>  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
->>  		}
->>  	}
->> -
->> -	/* double check if bridge does support 64 bit pref */
->> -	if (b_res[2].flags & IORESOURCE_MEM_64) {
->> -		u32 mem_base_hi, tmp;
->> -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
->> -					 &mem_base_hi);
->> -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
->> -					       0xffffffff);
->> -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
->> -		if (!tmp)
->> -			b_res[2].flags &= ~IORESOURCE_MEM_64;
->> -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
->> -				       mem_base_hi);
->> -	}
->>  }
->>  
->>  /* Helper function for sizing routines: find first available
-> 
-> Maybe we can try this: only touch upper 32bits after we touched low 32bits ?
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 958da7db9033..2ac4d20e5c11 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -744,6 +744,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->  	u32 pmem;
->  	struct pci_dev *bridge = bus->self;
->  	struct resource *b_res;
-> +	int pref_memory_base_touched = 0;
->  
->  	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
->  	b_res[1].flags |= IORESOURCE_MEM;
-> @@ -769,6 +770,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->  					       0xffe0fff0);
->  		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
->  		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
-> +		pref_memory_base_touched = 1;
->  	}
->  	if (pmem) {
->  		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-> @@ -780,7 +782,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->  	}
->  
->  	/* double check if bridge does support 64 bit pref */
-> -	if (b_res[2].flags & IORESOURCE_MEM_64) {
-> +	if (pref_memory_base_touched && b_res[2].flags & IORESOURCE_MEM_64) {
->  		u32 mem_base_hi, tmp;
->  		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
->  					 &mem_base_hi);
->
-
-I think this workaround can solve the problem I mentioned in commit message:
-
-if we have below PCIe topology:
-
--[0000:00]-+-00.0-[01-02]--+-00.0  Device 8086:10fb
-           |               \-00.1  Device 8086:10fb
-           \-08.0-[03]----00.0  Device 8086:0953
-
-When rescan 00:08.0, it will change the prefetch range of 00:00.0 in a time slot,
-so traffic of 01:00.0 or 01:00.1 may be broken.
-
-As when it runs pci_bridge_check_ranges for bus 1, PCI_PREF_MEMORY_BASE will not be
-0, PCI_PREF_BASE_UPPER32 will not be double checked.
-
-Thanks,
-Zhou
-
-> 
-> 
-> 
-> .
-> 
+UGxlYXNlIGRvbid0IHRvcCBwb3N0LCB3cml0ZSBzaG9ydGVyIGxpbmVzLCBhbmQgYWRkIHRoZSBv
+ZGQgYmxhbmsgbGluZS4NCkJpZyBibG9ja3Mgb2YgdGV4dCBhcmUgaGFyZCB0byByZWFkIHF1aWNr
+bHkuDQoNCj4gRnJvbTogUGV0cm9zeWFuLCBMdWR3aWcgW21haWx0bzpsdWR3aWcucGV0cm9zeWFu
+QGRlc3kuZGVdDQo+IFllcyBJIGFncmVlIGl0IGhhcyB0byBiZSBzdGFydGVkIHdpdGggdGhlIHdy
+aXRlIHRyYW5zYWN0aW9uLCBhY2NvcmRpbmcgb2YgUENJZSBzdGFuZGFyZCBhbGwgd3JpdGUNCj4g
+dHJhbnNhY3Rpb24gYXJlIGFkZHJlc3Mgcm91dGVkLCBhbmQgSSBhZ3JlZSB3aXRoIExvZ2FuOg0K
+PiBpZiBpbiB3cml0ZSB0cmFuc2FjdGlvbiBUTFAgdGhlIGVuZHBvaW50IGFkZHJlc3Mgd3JpdHRl
+biBpbiBoZWFkZXIgdGhlIFRMUCBzaG91bGQgbm90IHRvdWNoIENQVSwgdGhlDQo+IFBDSWUgU3dp
+dGNoIGhhcyB0byByb3V0ZSBpdCB0byBlbmRwb2ludC4NCg0KVGhhdCBkZXBlbmRzLCBJSVJDIHRo
+ZXJlIGlzIGEgZmVhdHVyZSBmb3IgUENJZSBzd2l0Y2hlcyB0byBmb3JjZSB0aGVtDQp0byBzZW5k
+IGFsbCB0cmFuc2FjdGlvbnMgdG8gdGhlIHJvb3QgaHViLg0KVGhpcyBpcyB0aGVyZSBzbyB0aGF0
+IHRoZSBob3N0IGNhbiBlbmZvcmNlIHJ1bGVzIHRvIHN0b3AgcDJwIHRyYW5zZmVycy4NCkl0IG1p
+Z2h0IGVuYWJsZWQgb24gdGhlIHN3aXRjaCB5b3UgaGF2ZS4NCg0KPiBUaGUgaWRlYSB3YXM6IGlu
+IE1UQ0Egc3lzdGVtIHRoZXJlIGlzIFBDSWUgU3dpdGNoIG9uIE1DSCAoTVRDQSBjcmF0ZSBIVUIp
+IHRoaXMgc3dpdGNoIGNvbm5lY3RzIENQVSB0bw0KPiBvdGhlciBDcmF0ZSBTbG90cywgc28gb25l
+IHBvcnQgaXMgVXBzdHJlYW0gYW5kIG90aGVycyBhcmUgRG93bnN0cmVhbSAgcG9ydHMsIERNQSBy
+ZWFkIGZyb20gQ1BVIGlzDQo+IHVzdWFsIHdyaXRlIG9uIGVuZHBvaW50IHNpZGUsIFhpbGlueCBE
+TUEgY29yZSBoYXMgdHdvIHJlZ2lzdGVycyBEZXN0aW5hdGlvbiBBZGRyZXNzIGFuZCBTb3VyY2UN
+Cj4gQWRkcmVzcywNCj4gZGV2aWNlIGRyaXZlciB0byBtYWtlIERNQSBoYXMgdG8gc2V0IHVwIHRo
+ZXNlIHJlZ2lzdGVycywNCj4gdXN1YWxseSBkZXZpY2UgZHJpdmVyIHRvIHN0YXJ0IERNQSByZWFk
+IGZyb20gQm9hcmQgc2V0cyBTb3VyY2UgYWRkcmVzcyBhcyBGUEdBIG1lbW9yeSBhZGRyZXNzIGFu
+ZA0KPiBEZXN0aW5hdGlvbiBhZGRyZXNzIGlzIERNQSBwcmVwYXJlZCBzeXN0ZW0gYWRkcmVzcywN
+Cj4gaW4gY2FzZSBvZiB0ZXN0aW5nIHAycCBJIHNldCBEZXN0aW5hdGlvbiBhZGRyZXNzIGFzIHBo
+eXNpY2FsIGFkZHJlc3Mgb2Ygb3RoZXIgZW5kcG9pbnQuDQoNClVubmVjZXNzYXJ5IGRldGFpbC4u
+Lg0KDQo+IE1vcmUgZGV0YWlsZWQ6DQo+IHdlIGhhdmUgc28gY2FsbGVkIHBjaWUgdW5pdmVyc2Fs
+IGRyaXZlcjogdGhlIGlkZWEgYmVoaW5kIGlzDQo+IDEuIGFsbCBwY2llIGNvbmZpZ3VyYXRpb24g
+c3RhZmYsIGZpbmQgZW5hYmxlZCBCQVJzLCBtYXBwaW5nIEJBUnMsIHVzdWFsIHJlYWQvd3JpdGUg
+YW5kIGNvbW1vbiBpb2N0bA0KPiAoZ2V0IHNsb3QgbnVtYmVyLCBnZXQgZHJpdmVyIHZlcnNpb24g
+Li4uKSBpbXBsZW1lbnRlZCBpbiB1bml2ZXJzYWwgZHJpdmVyIGFuZCBFWFBPUlRlZC4NCj4gMi4g
+aWYgc29tZSBzeXN0ZW0gZnVuY3Rpb24gaW4gbmV3IGtlcm5lbCBhcmUgY2hhbmdlZCB3ZSBjaGFu
+Z2UgaXQgb25seSBpbiB1bml2ZXJzYWwgcGFydHMgKGVhc3kNCj4gc3VwcG9ydCBhIGJpZyBudW1i
+ZXIgb2YgZHJpdmVycyApDQo+IHNvIHRoZSB1bml2ZXJzYWwgZHJpdmVyIHNvbWV0aGluZyBsaWtl
+IFBDSWUgRHJpdmVyIEFQSQ0KPiAzLiB0aGUgdW5pdmVyc2FsIGRyaXZlciBwcm92aWRlcyByZWFk
+L3dyaXQgZnVuY3Rpb25zIHNvIHdlIGhhdmUgdGhlIHNhbWUgZGV2aWNlIGFjY2VzcyBBUEkgZm9y
+IGFueQ0KPiBQQ0llIGRldmljZSwgd2UgY291bGQgdXNlIHRoZSBzYW1lIHVzZXIgYXBwbGljYXRp
+b24gd2l0aCBhbnkgUENJZSBkZXZpY2UNCg0KTW9yZSBjcmFwLi4uDQoNCj4gbm93LiBkdXJpbmcg
+QkFScyBmaW5kaW5nIGFuZCBtYXBwaW5nIHVuaXZlcnNhbCBkcml2ZXIga2VlcHMgcGNpZSBlbmRw
+b2ludCBwaHlzaWNhbCBhZGRyZXNzIGluIHNvbWUNCj4gaW50ZXJuYWwgc3RydWN0dXJlcywgYW55
+IHRvcCBkcml2ZXIgbWF5IGdldCBwaHlzaWNhbCBhZGRyZXNzDQo+IG9mIG90aGVyIHBjaWUgZW5k
+cG9pbnQgYnkgc2xvdCBudW1iZXIuDQo+IGluIG1heSBjYXNlIGR1cmluZyBnZXRfcmVzb3JjZSB0
+aGUgcGh5c2ljYWwgYWRkcmVzcyBpcyAweEIyMDAwMDAwLCBJIGNoZWNrIGxzcGNpIC1IMSAtdnZ2
+diAtcyBwc2llDQo+IHN3aXRjaCBwb3J0IGJ1cyBhZGRyZXNzICh0aGUgZW5kcG9pbnQgY29ubmVj
+dGVkIHRvIHRoaXMgcG9ydCwgY2hlY2tlZCBieSBsc3BjaSAtSDEgLXQpIHRoZSBzYW1lDQo+IGFk
+ZHJlc3MgKDB4QjIwMDAwMCkgaXMgdGhlIG1lbW9yeSBiZWhpbmQgYnJpZGdlLA0KDQpPdmVybHkg
+dmVyYm9zZS4uLg0KDQo+IEkgd2FudCB0byBtYWtlIHAycCB3cml0ZXMgdG8gb2Zmc2V0IDB4NDAw
+MDAsIHNvIEkgc2V0IERNQSBkZXN0aW5hdGlvbiBhZGRyZXNzIDB4QjI0MDAwMDANCj4gaXMgc29t
+ZXRoaW5nIHdyb25nPw0KDQpQb3NzaWJseS4NCg0KWW91IGFsbW9zdCBjZXJ0YWlubHkgbmVlZCB0
+aGUgYWRkcmVzcyB0aGF0IGlzIHdyaXR0ZW4gaW50byB0aGUgQkFSIG9mIHRoZQ0KdGFyZ2V0IGVu
+ZHBvaW50Lg0KVGhpcyBjb3VsZCB3ZWxsIGJlIGRpZmZlcmVudCBmcm9tIHRoZSBwaHlzaWNhbCBh
+ZGRyZXNzIHRoYXQgdGhlIGNwdSB1c2VzDQp0byB3cml0ZSB0byB0aGUgZW5kcG9pbnQgKGFzIHdl
+bGwgYXMgdGhlIGNwdSB2aXJ0dWFsIGFkZHJlc3MpLg0KDQpsc3BjaSBsaWVzIFsxXSwgcnVuIGxz
+cGNpIC14ICAob3IgaGV4ZHVtcCBjb25maWcgc3BhY2UgdGhyb3VnaCAvc3lzL2RldmljZXMpDQp0
+byBzZWUgd2hhdCBpcyBhY3R1YWxseSBpbiB0aGUgQkFSLg0KDQpbMV0gVGhlIGFkZHJlc3NlcyBj
+b21lIGZyb20gc29tZXdoZXJlIG90aGVyIHRoYW4gcmVhZGluZyB0aGUgQkFSLg0KSWYgdGhlIGVu
+ZHBvaW50IHJlc2V0cyB0aGUgQkFSIGxzcGNpIHdpbGwgc3RpbGwgcmVwb3J0IHRoZSBvbGQNCmFk
+ZHJlc3Nlcy4NCg0KCURhdmlkDQoNCg==
