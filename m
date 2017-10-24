@@ -1,50 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:17639 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750863AbdJXGqM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 02:46:12 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH V3 0/2] Tegra PCIe end point config space map code refactoring
-Date: Tue, 24 Oct 2017 12:14:47 +0530
-Message-ID: <1508827489-10842-1-git-send-email-vidyas@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:33778 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750908AbdJXToj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Oct 2017 15:44:39 -0400
+Date: Tue, 24 Oct 2017 14:44:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?=
+        <ckoenig.leichtzumerken@gmail.com>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org
+Subject: Re: Resizable PCI BAR support V9
+Message-ID: <20171024194438.GB21840@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20171018135821.3248-1-deathsimple@vodafone.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe host controller in Tegra SoCs has 1GB of aperture available
-for mapping end points config space, IO and BARs. In that, currently
-256MB is being reserved for mapping end points configuration space
-which leaves less memory space available for mapping end points BARs
-on some of the platforms.
-This patch series attempts to map only 4K space from 1GB aperture to
-access end points configuration space.
+On Wed, Oct 18, 2017 at 03:58:16PM +0200, Christian König wrote:
+> Hi everyone,
+> 
+> This is the ninth and hopefully last incarnation of this set of patches. It
+> enables device drivers to resize and most likely also relocate the PCI BAR of
+> devices they manage to allow the CPU to access all of the device local memory
+> at once.
+> 
+> This is very useful for GFX device drivers where the default PCI BAR is only
+> about 256MB in size for compatibility reasons, but the device easily have
+> multiple gigabyte of local memory.
+> 
+> Some changes since the last version:
+> 1. Rebased on drm-next, so should be ready to be merged for 4.15.
+> 2. The fixup of the 64bit root window on AMD Family 15h CPUs/APUs is only
+>    enabled when we compile a kernel supporting that hw.
+> 3. Some minor error handling improvements for the amdgpu side. We now
+>    gracefully abort driver loading in case of a critical error instead of
+>    calling BUG().
+> 
+> Bjorn any more comments or can we finally get this into 4.15? I will remove the
+> version tags from the patches when I send you a pull request if you want this.
+> 
+> I only work on this as a background task, so sorry for the ~3 month delay
+> between each version of the patchset.
 
-Currently, this change can benefit T20 and T186 in saving (i.e. repurposed
-to use for BAR mapping) physical space as well as kernel virtual mapping space,
-it saves only kernel virtual address space in T30, T124, T132 and T210.
+I put these (except for the last) on pci/resource for v4.15.  I'd be
+happy to merge the last as well if you like.  My tree does not include
+drm-next, so there would be a minor conflict when merging upstream.
 
-NOTE: Since T186 PCIe DT entry is not yet present in main line (it is currently
-merged to 'for-4.15/arm64/dt' branch), nothing gets broken with this change for T186.
-For older platforms (T20, T30, T124, T132, T210), this change works fine without any
-DT modifications
-
-Testing Done on T124, T210 & T186:
- Enumeration and basic functionality of immediate devices
- Enumeration of devices behind a PCIe switch
- Complete 4K configuration space access
-
-Vidya Sagar (2):
-  PCI: tegra: refactor config space mapping code
-  ARM64: tegra: limit PCIe config space mapping to 4K for T186
-
- arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +-
- drivers/pci/host/pci-tegra.c             | 125 ++++++++++---------------------
- 2 files changed, 44 insertions(+), 89 deletions(-)
-
--- 
-2.7.4
+Bjorn
