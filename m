@@ -1,71 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 4 Oct 2017 17:36:47 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v2] ACPI/IORT: Fix PCI ACS enablement
-Message-ID: <20171004163647.zmgvhevi3pb4u32o@armageddon.cambridge.arm.com>
-References: <1506965324-5818-1-git-send-email-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0081.outbound.protection.outlook.com ([104.47.36.81]:59091
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932419AbdJXItV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Oct 2017 04:49:21 -0400
+From: Bao Xiaowei <xiaowei.bao@nxp.com>
+To: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <bhelgaas@google.com>, <shawnguo@kernel.org>,
+        <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
+        <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>,
+        <leoyang.li@nxp.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <pbrobinson@gmail.com>, <songxiaowei@hisilicon.com>,
+        <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <Zhiqiang.Hou@nxp.com>,
+        <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
+CC: Bao Xiaowei <xiaowei.bao@nxp.com>
+Subject: [PATCH 3/3] ARMv8: pcie: make the DWC EP driver support for layerscape
+Date: Tue, 24 Oct 2017 16:30:45 +0800
+Message-ID: <20171024083045.31135-4-xiaowei.bao@nxp.com>
+In-Reply-To: <20171024083045.31135-1-xiaowei.bao@nxp.com>
+References: <20171024083045.31135-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <1506965324-5818-1-git-send-email-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, linux-acpi@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>,
- Hanjun Guo <hanjun.guo@linaro.org>, Sudeep Holla <sudeep.holla@arm.com>,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 02, 2017 at 06:28:44PM +0100, Lorenzo Pieralisi wrote:
-> commit f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
-> workarounds") removed kernel code that was allowing to initialize
-> and probe the SMMU devices early (ie earlier than PCI devices, through
-> linker script callback entries) in the boot process because it was not
-> needed any longer in that the SMMU devices/drivers now support deferred
-> probing.
-> 
-> Since the SMMUs probe routines are also in charge of requesting global
-> PCI ACS kernel enablement, commit f6810c15cf97 ("iommu/arm-smmu: Clean
-> up early-probing workarounds") also postponed PCI ACS enablement to
-> SMMUs devices probe time, which is too late given that PCI devices needs
-> to detect if PCI ACS is enabled to init the respective capability
-> through the following call path:
-> 
-> pci_device_add()
->  -> pci_init_capabilities()
->   -> pci_enable_acs()
-> 
-> Add code in the ACPI IORT SMMU platform devices initialization path
-> (that is called before ACPI PCI enumeration) to detect if there
-> exists firmware mappings to map root complexes ids to SMMU ids
-> and if so enable ACS for the system.
-> 
-> Fixes: f6810c15cf97 ("iommu/arm-smmu: Clean up early-probing
-> Signed-workarounds")
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Sudeep Holla <sudeep.holla@arm.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Zhou Wang <wangzhou1@hisilicon.com>
-> Cc: Alex Williamson <alex.williamson@redhat.com>
+Layerscape pcie controllers support RC or EP mode, Add the EP mode
+support in Kconfig, the driver will support both RC and EP mode, and
+the driver is able to judge the pcie controllers work on RC or EP mode.
 
-Queued for 4.14-rc4. Thanks.
+Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
+---
+ drivers/pci/dwc/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 22ec82fcdea2..b5f507795779 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -108,6 +108,7 @@ config PCI_LAYERSCAPE
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+ 	select PCIE_DW_HOST
++	select PCIE_DW_EP
+ 	help
+ 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+ 
 -- 
-Catalin
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.1
