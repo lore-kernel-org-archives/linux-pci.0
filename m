@@ -1,63 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48266 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751423AbdJKRVS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 13:21:18 -0400
-Date: Wed, 11 Oct 2017 12:21:13 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Subject: Re: PCIe error reporting
-Message-ID: <20171011172113.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <063D6719AE5E284EB5DD2968C1650D6DD008D9F2@AcuExch.aculab.com>
- <20171010211035.GY25517@bhelgaas-glaptop.roam.corp.google.com>
- <063D6719AE5E284EB5DD2968C1650D6DD0090E73@AcuExch.aculab.com>
- <063D6719AE5E284EB5DD2968C1650D6DD00911C9@AcuExch.aculab.com>
- <20171011132525.GF25517@bhelgaas-glaptop.roam.corp.google.com>
- <063D6719AE5E284EB5DD2968C1650D6DD009155B@AcuExch.aculab.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD009155B@AcuExch.aculab.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD009F05A@AcuExch.aculab.com>
+References: <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
+ <589c04cb-061b-a453-3188-79324a02388e@arm.com> <20171017081422.GA19475@lst.de>
+ <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
+ <20171018065316.GA11183@lst.de>
+ <CANCKTBv+yiCNsrnx3m+W9wPqC4NdKPZ2p=zLtSa8fX6v1rPcYQ@mail.gmail.com>
+ <20171019091644.GA14983@lst.de>
+ <CANCKTBuaTD29My77QfOeUmtZfLAmmJXUYe6QvBW+uoH2Kb+tAQ@mail.gmail.com>
+ <20171020073730.GA12937@lst.de>
+ <CANCKTBsRRkwNMrxWjtgxbyZqT6NOxPX0NHDbnEO2BMjj8oVtpg@mail.gmail.com>
+ <20171020145752.GA4694@lst.de>
+ <CANCKTBtxp9gSdndKAZ7xGA+VozQsn2PX_-9P8A22_5Matbb7-w@mail.gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD009F05A@AcuExch.aculab.com>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Tue, 24 Oct 2017 14:08:12 -0400
+Message-ID: <CANCKTBu6H6thuK9F_6HBGhStaXSto7fwWv4V5oH8EdWQD0-1kQ@mail.gmail.com>
+Subject: Re: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
+To: David Laight <David.Laight@aculab.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Ralf Baechle <ralf@linux-mips.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 04:00:04PM +0000, David Laight wrote:
-> From: Bjorn Helgaas
-> > Sent: 11 October 2017 14:25
-> ..
-> > The current Linux behavior is based on the spec I cited above, which
-> > says
-> > 
-> >   If any bits in the Control Field are returned cleared (masked to
-> >   zero) by the _OSC control method, the respective feature is
-> >   designated unsupported by the platform and must not be enabled by
-> >   the operating system. Some of these features may be controlled by
-> >   platform firmware prior to operating system boot or during runtime
-> >   for a legacy operating system, while others may be
-> >   disabled/inoperative until native operating system support is
-> >   available.
-> 
-> That is a strange statement.
-> 
-> What an earth have 'legacy operating system' and 'native operating
-> system' got to do with whether the ACPI features can be enabled.
-> How are we supposed to write the os support if the features are
-> disabled until it is available!
+On Mon, Oct 23, 2017 at 5:06 AM, David Laight <David.Laight@aculab.com> wrote:
+> From: Jim Quinlan
+>> Sent: 20 October 2017 16:28
+>> On Fri, Oct 20, 2017 at 10:57 AM, Christoph Hellwig <hch@lst.de> wrote:
+>> > On Fri, Oct 20, 2017 at 10:41:56AM -0400, Jim Quinlan wrote:
+>> >> I am not sure I understand your comment -- the size of the request
+>> >> shouldn't be a factor.  Let's look at your example of the DMA request
+>> >> of 3fffff00 to 4000000f (physical memory).  Lets say it is for 15
+>> >> pages.  If we block out  the last page [0x3ffff000..0x3fffffff] from
+>> >> what is available, there is no 15 page span that can happen across the
+>> >> 0x40000000 boundary.  For SG, there can be no merge that connects a
+>> >> page from one region to another region.  Can you give an example of
+>> >> the scenario you are thinking of?
+>> >
+>> > What prevents a merge from say the regions of
+>> > 0....3fffffff and 40000000....7fffffff?
+>>
+>> Huh? [0x3ffff000...x3ffffff] is not available to be used. Drawing from
+>> the original example, we now have to tell Linux that these are now our
+>> effective memory regions:
+>>
+>>       memc0-a@[        0....3fffefff] <=> pci@[        0....3fffefff]
+>>       memc0-b@[100000000...13fffefff] <=> pci@[ 40000000....7fffefff]
+>>       memc1-a@[ 40000000....7fffefff] <=> pci@[ 80000000....bfffefff]
+>>       memc1-b@[300000000...33fffefff] <=> pci@[ c0000000....ffffefff]
+>>       memc2-a@[ 80000000....bfffefff] <=> pci@[100000000...13fffefff]
+>>       memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
+>>
+>> This leaves a one-page gap between phsyical memory regions which would
+>> normally be contiguous. One cannot have a dma alloc that spans any two
+>> regions.  This is a drastic step, but I don't see an alternative.
+>> Perhaps  I may be missing what you are saying...
+>
+> Isn't this all unnecessary?
+> Both kmalloc() and dma_alloc() are constrained to allocate memory
+> that doesn't cross an address boundary that is larger than the size.
+> So if you allocate 16k it won't cross a 16k physical address boundary.
+>
+>         David
+>
+Hi David,  Christoph was also concerned about this:
 
-I wasn't involved in writing that spec, but my guess is that some
-platforms want to do AER logging themselves, in a consistent way
-regardless of what OS is running or whether that OS has AER support.
-That means there has to be some way to coordinate control of the AER
-registers between the platform (BIOS) and the OS, and _OSC is the ACPI
-way to do that.
+"For the block world take a look at __blk_segment_map_sg which does the merging
+of contiguous pages into a single SG segment.  You'd have to override
+BIOVEC_PHYS_MERGEABLE to prevent this from happening in your supported
+architectures for the block layer."
 
-Linux should be setting OSC_PCI_EXPRESS_AER_CONTROL to request control
-of AER, and apparently on your system the BIOS explicitly cleared that
-bit to tell us "no, you're not allowed to use AER."  If the BIOS
-cleared it unnecessarily, that's really a BIOS problem, not a Linux
-problem.
+Do you consider this a non-issue as well or can this happen and span
+memory regions?
 
-It would be interesting to know what Windows does about AER on that
-platform.  I would expect Windows to respect the platform's wishes as
-expressed by _OSC, so if Windows does AER recovery, there might be a
-problem in the way Linux uses _OSC.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
