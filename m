@@ -1,238 +1,387 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 0/12] PM / sleep: Driver flags for system suspend/resume
-Date: Tue, 17 Oct 2017 17:25:43 +0200
-Message-ID: <17155956.N7VCkzZpky@aspire.rjw.lan>
-In-Reply-To: <CAPDyKFrw6-pC3aBF5DrSRftuKv5v-X518oyy5mBt+hzM3EpHzA@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAPDyKFrw6-pC3aBF5DrSRftuKv5v-X518oyy5mBt+hzM3EpHzA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.138]:47962 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932545AbdJXNNr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2017 09:13:47 -0400
+Message-ID: <59EF3C75.2070107@rock-chips.com>
+Date: Tue, 24 Oct 2017 21:13:25 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Brian Norris <briannorris@chromium.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org, shawn.lin@rock-chips.com,
+        dianders@chromium.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, Tony Lindgren <tony@atomide.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v7 1/3] PCI: Add support for wake irq
+References: <20171019111007.25234-1-jeffy.chen@rock-chips.com> <20171019111007.25234-2-jeffy.chen@rock-chips.com> <20171023230252.GA53058@google.com> <59EEBC3E.4030804@rock-chips.com>
+In-Reply-To: <59EEBC3E.4030804@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 17, 2017 10:36:39 AM CEST Ulf Hansson wrote:
-> On 16 October 2017 at 03:12, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > Hi All,
-> >
-> > Well, this took more time than expected, as I tried to cover everything I had
-> > in mind regarding PM flags for drivers.
-> >
-> > This work was triggered by attempts to fix and optimize PM in the
-> > i2c-designware-platdev driver that ended up with adding a couple of
-> > flags to the driver's internal data structures for the tracking of
-> > device state (https://marc.info/?l=linux-acpi&m=150629646805636&w=2).
-> > That approach is sort of suboptimal, though, because other drivers will
-> > probably want to do similar things and if all of them need to use internal
-> > flags for that, quite a bit of code duplication may ensue at least.
-> >
-> > That can be avoided in a couple of ways and one of them is to provide a means
-> > for drivers to tell the core what to do and to make the core take care of it
-> > if told to do so.  Hence, the idea to use driver flags for system-wide PM
-> > that was briefly discussed during the LPC in LA last month.
-> >
-> > One of the flags considered at that time was to possibly cause the core
-> > to reuse the runtime PM callback path of a device for system suspend/resume.
-> > Admittedly, that idea didn't look too bad to me until I had started to try to
-> > implement it and I got to the PCI bus type's hibernation callbacks.  Then, I
-> > moved the patch I was working on to /dev/null right away.  I mean it.
-> >
-> > No, this is not going to happen.  No way.
-> >
-> > Moreover, that experience made me realize that the whole *idea* of using the
-> > runtime PM callback path for system-wide PM was actually totally bogus (sorry
-> > Ulf).
-> >
-> > The whole point of having different callbacks pointers for different types of
-> > device transitions is because it may be necessary to do different things in
-> > those callbacks in general.  Now, if you consider runtime PM and system
-> > suspend/resume *only* and from a driver perspective, then yes, in some cases
-> > the same pair of callback routines may be used for all suspend-like and
-> > resume-like transitions of the device, but if you add hibernation to the mix,
-> > then it is not so clear any more unless the callbacks don't actually do any
-> > power management at all, but simply quiesce the device's activity and then
-> > activate it again.  Namely, changing power states of devices during the
-> > hibernation's "freeze" and "thaw" transitions rarely makes sense at all and
-> > the "restore" transition needs to be able to cope with uninitialized devices
-> > (in fact, it should be prepared to cope with devices in *any* state), so
-> > runtime PM is hardly suitable for them.  Still, if a *driver* choses to not
-> > do any real PM in its PM callbacks and leaves that to a middle layer (quite
-> > a few drivers do that), then it possibly can use one pair of callbacks in all
-> > cases and be happy, but middle layers pretty much have to use different
-> > callback routines for different transitions.
-> >
-> > If you are a middle layer, your role is basically to do PM for a certain
-> > group of devices.  Thus you cannot really do the same in ->suspend or
-> > ->suspend_early and in ->runtime_suspend (because the former generally need to
-> > take device_may_wakeup() into account and the latter doesn't) and you shouldn't
-> > really do the same in ->suspend and ->freeze (becuase the latter shouldn't
-> > change the device's power state) and so on.  To put it bluntly, trying
-> > to use the ->runtime_suspend callback of a middle layer for anything other
-> > than runtime suspend is complete and utter nonsense.  At the same time, the
-> > ->runtime_resume callback of a middle layer may be reused to some extent,
-> > but even that doesn't cover the "thaw" transitions during hibernation.
-> >
-> > What can work (and this is the only strategy that can work AFAICS) is to
-> > point different callback pointers *in* *a* *driver* to the same routine
-> > if the driver wants to reuse that code.  That actually will work for PCI
-> > and USB drivers today, at least most of the time, but unfortunately there
-> > are problems with it for, say, platform devices.
-> >
-> > The first problem is the requirement to track the status of the device
-> > (suspended vs not suspended) in the callbacks, because the system-wide PM
-> > code in the PM core doesn't do that.  The runtime PM framework does it, so
-> > this means adding some extra code which isn't necessary for runtime PM to
-> > the callback routines and that is not particularly nice.
-> >
-> > The second problem is that, if the driver wants to do anything in its
-> > ->suspend callback, it generally has to prevent runtime suspend of the
-> > device from taking place in parallel with that, which is quite cumbersome.
-> > Usually, that is taken care of by resuming the device from runtime suspend
-> > upfront, but generally doing that is wasteful (there may be no real need to
-> > resume the device except for the fact that the code is designed this way).
-> >
-> > On top of the above, there are optimizations to be made, like leaving certain
-> > devices in suspend after system resume to avoid wasting time on waiting for
-> > them to resume before user space can run again and similar.
-> >
-> > This patch series focuses on addressing those problems so as to make it
-> > easier to reuse callback routines by pointing different callback pointers
-> > to them in device drivers.  The flags introduced here are to instruct the
-> > PM core and middle layers (whatever they are) on how the driver wants the
-> > device to be handled and then the driver has to provide callbacks to match
-> > these instructions and the rest should be taken care of by the code above it.
-> >
-> > The flags are introduced one by one to avoid making too many changes in
-> > one go and to allow things to be explained better (hopefully).  They mostly
-> > are mutually independent with some clearly documented exceptions.
-> >
-> > The first three patches in the series are about an issue with the
-> > direct-complete optimization introduced some time ago in which some middle
-> > layers decide on whether or not to do the optimization without asking the
-> > drivers.  And, as it turns out, in some cases the drivers actually know
-> > better, so the new flags introduced by these patches are here for these
-> > drivers (and the DPM_FLAG_NEVER_SKIP one is really to avoid having to define
-> > ->prepare callbacks always returning zero).
-> >
-> > The really interesting things start to happen in patches [4-9/12] which make it
-> > possible to avoid resuming devices from runtime suspend upfront during system
-> > suspend at least in some cases (and when direct-complete is not applied to the
-> > devices in question), but please refer to the changelogs for details.
-> >
-> > The i2d-designware-platdev driver is used as the primary example in the series
-> > and the patches modifying it are based on some previous changes currently in
-> > linux-next AFAICS (the same applies to the intel-lpss driver), but these
-> > patches can wait until everything is properly merged.  They are included here
-> > mostly as illustration.
-> >
-> > Overall, the series is based on the linux-next branch of the linux-pm.git tree
-> > with some extra patches on top of it and all of the names of new entities
-> > introduced in it are negotiable.
-> >
-> > Thanks,
-> > Rafael
-> >
-> 
-> I am not sure I fully understand the goal you have with this series.
-> Can we please try to get that clear before I continue the review.
+Hi Brian,
 
-Quoting from the above:
+checking the pci-acpi code, it has:
+1/ pci_acpi_setup() and pci_acpi_cleanup() to setup/cleanup the 
+wakeup(and other stuff) for pci devices
 
-"This patch series focuses on addressing those problems so as to make it
-easier to reuse callback routines by pointing different callback pointers
-to them in device drivers.  The flags introduced here are to instruct the
-PM core and middle layers (whatever they are) on how the driver wants the
-device to be handled and then the driver has to provide callbacks to match
-these instructions and the rest should be taken care of by the code above it."
+we may need it too(for per-device wake) to parse wake irq and init 
+wakeup(false) and maybe setup dedicated wakeirq.
 
-I'm not sure what I can explain beyond that. :-)
+2/ acpi_pci_wakeup(), which would do:
+find a parent or root bus or pci dev itself, which can do wakeup, and 
+update it's wakeup ability(with a enable_count).
 
-And the i2c-designware-platdrv and intel-lpss patches show the direction
-I would like to take with that going forward: use the flags to reduce code
-duplication in drivers and between drivers.
+we may need to do something like that, but the can_wakeup() would be 
+check if wake irq avaliable, and set_device/bridge_wakeup() would be 
+setup/clear dedicated wakeirq, or just call device_set_wakeup_enable()
 
-> Now, re-using runtime PM callbacks for system sleep, is already
-> happening. We have > 60 users (git grep "pm_runtime_force_suspend")
 
-60 is a small number relative to the total number of device drivers in
-the tree.  In particular, that scheme is totally unsuitable for PCI drivers
-and how many of them there are?  Surely more than 60.
 
-> deploying this and from a middle layer point of view, all the trivial
-> cases supports this.
+so maybe we can:
+1/ add a setup_root_bus() platform ops callback to parse/setup root 
+bus's wakeirq in pci_register_host_bridge(),and clean it in 
+pci_stop_bus_device()
 
-These functions are wrong, however, because they attempt to reuse the
-whole callback *path* instead of just reusing driver callbacks.  The
-*only* reason why it all "works" is because there are no middle layer
-callbacks involved in that now.
+2/ add a device_setup() and device_cleanup() callbacks to setup/clean 
+pci device's wake irq, and maybe call it in pci_device_probe() or 
+pci_setup_device()?
 
-If you changed them to reuse driver callbacks only today, nothing would break
-AFAICS.
+3/ add a can_wakeup() and set_device_wakeup() and set_bridge_wakeup() 
+callbacks, and move acpi_pci_wakeup() and acpi_pci_propagate_wakeup()'s 
+code and the enable_count code into common platform_pci_set_wakeup().
 
-> Like the spi bus, i2c bus, amba bus, platform
-> bus, genpd, etc. There are no changes needed to continue to support
-> this option, if you see what I mean.
 
-For the time being, nothing changes in that respect, but eventually I'd
-prefer the pm_runtime_force_* things to go away, frankly.
+does this make sense?
 
-> So, when you say that re-using runtime PM callbacks for system-wide PM
-> isn't going to happen, can you please elaborate what you mean?
 
-I didn't mean "reusing runtime PM callbacks for system-wide PM" overall, but
-reusing *middle-layer* runtime PM callbacks for system-wide PM.  That is the
-bogus part.
-
-Quoting again:
-
-"If you are a middle layer, your role is basically to do PM for a certain
-group of devices.  Thus you cannot really do the same in ->suspend or
-->suspend_early and in ->runtime_suspend (because the former generally need to
-take device_may_wakeup() into account and the latter doesn't) and you shouldn't
-really do the same in ->suspend and ->freeze (becuase the latter shouldn't
-change the device's power state) and so on."
-
-I have said for multiple times that re-using *driver* callbacks actually makes
-sense and the series is for doing that easier in general among other things.
-
-> I assume you mean that the PM core won't be involved to support this,
-> but is that it?
-> 
-> Do you also mean that *all* users of pm_runtime_force_suspend|resume()
-> must convert to this new thing, using "driver PM flags", so in the end
-> you want to remove pm_runtime_force_suspend|resume()?
->  - Then if so, you must of course consider all cases for how
-> pm_runtime_force_suspend|resume() are being deployed currently, else
-> existing users can't convert to the "driver PM flags" thing. Have you
-> done that in this series?
-
-Let me turn this around.
-
-The majority of cases in which pm_runtime_force_* are used *should* be
-addressable using the flags introduced here.  Some case in which
-pm_runtime_force_* cannot be used should be addressable by these flags
-as well.
-
-There may be some cases in which pm_runtime_force_* are used that may
-require something more, but I'm not going to worry about that right now.
-
-I'll take care of that when I'll be removing pm_runtime_force_*, which I'm
-not doing here.
-
-Thanks,
-Rafael
-
+On 10/24/2017 12:06 PM, jeffy wrote:
+> Hi Brian,
+>
+> On 10/24/2017 07:02 AM, Brian Norris wrote:
+>> + PM folks
+>>
+>> Hi Jeffy,
+>>
+>> It's probably good if you send the whole thing to linux-pm@ in the
+>> future, if you're really trying to implement generic PCI/PM for device
+>> tree systems.
+> ok
+>>
+>> On Thu, Oct 19, 2017 at 07:10:05PM +0800, Jeffy Chen wrote:
+>>> Add support for PCIE_WAKE pin.
+>>
+>> This is kind of an important change, so it feels like you should
+>> document it a little more thoroughly than this. Particularly, I have a
+>> few questions below, and it seems like some of these questions should be
+>> acknowledged up front. e.g., why does this look so different than the
+>> ACPI hooks?
+> sure, will do in next version.
+>>
+>>>
+>>> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>>> ---
+>>>
+>>> Changes in v7:
+>>> Move PCIE_WAKE handling into pci core.
+>>>
+>>> Changes in v6:
+>>> Fix device_init_wake error handling, and add some comments.
+>>>
+>>> Changes in v5:
+>>> Rebase
+>>>
+>>> Changes in v3:
+>>> Fix error handling
+>>>
+>>> Changes in v2:
+>>> Use dev_pm_set_dedicated_wake_irq
+>>>          -- Suggested by Brian Norris <briannorris@chromium.com>
+>>>
+>>>   drivers/pci/pci.c    | 34 ++++++++++++++++++++++++++++++++--
+>>>   drivers/pci/probe.c  | 32 ++++++++++++++++++++++++++++----
+>>>   drivers/pci/remove.c |  9 +++++++++
+>>>   3 files changed, 69 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index f0d68066c726..49080a10bdf0 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -603,10 +603,40 @@ static inline pci_power_t
+>>> platform_pci_choose_state(struct pci_dev *dev)
+>>>               pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
+>>>   }
+>>>
+>>> +static int pci_dev_check_wakeup(struct pci_dev *dev, void *data)
+>>> +{
+>>> +    bool *wakeup = data;
+>>> +
+>>> +    if (device_may_wakeup(&dev->dev))
+>>> +        *wakeup = true;
+>>> +
+>>> +    return *wakeup;
+>>> +}
+>>> +
+>>>   static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool
+>>> enable)
+>>>   {
+>>> -    return pci_platform_pm ?
+>>> -            pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
+>>> +    struct pci_dev *parent = dev;
+>>> +    struct pci_bus *bus;
+>>> +    bool wakeup = false;
+>>
+>> It feels like you're implementing a set of pci_platform_pm_ops, except
+>> you're not actually implementing them. It almost seems like we should
+>> have a drivers/pci/pci-of.c to do this. But that brings up a few
+>> questions....
+> i saw the drivers might call set_wakeup() in suspend/resume/shutdown to
+> configure the wakeup ability, maybe we can call
+> device_set_wakeup_enable() here as a common part of set_wakeup()?
+>
+> static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool
+> enable) {
+>      device_set_wakeup_enable()
+> ...
+>      return pci_platform_pm ? pci_platform_pm->set_wakeup(dev, enable) :
+> -ENODEV;
+>
+>>
+>>> +
+>>> +    if (pci_platform_pm)
+>>
+>> So, if somebody already registered ops, then you won't follow the "OF"
+>> route? That means this all breaks as soon as a kernel has both
+>> CONFIG_ACPI and CONFIG_OF enabled. This is possible on at least ARM64,
+>> which 'select's OF and may also be built/run with CONFIG_ACPI.
+>>
+>> And that conflict is the same if we try to register pci_platform_pm_ops
+>> for OF systems -- it'll be a race over who sets them up first (or
+>> rather, last).
+>>
+>> Also, what happens on !ACPI && !OF? Or if the device tree did not
+>> contain a "wakeup" definition? You're now implementing a default path
+>> that doesn't make much sense IMO; you may claim wakeup capability
+>> without actually having set it up somewhere.
+> maybe we can use device_set_wakeup_enable(), which will check the setup
+> before setting?
+>>
+>> I think you could use some more comments, and (again) a real commit
+>> message.
+> ok, will do.
+>>
+>>> +        return pci_platform_pm->set_wakeup(dev, enable);
+>>> +
+>>> +    device_set_wakeup_capable(&dev->dev, enable);
+>>
+>> Why are you setting that here? This function should just be telling the
+>> lower layers to enable the physical WAKE# ability. In our case, it just
+>> means configuring the WAKE# interrupt for wakeup -- or, since you've
+>> used dev_pm_set_dedicated_wake_irq() which handles most of this
+>> automatically...do you need this at all? It seems like you should
+>> *either* implement these callbacks to manually manage the wakeup IRQ or
+>> else use the dedicated wakeirq infrastructure -- not both.
+>>
+>> And even if you need this, I don't think you need to do this many times;
+>> you should only need to set up the capabilities once, when you first set
+>> up the device.
+>>
+>> And BTW, the description for the set_wakeup() callback says:
+>>
+>>   * @set_wakeup: enables/disables wakeup capability for the device
+>>
+>> I *don't* think that means "capability" as in the device framework's
+>> view of "wakeup capable"; I think it means capability as in the physical
+>> ability (a la, enable_irq_wake() or similar).
+> i was thinking maybe we should disable the wakeup if all children
+> request set_wakeup(false)?
+>
+> and it seems like the dedicated wakeirq can be disabled by:
+> 1/ dev_pm_clear_wake_irq(), then we may need to store the irq somewhere
+> to set it up again in the future?
+>
+> 2/ let device_may_wakeup return false:
+> void dev_pm_arm_wake_irq(struct wake_irq *wirq)
+> {
+>          if (!wirq)
+>                  return;
+>
+>          if (device_may_wakeup(wirq->dev)) {
+>                  if (wirq->status & WAKE_IRQ_DEDICATED_ALLOCATED)
+>                          enable_irq(wirq->irq);
+>
+>                  enable_irq_wake(wirq->irq);
+>          }
+>
+>>
+>>> +
+>>> +    while ((parent = pci_upstream_bridge(parent)))
+>>> +        bus = parent->bus;
+>>> +
+>>> +    if (!bus || !pci_is_root_bus(bus) || !bus->bridge->parent)
+>>> +        return -ENODEV;
+>>> +
+>>> +    pci_walk_bus(bus, pci_dev_check_wakeup, &wakeup);
+>>> +    device_set_wakeup_capable(bus->bridge->parent, wakeup);
+>>
+>> What happens to any intermediate buses? You haven't marked them as
+>> wakeup-capable. Should you?
+>>
+>> And the more fundamental question here is: is this a per-device
+>> configuration or a per-root-port configuration? The APIs here are
+>> modeled after ACPI, where I guess this is a per-device thing. The PCIe
+>> spec doesn't exactly specify how many WAKE# pins you need, though it
+>> seems to say
+>>
+>> (a) it's all-or-nothing (if one device uses it, all wakeup-capable EPs
+>>      should be wired up to it)
+>> (b) it *can* be done as a single input to the system controller, since
+>>      it's an open drain signal
+>> (c) ...but I also see now in the PCIe Card Electromechanical
+>>      specification:
+>>
+>>      "WAKE# may be bused to multiple PCI Express add-in card connectors,
+>>      forming a single input connection at the PM controller, or
+>>      individual connectors can have individual connections to the PM
+>>      controller."
+>>
+>> So I think you're kind of going along the lines of (b) (as I suggested
+>> to you previously), and that matches the current hardware (we only have
+>> a single WAKE#) and proposed DT binding. But should this be set up in a
+>> way that suits (c) too? It's hard to tell exactly what ACPI-based
+>> systems do, since they have this abstracted behind ACPI interfaces that
+>> seem like they *could* support per-device or per-bridge type of hookups.
+> maybe we can try to setup wake irq for each pci devices which have it in
+> the dts, then in the set_wakeup(), try to find the parents(or itself)
+> who has wake irq, and enable/disable them(maybe also need a refcount)?
+>>
+>> Bjorn, any thoughts? This seems like a halfway attempt in between two
+>> different designs, and I'm not really sure which one makes more sense.
+>>
+>> Brian
+>>
+>>> +
+>>> +    dev_dbg(bus->bridge->parent,
+>>> +        "Wakeup %s\n", wakeup ? "enabled" : "disabled");
+>>> +
+>>> +    return 0;
+>>>   }
+>>>
+>>>   static inline bool platform_pci_need_resume(struct pci_dev *dev)
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index cdc2f83c11c5..fd43ca832665 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -7,6 +7,7 @@
+>>>   #include <linux/init.h>
+>>>   #include <linux/pci.h>
+>>>   #include <linux/of_device.h>
+>>> +#include <linux/of_irq.h>
+>>>   #include <linux/of_pci.h>
+>>>   #include <linux/pci_hotplug.h>
+>>>   #include <linux/slab.h>
+>>> @@ -17,6 +18,7 @@
+>>>   #include <linux/acpi.h>
+>>>   #include <linux/irqdomain.h>
+>>>   #include <linux/pm_runtime.h>
+>>> +#include <linux/pm_wakeirq.h>
+>>>   #include "pci.h"
+>>>
+>>>   #define CARDBUS_LATENCY_TIMER    176    /* secondary latency timer */
+>>> @@ -756,11 +758,28 @@ static int pci_register_host_bridge(struct
+>>> pci_host_bridge *bridge)
+>>>       struct resource *res;
+>>>       char addr[64], *fmt;
+>>>       const char *name;
+>>> -    int err;
+>>> +    int err, irq;
+>>> +
+>>> +    if (IS_ENABLED(CONFIG_OF) && parent && parent->of_node) {
+>>> +        irq = of_irq_get_byname(parent->of_node, "wakeup");
+>>> +        if (irq == -EPROBE_DEFER)
+>>> +            return irq;
+>>> +        if (irq > 0) {
+>>> +            device_init_wakeup(parent, true);
+>>> +            err = dev_pm_set_dedicated_wake_irq(parent, irq);
+>>> +            if (err) {
+>>> +                dev_err(parent, "Failed to setup wakeup IRQ\n");
+>>> +                goto deinit_wakeup;
+>>> +            }
+>>> +            dev_info(parent, "Wakeup enabled with IRQ %d\n", irq);
+>>> +        }
+>>> +    }
+>>>
+>>>       bus = pci_alloc_bus(NULL);
+>>> -    if (!bus)
+>>> -        return -ENOMEM;
+>>> +    if (!bus) {
+>>> +        err = -ENOMEM;
+>>> +        goto clear_wake_irq;
+>>> +    }
+>>>
+>>>       bridge->bus = bus;
+>>>
+>>> @@ -856,9 +875,14 @@ static int pci_register_host_bridge(struct
+>>> pci_host_bridge *bridge)
+>>>   unregister:
+>>>       put_device(&bridge->dev);
+>>>       device_unregister(&bridge->dev);
+>>> -
+>>>   free:
+>>>       kfree(bus);
+>>> +clear_wake_irq:
+>>> +    if (parent)
+>>> +        dev_pm_clear_wake_irq(parent);
+>>> +deinit_wakeup:
+>>> +    if (parent)
+>>> +        device_init_wakeup(parent, false);
+>>>       return err;
+>>>   }
+>>>
+>>> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+>>> index 73a03d382590..cb7a326429e1 100644
+>>> --- a/drivers/pci/remove.c
+>>> +++ b/drivers/pci/remove.c
+>>> @@ -1,6 +1,7 @@
+>>>   #include <linux/pci.h>
+>>>   #include <linux/module.h>
+>>>   #include <linux/pci-aspm.h>
+>>> +#include <linux/pm_wakeirq.h>
+>>>   #include "pci.h"
+>>>
+>>>   static void pci_free_resources(struct pci_dev *dev)
+>>> @@ -131,17 +132,25 @@ void pci_stop_root_bus(struct pci_bus *bus)
+>>>   {
+>>>       struct pci_dev *child, *tmp;
+>>>       struct pci_host_bridge *host_bridge;
+>>> +    struct device *parent;
+>>>
+>>>       if (!pci_is_root_bus(bus))
+>>>           return;
+>>>
+>>>       host_bridge = to_pci_host_bridge(bus->bridge);
+>>> +    parent = host_bridge->dev.parent;
+>>> +
+>>>       list_for_each_entry_safe_reverse(child, tmp,
+>>>                        &bus->devices, bus_list)
+>>>           pci_stop_bus_device(child);
+>>>
+>>>       /* stop the host bridge */
+>>>       device_release_driver(&host_bridge->dev);
+>>> +
+>>> +    if (parent) {
+>>> +        dev_pm_clear_wake_irq(parent);
+>>> +        device_init_wakeup(parent, false);
+>>> +    }
+>>>   }
+>>>   EXPORT_SYMBOL_GPL(pci_stop_root_bus);
+>>>
+>>> --
+>>> 2.11.0
+>>>
+>>>
+>>
+>>
+>>
+>
