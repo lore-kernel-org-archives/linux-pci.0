@@ -1,79 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36648 "EHLO mail.kernel.org"
+Received: from mga06.intel.com ([134.134.136.31]:40210 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751935AbdJPW0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Oct 2017 18:26:35 -0400
-Date: Mon, 16 Oct 2017 17:26:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/10] PCI: designware-ep: set_msi should only set MMC
- bits
-Message-ID: <20171016222632.GL25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-3-niklas.cassel@axis.com>
+        id S1751407AbdJXW3C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Oct 2017 18:29:02 -0400
+From: "Wang, Liang-min" <liang-min.wang@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>
+Subject: RE: [PATCH] Enable SR-IOV instantiation through /sys file
+Date: Tue, 24 Oct 2017 22:29:00 +0000
+Message-ID: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E7F@FMSMSX110.amr.corp.intel.com>
+References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
+        <20171024234351.0af0ff4a@t450s.home>
+        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
+ <20171025000654.7621b84e@t450s.home>
+In-Reply-To: <20171025000654.7621b84e@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171013160914.3220-3-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Would you mind capitalizing the first letter of the changelog summary,
-i.e., to follow the convention of "git log --oneline
-drivers/pci/dwc/pcie-designware-ep.c"?  I usually fix that up
-manually, but it saves me time if you do it.
 
-On Fri, Oct 13, 2017 at 06:09:05PM +0200, Niklas Cassel wrote:
-> Previously, set_msi wrote all bits in the Message Control
-> register, thus overwriting the 64 bit address capable bit.
-> By clearing the 64 bit address capable bit, we break MSI
-> on systems where the RC has set a 64 bit MSI address.
 
-s/set_msi/dw_pcie_ep_set_msi()/ to be specific.
-
-I think we overwrote PCI_MSI_FLAGS_64BIT (and PCI_MSI_FLAGS_ENABLE).
-
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
->  drivers/pci/dwc/pcie-designware.h    | 1 +
->  2 files changed, 4 insertions(+), 1 deletion(-)
+> -----Original Message-----
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Tuesday, October 24, 2017 6:07 PM
+> To: Wang, Liang-min <liang-min.wang@intel.com>
+> Cc: Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>; kvm@vger.kernel.org;
+> linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> bhelgaas@google.com; Duyck, Alexander H <alexander.h.duyck@intel.com>
+> Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
 > 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index d53d5f168363..c92ab87fd660 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -220,7 +220,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->  
-> -	val = (encode_int << MSI_CAP_MMC_SHIFT);
-> +	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-> +	val &= ~MSI_CAP_MMC_MASK;
-> +	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
->  	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
->  
->  	return 0;
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index 547352a317f8..36183906e1d2 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -101,6 +101,7 @@
->  
->  #define MSI_MESSAGE_CONTROL		0x52
->  #define MSI_CAP_MMC_SHIFT		1
-> +#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
->  #define MSI_CAP_MME_SHIFT		4
->  #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
->  #define MSI_MESSAGE_ADDR_L32		0x54
+> On Tue, 24 Oct 2017 21:49:15 +0000
+> "Wang, Liang-min" <liang-min.wang@intel.com> wrote:
+> 
+> > Just like any PCIe devices that supports SR-IOV. There are restrictions set for
+> VF. Also, there is a concept of trust VF now available for PF to manage certain
+> features that only selected VF could exercise. Are you saying all the devices
+> supporting SR-IOV all have security issue?
+> 
+> Here's a simple example, most SR-IOV capable NICs, including those from
+> Intel, require the PF interface to be up in order to route traffic from
+> the VF.  If the user controls the PF interface and VFs are used
+> elsewhere in the host, the PF driver in userspace can induce a denial
+> of service on the VFs.  That doesn't even take into account that VFs
+> might be in separate IOMMU groups from the PF and therefore not
+> isolated from the host like the PF and that the PF driver can
+> potentially manipulate the VF, possibly performing DMA on behalf of the
+> PF.  VFs are only considered secure today because the PF is managed by
+> a driver in the host kernel.  Allowing simple enablement of VFs for a
+> user owned PF seems inherently insecure to me.  Thanks,
+> 
+> Alex
 
-It looks like these are really other names for PCI_MSI_FLAGS_QMASK and
-PCI_MSI_FLAGS_QSIZE.  I wish the DW code used those to make the
-connection more obvious.
+So, I assume over PF+SR-IOV usage model, you would agree that PF is trusted, and not VF. So, the "potential" insecure issue occurs on both native device kernel driver and vfio-pci. The interface that is used to create SR-IOV is also considered trusted, either it's a script run by a network manager or manually done by network manager. So, it's up to the trusted network manager to give privileges to each individual VF according to respective policy. BTW, there is a separate effort on a similar support (https://lkml.org/lkml/2017/9/27/348). Do you have the same concern for uio_pci_generic?
 
-But I think this patch is correct as-is and that would be a different
-patch.
+Liang-Min
