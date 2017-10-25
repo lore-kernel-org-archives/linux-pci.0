@@ -1,62 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:53612 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753432AbdJPWHE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 18:07:04 -0400
-Date: Tue, 17 Oct 2017 00:06:56 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Dexuan Cui <decui@microsoft.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>
-Subject: Re: [PATCH] PCI: hv: fix "spurious APIC interrupt" due to new vector
- reservation mode
-In-Reply-To: <KL1P15301MB0006E6E2D1AF8F6E27686DD0BF490@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
-Message-ID: <alpine.DEB.2.20.1710170004480.2037@nanos>
-References: <KL1P15301MB0006E6E2D1AF8F6E27686DD0BF490@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/8] SOC: brcmstb: add memory API
+To: Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon
+ <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ Florian Fainelli <f.fainelli@gmail.com>
+References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
+ <1508868949-16652-2-git-send-email-jim2101024@gmail.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <a83617d0-8506-7fe4-2870-d9dbd9ffdb3f@gmail.com>
+Date: Tue, 24 Oct 2017 17:23:24 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1508868949-16652-2-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+ bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 14 Oct 2017, Dexuan Cui wrote:
-> Last month the vector management code was reworked, and as a result of the
-> changes, e.g. commit 22d0b12f3560 ("genirq/irqdomain: Add force
-> reactivation flag to irq domains"), commit 4900be83602b ("x86/vector/msi:
-> Switch to global reservation mode") etc, now we must add this new flag
-> MSI_FLAG_MUST_REACTIVATE when calling pci_msi_create_irq_domain() on x86,
-> otherwise Hyper-V PCIe pass-through can't work, and we get:
-> "spurious APIC interrupt through vector ff on CPU#0, should never happen",
-> this is because no valid MSI/MSI-X vector is allocated.
-> 
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: Haiyang Zhang <haiyangz@microsoft.com>
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> ---
-> 
-> Currently the "reservation mode" patchset has not been in Linus's tree yet, so
-> today's mainline hasn't shown the issue, but today's linux-next has shown the
-> issue (PCIe pass-through on Hyper-V can't work).
-> 
-> I think any caller of pci_msi_create_irq_domain() that runs on x86 needs to
-> be updated, but besides pci-hyper I'm not sure which callers run on x86.
+Hi Jim,
 
-I'm sure I thought about adding something to pci_msi_create_irq_domain() in
-the first place, but then forgot about it again. I'll have a look tomorrow
-morning.
+On 10/24/2017 11:15 AM, Jim Quinlan wrote:
+> +#elif defined(CONFIG_MIPS)
+> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
+> +{
+> +	/* The logic here is fairly simple and hardcoded: if pa <= 0x5000_0000,
+> +	 * then this is MEMC0, else MEMC1.
+> +	 *
+> +	 * For systems with 2GB on MEMC0, MEMC1 starts at 9000_0000, with 1GB
+> +	 * on MEMC0, MEMC1 starts at 6000_0000.
+> +	 */
+> +	if (pa >= 0x50000000ULL)
+> +		return 1;
+> +	else
+> +		return 0;
+> +}
+> +#endif
 
-Thanks,
+We may be missing an EXPORT_SYMBOL_GPL(brcmstb_memory_phys_to_addr_memc)
+here?
 
-	tglx
+Thanks!
+-- 
+Florian
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
