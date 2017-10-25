@@ -1,203 +1,352 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 5 Oct 2017 16:07:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Tony Nguyen <anthony.l.nguyen@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        intel-wired-lan <intel-wired-lan@lists.osuosl.org>,
-        Netdev <netdev@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [Intel-wired-lan] [PATCH] PCI: Check/Set ARI capability before
- setting numVFs
-Message-ID: <20171005195959.GW25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171004155258.35634-1-anthony.l.nguyen@intel.com>
- <20171004230114.GO25517@bhelgaas-glaptop.roam.corp.google.com>
- <CAKgT0UfL6sASMFfUbN7qkJxAMEU9BwJgMJeFmHRZsk1fhVYzZQ@mail.gmail.com>
+Date: Wed, 25 Oct 2017 11:43:22 +0300 (EEST)
+From: Meelis Roos <mroos@ut.ee>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+cc: linux-alpha@vger.kernel.org,
+        Linux Kernel list <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: alpha boot hang - 4.14-rc* regression
+In-Reply-To: <alpine.LRH.2.21.1710251109150.7098@math.ut.ee>
+Message-ID: <alpine.LRH.2.21.1710251129520.7098@math.ut.ee>
+References: <alpine.LRH.2.21.1710251043170.7098@math.ut.ee> <alpine.LRH.2.21.1710251109150.7098@math.ut.ee>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0UfL6sASMFfUbN7qkJxAMEU9BwJgMJeFmHRZsk1fhVYzZQ@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 04, 2017 at 04:29:14PM -0700, Alexander Duyck wrote:
-> On Wed, Oct 4, 2017 at 4:01 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Oct 04, 2017 at 08:52:58AM -0700, Tony Nguyen wrote:
-> >> This fixes a bug that can occur if an AER error is encountered while SRIOV
-> >> devices are present.
-> >>
-> >> This issue was seen by doing the following. Inject an AER error to a device
-> >> that has SRIOV devices.  After the device has recovered, remove the driver.
-> >> Reload the driver and enable SRIOV which causes the following crash to
-> >> occur:
-> >>
-> >> kernel BUG at drivers/pci/iov.c:157!
-> >> invalid opcode: 0000 [#1] SMP
-> >> CPU: 36 PID: 2295 Comm: bash Not tainted 4.14.0-rc1+ #74
-> >> Hardware name: Supermicro X9DAi/X9DAi, BIOS 3.0a 04/29/2014
-> >> task: ffff9fa41cd45a00 task.stack: ffffb4b2036e8000
-> >> RIP: 0010:pci_iov_add_virtfn+0x2eb/0x350
-> >> RSP: 0018:ffffb4b2036ebcb8 EFLAGS: 00010286
-> >> RAX: 00000000fffffff0 RBX: ffff9fa42c1c8800 RCX: ffff9fa421ce2388
-> >> RDX: 00000000df900000 RSI: ffff9fa8214fb388 RDI: 00000000df903fff
-> >> RBP: ffffb4b2036ebd18 R08: ffff9fa421ce23b8 R09: ffffb4b2036ebc2c
-> >> R10: ffff9fa42c1a5548 R11: 000000000000058e R12: ffff9fa8214fb000
-> >> R13: ffff9fa42c1a5000 R14: ffff9fa8214fb388 R15: 0000000000000000
-> >> FS:  00007f60724b6700(0000) GS:ffff9fa82f300000(0000)
-> >> knlGS:0000000000000000
-> >> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> >> CR2: 0000559eca8b0f40 CR3: 0000000864146000 CR4: 00000000001606e0
-> >> Call Trace:
-> >>  pci_enable_sriov+0x353/0x440
-> >>  ixgbe_pci_sriov_configure+0xd5/0x1f0 [ixgbe]
-> >>  sriov_numvfs_store+0xf7/0x170
-> >>  dev_attr_store+0x18/0x30
-> >>  sysfs_kf_write+0x37/0x40
-> >>  kernfs_fop_write+0x120/0x1b0
-> >>  __vfs_write+0x37/0x170
-> >>  ? __alloc_fd+0x3f/0x170
-> >>  ? set_close_on_exec+0x30/0x70
-> >>  vfs_write+0xb5/0x1a0
-> >>  SyS_write+0x55/0xc0
-> >>  entry_SYSCALL_64_fastpath+0x1a/0xa5
-> >> RIP: 0033:0x7f6071bafc20
-> >> RSP: 002b:00007ffe7d42ba48 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-> >> RAX: ffffffffffffffda RBX: 0000559eca8b0f30 RCX: 00007f6071bafc20
-> >> RDX: 0000000000000002 RSI: 0000559eca961f60 RDI: 0000000000000001
-> >> RBP: 00007f6071e78ae0 R08: 00007f6071e7a740 R09: 00007f60724b6700
-> >> R10: 0000000000000073 R11: 0000000000000246 R12: 0000000000000000
-> >> R13: 0000000000000000 R14: 0000000000000000 R15: 0000559eca892170
-> >> RIP: pci_iov_add_virtfn+0x2eb/0x350 RSP: ffffb4b2036ebcb8
-> >>
-> >> The occurs since during AER recovery the ARI Capable Hierarchy bit,
-> >> which can affect the values for First VF Offset and VF Stride, is not set
-> >> until after pci_iov_set_numvfs() is called.
-> >
-> > Can you elaborate on where exactly this happens?  The only place we
-> > explicitly set PCI_SRIOV_CTRL_ARI is in sriov_init(), which is only
-> > called at enumeration-time.  So I'm guessing you're talking about this
-> > path:
-> >
-> >   ixgbe_io_slot_reset
-> >     pci_restore_state
-> >       pci_restore_iov_state
-> >         sriov_restore_state
-> >           pci_iov_set_numvfs
-> >
-> > where we don't set PCI_SRIOV_CTRL_ARI at all.  The fact that you say
-> > PCI_SRIOV_CTRL_ARI isn't set until *after* pci_iov_set_numvfs() is
-> > called suggests that it is being set *somewhere*, but I don't know
-> > where.
+(Added linux-pci to CC)
+
+> > I run Gentoo Linux on my alphas, with latest git kernels for test. 
+> > 4.13.0 worked well on 3 alphas but 4.13.0-09217-g5969d1bb3082 hangs on 
+> > boot on all 3 of them. Tried bisecting on PC164, got into unrelated 
+> > stuff, so probably it does not trigger always. Retried bisecting on 
+> > DS10L. On the first try I got that the same keel where I first saw bad 
+> > was the culprit, another bisect led me to 
+> > 0e4c2eeb758a91e68b9eaf7a4bee9bd5ed97ff2b which looks more related.
+> > 
+> > This is how the crash looks on console:
+> > 
+> >  * Starting udev ...
+> > starting version 225
+> >  [ ok ]
+> >  * Generating a rule to create a /dev/root symlink ...
+> >  [ ok ]
+> >  * Populating /dev with existing devices through uevents ...
+> >  [ ok ]
+> > 
+> > halted CPU 0
+> > 
+> > halt code = 5
+> > HALT instruction executed
+> > PC = fffffc00009bf914
+> > boot failure
+> > >>>
+> > 
+> > What else can I do to debug this?
 > 
-> The ARI bit is initialized in sriov_init, stored in iov->ctrl, and
-> restored in sriov_restore_state, but it occurs in the line after the
-> call to pci_iov_set_numvfs.
-> 
-> The problem is you don't want to write the full iov->ctrl value until
-> after you have reset the the number of VFs since it will set VFE so
-> pulling out and configuring the ARI value separately is needed.
+> Booting with debug ignore_loglevel I get also this:
+[...]
+> So maybe it is related pcspkr loading, or the just loaded libata or 
+> floppy...
 
-Doh, that should have been obvious to me ;)
+removing libata modules and rebooting fixes it - so it seems to be 
+loading of libata.
 
-> >> This can cause the iov
-> >> structure to be populated with values that are incorrect if the bit is
-> >> later set.   Check and set this bit, if needed, before calling
-> >> pci_iov_set_numvfs() so that the values being populated properly take
-> >> the ARI bit into account.
-> >>
-> >> CC: Alexander Duyck <alexander.h.duyck@intel.com>
-> >> CC: Emil Tantilov <emil.s.tantilov@intel.com>
-> >> Signed-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>
-> >> ---
-> >>  drivers/pci/iov.c | 4 ++++
-> >>  1 file changed, 4 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> >> index 7492a65..a8896c7 100644
-> >> --- a/drivers/pci/iov.c
-> >> +++ b/drivers/pci/iov.c
-> >> @@ -497,6 +497,10 @@ static void sriov_restore_state(struct pci_dev *dev)
-> >>       if (ctrl & PCI_SRIOV_CTRL_VFE)
-> >>               return;
-> >>
-> >> +     if ((iov->ctrl & PCI_SRIOV_CTRL_ARI) && !(ctrl & PCI_SRIOV_CTRL_ARI))
-> >> +             pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL,
-> >> +                                   ctrl | PCI_SRIOV_CTRL_ARI);
+lspci -vvv from broken kernel with no libata loaded:
 
-This looks a little fiddly and also assumes that we only ever need to
-*set* PCI_SRIOV_CTRL_ARI.  That's likely the case because it's
-probably cleared after reset and during resume.  But I'm not *sure*
-that's always the case, so what do you think about the proposal below?
+00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+] (rev c3)
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort+ <MAbort+ >SERR- <PERR- INTx-
+        Latency: 0
 
-> >>       for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
-> >>               pci_update_resource(dev, i);
-> >>
+00:09.0 Ethernet controller: Digital Equipment Corporation DECchip 21142/43 (rev 41)
+        Subsystem: Digital Equipment Corporation DE500B Fast Ethernet
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 255 (5000ns min, 10000ns max), Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 29
+        Region 0: I/O ports at 8400 [size=128]
+        Region 1: Memory at 09091000 (32-bit, non-prefetchable) [size=1K]
+        Expansion ROM at 09000000 [disabled] [size=256K]
+        Kernel driver in use: tulip
+
+00:0b.0 Ethernet controller: Digital Equipment Corporation DECchip 21142/43 (rev 41)
+        Subsystem: Digital Equipment Corporation DE500B Fast Ethernet
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 255 (5000ns min, 10000ns max), Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 30
+        Region 0: I/O ports at 8480 [size=128]
+        Region 1: Memory at 09092000 (32-bit, non-prefetchable) [size=1K]
+        Expansion ROM at 09040000 [disabled] [size=256K]
+        Kernel driver in use: tulip
+
+00:0d.0 IDE interface: ULi Electronics Inc. M5229 IDE (rev c1) (prog-if f0)
+        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 255 (500ns min, 1000ns max)
+        Interrupt: pin A routed to IRQ 238
+        Region 0: I/O ports at 01f0 [size=8]
+        Region 1: I/O ports at 03f4
+        Region 2: I/O ports at 0170 [size=8]
+        Region 3: I/O ports at 0374
+        Region 4: I/O ports at 8800 [size=16]
+
+00:11.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 248, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 47
+        Region 0: I/O ports at 8000 [size=256]
+        Region 1: Memory at 09090000 (32-bit, non-prefetchable) [size=4K]
+        Expansion ROM at 09080000 [disabled] [size=64K]
+        Kernel driver in use: qla1280
 
 
-commit 95594dedd443e42ab0c16b9fba0109e955e7be13
-Author: Tony Nguyen <anthony.l.nguyen@intel.com>
-Date:   Wed Oct 4 08:52:58 2017 -0700
+/proc/interrupts from the same kernel:
+           CPU0       
+  1:          3    XT-PIC      i8042
+  2:          0    XT-PIC      cascade
+  4:        319    XT-PIC      ttyS0
+  6:          3    XT-PIC      floppy
+  8:     688138     dummy    -RTC       timer
+ 12:          5    XT-PIC      i8042
+ 29:        975     DP264      enp0s9
+ 47:      18229     DP264      qla1280
+PMI:          0           Performance Monitoring
+ERR:          0
 
-    PCI: Restore "ARI Capable Hierarchy" before setting numVFs
-    
-    In the restore path, we previously read PCI_SRIOV_VF_OFFSET and
-    PCI_SRIOV_VF_STRIDE before restoring PCI_SRIOV_CTRL_ARI, which
-    affects the offset and stride:
-    
-      pci_restore_state
-        pci_restore_iov_state
-          sriov_restore_state
-            pci_iov_set_numvfs
-              pci_read_config_word(... PCI_SRIOV_VF_OFFSET, &iov->offset)
-            pci_write_config_word(... PCI_SRIOV_CTRL, iov->ctrl)
-    
-    The effect is that suspend/resume and AER recovery, which use
-    pci_restore_state(), may corrupt iov->offset and iov->stride.  The iov
-    state is associated with the device, not the driver, so if we reload the
-    driver, it will use the the corrupted data, which may cause crashes like
-    this:
-    
-      kernel BUG at drivers/pci/iov.c:157!
-      RIP: 0010:pci_iov_add_virtfn+0x2eb/0x350
-      Call Trace:
-       pci_enable_sriov+0x353/0x440
-       ixgbe_pci_sriov_configure+0xd5/0x1f0 [ixgbe]
-       sriov_numvfs_store+0xf7/0x170
-       dev_attr_store+0x18/0x30
-       sysfs_kf_write+0x37/0x40
-       kernfs_fop_write+0x120/0x1b0
-       vfs_write+0xb5/0x1a0
-       SyS_write+0x55/0xc0
-    
-    The occurs since during AER recovery the ARI Capable Hierarchy bit, which
-    can affect the values for First VF Offset and VF Stride, is not set until
-    after pci_iov_set_numvfs() is called.  This can cause the iov structure to
-    be populated with values that are incorrect if the bit is later set.
-    Check and set this bit, if needed, before calling pci_iov_set_numvfs() so
-    that the values being populated properly take the ARI bit into account.
-    
-    Signed-off-by: Tony Nguyen <anthony.l.nguyen@intel.com>
-    [bhelgaas: changelog, add comment, also clear ARI if necessary]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: Alexander Duyck <alexander.h.duyck@intel.com>
-    CC: Emil Tantilov <emil.s.tantilov@intel.com>
+lspci -vvvv from working 4.13.0:
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ce24cf235f01..6bacb8995e96 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -498,6 +498,14 @@ static void sriov_restore_state(struct pci_dev *dev)
- 	if (ctrl & PCI_SRIOV_CTRL_VFE)
- 		return;
- 
-+	/*
-+	 * Restore PCI_SRIOV_CTRL_ARI before pci_iov_set_numvfs() because
-+	 * it reads offset & stride, which depend on PCI_SRIOV_CTRL_ARI.
-+	 */
-+	ctrl &= ~PCI_SRIOV_CTRL_ARI;
-+	ctrl |= iov->ctrl & PCI_SRIOV_CTRL_ARI;
-+	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, ctrl);
-+
- 	for (i = PCI_IOV_RESOURCES; i <= PCI_IOV_RESOURCE_END; i++)
- 		pci_update_resource(dev, i);
- 
+00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+] (rev c3)
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort+ <MAbort+ >SERR- <PERR- INTx-
+        Latency: 0
+
+00:09.0 Ethernet controller: Digital Equipment Corporation DECchip 21142/43 (rev 41)
+        Subsystem: Digital Equipment Corporation DE500B Fast Ethernet
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 255 (5000ns min, 10000ns max), Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 29
+        Region 0: I/O ports at 8400 [size=128]
+        Region 1: Memory at 09091000 (32-bit, non-prefetchable) [size=1K]
+        Expansion ROM at 09000000 [disabled] [size=256K]
+        Kernel driver in use: tulip
+
+00:0b.0 Ethernet controller: Digital Equipment Corporation DECchip 21142/43 (rev 41)
+        Subsystem: Digital Equipment Corporation DE500B Fast Ethernet
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 255 (5000ns min, 10000ns max), Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 30
+        Region 0: I/O ports at 8480 [size=128]
+        Region 1: Memory at 09092000 (32-bit, non-prefetchable) [size=1K]
+        Expansion ROM at 09040000 [disabled] [size=256K]
+        Kernel driver in use: tulip
+
+00:0d.0 IDE interface: ULi Electronics Inc. M5229 IDE (rev c1) (prog-if f0)
+        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 255 (500ns min, 1000ns max)
+        Interrupt: pin A routed to IRQ 14
+        Region 0: I/O ports at 01f0 [size=8]
+        Region 1: I/O ports at 03f4
+        Region 2: I/O ports at 0170 [size=8]
+        Region 3: I/O ports at 0374
+        Region 4: I/O ports at 8800 [size=16]
+        Kernel driver in use: pata_ali
+        Kernel modules: pata_ali, ata_generic
+
+00:11.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 248, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 47
+        Region 0: I/O ports at 8000 [size=256]
+        Region 1: Memory at 09090000 (32-bit, non-prefetchable) [size=4K]
+        Expansion ROM at 09080000 [disabled] [size=64K]
+        Kernel driver in use: qla1280
+
+           CPU0       
+  1:          3    XT-PIC      i8042
+  2:          0    XT-PIC      cascade
+  4:        320    XT-PIC      ttyS0
+  6:          3    XT-PIC      floppy
+  8:     165722     dummy    -RTC       timer
+ 12:          5    XT-PIC      i8042
+ 14:          0    XT-PIC      pata_ali
+ 15:          0    XT-PIC      pata_ali
+ 29:        535     DP264      enp0s9
+ 47:      21742     DP264      qla1280
+PMI:          0           Performance Monitoring
+ERR:          0
+
+
+dmesg from broken kernel with no libata loaded:
+[    0.000000] Linux version 4.13.0-rc3-00004-g0e4c2eeb758a (mroos@ds10l) (gcc version 5.4.0 (Gentoo 5.4.0-r3 p1.3, pie-0.6.5)) #101 Wed Oct 25 09:49:26 EEST 2017
+[    0.000000] Booting GENERIC on Tsunami variation Webbrick using machine vector Webbrick from SRM
+[    0.000000] Major Options: LEGACY_START VERBOSE_MCHECK MAGIC_SYSRQ 
+[    0.000000] Command line: root=/dev/sda2 console=ttyS0
+[    0.000000] memcluster 0, usage 1, start        0, end      256
+[    0.000000] memcluster 1, usage 0, start      256, end    65429
+[    0.000000] memcluster 2, usage 1, start    65429, end    65536
+[    0.000000] freeing pages 256:384
+[    0.000000] freeing pages 1358:65429
+[    0.000000] reserving pages 1358:1359
+[    0.000000] 2048K Bcache detected; load hit latency 18 cycles, load miss latency 112 cycles
+[    0.000000] On node 0 totalpages: 65429
+[    0.000000] free_area_init_node: node 0, pgdat fffffc0000a4b550, node_mem_map fffffc0000a9e000
+[    0.000000]   DMA zone: 448 pages used for memmap
+[    0.000000]   DMA zone: 0 pages reserved
+[    0.000000]   DMA zone: 65429 pages, LIFO batch:15
+[    0.000000] pcpu-alloc: s0 r0 d32768 u32768 alloc=1*32768
+[    0.000000] pcpu-alloc: [0] 0 
+[    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 64981
+[    0.000000] Kernel command line: root=/dev/sda2 console=ttyS0
+[    0.000000] PID hash table entries: 2048 (order: 1, 16384 bytes)
+[    0.000000] Dentry cache hash table entries: 65536 (order: 6, 524288 bytes)
+[    0.000000] Inode-cache hash table entries: 32768 (order: 5, 262144 bytes)
+[    0.000000] Sorting __ex_table...
+[    0.000000] Memory: 508632K/523432K available (5297K kernel code, 422K rwdata, 1504K rodata, 256K init, 212K bss, 14800K reserved, 0K cma-reserved)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] NR_IRQS: 128
+[    0.000000] HWRPB cycle frequency bogus.  Estimated 616560540 Hz
+[    0.000000] clocksource: rpcc: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 3099874744 ns
+[    0.000976] Console: colour dummy device 80x25
+[    0.024414] console [ttyS0] enabled
+[    0.026367] Calibrating delay loop... 1221.92 BogoMIPS (lpj=595968)
+[    0.036132] pid_max: default: 32768 minimum: 301
+[    0.037109] Mount-cache hash table entries: 1024 (order: 0, 8192 bytes)
+[    0.038085] Mountpoint-cache hash table entries: 1024 (order: 0, 8192 bytes)
+[    0.041015] devtmpfs: initialized
+[    0.042968] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1866466235866741 ns
+[    0.043945] futex hash table entries: 256 (order: -1, 6144 bytes)
+[    0.044921] random: get_random_u32 called from bucket_table_alloc+0x12c/0x300 with crng_init=0
+[    0.045898] NET: Registered protocol family 16
+[    0.046874] EISA bus registered
+[    0.047851] PCI host bridge to bus 0000:00
+[    0.048828] pci_bus 0000:00: root bus resource [io  0x0000-0x1ffffff]
+[    0.049804] pci_bus 0000:00: root bus resource [mem 0x00000000-0x3fffffff]
+[    0.050781] pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+[    0.051757] pci 0000:00:07.0: [10b9:1533] type 00 class 0x060100
+[    0.052734] pci 0000:00:09.0: [1011:0019] type 00 class 0x020000
+[    0.052734] pci 0000:00:09.0: reg 0x10: [io  0x10000-0x1007f]
+[    0.052734] pci 0000:00:09.0: reg 0x14: [mem 0x01091000-0x010913ff]
+[    0.052734] pci 0000:00:09.0: reg 0x30: [mem 0x01000000-0x0103ffff pref]
+[    0.052734] pci 0000:00:0b.0: [1011:0019] type 00 class 0x020000
+[    0.052734] pci 0000:00:0b.0: reg 0x10: [io  0x10080-0x100ff]
+[    0.052734] pci 0000:00:0b.0: reg 0x14: [mem 0x01091400-0x010917ff]
+[    0.052734] pci 0000:00:0b.0: reg 0x30: [mem 0x01040000-0x0107ffff pref]
+[    0.052734] pci 0000:00:0d.0: [10b9:5229] type 00 class 0x0101f0
+[    0.052734] pci 0000:00:0d.0: [Firmware Bug]: reg 0x10: invalid BAR (can't size)
+[    0.053710] pci 0000:00:0d.0: [Firmware Bug]: reg 0x14: invalid BAR (can't size)
+[    0.054687] pci 0000:00:0d.0: [Firmware Bug]: reg 0x18: invalid BAR (can't size)
+[    0.055664] pci 0000:00:0d.0: [Firmware Bug]: reg 0x1c: invalid BAR (can't size)
+[    0.056640] pci 0000:00:0d.0: reg 0x20: [io  0x10110-0x1011f]
+[    0.056640] pci 0000:00:0d.0: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
+[    0.057617] pci 0000:00:0d.0: legacy IDE quirk: reg 0x14: [io  0x03f6]
+[    0.058593] pci 0000:00:0d.0: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
+[    0.059570] pci 0000:00:0d.0: legacy IDE quirk: reg 0x1c: [io  0x0376]
+[    0.060546] pci 0000:00:11.0: [1077:1020] type 00 class 0x010000
+[    0.060546] pci 0000:00:11.0: reg 0x10: [io  0x1000-0x10ff]
+[    0.060546] pci 0000:00:11.0: reg 0x14: [mem 0x01090000-0x01090fff]
+[    0.060546] pci 0000:00:11.0: reg 0x30: [mem 0x01080000-0x0108ffff pref]
+[    0.060546] pci: enabling save/restore of SRM state
+[    0.061523] pci_bus 0000:00: busn_res: [bus 00-ff] end is updated to 00
+[    0.061523] pci 0000:00:09.0: BAR 6: assigned [mem 0x09000000-0x0903ffff pref]
+[    0.062499] pci 0000:00:0b.0: BAR 6: assigned [mem 0x09040000-0x0907ffff pref]
+[    0.063476] pci 0000:00:11.0: BAR 6: assigned [mem 0x09080000-0x0908ffff pref]
+[    0.064453] pci 0000:00:11.0: BAR 1: assigned [mem 0x09090000-0x09090fff]
+[    0.065429] pci 0000:00:09.0: BAR 1: assigned [mem 0x09091000-0x090913ff]
+[    0.066406] pci 0000:00:0b.0: BAR 1: assigned [mem 0x09092000-0x090923ff]
+[    0.067382] pci 0000:00:11.0: BAR 0: assigned [io  0x8000-0x80ff]
+[    0.068359] pci 0000:00:09.0: BAR 0: assigned [io  0x8400-0x847f]
+[    0.069335] pci 0000:00:0b.0: BAR 0: assigned [io  0x8480-0x84ff]
+[    0.070312] pci 0000:00:0d.0: BAR 4: assigned [io  0x8800-0x880f]
+[    0.071289] pci_bus 0000:00: resource 4 [io  0x0000-0x1ffffff]
+[    0.071289] pci_bus 0000:00: resource 5 [mem 0x00000000-0x3fffffff]
+[    0.075195] vgaarb: loaded
+[    0.076171] SCSI subsystem initialized
+[    0.078124] clocksource: Switched to clocksource rpcc
+[    0.086914] NET: Registered protocol family 2
+[    0.087890] random: get_random_u32 called from neigh_hash_alloc+0xdc/0x160 with crng_init=0
+[    0.088867] random: get_random_u32 called from rt_genid_init+0x2c/0x50 with crng_init=0
+[    0.089843] TCP established hash table entries: 4096 (order: 2, 32768 bytes)
+[    0.090820] TCP bind hash table entries: 4096 (order: 2, 32768 bytes)
+[    0.091796] TCP: Hash tables configured (established 4096 bind 4096)
+[    0.092773] UDP hash table entries: 256 (order: 0, 8192 bytes)
+[    0.094726] UDP-Lite hash table entries: 256 (order: 0, 8192 bytes)
+[    0.096679] NET: Registered protocol family 1
+[    0.097656] pci 0000:00:07.0: Activating ISA DMA hang workarounds
+[    0.098632] PCI: CLS 64 bytes, default 64
+[    0.099609] srm_env: version 0.0.6 loaded successfully
+[    0.100585] Using epoch 2000 for rtc year 17
+[    0.102539] platform rtc-alpha: rtc core: registered rtc-alpha as rtc0
+[    0.103515] workingset: timestamp_bits=62 max_order=16 bucket_order=0
+[    0.113281] random: fast init done
+[    0.115234] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 252)
+[    0.116210] io scheduler noop registered
+[    0.118164] io scheduler cfq registered (default)
+[    0.119140] isapnp: Scanning for PnP cards...
+[    0.473632] isapnp: No Plug & Play device found
+[    0.475585] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
+[    0.477538] serial8250: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+[    0.480468] serial8250: ttyS1 at I/O 0x2f8 (irq = 3, base_baud = 115200) is a 16550A
+[    0.482421] qla1280: QLA1040 found on PCI bus 0, dev 17
+[    0.484374] Floppy drive(s): fd0 is 2.88M
+[    0.824218] random: crng init done
+[    0.946288] FDC 0 is a post-1991 82077
+[    0.960937] scsi(0:0): Resetting SCSI BUS
+[    3.999997] scsi host0: QLogic QLA1040 PCI to SCSI Host Adapter
+                      Firmware version:  7.65.06, Driver version 3.27.1
+[    4.006833] Linux Tulip driver version 1.1.15 (Feb 27, 2007)
+[    4.013669] tulip0: EEPROM default media type Autosense
+[    4.014646] tulip0: Index #0 - Media 10baseT (#0) described by a 21142 Serial PHY (2) block
+[    4.015622] tulip0: Index #1 - Media 10baseT-FDX (#4) described by a 21142 Serial PHY (2) block
+[    4.016599] tulip0: Index #2 - Media 100baseTx (#3) described by a 21143 SYM PHY (4) block
+[    4.017576] tulip0: Index #3 - Media 100baseTx-FDX (#5) described by a 21143 SYM PHY (4) block
+[    4.025388] net eth0: Digital DS21142/43 Tulip rev 65 at MMIO 0x9091000, 00:10:64:30:19:8e, IRQ 29
+[    4.032224] tulip1: EEPROM default media type Autosense
+[    4.033201] tulip1: Index #0 - Media 10baseT (#0) described by a 21142 Serial PHY (2) block
+[    4.034177] tulip1: Index #1 - Media 10baseT-FDX (#4) described by a 21142 Serial PHY (2) block
+[    4.035154] tulip1: Index #2 - Media 100baseTx (#3) described by a 21143 SYM PHY (4) block
+[    4.036130] tulip1: Index #3 - Media 100baseTx-FDX (#5) described by a 21143 SYM PHY (4) block
+[    4.043943] net eth1: Digital DS21142/43 Tulip rev 65 at MMIO 0x9092000, 00:10:64:30:19:8d, IRQ 30
+[    4.049802] serio: i8042 KBD port at 0x60,0x64 irq 1
+[    4.050779] serio: i8042 AUX port at 0x60,0x64 irq 12
+[    4.051755] scsi 0:0:0:0: Direct-Access     COMPAQ   BF0369A4BC       HPB7 PQ: 0 ANSI: 3
+[    4.053708] mousedev: PS/2 mouse device common for all mice
+[    4.055661] NET: Registered protocol family 10
+[    4.058591] scsi(0:0:0:0):
+[    4.058591]  Sync: period 10, offset 12
+[    4.058591] , Wide
+[    4.058591] , Tagged queuing: depth 31
+
+[    4.060544] atkbd serio0: keyboard reset failed on isa0060/serio0
+[    4.062497] Segment Routing with IPv6
+[    4.063474] NET: Registered protocol family 17
+[    4.065427] platform rtc-alpha: setting system clock to 2017-10-25 08:33:31 UTC (1508920411)
+[    4.083005] atkbd serio1: keyboard reset failed on isa0060/serio1
+[    6.167965] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    6.168942] sd 0:0:0:0: [sda] 71132000 512-byte logical blocks: (36.4 GB/33.9 GiB)
+[    6.170895] sd 0:0:0:0: [sda] Write Protect is off
+[    6.171871] sd 0:0:0:0: [sda] Mode Sense: cf 00 10 08
+[    6.172848] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
+[    6.186520]  sda: sda1 sda2 sda4
+[    6.191403] sd 0:0:0:0: [sda] Attached SCSI disk
+[    6.195309] EXT4-fs (sda2): couldn't mount as ext3 due to feature incompatibilities
+[    6.197262] EXT4-fs (sda2): couldn't mount as ext2 due to feature incompatibilities
+[    6.211910] EXT4-fs (sda2): mounted filesystem with ordered data mode. Opts: (null)
+[    6.212887] VFS: Mounted root (ext4 filesystem) readonly on device 8:2.
+[    6.234371] devtmpfs: mounted
+[    6.235348] Freeing unused kernel memory: 256K
+[    6.236324] This architecture does not have kernel memory protection.
+[   13.266594] tulip 0000:00:0b.0 enp0s11: renamed from eth1
+[   13.267571] tulip 0000:00:09.0 enp0s9: renamed from eth0
+[   15.346671] EXT4-fs (sda2): re-mounted. Opts: (null)
+[   16.040030] EXT4-fs (sda1): mounting ext2 file system using the ext4 subsystem
+[   16.050773] EXT4-fs (sda1): mounted filesystem without journal. Opts: (null)
+
+-- 
+Meelis Roos (mroos@ut.ee)      http://www.cs.ut.ee/~mroos/
