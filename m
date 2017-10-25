@@ -1,43 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14289 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751834AbdJII41 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 9 Oct 2017 04:56:27 -0400
-Date: Mon, 9 Oct 2017 11:47:39 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/7] PCI: Improvements for native PCIe hotplug
-Message-ID: <20171009084739.GK2761@lahna.fi.intel.com>
-References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
+Received: from smtp-out4.electric.net ([192.162.216.194]:64685 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750862AbdJYLT5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Oct 2017 07:19:57 -0400
+Received: from 1e7Jiz-0000lP-W2 by out4a.electric.net with emc1-ok (Exim 4.87)
+        (envelope-from <David.Laight@ACULAB.COM>)
+        id 1e7Jj0-0000rS-Vg
+        for linux-pci@vger.kernel.org; Wed, 25 Oct 2017 04:19:54 -0700
+Received: from [156.67.243.126] (helo=AcuExch.aculab.com)
+        by out4a.electric.net with esmtps (TLSv1:AES128-SHA:128)
+        (Exim 4.87)
+        (envelope-from <David.Laight@ACULAB.COM>)
+        id 1e7Jiz-0000lP-W2
+        for linux-pci@vger.kernel.org; Wed, 25 Oct 2017 04:19:53 -0700
+From: David Laight <David.Laight@ACULAB.COM>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Recovering from driver-detected 'surprise removal'
+Date: Wed, 25 Oct 2017 11:20:12 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A2675@AcuExch.aculab.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 26, 2017 at 05:17:13PM +0300, Mika Westerberg wrote:
-> Hi,
-> 
-> Currently when plugging PCIe device using native PCIe hotplug Linux PCI
-> core tries to allocate bus space and resources so that the newly enumerated
-> topology barely fits there. Now, if the PCIe topology that was just plugged
-> in has more PCIe hotplug ports we will run out of bus space and resources
-> pretty quickly. There is a workaround for this by passing pci=hpbussize=N
-> in the kernel command line but it runs to the same situation after next
-> hotplug.
+Is there an easy way for a driver get a pcie device removed
+(as in echo 1 > /sys/devices/pcixxx/xxxx/remove)
+and then force a rescan of the bus?
 
-Hi Bjorn,
+Clearly it could ask a daemon to do it - but finding the
+correct entry in /sys/devices isn't entirely trivial.
+(Or rather I don't know the trival way... )
 
-Do you have any comments regarding this series? I think I need to respin
-this on top of Andy's for_each_pci_bridge() patch but if there are other
-comments I can address them at the same time.
+The initial trigger would be a read returning ~0u.
+But other things can be done to confirm the error.
+eg: Reading config space and getting all zeros for the BARs
+    indicating that the endpoint has reset itself.
 
-Thanks!
+	David
