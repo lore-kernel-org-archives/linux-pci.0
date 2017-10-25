@@ -1,61 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 09/17] PCI: dwc: dra7xx: Add ifdefs for host/ep
- specific code
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
- <20171030124221.20690-10-niklas.cassel@axis.com>
- <32dd0d05-4ed0-1c8b-6ea4-ea4d560c5570@ti.com>
- <669377ab-b859-24ed-5a2b-36bf826d426b@axis.com>
-Message-ID: <f99d17a1-19c3-a63d-3758-7def12d634e5@axis.com>
-Date: Tue, 31 Oct 2017 22:38:34 +0100
+Return-Path: <SRS0=0ccY=BY=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=0ccY=BY=redhat.com=alex.williamson@kernel.org>
+Date: Thu, 26 Oct 2017 00:34:07 +0200
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, linux-arm-msm@vger.kernel.org, Bjorn Helgaas
+ <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: rework error checking in the reset path
+Message-ID: <20171026003407.29d3f400@t450s.home>
+In-Reply-To: <20171025221046.GA25858@bhelgaas-glaptop.roam.corp.google.com>
+References: <1508794608-15310-1-git-send-email-okaya@codeaurora.org>
+	<20171025134511.GL21840@bhelgaas-glaptop.roam.corp.google.com>
+	<20171025232805.163ccaad@t450s.home>
+	<20171025221046.GA25858@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <669377ab-b859-24ed-5a2b-36bf826d426b@axis.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
->>>  
->>>  static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->>>  {
->>> @@ -681,6 +697,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->>>  		dra7xx->link_gen = 2;
->>>  
->>>  	switch (mode) {
->>> +#ifdef CONFIG_PCI_DRA7XX_HOST
->>>  	case DW_PCIE_RC_TYPE:
->>>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
->>>  				   DEVICE_TYPE_RC);
->>> @@ -688,6 +705,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->>>  		if (ret < 0)
->>>  			goto err_gpio;
->>>  		break;
->>> +#endif
->>> +#ifdef CONFIG_PCI_DRA7XX_EP
->>>  	case DW_PCIE_EP_TYPE:
->>>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
->>>  				   DEVICE_TYPE_EP);
->>> @@ -700,6 +719,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->>>  		if (ret < 0)
->>>  			goto err_gpio;
->>>  		break;
->>> +#endif
+On Wed, 25 Oct 2017 17:10:46 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
+
+> On Wed, Oct 25, 2017 at 11:28:05PM +0200, Alex Williamson wrote:
+> > On Wed, 25 Oct 2017 08:45:11 -0500
+> > Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >   
+> > > [+cc Alex]
+> > > 
+> > > On Mon, Oct 23, 2017 at 05:36:48PM -0400, Sinan Kaya wrote:  
+> > > > The return codes from various reset types are not consistent. The code is
+> > > > assuming that all reset types will return -ENOTTY when things go wrong.
+> > > > Instead of relying on negative error status, let's bail out if the
+> > > > operation is successful instead.    
+> > > 
+> > > I like this (no surprise since I suggested something similar at
+> > > http://lkml.kernel.org/r/20171011210057.GU25517@bhelgaas-glaptop.roam.corp.google.com),
+> > > but I'd like Alex's opinion before merging it.
+> > > 
+> > > Previously, we only tried the next reset method if one method failed
+> > > with -ENOTTY.  With this patch, we'll try the next reset method if one
+> > > method fails for any reason, not just -ENOTTY.  
+> > 
+> > Hmm, I thought the return codes were pretty consistent.  -ENOTTY means
+> > that the reset callback doesn't handle the device, move on.  Many
+> > ioctls use the same return code to indicate an unknown ioctl.  This
+> > allows us to differentiate success vs error vs unhandled.  In the code
+> > below we lose the ability to, for instance, have a device specific
+> > reset that returns -EINVAL to prevent the PCI core for triggering
+> > further reset mechanisms which might be broken on the device.  So, I
+> > don't see that this patch specifically fixes anything, but it does
+> > remove what seems like useful functionality...  I'd veto it.  Thanks,  
 > 
-> Actually, these ifdefs has to stay, otherwise we get build warnings, since we
-> are calling functions that aren't defined (dra7xx_pcie_ep_unaligned_memaccess,
-> dra7xx_add_pcie_ep, dra7xx_add_pcie_port).
-> We could add dummy implementations for these inside an #else block following
-> the ifdef blocks. However, I think that adding dummy implementations in the
-> #else block is uglier and more verbose than keeping the ifdefs around the
-> two cases.
+> I didn't understand the  intention of -EINVAL vs -ENOTTY, so
+> that might be a reasonable argument.  The knowledge about mechanisms
+> being broken on a specific device seems like it would belong in
+> pci_dev_specific_reset() and not really applicable to other methods,
+> though.
 > 
+> But I'm not sure the current usage makes a lot of sense.  The only
+> places I found that return an error other than -ENOTTY are
+> reset_ivb_igd() and pci_pm_reset().  In reset_ivb_igd(), we return
+> -ENOMEM if an ioremap() fails.  That's not a case of "other reset
+> mechanisms are broken and we shouldn't try them."
 
-..however, if you prefer dummy implementations inside the #else blocks,
-I will of course do that.
+Well, by the fact that we have a device specific reset here, we can
+probably deduce that the standard reset mechanisms do not work or are
+undesirable for some reason.  Therefore if we cannot perform the
+necessary ioremap in this case, it's probably better to stop and return
+error.
 
+> pci_pm_reset() returns -EINVAL if the device is not in D0.  Maybe it
+> makes sense to not try any other reset methods in that case, but I
+> really don't know.
 
-Regards,
-Niklas
+Yeah, that one could probably be re-worked since it's a standard reset
+mechanism.  I wonder if the logic here is to avoid a bus reset for a
+device that reports NoSoftRst- but is simply in the wrong state for it.
+ 
+> If we leave it as-is, maybe a comment like the following would be
+> useful.
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f0d68066c726..2c98f309bc8a 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4170,6 +4170,13 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+>  
+>  	might_sleep();
+>  
+> +	/*
+> +	 * Reset method return values:
+> +	 *   0:		    Device was successfully reset
+> +	 *   -ENOTTY:	    Method doesn't support resetting this device;
+> +	 *		    try the next method
+> +	 *   anything else: Reset failed; don't try any other mechanisms
+> +	 */
+>  	rc = pci_dev_specific_reset(dev, 0);
+>  	if (rc != -ENOTTY)
+>  		return rc;
+
+Yep, that's helpful.  The standard reset mechanisms also use the
+-ENOTTY convention, but maybe don't have the same authority to indicate
+whether to abort or move on to the next method as device specific
+resets.  Thanks,
+
+Alex
