@@ -1,129 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:60486 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752404AbdJFN2t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Oct 2017 09:28:49 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 11/36] iommu/arm-smmu-v3: Link domains and devices
-Date: Fri,  6 Oct 2017 14:31:38 +0100
-Message-Id: <20171006133203.22803-12-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Received: from mail-it0-f53.google.com ([209.85.214.53]:49318 "EHLO
+        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750974AbdJYQAF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Oct 2017 12:00:05 -0400
+MIME-Version: 1.0
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD00A252D@AcuExch.aculab.com>
+References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
+ <1508868949-16652-5-git-send-email-jim2101024@gmail.com> <063D6719AE5E284EB5DD2968C1650D6DD00A252D@AcuExch.aculab.com>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Wed, 25 Oct 2017 12:00:03 -0400
+Message-ID: <CANCKTBuH_FsRAEWtae5L_YvvC6QQSKETLNKU+G+8_LGwMy6smw@mail.gmail.com>
+Subject: Re: [PATCH 4/8] PCI: host: brcmstb: add dma-ranges for inbound traffic
+To: David Laight <David.Laight@aculab.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bcm-kernel-feedback-list@broadcom.com"
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Kevin Cernekee <cernekee@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+        Ralf Baechle <ralf@linux-mips.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When removing a mapping from a domain, we need to send an invalidation to
-all devices that might have stored it in their Address Translation Cache
-(ATC). In addition with SVM, we'll need to invalidate context descriptors
-of all devices attached to a live domain.
+On Wed, Oct 25, 2017 at 5:46 AM, David Laight <David.Laight@aculab.com> wrote:
+> From: Jim QuinlanPCIE_IPROC_MSI
+>> Sent: 24 October 2017 19:16
+>> The Broadcom STB PCIe host controller is intimately related to the
+>> memory subsystem.  This close relationship adds complexity to how cpu
+>> system memory is mapped to PCIe memory.  Ideally, this mapping is an
+>> identity mapping, or an identity mapping off by a constant.  Not so in
+>> this case.
+>>
+>> Consider the Broadcom reference board BCM97445LCC_4X8 which has 6 GB
+>> of system memory.  Here is how the PCIe controller maps the
+>> system memory to PCIe memory:
+>>
+>>   memc0-a@[        0....3fffffff] <=> pci@[        0....3fffffff]
+>>   memc0-b@[100000000...13fffffff] <=> pci@[ 40000000....7fffffff]
+>>   memc1-a@[ 40000000....7fffffff] <=> pci@[ 80000000....bfffffff]
+>>   memc1-b@[300000000...33fffffff] <=> pci@[ c0000000....ffffffff]
+>>   memc2-a@[ 80000000....bfffffff] <=> pci@[100000000...13fffffff]
+>>   memc2-b@[c00000000...c3fffffff] <=> pci@[140000000...17fffffff]
+>
+> I presume the first column is the 'cpu physical address'
+> and the second the 'pci' address?
+>
+Yes.  I probably made this more difficult to read because I ordered
+the rows by PCI addresses.
 
-Maintain a list of devices in each domain, protected by a spinlock. It is
-updated every time we attach or detach devices to and from domains.
+> ...
+>
+> Isn't this just the same as having an iommu that converts 'bus'
+> addresses into 'physical' ones?
 
-It needs to be a spinlock because we'll invalidate ATC entries from
-within hardirq-safe contexts, but it may be possible to relax the read
-side with RCU later.
+Pretty much, but for PCIe devices only.  This could be done by somehow
+overriding the arch specific phys_to_dma() and dma_to_phys() calls.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+>
+> A simple table lookup of the high address bits will do the
+> conversion.
+True, but this table could be passed something like ARM_MAPPING_ERROR,
+which may be out the table (the driver is not privy to
+ARM_MAPPING_ERROR's definition).
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 22a6b08ef014..ecc424b15749 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -644,6 +644,11 @@ struct arm_smmu_device {
- struct arm_smmu_master_data {
- 	struct arm_smmu_device		*smmu;
- 	struct arm_smmu_strtab_ent	ste;
-+
-+	struct arm_smmu_domain		*domain;
-+	struct list_head		list; /* domain->devices */
-+
-+	struct device			*dev;
- };
- 
- /* SMMU private data for an IOMMU domain */
-@@ -667,6 +672,9 @@ struct arm_smmu_domain {
- 	};
- 
- 	struct iommu_domain		domain;
-+
-+	struct list_head		devices;
-+	spinlock_t			devices_lock;
- };
- 
- struct arm_smmu_option_prop {
-@@ -1461,6 +1469,9 @@ static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
- 	}
- 
- 	mutex_init(&smmu_domain->init_mutex);
-+	INIT_LIST_HEAD(&smmu_domain->devices);
-+	spin_lock_init(&smmu_domain->devices_lock);
-+
- 	return &smmu_domain->domain;
- }
- 
-@@ -1666,7 +1677,17 @@ static void arm_smmu_install_ste_for_dev(struct iommu_fwspec *fwspec)
- 
- static void arm_smmu_detach_dev(struct device *dev)
- {
-+	unsigned long flags;
- 	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
-+	struct arm_smmu_domain *smmu_domain = master->domain;
-+
-+	if (smmu_domain) {
-+		spin_lock_irqsave(&smmu_domain->devices_lock, flags);
-+		list_del(&master->list);
-+		spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
-+
-+		master->domain = NULL;
-+	}
- 
- 	master->ste.assigned = false;
- 	arm_smmu_install_ste_for_dev(dev->iommu_fwspec);
-@@ -1675,6 +1696,7 @@ static void arm_smmu_detach_dev(struct device *dev)
- static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- {
- 	int ret = 0;
-+	unsigned long flags;
- 	struct arm_smmu_device *smmu;
- 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
- 	struct arm_smmu_master_data *master;
-@@ -1710,6 +1732,11 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- 	}
- 
- 	ste->assigned = true;
-+	master->domain = smmu_domain;
-+
-+	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
-+	list_add(&master->list, &smmu_domain->devices);
-+	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
- 
- 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_BYPASS) {
- 		ste->s1_cfg = NULL;
-@@ -1820,6 +1847,7 @@ static int arm_smmu_add_device(struct device *dev)
- 			return -ENOMEM;
- 
- 		master->smmu = smmu;
-+		master->dev = dev;
- 		fwspec->iommu_priv = master;
- 	}
- 
--- 
-2.13.3
+Thanks,
+Jim
+
+>
+>         David
+>
