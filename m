@@ -1,177 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-To: "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "marc.zyngier@arm.com" <marc.zyngier@arm.com>, "sudeep.holla@arm.com"
- <sudeep.holla@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>, "joro@8bytes.org"
- <joro@8bytes.org>, "bhelgaas@google.com" <bhelgaas@google.com>, "Gabriele
- Paoloni" <gabriele.paoloni@huawei.com>
-Subject: RE: [PATCH v9 0/4] iommu/smmu-v3: Workaround for hisilicon
- 161010801 erratum(reserve HW MSI)
-Date: Wed, 11 Oct 2017 11:34:18 +0000
-Message-ID: <5FC3163CFD30C246ABAA99954A238FA8384228BC@FRAEML521-MBX.china.huawei.com>
-References: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
-In-Reply-To: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
+Return-Path: <SRS0=HTtN=BY=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=HTtN=BY=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Reply-To: christian.koenig@amd.com
+Subject: Re: Resizable PCI BAR support V9
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
+ <20171024194438.GB21840@bhelgaas-glaptop.roam.corp.google.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
+Message-ID: <6cea55fd-1454-60ef-e3d0-f394b7a1c61f@gmail.com>
+Date: Wed, 25 Oct 2017 13:27:48 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- John Garry <john.garry@huawei.com>, Linuxarm <linuxarm@huawei.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "Wangzhou \(B\)" <wangzhou1@hisilicon.com>, "Guohanjun
- \(Hanjun Guo\)" <guohanjun@huawei.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "devel@acpica.org" <devel@acpica.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171024194438.GB21840@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Will,
+Am 24.10.2017 um 21:44 schrieb Bjorn Helgaas:
+> On Wed, Oct 18, 2017 at 03:58:16PM +0200, Christian König wrote:
+>> Hi everyone,
+>>
+>> This is the ninth and hopefully last incarnation of this set of patches. It
+>> enables device drivers to resize and most likely also relocate the PCI BAR of
+>> devices they manage to allow the CPU to access all of the device local memory
+>> at once.
+>>
+>> This is very useful for GFX device drivers where the default PCI BAR is only
+>> about 256MB in size for compatibility reasons, but the device easily have
+>> multiple gigabyte of local memory.
+>>
+>> Some changes since the last version:
+>> 1. Rebased on drm-next, so should be ready to be merged for 4.15.
+>> 2. The fixup of the 64bit root window on AMD Family 15h CPUs/APUs is only
+>>     enabled when we compile a kernel supporting that hw.
+>> 3. Some minor error handling improvements for the amdgpu side. We now
+>>     gracefully abort driver loading in case of a critical error instead of
+>>     calling BUG().
+>>
+>> Bjorn any more comments or can we finally get this into 4.15? I will remove the
+>> version tags from the patches when I send you a pull request if you want this.
+>>
+>> I only work on this as a background task, so sorry for the ~3 month delay
+>> between each version of the patchset.
+> I put these (except for the last) on pci/resource for v4.15.  I'd be
+> happy to merge the last as well if you like.  My tree does not include
+> drm-next, so there would be a minor conflict when merging upstream.
 
-Any further comments on this series, please? 
+Thanks Bjorn, that is great to hear.
 
-We do have the ack from all relevant people for the "[PATCH v9 4/4] PCI: hisi: blacklist
-hip06/hip07 controllers behind SMMUv3" now. 
+I will sync up with Alex and Dave how to merge the last patch.
 
-Really appreciate if you can take a look and let us know.
+Christian.
 
-Many thanks,
-Shameer
-
-> -----Original Message-----
-> From: Shameerali Kolothum Thodi
-> Sent: Friday, October 06, 2017 3:05 PM
-> To: lorenzo.pieralisi@arm.com; marc.zyngier@arm.com;
-> sudeep.holla@arm.com; will.deacon@arm.com; robin.murphy@arm.com;
-> joro@8bytes.org; bhelgaas@google.com; Gabriele Paoloni
-> <gabriele.paoloni@huawei.com>
-> Cc: John Garry <john.garry@huawei.com>; iommu@lists.linux-
-> foundation.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-pci@vger.kernel.org; devel@acpica.org;
-> Linuxarm <linuxarm@huawei.com>; Wangzhou (B)
-> <wangzhou1@hisilicon.com>; Guohanjun (Hanjun Guo)
-> <guohanjun@huawei.com>; Shameerali Kolothum Thodi
-> <shameerali.kolothum.thodi@huawei.com>
-> Subject: [PATCH v9 0/4] iommu/smmu-v3: Workaround for hisilicon
-> 161010801 erratum(reserve HW MSI)
-> 
-> On certain HiSilicon platforms (hip06/hip07) the GIC ITS and PCIe RC
-> deviates from the standard implementation and this breaks PCIe MSI
-> functionality when SMMU is enabled.
-> 
-> The HiSilicon erratum 161010801 describes this limitation of certain
-> HiSilicon platforms to support the SMMU mappings for MSI transactions.
-> On these platforms GICv3 ITS translator is presented with the deviceID
-> by extending the MSI payload data to 64 bits to include the deviceID.
-> Hence, the PCIe controller on this platforms has to differentiate the MSI
-> payload against other DMA payload and has to modify the MSI payload.
-> This basically makes it difficult for this platforms to have a SMMU
-> translation for MSI.
-> 
-> This patch implements an ACPI and DT based quirk to reserve the hw msi
-> regions in the smmu-v3 driver which means these address regions will
-> not be translated and will be excluded from iova allocations.
-> 
-> To implement this quirk, the following changes are incorporated:
-> 1. Added a generic helper function to IORT code to retrieve the
->    associated ITS base address from a device IORT node.
-> 2. Added a generic helper function to of iommu code to retrieve the
->    associated msi controller base address from for a PCI RC
->    msi-mapping and also platform device msi-parent.
-> 3. Blacklisted HiSilicon PCIe controllers on DT based hip06/hip07
->    platforms when SMMUv3 is enabled as there is no DT based solution
->    for this as of now.
-> 
-> Changelog:
-> 
-> v8 --> v9
-> -Thanks to Marc, fixed IORT helper function to reserve the ITS
->  translater region only.
-> -Removed the DT support for MSI reservation and blacklisted
->  HiSilicon PCIe controllers on DT based systems when SMMUv3 is
->  enabled.
-> 
-> v7 --> v8
-> Addressed comments from Rob and Lorenzo:
->  -Modified to use DT compatible string for errata.
->  -Changed logic to retrieve the msi-parent for DT case.
-> 
-> v6 --> v7
-> Addressed request from Will to add DT support for the erratum:
->  - added bt binding
->  - add of_iommu_msi_get_resv_regions()
-> New arm64 silicon errata entry
-> Rename iort_iommu_{its->msi}_get_resv_regions
-> 
-> v5 --> v6
-> Addressed comments from Robin and Lorenzo:
-> -No change to patch#1 .
-> -Reverted v5 patch#2 as this might break the platforms where this quirk
->   is not applicable. Provided a generic function in iommu code and added
->   back the quirk implementation in SMMU v3 driver(patch#3)
-> 
-> v4 --> v5
-> Addressed comments from Robin and Lorenzo:
-> -Added a comment to make it clear that, for now, only straightforward
->   HW topologies are handled while reserving ITS regions(patch #1).
-> 
-> v3 --> v4
-> Rebased on 4.13-rc1.
-> Addressed comments from Robin, Will and Lorenzo:
-> -As suggested by Robin, moved the ITS msi reservation into
->   iommu_dma_get_resv_regions().
-> -Added its_count != resv region failure case(patch #1).
-> 
-> v2 --> v3
-> Addressed comments from Lorenzo and Robin:
-> -Removed dev_is_pci() check in smmuV3 driver.
-> -Don't treat device not having an ITS mapping as an error in
->   iort helper function.
-> 
-> v1 --> v2
-> -patch 2/2: Invoke iort helper fn based on fwnode type(acpi).
-> 
-> RFCv2 -->PATCH
-> -Incorporated Lorenzo's review comments.
-> 
-> RFC v1 --> RFC v2
-> Based on Robin's review comments,
-> -Removed  the generic erratum framework.
-> -Using IORT/MADT tables to retrieve the ITS base addr instead  of vendor
-> specific CSRT table.
-> 
-> 
-> Shameer Kolothum (4):
->   ACPI/IORT: Add msi address regions reservation helper
->   iommu/dma: Add a helper function to reserve HW MSI address regions for
->     IOMMU drivers
->   iommu/arm-smmu-v3:Enable ACPI based HiSilicon erratum 161010801
->   PCI: hisi: blacklist hip06/hip07 controllers behind SMMUv3
-> 
->  drivers/acpi/arm64/iort.c        | 97
-> ++++++++++++++++++++++++++++++++++++++--
->  drivers/iommu/arm-smmu-v3.c      | 27 ++++++++---
->  drivers/iommu/dma-iommu.c        | 20 +++++++++
->  drivers/irqchip/irq-gic-v3-its.c |  3 +-
->  drivers/pci/dwc/pcie-hisi.c      | 12 +++++
->  include/linux/acpi_iort.h        |  7 ++-
->  include/linux/dma-iommu.h        |  7 +++
->  7 files changed, 163 insertions(+), 10 deletions(-)
-> 
-> --
-> 1.9.1
-> 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
+> Bjorn
