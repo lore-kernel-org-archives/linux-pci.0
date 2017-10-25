@@ -1,43 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52776 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751162AbdINIGw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Sep 2017 04:06:52 -0400
-Date: Thu, 14 Sep 2017 03:06:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org
-Subject: Re: Resizeable PCI BAR support V8
-Message-ID: <20170914080650.GA872@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:38258 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751312AbdJYPOJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 25 Oct 2017 11:14:09 -0400
+Date: Wed, 25 Oct 2017 16:14:13 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Meelis Roos <mroos@linux.ee>
+Cc: linux-alpha@vger.kernel.org,
+        Linux Kernel list <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: alpha boot hang - 4.14-rc* regression
+Message-ID: <20171025151413.GA6499@red-moon>
+References: <alpine.LRH.2.21.1710251043170.7098@math.ut.ee>
+ <alpine.LRH.2.21.1710251109150.7098@math.ut.ee>
+ <alpine.LRH.2.21.1710251129520.7098@math.ut.ee>
+ <20171025092159.GA14222@red-moon>
+ <alpine.LRH.2.21.1710251511090.10071@math.ut.ee>
+ <20171025133730.GA5487@red-moon>
+ <alpine.LRH.2.21.1710251748170.10071@math.ut.ee>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.21.1710251748170.10071@math.ut.ee>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 10, 2017 at 04:59:48PM +0200, Christian König wrote:
-> Hi everyone,
+On Wed, Oct 25, 2017 at 05:49:54PM +0300, Meelis Roos wrote:
+> > > > > removing libata modules and rebooting fixes it - so it seems to be 
+> > > > > loading of libata.
+> > > > 
+> > > > Can you please cherry-pick:
+> > > > 
+> > > > commit b1f9e5e355e9 ("ide: fix IRQ assignment for PCI bus order probing")
+> > > > 
+> > > > from mainline and let us know if that solves the issue ?
+> > > 
+> > > No, still breaks the same way (b1f9e5e355e9 patched on top of 
+> > > 0e4c2eeb758a).
+> > > 
+> > > 4.14.0-rc5-00095-g1c9fec470b81 was also still broken the same way (tried 
+> > > on Sunday).
+> > 
+> > I am not sure I patched the right sys file but if I did, does the patch
+> > below help ?
+> > 
+> > I think that at sata driver binding time the kernel finds a freed
+> > pointer in the host bridge map_irq() hook and that's where things
+> > go wrong.
+> > 
+> > Please let me know if that's the right sys file, it is a mechanical
+> > change and making it for other sys file should be reasonably simple.
+> > 
+> > Lorenzo
+> > 
+> > -- >8 --
+> > diff --git a/arch/alpha/kernel/sys_dp264.c b/arch/alpha/kernel/sys_dp264.c
 > 
-> This is the eighth incarnation of this set of patches. It enables device
-> drivers to resize and most likely also relocate the PCI BAR of devices 
-> they manage to allow the CPU to access all of the device local memory at once.
+> "Booting GENERIC on Tsunami variation Webbrick using machine vector 
+> Webbrick from SRM"
 > 
-> This is very useful for GFX device drivers where the default PCI BAR is only
-> about 256MB in size for compatibility reasons, but the device easily have
-> multiple gigabyte of local memory.
+> Seems to be the correct file - tsunami is referenced from this file and 
+> the IRQ-s are DP264.
 > 
-> Some changes since the last version:
-> 1. Rebased on Linus current master tree, going to rebase on 4.13-rc1 as soon as that is out.
-> 2. Some more documentation on how to use the new functionality in drivers.
-> 3. Only re-enable decoding when everything looks good.
-> 4. Rename the new amdgpu function to better match what it is doing.
-> 
-> Bjorn what's you'r feeling on getting this into 4.14?
+> But the patch does not make a difference :(
 
-This seems 99.9% done, but there were some kbuild issues that need to be
-resolved.  Or did I miss the resolution of those?
+It is probably because I patched the wrong map_irq() function,
+I am trying to detect which one you are _actually_ using, if
+the patch below fails I will patch them all (which is what I
+have to do anyway).
 
-Bjorn
+Please give this a go - this _has_ to make a difference, it is not
+correct to leave map_irq() pointers as __init memory, IRQ routing
+for modules can't work.
+
+-- >8 --
+diff --git a/arch/alpha/kernel/sys_dp264.c b/arch/alpha/kernel/sys_dp264.c
+index 6c35159..62fd7f1 100644
+--- a/arch/alpha/kernel/sys_dp264.c
++++ b/arch/alpha/kernel/sys_dp264.c
+@@ -356,7 +356,7 @@ clipper_init_irq(void)
+  *  10	 64 bit PCI option slot 3 (not bus 0)
+  */
+ 
+-static int __init
++static int
+ isa_irq_fixup(const struct pci_dev *dev, int irq)
+ {
+ 	u8 irq8;
+@@ -372,10 +372,10 @@ isa_irq_fixup(const struct pci_dev *dev, int irq)
+ 	return irq8 & 0xf;
+ }
+ 
+-static int __init
++static int
+ dp264_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[6][5] __initdata = {
++	static char irq_tab[6][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 5 ISA Bridge */
+ 		{ 16+ 3, 16+ 3, 16+ 2, 16+ 2, 16+ 2}, /* IdSel 6 SCSI builtin*/
+@@ -456,10 +456,10 @@ monet_swizzle(struct pci_dev *dev, u8 *pinp)
+ 	return slot;
+ }
+ 
+-static int __init
++static int
+ webbrick_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[13][5] __initdata = {
++	static char irq_tab[13][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 7 ISA Bridge */
+ 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 8 unused */
