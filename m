@@ -1,103 +1,110 @@
-Return-Path: <SRS0=AO0a=BR=codeaurora.org=tbaicar@kernel.org>
-Return-Path: <SRS0=AO0a=BR=codeaurora.org=tbaicar@kernel.org>
-Subject: Re: [PATCH] PCI/AER: update AER status string print to match other
- AER logs
-To: David Laight <David.Laight@ACULAB.COM>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "helgaas@kernel.org" <helgaas@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <1508254922-30925-1-git-send-email-tbaicar@codeaurora.org>
- <063D6719AE5E284EB5DD2968C1650D6DD0099999@AcuExch.aculab.com>
- <afd74efa-96eb-3597-7323-a110f53e221b@codeaurora.org>
- <063D6719AE5E284EB5DD2968C1650D6DD009A8FD@AcuExch.aculab.com>
-From: Tyler Baicar <tbaicar@codeaurora.org>
-Message-ID: <fb9df680-6b4a-89bb-4d04-d2a05f0fd93e@codeaurora.org>
-Date: Wed, 18 Oct 2017 14:23:58 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 25 Oct 2017 14:37:30 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Meelis Roos <mroos@linux.ee>
+Cc: linux-alpha@vger.kernel.org,
+        Linux Kernel list <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: alpha boot hang - 4.14-rc* regression
+Message-ID: <20171025133730.GA5487@red-moon>
+References: <alpine.LRH.2.21.1710251043170.7098@math.ut.ee>
+ <alpine.LRH.2.21.1710251109150.7098@math.ut.ee>
+ <alpine.LRH.2.21.1710251129520.7098@math.ut.ee>
+ <20171025092159.GA14222@red-moon>
+ <alpine.LRH.2.21.1710251511090.10071@math.ut.ee>
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD009A8FD@AcuExch.aculab.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.21.1710251511090.10071@math.ut.ee>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/18/2017 6:14 AM, David Laight wrote:
-> From: Tyler Baicar [mailto:tbaicar@codeaurora.org]
->> Sent: 17 October 2017 18:14
->> On 10/17/2017 12:00 PM, David Laight wrote:
->>> From: Tyler Baicar
->>>> Sent: 17 October 2017 16:42
->>>> Currently the AER driver uses cper_print_bits() to print the AER status
->>>> string. This causes the status string to not include the proper PCI device
->>>> name prefix that the other AER prints include. Also, it has a different
->>>> print level than all the other AER prints.
->>>>
->>>> Update the AER driver to print the AER status string with the proper string
->>>> prefix and proper print level.
->>>>
->>>> Previous log example:
->>>>
->>>> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
->>>> Receiver Error, Bad TLP
->>> ...
->>>> New log:
->>>>
->>>> e1000e 0003:01:00.1: aer_status: 0x00000041, aer_mask: 0x00000000
->>>> e1000e 0003:01:00.1: Receiver Error
->>>> e1000e 0003:01:00.1: Bad TLP
->>> Wouldn't it be better to manage to print the above all on 1 line?
->   
->> I broke them up into separate lines to simplify the code. If you look at
->> cper_print_bits(),
->> it is not a clean solution and involves some hard coded values to try to limit
->> the lines to 80 characters.
-> I'm not sure the 80 char limit is needed.
->
->
-> How about:
-> #define MAX_STR 32
-> void pr_bits(unsigned int val, const char *strs[], unsigned int num_str)
-> {
->          const char *str[MAX_STR] = {};
->          unsigned int i, num;
->
->          if (num_str > MAX_STR)
->                  num_str = MAX_STR;
->          for (i = 0, num = 0; i < num_str; i++) {
->                  if (!(val & (1 << i)))
->                          continue;
->                  str[num++] = strs[i];
->          }
->          printf(" %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n" + (MAX_STR - num) * 3,
->                  str[0], str[1], str[2], str[3],
->                  str[4], str[5], str[6], str[7],
->                  str[8], str[9], str[10], str[11],
->                  str[12], str[13], str[14], str[15],
->                  str[16], str[17], str[18], str[19],
->                  str[20], str[21], str[22], str[23],
->                  str[24], str[25], str[26], str[27],
->                  str[28], str[29], str[30], str[31]);
-> }
->
-> For kernel use you'd probably want to pass in 'dev' and a printf list
-> and use %pV to put the fixed text on the front of the line.
->
-> All rather begging for a new %p? feature that is passed the value, strings
-> and separator.
-Hi David,
+On Wed, Oct 25, 2017 at 03:21:21PM +0300, Meelis Roos wrote:
+> > > (Added linux-pci to CC)
+> > > 
+> > > > > I run Gentoo Linux on my alphas, with latest git kernels for test. 
+> > > > > 4.13.0 worked well on 3 alphas but 4.13.0-09217-g5969d1bb3082 hangs on 
+> > > > > boot on all 3 of them. Tried bisecting on PC164, got into unrelated 
+> > > > > stuff, so probably it does not trigger always. Retried bisecting on 
+> > > > > DS10L. On the first try I got that the same keel where I first saw bad 
+> > > > > was the culprit, another bisect led me to 
+> > > > > 0e4c2eeb758a91e68b9eaf7a4bee9bd5ed97ff2b which looks more related.
+> > > > > 
+> > > > > This is how the crash looks on console:
+> > > > > 
+> > > > >  * Starting udev ...
+> > > > > starting version 225
+> > > > >  [ ok ]
+> > > > >  * Generating a rule to create a /dev/root symlink ...
+> > > > >  [ ok ]
+> > > > >  * Populating /dev with existing devices through uevents ...
+> > > > >  [ ok ]
+> > > > > 
+> > > > > halted CPU 0
+> > > > > 
+> > > > > halt code = 5
+> > > > > HALT instruction executed
+> > > > > PC = fffffc00009bf914
+> > > > > boot failure
+> > > > > >>>
+> > > > > 
+> > > > > What else can I do to debug this?
+> > > > 
+> > > > Booting with debug ignore_loglevel I get also this:
+> > > [...]
+> > > > So maybe it is related pcspkr loading, or the just loaded libata or 
+> > > > floppy...
+> > > 
+> > > removing libata modules and rebooting fixes it - so it seems to be 
+> > > loading of libata.
+> > 
+> > Can you please cherry-pick:
+> > 
+> > commit b1f9e5e355e9 ("ide: fix IRQ assignment for PCI bus order probing")
+> > 
+> > from mainline and let us know if that solves the issue ?
+> 
+> No, still breaks the same way (b1f9e5e355e9 patched on top of 
+> 0e4c2eeb758a).
+> 
+> 4.14.0-rc5-00095-g1c9fec470b81 was also still broken the same way (tried 
+> on Sunday).
 
-This seems like a bad approach. This can make the print in the kernel logs and 
-the code both
-look pretty awful. I would prefer to have each error that occurred have it's own 
-print line in
-the logs rather than introduce this code for the sole purpose of keeping the 
-list on a single
-print line. I don't see any real downside to having a few additional print lines 
-in error
-scenarios.
+I am not sure I patched the right sys file but if I did, does the patch
+below help ?
 
-Thanks,
-Tyler
+I think that at sata driver binding time the kernel finds a freed
+pointer in the host bridge map_irq() hook and that's where things
+go wrong.
 
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+Please let me know if that's the right sys file, it is a mechanical
+change and making it for other sys file should be reasonably simple.
+
+Lorenzo
+
+-- >8 --
+diff --git a/arch/alpha/kernel/sys_dp264.c b/arch/alpha/kernel/sys_dp264.c
+index 6c35159..88c72fe 100644
+--- a/arch/alpha/kernel/sys_dp264.c
++++ b/arch/alpha/kernel/sys_dp264.c
+@@ -356,7 +356,7 @@
+  *  10	 64 bit PCI option slot 3 (not bus 0)
+  */
+ 
+-static int __init
++static int
+ isa_irq_fixup(const struct pci_dev *dev, int irq)
+ {
+ 	u8 irq8;
+@@ -372,10 +372,10 @@
+ 	return irq8 & 0xf;
+ }
+ 
+-static int __init
++static int
+ dp264_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[6][5] __initdata = {
++	static char irq_tab[6][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 5 ISA Bridge */
+ 		{ 16+ 3, 16+ 3, 16+ 2, 16+ 2, 16+ 2}, /* IdSel 6 SCSI builtin*/
