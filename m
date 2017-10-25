@@ -1,46 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:53810 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751682AbdJLOfL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 10:35:11 -0400
-Received: by mail-pf0-f170.google.com with SMTP id t188so2575441pfd.10
-        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 07:35:11 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
-References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
-From: Roopa Prabhu <roopa@cumulusnetworks.com>
-Date: Thu, 12 Oct 2017 07:35:10 -0700
-Message-ID: <CAJieiUjuKtmYDZ5-7UjYkWFJuMGu2gajhziLQKAZLTz6g63f2A@mail.gmail.com>
-Subject: Re: [RFC 0/3] Adding config get/set to devlink
-To: Steve Lin <steven.lin1@broadcom.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Jiri Pirko <jiri@mellanox.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        michael.chan@broadcom.com, linux-pci@vger.kernel.org,
-        "John W. Linville" <linville@tuxdriver.com>, gospo@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <a83617d0-8506-7fe4-2870-d9dbd9ffdb3f@gmail.com>
+References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
+ <1508868949-16652-2-git-send-email-jim2101024@gmail.com>
+ <a83617d0-8506-7fe4-2870-d9dbd9ffdb3f@gmail.com>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Wed, 25 Oct 2017 11:00:32 -0400
+Message-ID: <CANCKTBtLxAv9tmfi+92n+bYVq6x_ts0YzhH2YZ_jLnc+Dadc7g@mail.gmail.com>
+Subject: Re: [PATCH 1/8] SOC: brcmstb: add memory API
+To: Florian Fainelli <f.fainelli@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Linux-MIPS <linux-mips@linux-mips.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 6:34 AM, Steve Lin <steven.lin1@broadcom.com> wrote:
-> Adds a devlink command for getting & setting device configuration
-> parameters, and enumerates a bunch of those parameters as devlink
-> attributes.  Also introduces an attribute that can be set by a
-> driver to indicate that the config change doesn't take effect
-> until the next restart (as in the case of the bnxt driver changes
-> in this patchset, for which all the configuration changes affect NVM
-> only, and aren't loaded until the next restart.)
+On Tue, Oct 24, 2017 at 8:23 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
+> Hi Jim,
 >
-> bnxt driver patches make use of these new devlink cmds/attributes.
+> On 10/24/2017 11:15 AM, Jim Quinlan wrote:
+>> +#elif defined(CONFIG_MIPS)
+>> +int brcmstb_memory_phys_addr_to_memc(phys_addr_t pa)
+>> +{
+>> +     /* The logic here is fairly simple and hardcoded: if pa <= 0x5000_0000,
+>> +      * then this is MEMC0, else MEMC1.
+>> +      *
+>> +      * For systems with 2GB on MEMC0, MEMC1 starts at 9000_0000, with 1GB
+>> +      * on MEMC0, MEMC1 starts at 6000_0000.
+>> +      */
+>> +     if (pa >= 0x50000000ULL)
+>> +             return 1;
+>> +     else
+>> +             return 0;
+>> +}
+>> +#endif
 >
-> Steve Lin (3):
->   devlink: Add config parameter get/set operations
->   bnxt: Move generic devlink code to new file
->   bnxt: Add devlink support for config get/set
+> We may be missing an EXPORT_SYMBOL_GPL(brcmstb_memory_phys_to_addr_memc)
+> here?
 >
+> Thanks!
+> --
+> Florian
 
-Is the goal here to move all ethtool operations to devlink (I saw some
-attrs related to speed etc). ?.
-We do need to move ethtool attrs to netlink and devlink is a good
-place (and of-course leave the current ethtool api around for backward
-compatibility).
+Hi Florian,
+
+I removed that EXPORT_SYMBOL_GPL() because this particular call is not
+directly invoked PCIe RC driver.  It is indirectly invoked by
+brcmstb_memory_memc_size(), which is exported.
+
+Thanks, Jim
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
