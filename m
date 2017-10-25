@@ -1,200 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56186 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756135AbdJJLK1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Oct 2017 07:10:27 -0400
-Date: Tue, 10 Oct 2017 06:10:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ray Jui <ray.jui@broadcom.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Jon Mason <jon.mason@broadcom.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
-Message-ID: <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
- <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
+Return-Path: <SRS0=ogav=BY=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=ogav=BY=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH] PCI: endpoint: handle probable NULL pointer access
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Pankaj Dubey
+	<pankaj.dubey@samsung.com>
+References: <CGME20171012035806epcas1p16df484a0565cfe780416253710464a8f@epcas1p1.samsung.com>
+ <1507780677-7983-1-git-send-email-pankaj.dubey@samsung.com>
+ <20171024200200.GE21840@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <6ee65418-8589-01c1-2156-67fbf881260a@ti.com>
+Date: Wed, 25 Oct 2017 17:32:07 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171024200200.GE21840@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 09, 2017 at 10:33:01PM -0700, Ray Jui wrote:
-> Hi Florian,
-> 
-> This is from the following commit:
-> 
-> commit fb26592301200dbbe4a9943fe188b57a46716900
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Mon Oct 31 16:00:01 2016 -0500
-> 
->     PCI: Warn on possible RW1C corruption for sub-32 bit config writes
-> 
->     Hardware that supports only 32-bit config writes is not spec-compliant.
->     For example, if software performs a 16-bit write, we must do a 32-bit read,
->     merge in the 16 bits we intend to write, followed by a 32-bit write.  If
->     the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
->     to-clear) bits set, we just inadvertently cleared something we shouldn't
->     have.
-> 
->     Add a rate-limited warning when we do sub-32 bit config writes.  Remove
->     similar probe-time warnings from some of the affected host bridge drivers.
-> 
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
->     Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
->     Acked-by: Thierry Reding <treding@nvidia.com>
-> 
-> This warning message will show up on every root complex that can only
-> support 32-bit config register write (instead of 8-bit, 16-bit writes)
-> and iProc based host controller happens to be one of them.
-> 
-> This limitation violates the PCIe spec as the 32-bit write may clear
-> RW1C bits of a config register. But I believe those registers are
-> usually used in AER which we do not currently support in the iProc
-> based hos controllers.
+Hi,
 
-This warning is ratelimited, but maybe even that is overkill.  It
-looks like we currently warn on every config write of less than 32
-bits.  How many of those do you see?  Once per boot might be enough,
-or maybe once per device (so we get a hint when loading a new driver).  
+On Wednesday 25 October 2017 01:32 AM, Bjorn Helgaas wrote:
+> On Thu, Oct 12, 2017 at 09:27:57AM +0530, Pankaj Dubey wrote:
+>> controller_group allocation in pci_ep_cfs_init function can fail
+>> so we should have a check while using it in pci_ep_cfs_add_epc_group
+>> for registering group, else we will hit NULL pointer access.
+>>
+>> This patch adds required check for the same and returns -EPROBE_DEFER,
+>> so that endpoint controller driver probe can be reattempted later
+>> in case controller_group is not allocated because pci_ep_cfs_init is
+>> not yet called.
+>>
+>> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+> 
+> Looking for Kishon's ack here.
+> 
+>> ---
+>>  drivers/pci/endpoint/pci-ep-cfs.c   | 7 ++++++-
+>>  drivers/pci/endpoint/pci-epc-core.c | 4 ++++
+>>  2 files changed, 10 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+>> index 424fdd6..3cac818 100644
+>> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+>> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+>> @@ -172,7 +172,12 @@ struct config_group *pci_ep_cfs_add_epc_group(const char *name)
+>>  	group = &epc_group->group;
+>>  
+>>  	config_group_init_type_name(group, name, &pci_epc_type);
+>> -	ret = configfs_register_group(controllers_group, group);
+>> +
+>> +	if (controllers_group)
+>> +		ret = configfs_register_group(controllers_group, group);
+>> +	else
+>> +		ret = -EPROBE_DEFER;
+>> +
 
-> On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
-> > Hi,
-> >
-> > With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
-> > warnings using pcie_iproc; is this something to be worried about?
-> >
-> > [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
-> >
-> >
-> >
-> > [    2.632358] pci_bus 0000:00: root bus resource [mem
-> > 0x08000000-0x0fffffff]
-> >
-> >
-> > [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
-> > will use [bus 00-ff]
-> >
-> >
-> > [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0x4 may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0x4 may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0x4c may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0x3e may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0x4 may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
-> > offset 0xc may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.705531] PCI: bus0: Fast back to back transfers disabled
-> >
-> >
-> >
-> > [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
-> > 00-00]), reconfiguring
-> >
-> >
-> > [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0x3e may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0xc8 may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0x3e may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> > offset 0x3e may corrupt adjacent RW1C bits
-> >
-> >
-> > [    2.758262] pci 0000:01:00.0: enabling Extended Tags
-> >
-> >
-> >
-> > [    2.763577] PCI: bus1: Fast back to back transfers disabled
-> >
-> >
-> >
-> > [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
-> > 0x08000000-0x080fffff]
-> >
-> >
-> > [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
-> > 0x08000000-0x08003fff 64bit]
-> >
-> >
-> > [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
-> >
-> >
-> >
-> > [    2.788293] pci 0000:00:00.0:   bridge window [mem
-> > 0x08000000-0x080fffff]
-> >
-> >
-> > [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
-> >
-> >
-> >
-> > [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
-> >
-> >
-> >
-> > [    2.922349] pci_bus 0001:00: root bus resource [mem
-> > 0x40000000-0x47ffffff]
-> >
-> >
-> > [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
-> > will use [bus 00-ff]
-> >
-> >
-> > [    2.937482] PCI: bus0: Fast back to back transfers disabled
-> >
-> >
-> >
-> > [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
-> > 00-00]), reconfiguring
-> >
-> >
-> > [    2.951713] PCI: bus1: Fast back to back transfers disabled
-> >
-> >
-> >
-> > [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
-> > 0x40000000-0x400fffff]
-> >
-> >
-> > [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
-> > 0x40000000-0x40007fff 64bit]
-> >
-> >
-> > [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
-> >
-> >
-> >
-> > [    2.976434] pci 0001:00:00.0:   bridge window [mem
-> > 0x40000000-0x400fffff]
-> > --
-> > Florian
+Do you ever face this issue? Ideally controllers_group should always be
+initialized if the dependencies are modeled properly.
+>>  	if (ret) {
+>>  		pr_err("failed to register configfs group for %s\n", name);
+>>  		goto err_register_group;
+>> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+>> index 42c2a11..d327a2a 100644
+>> --- a/drivers/pci/endpoint/pci-epc-core.c
+>> +++ b/drivers/pci/endpoint/pci-epc-core.c
+>> @@ -518,6 +518,10 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
+>>  		goto put_dev;
+>>  
+>>  	epc->group = pci_ep_cfs_add_epc_group(dev_name(dev));
+>> +	if (IS_ERR(epc->group)) {
+>> +		ret = -EPROBE_DEFER;
+
+should use the return value of pci_ep_cfs_add_epc_group().
+
+However I don't think this is required since drivers might not actually need cfs.
+
+Thanks
+Kishon
