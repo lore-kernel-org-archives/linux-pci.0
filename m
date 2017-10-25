@@ -1,13 +1,26 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 17 Oct 2017 14:03:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bodo-Merle Sandor <esndbod@gmail.com>
-Subject: Re: [PATCH] PCI: iproc: Allow allocation of multiple MSIs
-Message-ID: <20171017190300.GI5641@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171007120851.20230-1-sbodomerle@gmail.com>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Jim Quinlan' <jim2101024@gmail.com>
+Subject: RE: [PATCH 5/9] PCI: host: brcmstb: add dma-ranges for inbound traffic
+Date: Wed, 25 Oct 2017 09:36:37 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A24FC@AcuExch.aculab.com>
+References: <1507761269-7017-6-git-send-email-jim2101024@gmail.com>
+ <589c04cb-061b-a453-3188-79324a02388e@arm.com>
+ <20171017081422.GA19475@lst.de>
+ <CANCKTBsCB+x2XgrND9AhRtxPkCXfps1nA+YymkZjKHOUZfjSHQ@mail.gmail.com>
+ <20171018065316.GA11183@lst.de>
+ <CANCKTBv+yiCNsrnx3m+W9wPqC4NdKPZ2p=zLtSa8fX6v1rPcYQ@mail.gmail.com>
+ <20171019091644.GA14983@lst.de>
+ <CANCKTBuaTD29My77QfOeUmtZfLAmmJXUYe6QvBW+uoH2Kb+tAQ@mail.gmail.com>
+ <20171020073730.GA12937@lst.de>
+ <CANCKTBsRRkwNMrxWjtgxbyZqT6NOxPX0NHDbnEO2BMjj8oVtpg@mail.gmail.com>
+ <20171020145752.GA4694@lst.de>
+ <CANCKTBtxp9gSdndKAZ7xGA+VozQsn2PX_-9P8A22_5Matbb7-w@mail.gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD009F05A@AcuExch.aculab.com>
+ <CANCKTBu6H6thuK9F_6HBGhStaXSto7fwWv4V5oH8EdWQD0-1kQ@mail.gmail.com>
+In-Reply-To: <CANCKTBu6H6thuK9F_6HBGhStaXSto7fwWv4V5oH8EdWQD0-1kQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171007120851.20230-1-sbodomerle@gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,106 +28,55 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Sandor Bodo-Merle <sbodomerle@gmail.com>, linux-arm-kernel@lists.infradead.org
+Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Kevin
+ Cernekee <cernekee@gmail.com>, Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Ralf
+ Baechle <ralf@linux-mips.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>, Gregory
+ Fong <gregory.0xf0@gmail.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Oct 07, 2017 at 02:08:44PM +0200, Bodo-Merle Sandor wrote:
-> From: Sandor Bodo-Merle <sbodomerle@gmail.com>
+From: Jim Quinla
+> Sent: 24 October 2017 19:08
+...
+> Hi David,  Christoph was also concerned about this:
 > 
-> Add support for allocating multiple MSIs at the same time, so that the
-> MSI_FLAG_MULTI_PCI_MSI flag can be added to the msi_domain_info
-> structure.
+> "For the block world take a look at __blk_segment_map_sg which does the merging
+> of contiguous pages into a single SG segment.  You'd have to override
+> BIOVEC_PHYS_MERGEABLE to prevent this from happening in your supported
+> architectures for the block layer."
 > 
-> Avoid storing the hwirq in the low 5 bits of the message data, as it is
-> used by the device. Also fix an endianness problem by using readl().
-> 
-> Signed-off-by: Sandor Bodo-Merle <sbodomerle@gmail.com>
+> Do you consider this a non-issue as well or can this happen and span
+> memory regions?
 
-Applied with Ray's reviewed-by to pci/host-iproc for v4.15, thanks!
+Probably easiest to have an architecture limit on the addresses that
+can be merged.
 
-BTW, I saw Ray's reviewed-by and associated discussion because I was
-personally addressed, but it didn't appear on linux-pci, probably
-because the emails were not plain text; see
-http://vger.kernel.org/majordomo-info.html
+My guess is that this code only really ever merges pages that were
+allocated contiguously, but have got converted to a list of VA.
+So stopping merging over even 1MB boundaries would have minimal effect
+(even if done unconditionally).
 
-> ---
->  drivers/pci/host/pcie-iproc-msi.c | 19 ++++++++++++-------
->  1 file changed, 12 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/host/pcie-iproc-msi.c
-> index 2d0f535a2f69..990fc906d73d 100644
-> --- a/drivers/pci/host/pcie-iproc-msi.c
-> +++ b/drivers/pci/host/pcie-iproc-msi.c
-> @@ -179,7 +179,7 @@ static struct irq_chip iproc_msi_irq_chip = {
->  
->  static struct msi_domain_info iproc_msi_domain_info = {
->  	.flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-> -		MSI_FLAG_PCI_MSIX,
-> +		MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
->  	.chip = &iproc_msi_irq_chip,
->  };
->  
-> @@ -237,7 +237,7 @@ static void iproc_msi_irq_compose_msi_msg(struct irq_data *data,
->  	addr = msi->msi_addr + iproc_msi_addr_offset(msi, data->hwirq);
->  	msg->address_lo = lower_32_bits(addr);
->  	msg->address_hi = upper_32_bits(addr);
-> -	msg->data = data->hwirq;
-> +	msg->data = data->hwirq << 5;
->  }
->  
->  static struct irq_chip iproc_msi_bottom_irq_chip = {
-> @@ -251,7 +251,7 @@ static int iproc_msi_irq_domain_alloc(struct irq_domain *domain,
->  				      void *args)
->  {
->  	struct iproc_msi *msi = domain->host_data;
-> -	int hwirq;
-> +	int hwirq, i;
->  
->  	mutex_lock(&msi->bitmap_lock);
->  
-> @@ -267,10 +267,14 @@ static int iproc_msi_irq_domain_alloc(struct irq_domain *domain,
->  
->  	mutex_unlock(&msi->bitmap_lock);
->  
-> -	irq_domain_set_info(domain, virq, hwirq, &iproc_msi_bottom_irq_chip,
-> -			    domain->host_data, handle_simple_irq, NULL, NULL);
-> +	for (i = 0; i < nr_irqs; i++) {
-> +		irq_domain_set_info(domain, virq + i, hwirq + i,
-> +				    &iproc_msi_bottom_irq_chip,
-> +				    domain->host_data, handle_simple_irq,
-> +				    NULL, NULL);
-> +	}
->  
-> -	return 0;
-> +	return hwirq;
->  }
->  
->  static void iproc_msi_irq_domain_free(struct irq_domain *domain,
-> @@ -302,7 +306,8 @@ static inline u32 decode_msi_hwirq(struct iproc_msi *msi, u32 eq, u32 head)
->  
->  	offs = iproc_msi_eq_offset(msi, eq) + head * sizeof(u32);
->  	msg = (u32 *)(msi->eq_cpu + offs);
-> -	hwirq = *msg & IPROC_MSI_EQ_MASK;
-> +	hwirq = readl(msg);
-> +	hwirq = (hwirq >> 5) + (hwirq & 0x1f);
->  
->  	/*
->  	 * Since we have multiple hwirq mapped to a single MSI vector,
-> -- 
-> 2.15.0.rc0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I even wonder if the merging is actually worthwhile at all?
+Maybe if any code has limits on the SG list length.
+(or reducing the number of cache lines the get dirtied...)
+
+	David
+
+
 
 _______________________________________________
 linux-arm-kernel mailing list
