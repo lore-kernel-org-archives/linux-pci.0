@@ -1,14 +1,12 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU1GZMpptQ2oCE-cOzX+G=cj248bVGXhC_vSqD_4d7D7+Q@mail.gmail.com>
-References: <20170828142307.30061-1-l.stach@pengutronix.de>
- <CAJ+vNU1GZMpptQ2oCE-cOzX+G=cj248bVGXhC_vSqD_4d7D7+Q@mail.gmail.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Mon, 9 Oct 2017 09:14:19 -0300
-Message-ID: <CAOMZO5CLqYx-OyxqrqGjGgRNGoGETM=nt5FF_wQ2bye=nXkFPQ@mail.gmail.com>
-Subject: Re: [PATCH 0/3] DWC host without MSI controller
-To: Tim Harvey <tharvey@gateworks.com>, Bjorn Helgaas <bhelgaas@google.com>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org,
+	bhelgaas@google.com
+Subject: [RFC PATCH v8 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci
+ core
+Date: Thu, 26 Oct 2017 21:28:33 +0800
+Message-Id: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,68 +14,84 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- patchwork-lst@pengutronix.de, Sascha Hauer <kernel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Shawn Guo <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
+Cc: Mark Rutland <mark.rutland@arm.com>, Heiko Stuebner <heiko@sntech.de>,
+ Ganapathi Bhat <gbhat@marvell.com>, tony@atomide.com,
+ Catalin Marinas <catalin.marinas@arm.com>, shawn.lin@rock-chips.com,
+ Will Deacon <will.deacon@arm.com>, Amitkumar Karwar <amitkarwar@gmail.com>,
+ Frank Rowand <frowand.list@gmail.com>, linux-rockchip@lists.infradead.org,
+ briannorris@chromium.org, linux-acpi@vger.kernel.org,
+ Matthias Kaehlcke <mka@chromium.org>, linux-arm-kernel@lists.infradead.org,
+ linux-pci@vger.kernel.org, Len Brown <lenb@kernel.org>,
+ devicetree@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
+ linux-pm@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+ Nishant Sarmukadam <nishants@marvell.com>, Rob Herring <robh+dt@kernel.org>,
+ Kalle Valo <kvalo@codeaurora.org>, rjw@rjwysocki.net, netdev@vger.kernel.org,
+ linux-wireless@vger.kernel.org, dianders@chromium.org,
+ Caesar Wang <wxt@rock-chips.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
 
-On Mon, Aug 28, 2017 at 1:59 PM, Tim Harvey <tharvey@gateworks.com> wrote:
-> On Mon, Aug 28, 2017 at 7:23 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->> Hi all,
->>
->> this small series tries to fix/workaround a serious design flaw of the DWC PCIe
->> host controller: it is unable to work with both legacy and MSI IRQs enabled at
->> the same time. As soon as the first MSI is enabled in the DWC MSI controller,
->> the host stops forwarding legacy IRQs.
->>
->> If the MSI controller is present, MSIs will be used for the PCIe port services
->> IRQs, leaving endpoint devices which don't support MSIs unable to raise IRQs.
->> It is only safe to enable the MSI controller if it is validated that all PCIe
->> devices and drivers in the system support working MSIs. As most devices
->> support falling back to using legacy PCIe IRQs if MSI support is missing it is
->> much safer to disable the MSI by default and only enable it on validated
->> systems.
->>
->> Feedback welcome.
->>
->> Regards,
->> Lucas
->>
->> Lucas Stach (3):
->>   PCI: designware: only register MSI controller when MSI irq line is
->>     valid
->>   PCI: imx6: allow MSI irq to be absent
->>   ARM: dts: imx6qdl: remove MSI irq line
->>
->>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 ++++----
->>  arch/arm/boot/dts/imx6qdl.dtsi                     |  2 --
->>  drivers/pci/dwc/pci-imx6.c                         | 23 +++++++++++-----------
->>  drivers/pci/dwc/pcie-designware-host.c             |  4 ++--
->>  4 files changed, 17 insertions(+), 20 deletions(-)
->>
->
-> Lucas,
->
-> Thank you for following up on this!
->
-> I tested it with and without the third patch that removes msi from the
-> dt thus with both an ath9k 802.11 device which only supports legacy
-> interrupts and a Marvell sky2 device which supports msi as well as
-> legacy interrupts and it works as expected:
->  - without msi enabled in dts (default): both sky2 and ath9k work
->  - with msi enabled in dt: sky2 works ath9k does not
->
-> Tested-by: Tim Harvey <tharvey@gateworks.com>
+Currently we are handling wake irq in mrvl wifi driver. Move it into
+pci core.
 
-Any comments about this series?
+Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
+
+
+Changes in v8:
+Add optional "pci", and rewrite commit message.
+Rewrite the commit message.
+Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
+
+Changes in v7:
+Move PCIE_WAKE handling into pci core.
+
+Changes in v6:
+Fix device_init_wake error handling, and add some comments.
+
+Changes in v5:
+Move to pci.txt
+Use "wakeup" instead of "wake"
+Rebase.
+
+Changes in v3:
+Fix error handling.
+
+Changes in v2:
+Use dev_pm_set_dedicated_wake_irq.
+
+Jeffy Chen (7):
+  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+  mwifiex: Disable wakeup irq handling for pcie
+  arm64: dts: rockchip: Handle PCIe WAKE# signal in pcie driver for Gru
+  of/irq: Adjust of pci irq parsing for multiple interrupts
+  PCI: Make pci_platform_pm_ops's callbacks optional
+  PCI / PM: Move acpi wakeup code to pci core
+  PCI / PM: Add support for the PCIe WAKE# signal for OF
+
+ Documentation/devicetree/bindings/pci/pci.txt |   3 +
+ arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  |  15 +--
+ drivers/net/wireless/marvell/mwifiex/main.c   |   4 +
+ drivers/of/of_pci_irq.c                       |  13 ++-
+ drivers/pci/Makefile                          |   2 +-
+ drivers/pci/pci-acpi.c                        | 121 +++++++++++------------
+ drivers/pci/pci-driver.c                      |   9 ++
+ drivers/pci/pci-of.c                          | 136 ++++++++++++++++++++++++++
+ drivers/pci/pci.c                             | 112 +++++++++++++++++----
+ drivers/pci/pci.h                             |  31 ++++--
+ drivers/pci/probe.c                           |  12 ++-
+ drivers/pci/remove.c                          |   2 +
+ include/linux/pci.h                           |   2 +
+ 13 files changed, 365 insertions(+), 97 deletions(-)
+ create mode 100644 drivers/pci/pci-of.c
+
+-- 
+2.11.0
+
+
 
 _______________________________________________
 linux-arm-kernel mailing list
