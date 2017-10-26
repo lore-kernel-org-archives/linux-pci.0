@@ -1,181 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46430 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759645AbdJQTZn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Oct 2017 15:25:43 -0400
-Date: Tue, 17 Oct 2017 14:25:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        nsekhar@ti.com
-Subject: Re: [PATCH 4/4] PCI: dwc: pci-dra7xx: Enable x2 mode support
-Message-ID: <20171017192541.GL5641@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171010101606.15951-1-kishon@ti.com>
- <20171010101606.15951-5-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171010101606.15951-5-kishon@ti.com>
+Received: from regular1.263xmail.com ([211.150.99.138]:47883 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932464AbdJZN3d (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Oct 2017 09:29:33 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-pci@vger.kernel.org
+Subject: [RFC PATCH v8 5/7] PCI: Make pci_platform_pm_ops's callbacks optional
+Date: Thu, 26 Oct 2017 21:28:38 +0800
+Message-Id: <20171026132840.20946-6-jeffy.chen@rock-chips.com>
+In-Reply-To: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
+References: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-s/PCI: dwc: pci-dra7xx: Enable x2 mode support/
-  PCI: dra7xx: Enable x2 mode support for dra74x and dra76x/
+Allow platforms not to provide some of the pci_platform_pm_ops's
+callbacks.
 
-Looks OK to me otherwise, but Rob had a comment about the DT names, so
-I'll wait for that resolution.
+Also change the return value -ENOSYS to -ENODEV for:
+warning: drivers/pci/pci.c,594: ENOSYS means 'invalid syscall nr' and nothing else
 
-On Tue, Oct 10, 2017 at 03:46:06PM +0530, Kishon Vijay Abraham I wrote:
-> Perform syscon configurations to get x2 mode to working in dra74x
-> (and dra76x).
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 68 ++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 66 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 78a87a8f1362..a43c904310f3 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -21,6 +21,7 @@
->  #include <linux/of_device.h>
->  #include <linux/of_gpio.h>
->  #include <linux/of_pci.h>
-> +#include <linux/of_platform.h>
->  #include <linux/pci.h>
->  #include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
-> @@ -83,6 +84,9 @@
->  #define MSI_REQ_GRANT					BIT(0)
->  #define MSI_VECTOR_SHIFT				7
->  
-> +#define PCIE_1LANE_2LANE_SELECTION			BIT(13)
-> +#define PCIE_B1C0_MODE_SEL				BIT(2)
-> +
->  struct dra7xx_pcie {
->  	struct dw_pcie		*pci;
->  	void __iomem		*base;		/* DT ti_conf */
-> @@ -95,6 +99,10 @@ struct dra7xx_pcie {
->  
->  struct dra7xx_pcie_of_data {
->  	enum dw_pcie_device_mode mode;
-> +	u32 b1co_mode_sel_mask;
-> +};
-> +
-> +struct dra7xx_pcie_data {
->  };
->  
->  #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
-> @@ -533,6 +541,16 @@ static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
->  	.mode = DW_PCIE_EP_TYPE,
->  };
->  
-> +static const struct dra7xx_pcie_of_data dra746_pcie_rc_of_data = {
-> +	.b1co_mode_sel_mask = BIT(2),
-> +	.mode = DW_PCIE_RC_TYPE,
-> +};
-> +
-> +static const struct dra7xx_pcie_of_data dra746_pcie_ep_of_data = {
-> +	.b1co_mode_sel_mask = BIT(2),
-> +	.mode = DW_PCIE_EP_TYPE,
-> +};
-> +
->  static const struct of_device_id of_dra7xx_pcie_match[] = {
->  	{
->  		.compatible = "ti,dra7-pcie",
-> @@ -544,11 +562,11 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
->  	},
->  	{
->  		.compatible = "ti,dra746-pcie-rc",
-> -		.data = &dra7xx_pcie_rc_of_data,
-> +		.data = &dra746_pcie_rc_of_data,
->  	},
->  	{
->  		.compatible = "ti,dra746-pcie-ep",
-> -		.data = &dra7xx_pcie_ep_of_data,
-> +		.data = &dra746_pcie_ep_of_data,
->  	},
->  	{
->  		.compatible = "ti,dra726-pcie-rc",
-> @@ -603,6 +621,44 @@ static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
->  	return ret;
->  }
->  
-> +static int dra7xx_pcie_configure_two_lane(struct device *dev,
-> +					  u32 b1co_mode_sel_mask)
-> +{
-> +	struct device_node *np = dev->of_node;
-> +	struct regmap *pcie_syscon;
-> +	unsigned int pcie_reg;
-> +
-> +	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-conf");
-> +	if (IS_ERR(pcie_syscon)) {
-> +		dev_err(dev, "unable to get syscon-lane-conf\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (of_property_read_u32_index(np, "syscon-lane-conf", 1, &pcie_reg)) {
-> +		dev_err(dev, "couldn't get lane configuration reg offset\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	regmap_update_bits(pcie_syscon, pcie_reg, PCIE_1LANE_2LANE_SELECTION,
-> +			   PCIE_1LANE_2LANE_SELECTION);
-> +
-> +	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-sel");
-> +	if (IS_ERR(pcie_syscon)) {
-> +		dev_err(dev, "unable to get syscon-lane-sel\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (of_property_read_u32_index(np, "syscon-lane-sel", 1, &pcie_reg)) {
-> +		dev_err(dev, "couldn't get lane selection reg offset\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	regmap_update_bits(pcie_syscon, pcie_reg, b1co_mode_sel_mask,
-> +			   PCIE_B1C0_MODE_SEL);
-> +
-> +	return 0;
-> +}
-> +
->  static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  {
->  	u32 reg;
-> @@ -624,6 +680,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  	const struct of_device_id *match;
->  	const struct dra7xx_pcie_of_data *data;
->  	enum dw_pcie_device_mode mode;
-> +	u32 b1co_mode_sel_mask;
->  
->  	match = of_match_device(of_match_ptr(of_dra7xx_pcie_match), dev);
->  	if (!match)
-> @@ -631,6 +688,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  
->  	data = (struct dra7xx_pcie_of_data *)match->data;
->  	mode = (enum dw_pcie_device_mode)data->mode;
-> +	b1co_mode_sel_mask = data->b1co_mode_sel_mask;
->  
->  	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
->  	if (!dra7xx)
-> @@ -689,6 +747,12 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  	dra7xx->pci = pci;
->  	dra7xx->phy_count = phy_count;
->  
-> +	if (phy_count == 2) {
-> +		ret = dra7xx_pcie_configure_two_lane(dev, b1co_mode_sel_mask);
-> +		if (ret < 0)
-> +			goto err_link;
-> +	}
-> +
->  	ret = dra7xx_pcie_enable_phy(dra7xx);
->  	if (ret) {
->  		dev_err(dev, "failed to enable phy\n");
-> -- 
-> 2.11.0
-> 
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
+
+Changes in v8: None
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/pci.c | 38 +++++++++++++++++++++++++-------------
+ drivers/pci/pci.h |  5 +----
+ 2 files changed, 26 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f0d68066c726..e120b00a9017 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -572,46 +572,58 @@ static void pci_restore_bars(struct pci_dev *dev)
+ 
+ static const struct pci_platform_pm_ops *pci_platform_pm;
+ 
+-int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
++void pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+ {
+-	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
+-	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
+-		return -EINVAL;
+ 	pci_platform_pm = ops;
+-	return 0;
+ }
+ 
+ static inline bool platform_pci_power_manageable(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->is_manageable(dev) : false;
++	if (pci_platform_pm && pci_platform_pm->is_manageable)
++		return pci_platform_pm->is_manageable(dev);
++
++	return false;
+ }
+ 
+ static inline int platform_pci_set_power_state(struct pci_dev *dev,
+ 					       pci_power_t t)
+ {
+-	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
++	if (pci_platform_pm && pci_platform_pm->set_state)
++		return pci_platform_pm->set_state(dev, t);
++
++	return -ENODEV;
+ }
+ 
+ static inline pci_power_t platform_pci_get_power_state(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->get_state(dev) : PCI_UNKNOWN;
++	if (pci_platform_pm && pci_platform_pm->get_state)
++		return pci_platform_pm->get_state(dev);
++
++	return PCI_UNKNOWN;
+ }
+ 
+ static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ?
+-			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
++	if (pci_platform_pm && pci_platform_pm->choose_state)
++		return pci_platform_pm->choose_state(dev);
++
++	return PCI_POWER_ERROR;
+ }
+ 
+ static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
+ {
+-	return pci_platform_pm ?
+-			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
++	if (pci_platform_pm && pci_platform_pm->set_wakeup)
++		return pci_platform_pm->set_wakeup(dev, enable);
++
++	return -ENODEV;
+ }
+ 
+ static inline bool platform_pci_need_resume(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
++	if (pci_platform_pm && pci_platform_pm->need_resume)
++		return pci_platform_pm->need_resume(dev);
++
++	return false;
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e816a13e6259..048668271014 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -52,9 +52,6 @@ int pci_probe_reset_function(struct pci_dev *dev);
+  * @need_resume: returns 'true' if the given device (which is currently
+  *		suspended) needs to be resumed to be configured for system
+  *		wakeup.
+- *
+- * If given platform is generally capable of power managing PCI devices, all of
+- * these callbacks are mandatory.
+  */
+ struct pci_platform_pm_ops {
+ 	bool (*is_manageable)(struct pci_dev *dev);
+@@ -65,7 +62,7 @@ struct pci_platform_pm_ops {
+ 	bool (*need_resume)(struct pci_dev *dev);
+ };
+ 
+-int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
++void pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
+ void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
+ void pci_power_up(struct pci_dev *dev);
+ void pci_disable_enabled_device(struct pci_dev *dev);
+-- 
+2.11.0
