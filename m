@@ -1,118 +1,212 @@
-Return-Path: <SRS0=6Zeu=BK=gmail.com=ibmirkin@kernel.org>
-Return-Path: <SRS0=6Zeu=BK=gmail.com=ibmirkin@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+To: Robin Murphy <robin.murphy@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>
+CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        John Garry <john.garry@huawei.com>,
+        "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+        "sudeep.holla@arm.com" <sudeep.holla@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "devel@acpica.org" <devel@acpica.org>
+Subject: RE: [PATCH v9 2/4] iommu/dma: Add a helper function to reserve HW
+ MSI address regions for IOMMU drivers
+Date: Thu, 26 Oct 2017 10:11:58 +0000
+Message-ID: <5FC3163CFD30C246ABAA99954A238FA83844FE04@FRAEML521-MBX.china.huawei.com>
+References: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
+ <20171006140450.89652-3-shameerali.kolothum.thodi@huawei.com>
+ <20171013192350.GA32130@arm.com>
+ <5FC3163CFD30C246ABAA99954A238FA83844672A@FRAEML521-MBX.china.huawei.com>
+ <1d49243a-4746-f189-7c5d-4b98937115fb@arm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Sender: ibmirkin@gmail.com
-In-Reply-To: <20171011134652.GH25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
- <20171011114735.GE25517@bhelgaas-glaptop.roam.corp.google.com>
- <CAKb7Uvid3024Ja=YEzcSmjgnXp5Ti19i07yD7EZz3+POkkjq-A@mail.gmail.com> <20171011134652.GH25517@bhelgaas-glaptop.roam.corp.google.com>
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Date: Wed, 11 Oct 2017 10:18:14 -0400
-Message-ID: <CAKb7Uvg34QsDGNfG8qDhnJX8rjaQhJp4ri2vrUyfgpy=0nS7LQ@mail.gmail.com>
-Subject: Re: Dynamically adding a PCI subfunction
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Ben Skeggs <bskeggs@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 9:46 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Oct 11, 2017 at 08:54:05AM -0400, Ilia Mirkin wrote:
->> On Wed, Oct 11, 2017 at 7:47 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> >   /* do magic */
->> >   nvif_mask(&device->object, 0x088488, (1 << 25), (1 << 25));
->> >
->> > Wow, that *is* inscrutable magic.  I gave up trying to convince myself
->> > that this turns into pci_write_config_word() eventually.
->> >
->> > 0x88000 is way too big for an offset into PCI config space (it's only
->> > 4096 bytes per device at most), so I don't know what sort of alias it
->> > could be.  It doesn't look like a MMCONFIG address (which the driver
->> > shouldn't be using directly anyway).
->>
->> 0x88000 is an offset into one of the BARs. At this offset is a mirror
->> of the PCI config space (or you could say that the PCI config space is
->> a mirror of these registers... we'll never know). The "magic" comment
->> probably refers to flipping the bit though, since it's the "make it
->> work" bit.
->
-> OK, that makes sense.  If you made a quirk, you might want to use a
-> config access, since using MMIO means you depend on the BAR having
-> been assigned space.  Often the BIOS will have assigned the BAR, but
-> there's no requirement for it to do so.
-
-Oh yeah, we'd definitely do it via the PCI config space. Mapping the
-bar in early pci setup doesn't seem like the wise move. I was just
-mentioning the 88000 thing so that the code made sense. I guess that
-didn't go to plan...
-
->> >> This works for runtime pm resume, since the device was originally
->> >> there and we just have to make sure the underlying device agrees with
->> >> it, but when it's missing on boot, we have to convince linux that it
->> >> exists, bind a driver, etc.
->> >>
->> >> What's the best way of going about doing that?
->> >
->> > If you make an early quirk for the GPU device, we'll run the quirk
->> > while enumerating it.  If it can enable the audio device, and if the
->> > audio device is at a higher device number, the PCI core should try to
->> > enumerate it later.  But there might be wrinkles if setting the bit
->> > turns a single-function device into a multi-function one, because the
->> > core might have already decided it didn't need to scan for more
->> > functions.  DECLARE_PCI_FIXUP_CLASS_EARLY() is the place to start.
->>
->> I thought about this type of approach but I have two concerns:
->>  - We can't just do this willy-nilly on *any* NVIDIA GPU, only on
->> "new" ones. The definition of "new" here, of course, is like 2010, and
->> there have been a lot of chips released since then. Each chip is
->> allocated a group of 0x20 or 0x40 PCI device ids, but it'll still be a
->> lot of code. Do you really want this in drivers/pci/quirks.c?
->
-> It sounds like this is basically a workaround for a BIOS bug -- it
-> forgot to enable the audio device.  If you complain to the vendor,
-> they might eventually fix it and you won't need to add new devices.
-
-I was thinking of just blanket applying it to all GT215+ chips after
-we do some spot checks for safety -- the chip can be determined based
-on PCI id (http://envytools.readthedocs.io/en/latest/hw/pciid.html).
-There are more GPU pci ids than there are users of nouveau... and the
-failure has nothing to do with the pci id but rather with the platform
-and/or vbios author. It's a somewhat widespread problem among laptops
-and still happens with new ones.
-
-I suspect it was treated as a BIOS feature rather than a bug -- you
-get a second audio device and confuse the user about which one is the
-"real audio". There are even some laptops which make the audio
-function appear based on HDMI cable presence at boot (and I think make
-it appear/disappear dynamically in Windows).
-
->
->>  - This fixup will be applied no matter what. I wonder if that's an OK
->> thing to do -- feels like this sort of thing should be scoped to the
->> driver. I was assuming there'd be some magic hotplug function that
->> could be called. I suppose we could condition the quirk on
->> CONFIG_NOUVEAU being built (into the kernel or otherwise), but that's
->> still a coarse tool given that distros enable everything.
->
-> You can have conditions in your fixup -- only certain devices, certain
-> platforms, etc.
->
->> How would I find out about the single-function vs multi-function
->> issue? Is there a separate bit in the pci config that indicates a
->> multi-function device, or do you just mean it's an implementation
->> issue in the pci core which might not handle a quirk that adds a
->> second device?
->
-> There's a bit in the header that tells us whether it's a multifunction
-> device.  See pci_setup_device(), where it sets dev->multifunction.
-> That happens before we run early quirks, so if enabling the audio
-> device in the quirk changed the bit, we'd have a problem.  But you'll
-> have to experiment.  It could be that the GPU identifies as a
-> multifunction device even if the audio device is disabled.
-
-OK, thanks for all the info! I'll try to work something up and get it
-tested by affected users.
-
-Cheers,
-
-  -ilia
+SGkgTG9yZW56by9XaWxsLA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206
+IFNoYW1lZXJhbGkgS29sb3RodW0gVGhvZGkNCj4gU2VudDogV2VkbmVzZGF5LCBPY3RvYmVyIDE4
+LCAyMDE3IDM6MjQgUE0NCj4gVG86ICdSb2JpbiBNdXJwaHknIDxyb2Jpbi5tdXJwaHlAYXJtLmNv
+bT47IFdpbGwgRGVhY29uDQo+IDx3aWxsLmRlYWNvbkBhcm0uY29tPg0KPiBDYzogbG9yZW56by5w
+aWVyYWxpc2lAYXJtLmNvbTsgR2FicmllbGUgUGFvbG9uaQ0KPiA8Z2FicmllbGUucGFvbG9uaUBo
+dWF3ZWkuY29tPjsgbWFyYy56eW5naWVyQGFybS5jb207IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJu
+ZWwub3JnOyBqb3JvQDhieXRlcy5vcmc7IEpvaG4gR2FycnkgPGpvaG4uZ2FycnlAaHVhd2VpLmNv
+bT47DQo+IEd1b2hhbmp1biAoSGFuanVuIEd1bykgPGd1b2hhbmp1bkBodWF3ZWkuY29tPjsgTGlu
+dXhhcm0NCj4gPGxpbnV4YXJtQGh1YXdlaS5jb20+OyBsaW51eC1hY3BpQHZnZXIua2VybmVsLm9y
+ZzsgaW9tbXVAbGlzdHMubGludXgtDQo+IGZvdW5kYXRpb24ub3JnOyBXYW5nemhvdSAoQikgPHdh
+bmd6aG91MUBoaXNpbGljb24uY29tPjsNCj4gc3VkZWVwLmhvbGxhQGFybS5jb207IGJoZWxnYWFz
+QGdvb2dsZS5jb207IGxpbnV4LWFybS0NCj4ga2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGRl
+dmVsQGFjcGljYS5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSCB2OSAyLzRdIGlvbW11L2RtYTog
+QWRkIGEgaGVscGVyIGZ1bmN0aW9uIHRvIHJlc2VydmUgSFcNCj4gTVNJIGFkZHJlc3MgcmVnaW9u
+cyBmb3IgSU9NTVUgZHJpdmVycw0KPiANCj4gDQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2Fn
+ZS0tLS0tDQo+ID4gRnJvbTogUm9iaW4gTXVycGh5IFttYWlsdG86cm9iaW4ubXVycGh5QGFybS5j
+b21dDQo+ID4gU2VudDogV2VkbmVzZGF5LCBPY3RvYmVyIDE4LCAyMDE3IDE6MzQgUE0NCj4gPiBU
+bzogU2hhbWVlcmFsaSBLb2xvdGh1bSBUaG9kaSA8c2hhbWVlcmFsaS5rb2xvdGh1bS50aG9kaUBo
+dWF3ZWkuY29tPjsNCj4gPiBXaWxsIERlYWNvbiA8d2lsbC5kZWFjb25AYXJtLmNvbT4NCj4gPiBD
+YzogbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsgR2FicmllbGUgUGFvbG9uaQ0KPiA+IDxnYWJy
+aWVsZS5wYW9sb25pQGh1YXdlaS5jb20+OyBtYXJjLnp5bmdpZXJAYXJtLmNvbTsgbGludXgtDQo+
+ID4gcGNpQHZnZXIua2VybmVsLm9yZzsgam9yb0A4Ynl0ZXMub3JnOyBKb2huIEdhcnJ5DQo+ID4g
+PGpvaG4uZ2FycnlAaHVhd2VpLmNvbT47IEd1b2hhbmp1biAoSGFuanVuIEd1bykNCj4gPiA8Z3Vv
+aGFuanVuQGh1YXdlaS5jb20+OyBMaW51eGFybSA8bGludXhhcm1AaHVhd2VpLmNvbT47DQo+ID4g
+bGludXgtYWNwaUB2Z2VyLmtlcm5lbC5vcmc7IGlvbW11QGxpc3RzLmxpbnV4LSBmb3VuZGF0aW9u
+Lm9yZzsNCj4gPiBXYW5nemhvdSAoQikgPHdhbmd6aG91MUBoaXNpbGljb24uY29tPjsgc3VkZWVw
+LmhvbGxhQGFybS5jb207DQo+ID4gYmhlbGdhYXNAZ29vZ2xlLmNvbTsgbGludXgtYXJtLSBrZXJu
+ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gPiBkZXZlbEBhY3BpY2Eub3JnDQo+ID4gU3ViamVj
+dDogUmU6IFtQQVRDSCB2OSAyLzRdIGlvbW11L2RtYTogQWRkIGEgaGVscGVyIGZ1bmN0aW9uIHRv
+DQo+ID4gcmVzZXJ2ZSBIVyBNU0kgYWRkcmVzcyByZWdpb25zIGZvciBJT01NVSBkcml2ZXJzDQo+
+ID4NCj4gPiBPbiAxNi8xMC8xNyAxNzowOSwgU2hhbWVlcmFsaSBLb2xvdGh1bSBUaG9kaSB3cm90
+ZToNCj4gPiA+IEhpIFJvYmluLA0KPiA+ID4NCj4gPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
+LS0tLQ0KPiA+ID4+IEZyb206IFdpbGwgRGVhY29uIFttYWlsdG86d2lsbC5kZWFjb25AYXJtLmNv
+bV0NCj4gPiA+PiBTZW50OiBGcmlkYXksIE9jdG9iZXIgMTMsIDIwMTcgODoyNCBQTQ0KPiA+ID4+
+IFRvOiBTaGFtZWVyYWxpIEtvbG90aHVtIFRob2RpDQo+ID4gPj4gPHNoYW1lZXJhbGkua29sb3Ro
+dW0udGhvZGlAaHVhd2VpLmNvbT4NCj4gPiA+PiBDYzogbG9yZW56by5waWVyYWxpc2lAYXJtLmNv
+bTsgbWFyYy56eW5naWVyQGFybS5jb207DQo+ID4gPj4gc3VkZWVwLmhvbGxhQGFybS5jb207IHJv
+YmluLm11cnBoeUBhcm0uY29tOyBqb3JvQDhieXRlcy5vcmc7DQo+ID4gPj4gYmhlbGdhYXNAZ29v
+Z2xlLmNvbTsgR2FicmllbGUgUGFvbG9uaQ0KPiA+ID4+IDxnYWJyaWVsZS5wYW9sb25pQGh1YXdl
+aS5jb20+OyBKb2huIEdhcnJ5IDxqb2huLmdhcnJ5QGh1YXdlaS5jb20+Ow0KPiA+ID4+IGlvbW11
+QGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnOw0KPiA+ID4+IGxpbnV4LWFybS1rZXJuZWxAbGlz
+dHMuaW5mcmFkZWFkLm9yZzsgbGludXgtYWNwaUB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4gPj4gbGlu
+dXgtIHBjaUB2Z2VyLmtlcm5lbC5vcmc7IGRldmVsQGFjcGljYS5vcmc7IExpbnV4YXJtDQo+ID4g
+PGxpbnV4YXJtQGh1YXdlaS5jb20+Ow0KPiA+ID4+IFdhbmd6aG91IChCKSA8d2FuZ3pob3UxQGhp
+c2lsaWNvbi5jb20+OyBHdW9oYW5qdW4gKEhhbmp1biBHdW8pDQo+ID4gPj4gPGd1b2hhbmp1bkBo
+dWF3ZWkuY29tPg0KPiA+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjkgMi80XSBpb21tdS9kbWE6
+IEFkZCBhIGhlbHBlciBmdW5jdGlvbiB0bw0KPiA+ID4+IHJlc2VydmUNCj4gPiBIVw0KPiA+ID4+
+IE1TSSBhZGRyZXNzIHJlZ2lvbnMgZm9yIElPTU1VIGRyaXZlcnMNCj4gPiA+Pg0KPiA+ID4+IE9u
+IEZyaSwgT2N0IDA2LCAyMDE3IGF0IDAzOjA0OjQ4UE0gKzAxMDAsIFNoYW1lZXIgS29sb3RodW0g
+d3JvdGU6DQo+ID4gPj4+IElPTU1VIGRyaXZlcnMgY2FuIHVzZSB0aGlzIHRvIGltcGxlbWVudCB0
+aGVpciAuZ2V0X3Jlc3ZfcmVnaW9ucw0KPiA+ID4+PiBjYWxsYmFjayBmb3IgSFcgTVNJIHNwZWNp
+ZmljIHJlc2VydmF0aW9ucyhlLmcuIEFSTSBHSUN2MyBJVFMgTVNJDQo+IHJlZ2lvbikuDQo+ID4g
+Pj4+DQo+ID4gPj4+IFNpZ25lZC1vZmYtYnk6IFNoYW1lZXIgS29sb3RodW0NCj4gPiA8c2hhbWVl
+cmFsaS5rb2xvdGh1bS50aG9kaUBodWF3ZWkuY29tPg0KPiA+ID4+PiAtLS0NCj4gPiA+Pj4gIGRy
+aXZlcnMvaW9tbXUvZG1hLWlvbW11LmMgfCAyMCArKysrKysrKysrKysrKysrKysrKw0KPiA+ID4+
+PiBpbmNsdWRlL2xpbnV4L2RtYS1pb21tdS5oIHwgIDcgKysrKysrKw0KPiA+ID4+PiAgMiBmaWxl
+cyBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspDQo+ID4gPj4NCj4gPiA+PiBJJ2QgbGlrZSB0byBz
+ZWUgUm9iaW4ncyBBY2sgb24gdGhpcywgYmVjYXVzZSB0aGlzIGlzIGhpcyBjb2RlIGFuZA0KPiA+
+ID4+IGhlIGhhZCBpZGVhcyBvbiB3YXlzIHRvIHNvbHZlIHRoaXMgcHJvYmxlbSBwcm9wZXJseS4N
+Cj4gPiA+DQo+ID4gPiBQbGVhc2UgbGV0IHVzIGtub3cgaWYgaXQgaXMgb2sgdG8gZ28gYWhlYWQg
+d2l0aCBBQ1BJIHN1cHBvcnQgZm9yIG5vdy4NCj4gPiA+IEl0IHdpbGwgaGVscCBvdXIgY3VzdG9t
+ZXJzIHRvIHN0YXJ0IHVzaW5nIHBhc3MtdGhyb3VnaCBmb3IgUENJZS4NCj4gPiA+DQo+ID4gPiBU
+aGFua3MsDQo+ID4gPiBTaGFtZWVyDQo+ID4gPg0KPiA+ID4+DQo+ID4gPj4gV2lsbA0KPiA+ID4+
+DQo+ID4gPj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2lvbW11L2RtYS1pb21tdS5jIGIvZHJpdmVy
+cy9pb21tdS9kbWEtaW9tbXUuYw0KPiA+ID4+PiBpbmRleCA5ZDFjZWJlLi5iYWU2NzdlIDEwMDY0
+NA0KPiA+ID4+PiAtLS0gYS9kcml2ZXJzL2lvbW11L2RtYS1pb21tdS5jDQo+ID4gPj4+ICsrKyBi
+L2RyaXZlcnMvaW9tbXUvZG1hLWlvbW11LmMNCj4gPiA+Pj4gQEAgLTE5LDYgKzE5LDcgQEANCj4g
+PiA+Pj4gICAqIGFsb25nIHdpdGggdGhpcyBwcm9ncmFtLiAgSWYgbm90LCBzZWUgPGh0dHA6Ly93
+d3cuZ251Lm9yZy9saWNlbnNlcy8+Lg0KPiA+ID4+PiAgICovDQo+ID4gPj4+DQo+ID4gPj4+ICsj
+aW5jbHVkZSA8bGludXgvYWNwaV9pb3J0Lmg+DQo+ID4gPj4+ICAjaW5jbHVkZSA8bGludXgvZGV2
+aWNlLmg+DQo+ID4gPj4+ICAjaW5jbHVkZSA8bGludXgvZG1hLWlvbW11Lmg+DQo+ID4gPj4+ICAj
+aW5jbHVkZSA8bGludXgvZ2ZwLmg+DQo+ID4gPj4+IEBAIC0yNyw2ICsyOCw3IEBADQo+ID4gPj4+
+ICAjaW5jbHVkZSA8bGludXgvaW92YS5oPg0KPiA+ID4+PiAgI2luY2x1ZGUgPGxpbnV4L2lycS5o
+Pg0KPiA+ID4+PiAgI2luY2x1ZGUgPGxpbnV4L21tLmg+DQo+ID4gPj4+ICsjaW5jbHVkZSA8bGlu
+dXgvb2ZfaW9tbXUuaD4NCj4gPiA+Pj4gICNpbmNsdWRlIDxsaW51eC9wY2kuaD4NCj4gPiA+Pj4g
+ICNpbmNsdWRlIDxsaW51eC9zY2F0dGVybGlzdC5oPg0KPiA+ID4+PiAgI2luY2x1ZGUgPGxpbnV4
+L3ZtYWxsb2MuaD4NCj4gPiA+Pj4gQEAgLTE5OCw2ICsyMDAsMjQgQEAgdm9pZCBpb21tdV9kbWFf
+Z2V0X3Jlc3ZfcmVnaW9ucyhzdHJ1Y3QNCj4gZGV2aWNlDQo+ID4gPj4gKmRldiwgc3RydWN0IGxp
+c3RfaGVhZCAqbGlzdCkNCj4gPiA+Pj4gIH0NCj4gPiA+Pj4gIEVYUE9SVF9TWU1CT0woaW9tbXVf
+ZG1hX2dldF9yZXN2X3JlZ2lvbnMpOw0KPiA+ID4+Pg0KPiA+ID4+PiArLyoqDQo+ID4gPj4+ICsg
+KiBpb21tdV9kbWFfZ2V0X21zaV9yZXN2X3JlZ2lvbnMgLSBSZXNlcnZlZCByZWdpb24gZHJpdmVy
+IGhlbHBlcg0KPiA+ID4+PiArICogQGRldjogRGV2aWNlIGZyb20gaW9tbXVfZ2V0X3Jlc3ZfcmVn
+aW9ucygpDQo+ID4gPj4+ICsgKiBAbGlzdDogUmVzZXJ2ZWQgcmVnaW9uIGxpc3QgZnJvbSBpb21t
+dV9nZXRfcmVzdl9yZWdpb25zKCkNCj4gPiA+Pj4gKyAqDQo+ID4gPj4+ICsgKiBJT01NVSBkcml2
+ZXJzIGNhbiB1c2UgdGhpcyB0byBpbXBsZW1lbnQgdGhlaXINCj4gPiA+Pj4gKy5nZXRfcmVzdl9y
+ZWdpb25zDQo+ID4gPj4+ICsgKiBjYWxsYmFjayBmb3IgSFcgTVNJIHNwZWNpZmljIHJlc2VydmF0
+aW9ucy4gRm9yIG5vdywgdGhpcyBvbmx5DQo+ID4NCj4gPiBUaGlzIGRvZXNuJ3QgbWFrZSBhbiBh
+d2Z1bCBsb3Qgb2Ygc2Vuc2UgLSB0aGVyZSdzIG9ubHkgb25lIHJlc2VydmVkDQo+ID4gcmVnaW9u
+IGNhbGxiYWNrLCBzbyBpb21tdS1kbWEgc2hvdWxkbid0IGJlIG9mZmVyaW5nIHR3byBzZXBhcmF0
+ZSBhbmQNCj4gPiBub24tb3ZlcmxhcHBpbmcgaW1wbGVtZW50YXRpb25zLg0KPiA+DQo+ID4gPj4+
+ICsgKiBjb3ZlcnMgSVRTIE1TSSByZWdpb24gcmVzZXJ2YXRpb24gdXNpbmcgQUNQSSBJT1JUIGhl
+bHBlciBmdW5jdGlvbi4NCj4gPiA+Pj4gKyAqLw0KPiA+ID4+PiAraW50IGlvbW11X2RtYV9nZXRf
+bXNpX3Jlc3ZfcmVnaW9ucyhzdHJ1Y3QgZGV2aWNlICpkZXYsIHN0cnVjdA0KPiA+IGxpc3RfaGVh
+ZA0KPiA+ID4+ICpsaXN0KQ0KPiA+ID4+PiArew0KPiA+ID4+PiArCWlmICghaXNfb2Zfbm9kZShk
+ZXYtPmlvbW11X2Z3c3BlYy0+aW9tbXVfZndub2RlKSkNCj4gPiA+Pj4gKwkJcmV0dXJuIGlvcnRf
+aW9tbXVfbXNpX2dldF9yZXN2X3JlZ2lvbnMoZGV2LCBsaXN0KTsNCj4gPg0KPiA+IEVpdGhlciB0
+aGlzIGNhbGwga25vd3MgaG93IHRvIGRvIHRoZSByaWdodCB0aGluZyBmb3IgYW55IHBsYXRmb3Jt
+IGFuZA0KPiA+IHNob3VsZCBiZSBtYWRlIGZyb20gaW9tbXVfZG1hX2dldF9yZXNlcnZlZF9yZWdp
+b25zKCkgZGlyZWN0bHksIG9yIGl0J3MNCj4gPiB0aWdodGx5IGNvdXBsZWQgdG8gdGhlIEhpU2ls
+aWNvbiBxdWlyayBpbiB0aGUgU01NVXYzIGRyaXZlciBhbmQNCj4gPiBpb21tdS1kbWEgZG9lc24n
+dCBuZWVkIHRvIGtub3cgLSB0aGUgbWlkZGxlIGdyb3VuZCBwcmVzZW50ZWQgaGVyZSBpcw0KPiA+
+IHN1cmVseSB0aGUgd29yc3Qgb2YgYm90aCB3b3JsZHMuDQo+IA0KPiBSaWdodC4gSSB0aGluayB3
+ZSBoYXZlIGRpc2N1c3NlZCB0aGlzIGVhcmxpZXJbMV0gYW5kIGhhZCBhIHY0IGJhc2VkIG9uIGlu
+dm9raW5nDQo+IHRoZSBpb3J0X2lvbW11X2l0c19nZXRfcmVzdl9yZWdpb25zKCkgd2l0aGluIHRo
+ZQ0KPiBpb21tdV9kbWFfZ2V0X3Jlc3ZfcmVnaW9ucygpLg0KPiBCdXQgbGF0ZXIgYXMgeW91IHJp
+Z2h0bHkgcG9pbnRlZCBvdXQsIHdlIHdlcmUgbm90IGNoZWNraW5nIGZvciBwbGF0Zm9ybXMgd2hp
+Y2gNCj4gcmVxdWlyZXMgdGhpcyBxdWlyayBpbnNpZGUgdGhlIGlvcnQgY29kZSBhbmQgdGhhdCB3
+aWxsIGJyZWFrIHRoZSBwbGF0Zm9ybXMgd2hpY2gNCj4gYXJlIGhhcHB5IHdpdGggTVNJIHRyYW5z
+bGF0aW9ucy4gSGVuY2UgbW92ZWQgdG8gdGhlIGN1cnJlbnQgaW1wbGVtZW50YXRpb24NCj4gaW4g
+djYgYWZ0ZXIgdGhpcyBkaXNjdXNzaW9uIGhlcmVbMl0NCj4gDQo+IEFuZCBlYXJsaWVyIEkgdGhp
+bmsgaW4gdGhlIHYzIHZlcnNpb24gd2UgaGFkIHRoZSBmdW5jdGlvbiBjYWxsZWQgZnJvbSBzbW11
+DQo+IGRyaXZlciBkaXJlY3RseSBhbmQgdGhlIGZlZWRiYWNrIHdhcyB0aGF0IGl0IHNob3VsZCBi
+ZSBhYnN0cmFjdGVkIGZyb20gdGhlDQo+IGRyaXZlci4NCj4gDQo+IE1heSBiZSBpdCBpcyBzdGls
+bCBwb3NzaWJsZSB0byBtb3ZlIHRoZSBmdW5jdGlvbiBjYWxsIGluc2lkZSB0aGUNCj4gaW9tbXVf
+ZG1hX2dldF9yZXN2X3JlZ2lvbnMoKSBhbmQgZG8gdGhlIHNtbXUgbW9kZWwgY2hlY2sgaW5zaWRl
+ICB0aGUgaW9ydA0KPiBoZWxwZXIgZnVuY3Rpb24gYW5kIHNlbGVjdGl2ZWx5IGFwcGx5IHRoZSBI
+VyBNU0kgcmVzZXJ2YXRpb25zLg0KPiANCj4gQnV0IEkgdGhpbmsgaXQgaXMgbXVjaCBuZWF0ZXIg
+aWYgd2UgY2FuIGludm9rZSB0aGUgaW9ydF9nZXRfbXNpX3JlZ2lvbnMoKQ0KPiBkaXJlY3RseSBm
+cm9tIFNNTVV2MyBiYXNlZCBvbiB0aGUgbW9kZWwuDQo+IA0KPiBUaG91Z2h0cz8NCg0KQXMgd2Ug
+c3RpbGwgZG9u4oCZdCBoYXZlIGEgY2xlYXIgcmVzb2x1dGlvbiBvbiBob3cgdG8gaW52b2tlIHRo
+ZSANCmlvcnRfaW9tbXVfbXNpX2dldF9yZXN2X3JlZ2lvbnMoKSwgSSBoYXZlIGdvbmUgYmFjayBh
+bmQgYXR0ZW1wdGVkIHRvIG1vdmUgdGhlDQpzbW11IG1vZGVsIGNoZWNrIGluc2lkZSB0aGUgaW9y
+dCBjb2RlLiBUaGlzIG1lYW5zIHRoZSBmdW5jdGlvbiB3aWxsIHNlbGVjdGl2ZWx5DQphcHBseSBI
+VyBNU0kgcmVzZXJ2YXRpb24gYmFzZWQgb24gdGhlIHBsYXRmb3JtIGFuZCBhbHNvIHRoZSBmdW5j
+dGlvbiBjYW4gYmUgDQppbnZva2VkIGZyb20gdGhlIGlvbW11X2RtYV9nZXRfcmVzdl9yZWdpb25z
+KCkgZGlyZWN0bHkuDQoNCkNvdWxkIHlvdSBwbGVhc2UgdGFrZSBhIGxvb2sgYXQgdGhlIGJlbG93
+IHNuaXBwZXQgYW5kIGxldCBtZSBrbm93IHlvdXIgZmVlZGJhY2suDQpIb3BlIHdlIGNhbiBtYWtl
+IHNvbWUgcHJvZ3Jlc3Mgb24gdGhpcyBzZXJpZXMuDQoNClRoYW5rcywNClNoYW1lZXINCg0KLS0+
+OC0tDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hY3BpL2FybTY0L2lvcnQuYyBiL2RyaXZlcnMvYWNw
+aS9hcm02NC9pb3J0LmMNCmluZGV4IDg3NmMwZTEuLmEyNzIzM2QgMTAwNjQ0DQotLS0gYS9kcml2
+ZXJzL2FjcGkvYXJtNjQvaW9ydC5jDQorKysgYi9kcml2ZXJzL2FjcGkvYXJtNjQvaW9ydC5jDQpA
+QCAtNjE5LDYgKzYxOSwzOSBAQCBzdGF0aWMgaW50IF9fbWF5YmVfdW51c2VkIF9fZ2V0X3BjaV9y
+aWQoc3RydWN0IHBjaV9kZXYgKnBkZXYsIHUxNiBhbGlhcywNCiAJcmV0dXJuIDA7DQogfQ0KIA0K
+K3N0YXRpYyBib29sIF9fbWF5YmVfdW51c2VkIGlvcnRfaHdfbXNpX3Jlc3ZfZW5hYmxlKHN0cnVj
+dCBkZXZpY2UgKmRldiwNCisJCQkJCXN0cnVjdCBhY3BpX2lvcnRfbm9kZSAqbm9kZSkNCit7DQor
+CXN0cnVjdCBhY3BpX2lvcnRfbm9kZSAqaW9tbXUgPSBOVUxMOw0KKwlpbnQgaTsNCisNCisJaWYg
+KGRldl9pc19wY2koZGV2KSkgew0KKwkJdTMyIHJpZDsNCisNCisJCXBjaV9mb3JfZWFjaF9kbWFf
+YWxpYXModG9fcGNpX2RldihkZXYpLCBfX2dldF9wY2lfcmlkLCAmcmlkKTsNCisJCWlvbW11ID0g
+aW9ydF9ub2RlX21hcF9pZChub2RlLCByaWQsIE5VTEwsIElPUlRfSU9NTVVfVFlQRSk7DQorCX0g
+ZWxzZSB7DQorCQlmb3IgKGkgPSAwOyBpIDwgbm9kZS0+bWFwcGluZ19jb3VudDsgaSsrKSB7DQor
+CQkJaW9tbXUgPSBpb3J0X25vZGVfbWFwX3BsYXRmb3JtX2lkKG5vZGUsIE5VTEwsDQorCQkJCQkJ
+CUlPUlRfSU9NTVVfVFlQRSwgaSk7DQorCQkJaWYgKGlvbW11KQ0KKwkJCQlicmVhazsNCisJCX0N
+CisJfQ0KKw0KKwlpZiAoaW9tbXUgJiYgKGlvbW11LT50eXBlID09IEFDUElfSU9SVF9OT0RFX1NN
+TVVfVjMpKSB7DQorCQlzdHJ1Y3QgYWNwaV9pb3J0X3NtbXVfdjMgKnNtbXU7DQorDQorCQlzbW11
+ID0gKHN0cnVjdCBhY3BpX2lvcnRfc21tdV92MyAqKWlvbW11LT5ub2RlX2RhdGE7DQorCQlpZiAo
+c21tdS0+bW9kZWwgPT0gQUNQSV9JT1JUX1NNTVVfVjNfSElTSUxJQ09OX0hJMTYxWCkgew0KKwkJ
+CWRldl9ub3RpY2UoZGV2LCAiRW5hYmxpbmcgSGlTaWxpY29uIGVycmF0dW0gMTYxMDEwODAxXG4i
+KTsNCisJCQlyZXR1cm4gdHJ1ZTsNCisJCX0NCisJfQ0KKw0KKwlyZXR1cm4gZmFsc2U7DQorfQ0K
+Kw0KIHN0YXRpYyBpbnQgYXJtX3NtbXVfaW9ydF94bGF0ZShzdHJ1Y3QgZGV2aWNlICpkZXYsIHUz
+MiBzdHJlYW1pZCwNCiAJCQkgICAgICAgc3RydWN0IGZ3bm9kZV9oYW5kbGUgKmZ3bm9kZSwNCiAJ
+CQkgICAgICAgY29uc3Qgc3RydWN0IGlvbW11X29wcyAqb3BzKQ0KQEAgLTY4Miw2ICs3MTUsOSBA
+QCBpbnQgaW9ydF9pb21tdV9tc2lfZ2V0X3Jlc3ZfcmVnaW9ucyhzdHJ1Y3QgZGV2aWNlICpkZXYs
+IHN0cnVjdCBsaXN0X2hlYWQgKmhlYWQpDQogCWlmICghbm9kZSkNCiAJCXJldHVybiAtRU5PREVW
+Ow0KIA0KKwlpZiAoIWlvcnRfaHdfbXNpX3Jlc3ZfZW5hYmxlKGRldiwgbm9kZSkpDQorCQlyZXR1
+cm4gMDsNCisNCiAJLyoNCiAJICogQ3VycmVudCBsb2dpYyB0byByZXNlcnZlIElUUyByZWdpb25z
+IHJlbGllcyBvbiBIVyB0b3BvbG9naWVzDQogCSAqIHdoZXJlIGEgZ2l2ZW4gUENJIG9yIG5hbWVk
+IGNvbXBvbmVudCBtYXBzIGl0cyBJRHMgdG8gb25seSBvbmUNCmRpZmYgLS1naXQgYS9kcml2ZXJz
+L2lvbW11L2RtYS1pb21tdS5jIGIvZHJpdmVycy9pb21tdS9kbWEtaW9tbXUuYw0KaW5kZXggOWQx
+Y2ViZS4uNjdjNmUzMCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvaW9tbXUvZG1hLWlvbW11LmMNCisr
+KyBiL2RyaXZlcnMvaW9tbXUvZG1hLWlvbW11LmMNCkBAIC0xOSw2ICsxOSw3IEBADQogICogYWxv
+bmcgd2l0aCB0aGlzIHByb2dyYW0uICBJZiBub3QsIHNlZSA8aHR0cDovL3d3dy5nbnUub3JnL2xp
+Y2Vuc2VzLz4uDQogICovDQogDQorI2luY2x1ZGUgPGxpbnV4L2FjcGlfaW9ydC5oPg0KICNpbmNs
+dWRlIDxsaW51eC9kZXZpY2UuaD4NCiAjaW5jbHVkZSA8bGludXgvZG1hLWlvbW11Lmg+DQogI2lu
+Y2x1ZGUgPGxpbnV4L2dmcC5oPg0KQEAgLTE3NCw2ICsxNzUsMTAgQEAgdm9pZCBpb21tdV9kbWFf
+Z2V0X3Jlc3ZfcmVnaW9ucyhzdHJ1Y3QgZGV2aWNlICpkZXYsIHN0cnVjdCBsaXN0X2hlYWQgKmxp
+c3QpDQogCXN0cnVjdCBwY2lfaG9zdF9icmlkZ2UgKmJyaWRnZTsNCiAJc3RydWN0IHJlc291cmNl
+X2VudHJ5ICp3aW5kb3c7DQogDQorCWlmICghaXNfb2Zfbm9kZShkZXYtPmlvbW11X2Z3c3BlYy0+
+aW9tbXVfZndub2RlKSAmJg0KKwkJaW9ydF9pb21tdV9tc2lfZ2V0X3Jlc3ZfcmVnaW9ucyhkZXYs
+IGxpc3QpIDwgMCkNCisJCXJldHVybjsNCisNCiAJaWYgKCFkZXZfaXNfcGNpKGRldikpDQogCQly
+ZXR1cm47DQogDQpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9hY3BpX2lvcnQuaCBiL2luY2x1
+ZGUvbGludXgvYWNwaV9pb3J0LmgNCmluZGV4IDE4MmE1NzcuLjg4ZjE3YzkgMTAwNjQ0DQotLS0g
+YS9pbmNsdWRlL2xpbnV4L2FjcGlfaW9ydC5oDQorKysgYi9pbmNsdWRlL2xpbnV4L2FjcGlfaW9y
+dC5oDQpAQCAtNTYsNyArNTYsNyBAQCBjb25zdCBzdHJ1Y3QgaW9tbXVfb3BzICppb3J0X2lvbW11
+X2NvbmZpZ3VyZShzdHJ1Y3QgZGV2aWNlICpkZXYpDQogeyByZXR1cm4gTlVMTDsgfQ0KIHN0YXRp
+YyBpbmxpbmUNCiBpbnQgaW9ydF9pb21tdV9tc2lfZ2V0X3Jlc3ZfcmVnaW9ucyhzdHJ1Y3QgZGV2
+aWNlICpkZXYsIHN0cnVjdCBsaXN0X2hlYWQgKmhlYWQpDQoteyByZXR1cm4gLUVOT0RFVjsgfQ0K
+K3sgcmV0dXJuIDA7IH0NCiAjZW5kaWYNCiANCiAjZW5kaWYgLyogX19BQ1BJX0lPUlRfSF9fICov
+DQoNCi0tPjgtLQ0KDQogDQoNCg==
