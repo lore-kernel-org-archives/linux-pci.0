@@ -1,101 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: RE: [PATCH 2/2] pci/layerscape: change the default error response
- behavior
-Date: Thu, 12 Oct 2017 03:33:15 +0000
-Message-ID: <AM5PR0402MB27711353F4479D83E41359D8844B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <20170922072522.36306-1-Zhiqiang.Hou@nxp.com>
- <20170922072522.36306-3-Zhiqiang.Hou@nxp.com>
- <20171011194129.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171011194129.GQ25517@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Roy Zang <roy.zang@nxp.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "M.h. Lian" <minghuan.lian@nxp.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@nxp.com>
-Content-Type: text/plain; charset="gb2312"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:12064 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932234AbdJZOdH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 26 Oct 2017 10:33:07 -0400
+From: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        stable@vger.kernel.org
+Subject: [PATCH v1] PCI: Fixup the RTIT_BAR of Intel TH on Denverton
+Date: Thu, 26 Oct 2017 17:28:17 +0300
+Message-Id: <20171026142817.17791-1-alexander.shishkin@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciByZXZpZXchDQoNCj4gLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmhlbGdhYXNA
-a2VybmVsLm9yZ10NCj4gU2VudDogMjAxN8TqMTDUwjEyyNUgMzo0MQ0KPiBUbzogWi5xLiBIb3Ug
-PHpoaXFpYW5nLmhvdUBueHAuY29tPg0KPiBDYzogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9y
-ZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBsaW51eC1wY2lAdmdl
-ci5rZXJuZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBSb3kgWmFuZw0KPiA8cm95LnphbmdA
-bnhwLmNvbT47IE1pbmdrYWkgSHUgPG1pbmdrYWkuaHVAbnhwLmNvbT47IE0uaC4gTGlhbg0KPiA8
-bWluZ2h1YW4ubGlhbkBueHAuY29tPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDIvMl0gcGNpL2xh
-eWVyc2NhcGU6IGNoYW5nZSB0aGUgZGVmYXVsdCBlcnJvciByZXNwb25zZQ0KPiBiZWhhdmlvcg0K
-PiANCj4gT24gRnJpLCBTZXAgMjIsIDIwMTcgYXQgMDM6MjU6MjJQTSArMDgwMCwgWmhpcWlhbmcg
-SG91IHdyb3RlOg0KPiA+IEZyb206IE1pbmdodWFuIExpYW4gPE1pbmdodWFuLkxpYW5AbnhwLmNv
-bT4NCj4gPg0KPiA+IEJ5IGRlZmF1bHQsIHdoZW4gdGhlIFBDSWUgY29udHJvbGxlciBleHBlcmll
-bmNlcyBhbiBlcnJvbmVvdXMNCj4gPiBjb21wbGV0aW9uIGZyb20gYW4gZXh0ZXJuYWwgY29tcGxl
-dGVyIGZvciBpdHMgb3V0Ym91bmQgbm9uLXBvc3RlZA0KPiA+IHJlcXVlc3QsIGl0IGFsd2F5cyBz
-ZW5kcyBhbiBPS0FZIHJlc3BvbnNlIHRvIHRoZSBkZXZpY2UncyBpbnRlcm5hbCBBWEkNCj4gPiBz
-bGF2ZSBzeXN0ZW0gaW50ZXJmYWNlLiBIb3dldmVyLCBzdWNoIGRlZmF1bHQgc3lzdGVtIGVycm9y
-IHJlc3BvbnNlDQo+ID4gYmVoYXZpb3IgY2Fubm90IGJlIHVzZWQgZm9yIG90aGVyIHR5cGVzIG9m
-IG91dGJvdW5kIG5vbi1wb3N0ZWQNCj4gPiByZXF1ZXN0cy4gRm9yIGV4YW1wbGUsIHRoZSBvdXRi
-b3VuZCBtZW1vcnkgcmVhZCB0cmFuc2FjdGlvbiByZXF1aXJlcw0KPiA+IGFuIGFjdHVhbCBFUlJP
-UiByZXNwb25zZSwgbGlrZSBVUiBjb21wbGV0aW9uIG9yIGNvbXBsZXRpb24gdGltZW91dC4NCj4g
-PiBUaGUgcGF0Y2ggaXMgdG8gZml4IGl0IGJ5IGZvcndhcmRpbmcgdGhlIGVycm9yIHJlc3BvbnNl
-IG9mIHRoZQ0KPiA+IG5vbi1wb3N0ZWQgcmVxdWVzdC4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6
-IE1pbmdodWFuIExpYW4gPE1pbmdodWFuLkxpYW5AbnhwLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5
-OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2
-ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYyB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysr
-KysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDI1IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYg
-LS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+IGIvZHJpdmVycy9w
-Y2kvZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiBpbmRleCAzYjAxZTMwOWE1NWUuLmE2NDcwOTBj
-MTQwZSAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0K
-PiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4gQEAgLTMzLDYg
-KzMzLDggQEANCj4gPg0KPiA+ICAvKiBQRVggSW50ZXJuYWwgQ29uZmlndXJhdGlvbiBSZWdpc3Rl
-cnMgKi8NCj4gPiAgI2RlZmluZSBQQ0lFX1NUUkZNUjEJCTB4NzFjIC8qIFN5bWJvbCBUaW1lciAm
-IEZpbHRlciBNYXNrDQo+IFJlZ2lzdGVyMSAqLw0KPiA+ICsjZGVmaW5lIFBDSUVfQUJTRVJSCQkw
-eDhkMCAvKiBCcmlkZ2UgU2xhdmUgRXJyb3IgUmVzcG9uc2UNCj4gUmVnaXN0ZXIgKi8NCj4gPiAr
-I2RlZmluZSBQQ0lFX0FCU0VSUl9TRVRUSU5HCTB4OTQwMSAvKiBGb3J3YXJkIGVycm9yIG9mIG5v
-bi1wb3N0ZWQNCj4gcmVxdWVzdCAqLw0KPiA+DQo+ID4gICNkZWZpbmUgUENJRV9JQVRVX05VTQkJ
-Ng0KPiA+DQo+ID4gQEAgLTU0LDYgKzU2LDE5IEBAIHN0cnVjdCBsc19wY2llIHsNCj4gPg0KPiA+
-ICAjZGVmaW5lIHRvX2xzX3BjaWUoeCkJZGV2X2dldF9kcnZkYXRhKCh4KS0+ZGV2KQ0KPiA+DQo+
-ID4gK3N0YXRpYyBpbnQgZXJyX3Jlc3BvbnNlX2ZsYWcgPSAxOw0KPiA+ICsNCj4gPiArc3RhdGlj
-IGludCBfX2luaXQgbHNfcGNpZV9wYXJhbShjaGFyICpwKSB7DQo+ID4gKwlpZiAocCAmJiBzdHJu
-Y21wKHAsICJuby1lcnItcmVzcG9uc2UiLCAxNSkgPT0gMCkNCj4gPiArCQllcnJfcmVzcG9uc2Vf
-ZmxhZyA9IDA7DQo+ID4gKwllbHNlDQo+ID4gKwkJZXJyX3Jlc3BvbnNlX2ZsYWcgPSAxOw0KPiA+
-ICsNCj4gPiArCXJldHVybiAwOw0KPiA+ICt9DQo+ID4gK2Vhcmx5X3BhcmFtKCJsc19wY2llIiwg
-bHNfcGNpZV9wYXJhbSk7DQo+IA0KPiBXaGF0J3MgdGhlIHBvaW50IG9mIHRoaXMgcGFyYW1ldGVy
-PyAgSWYgaXQncyBmb3IgZGVidWdnaW5nLCBpdCdzIG5vdCBjbGVhciB0aGF0DQo+IHdlIG5lZWQg
-aXQgdXBzdHJlYW0uICBJZiBpdCdzIGZvciBkZWJ1Z2dpbmcgYW5kIHdlICpkbyogbmVlZCBpdCB1
-cHN0cmVhbSwNCj4gdGhlcmUgc2hvdWxkIGJlIHNvbWUgc29ydCBvZiBjb21tZW50IHRvIHRoYXQg
-ZWZmZWN0Lg0KPiANCj4gSSBhc3N1bWUgeW91IG5ldmVyIGV4cGVjdCBhbiBlbmQgdXNlciB0byBu
-ZWVkIHRoaXMgcGFyYW1ldGVyLg0KDQpJdCBpcyBmb3IgZGVidWdnaW5nLCB3aWxsIGRyb3AgdGhp
-cyBwYXJhbWV0ZXIgbmV4dCB2ZXJzaW9uLg0KDQo+IA0KPiA+ICBzdGF0aWMgYm9vbCBsc19wY2ll
-X2lzX2JyaWRnZShzdHJ1Y3QgbHNfcGNpZSAqcGNpZSkgIHsNCj4gPiAgCXN0cnVjdCBkd19wY2ll
-ICpwY2kgPSBwY2llLT5wY2k7DQo+ID4gQEAgLTEyNCw2ICsxMzksMTQgQEAgc3RhdGljIGludCBs
-c19wY2llX2xpbmtfdXAoc3RydWN0IGR3X3BjaWUgKnBjaSkNCj4gPiAgCXJldHVybiAxOw0KPiA+
-ICB9DQo+ID4NCj4gPiArLyogRm9yd2FyZCBlcnJvciByZXNwb25zZSBvZiBvdXRib3VuZCBub24t
-cG9zdGVkIHJlcXVlc3RzICovIHN0YXRpYw0KPiA+ICt2b2lkIGxzX3BjaWVfZml4X2Vycm9yX3Jl
-c3BvbnNlKHN0cnVjdCBsc19wY2llICpwY2llKSB7DQo+ID4gKwlzdHJ1Y3QgZHdfcGNpZSAqcGNp
-ID0gcGNpZS0+cGNpOw0KPiA+ICsNCj4gPiArCWlvd3JpdGUzMihQQ0lFX0FCU0VSUl9TRVRUSU5H
-LCBwY2ktPmRiaV9iYXNlICsgUENJRV9BQlNFUlIpOyB9DQo+ID4gKw0KPiA+ICBzdGF0aWMgaW50
-IGxzX3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKSAgew0KPiA+ICAJc3RydWN0
-IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7IEBAIC0xMzUsNiArMTU4LDgg
-QEANCj4gPiBzdGF0aWMgaW50IGxzX3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBw
-KQ0KPiA+ICAJICogZHdfcGNpZV9zZXR1cF9yYygpIHdpbGwgcmVjb25maWd1cmUgdGhlIG91dGJv
-dW5kIHdpbmRvd3MuDQo+ID4gIAkgKi8NCj4gPiAgCWxzX3BjaWVfZGlzYWJsZV9vdXRib3VuZF9h
-dHVzKHBjaWUpOw0KPiA+ICsJaWYgKGVycl9yZXNwb25zZV9mbGFnKQ0KPiA+ICsJCWxzX3BjaWVf
-Zml4X2Vycm9yX3Jlc3BvbnNlKHBjaWUpOw0KPiA+DQo+ID4gIAlkd19wY2llX2RiaV9yb193cl9l
-bihwY2kpOw0KPiA+ICAJbHNfcGNpZV9jbGVhcl9tdWx0aWZ1bmN0aW9uKHBjaWUpOw0KPiA+IC0t
-DQo+ID4gMi4xNC4xDQo+ID4NCg0KVGhhbmtzLA0KWmhpcWlhbmcNCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBs
-aXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5m
-cmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On some integrations of the Intel(R) Trace Hub (for a reference and
+overview see Documentation/trace/intel_th.txt) the reported size of
+one of its resources (RTIT_BAR) doesn't match its actual size, which
+leads to overlaps with other devices' resources.
+
+On a Denverton platform it overlaps with XHCI MMIO space, which results
+in the xhci driver bailing out after seeing its registers as 0xffffffff,
+and perceived disappearance of all USB devices:
+
+> intel_th_pci 0000:00:1f.7: enabling device (0004 -> 0006)
+> xhci_hcd 0000:00:15.0: xHCI host controller not responding, assume dead
+> xhci_hcd 0000:00:15.0: xHC not responding in xhci_irq, assume controller is dead
+> xhci_hcd 0000:00:15.0: HC died; cleaning up
+> usb 1-1: USB disconnect, device number 2
+...
+
+For this reason, we need to resize the RTIT_BAR on Denverton to its
+actual size, which in this case is 4MB.
+
+Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+Link: https://software.intel.com/sites/default/files/managed/d3/3c/intel-th-developer-manual.pdf
+Fixes: 5118ccd34780 ("intel_th: pci: Add Denverton SOC support")
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/quirks.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a4d33619a7bb..d321ea6427b8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4799,3 +4799,19 @@ static void quirk_no_ats(struct pci_dev *pdev)
+ /* AMD Stoney platform GPU */
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_no_ats);
+ #endif /* CONFIG_PCI_ATS */
++
++static void quirk_intel_th_dnv(struct pci_dev *dev)
++{
++	struct resource *r = &dev->resource[4];
++
++	/*
++	 * Denverton reports 2k of RTIT_BAR (intel_th resource 4), which
++	 * appears to be 4 MB in reality.
++	 */
++	if (r->end == r->start + 0x7ff) {
++		r->start = 0;
++		r->end   = 0x3fffff;
++		r->flags |= IORESOURCE_UNSET;
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x19e1, quirk_intel_th_dnv);
+-- 
+2.14.2
