@@ -1,72 +1,77 @@
-Return-Path: <SRS0=KCwd=BS=ACULAB.COM=David.Laight@kernel.org>
-Return-Path: <SRS0=KCwd=BS=ACULAB.COM=David.Laight@kernel.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Bjorn Helgaas' <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Martin Mares
-	<mj@ucw.cz>
-Subject: RE: lspci reports 'stale' BAR info after a card reset
-Date: Thu, 19 Oct 2017 09:08:45 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD009C04A@AcuExch.aculab.com>
-References: <063D6719AE5E284EB5DD2968C1650D6DD009AD46@AcuExch.aculab.com>
- <20171018170429.GA6332@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171018170429.GA6332@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="Windows-1252"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Wolfram Sang <wsa@the-dreams.de>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>, linux-i2c@vger.kernel.org,
+        Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 11/12] PM: i2c-designware-platdrv: Optimize power management
+Date: Thu, 26 Oct 2017 23:14:08 +0200
+Message-ID: <7872726.1UjM5oeC1r@aspire.rjw.lan>
+In-Reply-To: <20171026204140.wzrq4lronz4nu6la@ninjato>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2298462.BTY6P2Oy1l@aspire.rjw.lan> <20171026204140.wzrq4lronz4nu6la@ninjato>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas
-> Sent: 18 October 2017 18:04
-> [+cc Martin]
->=20
-> On Wed, Oct 18, 2017 at 01:23:53PM +0000, David Laight wrote:
-> > I'm doing some experiments that generate errors on a PCIe link.
-> > (I'd like to get AER reporting things - but that is a different
-> > problem.)
-> >
-> > If I force 'link down' (by shorting the TX lines with a screwdriver!)
-> > the card side resets everything to do with the PCIe links including
-> > all of config space - particularly the BARs.
-> >
-> > The kernel doesn't know this has happened, so the bridge is left
-> > configured and the device driver (hopefully) doesn't crash the
-> > kernel when it gets 0xffffffff back from reads!
-> >
-> > If I then run 'lspci -vx' I get:
-> > 09:00.0 Class 0004: Device 12d9:001e (rev 01) (prog-if 02)
-> >         Subsystem: Device 12d9:0001
-> >         Flags: fast devsel, IRQ 16, NUMA node 0
-> >         [virtual] Memory at fa200000 (32-bit, non-prefetchable) [size=
-=3D1M]
-> >         [virtual] Memory at fa100000 (32-bit, non-prefetchable) [size=
-=3D1M]
-> >         [virtual] Memory at fa300000 (32-bit, non-prefetchable) [size=
-=3D8K]
-> >         ...
-> > 00: d9 12 1e 00 00 00 10 00 01 02 04 00 00 00 00 00
-> > 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> > 20: 00 00 00 00 00 00 00 00 00 00 00 00 d9 12 01 00
-> > 30: 00 00 00 00 50 00 00 00 00 00 00 00 00 01 00 00
-> >
-> > Note that the hexdump shows the BARs as all zero, but the text shows th=
-e
-> > values that the kernel thinks are being used.
-> > This doesn't make it obvious that something has gone badly wrong.
-> >
-> > AFAICT most of the info lspci outputs comes from decoding config space.
-> > I suspect it is getting the BAR info from the kernel (linux 4.14.0-rc4 =
-ish)
-> > in order to print the size.
-> > It would be better if it reported the inconsistency.
->=20
-> I agree, it does seem odd that the hexdump reflects the hardware but
-> the text does not.  I don't know whether that's intentional; maybe
-> Martin does.
-...
+On Thursday, October 26, 2017 10:41:40 PM CEST Wolfram Sang wrote:
+> On Mon, Oct 16, 2017 at 03:31:17AM +0200, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Optimize the power management in i2c-designware-platdrv by making it
+> > set the DPM_FLAG_SMART_SUSPEND and DPM_FLAG_LEAVE_SUSPENDED which
+> > allows some code to be dropped from its PM callbacks.
+> > 
+> > First, setting DPM_FLAG_SMART_SUSPEND causes the intel-lpss driver
+> > to avoid resuming i2c-designware-platdrv devices in its ->prepare
+> > callback, so they can stay in runtime suspend after that point even
+> > if the direct-complete feature is not used for them.
+> > 
+> > It also causes the PM core to avoid invoking "late" and "noirq"
+> > suspend callbacks for these devices if they are in runtime suspend
+> > at the beginning of the "late" phase of device suspend during
+> > system suspend.  That guarantees dw_i2c_plat_suspend() to be
+> > called for a device only if it is not in runtime suspend.
+> > Moreover, it also causes the PM core to set the device's runtime
+> > PM status to "active" after calling dw_i2c_plat_resume() for
+> > it, so the driver doesn't need internal flags to avoid invoking
+> > either dw_i2c_plat_suspend() or dw_i2c_plat_resume() twice in
+> > a row.
+> > 
+> > Second, setting DPM_FLAG_LEAVE_SUSPENDED enables the optimization
+> > allowing the device to stay suspended after system resume under
+> > suitable conditions, so again the driver doesn't need to take
+> > care of that by itself.
+> > 
+> > Accordingly, the internal "suspended" and "skip_resume" flags
+> > used by the driver are not necessary any more, so drop them and
+> > simplify the driver's PM callbacks.
+> > 
+> > Additionally, notice that dw_i2c_plat_complete() only needs
+> > to schedule runtime PM for the device if platform firmware
+> > has been involved in resuming the system, so make it call
+> > pm_resume_via_firmware() to check that.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> So, if the designware maintainers ack it, I will, too.
 
-Actually, looking at the lspci code, the "[virtual]" is output
-when the value read from the BAR is zero.
-I'm not sure what this is supposed to mean.
-It won't be output for an unconfigured IO address (low bit set)
-and it is technically valid to map a BAR to address zero.
+Thanks!
 
-	David
+I need to post a new revision of the core patches, so I'll send this one
+again later.  Likely during the next cycle.
+
+Thanks,
+Rafael
+
+
