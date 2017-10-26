@@ -1,644 +1,539 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Reply-To: minyard@acm.org
-Subject: Re: [PATCH v10 1/9] LIB: Introduce a generic PIO mapping method
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com, rafael@kernel.org,
-        arnd@arndb.de, linux-arm-kernel@lists.infradead.org,
-        lorenzo.pieralisi@arm.com
-Cc: mark.rutland@arm.com, brian.starkey@arm.com, olof@lixom.net,
-        benh@kernel.crashing.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linuxarm@huawei.com,
-        linux-pci@vger.kernel.org, john.garry@huawei.com,
-        xuwei5@hisilicon.com, "zhichang.yuan" <yuanzhichang@hisilicon.com>
-References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
- <1509120687-7352-2-git-send-email-gabriele.paoloni@huawei.com>
-From: Corey Minyard <minyard@acm.org>
-Message-ID: <49ac8217-1e89-bb4a-8592-9d57039f792c@acm.org>
-Date: Fri, 27 Oct 2017 13:32:28 -0500
-MIME-Version: 1.0
-In-Reply-To: <1509120687-7352-2-git-send-email-gabriele.paoloni@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47882 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932246AbdJZOyN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 26 Oct 2017 10:54:13 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Meelis Roos <mroos@linux.ee>, Matt Turner <mattst88@gmail.com>
+Subject: [PATCH] alpha/pci: Fix pci_map_irq()/pci_swizzle() functions section markers
+Date: Thu, 26 Oct 2017 15:54:15 +0100
+Message-Id: <1509029655-30493-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/27/2017 11:11 AM, Gabriele Paoloni wrote:
-> From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
->
-> In commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
-> pci_pio_to_address()"), a new I/O space management was supported. With
-> that driver, the I/O ranges configured for PCI/PCIE hosts on some
-> architectures can be mapped to logical PIO, converted easily between
-> CPU address and the corresponding logicial PIO. Based on this, PCI
-> I/O devices can be accessed in a memory read/write way through the
-> unified in/out accessors.
->
-> But on some archs/platforms, there are bus hosts which access I/O
-> peripherals with host-local I/O port addresses rather than memory
-> addresses after memory-mapped.
-> To support those devices, a more generic I/O mapping method is introduced
-> here. Through this patch, both the CPU addresses and the host-local port
-> can be mapped into the logical PIO space with different logical/fake PIOs.
-> After this, all the I/O accesses to either PCI MMIO devices or host-local
-> I/O peripherals can be unified into the existing I/O accessors defined in
-> asm-generic/io.h and be redirected to the right device-specific hooks
-> based on the input logical PIO.
->
-> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> ---
->   include/asm-generic/io.h  |  26 +++++
->   include/linux/logic_pio.h | 118 +++++++++++++++++++
->   lib/Kconfig               |  26 +++++
->   lib/Makefile              |   2 +
->   lib/logic_pio.c           | 286 ++++++++++++++++++++++++++++++++++++++++++++++
->   5 files changed, 458 insertions(+)
->   create mode 100644 include/linux/logic_pio.h
->   create mode 100644 lib/logic_pio.c
->
-> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-> index 7ef015e..334e5db 100644
-> --- a/include/asm-generic/io.h
-> +++ b/include/asm-generic/io.h
-> @@ -351,6 +351,8 @@ static inline void writesq(volatile void __iomem *addr, const void *buffer,
->   #define IO_SPACE_LIMIT 0xffff
->   #endif
->   
-> +#include <linux/logic_pio.h>
+The introduction of {map/swizzle}_irq() hooks in the
+struct pci_host_bridge allowed to replace the pci_fixup_irqs()
+PCI IRQ allocation in alpha arch PCI code with per-bridge
+map/swizzle functions with commit 0e4c2eeb758a ("alpha/PCI: Replace
+pci_fixup_irqs() call with host bridge IRQ mapping hooks").
 
-This whole thing would be a lot simpler if you had:
+As a side effect of converting PCI IRQ allocation to the struct
+pci_host_bridge {map/swizzle}_irq() hooks mechanism, the actual PCI IRQ
+allocation function (ie pci_assign_irq()) is carried out per-device in
+pci_device_probe() that is called when a PCI device driver is about to
+be probed.
 
-#ifdef CONFIG_INDIRECT_PIO
-#define inb logic_inb
-#define outb logic outb
-.
-.
-#endif /* CONFIG_INDIRECT_PIO */
+This means that, for drivers compiled as loadable modules, the actual
+PCI device IRQ allocation can now happen after the system has booted so the
+struct pci_host_bridge {map/swizzle}_irq() hooks pci_assign_irq() relies
+on must stay valid after the system has booted so that PCI core can
+carry out PCI IRQ allocation correctly.
 
-and let the "ifndef XXX" below handle not enabling the standard code.
-You could even put that in logic_pio.h to avoid polluting io.h.
+Most of the alpha board structures pci_map_irq() and pci_swizzle() hooks
+(that are used to initialize their struct pci_host_bridge equivalent
+through the alpha_mv global variable - that represents the struct
+alpha_machine_vector of the running kernel) are marked as
+__init/__initdata; this causes freed memory dereferences when PCI IRQ
+allocation is carried out after the kernel has booted (ie when loading
+PCI drivers as loadable module) because when the kernel tries to bind
+the PCI device to its (module) driver, the function pci_assign_irq() is
+called, that in turn retrieves the struct pci_host_bridge
+{map/swizzle}_irq() hooks to carry out PCI IRQ allocation; if those
+hooks are marked as __init code/__initdata they point at freed/invalid
+memory.
 
-You might have to add "#ifndef inb", etc. above, but I still think it would
-be better.
+Fix the issue by removing the __init/__initdata markers from all subarch
+struct alpha_machine_vector.pci_map_irq()/pci_swizzle() functions (and
+data).
 
-I'm not sure if this wouldn't be better done in arm64/include/asm/io.h, 
-though.
-A specific machine may want to only do this in ranges, for instance.
+Fixes: 0e4c2eeb758a ("alpha/PCI: Replace pci_fixup_irqs() call with host bridge IRQ mapping hooks")
+Link: http://lkml.kernel.org/r/alpine.LRH.2.21.1710251043170.7098@math.ut.ee
+Reported-by: Meelis Roos <mroos@linux.ee>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Henderson <rth@twiddle.net>
+Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Cc: Meelis Roos <mroos@linux.ee>
+Cc: Matt Turner <mattst88@gmail.com>
+---
+ arch/alpha/kernel/sys_alcor.c     |  4 ++--
+ arch/alpha/kernel/sys_cabriolet.c | 12 ++++++------
+ arch/alpha/kernel/sys_dp264.c     | 20 ++++++++++----------
+ arch/alpha/kernel/sys_eb64p.c     |  4 ++--
+ arch/alpha/kernel/sys_eiger.c     |  4 ++--
+ arch/alpha/kernel/sys_miata.c     |  6 +++---
+ arch/alpha/kernel/sys_mikasa.c    |  4 ++--
+ arch/alpha/kernel/sys_nautilus.c  |  2 +-
+ arch/alpha/kernel/sys_noritake.c  |  6 +++---
+ arch/alpha/kernel/sys_rawhide.c   |  4 ++--
+ arch/alpha/kernel/sys_ruffian.c   |  6 +++---
+ arch/alpha/kernel/sys_rx164.c     |  4 ++--
+ arch/alpha/kernel/sys_sable.c     | 10 +++++-----
+ arch/alpha/kernel/sys_sio.c       |  8 ++++----
+ arch/alpha/kernel/sys_sx164.c     |  4 ++--
+ arch/alpha/kernel/sys_takara.c    |  6 +++---
+ arch/alpha/kernel/sys_wildfire.c  |  4 ++--
+ 17 files changed, 54 insertions(+), 54 deletions(-)
 
--corey
-
-> +
->   /*
->    * {in,out}{b,w,l}() access little endian I/O. {in,out}{b,w,l}_p() can be
->    * implemented on hardware that needs an additional delay for I/O accesses to
-> @@ -358,51 +360,75 @@ static inline void writesq(volatile void __iomem *addr, const void *buffer,
->    */
->   
->   #ifndef inb
-> +#ifdef CONFIG_INDIRECT_PIO
-> +#define inb logic_inb
-> +#else
->   #define inb inb
->   static inline u8 inb(unsigned long addr)
->   {
->   	return readb(PCI_IOBASE + addr);
->   }
-> +#endif /* CONFIG_INDIRECT_PIO */
->   #endif
->   
->   #ifndef inw
-> +#ifdef CONFIG_INDIRECT_PIO
-> +#define inw logic_inw
-> +#else
->   #define inw inw
->   static inline u16 inw(unsigned long addr)
->   {
->   	return readw(PCI_IOBASE + addr);
->   }
-> +#endif /* CONFIG_INDIRECT_PIO */
->   #endif
->   
->   #ifndef inl
-> +#ifdef CONFIG_INDIRECT_PIO
-> +#define inl logic_inl
-> +#else
->   #define inl inl
->   static inline u32 inl(unsigned long addr)
->   {
->   	return readl(PCI_IOBASE + addr);
->   }
-> +#endif /* CONFIG_INDIRECT_PIO */
->   #endif
->   
->   #ifndef outb
-> +#ifdef CONFIG_INDIRECT_PIO
-> +#define outb logic_outb
-> +#else
->   #define outb outb
->   static inline void outb(u8 value, unsigned long addr)
->   {
->   	writeb(value, PCI_IOBASE + addr);
->   }
-> +#endif /* CONFIG_INDIRECT_PIO */
->   #endif
->   
->   #ifndef outw
-> +#ifdef CONFIG_INDIRECT_PIO
-> +#define outw logic_outw
-> +#else
->   #define outw outw
->   static inline void outw(u16 value, unsigned long addr)
->   {
->   	writew(value, PCI_IOBASE + addr);
->   }
-> +#endif /* CONFIG_INDIRECT_PIO */
->   #endif
->   
->   #ifndef outl
-> +#ifdef CONFIG_INDIRECT_PIO
-> +#define outl logic_outl
-> +#else
->   #define outl outl
->   static inline void outl(u32 value, unsigned long addr)
->   {
->   	writel(value, PCI_IOBASE + addr);
->   }
-> +#endif /* CONFIG_INDIRECT_PIO */
->   #endif
->   
->   #ifndef inb_p
-> diff --git a/include/linux/logic_pio.h b/include/linux/logic_pio.h
-> new file mode 100644
-> index 0000000..f0a6f15
-> --- /dev/null
-> +++ b/include/linux/logic_pio.h
-> @@ -0,0 +1,118 @@
-> +/*
-> + * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
-> + * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-> + */
-> +
-> +#ifndef __LINUX_LOGIC_PIO_H
-> +#define __LINUX_LOGIC_PIO_H
-> +
-> +#ifdef __KERNEL__
-> +
-> +#include <linux/fwnode.h>
-> +
-> +#define PIO_INDIRECT		0x01UL /* indirect IO flag */
-> +#define PIO_CPU_MMIO		0x00UL /* memory mapped io flag */
-> +
-> +struct logic_pio_hwaddr {
-> +	struct list_head list;
-> +	struct fwnode_handle *fwnode;
-> +	resource_size_t hw_start;
-> +	resource_size_t io_start;
-> +	resource_size_t size; /* range size populated */
-> +	unsigned long flags;
-> +
-> +	void *devpara;	/* private parameter of the host device */
-> +	struct hostio_ops *ops;	/* ops operating on this node */
-> +};
-> +
-> +struct hostio_ops {
-> +	u32 (*pfin)(void *devobj, unsigned long ptaddr,	size_t dlen);
-> +	void (*pfout)(void *devobj, unsigned long ptaddr, u32 outval,
-> +			size_t dlen);
-> +	u32 (*pfins)(void *devobj, unsigned long ptaddr, void *inbuf,
-> +			size_t dlen, unsigned int count);
-> +	void (*pfouts)(void *devobj, unsigned long ptaddr,
-> +			const void *outbuf, size_t dlen, unsigned int count);
-> +};
-> +
-> +#ifdef CONFIG_INDIRECT_PIO
-> +u8 logic_inb(unsigned long addr);
-> +void logic_outb(u8 value, unsigned long addr);
-> +void logic_outw(u16 value, unsigned long addr);
-> +void logic_outl(u32 value, unsigned long addr);
-> +u16 logic_inw(unsigned long addr);
-> +u32 logic_inl(unsigned long addr);
-> +void logic_outb(u8 value, unsigned long addr);
-> +void logic_outw(u16 value, unsigned long addr);
-> +void logic_outl(u32 value, unsigned long addr);
-> +void logic_insb(unsigned long addr, void *buffer, unsigned int count);
-> +void logic_insl(unsigned long addr, void *buffer, unsigned int count);
-> +void logic_insw(unsigned long addr, void *buffer, unsigned int count);
-> +void logic_outsb(unsigned long addr, const void *buffer, unsigned int count);
-> +void logic_outsw(unsigned long addr, const void *buffer, unsigned int count);
-> +void logic_outsl(unsigned long addr, const void *buffer, unsigned int count);
-> +
-> +#define insb logic_insb
-> +#define insw logic_insw
-> +#define insl logic_insl
-> +#define outsb logic_outsb
-> +#define outsw logic_outsw
-> +#define outsl logic_outsl
-> +
-> +/*
-> + * Below we reserve 0x4000 bytes for Indirect IO as so far this library is only
-> + * used by Hisilicon LPC Host. If needed in future we may reserve a wider IO
-> + * area by redefining the macro below.
-> + */
-> +#define PIO_INDIRECT_SIZE 0x4000
-> +#define MMIO_UPPER_LIMIT (IO_SPACE_LIMIT - PIO_INDIRECT_SIZE)
-> +#else
-> +#define MMIO_UPPER_LIMIT IO_SPACE_LIMIT
-> +#endif
-> +
-> +#ifdef CONFIG_LOGIC_PIO
-> +struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode);
-> +
-> +unsigned long logic_pio_trans_hwaddr(struct fwnode_handle *fwnode,
-> +			resource_size_t hw_addr, resource_size_t size);
-> +
-> +int logic_pio_register_range(struct logic_pio_hwaddr *newrange);
-> +#else
-> +static inline struct logic_pio_hwaddr
-> +*find_io_range_by_fwnode(struct fwnode_handle *fwnode)
-> +{
-> +	return NULL;
-> +}
-> +
-> +static inline unsigned long logic_pio_trans_hwaddr(struct fwnode_handle *fwnode,
-> +			resource_size_t hw_addr, resource_size_t size);
-> +{
-> +	return -1;
-> +}
-> +
-> +static inline struct logic_pio_hwaddr
-> +*logic_pio_register_range(struct logic_pio_hwaddr *newrange);
-> +{
-> +	return NULL;
-> +}
-> +#endif
-> +
-> +extern resource_size_t logic_pio_to_hwaddr(unsigned long pio);
-> +
-> +extern unsigned long logic_pio_trans_cpuaddr(resource_size_t hw_addr);
-> +
-> +#endif /* __KERNEL__ */
-> +#endif /* __LINUX_LOGIC_PIO_H */
-> diff --git a/lib/Kconfig b/lib/Kconfig
-> index 6762529..d7443a6 100644
-> --- a/lib/Kconfig
-> +++ b/lib/Kconfig
-> @@ -59,6 +59,32 @@ config ARCH_USE_CMPXCHG_LOCKREF
->   config ARCH_HAS_FAST_MULTIPLIER
->   	bool
->   
-> +config LOGIC_PIO
-> +	bool "Generic logical I/O management"
-> +	def_bool y if PCI && !X86 && !IA64 && !POWERPC
-> +	help
-> +	  For some architectures, there are no IO space. To support the
-> +	  accesses to legacy I/O devices on those architectures, kernel
-> +	  implemented the memory mapped I/O mechanism based on bridge bus
-> +	  supports. But for some buses which do not support MMIO, the
-> +	  peripherals there should be accessed with device-specific way.
-> +	  To abstract those different I/O accesses into unified I/O accessors,
-> +	  this option provide a generic I/O space management way after mapping
-> +	  the device I/O to system logical/fake I/O and help to hide all the
-> +	  hardware detail.
-> +
-> +config INDIRECT_PIO
-> +	bool "Access I/O in non-MMIO mode" if LOGIC_PIO
-> +	help
-> +	  On some platforms where no separate I/O space exist, there are I/O
-> +	  hosts which can not be accessed in MMIO mode. Based on LOGIC_PIO
-> +	  mechanism, the host-local I/O resource can be mapped into system
-> +	  logic PIO space shared with MMIO hosts, such as PCI/PCIE, then system
-> +	  can access the I/O devices with the mapped logic PIO through I/O
-> +	  accessors.
-> +	  This way has a little I/O performance cost. Please make sure your
-> +	  devices really need this configure item enabled.
-> +
-
-If this is always available on the hisilicon chips, I think you would 
-want to just always
-enable this on those chips.
-
--corey
-
->   config CRC_CCITT
->   	tristate "CRC-CCITT functions"
->   	help
-> diff --git a/lib/Makefile b/lib/Makefile
-> index 40c1837..e0246ad 100644
-> --- a/lib/Makefile
-> +++ b/lib/Makefile
-> @@ -77,6 +77,8 @@ obj-$(CONFIG_HAS_IOMEM) += iomap_copy.o devres.o
->   obj-$(CONFIG_CHECK_SIGNATURE) += check_signature.o
->   obj-$(CONFIG_DEBUG_LOCKING_API_SELFTESTS) += locking-selftest.o
->   
-> +obj-$(CONFIG_LOGIC_PIO) += logic_pio.o
-> +
->   obj-$(CONFIG_GENERIC_HWEIGHT) += hweight.o
->   
->   obj-$(CONFIG_BTREE) += btree.o
-> diff --git a/lib/logic_pio.c b/lib/logic_pio.c
-> new file mode 100644
-> index 0000000..f8427cb
-> --- /dev/null
-> +++ b/lib/logic_pio.c
-> @@ -0,0 +1,286 @@
-> +/*
-> + * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
-> + * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-> + */
-> +
-> +#include <linux/of.h>
-> +#include <linux/io.h>
-> +#include <linux/logic_pio.h>
-> +#include <linux/mm.h>
-> +#include <linux/rculist.h>
-> +#include <linux/sizes.h>
-> +#include <linux/slab.h>
-> +
-> +/* The unique hardware address list. */
-> +static LIST_HEAD(io_range_list);
-> +static DEFINE_MUTEX(io_range_mutex);
-> +
-> +/*
-> + * register a new io range node in the io range list.
-> + *
-> + * @newrange: pointer to the io range to be registered.
-> + *
-> + * returns 0 on success, the error code in case of failure
-> + */
-> +int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
-> +{
-> +	struct logic_pio_hwaddr *range;
-> +	int ret = 0;
-> +	resource_size_t start = new_range->hw_start;
-> +	resource_size_t end = new_range->hw_start + new_range->size;
-> +	resource_size_t allocated_mmio_size = 0;
-> +	resource_size_t allocated_iio_size = MMIO_UPPER_LIMIT;
-> +
-> +	if (!new_range || !new_range->fwnode || !new_range->size)
-> +		return -EINVAL;
-> +
-> +	mutex_lock(&io_range_mutex);
-> +	list_for_each_entry_rcu(range, &io_range_list, list) {
-> +
-> +		if (range->fwnode == new_range->fwnode) {
-> +			/* range already there */
-> +			ret = -EFAULT;
-> +			goto end_register;
-> +		}
-> +		if (range->flags == PIO_CPU_MMIO &&
-> +				new_range->flags == PIO_CPU_MMIO) {
-> +			/* for MMIO ranges we need to check for overlap */
-> +			if (start >= range->hw_start + range->size ||
-> +				end < range->hw_start)
-> +				allocated_mmio_size += range->size;
-> +			else {
-> +				ret = -EFAULT;
-> +				goto end_register;
-> +			}
-> +		} else if (range->flags == PIO_INDIRECT &&
-> +				new_range->flags == PIO_INDIRECT) {
-> +			allocated_iio_size += range->size;
-> +		}
-> +	}
-> +
-> +	/* range not registered yet, check for available space */
-> +	if (new_range->flags == PIO_CPU_MMIO) {
-> +
-> +		if (allocated_mmio_size + new_range->size - 1 >
-> +			MMIO_UPPER_LIMIT) {
-> +			/* if it's too big check if 64K space can be reserved */
-> +			if (allocated_mmio_size + SZ_64K - 1 >
-> +			MMIO_UPPER_LIMIT) {
-> +				ret = -E2BIG;
-> +				goto end_register;
-> +			}
-> +			new_range->size = SZ_64K;
-> +			pr_warn("Requested IO range too big, new size set to 64K\n");
-> +		}
-> +
-> +		new_range->io_start = allocated_mmio_size;
-> +
-> +	} else if (new_range->flags == PIO_INDIRECT) {
-> +
-> +		if (allocated_iio_size + new_range->size - 1 >
-> +		IO_SPACE_LIMIT) {
-> +			ret = -E2BIG;
-> +			goto end_register;
-> +		}
-> +		new_range->io_start = allocated_iio_size;
-> +
-> +	} else {
-> +		/* invalid flag */
-> +		ret = -EINVAL;
-> +		goto end_register;
-> +	}
-> +
-> +	list_add_tail_rcu(&new_range->list, &io_range_list);
-> +
-> +end_register:
-> +	mutex_unlock(&io_range_mutex);
-> +	return ret;
-> +}
-> +
-> +/*
-> + * traverse the io_range_list to find the registered node whose device node
-> + * and/or physical IO address match to.
-> + */
-> +struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode)
-> +{
-> +	struct logic_pio_hwaddr *range;
-> +
-> +	list_for_each_entry_rcu(range, &io_range_list, list) {
-> +		if (range->fwnode == fwnode)
-> +			return range;
-> +	}
-> +	return NULL;
-> +}
-> +
-> +/* return a registered range given an input PIO token */
-> +static struct logic_pio_hwaddr *find_io_range(unsigned long pio)
-> +{
-> +	struct logic_pio_hwaddr *range;
-> +
-> +	list_for_each_entry_rcu(range, &io_range_list, list) {
-> +		if (pio >= range->io_start &&
-> +				pio < range->io_start + range->size)
-> +			return range;
-> +	}
-> +	pr_err("PIO entry token invalid\n");
-> +	return NULL;
-> +}
-> +
-> +/*
-> + * Translate the input logical pio to the corresponding hardware address.
-> + * The input pio should be unique in the whole logical PIO space.
-> + */
-> +resource_size_t logic_pio_to_hwaddr(unsigned long pio)
-> +{
-> +	struct logic_pio_hwaddr *range;
-> +	resource_size_t hwaddr = -1;
-> +
-> +	range = find_io_range(pio);
-> +	if (range)
-> +		hwaddr = range->hw_start + pio - range->io_start;
-> +
-> +	return hwaddr;
-> +}
-> +
-> +/*
-> + * This function is generic for translating a hardware address to logical PIO.
-> + * @hw_addr: the hardware address of host, can be CPU address or host-local
-> + *		address;
-> + */
-> +unsigned long
-> +logic_pio_trans_hwaddr(struct fwnode_handle *fwnode, resource_size_t addr,
-> +		       resource_size_t size)
-> +{
-> +	struct logic_pio_hwaddr *range;
-> +
-> +	range = find_io_range_by_fwnode(fwnode);
-> +	if (!range || range->flags == PIO_CPU_MMIO) {
-> +		pr_err("range not found or invalid\n");
-> +		return -1;
-> +	}
-> +	if (range->size < size) {
-> +		pr_err("resource size 0x%llx cannot fit in IO range size 0x%llx\n",
-> +		       size, range->size);
-> +		return -1;
-> +	}
-> +	return addr - range->hw_start + range->io_start;
-> +}
-> +
-> +unsigned long
-> +logic_pio_trans_cpuaddr(resource_size_t addr)
-> +{
-> +	struct logic_pio_hwaddr *range;
-> +
-> +	list_for_each_entry_rcu(range, &io_range_list, list) {
-> +		if (range->flags != PIO_CPU_MMIO)
-> +			continue;
-> +		if (addr >= range->hw_start &&
-> +			addr < range->hw_start + range->size)
-> +			return addr - range->hw_start +
-> +				range->io_start;
-> +	}
-> +	pr_err("addr not registered in io_range_list\n");
-> +	return -1;
-> +}
-> +
-> +#if defined(CONFIG_INDIRECT_PIO) && defined(PCI_IOBASE)
-> +#define BUILD_LOGIC_IO(bw, type)					\
-> +type logic_in##bw(unsigned long addr)					\
-> +{									\
-> +	type ret = -1;							\
-> +									\
-> +	if (addr < MMIO_UPPER_LIMIT) {					\
-> +		ret = read##bw(PCI_IOBASE + addr);			\
-> +	} else {							\
-> +		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-> +									\
-> +		if (entry && entry->ops)				\
-> +			ret = entry->ops->pfin(entry->devpara,		\
-> +					addr, sizeof(type));		\
-> +		else							\
-> +			WARN_ON_ONCE(1);				\
-> +	}								\
-> +	return ret;							\
-> +}									\
-> +									\
-> +void logic_out##bw(type value, unsigned long addr)			\
-> +{									\
-> +	if (addr < MMIO_UPPER_LIMIT) {					\
-> +		write##bw(value, PCI_IOBASE + addr);			\
-> +	} else {							\
-> +		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-> +									\
-> +		if (entry && entry->ops)				\
-> +			entry->ops->pfout(entry->devpara,		\
-> +					addr, value, sizeof(type));	\
-> +		else							\
-> +			WARN_ON_ONCE(1);				\
-> +	}								\
-> +}									\
-> +									\
-> +void logic_ins##bw(unsigned long addr, void *buffer, unsigned int count)\
-> +{									\
-> +	if (addr < MMIO_UPPER_LIMIT) {					\
-> +		reads##bw(PCI_IOBASE + addr, buffer, count);		\
-> +	} else {							\
-> +		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-> +									\
-> +		if (entry && entry->ops)				\
-> +			entry->ops->pfins(entry->devpara,		\
-> +				addr, buffer, sizeof(type), count);	\
-> +		else							\
-> +			WARN_ON_ONCE(1);				\
-> +	}								\
-> +									\
-> +}									\
-> +									\
-> +void logic_outs##bw(unsigned long addr, const void *buffer,		\
-> +		    unsigned int count)					\
-> +{									\
-> +	if (addr < MMIO_UPPER_LIMIT)					\
-> +		writes##bw(PCI_IOBASE + addr, buffer, count);		\
-> +	else {								\
-> +		struct logic_pio_hwaddr *entry = find_io_range(addr);	\
-> +									\
-> +		if (entry && entry->ops)				\
-> +			entry->ops->pfouts(entry->devpara,		\
-> +				addr, buffer, sizeof(type), count);	\
-> +		else							\
-> +			WARN_ON_ONCE(1);				\
-> +	}								\
-> +}
-> +
-> +BUILD_LOGIC_IO(b, u8)
-> +
-> +EXPORT_SYMBOL(logic_inb);
-> +EXPORT_SYMBOL(logic_outb);
-> +EXPORT_SYMBOL(logic_insb);
-> +EXPORT_SYMBOL(logic_outsb);
-> +
-> +BUILD_LOGIC_IO(w, u16)
-> +
-> +EXPORT_SYMBOL(logic_inw);
-> +EXPORT_SYMBOL(logic_outw);
-> +EXPORT_SYMBOL(logic_insw);
-> +EXPORT_SYMBOL(logic_outsw);
-> +
-> +BUILD_LOGIC_IO(l, u32)
-> +
-> +EXPORT_SYMBOL(logic_inl);
-> +EXPORT_SYMBOL(logic_outl);
-> +EXPORT_SYMBOL(logic_insl);
-> +EXPORT_SYMBOL(logic_outsl);
-> +#endif /* CONFIG_INDIRECT_PIO && PCI_IOBASE */
-
-
+diff --git a/arch/alpha/kernel/sys_alcor.c b/arch/alpha/kernel/sys_alcor.c
+index 118dc6a..7ad074f 100644
+--- a/arch/alpha/kernel/sys_alcor.c
++++ b/arch/alpha/kernel/sys_alcor.c
+@@ -181,10 +181,10 @@ alcor_init_irq(void)
+  * comes in on.  This makes interrupt processing much easier.
+  */
+ 
+-static int __init
++static int
+ alcor_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[7][5] __initdata = {
++	static char irq_tab[7][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		/* note: IDSEL 17 is XLT only */
+ 		{16+13, 16+13, 16+13, 16+13, 16+13},	/* IdSel 17,  TULIP  */
+diff --git a/arch/alpha/kernel/sys_cabriolet.c b/arch/alpha/kernel/sys_cabriolet.c
+index 4c50f8f4..c0fa1fe 100644
+--- a/arch/alpha/kernel/sys_cabriolet.c
++++ b/arch/alpha/kernel/sys_cabriolet.c
+@@ -173,10 +173,10 @@ pc164_init_irq(void)
+  * because it is the Saturn IO (SIO) PCI/ISA Bridge Chip.
+  */
+ 
+-static inline int __init
++static inline int
+ eb66p_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[5][5] __initdata = {
++	static char irq_tab[5][5] = {
+ 		/*INT  INTA  INTB  INTC   INTD */
+ 		{16+0, 16+0, 16+5,  16+9, 16+13},  /* IdSel 6,  slot 0, J25 */
+ 		{16+1, 16+1, 16+6, 16+10, 16+14},  /* IdSel 7,  slot 1, J26 */
+@@ -203,10 +203,10 @@ eb66p_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+  * because it is the Saturn IO (SIO) PCI/ISA Bridge Chip.
+  */
+ 
+-static inline int __init
++static inline int
+ cabriolet_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[5][5] __initdata = {
++	static char irq_tab[5][5] = {
+ 		/*INT   INTA  INTB  INTC   INTD */
+ 		{ 16+2, 16+2, 16+7, 16+11, 16+15}, /* IdSel 5,  slot 2, J21 */
+ 		{ 16+0, 16+0, 16+5,  16+9, 16+13}, /* IdSel 6,  slot 0, J19 */
+@@ -287,10 +287,10 @@ cia_cab_init_pci(void)
+  * 
+  */
+ 
+-static inline int __init
++static inline int
+ alphapc164_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[7][5] __initdata = {
++	static char irq_tab[7][5] = {
+ 		/*INT   INTA  INTB   INTC   INTD */
+ 		{ 16+2, 16+2, 16+9,  16+13, 16+17}, /* IdSel  5, slot 2, J20 */
+ 		{ 16+0, 16+0, 16+7,  16+11, 16+15}, /* IdSel  6, slot 0, J29 */
+diff --git a/arch/alpha/kernel/sys_dp264.c b/arch/alpha/kernel/sys_dp264.c
+index 6c35159..9e1e40e 100644
+--- a/arch/alpha/kernel/sys_dp264.c
++++ b/arch/alpha/kernel/sys_dp264.c
+@@ -356,7 +356,7 @@ clipper_init_irq(void)
+  *  10	 64 bit PCI option slot 3 (not bus 0)
+  */
+ 
+-static int __init
++static int
+ isa_irq_fixup(const struct pci_dev *dev, int irq)
+ {
+ 	u8 irq8;
+@@ -372,10 +372,10 @@ isa_irq_fixup(const struct pci_dev *dev, int irq)
+ 	return irq8 & 0xf;
+ }
+ 
+-static int __init
++static int
+ dp264_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[6][5] __initdata = {
++	static char irq_tab[6][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 5 ISA Bridge */
+ 		{ 16+ 3, 16+ 3, 16+ 2, 16+ 2, 16+ 2}, /* IdSel 6 SCSI builtin*/
+@@ -394,10 +394,10 @@ dp264_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return isa_irq_fixup(dev, irq);
+ }
+ 
+-static int __init
++static int
+ monet_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[13][5] __initdata = {
++	static char irq_tab[13][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{    45,    45,    45,    45,    45}, /* IdSel 3 21143 PCI1 */
+ 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 4 unused */
+@@ -423,7 +423,7 @@ monet_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return isa_irq_fixup(dev, COMMON_TABLE_LOOKUP);
+ }
+ 
+-static u8 __init
++static u8
+ monet_swizzle(struct pci_dev *dev, u8 *pinp)
+ {
+ 	struct pci_controller *hose = dev->sysdata;
+@@ -456,10 +456,10 @@ monet_swizzle(struct pci_dev *dev, u8 *pinp)
+ 	return slot;
+ }
+ 
+-static int __init
++static int
+ webbrick_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[13][5] __initdata = {
++	static char irq_tab[13][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 7 ISA Bridge */
+ 		{    -1,    -1,    -1,    -1,    -1}, /* IdSel 8 unused */
+@@ -478,10 +478,10 @@ webbrick_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return isa_irq_fixup(dev, COMMON_TABLE_LOOKUP);
+ }
+ 
+-static int __init
++static int
+ clipper_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[7][5] __initdata = {
++	static char irq_tab[7][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{ 16+ 8, 16+ 8, 16+ 9, 16+10, 16+11}, /* IdSel 1 slot 1 */
+ 		{ 16+12, 16+12, 16+13, 16+14, 16+15}, /* IdSel 2 slot 2 */
+diff --git a/arch/alpha/kernel/sys_eb64p.c b/arch/alpha/kernel/sys_eb64p.c
+index ad40a42..372661c 100644
+--- a/arch/alpha/kernel/sys_eb64p.c
++++ b/arch/alpha/kernel/sys_eb64p.c
+@@ -167,10 +167,10 @@ eb64p_init_irq(void)
+  * comes in on.  This makes interrupt processing much easier.
+  */
+ 
+-static int __init
++static int
+ eb64p_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[5][5] __initdata = {
++	static char irq_tab[5][5] = {
+ 		/*INT  INTA  INTB  INTC   INTD */
+ 		{16+7, 16+7, 16+7, 16+7,  16+7},  /* IdSel 5,  slot ?, ?? */
+ 		{16+0, 16+0, 16+2, 16+4,  16+9},  /* IdSel 6,  slot ?, ?? */
+diff --git a/arch/alpha/kernel/sys_eiger.c b/arch/alpha/kernel/sys_eiger.c
+index 15f4208..2731738 100644
+--- a/arch/alpha/kernel/sys_eiger.c
++++ b/arch/alpha/kernel/sys_eiger.c
+@@ -141,7 +141,7 @@ eiger_init_irq(void)
+ 	}
+ }
+ 
+-static int __init
++static int
+ eiger_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	u8 irq_orig;
+@@ -158,7 +158,7 @@ eiger_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return irq_orig - 0x80;
+ }
+ 
+-static u8 __init
++static u8
+ eiger_swizzle(struct pci_dev *dev, u8 *pinp)
+ {
+ 	struct pci_controller *hose = dev->sysdata;
+diff --git a/arch/alpha/kernel/sys_miata.c b/arch/alpha/kernel/sys_miata.c
+index d5b9776..731d693f 100644
+--- a/arch/alpha/kernel/sys_miata.c
++++ b/arch/alpha/kernel/sys_miata.c
+@@ -149,10 +149,10 @@ miata_init_irq(void)
+  * comes in on.  This makes interrupt processing much easier.
+  */
+ 
+-static int __init
++static int
+ miata_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-        static char irq_tab[18][5] __initdata = {
++        static char irq_tab[18][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{16+ 8, 16+ 8, 16+ 8, 16+ 8, 16+ 8},  /* IdSel 14,  DC21142 */
+ 		{   -1,    -1,    -1,    -1,    -1},  /* IdSel 15,  EIDE    */
+@@ -196,7 +196,7 @@ miata_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return COMMON_TABLE_LOOKUP;
+ }
+ 
+-static u8 __init
++static u8
+ miata_swizzle(struct pci_dev *dev, u8 *pinp)
+ {
+ 	int slot, pin = *pinp;
+diff --git a/arch/alpha/kernel/sys_mikasa.c b/arch/alpha/kernel/sys_mikasa.c
+index 5e82dc1..350ec9c 100644
+--- a/arch/alpha/kernel/sys_mikasa.c
++++ b/arch/alpha/kernel/sys_mikasa.c
+@@ -145,10 +145,10 @@ mikasa_init_irq(void)
+  * comes in on.  This makes interrupt processing much easier.
+  */
+ 
+-static int __init
++static int
+ mikasa_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[8][5] __initdata = {
++	static char irq_tab[8][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{16+12, 16+12, 16+12, 16+12, 16+12},	/* IdSel 17,  SCSI */
+ 		{   -1,    -1,    -1,    -1,    -1},	/* IdSel 18,  PCEB */
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 8ae04a1..d019e4c 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -62,7 +62,7 @@ nautilus_init_irq(void)
+ 	common_init_isa_dma();
+ }
+ 
+-static int __init
++static int
+ nautilus_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	/* Preserve the IRQ set up by the console.  */
+diff --git a/arch/alpha/kernel/sys_noritake.c b/arch/alpha/kernel/sys_noritake.c
+index 063e594..2301678 100644
+--- a/arch/alpha/kernel/sys_noritake.c
++++ b/arch/alpha/kernel/sys_noritake.c
+@@ -193,10 +193,10 @@ noritake_init_irq(void)
+  * comes in on.  This makes interrupt processing much easier.
+  */
+ 
+-static int __init
++static int
+ noritake_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[15][5] __initdata = {
++	static char irq_tab[15][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		/* note: IDSELs 16, 17, and 25 are CORELLE only */
+ 		{ 16+1,  16+1,  16+1,  16+1,  16+1},  /* IdSel 16,  QLOGIC */
+@@ -221,7 +221,7 @@ noritake_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return COMMON_TABLE_LOOKUP;
+ }
+ 
+-static u8 __init
++static u8
+ noritake_swizzle(struct pci_dev *dev, u8 *pinp)
+ {
+ 	int slot, pin = *pinp;
+diff --git a/arch/alpha/kernel/sys_rawhide.c b/arch/alpha/kernel/sys_rawhide.c
+index dfd510a..546822d 100644
+--- a/arch/alpha/kernel/sys_rawhide.c
++++ b/arch/alpha/kernel/sys_rawhide.c
+@@ -221,10 +221,10 @@ rawhide_init_irq(void)
+  * 
+  */
+ 
+-static int __init
++static int
+ rawhide_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[5][5] __initdata = {
++	static char irq_tab[5][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{ 16+16, 16+16, 16+16, 16+16, 16+16}, /* IdSel 1 SCSI PCI 1 */
+ 		{ 16+ 0, 16+ 0, 16+ 1, 16+ 2, 16+ 3}, /* IdSel 2 slot 2 */
+diff --git a/arch/alpha/kernel/sys_ruffian.c b/arch/alpha/kernel/sys_ruffian.c
+index a3f4852..3b35e19 100644
+--- a/arch/alpha/kernel/sys_ruffian.c
++++ b/arch/alpha/kernel/sys_ruffian.c
+@@ -117,10 +117,10 @@ ruffian_kill_arch (int mode)
+  *
+  */
+ 
+-static int __init
++static int
+ ruffian_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-        static char irq_tab[11][5] __initdata = {
++        static char irq_tab[11][5] = {
+ 	      /*INT  INTA INTB INTC INTD */
+ 		{-1,  -1,  -1,  -1,  -1},  /* IdSel 13,  21052	     */
+ 		{-1,  -1,  -1,  -1,  -1},  /* IdSel 14,  SIO	     */
+@@ -139,7 +139,7 @@ ruffian_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return COMMON_TABLE_LOOKUP;
+ }
+ 
+-static u8 __init
++static u8
+ ruffian_swizzle(struct pci_dev *dev, u8 *pinp)
+ {
+ 	int slot, pin = *pinp;
+diff --git a/arch/alpha/kernel/sys_rx164.c b/arch/alpha/kernel/sys_rx164.c
+index 08ee737..e178007 100644
+--- a/arch/alpha/kernel/sys_rx164.c
++++ b/arch/alpha/kernel/sys_rx164.c
+@@ -142,7 +142,7 @@ rx164_init_irq(void)
+  * 
+  */
+ 
+-static int __init
++static int
+ rx164_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ #if 0
+@@ -156,7 +156,7 @@ rx164_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	  { 16+1, 16+1, 16+6, 16+11, 16+16},      /* IdSel 10, slot 4 */
+ 	};
+ #else
+-	static char irq_tab[6][5] __initdata = {
++	static char irq_tab[6][5] = {
+ 	  /*INT   INTA  INTB  INTC   INTD */
+ 	  { 16+0, 16+0, 16+6, 16+11, 16+16},      /* IdSel 5,  slot 0 */
+ 	  { 16+1, 16+1, 16+7, 16+12, 16+17},      /* IdSel 6,  slot 1 */
+diff --git a/arch/alpha/kernel/sys_sable.c b/arch/alpha/kernel/sys_sable.c
+index 8a0aa6d..86d259c 100644
+--- a/arch/alpha/kernel/sys_sable.c
++++ b/arch/alpha/kernel/sys_sable.c
+@@ -192,10 +192,10 @@ sable_init_irq(void)
+  * with the values in the irq swizzling tables above.
+  */
+ 
+-static int __init
++static int
+ sable_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[9][5] __initdata = {
++	static char irq_tab[9][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{ 32+0,  32+0,  32+0,  32+0,  32+0},  /* IdSel 0,  TULIP  */
+ 		{ 32+1,  32+1,  32+1,  32+1,  32+1},  /* IdSel 1,  SCSI   */
+@@ -374,10 +374,10 @@ lynx_init_irq(void)
+  * with the values in the irq swizzling tables above.
+  */
+ 
+-static int __init
++static int
+ lynx_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[19][5] __initdata = {
++	static char irq_tab[19][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{   -1,    -1,    -1,    -1,    -1},  /* IdSel 13,  PCEB   */
+ 		{   -1,    -1,    -1,    -1,    -1},  /* IdSel 14,  PPB    */
+@@ -404,7 +404,7 @@ lynx_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return COMMON_TABLE_LOOKUP;
+ }
+ 
+-static u8 __init
++static u8
+ lynx_swizzle(struct pci_dev *dev, u8 *pinp)
+ {
+ 	int slot, pin = *pinp;
+diff --git a/arch/alpha/kernel/sys_sio.c b/arch/alpha/kernel/sys_sio.c
+index febd24e..9fd2895 100644
+--- a/arch/alpha/kernel/sys_sio.c
++++ b/arch/alpha/kernel/sys_sio.c
+@@ -144,7 +144,7 @@ sio_fixup_irq_levels(unsigned int level_bits)
+ 	outb((level_bits >> 8) & 0xff, 0x4d1);
+ }
+ 
+-static inline int __init
++static inline int
+ noname_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	/*
+@@ -165,7 +165,7 @@ noname_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	 * that they use the default INTA line, if they are interrupt
+ 	 * driven at all).
+ 	 */
+-	static char irq_tab[][5] __initdata = {
++	static char irq_tab[][5] = {
+ 		/*INT A   B   C   D */
+ 		{ 3,  3,  3,  3,  3}, /* idsel  6 (53c810) */ 
+ 		{-1, -1, -1, -1, -1}, /* idsel  7 (SIO: PCI/ISA bridge) */
+@@ -183,10 +183,10 @@ noname_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return irq >= 0 ? tmp : -1;
+ }
+ 
+-static inline int __init
++static inline int
+ p2k_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[][5] __initdata = {
++	static char irq_tab[][5] = {
+ 		/*INT A   B   C   D */
+ 		{ 0,  0, -1, -1, -1}, /* idsel  6 (53c810) */
+ 		{-1, -1, -1, -1, -1}, /* idsel  7 (SIO: PCI/ISA bridge) */
+diff --git a/arch/alpha/kernel/sys_sx164.c b/arch/alpha/kernel/sys_sx164.c
+index d063b36..23eee54 100644
+--- a/arch/alpha/kernel/sys_sx164.c
++++ b/arch/alpha/kernel/sys_sx164.c
+@@ -94,10 +94,10 @@ sx164_init_irq(void)
+  *   9  32 bit PCI option slot 3
+  */
+ 
+-static int __init
++static int
+ sx164_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[5][5] __initdata = {
++	static char irq_tab[5][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{ 16+ 9, 16+ 9, 16+13, 16+17, 16+21}, /* IdSel 5 slot 2 J17 */
+ 		{ 16+11, 16+11, 16+15, 16+19, 16+23}, /* IdSel 6 slot 0 J19 */
+diff --git a/arch/alpha/kernel/sys_takara.c b/arch/alpha/kernel/sys_takara.c
+index dd0f1ea..9101f2b 100644
+--- a/arch/alpha/kernel/sys_takara.c
++++ b/arch/alpha/kernel/sys_takara.c
+@@ -155,10 +155,10 @@ takara_init_irq(void)
+  * assign it whatever the hell IRQ we like and it doesn't matter.
+  */
+ 
+-static int __init
++static int
+ takara_map_irq_srm(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[15][5] __initdata = {
++	static char irq_tab[15][5] = {
+ 		{ 16+3, 16+3, 16+3, 16+3, 16+3},   /* slot  6 == device 3 */
+ 		{ 16+2, 16+2, 16+2, 16+2, 16+2},   /* slot  7 == device 2 */
+ 		{ 16+1, 16+1, 16+1, 16+1, 16+1},   /* slot  8 == device 1 */
+@@ -210,7 +210,7 @@ takara_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 	return COMMON_TABLE_LOOKUP;
+ }
+ 
+-static u8 __init
++static u8
+ takara_swizzle(struct pci_dev *dev, u8 *pinp)
+ {
+ 	int slot = PCI_SLOT(dev->devfn);
+diff --git a/arch/alpha/kernel/sys_wildfire.c b/arch/alpha/kernel/sys_wildfire.c
+index ee18748..c3f8b79 100644
+--- a/arch/alpha/kernel/sys_wildfire.c
++++ b/arch/alpha/kernel/sys_wildfire.c
+@@ -288,10 +288,10 @@ wildfire_device_interrupt(unsigned long vector)
+  *   7	 64 bit PCI 1 option slot 7
+  */
+ 
+-static int __init
++static int
+ wildfire_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-	static char irq_tab[8][5] __initdata = {
++	static char irq_tab[8][5] = {
+ 		/*INT    INTA   INTB   INTC   INTD */
+ 		{ -1,    -1,    -1,    -1,    -1}, /* IdSel 0 ISA Bridge */
+ 		{ 36,    36,    36+1, 36+2, 36+3}, /* IdSel 1 SCSI builtin */
+-- 
+2.4.12
