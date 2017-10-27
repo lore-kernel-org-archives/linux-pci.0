@@ -1,138 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
- <sudeep.holla@arm.com>, <will.deacon@arm.com>, <robin.murphy@arm.com>,
- <joro@8bytes.org>, <bhelgaas@google.com>, <gabriele.paoloni@huawei.com>
-Subject: [PATCH v9 0/4] iommu/smmu-v3: Workaround for hisilicon 161010801
- erratum(reserve HW MSI)
-Date: Fri, 6 Oct 2017 15:04:46 +0100
-Message-ID: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17930 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932244AbdJ0TbM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 15:31:12 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH 07/12] PCI: tegra: Disable AFI dynamic clock gating
+Date: Sat, 28 Oct 2017 00:59:24 +0530
+Message-ID: <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, john.garry@huawei.com, linuxarm@huawei.com,
- Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- wangzhou1@hisilicon.com, guohanjun@huawei.com,
- linux-arm-kernel@lists.infradead.org, devel@acpica.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On certain HiSilicon platforms (hip06/hip07) the GIC ITS and PCIe RC
-deviates from the standard implementation and this breaks PCIe MSI
-functionality when SMMU is enabled.
+When there are 32 outstanding writes from AFI to memory, the outstanding
+write counter overflows and indicates that there are "0" outstanding write
+transactions. This outstanding write counter is used to generate IDLE
+signal to dynamically gate the AFI clock.
 
-The HiSilicon erratum 161010801 describes this limitation of certain
-HiSilicon platforms to support the SMMU mappings for MSI transactions.
-On these platforms GICv3 ITS translator is presented with the deviceID
-by extending the MSI payload data to 64 bits to include the deviceID.
-Hence, the PCIe controller on this platforms has to differentiate the MSI
-payload against other DMA payload and has to modify the MSI payload.
-This basically makes it difficult for this platforms to have a SMMU
-translation for MSI.
+When memory controller is under heavy load, its possible that write
+completions will come back to AFI after long delay and AFI write counter
+overflows. AFI clock gets gated even when there are outstanding
+transactions towards memory controller resutling in system hang.
 
-This patch implements an ACPI and DT based quirk to reserve the hw msi
-regions in the smmu-v3 driver which means these address regions will
-not be translated and will be excluded from iova allocations.
+Disable dynamic clock gating of AFI clock to avoid system hang.
 
-To implement this quirk, the following changes are incorporated:
-1. Added a generic helper function to IORT code to retrieve the
-   associated ITS base address from a device IORT node.
-2. Added a generic helper function to of iommu code to retrieve the
-   associated msi controller base address from for a PCI RC
-   msi-mapping and also platform device msi-parent.
-3. Blacklisted HiSilicon PCIe controllers on DT based hip06/hip07
-   platforms when SMMUv3 is enabled as there is no DT based solution
-   for this as of now.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Changelog:
-
-v8 --> v9
--Thanks to Marc, fixed IORT helper function to reserve the ITS 
- translater region only.
--Removed the DT support for MSI reservation and blacklisted
- HiSilicon PCIe controllers on DT based systems when SMMUv3 is
- enabled.
-
-v7 --> v8
-Addressed comments from Rob and Lorenzo:
- -Modified to use DT compatible string for errata.
- -Changed logic to retrieve the msi-parent for DT case.
-
-v6 --> v7
-Addressed request from Will to add DT support for the erratum:
- - added bt binding
- - add of_iommu_msi_get_resv_regions()
-New arm64 silicon errata entry
-Rename iort_iommu_{its->msi}_get_resv_regions
-
-v5 --> v6
-Addressed comments from Robin and Lorenzo:
--No change to patch#1 .
--Reverted v5 patch#2 as this might break the platforms where this quirk
-  is not applicable. Provided a generic function in iommu code and added
-  back the quirk implementation in SMMU v3 driver(patch#3)
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 27a8211c48b2..b8cac871712b 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -103,8 +103,9 @@
+ #define AFI_MSI_EN_VEC6		0xa4
+ #define AFI_MSI_EN_VEC7		0xa8
  
-v4 --> v5
-Addressed comments from Robin and Lorenzo:
--Added a comment to make it clear that, for now, only straightforward 
-  HW topologies are handled while reserving ITS regions(patch #1).
-
-v3 --> v4
-Rebased on 4.13-rc1.
-Addressed comments from Robin, Will and Lorenzo:
--As suggested by Robin, moved the ITS msi reservation into 
-  iommu_dma_get_resv_regions().
--Added its_count != resv region failure case(patch #1).
-
-v2 --> v3
-Addressed comments from Lorenzo and Robin:
--Removed dev_is_pci() check in smmuV3 driver.
--Don't treat device not having an ITS mapping as an error in
-  iort helper function.
-
-v1 --> v2
--patch 2/2: Invoke iort helper fn based on fwnode type(acpi).
-
-RFCv2 -->PATCH
--Incorporated Lorenzo's review comments.
-
-RFC v1 --> RFC v2
-Based on Robin's review comments,
--Removed  the generic erratum framework.
--Using IORT/MADT tables to retrieve the ITS base addr instead  of vendor specific CSRT table.
-
-
-Shameer Kolothum (4):
-  ACPI/IORT: Add msi address regions reservation helper
-  iommu/dma: Add a helper function to reserve HW MSI address regions for
-    IOMMU drivers
-  iommu/arm-smmu-v3:Enable ACPI based HiSilicon erratum 161010801
-  PCI: hisi: blacklist hip06/hip07 controllers behind SMMUv3
-
- drivers/acpi/arm64/iort.c        | 97 ++++++++++++++++++++++++++++++++++++++--
- drivers/iommu/arm-smmu-v3.c      | 27 ++++++++---
- drivers/iommu/dma-iommu.c        | 20 +++++++++
- drivers/irqchip/irq-gic-v3-its.c |  3 +-
- drivers/pci/dwc/pcie-hisi.c      | 12 +++++
- include/linux/acpi_iort.h        |  7 ++-
- include/linux/dma-iommu.h        |  7 +++
- 7 files changed, 163 insertions(+), 10 deletions(-)
-
+-#define AFI_CONFIGURATION		0xac
+-#define  AFI_CONFIGURATION_EN_FPCI	(1 << 0)
++#define AFI_CONFIGURATION			0xac
++#define  AFI_CONFIGURATION_EN_FPCI		(1 << 0)
++#define  AFI_CONFIGURATION_CLKEN_OVERRIDE	(1 << 31)
+ 
+ #define AFI_FPCI_ERROR_MASKS	0xb0
+ 
+@@ -1057,9 +1058,10 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 		}
+ 	}
+ 
+-	/* finally enable PCIe */
++	/* Disable AFI dynamic clock gating and enable PCIe */
+ 	value = afi_readl(pcie, AFI_CONFIGURATION);
+-	value |= AFI_CONFIGURATION_EN_FPCI;
++	value |= (AFI_CONFIGURATION_EN_FPCI |
++			AFI_CONFIGURATION_CLKEN_OVERRIDE);
+ 	afi_writel(pcie, value, AFI_CONFIGURATION);
+ 
+ 	value = AFI_INTR_EN_INI_SLVERR | AFI_INTR_EN_INI_DECERR |
 -- 
-1.9.1
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.1.4
