@@ -1,65 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:36764 "EHLO mga04.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:51662 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751487AbdJaMze (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 31 Oct 2017 08:55:34 -0400
-From: "Wang, Liang-min" <liang-min.wang@intel.com>
-To: David Woodhouse <dwmw2@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "O'riordain, Seosamh" <seosamh.oriordain@intel.com>
-CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH] Enable SR-IOV instantiation through /sys file
-Date: Tue, 31 Oct 2017 12:55:20 +0000
-Message-ID: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5BB50@FMSMSX110.amr.corp.intel.com>
-References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
-         <20171024234351.0af0ff4a@t450s.home>
-         <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
-         <20171025000654.7621b84e@t450s.home>
-         <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
-         <20171028001907.7b8fa60d@t450s.home> <1509146439.11655.60.camel@intel.com>
-         <20171029061646.GA28105@infradead.org>
- <1509367141.11641.51.camel@infradead.org>
-In-Reply-To: <1509367141.11641.51.camel@infradead.org>
-Content-Type: text/plain; charset="utf-8"
+        id S1751189AbdJ0Vaw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Oct 2017 17:30:52 -0400
+Date: Fri, 27 Oct 2017 16:30:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
+Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Steven Royer <seroyer@linux.vnet.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>, bhelgaas@google.com,
+        benh@kernel.crashing.org, paulus@samba.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>,
+        Eli Cohen <eli@mellanox.com>,
+        Saeed Mahameed <saeedm@mellanox.com>
+Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
+Message-ID: <20171027213039.GB9235@bhelgaas-glaptop.roam.corp.google.com>
+References: <88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
+ <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
+ <20171013120558.1a129183@t450s.home>
+ <24fdec01-8df4-f027-0b3c-0472a2d73946@linux.vnet.ibm.com>
+ <20171017135123.GA5641@bhelgaas-glaptop.roam.corp.google.com>
+ <7e23c703-750b-b4f8-f252-0c872a40ae8a@linux.vnet.ibm.com>
+ <20171017162621.GB5641@bhelgaas-glaptop.roam.corp.google.com>
+ <f8fbbd56-f165-0a17-a24a-2b021f7fa238@linux.vnet.ibm.com>
+ <20171017185242.GG5641@bhelgaas-glaptop.roam.corp.google.com>
+ <eb1ac136-a054-ea2b-2368-af740e0c23d4@linux.vnet.ibm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <eb1ac136-a054-ea2b-2368-af740e0c23d4@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRGF2aWQgV29vZGhvdXNl
-IFttYWlsdG86ZHdtdzJAaW5mcmFkZWFkLm9yZ10NCj4gU2VudDogTW9uZGF5LCBPY3RvYmVyIDMw
-LCAyMDE3IDg6MzkgQU0NCj4gVG86IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9y
-Zz47IER1eWNrLCBBbGV4YW5kZXIgSA0KPiA8YWxleGFuZGVyLmguZHV5Y2tAaW50ZWwuY29tPg0K
-PiBDYzogV2FuZywgTGlhbmctbWluIDxsaWFuZy1taW4ud2FuZ0BpbnRlbC5jb20+Ow0KPiBhbGV4
-LndpbGxpYW1zb25AcmVkaGF0LmNvbTsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgS2ly
-c2hlciwgSmVmZnJleSBUDQo+IDxqZWZmcmV5LnQua2lyc2hlckBpbnRlbC5jb20+OyBrdm1Admdl
-ci5rZXJuZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOw0KPiBsaW51eC1wY2lAdmdlci5rZXJu
-ZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIEVuYWJsZSBTUi1JT1YgaW5zdGFudGlhdGlv
-biB0aHJvdWdoIC9zeXMgZmlsZQ0KPiANCj4gT24gU2F0LCAyMDE3LTEwLTI4IGF0IDIzOjE2IC0w
-NzAwLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToNCj4gPiBPbiBGcmksIE9jdCAyNywgMjAxNyBh
-dCAxMToyMDo0MVBNICswMDAwLCBEdXljaywgQWxleGFuZGVyIEggd3JvdGU6DQo+ID4gPg0KPiA+
-ID4gSSBkb24ndCBzZWUgdGhpcyBzbyBtdWNoIGFzIGEgc2VjdXJpdHkgcHJvYmxlbSBwZXItc2Uu
-IEl0IGFsbCBkZXBlbmRzDQo+ID4gPiBvbiB0aGUgaGFyZHdhcmUgc2V0dXAuIElmIEkgcmVjYWxs
-IGNvcnJlY3RseSwgdGhlcmUgYXJlIGRldmljZXMgd2hlcmUNCj4gPiA+IHRoZSBQRiBmdW5jdGlv
-biBkb2Vzbid0IHJlYWxseSBkbyBtdWNoIG90aGVyIHRoYW4gYWN0IGFzIGEgYml0IG1vcmUNCj4g
-PiA+IGhlYXZ5LXdlaWdodCBWRiwgYW5kIHRoZSBhY3R1YWwgbG9naWMgaXMgaGFuZGxlZCBieSBh
-IGZpcm13YXJlIGVuZ2luZQ0KPiA+ID4gb24gdGhlIGRldmljZS4NCj4gPg0KPiA+IENhbiB5b3Ug
-Y2l0ZSBhbiBleGFtcGxlP8KgwqBXaGlsZSB0aG9zZSBzdXJlbHkgY291bGQgZXhpc3QgaW4gdGhl
-b3J5LA0KPiA+IEkgY2FuJ3QgdGhpbmsgb2YgYSBwcmFjdGljYWwgZXhhbXBsZS4NCj4gDQo+IEkg
-aGF2ZSB0aGVtLCB3aGljaCBpcyB3aHkgSSdtIHBhdGNoaW5nIHRoZSBVSU8gZHJpdmVyIHRvIGFs
-bG93IG51bV92ZnMNCj4gdG8gYmUgc2V0LiBJIGRvbid0IGV2ZW4gd2FudCB0byAqdXNlKiB0aGUg
-VUlPIGRyaXZlciBmb3IgYW55IHB1cnBvc2UNCj4gZXhjZXB0IHRvIG1ha2UgdGhhdCBhcHBlYXIg
-aW4gc3lzZnMuIEl0J3MgYWxsIGhhbmRsZWQgaW4gdGhlIGRldmljZS4NCj4gDQo+IChJIHRoaW5r
-IHdlIG1pZ2h0IGJlIGFibGUgdG8ganVzdCBnaXZlIHRoZSBQRiBvdXQgdG8gYSBndWVzdCBhcyBp
-ZiBpdA0KPiB3ZXJlIGp1c3QgYW5vdGhlciBWRiwgYnV0IEkgZG9uJ3QgdGhpbmsgd2UgYWN0dWFs
-bHkgKmRvKiB0aGF0IHJpZ2h0DQo+IG5vdykuDQoNClVuZGVyIFVFRkkgc2VjdXJlIGJvb3QgZW52
-aXJvbm1lbnQsIGtlcm5lbCBwdXRzIHJlc3RyaWN0aW9ucyBvbiBVSU8gYW5kIGl0cyBkZXJpdmF0
-aXZlcy4NClNvLCB1c2VyLXNwYWNlIGZ1bmN0aW9uL2RyaXZlciBiYXNlZCB1cG9uIFVJTyBpcyBu
-byBsb25nZXIgd29ya2luZyB1bmRlciBVRUZJIHNlY3VyZQ0KYm9vdCBlbnZpcm9ubWVudC4gVGhl
-IG5leHQgdmlhYmxlIG9wdGlvbiBpcyB2ZmlvLXBjaSwgaGVuY2UgdGhpcyBwYXRjaCBpbiBwYXJh
-bGxlbCB3aXRoDQpVSU8gd29yay4NCg==
+On Tue, Oct 17, 2017 at 06:13:35PM -0500, Juan Alvarez wrote:
+> On 10/17/17 1:52 PM, Bjorn Helgaas wrote:
+> > I'm suggesting that maybe there should be a generic way to prevent
+> > binding to VF devices that works for everybody and doesn't require any
+> > arch-specific code at all.
+> 
+> The patch that you have suggested in kernel 4.12 is also a generic way.
+> 
+> https://marc.info/?l=linux-kernel&m=149002335105804&w=2
+
+The patch mentioned above is now upstream:
+
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=0e7df22401a3
+
+> Perhaps we can use the same constructs that this patch uses at our level.
+> Nonetheless, that will take a rework to this patch and possibly an export
+> of a function to set drivers_autoprobe globally. I know that was frowned
+> upon on first email thread. Let me know if this is an acceptable
+> solution.
+
+I would definitely like to see you use a solution that is somehow
+connected with the sriov->drivers_autoprobe mechanism added by
+0e7df22401a3.
+
+0e7df22401a3 is a per-PF solution, and you're looking for a
+system-wide switch.  I could imagine a system-wide flag exposed in
+sysfs and used by pci_device_can_probe().  Or maybe some arch hook in
+the pci_device_add() path that clears sriov->drivers_autoprobe for
+every PF.
+
+I think the important thing is that it is coordinated as much as
+possible with other driver binding controls and not unnecessarily
+arch-dependent.
+
+Bjorn
