@@ -1,110 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:5875 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751499AbdJaEXm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 00:23:42 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
-        <yinghai@kernel.org>, <david.daney@cavium.com>,
-        <Julia.Lawall@lip6.fr>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH V2 2/4] PCI: tegra: Enable ASPM-L1 capability advertisement
-Date: Tue, 31 Oct 2017 09:52:47 +0530
-Message-ID: <1509423769-10522-3-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
-References: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Xinming Hu <huxm@marvell.com>, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Heiko Stuebner <heiko@sntech.de>, linux-acpi@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        devicetree@vger.kernel.org, Ganapathi Bhat <gbhat@marvell.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Len Brown <lenb@kernel.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Caesar Wang <wxt@rock-chips.com>,
+        Klaus Goger <klaus.goger@theobroma-systems.com>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [RFC PATCH v10 0/7] PCI: rockchip: Move PCIe WAKE# handling into pci core
+Date: Fri, 27 Oct 2017 15:26:05 +0800
+Message-Id: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enables advertisement of ASPM-L1 support in capability
-registers of applicable Tegra chips
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V2:
-* no change in this patch
+Currently we are handling wake irq in mrvl wifi driver. Move it into
+pci core.
 
- drivers/pci/host/pci-tegra.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index adae03d671ab..e1526cc5d381 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -226,6 +226,9 @@
- #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
- #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
- 
-+#define RP_VEND_XP1	0xf04
-+#define RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT	BIT(21)
-+
- #define RP_VEND_CTL0	0xf44
- #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
- #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
-@@ -327,6 +330,7 @@ struct tegra_pcie_soc {
- 	bool RAW_violation_fixup;
- 	bool program_deskew_time;
- 	bool updateFC_threshold;
-+	bool has_aspm_l1;
- };
- 
- static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-@@ -2188,6 +2192,13 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
- 	value = readl(port->base + RP_VEND_CTL1);
- 	value |= RP_VEND_CTL1_ERPT;
- 	writel(value, port->base + RP_VEND_CTL1);
-+
-+	if (port->pcie->soc->has_aspm_l1) {
-+		/* Advertise ASPM-L1 state capability*/
-+		value = readl(port->base + RP_VEND_XP1);
-+		value |= RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT;
-+		writel(value, port->base + RP_VEND_XP1);
-+	}
- }
- 
- static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
-@@ -2391,6 +2402,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = false,
- };
- 
- static const struct tegra_pcie_soc tegra30_pcie = {
-@@ -2412,6 +2424,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- };
- 
- static const struct tegra_pcie_soc tegra124_pcie = {
-@@ -2432,6 +2445,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.RAW_violation_fixup = true,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- };
- 
- static const struct tegra_pcie_soc tegra210_pcie = {
-@@ -2460,6 +2474,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = true,
- 	.updateFC_threshold = true,
-+	.has_aspm_l1 = true,
- };
- 
- static const struct tegra_pcie_soc tegra186_pcie = {
-@@ -2481,6 +2496,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- };
- 
- static const struct of_device_id tegra_pcie_of_match[] = {
+
+Changes in v10:
+Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
+since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
+
+Changes in v9:
+Add section for PCI devices and rewrite the commit message.
+Rewrite the commit message.
+Fix check error in .cleanup().
+Move dedicated wakeirq setup to setup() callback and use
+device_set_wakeup_enable() to enable/disable.
+
+Changes in v8:
+Add optional "pci", and rewrite commit message.
+Rewrite the commit message.
+Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
+
+Changes in v7:
+Move PCIE_WAKE handling into pci core.
+
+Changes in v6:
+Fix device_init_wake error handling, and add some comments.
+
+Changes in v5:
+Move to pci.txt
+Use "wakeup" instead of "wake"
+Rebase.
+
+Changes in v3:
+Fix error handling.
+
+Changes in v2:
+Use dev_pm_set_dedicated_wake_irq.
+
+Jeffy Chen (7):
+  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+  of/irq: Adjust of_pci_irq parsing for multiple interrupts
+  mwifiex: Disable wakeup irq handling for pcie
+  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie driver for Gru
+  PCI: Make pci_platform_pm_ops's callbacks optional
+  PCI / PM: Move acpi wakeup code to pci core
+  PCI / PM: Add support for the PCIe WAKE# signal for OF
+
+ Documentation/devicetree/bindings/pci/pci.txt |   8 ++
+ arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  |  15 +--
+ drivers/net/wireless/marvell/mwifiex/main.c   |   4 +
+ drivers/of/of_pci_irq.c                       |  13 ++-
+ drivers/pci/Makefile                          |   2 +-
+ drivers/pci/pci-acpi.c                        | 121 ++++++++++++------------
+ drivers/pci/pci-driver.c                      |   9 ++
+ drivers/pci/pci-of.c                          | 127 ++++++++++++++++++++++++++
+ drivers/pci/pci.c                             | 112 +++++++++++++++++++----
+ drivers/pci/pci.h                             |  31 +++++--
+ drivers/pci/probe.c                           |  12 ++-
+ drivers/pci/remove.c                          |   2 +
+ include/linux/pci.h                           |   2 +
+ 13 files changed, 361 insertions(+), 97 deletions(-)
+ create mode 100644 drivers/pci/pci-of.c
+
 -- 
-2.7.4
+2.11.0
+
+
