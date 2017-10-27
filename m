@@ -1,191 +1,143 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 22/36] iommu/io-pgtable-arm: Factor out ARM LPAE register defines
-Date: Fri,  6 Oct 2017 14:31:49 +0100
-Message-Id: <20171006133203.22803-23-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.136]:42223 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751072AbdJ0H1T (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 03:27:19 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-pci@vger.kernel.org
+Subject: [RFC PATCH v10 5/7] PCI: Make pci_platform_pm_ops's callbacks optional
+Date: Fri, 27 Oct 2017 15:26:10 +0800
+Message-Id: <20171027072612.26565-6-jeffy.chen@rock-chips.com>
+In-Reply-To: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For SVM, we'll need to extract CPU page table information and mirror it in
-the substream setup. Move relevant defines to a common header.
+Allow platforms not to provide some of the pci_platform_pm_ops's
+callbacks.
 
-Fix TCR_SZ_MASK while we're at it.
+Also change the return value from -ENOSYS to -ENODEV for:
+warning: drivers/pci/pci.c,594: ENOSYS means 'invalid syscall nr' and nothing else
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
- MAINTAINERS                    |  1 +
- drivers/iommu/io-pgtable-arm.c | 48 +-----------------------------
- drivers/iommu/io-pgtable-arm.h | 67 ++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 69 insertions(+), 47 deletions(-)
- create mode 100644 drivers/iommu/io-pgtable-arm.h
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 65b0c88d5ee0..cff90315c2ec 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1089,6 +1089,7 @@ S:	Maintained
- F:	drivers/iommu/arm-smmu.c
- F:	drivers/iommu/arm-smmu-v3.c
- F:	drivers/iommu/io-pgtable-arm.c
-+F:	drivers/iommu/io-pgtable-arm.h
- F:	drivers/iommu/io-pgtable-arm-v7s.c
+Changes in v10: None
+Changes in v9: None
+Changes in v8: None
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/pci.c | 38 +++++++++++++++++++++++++-------------
+ drivers/pci/pci.h |  5 +----
+ 2 files changed, 26 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f0d68066c726..e120b00a9017 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -572,46 +572,58 @@ static void pci_restore_bars(struct pci_dev *dev)
  
- ARM SUB-ARCHITECTURES
-diff --git a/drivers/iommu/io-pgtable-arm.c b/drivers/iommu/io-pgtable-arm.c
-index e8018a308868..443234a564a6 100644
---- a/drivers/iommu/io-pgtable-arm.c
-+++ b/drivers/iommu/io-pgtable-arm.c
-@@ -31,6 +31,7 @@
- #include <asm/barrier.h>
+ static const struct pci_platform_pm_ops *pci_platform_pm;
  
- #include "io-pgtable.h"
-+#include "io-pgtable-arm.h"
+-int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
++void pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+ {
+-	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
+-	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
+-		return -EINVAL;
+ 	pci_platform_pm = ops;
+-	return 0;
+ }
  
- #define ARM_LPAE_MAX_ADDR_BITS		48
- #define ARM_LPAE_S2_MAX_CONCAT_PAGES	16
-@@ -118,53 +119,6 @@
- #define ARM_LPAE_PTE_MEMATTR_DEV	(((arm_lpae_iopte)0x1) << 2)
+ static inline bool platform_pci_power_manageable(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->is_manageable(dev) : false;
++	if (pci_platform_pm && pci_platform_pm->is_manageable)
++		return pci_platform_pm->is_manageable(dev);
++
++	return false;
+ }
  
- /* Register bits */
--#define ARM_32_LPAE_TCR_EAE		(1 << 31)
--#define ARM_64_LPAE_S2_TCR_RES1		(1 << 31)
--
--#define ARM_LPAE_TCR_EPD1		(1 << 23)
--
--#define ARM_LPAE_TCR_TG0_4K		(0 << 14)
--#define ARM_LPAE_TCR_TG0_64K		(1 << 14)
--#define ARM_LPAE_TCR_TG0_16K		(2 << 14)
--
--#define ARM_LPAE_TCR_SH0_SHIFT		12
--#define ARM_LPAE_TCR_SH0_MASK		0x3
--#define ARM_LPAE_TCR_SH_NS		0
--#define ARM_LPAE_TCR_SH_OS		2
--#define ARM_LPAE_TCR_SH_IS		3
--
--#define ARM_LPAE_TCR_ORGN0_SHIFT	10
--#define ARM_LPAE_TCR_IRGN0_SHIFT	8
--#define ARM_LPAE_TCR_RGN_MASK		0x3
--#define ARM_LPAE_TCR_RGN_NC		0
--#define ARM_LPAE_TCR_RGN_WBWA		1
--#define ARM_LPAE_TCR_RGN_WT		2
--#define ARM_LPAE_TCR_RGN_WB		3
--
--#define ARM_LPAE_TCR_SL0_SHIFT		6
--#define ARM_LPAE_TCR_SL0_MASK		0x3
--
--#define ARM_LPAE_TCR_T0SZ_SHIFT		0
--#define ARM_LPAE_TCR_SZ_MASK		0xf
--
--#define ARM_LPAE_TCR_PS_SHIFT		16
--#define ARM_LPAE_TCR_PS_MASK		0x7
--
--#define ARM_LPAE_TCR_IPS_SHIFT		32
--#define ARM_LPAE_TCR_IPS_MASK		0x7
--
--#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
--#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
--#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
--#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
--#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
--#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
--
--#define ARM_LPAE_MAIR_ATTR_SHIFT(n)	((n) << 3)
--#define ARM_LPAE_MAIR_ATTR_MASK		0xff
--#define ARM_LPAE_MAIR_ATTR_DEVICE	0x04
--#define ARM_LPAE_MAIR_ATTR_NC		0x44
--#define ARM_LPAE_MAIR_ATTR_WBRWA	0xff
- #define ARM_LPAE_MAIR_ATTR_IDX_NC	0
- #define ARM_LPAE_MAIR_ATTR_IDX_CACHE	1
- #define ARM_LPAE_MAIR_ATTR_IDX_DEV	2
-diff --git a/drivers/iommu/io-pgtable-arm.h b/drivers/iommu/io-pgtable-arm.h
-new file mode 100644
-index 000000000000..cb31314971ac
---- /dev/null
-+++ b/drivers/iommu/io-pgtable-arm.h
-@@ -0,0 +1,67 @@
-+/*
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (C) 2017 ARM Limited
-+ */
-+#ifndef __IO_PGTABLE_ARM_H
-+#define __IO_PGTABLE_ARM_H
+ static inline int platform_pci_set_power_state(struct pci_dev *dev,
+ 					       pci_power_t t)
+ {
+-	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
++	if (pci_platform_pm && pci_platform_pm->set_state)
++		return pci_platform_pm->set_state(dev, t);
 +
-+#define ARM_32_LPAE_TCR_EAE		(1 << 31)
-+#define ARM_64_LPAE_S2_TCR_RES1		(1 << 31)
++	return -ENODEV;
+ }
+ 
+ static inline pci_power_t platform_pci_get_power_state(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->get_state(dev) : PCI_UNKNOWN;
++	if (pci_platform_pm && pci_platform_pm->get_state)
++		return pci_platform_pm->get_state(dev);
 +
-+#define ARM_LPAE_TCR_EPD1		(1 << 23)
++	return PCI_UNKNOWN;
+ }
+ 
+ static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ?
+-			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
++	if (pci_platform_pm && pci_platform_pm->choose_state)
++		return pci_platform_pm->choose_state(dev);
 +
-+#define ARM_LPAE_TCR_TG0_4K		(0 << 14)
-+#define ARM_LPAE_TCR_TG0_64K		(1 << 14)
-+#define ARM_LPAE_TCR_TG0_16K		(2 << 14)
++	return PCI_POWER_ERROR;
+ }
+ 
+ static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
+ {
+-	return pci_platform_pm ?
+-			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
++	if (pci_platform_pm && pci_platform_pm->set_wakeup)
++		return pci_platform_pm->set_wakeup(dev, enable);
 +
-+#define ARM_LPAE_TCR_SH0_SHIFT		12
-+#define ARM_LPAE_TCR_SH0_MASK		0x3
-+#define ARM_LPAE_TCR_SH_NS		0
-+#define ARM_LPAE_TCR_SH_OS		2
-+#define ARM_LPAE_TCR_SH_IS		3
++	return -ENODEV;
+ }
+ 
+ static inline bool platform_pci_need_resume(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
++	if (pci_platform_pm && pci_platform_pm->need_resume)
++		return pci_platform_pm->need_resume(dev);
 +
-+#define ARM_LPAE_TCR_ORGN0_SHIFT	10
-+#define ARM_LPAE_TCR_IRGN0_SHIFT	8
-+#define ARM_LPAE_TCR_RGN_MASK		0x3
-+#define ARM_LPAE_TCR_RGN_NC		0
-+#define ARM_LPAE_TCR_RGN_WBWA		1
-+#define ARM_LPAE_TCR_RGN_WT		2
-+#define ARM_LPAE_TCR_RGN_WB		3
-+
-+#define ARM_LPAE_TCR_SL0_SHIFT		6
-+#define ARM_LPAE_TCR_SL0_MASK		0x3
-+
-+#define ARM_LPAE_TCR_T0SZ_SHIFT		0
-+#define ARM_LPAE_TCR_SZ_MASK		0x3f
-+
-+#define ARM_LPAE_TCR_PS_SHIFT		16
-+#define ARM_LPAE_TCR_PS_MASK		0x7
-+
-+#define ARM_LPAE_TCR_IPS_SHIFT		32
-+#define ARM_LPAE_TCR_IPS_MASK		0x7
-+
-+#define ARM_LPAE_TCR_PS_32_BIT		0x0ULL
-+#define ARM_LPAE_TCR_PS_36_BIT		0x1ULL
-+#define ARM_LPAE_TCR_PS_40_BIT		0x2ULL
-+#define ARM_LPAE_TCR_PS_42_BIT		0x3ULL
-+#define ARM_LPAE_TCR_PS_44_BIT		0x4ULL
-+#define ARM_LPAE_TCR_PS_48_BIT		0x5ULL
-+
-+#define ARM_LPAE_MAIR_ATTR_SHIFT(n)	((n) << 3)
-+#define ARM_LPAE_MAIR_ATTR_MASK		0xff
-+#define ARM_LPAE_MAIR_ATTR_DEVICE	0x04
-+#define ARM_LPAE_MAIR_ATTR_NC		0x44
-+#define ARM_LPAE_MAIR_ATTR_WBRWA	0xff
-+
-+#endif /* __IO_PGTABLE_ARM_H */
++	return false;
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e816a13e6259..048668271014 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -52,9 +52,6 @@ int pci_probe_reset_function(struct pci_dev *dev);
+  * @need_resume: returns 'true' if the given device (which is currently
+  *		suspended) needs to be resumed to be configured for system
+  *		wakeup.
+- *
+- * If given platform is generally capable of power managing PCI devices, all of
+- * these callbacks are mandatory.
+  */
+ struct pci_platform_pm_ops {
+ 	bool (*is_manageable)(struct pci_dev *dev);
+@@ -65,7 +62,7 @@ struct pci_platform_pm_ops {
+ 	bool (*need_resume)(struct pci_dev *dev);
+ };
+ 
+-int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
++void pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
+ void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
+ void pci_power_up(struct pci_dev *dev);
+ void pci_disable_enabled_device(struct pci_dev *dev);
 -- 
-2.13.3
-
+2.11.0
