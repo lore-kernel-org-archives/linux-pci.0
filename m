@@ -1,34 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0045.outbound.protection.outlook.com ([104.47.2.45]:39340
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750928AbdJ2H4z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Oct 2017 03:56:55 -0400
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Devices behind a non-ACS switch are assigned different iommu-groups
-Date: Sun, 29 Oct 2017 07:56:52 +0000
-Message-ID: <AM4PR0501MB2723EC01DCA37976AE4EABA4D4580@AM4PR0501MB2723.eurprd05.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:12117 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932176AbdJ0Tba (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 15:31:30 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH 12/12] PCI: tegra: Update flow control threshold in Tegra210
+Date: Sat, 28 Oct 2017 00:59:29 +0530
+Message-ID: <1509132569-9398-13-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-I was testing devices assignment behind a non-ACS switch and to my surprise=
-,
-Devices connected to different ports were assigned different iommu-groups.
+Recommended update FC threshold in Tegra210 is 0x60 for best performance
+of x1 link. Setting this to 0x60 provides the best balance between number
+of UpdateFC and read data sent over the link.
 
-The reason for this behavior is that pci_acs_enabled(...) considers the swi=
-tch=20
-Upstream port to have ACS enabled.
-http://elixir.free-electrons.com/linux/v4.13.1/source/drivers/pci/pci.c#L29=
-14
-(the upstream port is not a multifunction device).
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-I'm not sure what the correct solution is but I believe, the upstream port
-Shouldn't be considered in pci_acs_path_enable(...).
-
-Thanks,
-Ilya
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index db1ce74ba64a..da5f4998f149 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -221,6 +221,7 @@
+ #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+ #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
++#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
+ 
+ #define RP_VEND_CTL0	0xf44
+ #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+@@ -321,6 +322,7 @@ struct tegra_pcie_soc {
+ 	bool update_clamp_threshold;
+ 	bool RAW_violation_fixup;
+ 	bool program_deskew_time;
++	bool updateFC_threshold;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2229,6 +2231,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
+ 		writel(value, port->base + RP_VEND_CTL0);
+ 	}
++
++	if (soc->updateFC_threshold) {
++		value = readl(port->base + RP_VEND_XP);
++		value &= ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
++		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
++		writel(value, port->base + RP_VEND_XP);
++	}
+ }
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+@@ -2368,6 +2377,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.updateFC_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2388,6 +2398,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.updateFC_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2407,6 +2418,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.update_clamp_threshold = true,
+ 	.RAW_violation_fixup = true,
+ 	.program_deskew_time = false,
++	.updateFC_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2434,6 +2446,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.update_clamp_threshold = true,
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = true,
++	.updateFC_threshold = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2454,6 +2467,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.updateFC_threshold = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
+-- 
+2.1.4
