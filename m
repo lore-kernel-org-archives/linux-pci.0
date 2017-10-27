@@ -1,298 +1,102 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 23 Oct 2017 16:02:53 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        shawn.lin@rock-chips.com, dianders@chromium.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Tony Lindgren <tony@atomide.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v7 1/3] PCI: Add support for wake irq
-Message-ID: <20171023230252.GA53058@google.com>
-References: <20171019111007.25234-1-jeffy.chen@rock-chips.com>
- <20171019111007.25234-2-jeffy.chen@rock-chips.com>
+From: "Duyck, Alexander H" <alexander.h.duyck@intel.com>
+To: "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
+Date: Fri, 27 Oct 2017 23:20:41 +0000
+Message-ID: <1509146439.11655.60.camel@intel.com>
+References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
+         <20171024234351.0af0ff4a@t450s.home>
+         <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
+         <20171025000654.7621b84e@t450s.home>
+         <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
+         <20171028001907.7b8fa60d@t450s.home>
+In-Reply-To: <20171028001907.7b8fa60d@t450s.home>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171019111007.25234-2-jeffy.chen@rock-chips.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+ PM folks
-
-Hi Jeffy,
-
-It's probably good if you send the whole thing to linux-pm@ in the
-future, if you're really trying to implement generic PCI/PM for device
-tree systems.
-
-On Thu, Oct 19, 2017 at 07:10:05PM +0800, Jeffy Chen wrote:
-> Add support for PCIE_WAKE pin.
-
-This is kind of an important change, so it feels like you should
-document it a little more thoroughly than this. Particularly, I have a
-few questions below, and it seems like some of these questions should be
-acknowledged up front. e.g., why does this look so different than the
-ACPI hooks?
-
-> 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
-> 
-> Changes in v7:
-> Move PCIE_WAKE handling into pci core.
-> 
-> Changes in v6:
-> Fix device_init_wake error handling, and add some comments.
-> 
-> Changes in v5:
-> Rebase
-> 
-> Changes in v3:
-> Fix error handling
-> 
-> Changes in v2:
-> Use dev_pm_set_dedicated_wake_irq
->         -- Suggested by Brian Norris <briannorris@chromium.com>
-> 
->  drivers/pci/pci.c    | 34 ++++++++++++++++++++++++++++++++--
->  drivers/pci/probe.c  | 32 ++++++++++++++++++++++++++++----
->  drivers/pci/remove.c |  9 +++++++++
->  3 files changed, 69 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index f0d68066c726..49080a10bdf0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -603,10 +603,40 @@ static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
->  			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
->  }
->  
-> +static int pci_dev_check_wakeup(struct pci_dev *dev, void *data)
-> +{
-> +	bool *wakeup = data;
-> +
-> +	if (device_may_wakeup(&dev->dev))
-> +		*wakeup = true;
-> +
-> +	return *wakeup;
-> +}
-> +
->  static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
->  {
-> -	return pci_platform_pm ?
-> -			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
-> +	struct pci_dev *parent = dev;
-> +	struct pci_bus *bus;
-> +	bool wakeup = false;
-
-It feels like you're implementing a set of pci_platform_pm_ops, except
-you're not actually implementing them. It almost seems like we should
-have a drivers/pci/pci-of.c to do this. But that brings up a few
-questions....
-
-> +
-> +	if (pci_platform_pm)
-
-So, if somebody already registered ops, then you won't follow the "OF"
-route? That means this all breaks as soon as a kernel has both
-CONFIG_ACPI and CONFIG_OF enabled. This is possible on at least ARM64,
-which 'select's OF and may also be built/run with CONFIG_ACPI.
-
-And that conflict is the same if we try to register pci_platform_pm_ops
-for OF systems -- it'll be a race over who sets them up first (or
-rather, last).
-
-Also, what happens on !ACPI && !OF? Or if the device tree did not
-contain a "wakeup" definition? You're now implementing a default path
-that doesn't make much sense IMO; you may claim wakeup capability
-without actually having set it up somewhere.
-
-I think you could use some more comments, and (again) a real commit
-message.
-
-> +		return pci_platform_pm->set_wakeup(dev, enable);
-> +
-> +	device_set_wakeup_capable(&dev->dev, enable);
-
-Why are you setting that here? This function should just be telling the
-lower layers to enable the physical WAKE# ability. In our case, it just
-means configuring the WAKE# interrupt for wakeup -- or, since you've
-used dev_pm_set_dedicated_wake_irq() which handles most of this
-automatically...do you need this at all? It seems like you should
-*either* implement these callbacks to manually manage the wakeup IRQ or
-else use the dedicated wakeirq infrastructure -- not both.
-
-And even if you need this, I don't think you need to do this many times;
-you should only need to set up the capabilities once, when you first set
-up the device.
-
-And BTW, the description for the set_wakeup() callback says:
-
- * @set_wakeup: enables/disables wakeup capability for the device
-
-I *don't* think that means "capability" as in the device framework's
-view of "wakeup capable"; I think it means capability as in the physical
-ability (a la, enable_irq_wake() or similar).
-
-> +
-> +	while ((parent = pci_upstream_bridge(parent)))
-> +		bus = parent->bus;
-> +
-> +	if (!bus || !pci_is_root_bus(bus) || !bus->bridge->parent)
-> +		return -ENODEV;
-> +
-> +	pci_walk_bus(bus, pci_dev_check_wakeup, &wakeup);
-> +	device_set_wakeup_capable(bus->bridge->parent, wakeup);
-
-What happens to any intermediate buses? You haven't marked them as
-wakeup-capable. Should you?
-
-And the more fundamental question here is: is this a per-device
-configuration or a per-root-port configuration? The APIs here are
-modeled after ACPI, where I guess this is a per-device thing. The PCIe
-spec doesn't exactly specify how many WAKE# pins you need, though it
-seems to say
-
-(a) it's all-or-nothing (if one device uses it, all wakeup-capable EPs
-    should be wired up to it)
-(b) it *can* be done as a single input to the system controller, since
-    it's an open drain signal
-(c) ...but I also see now in the PCIe Card Electromechanical
-    specification:
-
-    "WAKE# may be bused to multiple PCI Express add-in card connectors,
-    forming a single input connection at the PM controller, or
-    individual connectors can have individual connections to the PM
-    controller."
-
-So I think you're kind of going along the lines of (b) (as I suggested
-to you previously), and that matches the current hardware (we only have
-a single WAKE#) and proposed DT binding. But should this be set up in a
-way that suits (c) too? It's hard to tell exactly what ACPI-based
-systems do, since they have this abstracted behind ACPI interfaces that
-seem like they *could* support per-device or per-bridge type of hookups.
-
-Bjorn, any thoughts? This seems like a halfway attempt in between two
-different designs, and I'm not really sure which one makes more sense.
-
-Brian
-
-> +
-> +	dev_dbg(bus->bridge->parent,
-> +		"Wakeup %s\n", wakeup ? "enabled" : "disabled");
-> +
-> +	return 0;
->  }
->  
->  static inline bool platform_pci_need_resume(struct pci_dev *dev)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cdc2f83c11c5..fd43ca832665 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -7,6 +7,7 @@
->  #include <linux/init.h>
->  #include <linux/pci.h>
->  #include <linux/of_device.h>
-> +#include <linux/of_irq.h>
->  #include <linux/of_pci.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/slab.h>
-> @@ -17,6 +18,7 @@
->  #include <linux/acpi.h>
->  #include <linux/irqdomain.h>
->  #include <linux/pm_runtime.h>
-> +#include <linux/pm_wakeirq.h>
->  #include "pci.h"
->  
->  #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
-> @@ -756,11 +758,28 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->  	struct resource *res;
->  	char addr[64], *fmt;
->  	const char *name;
-> -	int err;
-> +	int err, irq;
-> +
-> +	if (IS_ENABLED(CONFIG_OF) && parent && parent->of_node) {
-> +		irq = of_irq_get_byname(parent->of_node, "wakeup");
-> +		if (irq == -EPROBE_DEFER)
-> +			return irq;
-> +		if (irq > 0) {
-> +			device_init_wakeup(parent, true);
-> +			err = dev_pm_set_dedicated_wake_irq(parent, irq);
-> +			if (err) {
-> +				dev_err(parent, "Failed to setup wakeup IRQ\n");
-> +				goto deinit_wakeup;
-> +			}
-> +			dev_info(parent, "Wakeup enabled with IRQ %d\n", irq);
-> +		}
-> +	}
->  
->  	bus = pci_alloc_bus(NULL);
-> -	if (!bus)
-> -		return -ENOMEM;
-> +	if (!bus) {
-> +		err = -ENOMEM;
-> +		goto clear_wake_irq;
-> +	}
->  
->  	bridge->bus = bus;
->  
-> @@ -856,9 +875,14 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->  unregister:
->  	put_device(&bridge->dev);
->  	device_unregister(&bridge->dev);
-> -
->  free:
->  	kfree(bus);
-> +clear_wake_irq:
-> +	if (parent)
-> +		dev_pm_clear_wake_irq(parent);
-> +deinit_wakeup:
-> +	if (parent)
-> +		device_init_wakeup(parent, false);
->  	return err;
->  }
->  
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 73a03d382590..cb7a326429e1 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -1,6 +1,7 @@
->  #include <linux/pci.h>
->  #include <linux/module.h>
->  #include <linux/pci-aspm.h>
-> +#include <linux/pm_wakeirq.h>
->  #include "pci.h"
->  
->  static void pci_free_resources(struct pci_dev *dev)
-> @@ -131,17 +132,25 @@ void pci_stop_root_bus(struct pci_bus *bus)
->  {
->  	struct pci_dev *child, *tmp;
->  	struct pci_host_bridge *host_bridge;
-> +	struct device *parent;
->  
->  	if (!pci_is_root_bus(bus))
->  		return;
->  
->  	host_bridge = to_pci_host_bridge(bus->bridge);
-> +	parent = host_bridge->dev.parent;
-> +
->  	list_for_each_entry_safe_reverse(child, tmp,
->  					 &bus->devices, bus_list)
->  		pci_stop_bus_device(child);
->  
->  	/* stop the host bridge */
->  	device_release_driver(&host_bridge->dev);
-> +
-> +	if (parent) {
-> +		dev_pm_clear_wake_irq(parent);
-> +		device_init_wakeup(parent, false);
-> +	}
->  }
->  EXPORT_SYMBOL_GPL(pci_stop_root_bus);
->  
-> -- 
-> 2.11.0
-> 
-> 
+T24gU2F0LCAyMDE3LTEwLTI4IGF0IDAwOjE5ICswMjAwLCBBbGV4IFdpbGxpYW1zb24gd3JvdGU6
+DQo+IE9uIEZyaSwgMjcgT2N0IDIwMTcgMjE6NTA6NDMgKzAwMDANCj4gIldhbmcsIExpYW5nLW1p
+biIgPGxpYW5nLW1pbi53YW5nQGludGVsLmNvbT4gd3JvdGU6DQo+IA0KPiA+ID4gLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCj4gPiA+IEZyb206IEFsZXggV2lsbGlhbXNvbiBbbWFpbHRvOmFs
+ZXgud2lsbGlhbXNvbkByZWRoYXQuY29tXQ0KPiA+ID4gU2VudDogVHVlc2RheSwgT2N0b2JlciAy
+NCwgMjAxNyA2OjA3IFBNDQo+ID4gPiBUbzogV2FuZywgTGlhbmctbWluIDxsaWFuZy1taW4ud2Fu
+Z0BpbnRlbC5jb20+DQo+ID4gPiBDYzogS2lyc2hlciwgSmVmZnJleSBUIDxqZWZmcmV5LnQua2ly
+c2hlckBpbnRlbC5jb20+OyBrdm1Admdlci5rZXJuZWwub3JnOw0KPiA+ID4gbGludXgtcGNpQHZn
+ZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+IGJoZWxn
+YWFzQGdvb2dsZS5jb207IER1eWNrLCBBbGV4YW5kZXIgSCA8YWxleGFuZGVyLmguZHV5Y2tAaW50
+ZWwuY29tPg0KPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSF0gRW5hYmxlIFNSLUlPViBpbnN0YW50
+aWF0aW9uIHRocm91Z2ggL3N5cyBmaWxlDQo+ID4gPiANCj4gPiA+IE9uIFR1ZSwgMjQgT2N0IDIw
+MTcgMjE6NDk6MTUgKzAwMDANCj4gPiA+ICJXYW5nLCBMaWFuZy1taW4iIDxsaWFuZy1taW4ud2Fu
+Z0BpbnRlbC5jb20+IHdyb3RlOg0KPiA+ID4gICANCj4gPiA+ID4gSnVzdCBsaWtlIGFueSBQQ0ll
+IGRldmljZXMgdGhhdCBzdXBwb3J0cyBTUi1JT1YuIFRoZXJlIGFyZSByZXN0cmljdGlvbnMgc2V0
+IGZvciAgDQo+ID4gPiANCj4gPiA+IFZGLiBBbHNvLCB0aGVyZSBpcyBhIGNvbmNlcHQgb2YgdHJ1
+c3QgVkYgbm93IGF2YWlsYWJsZSBmb3IgUEYgdG8gbWFuYWdlIGNlcnRhaW4NCj4gPiA+IGZlYXR1
+cmVzIHRoYXQgb25seSBzZWxlY3RlZCBWRiBjb3VsZCBleGVyY2lzZS4gQXJlIHlvdSBzYXlpbmcg
+YWxsIHRoZSBkZXZpY2VzDQo+ID4gPiBzdXBwb3J0aW5nIFNSLUlPViBhbGwgaGF2ZSBzZWN1cml0
+eSBpc3N1ZT8NCj4gPiA+IA0KPiA+ID4gSGVyZSdzIGEgc2ltcGxlIGV4YW1wbGUsIG1vc3QgU1It
+SU9WIGNhcGFibGUgTklDcywgaW5jbHVkaW5nIHRob3NlIGZyb20NCj4gPiA+IEludGVsLCByZXF1
+aXJlIHRoZSBQRiBpbnRlcmZhY2UgdG8gYmUgdXAgaW4gb3JkZXIgdG8gcm91dGUgdHJhZmZpYyBm
+cm9tDQo+ID4gPiB0aGUgVkYuICBJZiB0aGUgdXNlciBjb250cm9scyB0aGUgUEYgaW50ZXJmYWNl
+IGFuZCBWRnMgYXJlIHVzZWQNCj4gPiA+IGVsc2V3aGVyZSBpbiB0aGUgaG9zdCwgdGhlIFBGIGRy
+aXZlciBpbiB1c2Vyc3BhY2UgY2FuIGluZHVjZSBhIGRlbmlhbA0KPiA+ID4gb2Ygc2VydmljZSBv
+biB0aGUgVkZzLiAgVGhhdCBkb2Vzbid0IGV2ZW4gdGFrZSBpbnRvIGFjY291bnQgdGhhdCBWRnMN
+Cj4gPiA+IG1pZ2h0IGJlIGluIHNlcGFyYXRlIElPTU1VIGdyb3VwcyBmcm9tIHRoZSBQRiBhbmQg
+dGhlcmVmb3JlIG5vdA0KPiA+ID4gaXNvbGF0ZWQgZnJvbSB0aGUgaG9zdCBsaWtlIHRoZSBQRiBh
+bmQgdGhhdCB0aGUgUEYgZHJpdmVyIGNhbg0KPiA+ID4gcG90ZW50aWFsbHkgbWFuaXB1bGF0ZSB0
+aGUgVkYsIHBvc3NpYmx5IHBlcmZvcm1pbmcgRE1BIG9uIGJlaGFsZiBvZiB0aGUNCj4gPiA+IFBG
+LiAgVkZzIGFyZSBvbmx5IGNvbnNpZGVyZWQgc2VjdXJlIHRvZGF5IGJlY2F1c2UgdGhlIFBGIGlz
+IG1hbmFnZWQgYnkNCj4gPiA+IGEgZHJpdmVyIGluIHRoZSBob3N0IGtlcm5lbC4gIEFsbG93aW5n
+IHNpbXBsZSBlbmFibGVtZW50IG9mIFZGcyBmb3IgYQ0KPiA+ID4gdXNlciBvd25lZCBQRiBzZWVt
+cyBpbmhlcmVudGx5IGluc2VjdXJlIHRvIG1lLiAgVGhhbmtzLA0KPiA+ID4gDQo+ID4gPiBBbGV4
+ICANCj4gPiANCj4gPiBGaXJzdGx5LCB0aGUgY29uY2VybiBpcyBvbiB1c2VyLXNwYWNlIFBGIGRy
+aXZlciBiYXNlZCB1cG9uIHZmaW8tcGNpLCB0aGlzIHBhdGNoIGRvZXNuJ3QNCj4gPiBjaGFuZ2Ug
+UEYgYmVoYXZpb3Igc28gd2l0aC93aXRob3V0IHRoaXMgcGF0Y2gsIHRoZSBjb25jZXJuIHJlbWFp
+bnMgdGhlIHNhbWUuDQo+IA0KPiBUaGlzIHBhdGNoIGVuYWJsZXMgU1ItSU9WIHRvIGJlIGVuYWJs
+ZWQgdmlhIHRoZSBob3N0IG9uIGEgdXNlci1vd25lZA0KPiBQRiwgaG93IGlzIHRoaXMgbm90IGEg
+Y2hhbmdlIGluIGJlaGF2aW9yPw0KPiANCj4gPiBTZWNvbmRseSwgdGhlIHNlY3VyaXR5IGNvbmNl
+cm4gKGluY2x1ZGluZyBkZW5pYWwgb2Ygc2VydmljZSkgaW4gZ2VuZXJhbCBpcyB0byBlbnN1cmUg
+dHJ1c3QNCj4gPiBlbnRpdHkgdG8gYmUgdHJ1c3Qtd29ydGh5LiBObyBtYXR0ZXIgdGhlIFBGIGRy
+aXZlciBpcyBpbiBrZXJuZWwtc3BhY2Ugb3IgaW4gdXNlci0gc3BhY2UsDQo+ID4gbmVjZXNzYXJ5
+IG1lY2hhbmlzbSBuZWVkcyB0byBiZSBlbmZvcmNlZCBvbiB0aGUgZGV2aWNlIGRyaXZlciB0byBl
+bnN1cmUgaXQncw0KPiA+IHRydXN0ZWQgd29ydGh5LiBGb3IgZXhhbXBsZSwgaXhnYmUga2VybmVs
+IGRyaXZlciBpbnRyb2R1Y2VzIGEgVHggaGFuZyBkZXRlY3Rpb24NCj4gPiB0byBhdm9pZCBkcml2
+ZXIgc3RheXMgaW4gYSBiYWQgc3RhdGUuIFRoZXJlZm9yZSwgaXQncyB0aGUgcmVzcG9uc2liaWxp
+dHkgb2YgdXNlci1zcGFjZQ0KPiA+IGRyaXZlciBmdW5jdGlvbiwgd2hpY2ggYmFzZWQgdXBvbiB2
+ZmlvLXBjaSwgdG8gZW5mb3JjZSBuZWNlc3NhcnkgbWVjaGFuaXNtIHRvIGVuc3VyZQ0KPiA+IGl0
+cyB0cnVzdC1uZXNzLiBUaGF0J3MgYSBnaXZlbi4NCj4gDQo+IFVzZXJzcGFjZSBpcyBub3QgdHJ1
+c3R3b3J0aHksIHRoZXJlZm9yZSB0aGUgaG9zdCBrZXJuZWwgY2Fubm90IHBsYWNlDQo+IHJlc3Bv
+bnNpYmlsaXR5IG9uIGEgdXNlcnNwYWNlIGRyaXZlciBmb3IgYW55dGhpbmcsIGluY2x1ZGluZyB0
+aGUNCj4gYmVoYXZpb3Igb2YgVkZzLiAgSSdtIHNvcnJ5LCBidXQgaXQncyBhIE5BSyB1bmxlc3Mg
+eW91IGludGVuZCB0bw0KPiBmb2xsb3ctdXAgd2l0aCBzb21lIHByb3Bvc2FsIHRvIHF1YXJhbnRp
+bmUgdGhlIFZGcyBlbmFibGVkIGJ5IHRoZQ0KPiB1c2Vyc3BhY2UgUEYgZHJpdmVyLiAgVGhhbmtz
+LA0KPiANCj4gQWxleA0KDQpJIGRvbid0IHNlZSB0aGlzIHNvIG11Y2ggYXMgYSBzZWN1cml0eSBw
+cm9ibGVtIHBlci1zZS4gSXQgYWxsIGRlcGVuZHMNCm9uIHRoZSBoYXJkd2FyZSBzZXR1cC4gSWYg
+SSByZWNhbGwgY29ycmVjdGx5LCB0aGVyZSBhcmUgZGV2aWNlcyB3aGVyZQ0KdGhlIFBGIGZ1bmN0
+aW9uIGRvZXNuJ3QgcmVhbGx5IGRvIG11Y2ggb3RoZXIgdGhhbiBhY3QgYXMgYSBiaXQgbW9yZQ0K
+aGVhdnktd2VpZ2h0IFZGLCBhbmQgdGhlIGFjdHVhbCBsb2dpYyBpcyBoYW5kbGVkIGJ5IGEgZmly
+bXdhcmUgZW5naW5lDQpvbiB0aGUgZGV2aWNlLiBUaGUgb25seSByZWFsIGlzc3VlIGlzIHRoYXQg
+Zm9yIGRldmljZXMgbGlrZSB0aGUgSW50ZWwNCk5JQ3MgaW5zdGVhZCBvZiB0cnVzdGluZyBhIGZp
+cm13YXJlIGVuZ2luZSB3ZSBoYXZlIGhpc3RvcmljYWxseSB1c2VkIGENCmtlcm5lbCBkcml2ZXIg
+YW5kIG5vdyB3ZSBhcmUgd2FudGluZyB0byB0cnVzdCBhIHVzZXItc3BhY2UgYWdlbnQNCmluc3Rl
+YWQuDQoNCkkgZG8gdGhpbmsgdGhhdCB3ZSBwcm9iYWJseSBuZWVkIHRvIGhhdmUgc29tZSBzb3J0
+IG9mIHNpZ25hbGluZyBiZXR3ZWVuDQp1c2VyLXNwYWNlIGFuZCB2ZmlvLXBjaSB0aGF0IHdvdWxk
+IGFsbG93IGZvciBub3RpZnlpbmcgdGhlIHVzZXItc3BhY2UNCm9mIHRoZSBjaGFuZ2UgYW5kIGZv
+ciB1c2VyLXNwYWNlIHRvIG5vdGlmeSB2ZmlvLXBjaSB0aGF0IGl0IGlzIGNhcGFibGUNCm9mIGhh
+bmRsaW5nIHRoZSBub3RpZmljYXRpb24uIFRoaXMgaXMgc29tZXRoaW5nIHRoYXQgY2FuIGJlIHRv
+Z2dsZWQgYXQNCmFueSB0aW1lIGFmdGVyIGFsbCBhbmQgbm90IGFsbCBkZXZpY2VzIGhhdmUgYSBt
+ZWFucyBvZiBub3RpZnlpbmcgdGhlIFBGDQp0aGF0IHRoaXMgaGFzIGJlZW4gY2hhbmdlZC4NCg0K
+QmV5b25kIHRoYXQgb25jZSB0aGUgcm9vdCB1c2VyIGVuYWJsZXMgdGhlIFZGcyBJIHdvdWxkIGtp
+bmQgb2YgdGhpbmsNCnRoZXkga25vdyB3aGF0IGRyaXZlciB0aGV5IGhhdmUgcnVubmluZyB0aGVt
+LiBFbmFibGluZyBWRnMgaW1wbGllcyB0aGUNCnJvb3QgdXNlciB0cnVzdHMgdGhlIGFwcGxpY2F0
+aW9uIHJ1bm5pbmcgb24gdG9wIG9mIHZmaW8tcGNpIHRvIGhhbmRsZQ0KdGhlIFBGIHJlc3BvbnNp
+Ymx5LiBBdCBsZWFzdCB0aGF0IGlzIGhvdyBpdCB3b3JrcyBpbiBteSBtaW5kLg0KDQpUaGFua3Mu
+DQoNCi0gQWxleGFuZGVyDQogICh1c2luZyBmdWxsIG5hbWUgc2luY2UgMiBBbGV4cyBpbiBvbmUg
+dGhyZWFkIGNhbiBiZSBjb25mdXNpbmcpDQoNCg==
