@@ -1,188 +1,202 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 4 Oct 2017 17:24:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Scott Murray <scott@spiteful.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v1] pci: introduce for_each_pci_bridge() helper
-Message-ID: <20171004222444.GM25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170929192123.24817-1-andriy.shevchenko@linux.intel.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rafael@kernel.org>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>, <lorenzo.pieralisi@arm.com>
+CC: <gabriele.paoloni@huawei.com>, <mark.rutland@arm.com>,
+        <brian.starkey@arm.com>, <olof@lixom.net>,
+        <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
+        <john.garry@huawei.com>, <xuwei5@hisilicon.com>
+Subject: [PATCH v10 4/9] PCI: Apply the new generic I/O management on PCI IO hosts
+Date: Fri, 27 Oct 2017 17:11:22 +0100
+Message-ID: <1509120687-7352-5-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170929192123.24817-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 29, 2017 at 10:21:23PM +0300, Andy Shevchenko wrote:
-> It seems often the following pattern has been used
-> 
-> 	list_for_each_entry(dev, &bus->devices, bus_list) {
-> 		if (pci_is_bridge(dev)) {
-> 			...
-> 		}
-> 	}
-> 
-> Here for_each_pci_bridge() helper is introduced to make that code better
-> to write and read by lowing indentation level. It also saves one or few
-> lines of code in each occurrence.
-> 
-> Convert PCI core parts here at the same time.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Applied to pci/misc for v4.15, thanks!
+After introducing the new generic I/O space management(LOGIC_PIO), the
+original PCI MMIO relevant helpers need to be updated based on the new
+interfaces defined in LOGIC_PIO.
+This patch adapts the corresponding code to match the changes introduced
+by LOGIC_PIO.
 
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c     | 15 ++++++---------
->  drivers/pci/hotplug/cpci_hotplug_pci.c |  7 ++-----
->  drivers/pci/hotplug/pciehp_pci.c       |  5 ++---
->  drivers/pci/hotplug/shpchp_pci.c       |  6 ++----
->  drivers/pci/probe.c                    |  6 ++----
->  drivers/pci/setup-bus.c                |  7 +++----
->  include/linux/pci.h                    |  4 ++++
->  7 files changed, 21 insertions(+), 29 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 5ed2dcaa8e27..5db6f1839dad 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -462,18 +462,15 @@ static void enable_slot(struct acpiphp_slot *slot)
->  	acpiphp_rescan_slot(slot);
->  	max = acpiphp_max_busnr(bus);
->  	for (pass = 0; pass < 2; pass++) {
-> -		list_for_each_entry(dev, &bus->devices, bus_list) {
-> +		for_each_pci_bridge(dev, bus) {
->  			if (PCI_SLOT(dev->devfn) != slot->device)
->  				continue;
->  
-> -			if (pci_is_bridge(dev)) {
-> -				max = pci_scan_bridge(bus, dev, max, pass);
-> -				if (pass && dev->subordinate) {
-> -					check_hotplug_bridge(slot, dev);
-> -					pcibios_resource_survey_bus(dev->subordinate);
-> -					__pci_bus_size_bridges(dev->subordinate,
-> -							       &add_list);
-> -				}
-> +			max = pci_scan_bridge(bus, dev, max, pass);
-> +			if (pass && dev->subordinate) {
-> +				check_hotplug_bridge(slot, dev);
-> +				pcibios_resource_survey_bus(dev->subordinate);
-> +				__pci_bus_size_bridges(dev->subordinate, &add_list);
->  			}
->  		}
->  	}
-> diff --git a/drivers/pci/hotplug/cpci_hotplug_pci.c b/drivers/pci/hotplug/cpci_hotplug_pci.c
-> index 80c80017197d..f616358fa938 100644
-> --- a/drivers/pci/hotplug/cpci_hotplug_pci.c
-> +++ b/drivers/pci/hotplug/cpci_hotplug_pci.c
-> @@ -286,14 +286,11 @@ int cpci_configure_slot(struct slot *slot)
->  	}
->  	parent = slot->dev->bus;
->  
-> -	list_for_each_entry(dev, &parent->devices, bus_list) {
-> -		if (PCI_SLOT(dev->devfn) != PCI_SLOT(slot->devfn))
-> -			continue;
-> -		if (pci_is_bridge(dev))
-> +	for_each_pci_bridge(dev, parent) {
-> +		if (PCI_SLOT(dev->devfn) == PCI_SLOT(slot->devfn))
->  			pci_hp_add_bridge(dev);
->  	}
->  
-> -
->  	pci_assign_unassigned_bridge_resources(parent->self);
->  
->  	pci_bus_add_devices(parent);
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index 19f30a9f461d..c3af027ee1a6 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -60,9 +60,8 @@ int pciehp_configure_device(struct slot *p_slot)
->  		goto out;
->  	}
->  
-> -	list_for_each_entry(dev, &parent->devices, bus_list)
-> -		if (pci_is_bridge(dev))
-> -			pci_hp_add_bridge(dev);
-> +	for_each_pci_bridge(dev, parent)
-> +		pci_hp_add_bridge(dev);
->  
->  	pci_assign_unassigned_bridge_resources(bridge);
->  	pcie_bus_configure_settings(parent);
-> diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
-> index f8cd3a27e351..ea63db58b4b1 100644
-> --- a/drivers/pci/hotplug/shpchp_pci.c
-> +++ b/drivers/pci/hotplug/shpchp_pci.c
-> @@ -61,10 +61,8 @@ int shpchp_configure_device(struct slot *p_slot)
->  		goto out;
->  	}
->  
-> -	list_for_each_entry(dev, &parent->devices, bus_list) {
-> -		if (PCI_SLOT(dev->devfn) != p_slot->device)
-> -			continue;
-> -		if (pci_is_bridge(dev))
-> +	for_each_pci_bridge(dev, parent) {
-> +		if (PCI_SLOT(dev->devfn) == p_slot->device)
->  			pci_hp_add_bridge(dev);
->  	}
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index ff94b69738a8..cdc2f83c11c5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2421,10 +2421,8 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
->  	}
->  
->  	for (pass = 0; pass < 2; pass++)
-> -		list_for_each_entry(dev, &bus->devices, bus_list) {
-> -			if (pci_is_bridge(dev))
-> -				max = pci_scan_bridge(bus, dev, max, pass);
-> -		}
-> +		for_each_pci_bridge(dev, bus)
-> +			max = pci_scan_bridge(bus, dev, max, pass);
->  
->  	/*
->  	 * Make sure a hotplug bridge has at least the minimum requested
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 958da7db9033..7ca03407404c 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1921,10 +1921,9 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->  					want additional resources */
->  
->  	down_read(&pci_bus_sem);
-> -	list_for_each_entry(dev, &bus->devices, bus_list)
-> -		if (pci_is_bridge(dev) && pci_has_subordinate(dev))
-> -				__pci_bus_size_bridges(dev->subordinate,
-> -							 &add_list);
-> +	for_each_pci_bridge(dev, bus)
-> +		if (pci_has_subordinate(dev))
-> +			__pci_bus_size_bridges(dev->subordinate, &add_list);
->  	up_read(&pci_bus_sem);
->  	__pci_bus_assign_resources(bus, &add_list, NULL);
->  	BUG_ON(!list_empty(&add_list));
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index f4f8ee5a7362..3dbe947b4152 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -596,6 +596,10 @@ static inline bool pci_is_bridge(struct pci_dev *dev)
->  		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
->  }
->  
-> +#define for_each_pci_bridge(dev, bus)				\
-> +	list_for_each_entry(dev, &bus->devices, bus_list)	\
-> +		if (!pci_is_bridge(dev)) {} else
-> +
->  static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
->  {
->  	dev = pci_physfn(dev);
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
+Acked-by: Bjorn Helgaas <helgaas@kernel.org>
+---
+ drivers/pci/pci.c        | 95 +++++++++---------------------------------------
+ include/asm-generic/io.h |  2 +-
+ 2 files changed, 18 insertions(+), 79 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index bcecb47..a1ae4d3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -21,6 +21,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/log2.h>
++#include <linux/logic_pio.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+@@ -3255,17 +3256,6 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
+-#ifdef PCI_IOBASE
+-struct io_range {
+-	struct list_head list;
+-	phys_addr_t start;
+-	resource_size_t size;
+-};
+-
+-static LIST_HEAD(io_range_list);
+-static DEFINE_SPINLOCK(io_range_lock);
+-#endif
+-
+ /*
+  * Record the PCI IO range (expressed as CPU physical address + size).
+  * Return a negative value if an error has occured, zero otherwise
+@@ -3273,51 +3263,28 @@ static DEFINE_SPINLOCK(io_range_lock);
+ int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
+ 			resource_size_t	size)
+ {
+-	int err = 0;
+-
++	int ret = 0;
+ #ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	/* check if the range hasn't been previously recorded */
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (addr >= range->start && addr + size <= range->start + size) {
+-			/* range already registered, bail out */
+-			goto end_register;
+-		}
+-		allocated_size += range->size;
+-	}
++	struct logic_pio_hwaddr *range;
+ 
+-	/* range not registed yet, check for available space */
+-	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+-		/* if it's too big check if 64K space can be reserved */
+-		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+-			err = -E2BIG;
+-			goto end_register;
+-		}
+-
+-		size = SZ_64K;
+-		pr_warn("Requested IO range too big, new size set to 64K\n");
+-	}
++	if (!size || addr + size < addr)
++		return -EINVAL;
+ 
+-	/* add the range to the list */
+ 	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+-	if (!range) {
+-		err = -ENOMEM;
+-		goto end_register;
+-	}
++	if (!range)
++		return -ENOMEM;
+ 
+-	range->start = addr;
++	range->fwnode = fwnode;
+ 	range->size = size;
++	range->hw_start = addr;
++	range->flags = PIO_CPU_MMIO;
+ 
+-	list_add_tail(&range->list, &io_range_list);
+-
+-end_register:
+-	spin_unlock(&io_range_lock);
++	ret = logic_pio_register_range(range);
++	if (ret)
++		kfree(range);
+ #endif
+ 
+-	return err;
++	return ret;
+ }
+ 
+ phys_addr_t pci_pio_to_address(unsigned long pio)
+@@ -3325,21 +3292,10 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ 	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+ 
+ #ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	if (pio > IO_SPACE_LIMIT)
++	if (pio >= MMIO_UPPER_LIMIT)
+ 		return address;
+ 
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (pio >= allocated_size && pio < allocated_size + range->size) {
+-			address = range->start + pio - allocated_size;
+-			break;
+-		}
+-		allocated_size += range->size;
+-	}
+-	spin_unlock(&io_range_lock);
++	address = logic_pio_to_hwaddr(pio);
+ #endif
+ 
+ 	return address;
+@@ -3348,25 +3304,8 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
+ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+ {
+ #ifdef PCI_IOBASE
+-	struct io_range *res;
+-	resource_size_t offset = 0;
+-	unsigned long addr = -1;
+-
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(res, &io_range_list, list) {
+-		if (address >= res->start && address < res->start + res->size) {
+-			addr = address - res->start + offset;
+-			break;
+-		}
+-		offset += res->size;
+-	}
+-	spin_unlock(&io_range_lock);
+-
+-	return addr;
++	return logic_pio_trans_cpuaddr(address);
+ #else
+-	if (address > IO_SPACE_LIMIT)
+-		return (unsigned long)-1;
+-
+ 	return (unsigned long) address;
+ #endif
+ }
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index 334e5db..3980577 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -925,7 +925,7 @@ static inline void iounmap(void __iomem *addr)
+ #define ioport_map ioport_map
+ static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
+ {
+-	return PCI_IOBASE + (port & IO_SPACE_LIMIT);
++	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
+ }
+ #endif
+ 
+-- 
+2.7.4
+
+
