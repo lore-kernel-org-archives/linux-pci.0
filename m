@@ -1,109 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:6887 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdJ3Dya (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 23:54:30 -0400
-Subject: Re: [PATCH 03/12] PCI: tegra: Retrain link for Gen2 speed
-To: Vidya Sagar <vidyas@nvidia.com>, <thierry.reding@gmail.com>,
-        <bhelgaas@google.com>, <jonathanh@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>
-References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
- <1509132569-9398-4-git-send-email-mmaddireddy@nvidia.com>
- <c8dc3a6e-21f2-a7bd-6a2f-5e14f7976dbf@nvidia.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <84b3fca4-54a0-63bc-fe67-95e73cee0cbf@nvidia.com>
-Date: Mon, 30 Oct 2017 09:21:57 +0530
-MIME-Version: 1.0
-In-Reply-To: <c8dc3a6e-21f2-a7bd-6a2f-5e14f7976dbf@nvidia.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from regular1.263xmail.com ([211.150.99.135]:52027 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751068AbdJ0H0g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 03:26:36 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [RFC PATCH v10 1/7] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
+Date: Fri, 27 Oct 2017 15:26:06 +0800
+Message-Id: <20171027072612.26565-2-jeffy.chen@rock-chips.com>
+In-Reply-To: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+We are going to handle PCIe WAKE# pin for PCI bus bridges and PCI
+devices in the pci core, so add definitions of the optional PCIe
+WAKE# pin for PCI bus bridges and PCI devices.
 
+Also add an definition of the optional PCI interrupt pin for PCI
+devices to distinguish it from the PCIe WAKE# pin.
 
-On 29-Oct-17 3:04 PM, Vidya Sagar wrote:
-> 
-> 
-> On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
->> Tegra124, 132, 210 and 186 supports Gen2 link speed. After the link is up
->> in Gen1, set target link speed as Gen2 and retrain link. Link switches to
->> Gen2 speed if Gen2 capable end point is connected, else link stays in Gen1.
->>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->>   drivers/pci/host/pci-tegra.c | 42 ++++++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 42 insertions(+)
->>
->> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->> index 2c64eb6cc3cc..15df60e13a14 100644
->> --- a/drivers/pci/host/pci-tegra.c
->> +++ b/drivers/pci/host/pci-tegra.c
->> @@ -232,6 +232,8 @@
->>   #define PADS_REFCLK_CFG_PREDI_SHIFT        8  /* 11:8 */
->>   #define PADS_REFCLK_CFG_DRVI_SHIFT        12 /* 15:12 */
->>   +#define LINK_RETRAIN_TIMEOUT HZ
->> +
->>   struct tegra_msi {
->>       struct msi_controller chip;
->>       DECLARE_BITMAP(used, INT_PCI_MSI_NR);
->> @@ -2133,6 +2135,42 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->>       }
->>   }
->>   +static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
->> +        struct pci_dev *pci_dev)
->> +{
->> +    struct device *dev = pcie->dev;
->> +    unsigned long start_jiffies;
->> +    unsigned short val;
->> +
->> +    /* Skip if the current device is not a root port */
->> +    if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
->> +        return;
->> +
->> +    pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
->> +    val &= ~PCI_EXP_LNKSTA_CLS;
->> +    val |= PCI_EXP_LNKSTA_CLS_5_0GB;
->> +    pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
->> +
->> +    /* Retrain the link */
->> +    pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
->> +    val |= PCI_EXP_LNKCTL_RL;
->> +    pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
->> +
->> +    start_jiffies = jiffies;
->> +    for (;;) {
->> +        pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
->> +        if (!(val & PCI_EXP_LNKSTA_LT))
->> +            break;
->> +        if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
->> +            break;
->> +        usleep_range(2000, 3000);
->> +    }
->> +
->> +    if (val & PCI_EXP_LNKSTA_LT)
->> +        dev_err(dev, "link retrain of PCIe slot %u failed\n",
->> +                PCI_SLOT(pci_dev->devfn));
->> +}
->> +
->>   static const struct tegra_pcie_soc tegra20_pcie = {
->>       .num_ports = 2,
->>       .msi_base_shift = 0,
->> @@ -2334,6 +2372,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->>       struct pci_host_bridge *host;
->>       struct tegra_pcie *pcie;
->>       struct pci_bus *child;
->> +    struct pci_dev *pci_dev = NULL;
->>       int err;
->>         host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
->> @@ -2399,6 +2438,9 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->>         pci_bus_add_devices(host->bus);
->>   +    for_each_pci_dev(pci_dev)
->> +        tegra_pcie_change_link_speed(pcie, pci_dev);
->> +
-> Why can't we loop over only root ports using 'pcie->ports' like how it is done in tegra_pcie_enable_ports() ?
-It can be done, but I chose use to pci subsystem calls & register defines so that it is easy understand.
->>       if (IS_ENABLED(CONFIG_DEBUG_FS)) {
->>           err = tegra_pcie_debugfs_init(pcie);
->>           if (err < 0)
-> 
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
+
+Changes in v10: None
+Changes in v9:
+Add section for PCI devices and rewrite the commit message.
+
+Changes in v8:
+Add optional "pci", and rewrite commit message.
+
+Changes in v7: None
+Changes in v6: None
+Changes in v5:
+Move to pci.txt
+
+Changes in v3: None
+Changes in v2: None
+
+ Documentation/devicetree/bindings/pci/pci.txt | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index c77981c5dd18..d4406d4e15ad 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -24,3 +24,11 @@ driver implementation may support the following properties:
+    unsupported link speed, for instance, trying to do training for
+    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+    for gen2, and '1' for gen1. Any other values are invalid.
++- interrupts: Interrupt specifier for each name in interrupt-names.
++- interrupt-names: May contains "wakeup" for PCIe WAKE# interrupt.
++
++PCI devices have standardized Device Tree bindings:
++
++- interrupts: Interrupt specifier for each name in interrupt-names.
++- interrupt-names: May contains "wakeup" for PCIe WAKE# interrupt and "pci" for
++  PCI interrupt.
+-- 
+2.11.0
