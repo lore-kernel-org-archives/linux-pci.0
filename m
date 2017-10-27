@@ -1,77 +1,112 @@
-Return-Path: <SRS0=oEwl=BH=amazon.com=prvs=44771f684=sironi@kernel.org>
-Return-Path: <SRS0=oEwl=BH=amazon.com=prvs=44771f684=sironi@kernel.org>
-From: Filippo Sironi <sironi@amazon.de>
-To: helgaas@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Filippo Sironi <sironi@amazon.de>
-Subject: [PATCH v2] pci: Expose offset, stride, and VF device ID via sysfs
-Date: Mon,  9 Oct 2017 01:09:10 +0200
-Message-Id: <1507504151-16179-1-git-send-email-sironi@amazon.de>
-In-Reply-To: <1503927530-26076-1-git-send-email-sironi@amazon.de>
-References: <1503927530-26076-1-git-send-email-sironi@amazon.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17938 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932315AbdJ0TbM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2017 15:31:12 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH 11/12] PCI: tegra: Increase the deskew retry time
+Date: Sat, 28 Oct 2017 00:59:28 +0530
+Message-ID: <1509132569-9398-12-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Testing done:
+Some times Gen2 to Gen1 link speed switching fails due to instability in
+deskew logic on lane0 in Tegra210. Increase the deskew retry time to
+resolve this issue.
 
-$ ls -l /sys/bus/pci/devices/0000\:03\:00.0/
-total 0
--rw-r--r-- 1 root root    4096 Oct  9 00:48 broken_parity_status
--r--r--r-- 1 root root    4096 Oct  9 00:48 class
--rw-r--r-- 1 root root    4096 Oct  9 00:46 config
--r--r--r-- 1 root root    4096 Oct  9 00:48 consistent_dma_mask_bits
--r--r--r-- 1 root root    4096 Oct  9 00:48 current_link_speed
--r--r--r-- 1 root root    4096 Oct  9 00:48 current_link_width
--rw-r--r-- 1 root root    4096 Oct  9 00:48 d3cold_allowed
--r--r--r-- 1 root root    4096 Oct  9 00:46 device
--r--r--r-- 1 root root    4096 Oct  9 00:48 dma_mask_bits
-lrwxrwxrwx 1 root root       0 Oct  9 00:46 driver -> ../../../../bus/pci/drivers/igb
--rw-r--r-- 1 root root    4096 Oct  9 00:48 driver_override
--rw-r--r-- 1 root root    4096 Oct  9 00:48 enable
-lrwxrwxrwx 1 root root       0 Oct  9 00:48 firmware_node -> ../../../LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00/device:4b/device:4c
--r--r--r-- 1 root root    4096 Oct  9 00:46 irq
--r--r--r-- 1 root root    4096 Oct  9 00:48 local_cpulist
--r--r--r-- 1 root root    4096 Oct  9 00:48 local_cpus
--r--r--r-- 1 root root    4096 Oct  9 00:48 max_link_speed
--r--r--r-- 1 root root    4096 Oct  9 00:48 max_link_width
--r--r--r-- 1 root root    4096 Oct  9 00:48 modalias
--rw-r--r-- 1 root root    4096 Oct  9 00:48 msi_bus
-drwxr-xr-x 2 root root       0 Oct  9 00:48 msi_irqs
-drwxr-xr-x 3 root root       0 Oct  9 00:46 net
--rw-r--r-- 1 root root    4096 Oct  9 00:48 numa_node
-drwxr-xr-x 2 root root       0 Oct  9 00:48 power
-drwxr-xr-x 3 root root       0 Oct  9 00:46 ptp
---w--w---- 1 root root    4096 Oct  9 00:48 remove
---w--w---- 1 root root    4096 Oct  9 00:48 rescan
---w------- 1 root root    4096 Oct  9 00:48 reset
--r--r--r-- 1 root root    4096 Oct  9 00:46 resource
--rw------- 1 root root  131072 Oct  9 00:48 resource0
--rw------- 1 root root 4194304 Oct  9 00:48 resource1
--rw------- 1 root root      32 Oct  9 00:48 resource2
--rw------- 1 root root   16384 Oct  9 00:48 resource3
--r--r--r-- 1 root root    4096 Oct  9 00:48 revision
--rw-rw-r-- 1 root root    4096 Oct  9 00:48 sriov_drivers_autoprobe
--rw-rw-r-- 1 root root    4096 Oct  9 00:48 sriov_numvfs
--r--r--r-- 1 root root    4096 Oct  9 00:48 sriov_offset
--r--r--r-- 1 root root    4096 Oct  9 00:48 sriov_stride
--r--r--r-- 1 root root    4096 Oct  9 00:48 sriov_totalvfs
--r--r--r-- 1 root root    4096 Oct  9 00:48 sriov_vf_device
-lrwxrwxrwx 1 root root       0 Oct  9 00:46 subsystem -> ../../../../bus/pci
--r--r--r-- 1 root root    4096 Oct  9 00:48 subsystem_device
--r--r--r-- 1 root root    4096 Oct  9 00:48 subsystem_vendor
--rw-r--r-- 1 root root    4096 Oct  9 00:46 uevent
--r--r--r-- 1 root root    4096 Oct  9 00:46 vendor
-$ cat /sys/bus/pci/devices/0000\:03\:00.0/sriov_offset
-128
-$ cat /sys/bus/pci/devices/0000\:03\:00.0/sriov_stride
-2
-$ cat /sys/bus/pci/devices/0000\:03\:00.0/sriov_vf_device 
-10ca
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Filippo Sironi (1):
-  pci: Expose offset, stride, and VF device ID via sysfs
-
- drivers/pci/pci-sysfs.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
-
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 9680bf7d0a95..db1ce74ba64a 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -222,6 +222,10 @@
+ #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+ 
++#define RP_VEND_CTL0	0xf44
++#define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
++#define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
++
+ #define RP_VEND_CTL1	0xf48
+ #define  RP_VEND_CTL1_ERPT	(1 << 13)
+ 
+@@ -316,6 +320,7 @@ struct tegra_pcie_soc {
+ 	bool program_ectl_settings;
+ 	bool update_clamp_threshold;
+ 	bool RAW_violation_fixup;
++	bool program_deskew_time;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2214,6 +2219,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
+ 		writel(value, port->base + RP_VEND_XP);
+ 	}
++
++	/* Tune deskew retry time to take care of Gen2 -> Gen1
++	 * link speed change error in corner cases
++	 */
++	if (soc->program_deskew_time) {
++		value = readl(port->base + RP_VEND_CTL0);
++		value &= ~RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK;
++		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
++		writel(value, port->base + RP_VEND_CTL0);
++	}
+ }
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+@@ -2352,6 +2367,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
++	.program_deskew_time = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2371,6 +2387,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
++	.program_deskew_time = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2389,6 +2406,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = true,
+ 	.RAW_violation_fixup = true,
++	.program_deskew_time = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2415,6 +2433,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.program_ectl_settings = true,
+ 	.update_clamp_threshold = true,
+ 	.RAW_violation_fixup = false,
++	.program_deskew_time = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2434,6 +2453,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
++	.program_deskew_time = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
-2.7.4
+2.1.4
