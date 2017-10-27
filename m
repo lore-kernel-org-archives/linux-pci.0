@@ -1,86 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 11/15] stm class: make config_item_type const
-Date: Mon, 16 Oct 2017 17:18:50 +0200
-Message-Id: <1508167134-6243-12-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v10 6/9] LPC: Support the LPC host on Hip06/Hip07 with DT
+ bindings
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>, catalin.marinas@arm.com,
+ will.deacon@arm.com, robh+dt@kernel.org, frowand.list@gmail.com,
+ bhelgaas@google.com, rafael@kernel.org, arnd@arndb.de,
+ linux-arm-kernel@lists.infradead.org, lorenzo.pieralisi@arm.com
+References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1509120687-7352-7-git-send-email-gabriele.paoloni@huawei.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <de9f0362-6f2d-2f73-a23a-af248a9b1963@infradead.org>
+Date: Fri, 27 Oct 2017 09:44:19 -0700
+MIME-Version: 1.0
+In-Reply-To: <1509120687-7352-7-git-send-email-gabriele.paoloni@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, minyard@acm.org, benh@kernel.crashing.org,
+ john.garry@huawei.com, linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
+ linuxarm@huawei.com, linux-acpi@vger.kernel.org,
+ "zhichang.yuan" <yuanzhichang@hisilicon.com>, linux-pci@vger.kernel.org,
+ olof@lixom.net, brian.starkey@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make config_item_type structures const as they are either passed to a
-function having the argument as const or used inside a if statement or
-stored in the const "ci_type" field of a config_item structure.
+On 10/27/17 09:11, Gabriele Paoloni wrote:
+> diff --git a/drivers/bus/Kconfig b/drivers/bus/Kconfig
+> index 2408ea3..358eed3 100644
+> --- a/drivers/bus/Kconfig
+> +++ b/drivers/bus/Kconfig
+> @@ -64,6 +64,15 @@ config BRCMSTB_GISB_ARB
+>  	  arbiter. This driver provides timeout and target abort error handling
+>  	  and internal bus master decoding.
+>  
+> +config HISILICON_LPC
+> +	bool "Support for ISA I/O space on Hisilicon Hip0X"
+> +	depends on (ARM64 && (ARCH_HISI || COMPILE_TEST))
+> +	select LOGIC_PIO
+> +	select INDIRECT_PIO
+> +	help
+> +	  Driver needed for some legacy ISA devices attached to Low-Pin-Count
+> +	  on Hisilicon Hip0X SoC.
+> +
+>  config IMX_WEIM
+>  	bool "Freescale EIM DRIVER"
+>  	depends on ARCH_MXC
 
-Done using Coccinelle.
+Hi,
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
+Why bool? why not tristate?
 
- drivers/hwtracing/stm/policy.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/hwtracing/stm/policy.c b/drivers/hwtracing/stm/policy.c
-index 6c0ae29..33e9a1b 100644
---- a/drivers/hwtracing/stm/policy.c
-+++ b/drivers/hwtracing/stm/policy.c
-@@ -187,8 +187,8 @@ static void stp_policy_node_release(struct config_item *item)
- 	NULL,
- };
- 
--static struct config_item_type stp_policy_type;
--static struct config_item_type stp_policy_node_type;
-+static const struct config_item_type stp_policy_type;
-+static const struct config_item_type stp_policy_node_type;
- 
- static struct config_group *
- stp_policy_node_make(struct config_group *group, const char *name)
-@@ -236,7 +236,7 @@ static void stp_policy_node_release(struct config_item *item)
- 	.drop_item	= stp_policy_node_drop,
- };
- 
--static struct config_item_type stp_policy_node_type = {
-+static const struct config_item_type stp_policy_node_type = {
- 	.ct_item_ops	= &stp_policy_node_item_ops,
- 	.ct_group_ops	= &stp_policy_node_group_ops,
- 	.ct_attrs	= stp_policy_node_attrs,
-@@ -311,7 +311,7 @@ static void stp_policy_release(struct config_item *item)
- 	.make_group	= stp_policy_node_make,
- };
- 
--static struct config_item_type stp_policy_type = {
-+static const struct config_item_type stp_policy_type = {
- 	.ct_item_ops	= &stp_policy_item_ops,
- 	.ct_group_ops	= &stp_policy_group_ops,
- 	.ct_attrs	= stp_policy_attrs,
-@@ -380,7 +380,7 @@ static void stp_policy_release(struct config_item *item)
- 	.make_group	= stp_policies_make,
- };
- 
--static struct config_item_type stp_policies_type = {
-+static const struct config_item_type stp_policies_type = {
- 	.ct_group_ops	= &stp_policies_group_ops,
- 	.ct_owner	= THIS_MODULE,
- };
 -- 
-1.9.1
+~Randy
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
