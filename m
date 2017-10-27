@@ -1,100 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:48213 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932918AbdJRKkP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2017 06:40:15 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Daniel Drake <drake@endlessm.com>
-Cc: Andy Shevchenko <andy@infradead.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        x86@kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        AceLan Kao <acelan.kao@canonical.com>
-Subject: Re: PCIe legacy interrupts blocked on Intel Apollo Lake platforms
-Date: Wed, 18 Oct 2017 12:30:37 +0200
-Message-ID: <2318168.Mp02DdCiFO@aspire.rjw.lan>
-In-Reply-To: <CAD8Lp47nOCt-93kBxmcJzUam=P7XRcm8vhwogoxXTJ_mwCH_Cg@mail.gmail.com>
-References: <CAD8Lp47nOCt-93kBxmcJzUam=P7XRcm8vhwogoxXTJ_mwCH_Cg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 26 Oct 2017 19:33:32 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, rjw@rjwysocki.net, dianders@chromium.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [RFC PATCH v8 1/7] dt-bindings: PCI: Add definition of PCIe
+ WAKE# irq and PCI irq
+Message-ID: <20171027023331.GA11665@google.com>
+References: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
+ <20171026132840.20946-2-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171026132840.20946-2-jeffy.chen@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, October 18, 2017 10:36:49 AM CEST Daniel Drake wrote:
-> [retitling and re-summarizing in hope of attention from Intel]
+On Thu, Oct 26, 2017 at 09:28:34PM +0800, Jeffy Chen wrote:
+> Add optional interrupts for PCIe WAKE# pin and PCI interrupt pin.
 > 
-> Andy / Rafael,
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
 > 
-> Thomas Gleixner suggested that you might be able to help with a nasty
-> issue related to Intel Apollo Lake platforms - or you can put us in
-> contact with another relevant person at Intel.
+> Changes in v8:
+> Add optional "pci", and rewrite commit message.
 > 
-> On Thu, Oct 5, 2017 at 6:13 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> >> We have tried taking the mini-PCIe wifi module out of one of the affected
-> >> Acer products and moved it to another computer, where it is working fine
-> >> with legacy interrupts. So this suggests that the wifi module itself is OK,
-> >> but we are facing a hardware limitation or BIOS limitation on the affected
-> >> products. In the Dell thread it says "Some platform(BIOS) blocks legacy
-> >> interrupts (INTx)".
-> >>
-> >> If you have any suggestions for how we might solve this without getting into
-> >> the MSI mess then that would be much appreciated. If the BIOS blocks the
-> >> interrupts, can Linux unblock them?
-> >
-> > I'm pretty sure we can. Cc'ed Rafael and Andy. They might know, if not they
-> > certainly know whom to ask @Intel.
+> Changes in v7: None
+> Changes in v6: None
+> Changes in v5:
+> Move to pci.txt
 > 
-> To summarize the issue:
+> Changes in v3: None
+> Changes in v2: None
 > 
-> At least 8 new Acer consumer laptop products based on Intel Apollo
-> Lake are unable to deliver legacy interrupts from the ath9k miniPCIe
-> wifi card to the host. This results in wifi connectivity being
-> unusable on those systems.
+>  Documentation/devicetree/bindings/pci/pci.txt | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> This also seems to affect the 4 Dell systems included in this patch series:
->   https://lkml.org/lkml/2017/9/26/55
-> at least 2 of which are also Apollo Lake (can't find specs for the other 2).
-> 
-> We know that the wifi module itself is OK, since we can take it to
-> another laptop and it delivers legacy interrupts just fine.
-> 
-> We know that this is not a fundamental limitation of Intel Apollo
-> Lake, since we have other Apollo Lake products in hand with ath9k wifi
-> modules and legacy interrupts work fine there.
-> 
-> We would like to switch to MSI interrupts instead, but unfortunately
-> ath9k seems to have a hardware bug in that it corrupts the MSI message
-> data, see:
-> 
->   ath9k hardware corrupts MSI Message Data, raises wrong interrupt
->   https://marc.info/?l=linux-pci&m=150238260826803&w=2
-> 
-> We have explored workarounds for this on the Linux side, but that has
-> turned out to be unattractive and impractical:
-> 
->   [PATCH] PCI MSI: allow alignment restrictions on vector allocation
->   https://marc.info/?t=150631283200001&r=1&w=2
-> 
-> Interrupt remapping could probably help us avoid this MSI problem, but
-> unfortunately that's not available on the affected platforms:
-> 
->   DMAR table missing, Intel IOMMU not available
->   https://lists.linuxfoundation.org/pipermail/iommu/2017-August/023717.html
-> 
-> So now, digging for other options, I would like to explore the theory
-> mentioned on the Dell thread that the BIOS is blocking legacy
-> interrupts on these platforms. The question for Intel is: if the BIOS
-> is blocking legacy interrupts, can Linux unblock them? (and how)
-> 
-> I have Apollo Lake platforms here which exhibit the issue, and also
-> other Apollo Lake platforms that work fine, so let me know where I can
-> help look for differences (register dumps etc)
+> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> index c77981c5dd18..faed405811cd 100644
+> --- a/Documentation/devicetree/bindings/pci/pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> @@ -24,3 +24,6 @@ driver implementation may support the following properties:
+>     unsupported link speed, for instance, trying to do training for
+>     unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+>     for gen2, and '1' for gen1. Any other values are invalid.
+> +- interrupts: Interrupt specifier for each name in interrupt-names.
+> +- interrupt-names: May contains "wakeup" for PCIe WAKE# interrupt and "pci"
+> +  for PCI interrupt.
 
-Thanks for the very useful summary of the problem, I'll do my best to find
-out what can be done to address it.
+Similar criticism to what Rob made on patch 4: this file already says "a
+host bridge driver implementation may support the following properties",
+so this property is clearly not for child devices. And so having the
+"PCI interrupt" here doesn't make much sense.
 
-Thanks,
-Rafael
+Similarly, you're documenting "wakeup" here as a host bridge property,
+but then patch 7 is adding per-device support it seems? That seems
+wrong.
+
+In fact, I'm pretty sure this series fails to actually look in the host
+bridge for the "wakeup" interrupt at all! Did you actually test this?
+
+And again, describing your intentions a little better in the commit
+message would make this clearer. Then we could tell which way you
+intended this to work...
+
+Brian
