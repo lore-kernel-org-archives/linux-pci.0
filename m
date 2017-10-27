@@ -1,170 +1,93 @@
-Return-Path: <SRS0=Kkfq=BM=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=Kkfq=BM=redhat.com=alex.williamson@kernel.org>
-Date: Fri, 13 Oct 2017 12:05:58 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Steven Royer <seroyer@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Bryant G. Ly"
- <bryantly@linux.vnet.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>,
- bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
- linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, "Juan J .
- Alvarez" <jjalvare@us.ibm.com>, Bodong Wang <bodong@mellanox.com>, Eli
- Cohen <eli@mellanox.com>, Saeed Mahameed <saeedm@mellanox.com>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-Message-ID: <20171013120558.1a129183@t450s.home>
-In-Reply-To: <11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
-References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
-	<20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
-	<20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
-	<87efq92ei6.fsf@concordia.ellerman.id.au>
-	<20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
-	<e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
-	<20171013033456.GC25517@bhelgaas-glaptop.roam.corp.google.com>
-	<88eab212351a662dda330071d9afe9dc@linux.vnet.ibm.com>
-	<11c15c773aefcc0490e197051c2eaf41@linux.vnet.ibm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
+ <will.deacon@arm.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>, "bhelgaas@google.com"
+ <bhelgaas@google.com>, "rafael@kernel.org" <rafael@kernel.org>,
+ "arnd@arndb.de" <arnd@arndb.de>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "lorenzo.pieralisi@arm.com"
+ <lorenzo.pieralisi@arm.com>
+Subject: RE: [PATCH v10 0/9] LPC: legacy ISA I/O support
+Date: Fri, 27 Oct 2017 16:45:58 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A6F5C@AcuExch.aculab.com>
+References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "john.garry@huawei.com" <john.garry@huawei.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "xuwei5@hisilicon.com" <xuwei5@hisilicon.com>,
+ "linuxarm@huawei.com" <linuxarm@huawei.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "olof@lixom.net" <olof@lixom.net>,
+ "brian.starkey@arm.com" <brian.starkey@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 13 Oct 2017 07:01:48 -0500
-Steven Royer <seroyer@linux.vnet.ibm.com> wrote:
-
-> On 2017-10-13 06:53, Steven Royer wrote:
-> > On 2017-10-12 22:34, Bjorn Helgaas wrote:  
-> >> [+cc Alex, Bodong, Eli, Saeed]
-> >> 
-> >> On Thu, Oct 12, 2017 at 02:59:23PM -0500, Bryant G. Ly wrote:  
-> >>> On 10/12/17 1:29 PM, Bjorn Helgaas wrote:  
-> >>> >On Thu, Oct 12, 2017 at 03:09:53PM +1100, Michael Ellerman wrote:  
-> >>> >>Bjorn Helgaas <helgaas@kernel.org> writes:
-> >>> >>  
-> >>> >>>On Fri, Sep 22, 2017 at 09:19:28AM -0500, Bryant G. Ly wrote:  
-> >>> >>>>This patch adds the machine dependent call for
-> >>> >>>>pcibios_bus_add_device, since the previous patch
-> >>> >>>>separated the calls out between the PowerNV and PowerVM.
-> >>> >>>>
-> >>> >>>>The difference here is that for the PowerVM environment
-> >>> >>>>we do not want match_driver set because in this environment
-> >>> >>>>we do not want the VF device drivers to load immediately, due to
-> >>> >>>>firmware loading the device node when VF device is assigned to the
-> >>> >>>>logical partition.
-> >>> >>>>
-> >>> >>>>This patch will depend on the patch linked below, which is under
-> >>> >>>>review.
-> >>> >>>>
-> >>> >>>>https://patchwork.kernel.org/patch/9882915/
-> >>> >>>>
-> >>> >>>>Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-> >>> >>>>Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
-> >>> >>>>---
-> >>> >>>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++++++
-> >>> >>>>  1 file changed, 24 insertions(+)
-> >>> >>>>
-> >>> >>>>diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> >>> >>>>index 6b812ad990e4..45946ee90985 100644
-> >>> >>>>--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-> >>> >>>>+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-> >>> >>>>@@ -64,6 +64,27 @@ static unsigned char slot_errbuf[RTAS_ERROR_LOG_MAX];
-> >>> >>>>  static DEFINE_SPINLOCK(slot_errbuf_lock);
-> >>> >>>>  static int eeh_error_buf_size;
-> >>> >>>>+void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
-> >>> >>>>+{
-> >>> >>>>+	struct pci_dn *pdn = pci_get_pdn(pdev);
-> >>> >>>>+
-> >>> >>>>+	if (!pdev->is_virtfn)
-> >>> >>>>+		return;
-> >>> >>>>+
-> >>> >>>>+	pdn->device_id  =  pdev->device;
-> >>> >>>>+	pdn->vendor_id  =  pdev->vendor;
-> >>> >>>>+	pdn->class_code =  pdev->class;
-> >>> >>>>+
-> >>> >>>>+	/*
-> >>> >>>>+	 * The following operations will fail if VF's sysfs files
-> >>> >>>>+	 * aren't created or its resources aren't finalized.
-> >>> >>>>+	 */
-> >>> >>>>+	eeh_add_device_early(pdn);
-> >>> >>>>+	eeh_add_device_late(pdev);
-> >>> >>>>+	eeh_sysfs_add_device(pdev);
-> >>> >>>>+	pdev->match_driver = -1;  
-> >>> >>>match_driver is a bool, which should be assigned "true" or "false".  
-> >>> >>Above he mentioned a dependency on:
-> >>> >>
-> >>> >>   [04/10] PCI: extend pci device match_driver state
-> >>> >>   https://patchwork.kernel.org/patch/9882915/
-> >>> >>
-> >>> >>
-> >>> >>Which makes it an int.  
-> >>> >Oh, right, I missed that, thanks.
-> >>> >  
-> >>> >>Or has that patch been rejected or something?  
-> >>> >I haven't *rejected* it, but it's low on my priority list, so you
-> >>> >shouldn't depend on it unless it adds functionality you really need.
-> >>> >If I did apply that particular patch, I would want some rework because
-> >>> >it currently obfuscates the match_driver logic.  There's no clue when
-> >>> >reading the code what -1/0/1 mean.  
-> >>> So do you prefer enum's? - If so I can make a change for that.  
-> >>> >Apparently here you *do* want the "-1 means the PCI core will never
-> >>> >set match_driver to 1" functionality, so maybe you do depend on it.  
-> >>> We depend on the patch because we want that ability to never set
-> >>> match_driver,
-> >>> for SRIOV on PowerVM.  
-> >> 
-> >> Is this really new PowerVM-specific functionality?  ISTR recent 
-> >> discussions
-> >> about inhibiting driver binding in a generic way, e.g.,
-> >> http://lkml.kernel.org/r/1490022874-54718-1-git-send-email-bodong@mellanox.com
-> >>   
-> >>> >If that's the case, how to you ever bind a driver to these VFs?  The
-> >>> >changelog says you don't want VF drivers to load *immediately*, so I
-> >>> >assume you do want them to load eventually.
-> >>> >  
-> >>> The VF's that get dynamically created within the configure SR-IOV
-> >>> call, on the Pseries Platform, wont be matched with a driver. - We
-> >>> do not want it to match.
-> >>> 
-> >>> The Power Hypervisor will load the VFs. The VF's will get
-> >>> assigned(by the user) via the HMC or Novalink in this environment
-> >>> which will then trigger PHYP to load the VF device node to the
-> >>> device tree.  
-> >> 
-> >> I don't know what it means for the Hypervisor to "load the VFs."  Can
-> >> you explain that in PCI-speak?
-> >> 
-> >> The things I know about are:
-> >> 
-> >>   - we set PCI_SRIOV_CTRL_VFE in the PF, which enables VFs
-> >>   - now the VFs respond to config accesses
-> >>   - the PCI core enumerates the VFs by reading their config space
-> >>   - the PCI core builds pci_dev structs for the VFs
-> >>   - the PCI core adds these pci_devs to the bus
-> >>   - we try to bind drivers to the VFs
-> >>   - the VF driver probe function may read VF config space and VF BARs
-> >>   - the VF may be assigned to a guest VM
-> >> 
-> >> Where does "loading the VFs" fit in?  I don't know what HMC, Novalink,
-> >> or PHYP are.  I don't *need* to know what they are, as long as you can
-> >> explain what's happening in terms of the PCI concepts and generic 
-> >> Linux VMs
-> >> and device assignment.
-> >> 
-> >> Bjorn  
-> > 
-> > The VFs will be hotplugged into the VM separately from the enable
-> > SR-IOV, so the driver will load as part of the hotplug operation.
-> > 
-> > Steve  
+From: Gabriele Paoloni
+> Sent: 27 October 2017 17:11
+> This patchset supports the IPMI-bt device attached to the Low-Pin-Count
+> interface implemented on Hisilicon Hip06/Hip07 SoC.
+>                         -----------
+>                         | LPC host|
+>                         |         |
+>                         -----------
+>                              |
+>                 _____________V_______________LPC
+>                   |                       |
+>                   V                       V
+>                                      ------------
+>                                      |  BT(ipmi)|
+>                                      ------------
 > 
-> One more point of clarification: when the hotplug happens, the VF will 
-> show up on a virtual PCI bus that is not directly correlated to the real 
-> PCI bus that the PF is on.  On that virtual PCI bus, the driver will 
-> match because it won't be set to -1.
+> When master accesses those peripherals beneath the Hip06/Hip07 LPC, a specific
+> LPC driver is needed to make LPC host generate the standard LPC I/O cycles with
+> the target peripherals'I/O port addresses. But on curent arm64 world, there is
+> no real I/O accesses. All the I/O operations through in/out accessors are based
+> on MMIO ranges; on Hip06/Hip07 LPC the I/O accesses are performed through driver
+> specific accessors rather than MMIO.
+> To solve this issue and keep the relevant existing peripherals' drivers untouched,
+> this patchset:
+>    - introduces a generic I/O space management framework, LIBIO, to support I/O
+>      operations on host controllers operating either on MMIO buses or on buses
+>      requiring specific driver I/O accessors;
+>    - redefines the in/out accessors to provide a unified interface for both MMIO
+>      and driver specific I/O operations. Using LIBIO, th call of in/out() from
+>      the host children drivers, such as ipmi-si, will be redirected to the
+>      corresponding device-specific I/O hooks to perform the I/O accesses.
+> 
+>  Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC peripherals can
+>  be supported without any changes on the existing ipmi-si driver.
 
-I'm pretty lost too, but I think what's being said is that the
-paravirtualized SR-IOV enable creates VFs according to the SR-IOV
-offset and stride capabilities of the PF, but we're supposed to ignore
-those (why are we even creating pci_devs for them?) and the hypervisor
-will actually hotplug the VFs somewhere else.  How's that still
-SR-IOV?  Why wouldn't the hypervisor just add the real VFs that we're
-supposed to use at the offset and stride indicated by the PF SR-IOV
-capability and mask the VFs that we're not supposed to see?  Thanks,
+FWIW my thoughts on this are WTF!
 
-Alex
+Looks to me horribly over complicated and over generalised.
+
+Surely is it could be done the same way that x86 does IO cycles?
+So you encode the information into the 'address' the driver passes
+to ioread16() (etc) to allow it to do either a normal bus cycle or
+the indirect cycle onto the external bus.
+
+So you have one kernel option that makes these real functions.
+
+	David
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
