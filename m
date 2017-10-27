@@ -1,232 +1,138 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 2/9] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
- device
-To: Rob Herring <robh@kernel.org>, Jim Quinlan <jim2101024@gmail.com>
-References: <1507761269-7017-1-git-send-email-jim2101024@gmail.com>
- <1507761269-7017-3-git-send-email-jim2101024@gmail.com>
- <20171017202418.ykve2o4zvuwxjdgj@rob-hp-laptop>
- <CANCKTBt_gUF8qAEuhS1336Uce+WdP_98ApZhv1sxZgJsWGoiGQ@mail.gmail.com>
- <CAL_JsqLoqB0GF201ofJrjdYH8B-Ca=hGBtE4=VcrBxS7M52mVQ@mail.gmail.com>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <9fae640f-a9da-90bf-01d2-c62131611ef9@gmail.com>
-Date: Thu, 19 Oct 2017 14:58:55 -0700
-MIME-Version: 1.0
-In-Reply-To: <CAL_JsqLoqB0GF201ofJrjdYH8B-Ca=hGBtE4=VcrBxS7M52mVQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Linux-MIPS <linux-mips@linux-mips.org>,
- Florian Fainelli <f.fainelli@gmail.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Ralf Baechle <ralf@linux-mips.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        rjw@rjwysocki.net, dianders@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-pci@vger.kernel.org
+Subject: [RFC PATCH v9 5/7] PCI: Make pci_platform_pm_ops's callbacks optional
+Date: Fri, 27 Oct 2017 15:17:37 +0800
+Message-Id: <20171027071739.21927-6-jeffy.chen@rock-chips.com>
+In-Reply-To: <20171027071739.21927-1-jeffy.chen@rock-chips.com>
+References: <20171027071739.21927-1-jeffy.chen@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/19/2017 02:49 PM, Rob Herring wrote:
-> On Tue, Oct 17, 2017 at 5:42 PM, Jim Quinlan <jim2101024@gmail.com> wrote:
->> On Tue, Oct 17, 2017 at 4:24 PM, Rob Herring <robh@kernel.org> wrote:
->>> On Wed, Oct 11, 2017 at 06:34:22PM -0400, Jim Quinlan wrote:
->>>> The DT bindings description of the Brcmstb PCIe device is described.  This
->>>> node can be used by almost all Broadcom settop box chips, using
->>>> ARM, ARM64, or MIPS CPU architectures.
->>>>
->>>> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
->>>> ---
->>>>  .../devicetree/bindings/pci/brcmstb-pci.txt        | 106 +++++++++++++++++++++
->>>>  1 file changed, 106 insertions(+)
->>>>  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
->>>> new file mode 100644
->>>> index 0000000..2f699da
->>>> --- /dev/null
->>>> +++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
->>>> @@ -0,0 +1,106 @@
->>>> +Brcmstb PCIe Host Controller Device Tree Bindings
->>>> +We don't; this line is erroneous.
->>>> +Introduction:
->>>> +  The brcmstb host controller closely follows the example set in
->>>> +
->>>> +     [1] http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
->>>> +
->>>> +  The rest of this document explains some added customizations and
->>>> +  offers an example Brcmstb PCIe host controller DT node.
->>>> +
->>>> +Required Properties:
->>>> +  reg -- the register start address and length for the PCIe block.
->>>> +      Additional start,length pairs may be specified for clock addresses.
->>>
->>> Kind of vague and why do you need clock addresses and the clock binding?
->>>
->> We don't;  this line is erroneous and will be removed.
->>
->>> Also, typically the config space is defined here? Is that missing or you
->>> don't support memory mapped config space?
->>>
->> We do not support memory mapped config space.
->>
->>>> +  interrupts -- two interrupts are specified; the first interrupt is for
->>>> +      the PCI host controller and the second is for MSI if the built-in
->>>> +      MSI controller is to be used.
->>>> +  interrupt-names -- names of the interrupts (above): "pcie" and "msi".
->>>> +  compatible -- must be one of: "brcm,bcm7425-pcie", "brcm,bcm7435-pcie",
->>>> +      or "brcm,bcm7278-pcie".
->>>
->>> One compatible per line.
->>>
->> Will fix.
->>
->>>> +  #address-cells -- the number of address cells for PCI-space.
->>>> +  #size-cells -- the number of size cells for PCI-space.
->>>> +  ranges -- See [1]; a specification of the outbound windows for the host
->>>> +      controller.  Each outbound window is described by a n-tuple:
->>>> +          (3 cells) -- PCIe space start address; one cell for attributes
->>>> +                       and two cells for the 64-bit PCIe address.
->>>> +          (x cells) -- CPU/System start address, number of cells is determined
->>>> +                       by the parent node's #address-cells.
->>>> +          (y cells) -- Size of region, number of cells determined by the
->>>> +                       parent node's #size-cells.
->>>> +      Due to hardware limitations, there may be a maximum of four
->>>> +      non-contiguous ranges specified.We don't; this line is erroneous.
->>>> +  #interrupt-cells -- number of cells used to describe the interrupt.
->>>
->>> How many cells?
->>>
->> This line will be removed.
-> 
-> Humm, why? You need it to have interrupt-map. You just need to say
-> what the value is, not what the property is.
-> 
->>>> +  interrupt-map-mask -- see [1]; four cells, the first three are zero
->>>> +      for our uses and the fourth cell is the mask (val = 0x7) for
->>>> +      the legacy interrupt number [1..4].
->>>> +  interrupt-map -- See [1]; there are four interrupts (INTA, INTB,
->>>> +      INTC, and INTD) to be mapped; each interrupt requires 5 cells
->>>> +      plus the size of the interrupt specifier.
->>>> +  linux,pci-domain -- the domain of the host controller.
->>>> +
->>>> +Optional Properties:
->>>> +  clocks -- list of clock phandles.  If specified, this should list one
->>>> +      clock.
->>>> +  clock-names -- the "local" names of the clocks specified in 'clocks'.  Note
->>>> +      that if the 'clocks' property is given, 'clock-names' is mandatory,
->>>> +      and the name of the clock is expected to be "sw_pcie".
->>>> +  dma-ranges -- Similar in structure to ranges, each dma region is
->>>> +      specified with a n-tuple.  Dma-regions describe the inbound
->>>> +      accesses from EP to RC; it translates the pci address that the
->>>> +      EP "sees" to the CPU address in memory.  This property is needed
->>>> +      because the design of the Brcmstb memory subsystem often precludes
->>>> +      idenity-mapping between CPU address space and PCIe address space.
->>>> +      Each range is described by a n-tuple:
->>>> +          (3 cells) -- PCIe space start address; one cell for attributes
->>>> +                       and two cells for the 64-bit PCIe address.
->>>> +          (x cells) -- CPU/System start address, number of cells is determined
->>>> +                       by the parent node's #address-cells.
->>>> +          (y cells) -- Size of region, number of cells determined by the
->>>> +                       parent node's #size-cells.
->>>
->>> There's no need to describe standard properties. Just put whatever is
->>> specific to your platform. That applies throughout this doc.
->>>
->> Will fix.
->>
->>>> +  msi-parent -- if MSI is to be used, this must be a phandle to the
->>>> +      msi-parent.  If this prop is set to the phandle of the PCIe
->>>> +      node, or if the msi-parent prop is missing, the PCIE controller
->>>> +      will attempt to use its built in MSI controller.
->>>> +  msi-controller -- this property should only be specified if the
->>>> +      PCIe controller is using its internal MSI controller.
->>>> +  brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
->>>> +  brcm,gen --  (integer) indicates desired generation of link:
->>>> +      1 => 2.5 Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps.
->>>
->>> We have a standard property for this IIRC.
->>>
->> Yes, BrianN pointed that out and it will be fixed.
->>
->>>> +  supply-names -- the names of voltage regulators that the root
->>>> +      complex should turn off/on/on on suspend/resume/boot.  This
->>>> +      is a string list.
->>>> +  supplies -- A collection of phandles to a regulator nodes, see
->>>> +      Documentation/devicetree/bindings/regulator/ for specificWe don't; this line is erroneous.
->>>> +      bindings. The number and order of phandles must match
->>>> +      exactly the number of strings in the "supply-names" property.
->>>
->>> This is not the regulator binding. Use the standard binding.
->>>
->> The reason we do it this way is because the PCIe controller does not
->> know or care what the names of the supplies are, or how many there
->> will be.  The list of regulators can be different for each board we
->> support, as these regulators turn on/off the downstream EP device.
->> All the PCIe controller does is turn on/off this list of regulators
->> when booting,resuming/suspending.
->>
->> An alternative would have the node specifying the standard properties
->>
->> xyz-supply = <&xyz_reg>;
->> abc-supply = <&abc_reg>;
->> pdq-supply = <&pdq_reg>;
->> ...
->>
->> and then have this driver search all of the properties in the PCIe
->> node for names matching /-supply$/, and then create a list of phandles
->> from that.  Is that what you would like?
-> 
-> Really, you should have child nodes of the PCIe devices and have the
-> supplies in there.
+Allow platforms not to provide some of the pci_platform_pm_ops's
+callbacks.
 
-While that would be technically more correct this poses a number of issues:
+Also change the return value from -ENOSYS to -ENODEV for:
+warning: drivers/pci/pci.c,594: ENOSYS means 'invalid syscall nr' and nothing else
 
-- there is precedence in that area, and you already Acked binding
-documents proposing the same thing:
-	* Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt (commit
-c26ebe98a103479dae9284fe0a86a95af4a5cd46)
-	* Documentation/devicetree/bindings/pci/rockchip-pcie.txt (commit
-828bdcfbdb98eeb97facb05fe6c96ba0aed65c4a and before)
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-(which may indicate those should also be corrected, at the possible
-expense of creating incompatibilities)
+Changes in v9: None
+Changes in v8: None
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v3: None
+Changes in v2: None
 
-- there is a chicken and egg problem, you can't detect the EP without
-turning its regulator on, and if you can't create a pci_device, you
-certainly won't be able to associate it with an device_node counterpart
+ drivers/pci/pci.c | 38 +++++++++++++++++++++++++-------------
+ drivers/pci/pci.h |  5 +----
+ 2 files changed, 26 insertions(+), 17 deletions(-)
 
-- PCIe being dynamic by nature, can you have "wildcard" PCIE EP DT node
-that would be guaranteed to match any physically attached PCIE EP which
-is discovered by the PCI bus layer (and then back to issue #2)
-
-If we can solve #2 and #3, it would be reasonable to move the regulator
-to a PCIE EP node. Ideally, we may want the generic PCI layer to be
-responsible for managing regulators within pci_enable_device() and
-pci_disable_device() for instance?
-
-> 
-> The driver could do what you describe, but you've still got to define
-> the names here.
-> 
-> Rob
-> 
-
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index f0d68066c726..e120b00a9017 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -572,46 +572,58 @@ static void pci_restore_bars(struct pci_dev *dev)
+ 
+ static const struct pci_platform_pm_ops *pci_platform_pm;
+ 
+-int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
++void pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+ {
+-	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
+-	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
+-		return -EINVAL;
+ 	pci_platform_pm = ops;
+-	return 0;
+ }
+ 
+ static inline bool platform_pci_power_manageable(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->is_manageable(dev) : false;
++	if (pci_platform_pm && pci_platform_pm->is_manageable)
++		return pci_platform_pm->is_manageable(dev);
++
++	return false;
+ }
+ 
+ static inline int platform_pci_set_power_state(struct pci_dev *dev,
+ 					       pci_power_t t)
+ {
+-	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
++	if (pci_platform_pm && pci_platform_pm->set_state)
++		return pci_platform_pm->set_state(dev, t);
++
++	return -ENODEV;
+ }
+ 
+ static inline pci_power_t platform_pci_get_power_state(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->get_state(dev) : PCI_UNKNOWN;
++	if (pci_platform_pm && pci_platform_pm->get_state)
++		return pci_platform_pm->get_state(dev);
++
++	return PCI_UNKNOWN;
+ }
+ 
+ static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ?
+-			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
++	if (pci_platform_pm && pci_platform_pm->choose_state)
++		return pci_platform_pm->choose_state(dev);
++
++	return PCI_POWER_ERROR;
+ }
+ 
+ static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
+ {
+-	return pci_platform_pm ?
+-			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
++	if (pci_platform_pm && pci_platform_pm->set_wakeup)
++		return pci_platform_pm->set_wakeup(dev, enable);
++
++	return -ENODEV;
+ }
+ 
+ static inline bool platform_pci_need_resume(struct pci_dev *dev)
+ {
+-	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
++	if (pci_platform_pm && pci_platform_pm->need_resume)
++		return pci_platform_pm->need_resume(dev);
++
++	return false;
+ }
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e816a13e6259..048668271014 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -52,9 +52,6 @@ int pci_probe_reset_function(struct pci_dev *dev);
+  * @need_resume: returns 'true' if the given device (which is currently
+  *		suspended) needs to be resumed to be configured for system
+  *		wakeup.
+- *
+- * If given platform is generally capable of power managing PCI devices, all of
+- * these callbacks are mandatory.
+  */
+ struct pci_platform_pm_ops {
+ 	bool (*is_manageable)(struct pci_dev *dev);
+@@ -65,7 +62,7 @@ struct pci_platform_pm_ops {
+ 	bool (*need_resume)(struct pci_dev *dev);
+ };
+ 
+-int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
++void pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
+ void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
+ void pci_power_up(struct pci_dev *dev);
+ void pci_disable_enabled_device(struct pci_dev *dev);
 -- 
-Florian
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
