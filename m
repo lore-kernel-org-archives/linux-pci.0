@@ -1,99 +1,131 @@
-Return-Path: <SRS0=leV3=BR=nvidia.com=mmaddireddy@kernel.org>
-Return-Path: <SRS0=leV3=BR=nvidia.com=mmaddireddy@kernel.org>
-Subject: Re: [PATCH V2 0/4] Add Tegra186 PCIe support
-To: Thierry Reding <thierry.reding@gmail.com>, Bjorn Helgaas
-	<helgaas@kernel.org>
-CC: <bhelgaas@google.com>, <jonathanh@nvidia.com>,
-	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<mperttunen@nvidia.com>
-References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
- <20171017173740.GF5641@bhelgaas-glaptop.roam.corp.google.com>
- <20171017202814.GC10482@ulmo>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <c4c81f0f-eec7-654f-c76f-38afa4c39e3b@nvidia.com>
-Date: Wed, 18 Oct 2017 10:37:30 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 27 Oct 2017 09:37:18 -0500
+From: Rob Herring <robh@kernel.org>
+To: Jim Quinlan <jim2101024@gmail.com>
+Subject: Re: [PATCH 2/8] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
+ device
+Message-ID: <20171027130538.lb2hs4umew4cgovv@rob-hp-laptop>
+References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
+ <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171017202814.GC10482@ulmo>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Florian Fainelli <f.fainelli@gmail.com>, linux-mips@linux-mips.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Oct 24, 2017 at 02:15:43PM -0400, Jim Quinlan wrote:
+> The DT bindings description of the Brcmstb PCIe device is described.  This
+> node can be used by almost all Broadcom settop box chips, using
+> ARM, ARM64, or MIPS CPU architectures.
 
+"dt-bindings: pci: ..." for the subject please.
 
-On 18-Oct-17 1:58 AM, Thierry Reding wrote:
-> On Tue, Oct 17, 2017 at 12:37:40PM -0500, Bjorn Helgaas wrote:
->> On Wed, Sep 27, 2017 at 05:28:33PM +0530, Manikanta Maddireddy wrote:
->>> Tegra186 has three PCIe controllers which can be operated
->>> in 401, 211 or 111 lane configurations. Tegra TX2 platform
->>> has x4 and M.2 Key E PCIe slots, these patches enables
->>> x4 slot. BPMP programs UPHY lane0 ownership to USB,
->>> so M.2 Key E PCIe will not work.
->>>
->>> Testing: x4 slot is verified with PCIe based USB3.1 card.
->>> PCIe link up, usb flash drive mounting and file copy are
->>> verified. These patches are also verified by
->>> Mikko Perttunen <mperttunen@nvidia.com> with an Intel 82574L
->>> ethernet card.
->>>
->>> Patch V2 adds soc->program_uphy check for phy_exit call.
->>>
->>> Pasting PCIe link up logs below.
->>>
->>> [    1.452512] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
->>> [    1.452723] tegra-pcie 10003000.pcie: Failed to get supply 'dvdd-pex': -517
->>> [    1.561824] ehci-pci: EHCI PCI platform driver
->>> [    1.591587] ohci-pci: OHCI PCI platform driver
->>> [    3.072464] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
->>> [    3.078989] tegra-pcie 10003000.pcie: probing port 0, using 4 lanes
->>> [    3.087272] tegra-pcie 10003000.pcie: Slot present pin change, signature: 00000018
->>> [    3.128818] tegra-pcie 10003000.pcie: PCI host bridge to bus 0000:00
->>> [    3.135174] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->>> [    3.141352] pci_bus 0000:00: root bus resource [mem 0x50100000-0x57ffffff]
->>> [    3.148221] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7fffffff pref]
->>> [    3.155542] pci_bus 0000:00: root bus resource [bus 00-ff]
->>> [    3.161173] pci 0000:00:01.0: [10de:10e5] type 01 class 0x060400
->>> [    3.161188] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
->>> [    3.170838] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4 may corrupt adjacent RW1C bits
->>> [    3.180532] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x52 may corrupt adjacent RW1C bits
->>> [    3.190305] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3cold
->>> [    3.190312] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x4c may corrupt adjacent RW1C bits
->>> [    3.200158] pci 0000:00:01.0: bridge configuration invalid ([bus 00-00]), reconfiguring
->>> [    3.208158] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
->>> [    3.217918] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
->>> [    3.227649] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x3e may corrupt adjacent RW1C bits
->>> [    3.237382] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 offset 0x6 may corrupt adjacent RW1C bits
->>> [    3.247135] pci 0000:01:00.0: [1b21:1242] type 00 class 0x0c0330
->>> [    3.247157] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
->>> [    3.256807] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 offset 0x4 may corrupt adjacent RW1C bits
->>> [    3.266477] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 64bit]
->>> [    3.266544] pci 0000:01:00.0: enabling Extended Tags
->>> [    3.271622] pci 0000:01:00.0: PME# supported from D3hot D3cold
->>> [    3.271775] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
->>> [    3.271798] pci 0000:00:01.0: BAR 14: assigned [mem 0x50100000-0x501fffff]
->>> [    3.278671] pci 0000:01:00.0: BAR 0: assigned [mem 0x50100000-0x50107fff 64bit]
->>> [    3.285993] pci 0000:00:01.0: PCI bridge to [bus 01]
->>> [    3.290959] pci 0000:00:01.0:   bridge window [mem 0x50100000-0x501fffff]
->>> [    3.297763] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host bridge
->>> [    3.304784] pcieport 0000:00:01.0: enabling device (0000 -> 0002)
->>> [    3.311014] pcieport 0000:00:01.0: Signaling PME with IRQ 57
->>> [    3.316768] pci 0000:01:00.0: enabling device (0000 -> 0002)
->>>
->>>
->>> Manikanta Maddireddy (4):
->>>   dt-bindings: pci: tegra: Document Tegra186 PCIe DT
->>>   PCI: tegra: Add Tegra186 PCIe support
->>
->> I applied these two with Thierry's tested-by and acks to
->> pci/host-tegra for v4.15, thanks!  If you have a changelog update for
->> the pm_domain question, I can fold that in.
 > 
-> Thanks!
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> ---
+>  .../devicetree/bindings/pci/brcmstb-pci.txt        | 63 ++++++++++++++++++++++
+>  1 file changed, 63 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
 > 
-> Thierry
+> diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+> new file mode 100644
+> index 0000000..49f9852
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+> @@ -0,0 +1,63 @@
+> +Brcmstb PCIe Host Controller Device Tree Bindings
+> +
+> +Required Properties:
+> +- compatible
+> +  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
+> +  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
+> +  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
+> +      the 7278).
+> +  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
+> +
+> +- reg -- the register start address and length for the PCIe reg block.
+> +- interrupts -- two interrupts are specified; the first interrupt is for
+> +     the PCI host controller and the second is for MSI if the built-in
+> +     MSI controller is to be used.
+> +- interrupt-names -- names of the interrupts (above): "pcie" and "msi".
+> +- #address-cells -- set to <3>.
+> +- #size-cells -- set to <2>.
+> +- #interrupt-cells: set to <1>.
+> +- interrupt-map-mask and interrupt-map, standard PCI properties to define the
+> +     mapping of the PCIe interface to interrupt numbers.
+> +- ranges: ranges for the PCI memory and I/O regions.
+> +- linux,pci-domain -- should be unique per host controller.
+> +
+> +Optional Properties:
+> +- clocks -- phandle of pcie clock.
+> +- clock-names -- set to "sw_pcie" if clocks is used.
+> +- dma-ranges -- Specifies the inbound memory mapping regions when
+> +     an "identity map" is not possible.
+> +- msi-controller -- this property is typically specified to have the
+> +     PCIe controller use its internal MSI controller.
+> +- msi-parent -- set to use an external MSI interrupt controller.
+> +- brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
+
+Use the same one already defined for Broadcom SATA phy.
+
+> +- max-link-speed --  (integer) indicates desired generation of link:
+> +     1 => 2.5 Gbps (gen1), 2 => 5.0 Gbps (gen2), 3 => 8.0 Gbps (gen3).
+> +- xyz-supply -- set to a voltage regulator phandle  that the root
+> +     complex should turn off/on/on on suspend/resume/boot.  Any property
+> +     matching '-supply' will be added to an internal list of phandles.
+
+Still not really liking this...
+
+> +
+> +
+> +Example Node:
+> +
+> +pcie0: pcie@f0460000 {
+> +		reg = <0x0 0xf0460000 0x0 0x9310>;
+> +		interrupts = <0x0 0x0 0x4>;
+> +		compatible = "brcm,pci-plat-dev";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
+> +			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0 0 0 7>;
+> +		interrupt-map = <0 0 0 1 &intc 0 47 3
+> +				 0 0 0 2 &intc 0 48 3
+> +				 0 0 0 3 &intc 0 49 3
+> +				 0 0 0 4 &intc 0 50 3>;
+> +		clocks = <&sw_pcie0>;
+> +		clock-names = "sw_pcie";
+> +		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
+> +		msi-controller;         /* use PCIe's internal MSI controller */
+> +		brcm,ssc;
+> +		max-link-speed = <1>;
+> +		linux,pci-domain = <0>;
+> +	};
+> -- 
+> 1.9.0.138.g2de3478
 > 
 
-Thank you Mikko, Thierry and Bjorn for testing and reviewing these patches.
-
-Bjorn,
-
-Please let me know if Thierry's elaborate changelog update in [PATCH V2 2/4] clarified the pm_domain question or not?
-If that helps, please take that into changelog.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
