@@ -1,67 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50294 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:46992 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757269AbdJKNZ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 09:25:29 -0400
-Date: Wed, 11 Oct 2017 08:25:26 -0500
+        id S1751831AbdJ0URZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 27 Oct 2017 16:17:25 -0400
+Date: Fri, 27 Oct 2017 15:17:21 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Subject: Re: PCIe error reporting
-Message-ID: <20171011132525.GF25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <063D6719AE5E284EB5DD2968C1650D6DD008D9F2@AcuExch.aculab.com>
- <20171010211035.GY25517@bhelgaas-glaptop.roam.corp.google.com>
- <063D6719AE5E284EB5DD2968C1650D6DD0090E73@AcuExch.aculab.com>
- <063D6719AE5E284EB5DD2968C1650D6DD00911C9@AcuExch.aculab.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Meelis Roos <mroos@linux.ee>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>
+Subject: [GIT PULL] PCI fixes for v4.14
+Message-ID: <20171027201721.GA9235@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD00911C9@AcuExch.aculab.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 12:50:04PM +0000, David Laight wrote:
-> From: David Laight
-> > Sent: 11 October 2017 11:04
-> ...
-> > > > On that system (XEON E5-2600) dmesg contains (retyped):
-> > > >   acpi: PNP0A08:00: _OSC: platform does not support [AER]
-> > >
-> > > Per the PCI Firmware spec r3.0, sec 4.5.1, on ACPI platforms, the OS
-> > > is supposed to use _OSC to ask the firmware for permission before
-> > > using AER.  In this case, the firmware declined to grant us
-> > > permission, so we're not supposed to do anything at all with AER.
-> > 
-> > I read that as 'BIOS knows nothing about AER' rather than 'BIOS
-> > refused to hand over control' - but I could be wrong.
-> > 
-> > I'm not sure where to look to see if the actual hardware does.
-> > I'm guessing that Intel Haswell-E should.
-> 
-> I've four Haswell root port bridges with the AER block at offset 148.
-> None of them have anything in the three 'root error registers'.
-> 
-> So the firmware/bios can't be using the registers - which means the
-> OS could use them.
+PCI fixes:
 
-The current Linux behavior is based on the spec I cited above, which
-says
+  - move alpha PCI IRQ map/swizzle functions out of initdata to fix
+    regression from PCI core IRQ mapping changes (Lorenzo Pieralisi)
 
-  If any bits in the Control Field are returned cleared (masked to
-  zero) by the _OSC control method, the respective feature is
-  designated unsupported by the platform and must not be enabled by
-  the operating system. Some of these features may be controlled by
-  platform firmware prior to operating system boot or during runtime
-  for a legacy operating system, while others may be
-  disabled/inoperative until native operating system support is
-  available.
 
-If Linux is handling _OSC correctly (always a question, since it's
-quite complicated), it sounds like your platform is telling Linux not
-to enable AER.
+The following changes since commit 407dae1e4415acde2d9f48bb76361893c4653756:
 
-You could experimentally make Linux enable AER anyway, but it's hard
-for me to see how we could do that safely in general.
+  PCI: aardvark: Move to struct pci_host_bridge IRQ mapping functions (2017-10-10 21:17:43 -0500)
 
-The short answer probably is "complain to your platform vendor".
+are available in the Git repository at:
 
-Bjorn
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.14-fixes-6
+
+for you to fetch changes up to 814eae5982cc55988f642f7f1d10eaf340845c00:
+
+  alpha/PCI: Move pci_map_irq()/pci_swizzle() out of initdata (2017-10-26 11:53:38 -0500)
+
+----------------------------------------------------------------
+pci-v4.14-fixes-6
+
+----------------------------------------------------------------
+Lorenzo Pieralisi (1):
+      alpha/PCI: Move pci_map_irq()/pci_swizzle() out of initdata
+
+ arch/alpha/kernel/sys_alcor.c     |  4 ++--
+ arch/alpha/kernel/sys_cabriolet.c | 12 ++++++------
+ arch/alpha/kernel/sys_dp264.c     | 20 ++++++++++----------
+ arch/alpha/kernel/sys_eb64p.c     |  4 ++--
+ arch/alpha/kernel/sys_eiger.c     |  4 ++--
+ arch/alpha/kernel/sys_miata.c     |  6 +++---
+ arch/alpha/kernel/sys_mikasa.c    |  4 ++--
+ arch/alpha/kernel/sys_nautilus.c  |  2 +-
+ arch/alpha/kernel/sys_noritake.c  |  6 +++---
+ arch/alpha/kernel/sys_rawhide.c   |  4 ++--
+ arch/alpha/kernel/sys_ruffian.c   |  6 +++---
+ arch/alpha/kernel/sys_rx164.c     |  4 ++--
+ arch/alpha/kernel/sys_sable.c     | 10 +++++-----
+ arch/alpha/kernel/sys_sio.c       |  8 ++++----
+ arch/alpha/kernel/sys_sx164.c     |  4 ++--
+ arch/alpha/kernel/sys_takara.c    |  6 +++---
+ arch/alpha/kernel/sys_wildfire.c  |  4 ++--
+ 17 files changed, 54 insertions(+), 54 deletions(-)
