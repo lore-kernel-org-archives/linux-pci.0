@@ -1,46 +1,39 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 24 Oct 2017 14:59:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Faiz Abbas <faiz_abbas@ti.com>
-Cc: kishon@ti.com, bhelgaas@google.com, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] dwc: dra7xx: Print link state to console for debug
-Message-ID: <20171024195950.GD21840@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
+Message-ID: <59F2E234.1080801@rock-chips.com>
+Date: Fri, 27 Oct 2017 15:37:24 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
+        briannorris@chromium.org, rjw@rjwysocki.net, dianders@chromium.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v8 7/7] PCI / PM: Add support for the PCIe WAKE# signal
+ for OF
+References: <20171026132840.20946-1-jeffy.chen@rock-chips.com> <20171026132840.20946-8-jeffy.chen@rock-chips.com> <20171026144221.GF21504@atomide.com>
+In-Reply-To: <20171026144221.GF21504@atomide.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 19, 2017 at 06:13:29PM +0530, Faiz Abbas wrote:
-> Enable support for printing the LTSSM link state for debugging PCI
-> when link is down.
-> 
-> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
+Hi Tony,
 
-Applied with Kishon's ack to pci/host-dra7xx for v4.15, thanks!
+thanks for your Acked-by. but i'm moving the dedicated wakeirq setup to 
+the setup(), so that the irq would be tracked in the /proc/interrupts.
 
-I tweaked the "link up" testing as follows (what I suggested before):
+please help to check the new v10 patches, thanks :)
 
-
-@@ -118,8 +157,18 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
- 	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
-+	int link_up = !!(reg & LINK_UP);
-+	u32 cmd_reg;
-+	u32 ltssm_state;
-+
-+	if (!link_up) {
-+		cmd_reg = dra7xx_pcie_readl(dra7xx,
-+					    PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-+		ltssm_state = (cmd_reg & GENMASK(7, 2)) >> 2;
-+		dev_dbg(pci->dev, "Link state: %s\n", state[ltssm_state]);
-+	}
- 
--	return !!(reg & LINK_UP);
-+	return link_up;
- }
- 
- static void dra7xx_pcie_stop_link(struct dw_pcie *pci)
+On 10/26/2017 10:42 PM, Tony Lindgren wrote:
+> * Jeffy Chen <jeffy.chen@rock-chips.com> [171026 06:31]:
+>> Add pci-of.c to handle the PCIe WAKE# interrupt.
+>>
+>> Also use the dedicated wakeirq infrastructure to simplify it.
+>>
+>> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>
+> Thanks for doing this, looks good to me from wakeirq point of view:
+>
+> Acked-by: Tony Lindgren <tony@atomide.com>
+>
+>
+>
