@@ -1,130 +1,222 @@
-Return-Path: <SRS0=xvJt=BM=linux.intel.com=mika.westerberg@kernel.org>
-Return-Path: <SRS0=xvJt=BM=linux.intel.com=mika.westerberg@kernel.org>
-Date: Fri, 13 Oct 2017 13:26:18 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ashok Raj <ashok.raj@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Michael Jamet <michael.jamet@intel.com>,
-	Yehezkel Bernat <yehezkel.bernat@intel.com>,
-	Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] PCI: Distribute available buses to hotplug capable
- PCIe downstream ports
-Message-ID: <20171013102618.GA2761@lahna.fi.intel.com>
-References: <20170926141720.25067-1-mika.westerberg@linux.intel.com>
- <20170926141720.25067-4-mika.westerberg@linux.intel.com>
- <20171011233243.GX25517@bhelgaas-glaptop.roam.corp.google.com>
- <20171012124703.GD2761@lahna.fi.intel.com>
- <20171012183223.GY25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 26 Oct 2017 22:55:30 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, rjw@rjwysocki.net, dianders@chromium.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH v8 7/7] PCI / PM: Add support for the PCIe WAKE#
+ signal for OF
+Message-ID: <20171027055529.GB85582@google.com>
+References: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
+ <20171026132840.20946-8-jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20171012183223.GY25517@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171026132840.20946-8-jeffy.chen@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 01:32:23PM -0500, Bjorn Helgaas wrote:
-> On Thu, Oct 12, 2017 at 03:47:03PM +0300, Mika Westerberg wrote:
-> > On Wed, Oct 11, 2017 at 06:32:43PM -0500, Bjorn Helgaas wrote:
-> > > On Tue, Sep 26, 2017 at 05:17:16PM +0300, Mika Westerberg wrote:
-> > > > System BIOS sometimes allocates extra bus space for hotplug capable PCIe
-> > > > root/downstream ports. This space is needed if the device plugged to the
-> > > > port will have more hotplug capable downstream ports. A good example of
-> > > > this is Thunderbolt. Each Thunderbolt device contains a PCIe switch and
-> > > > one or more hotplug capable PCIe downstream ports where the daisy chain
-> > > > can be extended.
-> > > > 
-> > > > Currently Linux only allocates minimal bus space to make sure all the
-> > > > enumerated devices barely fit there. The BIOS reserved extra space is
-> > > > not taken into consideration at all. Because of this we run out of bus
-> > > > space pretty quickly when more PCIe devices are attached to hotplug
-> > > > downstream ports in order to extend the chain.
-> > > > 
-> > > > This modifies PCI core so that we distribute the available BIOS
-> > > > allocated bus space equally between hotplug capable PCIe downstream
-> > > > ports to make sure there is enough bus space for extending the
-> > > > hierarchy later on.
-> > > 
-> > > I think this makes sense in general.  It's a fairly complicated patch,
-> > > so my comments here are just a first pass.
-> > 
-> > Thanks for the comments!
-> > 
-> > > Why do you limit it to PCIe?  Isn't it conceivable that one could
-> > > hot-add a conventional PCI card that contained a bridge leading to
-> > > another hotplug slot?  E.g., a PCI card with PCMCIA slot or something
-> > > on it?
-> > 
-> > I guess this could be generalized to such configurations but I wanted to
-> > restrict this with PCIe for a couple of reasons. Firstly, I'm able to
-> > actually test this ;-) Second, the rules in PCIe are quite simple,
-> > whenever you have hotplug bridge (downstream port with a hotplug
-> > capability set) you distribute the available bus space with it. With a
-> > conventional PCI it is not so clear (at least to me).
-> 
-> You're testing dev->is_hotplug_bridge, which I think is the right
-> approach.  It happens that we currently only set that for PCIe bridges
-> with PCI_EXP_SLTCAP_HPC and for some ACPI cases (and a quirk for one
-> device).  But in principle we could and probably should set it if we
-> can identify a conventional PCI hotplug bridge.  So my suggestion is
-> to just remove the explicit PCIe tests.
+Hi Jeffy,
 
-Fair enough :)
+On Thu, Oct 26, 2017 at 09:28:40PM +0800, Jeffy Chen wrote:
+> Add pci-of.c to handle the PCIe WAKE# interrupt.
+> 
+> Also use the dedicated wakeirq infrastructure to simplify it.
+> 
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
+> 
+> Changes in v8:
+> Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
+> 
+> Changes in v7:
+> Move PCIE_WAKE handling into pci core.
+> 
+> Changes in v6:
+> Fix device_init_wake error handling, and add some comments.
+> 
+> Changes in v5:
+> Rebase.
+> 
+> Changes in v3:
+> Fix error handling.
+> 
+> Changes in v2:
+> Use dev_pm_set_dedicated_wake_irq.
+> 
+>  drivers/pci/Makefile |   2 +-
+>  drivers/pci/pci-of.c | 136 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 137 insertions(+), 1 deletion(-)
+>  create mode 100644 drivers/pci/pci-of.c
+> 
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 66a21acad952..4f76dbdb024c 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -49,7 +49,7 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
+>  
+>  obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+>  
+> -obj-$(CONFIG_OF) += of.o
+> +obj-$(CONFIG_OF) += of.o pci-of.o
+>  
+>  ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
+>  
+> diff --git a/drivers/pci/pci-of.c b/drivers/pci/pci-of.c
+> new file mode 100644
+> index 000000000000..55a33206fc84
+> --- /dev/null
+> +++ b/drivers/pci/pci-of.c
+> @@ -0,0 +1,136 @@
+> +/*
+> + * OF PCI PM support
+> + *
+> + * Copyright (c) 2017 Rockchip, Inc.
+> + *
+> + * Author: Jeffy Chen <jeffy.chen@rock-chips.com>
+> + *
+> + * This program is free software: you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation, either version 2 of the License, or
+> + * (at your option) any later version.
+> + */
+> +
+> +#include <linux/init.h>
+> +#include <linux/of_irq.h>
+> +#include <linux/pci.h>
+> +#include <linux/pm_wakeirq.h>
+> +#include "pci.h"
+> +
+> +struct of_pci_pm_data {
+> +	struct device	*dev;
+> +	unsigned int	wakeup_irq;
+> +	atomic_t	wakeup_cnt;
+> +};
+> +
+> +static void *of_pci_setup(struct device *dev)
+> +{
+> +	struct of_pci_pm_data *data;
+> +	int irq;
+> +
+> +	if (!dev->of_node)
+> +		return NULL;
+> +
+> +	data = devm_kzalloc(dev, sizeof(struct of_pci_pm_data), GFP_KERNEL);
+> +	if (!data)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	irq = of_irq_get_byname(dev->of_node, "wakeup");
+> +	if (irq < 0) {
+> +		if (irq == -EPROBE_DEFER)
+> +			return ERR_PTR(irq);
+> +
+> +		return NULL;
+> +	}
+> +
+> +	data->wakeup_irq = irq;
+> +	data->dev = dev;
+> +
+> +	device_init_wakeup(dev, false);
+> +
+> +	dev_info(dev, "Wakeup IRQ %d\n", irq);
+> +	return data;
+> +}
+> +
+> +static void *of_pci_setup_dev(struct pci_dev *pci_dev)
+> +{
+> +	return of_pci_setup(&pci_dev->dev);
+> +}
+> +
+> +static void *of_pci_setup_host_bridge(struct pci_host_bridge *bridge)
+> +{
+> +	return of_pci_setup(bridge->dev.parent);
+> +}
+> +
+> +static void of_pci_cleanup(void *pmdata)
+> +{
+> +	struct of_pci_pm_data *data = pmdata;
+> +
+> +	if (IS_ERR_OR_NULL(data)) {
+> +		device_init_wakeup(data->dev, false);
+> +		dev_pm_clear_wake_irq(data->dev);
+> +	}
+> +}
+> +
+> +static bool of_pci_can_wakeup(void *pmdata)
+> +{
+> +	struct of_pci_pm_data *data = pmdata;
+> +
+> +	if (IS_ERR_OR_NULL(data))
+> +		return false;
+> +
+> +	return data->wakeup_irq > 0;
+> +}
+> +
+> +static int of_pci_dev_wakeup(void *pmdata, bool enable)
+> +{
+> +	struct of_pci_pm_data *data = pmdata;
+> +	struct device *dev = data->dev;
+> +	int ret;
+> +
+> +	if (!enable) {
+> +		dev_pm_clear_wake_irq(dev);
+> +		return device_set_wakeup_enable(dev, false);
+> +	}
+> +
+> +	ret = device_set_wakeup_enable(dev, true);
+> +	if (ret < 0)
+> +		return ret;
 
-> > > > +	/* Second pass. Bridges that need to be configured. */
-> > > > +	list_for_each_entry(dev, &bus->devices, bus_list) {
-> > > > +		if (pci_is_bridge(dev)) {
-> > > > +			unsigned int buses = 0;
-> > > > +
-> > > > +			if (pcie_upstream_port(dev)) {
-> > > > +				/* Upstream port gets all available buses */
-> > > > +				buses = available_buses;
-> > > 
-> > > I guess this relies on the assumption that there can only be one
-> > > upstream port on a bus?  Is that true?  Typically a switch only has a
-> > > function 0 upstream port, but something niggles at me like the spec
-> > > admits the possibility of a switch with multiple functions of upstream
-> > > ports?  I don't know where that is right now (or if it exists), but
-> > > I'll try to find it.
-> > 
-> > My understanding is that there can be only one upstream port on a bus.
-> > That said I looked at the spec again and there is this in chapter 7.3.1
-> > of PCIe 3.1 spec:
-> > 
-> >   Switches, and components wishing to incorporate more than eight
-> >   Functions at their Upstream Port, are permitted to implement one or
-> >   more “virtual switches” represented by multiple Type 1 (PCI-PCI
-> >   Bridge) Configuration Space headers as illustrated in Figure 7-2.
-> >   These virtual switches serve to allow fan-out beyond eight Functions.
-> >   Since Switch Downstream Ports are permitted to appear on any Device
-> >   Number, in this case all address information fields (Bus, Device, and
-> >   Function Numbers) must be completely decoded to access the correct
-> >   register. Any Configuration Request targeting an unimplemented Bus,
-> >   Device, or Function must return a Completion with Unsupported Request
-> >   Completion Status.
-> > 
-> > Not sure what it actually means, though. A "virtual switch" to me says
-> > it is a switch with one upstream port and multiple downstream ports,
-> > just like normal switch. Is this what you meant? Do you understand it so
-> > that there can be multiple upstream ports connected to a bus?
-> 
-> I agree with you; I think that section is just saying that if a
-> component needs more then eight functions, it can incorporate a
-> switch, so it could have one upstream port, one internal logical bus,
-> up to 32 * 8 = 256 downstream ports on that logical bus, and 8
-> endpoints below each downstream port.  Of course, there wouldn't be
-> enough bus number space for all that.  But I don't think this is
-> talking about a multifunction switch upstream port.
-> 
-> Anyway, I think you're right that there can only be one upstream port
-> on a bus, because an upstream port contains link management stuff, and
-> it wouldn't make sense to have two upstream ports trying to manage the
-> same end of a single link.
-> 
-> But I would really like to remove the PCIe-specific nature of this
-> test somehow so it could work on a conventional PCI topology.
+One reason this series is failing for me: the above is failing with
+-EINVAL -- it seems like no one set the 'can_wakeup' flag for the
+Marvell Wifi card I'm using. It seems like we probably *should* be
+calling device_set_wakeup_capable() from your new setup method, to say
+that we're capable of wakeup. The PCI PME code does this already, which
+seems to make sense. There are also some network drivers that do it too
+(e.g., ath10k), but not all.
 
-I think we can change the test to check if the bus has only one
-non-hotplug bridge and assing resources to it then instead of explictly
-checking for PCIe upstream port.
+Brian
+
+> +
+> +	ret = dev_pm_set_dedicated_wake_irq(dev, data->wakeup_irq);
+> +	if (ret < 0) {
+> +		device_set_wakeup_enable(dev, false);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int of_pci_bridge_wakeup(void *pmdata, bool enable)
+> +{
+> +	struct of_pci_pm_data *data = pmdata;
+> +
+> +	if (enable && atomic_inc_return(&data->wakeup_cnt) != 1)
+> +		return 0;
+> +
+> +	if (!enable && atomic_dec_return(&data->wakeup_cnt) != 0)
+> +		return 0;
+> +
+> +	return of_pci_dev_wakeup(pmdata, enable);
+> +}
+> +
+> +static const struct pci_platform_pm_ops of_pci_platform_pm = {
+> +	.setup_dev		= of_pci_setup_dev,
+> +	.setup_host_bridge	= of_pci_setup_host_bridge,
+> +	.cleanup		= of_pci_cleanup,
+> +	.can_wakeup		= of_pci_can_wakeup,
+> +	.dev_wakeup		= of_pci_dev_wakeup,
+> +	.bridge_wakeup		= of_pci_bridge_wakeup,
+> +};
+> +
+> +static int __init of_pci_init(void)
+> +{
+> +	pci_set_platform_pm(&of_pci_platform_pm);
+> +	return 0;
+> +}
+> +arch_initcall(of_pci_init);
+> -- 
+> 2.11.0
+> 
+> 
