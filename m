@@ -1,172 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:36070 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751398AbdJJKQ3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2017 06:16:29 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <nsekhar@ti.com>
-Subject: [PATCH 4/4] PCI: dwc: pci-dra7xx: Enable x2 mode support
-Date: Tue, 10 Oct 2017 15:46:06 +0530
-Message-ID: <20171010101606.15951-5-kishon@ti.com>
-In-Reply-To: <20171010101606.15951-1-kishon@ti.com>
-References: <20171010101606.15951-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 28 Oct 2017 00:19:07 +0200
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Wang, Liang-min" <liang-min.wang@intel.com>
+Cc: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>
+Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
+Message-ID: <20171028001907.7b8fa60d@t450s.home>
+In-Reply-To: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
+References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
+        <20171024234351.0af0ff4a@t450s.home>
+        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
+        <20171025000654.7621b84e@t450s.home>
+        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Perform syscon configurations to get x2 mode to working in dra74x
-(and dra76x).
+On Fri, 27 Oct 2017 21:50:43 +0000
+"Wang, Liang-min" <liang-min.wang@intel.com> wrote:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c | 68 ++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 66 insertions(+), 2 deletions(-)
+> > -----Original Message-----
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Tuesday, October 24, 2017 6:07 PM
+> > To: Wang, Liang-min <liang-min.wang@intel.com>
+> > Cc: Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>; kvm@vger.kernel.org;
+> > linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > bhelgaas@google.com; Duyck, Alexander H <alexander.h.duyck@intel.com>
+> > Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
+> > 
+> > On Tue, 24 Oct 2017 21:49:15 +0000
+> > "Wang, Liang-min" <liang-min.wang@intel.com> wrote:
+> >   
+> > > Just like any PCIe devices that supports SR-IOV. There are restrictions set for  
+> > VF. Also, there is a concept of trust VF now available for PF to manage certain
+> > features that only selected VF could exercise. Are you saying all the devices
+> > supporting SR-IOV all have security issue?
+> > 
+> > Here's a simple example, most SR-IOV capable NICs, including those from
+> > Intel, require the PF interface to be up in order to route traffic from
+> > the VF.  If the user controls the PF interface and VFs are used
+> > elsewhere in the host, the PF driver in userspace can induce a denial
+> > of service on the VFs.  That doesn't even take into account that VFs
+> > might be in separate IOMMU groups from the PF and therefore not
+> > isolated from the host like the PF and that the PF driver can
+> > potentially manipulate the VF, possibly performing DMA on behalf of the
+> > PF.  VFs are only considered secure today because the PF is managed by
+> > a driver in the host kernel.  Allowing simple enablement of VFs for a
+> > user owned PF seems inherently insecure to me.  Thanks,
+> > 
+> > Alex  
+> 
+> Firstly, the concern is on user-space PF driver based upon vfio-pci, this patch doesn't
+> change PF behavior so with/without this patch, the concern remains the same.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 78a87a8f1362..a43c904310f3 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -21,6 +21,7 @@
- #include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/of_pci.h>
-+#include <linux/of_platform.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
-@@ -83,6 +84,9 @@
- #define MSI_REQ_GRANT					BIT(0)
- #define MSI_VECTOR_SHIFT				7
- 
-+#define PCIE_1LANE_2LANE_SELECTION			BIT(13)
-+#define PCIE_B1C0_MODE_SEL				BIT(2)
-+
- struct dra7xx_pcie {
- 	struct dw_pcie		*pci;
- 	void __iomem		*base;		/* DT ti_conf */
-@@ -95,6 +99,10 @@ struct dra7xx_pcie {
- 
- struct dra7xx_pcie_of_data {
- 	enum dw_pcie_device_mode mode;
-+	u32 b1co_mode_sel_mask;
-+};
-+
-+struct dra7xx_pcie_data {
- };
- 
- #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
-@@ -533,6 +541,16 @@ static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
- 	.mode = DW_PCIE_EP_TYPE,
- };
- 
-+static const struct dra7xx_pcie_of_data dra746_pcie_rc_of_data = {
-+	.b1co_mode_sel_mask = BIT(2),
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct dra7xx_pcie_of_data dra746_pcie_ep_of_data = {
-+	.b1co_mode_sel_mask = BIT(2),
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
- static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	{
- 		.compatible = "ti,dra7-pcie",
-@@ -544,11 +562,11 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	},
- 	{
- 		.compatible = "ti,dra746-pcie-rc",
--		.data = &dra7xx_pcie_rc_of_data,
-+		.data = &dra746_pcie_rc_of_data,
- 	},
- 	{
- 		.compatible = "ti,dra746-pcie-ep",
--		.data = &dra7xx_pcie_ep_of_data,
-+		.data = &dra746_pcie_ep_of_data,
- 	},
- 	{
- 		.compatible = "ti,dra726-pcie-rc",
-@@ -603,6 +621,44 @@ static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
- 	return ret;
- }
- 
-+static int dra7xx_pcie_configure_two_lane(struct device *dev,
-+					  u32 b1co_mode_sel_mask)
-+{
-+	struct device_node *np = dev->of_node;
-+	struct regmap *pcie_syscon;
-+	unsigned int pcie_reg;
-+
-+	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-conf");
-+	if (IS_ERR(pcie_syscon)) {
-+		dev_err(dev, "unable to get syscon-lane-conf\n");
-+		return -EINVAL;
-+	}
-+
-+	if (of_property_read_u32_index(np, "syscon-lane-conf", 1, &pcie_reg)) {
-+		dev_err(dev, "couldn't get lane configuration reg offset\n");
-+		return -EINVAL;
-+	}
-+
-+	regmap_update_bits(pcie_syscon, pcie_reg, PCIE_1LANE_2LANE_SELECTION,
-+			   PCIE_1LANE_2LANE_SELECTION);
-+
-+	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-sel");
-+	if (IS_ERR(pcie_syscon)) {
-+		dev_err(dev, "unable to get syscon-lane-sel\n");
-+		return -EINVAL;
-+	}
-+
-+	if (of_property_read_u32_index(np, "syscon-lane-sel", 1, &pcie_reg)) {
-+		dev_err(dev, "couldn't get lane selection reg offset\n");
-+		return -EINVAL;
-+	}
-+
-+	regmap_update_bits(pcie_syscon, pcie_reg, b1co_mode_sel_mask,
-+			   PCIE_B1C0_MODE_SEL);
-+
-+	return 0;
-+}
-+
- static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- {
- 	u32 reg;
-@@ -624,6 +680,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	const struct of_device_id *match;
- 	const struct dra7xx_pcie_of_data *data;
- 	enum dw_pcie_device_mode mode;
-+	u32 b1co_mode_sel_mask;
- 
- 	match = of_match_device(of_match_ptr(of_dra7xx_pcie_match), dev);
- 	if (!match)
-@@ -631,6 +688,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 
- 	data = (struct dra7xx_pcie_of_data *)match->data;
- 	mode = (enum dw_pcie_device_mode)data->mode;
-+	b1co_mode_sel_mask = data->b1co_mode_sel_mask;
- 
- 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
- 	if (!dra7xx)
-@@ -689,6 +747,12 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	dra7xx->pci = pci;
- 	dra7xx->phy_count = phy_count;
- 
-+	if (phy_count == 2) {
-+		ret = dra7xx_pcie_configure_two_lane(dev, b1co_mode_sel_mask);
-+		if (ret < 0)
-+			goto err_link;
-+	}
-+
- 	ret = dra7xx_pcie_enable_phy(dra7xx);
- 	if (ret) {
- 		dev_err(dev, "failed to enable phy\n");
--- 
-2.11.0
+This patch enables SR-IOV to be enabled via the host on a user-owned
+PF, how is this not a change in behavior?
+
+> Secondly, the security concern (including denial of service) in general is to ensure trust
+> entity to be trust-worthy. No matter the PF driver is in kernel-space or in user- space,
+> necessary mechanism needs to be enforced on the device driver to ensure it's
+> trusted worthy. For example, ixgbe kernel driver introduces a Tx hang detection
+> to avoid driver stays in a bad state. Therefore, it's the responsibility of user-space
+> driver function, which based upon vfio-pci, to enforce necessary mechanism to ensure
+> its trust-ness. That's a given.
+
+Userspace is not trustworthy, therefore the host kernel cannot place
+responsibility on a userspace driver for anything, including the
+behavior of VFs.  I'm sorry, but it's a NAK unless you intend to
+follow-up with some proposal to quarantine the VFs enabled by the
+userspace PF driver.  Thanks,
+
+Alex
