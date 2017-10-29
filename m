@@ -1,41 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 05/10] PCI: artpec6: remove unused defines
-Date: Fri, 13 Oct 2017 18:09:08 +0200
-Message-Id: <20171013160914.3220-6-niklas.cassel@axis.com>
-In-Reply-To: <20171013160914.3220-1-niklas.cassel@axis.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:15599 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751282AbdJ2Jne (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 05:43:34 -0400
+Subject: Re: [PATCH 08/12] PCI: tegra: Wait for DLLP to finish before entering
+ L1 or L2
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509132569-9398-9-git-send-email-mmaddireddy@nvidia.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <76a66fde-077b-7ced-7a4b-70d68451295d@nvidia.com>
+Date: Sun, 29 Oct 2017 15:12:48 +0530
+MIME-Version: 1.0
+In-Reply-To: <1509132569-9398-9-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit b015b37e6693 ("PCI: artpec6: Stop enabling writes to
-DBI read-only registers") removed the only write using these
-defines, but it did not remove the defines.
-Remove the defines since they are now unused.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 3 ---
- 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 6653619db6a1..4b8ef266dc2f 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -37,9 +37,6 @@ struct artpec6_pcie {
- #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
- #define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
- 
--#define MISC_CONTROL_1_OFF		(PL_OFFSET + 0x1bc)
--#define  DBI_RO_WR_EN			1
--
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
- #define  PCIECFG_DBG_OEN		(1 << 24)
--- 
-2.11.0
+On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
+> Set required bit to have LTSSM wait for DLLP to finish before entering L1
+> or L2. This avoids truncation of PM messages which results in receiver
+> errors.
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+>   drivers/pci/host/pci-tegra.c | 10 ++++++++++
+>   1 file changed, 10 insertions(+)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index b8cac871712b..6028d5f3d5bb 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -217,6 +217,9 @@
+>   #define RP_VEND_CTL1	0xf48
+>   #define  RP_VEND_CTL1_ERPT	(1 << 13)
+>   
+> +#define RP_VEND_XP_BIST	0xf4c
+> +#define  RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
+> +
+BIT macro is preferred here.
+>   #define RP_VEND_CTL2 0x00000fa8
+>   #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
+>   
+> @@ -2160,6 +2163,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>   	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
+>   	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
+>   	writel(value, port->base + RP_VEND_XP);
+> +
+> +	/* LTSSM will wait for DLLP to finish before entering L1 or L2,
+> +	 * to avoid truncation of PM messages which results in receiver errors
+> +	 */
+> +	value = readl(port->base + RP_VEND_XP_BIST);
+> +	value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
+> +	writel(value, port->base + RP_VEND_XP_BIST);
+>   }
+>   /*
+>    * FIXME: If there are no PCIe cards attached, then calling this function
