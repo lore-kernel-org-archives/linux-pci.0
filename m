@@ -1,102 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3155 "EHLO
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:15403 "EHLO
         hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932352AbdJ3RPU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 13:15:20 -0400
-Subject: Re: [PATCH 1/4] PCI/ASPM: Add API to supply LTR L1.2 threshold
-To: Rajat Jain <rajatja@google.com>
-CC: <treding@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        David Daney <david.daney@cavium.com>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>
-References: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
- <1509361385-21224-2-git-send-email-vidyas@nvidia.com>
- <CACK8Z6EUEKU8ke8giKOyxyLbsGv_0SZmSngLs-n+x3kqty0Fzw@mail.gmail.com>
+        with ESMTP id S1750915AbdJ2JfI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 05:35:08 -0400
+Subject: Re: [PATCH 03/12] PCI: tegra: Retrain link for Gen2 speed
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509132569-9398-4-git-send-email-mmaddireddy@nvidia.com>
 From: Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <4cba6cf2-7805-27a9-2653-be4f5399cba8@nvidia.com>
-Date: Mon, 30 Oct 2017 22:42:32 +0530
+Message-ID: <c8dc3a6e-21f2-a7bd-6a2f-5e14f7976dbf@nvidia.com>
+Date: Sun, 29 Oct 2017 15:04:40 +0530
 MIME-Version: 1.0
-In-Reply-To: <CACK8Z6EUEKU8ke8giKOyxyLbsGv_0SZmSngLs-n+x3kqty0Fzw@mail.gmail.com>
+In-Reply-To: <1509132569-9398-4-git-send-email-mmaddireddy@nvidia.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On Monday 30 October 2017 10:25 PM, Rajat Jain wrote:
-> On Mon, Oct 30, 2017 at 4:03 AM, Vidya Sagar <vidyas@nvidia.com> wrote:
->> adds API for host controller drivers to specify LTR L1.2
->> threshold value if it is different from the default value.
->> weak implementation of the API is added to supply default
->> value
->>
->> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> ---
->>   drivers/pci/pcie/aspm.c  | 11 ++++++++---
->>   include/linux/pci-aspm.h |  6 ++++++
->>   2 files changed, 14 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
->> index 1dfa10cc566b..c6e8604796e5 100644
->> --- a/drivers/pci/pcie/aspm.c
->> +++ b/drivers/pci/pcie/aspm.c
->> @@ -436,6 +436,11 @@ static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
->>          return NULL;
->>   }
->>
->> +u32 __weak pcie_aspm_get_ltr_l_1_2_threshold(void)
->> +{
->> +       return LTR_L1_2_THRESHOLD_BITS;
->> +}
->> +
->>   /* Calculate L1.2 PM substate timing parameters */
->>   static void aspm_calc_l1ss_info(struct pcie_link_state *link,
->>                                  struct aspm_register_info *upreg,
->> @@ -458,10 +463,10 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
->>          else
->>                  link->l1ss.ctl1 |= val2 << 8;
->>          /*
->> -        * We currently use LTR L1.2 threshold to be fixed constant picked from
->> -        * Intel's coreboot.
->> +        * Get LTR L1.2 threshold value specific to a platform if present
->> +        * Otherwise, get a constant value picked from Intel's coreboot.
->>           */
->> -       link->l1ss.ctl1 |= LTR_L1_2_THRESHOLD_BITS;
->> +       link->l1ss.ctl1 |= pcie_aspm_get_ltr_l_1_2_threshold();
->>
->>          /* Choose the greater of the two T_pwr_on */
->>          val1 = (upreg->l1ss_cap >> 19) & 0x1F;
->> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
->> index 207c561fb40e..7ffde0f57688 100644
->> --- a/include/linux/pci-aspm.h
->> +++ b/include/linux/pci-aspm.h
->> @@ -30,6 +30,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
->>   void pci_disable_link_state(struct pci_dev *pdev, int state);
->>   void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
->>   void pcie_no_aspm(void);
->> +u32 pcie_aspm_get_ltr_l_1_2_threshold(void);
->>   #else
->>   static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
->>   {
->> @@ -49,6 +50,11 @@ static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
->>   static inline void pcie_no_aspm(void)
->>   {
->>   }
->> +
->> +static inline u32 pcie_aspm_get_ltr_l_1_2_threshold(void)
->> +{
->> +       return 0;
->> +}
-> Do we really need this (bogus) function definition in
-> !defined(CONFIG_PCIEASPM) case? I believe the other bogus definitions
-> in that section are needed because functions outside of
-> CONFIG_PCIEASPM call it.
-I'll remove it in my next patch.
->>   #endif
->>
->>   #ifdef CONFIG_PCIEASPM_DEBUG /* this depends on CONFIG_PCIEASPM */
->> --
->> 2.7.4
->>
+On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
+> Tegra124, 132, 210 and 186 supports Gen2 link speed. After the link is up
+> in Gen1, set target link speed as Gen2 and retrain link. Link switches to
+> Gen2 speed if Gen2 capable end point is connected, else link stays in Gen1.
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+>   drivers/pci/host/pci-tegra.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 42 insertions(+)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 2c64eb6cc3cc..15df60e13a14 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -232,6 +232,8 @@
+>   #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
+>   #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
+>   
+> +#define LINK_RETRAIN_TIMEOUT HZ
+> +
+>   struct tegra_msi {
+>   	struct msi_controller chip;
+>   	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+> @@ -2133,6 +2135,42 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>   	}
+>   }
+>   
+> +static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
+> +		struct pci_dev *pci_dev)
+> +{
+> +	struct device *dev = pcie->dev;
+> +	unsigned long start_jiffies;
+> +	unsigned short val;
+> +
+> +	/* Skip if the current device is not a root port */
+> +	if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
+> +		return;
+> +
+> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
+> +	val &= ~PCI_EXP_LNKSTA_CLS;
+> +	val |= PCI_EXP_LNKSTA_CLS_5_0GB;
+> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
+> +
+> +	/* Retrain the link */
+> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
+> +	val |= PCI_EXP_LNKCTL_RL;
+> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
+> +
+> +	start_jiffies = jiffies;
+> +	for (;;) {
+> +		pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
+> +		if (!(val & PCI_EXP_LNKSTA_LT))
+> +			break;
+> +		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
+> +			break;
+> +		usleep_range(2000, 3000);
+> +	}
+> +
+> +	if (val & PCI_EXP_LNKSTA_LT)
+> +		dev_err(dev, "link retrain of PCIe slot %u failed\n",
+> +				PCI_SLOT(pci_dev->devfn));
+> +}
+> +
+>   static const struct tegra_pcie_soc tegra20_pcie = {
+>   	.num_ports = 2,
+>   	.msi_base_shift = 0,
+> @@ -2334,6 +2372,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+>   	struct pci_host_bridge *host;
+>   	struct tegra_pcie *pcie;
+>   	struct pci_bus *child;
+> +	struct pci_dev *pci_dev = NULL;
+>   	int err;
+>   
+>   	host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
+> @@ -2399,6 +2438,9 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+>   
+>   	pci_bus_add_devices(host->bus);
+>   
+> +	for_each_pci_dev(pci_dev)
+> +		tegra_pcie_change_link_speed(pcie, pci_dev);
+> +
+Why can't we loop over only root ports using 'pcie->ports' like how it 
+is done in tegra_pcie_enable_ports() ?
+>   	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
+>   		err = tegra_pcie_debugfs_init(pcie);
+>   		if (err < 0)
