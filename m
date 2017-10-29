@@ -1,59 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.182]:64358 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754085AbdJIPXo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Oct 2017 11:23:44 -0400
-Received: from 1e1ZjX-00023e-VO by out6a.electric.net with emc1-ok (Exim 4.87)
-        (envelope-from <David.Laight@ACULAB.COM>)
-        id 1e1ZjY-00025D-TI
-        for linux-pci@vger.kernel.org; Mon, 09 Oct 2017 08:12:44 -0700
-Received: from [156.67.243.126] (helo=AcuExch.aculab.com)
-        by out6a.electric.net with esmtps (TLSv1:AES128-SHA:128)
-        (Exim 4.87)
-        (envelope-from <David.Laight@ACULAB.COM>)
-        id 1e1ZjX-00023e-VO
-        for linux-pci@vger.kernel.org; Mon, 09 Oct 2017 08:12:43 -0700
-From: David Laight <David.Laight@ACULAB.COM>
-To: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
-Subject: PCIe error reporting
-Date: Mon, 9 Oct 2017 15:12:45 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD008D9F2@AcuExch.aculab.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171029061646.GA28105@infradead.org>
+References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
+ <20171024234351.0af0ff4a@t450s.home> <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
+ <20171025000654.7621b84e@t450s.home> <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
+ <20171028001907.7b8fa60d@t450s.home> <1509146439.11655.60.camel@intel.com> <20171029061646.GA28105@infradead.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Sun, 29 Oct 2017 14:12:52 -0700
+Message-ID: <CAKgT0UdyyCZT7+eMEvJwd=Q-Lr0k0HGwr9kJoqF7mq8sTS7LSA@mail.gmail.com>
+Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "Wang, Liang-min" <liang-min.wang@intel.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm trying to determine how a PCIe card we are building handles (and
-hopefully recovers from) PCIe link errors.
-However I'm not at all sure what I should expect the x86 Linux host to do.
+On Sat, Oct 28, 2017 at 11:16 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Oct 27, 2017 at 11:20:41PM +0000, Duyck, Alexander H wrote:
+>> I don't see this so much as a security problem per-se. It all depends
+>> on the hardware setup. If I recall correctly, there are devices where
+>> the PF function doesn't really do much other than act as a bit more
+>> heavy-weight VF, and the actual logic is handled by a firmware engine
+>> on the device.
+>
+> Can you cite an example?  While those surely could exist in theory,
+> I can't think of a practical example.
 
-The card has an Altera FPGA and I can monitor things like changes to
-it's LTSSM state engine, but not quite the full operation of the PCIe logic.
+If I recall the neterion vxge driver fell into that category if I
+recall correctly. Basically the hardware is preconfigured for some
+number of VFs and their driver just calls pci_enable_sriov and enables
+them.
 
-I've enabled AER and lspci seems to decode most of the bits but
-it looks as though something needs to detect error bits being set
-log the error and then clear them.
+One other thing I forgot about is the fact that we already have
+drivers such as igb, ixgbe, and vxge floating around that will leave
+SR-IOV enabled if the driver is loaded while VFs are direct assigned
+to guests. As a side effect we can sort of already support assigning
+vfio-pci to a driver that has SR-IOV enabled.
 
-I did a rather brutal test - shorted the TX lines after the caps.
-The card's PCIe logic issued a reset to the internal logic before
-bringing the PCIe link back up.
-I could then read config space - but the BARs were all zero
-(I think lspci reported the old values, but the -x data showed zeros).
-Nothing seemed to indicate the Linux thought anything was wrong.
-Not surprisingly reads returned ~0u.
+> Maybe we can start with the practical use case for this patch.  That
+> is what device is this intended for?
 
-I should really try a much shorter error.
+If I am not mistaken the typical use case for a patch like this is to
+support loading something like DPDK on a networking device PF, whlie
+the VFs are assigned to virtualized guests and/or containers. It would
+move the control of the PF/VFs into use space, but in the grand scheme
+of things it isn't much different then when a virtualized guest has a
+VF and has no direct control over the configuration of it since the
+host is managing that.
 
-On that system (XEON E5-2600) dmesg contains (retyped):
-  acpi: PNP0A08:00: _OSC: platform does not support [AER]
-
-Another system is even more 'useless', it reports "AER handled
-by the firmware".
-If we take the PCIe link down (even after echo 1 >sys/devices/.../remove)
-something generates an NMI!
-
-Is this all 'expected' behaviour?
-Anything else I should/could be looking at?
-Is there anything that will poll the AER bits for me?
-
-	David
+So if the root user is enabling SR-IOV and allocating VFs on a device
+that is running the vfio-pci driver the assumption is that the root
+user must be trusting the application that is running on top of the
+vfio-pci driver to behave correctly.
