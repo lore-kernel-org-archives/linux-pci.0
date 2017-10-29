@@ -1,96 +1,119 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Subject: [PATCH v2 4/6] PCI / PM: Drop unnecessary invocations of pcibios_pm_ops callbacks
-Date: Sat, 28 Oct 2017 00:23:41 +0200
-Message-ID: <5073211.tP4UlnrTEx@aspire.rjw.lan>
-In-Reply-To: <16592954.7Zo1mAdIIH@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:12893 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751794AbdJ2JiV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 05:38:21 -0400
+Subject: Re: [PATCH 03/12] PCI: tegra: Retrain link for Gen2 speed
+From: Vidya Sagar <vidyas@nvidia.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509132569-9398-4-git-send-email-mmaddireddy@nvidia.com>
+ <c8dc3a6e-21f2-a7bd-6a2f-5e14f7976dbf@nvidia.com>
+Message-ID: <da13f0e8-b78c-abef-2a93-e7b36d48e409@nvidia.com>
+Date: Sun, 29 Oct 2017 15:08:10 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <c8dc3a6e-21f2-a7bd-6a2f-5e14f7976dbf@nvidia.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-The only user of non-empty pcibios_pm_ops is s390 and it only uses
-"noirq" callbacks, so drop the invocations of the other pcibios_pm_ops
-callbacks from the PCI PM code.
-
-That will allow subsequent changes to be somewhat simpler.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
----
-
--> v2: No changes.
-
----
- drivers/pci/pci-driver.c |   18 ------------------
- 1 file changed, 18 deletions(-)
-
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -922,9 +922,6 @@ static int pci_pm_freeze(struct device *
- 			return error;
- 	}
- 
--	if (pcibios_pm_ops.freeze)
--		return pcibios_pm_ops.freeze(dev);
--
- 	return 0;
- }
- 
-@@ -986,12 +983,6 @@ static int pci_pm_thaw(struct device *de
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 	int error = 0;
- 
--	if (pcibios_pm_ops.thaw) {
--		error = pcibios_pm_ops.thaw(dev);
--		if (error)
--			return error;
--	}
--
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume(dev);
- 
-@@ -1036,9 +1027,6 @@ static int pci_pm_poweroff(struct device
-  Fixup:
- 	pci_fixup_device(pci_fixup_suspend, pci_dev);
- 
--	if (pcibios_pm_ops.poweroff)
--		return pcibios_pm_ops.poweroff(dev);
--
- 	return 0;
- }
- 
-@@ -1111,12 +1099,6 @@ static int pci_pm_restore(struct device
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 	int error = 0;
- 
--	if (pcibios_pm_ops.restore) {
--		error = pcibios_pm_ops.restore(dev);
--		if (error)
--			return error;
--	}
--
- 	/*
- 	 * This is necessary for the hibernation error path in which restore is
- 	 * called without restoring the standard config registers of the device.
 
 
+On Sunday 29 October 2017 03:04 PM, Vidya Sagar wrote:
+>
+>
+> On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
+>> Tegra124, 132, 210 and 186 supports Gen2 link speed. After the link 
+>> is up
+>> in Gen1, set target link speed as Gen2 and retrain link. Link 
+>> switches to
+>> Gen2 speed if Gen2 capable end point is connected, else link stays in 
+>> Gen1.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>   drivers/pci/host/pci-tegra.c | 42 
+>> ++++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 42 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index 2c64eb6cc3cc..15df60e13a14 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -232,6 +232,8 @@
+>>   #define PADS_REFCLK_CFG_PREDI_SHIFT        8  /* 11:8 */
+>>   #define PADS_REFCLK_CFG_DRVI_SHIFT        12 /* 15:12 */
+>>   +#define LINK_RETRAIN_TIMEOUT HZ
+>> +
+>>   struct tegra_msi {
+>>       struct msi_controller chip;
+>>       DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>> @@ -2133,6 +2135,42 @@ static void tegra_pcie_enable_ports(struct 
+>> tegra_pcie *pcie)
+>>       }
+>>   }
+>>   +static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
+>> +        struct pci_dev *pci_dev)
+alignment issue
+>> +{
+>> +    struct device *dev = pcie->dev;
+>> +    unsigned long start_jiffies;
+>> +    unsigned short val;
+>> +
+>> +    /* Skip if the current device is not a root port */
+>> +    if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
+>> +        return;
+>> +
+>> +    pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
+>> +    val &= ~PCI_EXP_LNKSTA_CLS;
+>> +    val |= PCI_EXP_LNKSTA_CLS_5_0GB;
+>> +    pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
+>> +
+>> +    /* Retrain the link */
+>> +    pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
+>> +    val |= PCI_EXP_LNKCTL_RL;
+>> +    pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
+>> +
+>> +    start_jiffies = jiffies;
+>> +    for (;;) {
+>> +        pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
+>> +        if (!(val & PCI_EXP_LNKSTA_LT))
+>> +            break;
+>> +        if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
+>> +            break;
+>> +        usleep_range(2000, 3000);
+>> +    }
+>> +
+>> +    if (val & PCI_EXP_LNKSTA_LT)
+>> +        dev_err(dev, "link retrain of PCIe slot %u failed\n",
+>> +                PCI_SLOT(pci_dev->devfn));
+alignment issue
+>> +}
+>> +
+>>   static const struct tegra_pcie_soc tegra20_pcie = {
+>>       .num_ports = 2,
+>>       .msi_base_shift = 0,
+>> @@ -2334,6 +2372,7 @@ static int tegra_pcie_probe(struct 
+>> platform_device *pdev)
+>>       struct pci_host_bridge *host;
+>>       struct tegra_pcie *pcie;
+>>       struct pci_bus *child;
+>> +    struct pci_dev *pci_dev = NULL;
+>>       int err;
+>>         host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
+>> @@ -2399,6 +2438,9 @@ static int tegra_pcie_probe(struct 
+>> platform_device *pdev)
+>>         pci_bus_add_devices(host->bus);
+>>   +    for_each_pci_dev(pci_dev)
+>> +        tegra_pcie_change_link_speed(pcie, pci_dev);
+>> +
+> Why can't we loop over only root ports using 'pcie->ports' like how it 
+> is done in tegra_pcie_enable_ports() ?
+>>       if (IS_ENABLED(CONFIG_DEBUG_FS)) {
+>>           err = tegra_pcie_debugfs_init(pcie);
+>>           if (err < 0)
+>
