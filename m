@@ -1,70 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:51802 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751348AbdJLTUO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 15:20:14 -0400
-Subject: Re: [RFC 0/3] Adding config get/set to devlink
-To: David Miller <davem@davemloft.net>
-Cc: jiri@resnulli.us, roopa@cumulusnetworks.com,
-        steven.lin1@broadcom.com, netdev@vger.kernel.org,
-        jiri@mellanox.com, michael.chan@broadcom.com,
-        linux-pci@vger.kernel.org, linville@tuxdriver.com,
-        gospo@broadcom.com
-References: <CAJieiUiFmBr72yYP9VNtm0VBTNjJcA6Lj5nHJNBjDBC4moxE2A@mail.gmail.com>
- <20171012150419.GI14672@nanopsycho>
- <24E5DE7C-A401-48BF-BF80-673ACC38FBBE@gmail.com>
- <20171012.120650.1063812043202847517.davem@davemloft.net>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <21ab4a5d-0b6a-7976-7bf0-acd334f2613f@gmail.com>
-Date: Thu, 12 Oct 2017 12:20:07 -0700
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:12990 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbdJ2Jlx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 05:41:53 -0400
+Subject: Re: [PATCH 06/12] PCI: tegra: Enable opportunistic update FC and ACK
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509132569-9398-7-git-send-email-mmaddireddy@nvidia.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <c59099be-16e9-ddd4-97e7-127363c4db65@nvidia.com>
+Date: Sun, 29 Oct 2017 15:11:34 +0530
 MIME-Version: 1.0
-In-Reply-To: <20171012.120650.1063812043202847517.davem@davemloft.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1509132569-9398-7-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/12/2017 12:06 PM, David Miller wrote:
-> From: Florian Fainelli <f.fainelli@gmail.com>
-> Date: Thu, 12 Oct 2017 08:43:59 -0700
-> 
->> Once we move ethtool (or however we name its successor) over to
->> netlink there is an opportunity for accessing objects that do and do
->> not have a netdevice representor today (e.g: management ports on
->> switches) with the same interface, and devlink could be used for
->> that.
-> 
-> That is an interesting angle for including this in devlink.
-> 
-> I'm not so sure what to do about this.
-> 
-> One suggestion is that devlink is used for getting ethtool stats for
-> objects lacking netdev representor's, and a new genetlink family is
-> used for netdev based ethtool.
 
-Right, I was also thinking along those lines that we we would have a new
-generic netlink family for ethtool to support ethtool over netlink.
 
-> 
-> I think it's important that we don't expand the scope of devlink
-> beyond what it was originally designed for.
-
-It seems to me like devlink is well defined in what it is not for: it is
-not meant to be used for any object that is/has a net_device, but it is
-not well defined for what it can offer to these non network devices. For
-instance, we have a tremendous amount of operations that are extremely
-specific to its single user(s) such as mlx5 and mlxsw.
-
-For instance, I am not sure how the buffer reservation scheme can be
-generalized, and this is always the tricky part with a single user
-facility in that you try to generalize the best you can based on the HW
-you know. This is not a criticism or meant to be anything negative, this
-just happens to be the case, and we did not have anything better.
-
-So maybe the first thing is to clarify what devlink operations can and
-should be and what they are absolutely not allowed to cover. We should
-also clarify whether a generic set/get that Steven is proposing is
-something that we tolerate, or whether there should be specific function
-pointers implemented for each attribute, which would be more in line
-with what has been done thus far.
--- 
-Florian
+On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
+> This patch ensures that DL sends pending ACKs and update FC packets when
+> link is idle instead of waiting for timers to expire which improves PCIe
+> bandwidth.
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+>   drivers/pci/host/pci-tegra.c | 15 ++++++++++++++-
+>   1 file changed, 14 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index af34daf3c6a2..27a8211c48b2 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -209,7 +209,9 @@
+>   #define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+>   
+>   #define RP_VEND_XP	0x00000f00
+> -#define  RP_VEND_XP_DL_UP	(1 << 30)
+> +#define  RP_VEND_XP_DL_UP			(1 << 30)
+> +#define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+> +#define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+>   
+BIT macro is preferred here.
+>   #define RP_VEND_CTL1	0xf48
+>   #define  RP_VEND_CTL1_ERPT	(1 << 13)
+> @@ -2147,6 +2149,16 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+>   	writel(value, port->base + RP_VEND_CTL1);
+>   }
+>   
+> +static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+> +{
+> +	unsigned long value;
+> +
+> +	/* Optimal settings to enhance bandwidth */
+> +	value = readl(port->base + RP_VEND_XP);
+> +	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
+> +	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
+> +	writel(value, port->base + RP_VEND_XP);
+> +}
+>   /*
+>    * FIXME: If there are no PCIe cards attached, then calling this function
+>    * can result in the increase of the bootup time as there are big timeout
+> @@ -2215,6 +2227,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>   		if (soc->program_ectl_settings)
+>   			tegra_pcie_program_ectl_settings(port);
+>   		tegra_pcie_enable_rp_features(port);
+> +		tegra_pcie_apply_sw_fixup(port);
+>   	}
+>   
+>   	/* take the PCIe interface module out of reset */
