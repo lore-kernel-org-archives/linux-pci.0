@@ -1,180 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47374 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752065AbdJTQWW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 20 Oct 2017 12:22:22 -0400
-Subject: [PATCH v6 3/4] PCI/portdrv: Factor out Interrupt Message Number
- lookup
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: Charles Chenxin <charles.chenxin@huawei.com>, linuxarm@huawei.com,
-        Christoph Hellwig <hch@lst.de>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        linux-pci@vger.kernel.org
-Date: Fri, 20 Oct 2017 11:22:19 -0500
-Message-ID: <20171020162219.6391.26729.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171020161922.6391.9091.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:7067 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751209AbdJ3D5M (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 23:57:12 -0400
+Subject: Re: [PATCH 06/12] PCI: tegra: Enable opportunistic update FC and ACK
+To: Vidya Sagar <vidyas@nvidia.com>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509132569-9398-7-git-send-email-mmaddireddy@nvidia.com>
+ <c59099be-16e9-ddd4-97e7-127363c4db65@nvidia.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <14de423a-5bf3-7a00-e956-c291379dd412@nvidia.com>
+Date: Mon, 30 Oct 2017 09:25:18 +0530
 MIME-Version: 1.0
+In-Reply-To: <c59099be-16e9-ddd4-97e7-127363c4db65@nvidia.com>
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
 
-Factor out Interrupt Message Number lookup from the MSI/MSI-X interrupt
-setup.  One side effect is that we only have to check once to see if we
-have enough vectors for all the services.  No functional change intended.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/portdrv_core.c |  110 ++++++++++++++++++++++-----------------
- 1 file changed, 62 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index accd16082348..102f5c5fcfe0 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -43,6 +43,53 @@ static void release_pcie_device(struct device *dev)
- 	kfree(to_pcie_device(dev));
- }
- 
-+/*
-+ * Fill in *pme, *aer, *dpc with the relevant Interrupt Message Numbers if
-+ * services are enabled in "mask".  Return the number of MSI/MSI-X vectors
-+ * required to accommodate the largest Message Number.
-+ */
-+static int pcie_message_numbers(struct pci_dev *dev, int mask,
-+				u32 *pme, u32 *aer, u32 *dpc)
-+{
-+	u32 nvec = 0, pos, reg32;
-+	u16 reg16;
-+
-+	/*
-+	 * The Interrupt Message Number indicates which vector is used, i.e.,
-+	 * the MSI-X table entry or the MSI offset between the base Message
-+	 * Data and the generated interrupt message.  See PCIe r3.1, sec
-+	 * 7.8.2, 7.10.10, 7.31.2.
-+	 */
-+
-+	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
-+		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
-+		*pme = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
-+		nvec = *pme + 1;
-+	}
-+
-+	if (mask & PCIE_PORT_SERVICE_AER) {
-+		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+		if (pos) {
-+			pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS,
-+					      &reg32);
-+			*aer = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
-+			nvec = max(nvec, *aer + 1);
-+		}
-+	}
-+
-+	if (mask & PCIE_PORT_SERVICE_DPC) {
-+		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
-+		if (pos) {
-+			pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP,
-+					     &reg16);
-+			*dpc = reg16 & PCI_EXP_DPC_IRQ;
-+			nvec = max(nvec, *dpc + 1);
-+		}
-+	}
-+
-+	return nvec;
-+}
-+
- /**
-  * pcie_port_enable_irq_vec - try to set up MSI-X or MSI as interrupt mode
-  * for given port
-@@ -54,7 +101,8 @@ static void release_pcie_device(struct device *dev)
-  */
- static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- {
--	int nr_entries, entry, nvec = 0;
-+	int nr_entries, nvec;
-+	u32 pme = 0, aer = 0, dpc = 0;
- 
- 	/* Allocate the maximum possible number of MSI/MSI-X vectors */
- 	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSI_ENTRIES,
-@@ -62,54 +110,24 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 	if (nr_entries < 0)
- 		return nr_entries;
- 
--	/*
--	 * The Interrupt Message Number indicates which vector is used, i.e.,
--	 * the MSI-X table entry or the MSI offset between the base Message
--	 * Data and the generated interrupt message.  See PCIe r3.1, sec
--	 * 7.8.2, 7.10.10, 7.31.2.
--	 */
--	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
--		u16 reg16;
--
--		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
--		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
--		if (entry >= nr_entries)
--			goto out_free_irqs;
--
--		/* PME and hotplug share an MSI/MSI-X vector */
--		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, entry);
--		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pci_irq_vector(dev, entry);
--
--		nvec = max(nvec, entry + 1);
-+	/* See how many and which Interrupt Message Numbers we actually use */
-+	nvec = pcie_message_numbers(dev, mask, &pme, &aer, &dpc);
-+	if (nvec > nr_entries) {
-+		pci_free_irq_vectors(dev);
-+		return -EIO;
- 	}
- 
--	if (mask & PCIE_PORT_SERVICE_AER) {
--		u32 reg32, pos;
--
--		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
--		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
--		entry = (reg32 & PCI_ERR_ROOT_AER_IRQ) >> 27;
--		if (entry >= nr_entries)
--			goto out_free_irqs;
--
--		irqs[PCIE_PORT_SERVICE_AER_SHIFT] = pci_irq_vector(dev, entry);
--
--		nvec = max(nvec, entry + 1);
-+	/* PME and hotplug share an MSI/MSI-X vector */
-+	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
-+		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, pme);
-+		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pci_irq_vector(dev, pme);
- 	}
- 
--	if (mask & PCIE_PORT_SERVICE_DPC) {
--		u16 reg16, pos;
--
--		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
--		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
--		entry = reg16 & PCI_EXP_DPC_IRQ;
--		if (entry >= nr_entries)
--			goto out_free_irqs;
--
--		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
-+	if (mask & PCIE_PORT_SERVICE_AER)
-+		irqs[PCIE_PORT_SERVICE_AER_SHIFT] = pci_irq_vector(dev, aer);
- 
--		nvec = max(nvec, entry + 1);
--	}
-+	if (mask & PCIE_PORT_SERVICE_DPC)
-+		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, dpc);
- 
- 	/* If we allocated more than we need, free them and allocate fewer */
- 	if (nvec != nr_entries) {
-@@ -122,10 +140,6 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 	}
- 
- 	return 0;
--
--out_free_irqs:
--	pci_free_irq_vectors(dev);
--	return -EIO;
- }
- 
- /**
+On 29-Oct-17 3:11 PM, Vidya Sagar wrote:
+> 
+> 
+> On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
+>> This patch ensures that DL sends pending ACKs and update FC packets when
+>> link is idle instead of waiting for timers to expire which improves PCIe
+>> bandwidth.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>   drivers/pci/host/pci-tegra.c | 15 ++++++++++++++-
+>>   1 file changed, 14 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index af34daf3c6a2..27a8211c48b2 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -209,7 +209,9 @@
+>>   #define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK    0xffffffff
+>>     #define RP_VEND_XP    0x00000f00
+>> -#define  RP_VEND_XP_DL_UP    (1 << 30)
+>> +#define  RP_VEND_XP_DL_UP            (1 << 30)
+>> +#define  RP_VEND_XP_OPPORTUNISTIC_ACK        (1 << 27)
+>> +#define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC    (1 << 28)
+>>   
+> BIT macro is preferred here.
+Left shift is used everywhere, so to be inline with that I used same format
+>>   #define RP_VEND_CTL1    0xf48
+>>   #define  RP_VEND_CTL1_ERPT    (1 << 13)
+>> @@ -2147,6 +2149,16 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+>>       writel(value, port->base + RP_VEND_CTL1);
+>>   }
+>>   +static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>> +{
+>> +    unsigned long value;
+>> +
+>> +    /* Optimal settings to enhance bandwidth */
+>> +    value = readl(port->base + RP_VEND_XP);
+>> +    value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
+>> +    value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
+>> +    writel(value, port->base + RP_VEND_XP);
+>> +}
+>>   /*
+>>    * FIXME: If there are no PCIe cards attached, then calling this function
+>>    * can result in the increase of the bootup time as there are big timeout
+>> @@ -2215,6 +2227,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>>           if (soc->program_ectl_settings)
+>>               tegra_pcie_program_ectl_settings(port);
+>>           tegra_pcie_enable_rp_features(port);
+>> +        tegra_pcie_apply_sw_fixup(port);
+>>       }
+>>         /* take the PCIe interface module out of reset */
+> 
