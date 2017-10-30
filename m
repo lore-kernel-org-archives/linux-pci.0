@@ -1,84 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:44191 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751528AbdJFQjv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Oct 2017 12:39:51 -0400
-Received: by mail-wm0-f43.google.com with SMTP id 196so3292065wma.1
-        for <linux-pci@vger.kernel.org>; Fri, 06 Oct 2017 09:39:51 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Leif Lindholm <leif.lindholm@linaro.org>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        Will Deacon <will.deacon@arm.com>
-Subject: [PATCH v4 2/2] dt-bindings: designware: add binding for Designware PCIe in ECAM mode
-Date: Fri,  6 Oct 2017 17:39:19 +0100
-Message-Id: <20171006163919.14898-3-ard.biesheuvel@linaro.org>
-In-Reply-To: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
-References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:16084 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751304AbdJ3EXX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:23:23 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 12/12] PCI: tegra: Update flow control threshold in Tegra210
+Date: Mon, 30 Oct 2017 09:49:03 +0530
+Message-ID: <1509337143-25963-13-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Describe the binding for firmware-configured instances of the Synopsys
-DesignWare PCIe controller in RC mode, that are almost but not quite
-ECAM compliant.
+Recommended update FC threshold in Tegra210 is 0x60 for best performance
+of x1 link. Setting this to 0x60 provides the best balance between number
+of UpdateFC and read data sent over the link.
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
- Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 42 ++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+V2:
+* no change in this patch
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
-new file mode 100644
-index 000000000000..515b2f9542e5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
-@@ -0,0 +1,42 @@
-+* Synopsys DesignWare PCIe root complex in ECAM shift mode
+ drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index afde9bfb867f..1adf9332560a 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -221,6 +221,7 @@
+ #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+ #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
++#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
+ 
+ #define RP_VEND_CTL0	0xf44
+ #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+@@ -321,6 +322,7 @@ struct tegra_pcie_soc {
+ 	bool update_clamp_threshold;
+ 	bool RAW_violation_fixup;
+ 	bool program_deskew_time;
++	bool updateFC_threshold;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2229,6 +2231,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
+ 		writel(value, port->base + RP_VEND_CTL0);
+ 	}
 +
-+In some cases, firmware may already have configured the Synopsys DesignWare
-+PCIe controller in RC mode with static ATU window mappings that cover all
-+config, MMIO and I/O spaces in a [mostly] ECAM compatible fashion.
-+In this case, there is no need for the OS to perform any low level setup
-+of clocks, PHYs or device registers, nor is there any reason for the driver
-+to reconfigure ATU windows for config and/or IO space accesses at runtime.
-+
-+In cases where the IP was synthesized with a minimum ATU window size of
-+64 KB, it cannot be supported by the generic ECAM driver, because it
-+requires special config space accessors that filter accesses to device #1
-+and beyond on the first bus.
-+
-+Required properties:
-+- compatible: "marvell,armada8k-pcie-ecam" or
-+              "socionext,synquacer-pcie-ecam" or
-+              "snps,dw-pcie-ecam" (must be preceded by a more specific match)
-+
-+Please refer to the binding document of "pci-host-ecam-generic" in the
-+file host-generic-pci.txt for a description of the remaining required
-+and optional properties.
-+
-+Example:
-+
-+    pcie1: pcie@7f000000 {
-+        compatible = "socionext,synquacer-pcie-ecam", "snps,dw-pcie-ecam";
-+        device_type = "pci";
-+        reg = <0x0 0x7f000000 0x0 0xf00000>;
-+        bus-range = <0x0 0xe>;
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        ranges = <0x1000000 0x00 0x00010000 0x00 0x7ff00000 0x0 0x00010000>,
-+                 <0x2000000 0x00 0x70000000 0x00 0x70000000 0x0 0x0f000000>,
-+                 <0x3000000 0x3f 0x00000000 0x3f 0x00000000 0x1 0x00000000>;
-+
-+        #interrupt-cells = <0x1>;
-+        interrupt-map-mask = <0x0 0x0 0x0 0x0>;
-+        interrupt-map = <0x0 0x0 0x0 0x0 &gic 0x0 0x0 0x0 182 0x4>;
-+        msi-map = <0x0 &its 0x0 0x10000>;
-+        dma-coherent;
-+    };
++	if (soc->updateFC_threshold) {
++		value = readl(port->base + RP_VEND_XP);
++		value &= ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
++		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
++		writel(value, port->base + RP_VEND_XP);
++	}
+ }
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+@@ -2368,6 +2377,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.updateFC_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2388,6 +2398,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.updateFC_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2407,6 +2418,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.update_clamp_threshold = true,
+ 	.RAW_violation_fixup = true,
+ 	.program_deskew_time = false,
++	.updateFC_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2434,6 +2446,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.update_clamp_threshold = true,
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = true,
++	.updateFC_threshold = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2454,6 +2467,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.updateFC_threshold = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
-2.11.0
+2.1.4
