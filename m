@@ -1,80 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59410 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750953AbdJAHzP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 1 Oct 2017 03:55:15 -0400
-Date: Sun, 1 Oct 2017 09:55:14 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Govindarajulu Varadarajan <gvaradar@cisco.com>
-Cc: benve@cisco.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jlbec@evilplan.org, hch@lst.de,
-        mingo@redhat.com, peterz@infradead.org, okaya@codeaurora.org
-Subject: Re: [PATCH V2] PCI: AER: fix deadlock in do_recovery
-Message-ID: <20171001075514.GA11554@lst.de>
-References: <20170930054938.43271-1-gvaradar@cisco.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:15958 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750758AbdJ3EVc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:21:32 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 02/12] PCI: tegra: Move REFCLK pad settings out of phy_power_on()
+Date: Mon, 30 Oct 2017 09:48:53 +0530
+Message-ID: <1509337143-25963-3-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170930054938.43271-1-gvaradar@cisco.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Can you please start with an explanation of the problem in text and
-cut down the cycle of involved functions to those actually relevant?
+In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
+in driver. REFCLK pad settings are independent of PHY and should be
+programmed by driver. So move REFCLK pad settings out of phy_power_on().
+These pad settings improves REFCLK peak to peak amplitude.
 
-That'll make reviewing the patch a bit easier..
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V2:
+* no change in this patch
 
->  2 files changed, 48 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-tegra.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.h b/drivers/pci/pcie/aer/aerdrv.h
-> index d51e4a57b190..f6d8761dc656 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.h
-> +++ b/drivers/pci/pcie/aer/aerdrv.h
-> @@ -105,6 +105,11 @@ static inline pci_ers_result_t merge_result(enum pci_ers_result orig,
->  	return orig;
->  }
->  
-> +struct aer_device_list {
-> +	struct device *dev;
-> +	struct hlist_node node;
-> +};
-> +
->  extern struct bus_type pcie_port_bus_type;
->  void aer_isr(struct work_struct *work);
->  void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 890efcc574cb..d524f2c2c288 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -346,6 +346,47 @@ static int report_resume(struct pci_dev *dev, void *data)
->  	return 0;
->  }
->  
-> +int aer_get_pci_dev(struct pci_dev *pdev, void *data)
-> +{
-> +	struct hlist_head *hhead = (struct hlist_head *)data;
-> +	struct device *dev = &pdev->dev;
-> +	struct aer_device_list *entry;
-> +
-> +	entry = kmalloc(sizeof(*entry), GFP_KERNEL);
-> +	if (!entry)
-> +		/* continue with other devices, lets not return error */
-> +		return 0;
-> +
-> +	entry->dev = get_device(dev);
-> +	hlist_add_head(&entry->node, hhead);
-> +
-> +	return 0;
-
-Can we just embedded the list_head in the pci_dev?  Or is there a way
-we can have multiple chains like this pending at the same time?
-
-> +static void aer_pci_walk_bus(struct pci_bus *top,
-> +			     int (*cb)(struct pci_dev *, void *),
-> +			     struct aer_broadcast_data *result)
-> +{
-> +	HLIST_HEAD(dev_hlist);
-> +	struct hlist_node *tmp;
-> +	struct aer_device_list *entry;
-
-Do we want to offer this as generic PCIe functionality?  If not we can
-probably hardcode the callback and callback data to simplify this a lot.
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index b41c60c7414c..2c64eb6cc3cc 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -910,7 +910,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
+ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+-	const struct tegra_pcie_soc *soc = pcie->soc;
+ 	struct tegra_pcie_port *port;
+ 	int err;
+ 
+@@ -936,12 +935,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+ 		}
+ 	}
+ 
+-	/* Configure the reference clock driver */
+-	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+-
+-	if (soc->num_ports > 2)
+-		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+-
+ 	return 0;
+ }
+ 
+@@ -2049,6 +2042,17 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
++{
++	const struct tegra_pcie_soc *soc = pcie->soc;
++
++	/* Configure the reference clock driver */
++	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
++
++	if (soc->num_ports > 2)
++		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
++}
++
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+  * can result in the increase of the bootup time as there are big timeout
+@@ -2107,6 +2111,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ 	struct device *dev = pcie->dev;
+ 	struct tegra_pcie_port *port, *tmp;
+ 
++	tegra_pcie_apply_pad_settings(pcie);
+ 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+ 		dev_info(dev, "probing port %u, using %u lanes\n",
+ 			 port->index, port->lanes);
+-- 
+2.1.4
