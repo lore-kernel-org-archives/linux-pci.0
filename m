@@ -1,42 +1,114 @@
-Return-Path: <SRS0=alSj=BR=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Return-Path: <SRS0=alSj=BR=gmail.com=ckoenig.leichtzumerken@kernel.org>
-From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org
-Subject: Resizable PCI BAR support V9
-Date: Wed, 18 Oct 2017 15:58:16 +0200
-Message-Id: <20171018135821.3248-1-deathsimple@vodafone.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:14090 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751342AbdJ3EXo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:23:44 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 11/12] PCI: tegra: Increase the deskew retry time
+Date: Mon, 30 Oct 2017 09:49:02 +0530
+Message-ID: <1509337143-25963-12-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi everyone,
+Some times Gen2 to Gen1 link speed switching fails due to instability in
+deskew logic on lane0 in Tegra210. Increase the deskew retry time to
+resolve this issue.
 
-This is the ninth and hopefully last incarnation of this set of patches. It
-enables device drivers to resize and most likely also relocate the PCI BAR of
-devices they manage to allow the CPU to access all of the device local memory
-at once.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V2:
+* no change in this patch
 
-This is very useful for GFX device drivers where the default PCI BAR is only
-about 256MB in size for compatibility reasons, but the device easily have
-multiple gigabyte of local memory.
+ drivers/pci/host/pci-tegra.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Some changes since the last version:
-1. Rebased on drm-next, so should be ready to be merged for 4.15.
-2. The fixup of the 64bit root window on AMD Family 15h CPUs/APUs is only
-   enabled when we compile a kernel supporting that hw.
-3. Some minor error handling improvements for the amdgpu side. We now
-   gracefully abort driver loading in case of a critical error instead of
-   calling BUG().
-
-Bjorn any more comments or can we finally get this into 4.15? I will remove the
-version tags from the patches when I send you a pull request if you want this.
-
-I only work on this as a background task, so sorry for the ~3 month delay
-between each version of the patchset.
-
-Regards,
-Christian.
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index d348f487f5d7..afde9bfb867f 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -222,6 +222,10 @@
+ #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+ 
++#define RP_VEND_CTL0	0xf44
++#define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
++#define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
++
+ #define RP_VEND_CTL1	0xf48
+ #define  RP_VEND_CTL1_ERPT	(1 << 13)
+ 
+@@ -316,6 +320,7 @@ struct tegra_pcie_soc {
+ 	bool program_ectl_settings;
+ 	bool update_clamp_threshold;
+ 	bool RAW_violation_fixup;
++	bool program_deskew_time;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2214,6 +2219,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
+ 		writel(value, port->base + RP_VEND_XP);
+ 	}
++
++	/* Tune deskew retry time to take care of Gen2 -> Gen1
++	 * link speed change error in corner cases
++	 */
++	if (soc->program_deskew_time) {
++		value = readl(port->base + RP_VEND_CTL0);
++		value &= ~RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK;
++		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
++		writel(value, port->base + RP_VEND_CTL0);
++	}
+ }
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+@@ -2352,6 +2367,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
++	.program_deskew_time = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2371,6 +2387,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
++	.program_deskew_time = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2389,6 +2406,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = true,
+ 	.RAW_violation_fixup = true,
++	.program_deskew_time = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2415,6 +2433,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.program_ectl_settings = true,
+ 	.update_clamp_threshold = true,
+ 	.RAW_violation_fixup = false,
++	.program_deskew_time = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2434,6 +2453,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
+ 	.RAW_violation_fixup = false,
++	.program_deskew_time = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
+-- 
+2.1.4
