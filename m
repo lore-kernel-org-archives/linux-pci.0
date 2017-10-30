@@ -1,70 +1,115 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 23 Oct 2017 14:32:25 +0800
-From: Shawn Guo <shawnguo@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] PCI: hisi: add PCIe driver support for HiSilicon STB SoCs
-Message-ID: <20171023063224.GI8700@dragon>
-References: <1508043971-23216-1-git-send-email-shawnguo@kernel.org>
- <CAKv+Gu9rY-UuVLGBUoVJqbqMR9Gz1Pcw37W4gnfMPmGAdDE=_A@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kapsi.fi ([91.232.154.25]:35241 "EHLO mail.kapsi.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752473AbdJ3KL0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Oct 2017 06:11:26 -0400
+Subject: Re: [PATCH V2 12/12] PCI: tegra: Update flow control threshold in
+ Tegra210
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509337143-25963-13-git-send-email-mmaddireddy@nvidia.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <2ad37b27-efc9-7fd7-7837-31bf6b726b2b@kapsi.fi>
+Date: Mon, 30 Oct 2017 12:11:24 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu9rY-UuVLGBUoVJqbqMR9Gz1Pcw37W4gnfMPmGAdDE=_A@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Jianguo Sun <sunjianguo1@huawei.com>,
- Jiancheng Xue <xuejiancheng@hisilicon.com>, Rob Herring <robh+dt@kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Shawn Guo <shawn.guo@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1509337143-25963-13-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ard,
+On 30.10.2017 06:19, Manikanta Maddireddy wrote:
+> Recommended update FC threshold in Tegra210 is 0x60 for best performance
+> of x1 link. Setting this to 0x60 provides the best balance between number
+> of UpdateFC and read data sent over the link.
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V2:
+> * no change in this patch
+>
+>  drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index afde9bfb867f..1adf9332560a 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -221,6 +221,7 @@
+>  #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+>  #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+>  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+> +#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
+>
+>  #define RP_VEND_CTL0	0xf44
+>  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+> @@ -321,6 +322,7 @@ struct tegra_pcie_soc {
+>  	bool update_clamp_threshold;
+>  	bool RAW_violation_fixup;
+>  	bool program_deskew_time;
+> +	bool updateFC_threshold;
 
-On Sun, Oct 22, 2017 at 10:36:47AM +0100, Ard Biesheuvel wrote:
-> > +Example:
-> > +       pcie@f9860000 {
-> > +               compatible = "hisilicon,hi3798cv200-pcie";
-> > +               reg = <0xf9860000 0x1000>,
-> > +                     <0xf0000000 0x2000>,
-> > +                     <0xf2000000 0x01000000>;
-> > +               reg-names = "control", "rc-dbi", "config";
-> > +               #address-cells = <3>;
-> > +               #size-cells = <2>;
-> > +               device_type = "pci";
-> > +               bus-range = <0 15>;
-> > +               num-lanes = <1>;
-> > +               ranges=<0x81000000 0 0 0xf4000000 0 0x00010000
-> > +                       0x82000000 0 0xf3000000 0xf3000000 0 0x01000000>;
-> > +               interrupts = <GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>;
-> > +               interrupt-names = "msi";
-> > +               #interrupt-cells = <1>;
-> > +               interrupt-map-mask = <0 0 0 7>;
-> > +               interrupt-map = <0 0 0 1 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
-> 
-> I know this is just the example, but this looks wrong to me: this only
-> covers INTA, so any multi-function devices that rely on legacy
-> interrupts (such as Nvidia GFX cards with HDMI audio device that are
-> blacklisted for MSI support) will fail to work. What I /think/ you
-> need is:
-> 
-> interrupt-map-mask = <0 0 0 0>;
-> interrupt-map = <0 0 0 0 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
+This needs to be "update_fc_threshold" or 
+"update_flow_control_threshold". Otherwise looks good.
 
-I really appreciate the comment.  Yes, all 4 legacy interrupts should be
-mapped to this IRQ.  I will get it fixed.  Thanks again.
-
-Shawn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  };
+>
+>  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+> @@ -2229,6 +2231,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>  		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
+>  		writel(value, port->base + RP_VEND_CTL0);
+>  	}
+> +
+> +	if (soc->updateFC_threshold) {
+> +		value = readl(port->base + RP_VEND_XP);
+> +		value &= ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
+> +		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
+> +		writel(value, port->base + RP_VEND_XP);
+> +	}
+>  }
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+> @@ -2368,6 +2377,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.update_clamp_threshold = false,
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+> +	.updateFC_threshold = false,
+>  };
+>
+>  static const struct tegra_pcie_soc tegra30_pcie = {
+> @@ -2388,6 +2398,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>  	.update_clamp_threshold = false,
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+> +	.updateFC_threshold = false,
+>  };
+>
+>  static const struct tegra_pcie_soc tegra124_pcie = {
+> @@ -2407,6 +2418,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>  	.update_clamp_threshold = true,
+>  	.RAW_violation_fixup = true,
+>  	.program_deskew_time = false,
+> +	.updateFC_threshold = false,
+>  };
+>
+>  static const struct tegra_pcie_soc tegra210_pcie = {
+> @@ -2434,6 +2446,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>  	.update_clamp_threshold = true,
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = true,
+> +	.updateFC_threshold = true,
+>  };
+>
+>  static const struct tegra_pcie_soc tegra186_pcie = {
+> @@ -2454,6 +2467,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>  	.update_clamp_threshold = false,
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+> +	.updateFC_threshold = false,
+>  };
+>
+>  static const struct of_device_id tegra_pcie_of_match[] = {
+>
