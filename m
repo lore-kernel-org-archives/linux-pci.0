@@ -1,47 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:54563 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755086AbdJLIoB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 04:44:01 -0400
-Received: by mail-it0-f67.google.com with SMTP id 72so5993119itk.3
-        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 01:44:01 -0700 (PDT)
+Received: from mail.kapsi.fi ([91.232.154.25]:46747 "EHLO mail.kapsi.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752020AbdJ3Jbg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Oct 2017 05:31:36 -0400
+Subject: Re: [PATCH V2 03/12] PCI: tegra: Retrain link for Gen2 speed
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509337143-25963-4-git-send-email-mmaddireddy@nvidia.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <ba7d166b-bb5d-7e25-6a68-227828b7dfe8@kapsi.fi>
+Date: Mon, 30 Oct 2017 11:31:34 +0200
 MIME-Version: 1.0
-From: =?UTF-8?Q?Rados=C5=82aw_Piliszek?= <radoslaw.piliszek@gmail.com>
-Date: Thu, 12 Oct 2017 10:44:00 +0200
-Message-ID: <CAB6MLKOh3BhVWLk650hJ76O_ys+J1OjezhiSPOkWGVkcVPLdFw@mail.gmail.com>
-Subject: ASPM not supported, yet ASPM L1 Enabled
-To: linux-pci@vger.kernel.org
-Cc: mj@ucw.cz
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1509337143-25963-4-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On 30.10.2017 06:18, Manikanta Maddireddy wrote:
+> Tegra124, 132, 210 and 186 supports Gen2 link speed. After the link is up
 
-First of all - I hope this is the right place to post this question.
-Please forgive me if it is not.
+s/supports/support/
 
-And now onto the problem:
+> in Gen1, set target link speed as Gen2 and retrain link. Link switches to
+> Gen2 speed if Gen2 capable end point is connected, else link stays in Gen1.
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V2:
+> * Fixed alignment issue
+>
+>  drivers/pci/host/pci-tegra.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 42 insertions(+)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 2c64eb6cc3cc..9f6d331c3571 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -232,6 +232,8 @@
+>  #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
+>  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
+>
+> +#define LINK_RETRAIN_TIMEOUT HZ
 
-I have a device which reports that ASPM is not supported yet reports
-ASPM L1 Enabled. This is PCIe switch's downstream port.
+I guess this originates in the pcie-altera driver or some common 
+ancestor, but it doesn't make much sense to me why this is bound to HZ. 
+It seems to me it should be just some constant.
 
-I used lspci -vvvnn in version 3.5.5 to obtain:
-LnkCap: Port #16, Speed 8GT/s, Width x16, ASPM not supported
-LnkCtl: ASPM L1 Enabled; Disabled- CommClk-
-LnkSta: Speed 8GT/s, Width x16, TrErr- Train- SlotClk- DLActive+
-BWMgmt- ABWMgmt-
+> +
+>  struct tegra_msi {
+>  	struct msi_controller chip;
+>  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+> @@ -2133,6 +2135,42 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>  	}
+>  }
+>
+> +static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
+> +					 struct pci_dev *pci_dev)
+> +{
+> +	struct device *dev = pcie->dev;
+> +	unsigned long start_jiffies;
+> +	unsigned short val;
+> +
+> +	/* Skip if the current device is not a root port */
+> +	if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
+> +		return;
+> +
+> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
+> +	val &= ~PCI_EXP_LNKSTA_CLS;
+> +	val |= PCI_EXP_LNKSTA_CLS_5_0GB;
+> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
+> +
+> +	/* Retrain the link */
+> +	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
+> +	val |= PCI_EXP_LNKCTL_RL;
+> +	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
+> +
+> +	start_jiffies = jiffies;
+> +	for (;;) {
+> +		pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
+> +		if (!(val & PCI_EXP_LNKSTA_LT))
+> +			break;
+> +		if (time_after(jiffies, start_jiffies + LINK_RETRAIN_TIMEOUT))
+> +			break;
+> +		usleep_range(2000, 3000);
+> +	}
 
-The same downstream port before the first use of the device after
-reboot reports:
-LnkCap: Port #16, Speed 8GT/s, Width x16, ASPM not supported
-LnkCtl: ASPM Disabled; Disabled- CommClk-
-LnkSta: Speed 8GT/s, Width x16, TrErr- Train- SlotClk- DLActive+
-BWMgmt+ ABWMgmt+
+Please use the ktime series of functions instead of using jiffies 
+directly. E.g.
 
-(The 2 bottom lines differ).
+ktime_t deadline = ktime_add_us(ktime_get(), LINK_RETRAIN_TIMEOUT);
+if (ktime_after(ktime_get(), deadline))
+	break;
 
-Is this normal behavior?
+(and replace LINK_RETRAIN_TIMEOUT with a timeout in microseconds)
 
-Regards,
-Rados=C5=82aw Piliszek
+You can take a look at the macros in linux/iopoll.h which do this but 
+for iomem access.
+
+> +
+> +	if (val & PCI_EXP_LNKSTA_LT)
+> +		dev_err(dev, "link retrain of PCIe slot %u failed\n",
+> +			PCI_SLOT(pci_dev->devfn));
+> +}
+> +
+>  static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.num_ports = 2,
+>  	.msi_base_shift = 0,
+> @@ -2334,6 +2372,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+>  	struct pci_host_bridge *host;
+>  	struct tegra_pcie *pcie;
+>  	struct pci_bus *child;
+> +	struct pci_dev *pci_dev = NULL;
+>  	int err;
+>
+>  	host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
+> @@ -2399,6 +2438,9 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+>
+>  	pci_bus_add_devices(host->bus);
+>
+> +	for_each_pci_dev(pci_dev)
+> +		tegra_pcie_change_link_speed(pcie, pci_dev);
+> +
+>  	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
+>  		err = tegra_pcie_debugfs_init(pcie);
+>  		if (err < 0)
+>
