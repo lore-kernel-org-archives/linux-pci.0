@@ -1,74 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49386 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750926AbdJRRSr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 18 Oct 2017 13:18:47 -0400
-Received: from mail-io0-f175.google.com (mail-io0-f175.google.com [209.85.223.175])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C24F121913
-        for <linux-pci@vger.kernel.org>; Wed, 18 Oct 2017 17:18:46 +0000 (UTC)
-Received: by mail-io0-f175.google.com with SMTP id m16so7050103iod.1
-        for <linux-pci@vger.kernel.org>; Wed, 18 Oct 2017 10:18:46 -0700 (PDT)
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:5598 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751209AbdJ3EXN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:23:13 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 09/12] PCI: tegra: Enable PCIe xclk clock clamping
+Date: Mon, 30 Oct 2017 09:49:00 +0530
+Message-ID: <1509337143-25963-10-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20171017133702.1b0e35bc@t450s.home> <MWHPR12MB16008EEBF251F321E9B48D41C84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAB=NE6U-1ytEbL9A2FeVjcOfN3VSNAJUa9JbsQH9UfjRfANKxw@mail.gmail.com> <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Date: Wed, 18 Oct 2017 10:18:25 -0700
-Message-ID: <CAB=NE6Xwj20hwX3XzW_bYEby+24c=gY_nQtXPOu1J_c7uRHRjA@mail.gmail.com>
-Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
- drivers when VFs are attached to VMs ...
-To: Casey Leedom <leedom@chelsio.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
-        Komali Katari <komali@chelsio.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 18, 2017 at 10:09 AM, Casey Leedom <leedom@chelsio.com> wrote:
-> | From: Luis R. Rodriguez <mcgrof@kernel.org>
-> | Sent: Tuesday, October 17, 2017 6:14:20 PM
-> |
-> | You referred to commit 2355869. What tree and more importantly what patch
-> | title?
->
->   Ah, my bad.  Sorry, I had the impression that git commit IDs were
-> preserved across repositories.  That's in Linus' main repository:
->
->   commit 235586939d7fe4833ada9e988f92af543ee6851f
->   Author: Luis R. Rodriguez <mcgrof@kernel.org>
->   Date:   Fri Sep 8 16:17:00 2017 -0700
->
->     kmod: split out umh code into its own file
->
->     Patch series "kmod: few code cleanups to split out umh code"
->
->     The usermode helper has a provenance from the old usb code which first
->     required a usermode helper.  Eventually this was shoved into kmod.c and
->     the kernel's modprobe calls was converted over eventually to share the
->     same code.  Over time the list of usermode helpers in the kernel has grown
->     -- so kmod is just but one user of the API.
->     ...
->
-> But, that was just a random guess since it was the largest recent change in
-> this area.  Komali tried to apply a reverse patch to see if that guess
-> worked out but that didn't apply cleanly and trying to reset to 2355869^ led
-> to other problems with systemd-udev.service running constantly reloading the
-> driver with a RHEL7 installation ... which may be a hint about what's going
-> on ...  I'm going to recommend that Komali do a bisect to see if she can
-> figure out where this new behavior started ...
+This patch enables PCIe xlck clock clamping by pad control. Pad control
+asserts UPHY lane sleep signal when L1 entry signal received from PCIe.
+UPHY sleep signal assertion is done per lane. Default clamp threshold
+margin is not enough to assert all UPHY lane sleep signals. Increase
+the clamp threshold in Tegra124, 132, 210 and 186.
 
-I'd recommend to do a full bisect, I *highly* doubt the above commit
-is the issue given it really should not have introduced any functional
-changes as its just a code shuffle, moving code from one file to
-another. Specially for the type of change you are describing, that
-requires significant changes. So save your time and just focus on a
-proper bisect.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V2:
+* no change in this patch
 
-  Luis
+ drivers/pci/host/pci-tegra.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 7f1e34e670d7..3c625ccfa539 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -224,8 +224,14 @@
+ #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
+ 
+ #define RP_PRIV_MISC	0x00000fe0
+-#define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT (0xe << 0)
+-#define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT (0xf << 0)
++#define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT		(0xe << 0)
++#define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT		(0xf << 0)
++#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD_MASK	(0x7f << 16)
++#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD		(0xf << 16)
++#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE		(1 << 23)
++#define  RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD_MASK	(0x7f << 24)
++#define  RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD		(0xf << 24)
++#define  RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE		(1 << 31)
+ 
+ #define RP_LINK_CONTROL_STATUS			0x00000090
+ #define  RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE	0x20000000
+@@ -300,6 +306,7 @@ struct tegra_pcie_soc {
+ 	bool force_pca_enable;
+ 	bool program_uphy;
+ 	bool program_ectl_settings;
++	bool update_clamp_threshold;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2156,6 +2163,7 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+ 
+ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ {
++	const struct tegra_pcie_soc *soc = port->pcie->soc;
+ 	unsigned long value;
+ 
+ 	/* Optimal settings to enhance bandwidth */
+@@ -2170,6 +2178,17 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 	value = readl(port->base + RP_VEND_XP_BIST);
+ 	value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
+ 	writel(value, port->base + RP_VEND_XP_BIST);
++
++	value = readl(port->base + RP_PRIV_MISC);
++	value |= (RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE |
++			 RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE);
++	if (soc->update_clamp_threshold) {
++		value &= ~(RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD_MASK |
++				RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD_MASK);
++		value |= (RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD |
++				RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD);
++	}
++	writel(value, port->base + RP_PRIV_MISC);
+ }
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+@@ -2306,6 +2325,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.force_pca_enable = false,
+ 	.program_uphy = true,
+ 	.program_ectl_settings = false,
++	.update_clamp_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2323,6 +2343,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.force_pca_enable = false,
+ 	.program_uphy = true,
+ 	.program_ectl_settings = false,
++	.update_clamp_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2339,6 +2360,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.force_pca_enable = false,
+ 	.program_uphy = true,
+ 	.program_ectl_settings = false,
++	.update_clamp_threshold = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2363,6 +2385,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.force_pca_enable = true,
+ 	.program_uphy = true,
+ 	.program_ectl_settings = true,
++	.update_clamp_threshold = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2380,6 +2403,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.force_pca_enable = false,
+ 	.program_uphy = false,
+ 	.program_ectl_settings = false,
++	.update_clamp_threshold = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
+-- 
+2.1.4
