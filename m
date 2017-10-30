@@ -1,46 +1,172 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:44432 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751138AbdJNWHp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 14 Oct 2017 18:07:45 -0400
-Received: by mail-qt0-f193.google.com with SMTP id 8so25456372qtv.1
-        for <linux-pci@vger.kernel.org>; Sat, 14 Oct 2017 15:07:44 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH 2/5] PCI: v3-semi: Fix platform_get_irq() error handling
-Date: Sat, 14 Oct 2017 19:07:28 -0300
-Message-Id: <1508018851-9272-2-git-send-email-festevam@gmail.com>
-In-Reply-To: <1508018851-9272-1-git-send-email-festevam@gmail.com>
-References: <1508018851-9272-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 09/17] PCI: dwc: dra7xx: Add ifdefs for host/ep specific code
+Date: Mon, 30 Oct 2017 13:42:12 +0100
+Message-Id: <20171030124221.20690-10-niklas.cassel@axis.com>
+In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When platform_get_irq() fails we should propagate the real error value
-instead of always returning -ENODEV.
+This way you will not build and include unused code
+when only building for only one mode.
 
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Signed-off-by: Fabio Estevam <festevam@gmail.com>
+Moved dra7xx_pcie_enable_wrapper_interrupts() in order
+to avoid adding an extra ifdef block.
+
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/host/pci-v3-semi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+V2:
+* New patch in this series.
 
-diff --git a/drivers/pci/host/pci-v3-semi.c b/drivers/pci/host/pci-v3-semi.c
-index a544d72..01017af 100644
---- a/drivers/pci/host/pci-v3-semi.c
-+++ b/drivers/pci/host/pci-v3-semi.c
-@@ -806,9 +806,9 @@ static int v3_pci_probe(struct platform_device *pdev)
+ drivers/pci/dwc/pci-dra7xx.c | 36 ++++++++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 009f6aeeee1c..175544d6c3ab 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -171,6 +171,15 @@ static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
+ 	return 0;
+ }
  
- 	/* Get and request error IRQ resource */
- 	irq = platform_get_irq(pdev, 0);
--	if (irq <= 0) {
-+	if (irq < 0) {
- 		dev_err(dev, "unable to obtain PCIv3 error IRQ\n");
--		return -ENODEV;
-+		return irq;
++static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
++{
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
++			   INTERRUPTS);
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
++			   INTERRUPTS);
++}
++
++#ifdef CONFIG_PCI_DRA7XX_HOST
+ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+@@ -181,14 +190,6 @@ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ 			   MSI | LEG_EP_INTERRUPTS);
+ }
+ 
+-static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
+-{
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+-			   INTERRUPTS);
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
+-			   INTERRUPTS);
+-}
+-
+ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+ 	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
+@@ -276,6 +277,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 
+ 	return IRQ_HANDLED;
+ }
++#endif
+ 
+ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ {
+@@ -336,6 +338,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
++#ifdef CONFIG_PCI_DRA7XX_EP
+ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+@@ -427,7 +430,9 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+ 
+ 	return 0;
+ }
++#endif
+ 
++#ifdef CONFIG_PCI_DRA7XX_HOST
+ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 				       struct platform_device *pdev)
+ {
+@@ -470,6 +475,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 
+ 	return 0;
+ }
++#endif
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
+@@ -517,23 +523,31 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_PCI_DRA7XX_HOST
+ static const struct dra7xx_pcie_of_data dra7xx_pcie_rc_of_data = {
+ 	.mode = DW_PCIE_RC_TYPE,
+ };
++#endif
+ 
++#ifdef CONFIG_PCI_DRA7XX_EP
+ static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
+ 	.mode = DW_PCIE_EP_TYPE,
+ };
++#endif
+ 
+ static const struct of_device_id of_dra7xx_pcie_match[] = {
++#ifdef CONFIG_PCI_DRA7XX_HOST
+ 	{
+ 		.compatible = "ti,dra7-pcie",
+ 		.data = &dra7xx_pcie_rc_of_data,
+ 	},
++#endif
++#ifdef CONFIG_PCI_DRA7XX_EP
+ 	{
+ 		.compatible = "ti,dra7-pcie-ep",
+ 		.data = &dra7xx_pcie_ep_of_data,
+ 	},
++#endif
+ 	{},
+ };
+ 
+@@ -548,6 +562,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+  *
+  * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+  */
++#ifdef CONFIG_PCI_DRA7XX_EP
+ static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+ {
+ 	int ret;
+@@ -578,6 +593,7 @@ static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+ 
+ 	return ret;
+ }
++#endif
+ 
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+@@ -681,6 +697,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		dra7xx->link_gen = 2;
+ 
+ 	switch (mode) {
++#ifdef CONFIG_PCI_DRA7XX_HOST
+ 	case DW_PCIE_RC_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_RC);
+@@ -688,6 +705,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		if (ret < 0)
+ 			goto err_gpio;
+ 		break;
++#endif
++#ifdef CONFIG_PCI_DRA7XX_EP
+ 	case DW_PCIE_EP_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
+@@ -700,6 +719,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		if (ret < 0)
+ 			goto err_gpio;
+ 		break;
++#endif
+ 	default:
+ 		dev_err(dev, "INVALID device type %d\n", mode);
  	}
- 	ret = devm_request_irq(dev, irq, v3_irq, 0,
- 			"PCIv3 error", v3);
 -- 
-2.7.4
+2.14.2
