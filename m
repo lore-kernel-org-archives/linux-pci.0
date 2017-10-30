@@ -1,98 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33356 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751291AbdJXQ2Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Oct 2017 12:28:24 -0400
-Date: Tue, 24 Oct 2017 11:28:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: pciehp: Check for valid PCI_BRIDGE_CONTROL in
- pciehp_unconfigure_device()
-Message-ID: <20171024162822.GA21840@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171024110914.53612-1-mika.westerberg@linux.intel.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17825 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752212AbdJ3N7E (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 09:59:04 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
+        <mperttunen@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V3 07/12] PCI: tegra: Disable AFI dynamic clock gating
+Date: Mon, 30 Oct 2017 19:27:18 +0530
+Message-ID: <1509371843-22931-8-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171024110914.53612-1-mika.westerberg@linux.intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 24, 2017 at 02:09:14PM +0300, Mika Westerberg wrote:
-> During surprise hot-unplug the device is not there anymore. When that
-> happens we read 0xffffffff from the registers and pciehp_unconfigure_device()
-> might inadvertently think the device is a display device because bridge
-> control register returns 0xff refusing to remove it:
-> 
->   pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
->   pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
->   pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
-> 
-> This causes the hotplug functionality to leave the hierarcy untouched
-> preventing further hotplug operations.
-> 
-> Fix this so that we first compare the read bctl value against 0xffff
-> (device is not present anymore) before determining whether the device is
-> a display or not.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
-> Hi Bjorn,
-> 
-> This is an updated version of the patch 8/8 in my "PCI: Improvements for
-> native PCIe hotplug" patch series and applies on top of pci.git/pci/hotplug.
-> 
-> We now just check bctl against 0xffff before preventing removal of the
-> "display" device.
-> 
-> I'm inclined to remove the whole check of "display" device because I don't
-> see any reason for it to be there in the first place. This code is pretty
-> much duplicated from shpchp_pci.c where it might make some sense.
+When there are 32 outstanding writes from AFI to memory, the outstanding
+write counter overflows and indicates that there are "0" outstanding write
+transactions. This outstanding write counter is used to generate IDLE
+signal to dynamically gate the AFI clock.
 
-Yeah, I don't understand this at all.  If the device is gone, it's
-gone, and complaining about it being a display device isn't going to
-make it come back.  I don't know the history of that check, but I
-agree that it might make sense to remove it altogether.
+When memory controller is under heavy load, its possible that write
+completions will come back to AFI after long delay and AFI write counter
+overflows. AFI clock gets gated even when there are outstanding
+transactions towards memory controller resutling in system hang.
 
-The message (and consequently your changelog) also seem misleading
-because we're removing *dev*, which in this case is a bridge that
-might lead to a display device.  But it's not a display device itself.
+Disable dynamic clock gating of AFI clock to avoid system hang.
 
->  drivers/pci/hotplug/pciehp_pci.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index 2a1ca020cf5a..5225b12c5a75 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -79,7 +79,6 @@ int pciehp_configure_device(struct slot *p_slot)
->  int pciehp_unconfigure_device(struct slot *p_slot)
->  {
->  	int rc = 0;
-> -	u8 bctl = 0;
->  	u8 presence = 0;
->  	struct pci_dev *dev, *temp;
->  	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
-> @@ -102,8 +101,10 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->  					 bus_list) {
->  		pci_dev_get(dev);
->  		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
-> -			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
-> -			if (bctl & PCI_BRIDGE_CTL_VGA) {
-> +			u16 bctl = 0;
-> +
-> +			pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &bctl);
-> +			if (bctl != 0xffff && (bctl & PCI_BRIDGE_CTL_VGA)) {
->  				ctrl_err(ctrl,
->  					 "Cannot remove display device %s\n",
->  					 pci_name(dev));
-> -- 
-> 2.14.2
-> 
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V3:
+* no change in this patch
+V2:
+* no change in this patch
+
+ drivers/pci/host/pci-tegra.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 4562b0c113a8..c264037112cb 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -103,8 +103,9 @@
+ #define AFI_MSI_EN_VEC6		0xa4
+ #define AFI_MSI_EN_VEC7		0xa8
+ 
+-#define AFI_CONFIGURATION		0xac
+-#define  AFI_CONFIGURATION_EN_FPCI	(1 << 0)
++#define AFI_CONFIGURATION			0xac
++#define  AFI_CONFIGURATION_EN_FPCI		(1 << 0)
++#define  AFI_CONFIGURATION_CLKEN_OVERRIDE	(1 << 31)
+ 
+ #define AFI_FPCI_ERROR_MASKS	0xb0
+ 
+@@ -1059,9 +1060,10 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 		}
+ 	}
+ 
+-	/* finally enable PCIe */
++	/* Disable AFI dynamic clock gating and enable PCIe */
+ 	value = afi_readl(pcie, AFI_CONFIGURATION);
+-	value |= AFI_CONFIGURATION_EN_FPCI;
++	value |= (AFI_CONFIGURATION_EN_FPCI |
++			AFI_CONFIGURATION_CLKEN_OVERRIDE);
+ 	afi_writel(pcie, value, AFI_CONFIGURATION);
+ 
+ 	value = AFI_INTR_EN_INI_SLVERR | AFI_INTR_EN_INI_DECERR |
+-- 
+2.1.4
