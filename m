@@ -1,46 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 01/12] PM / core: Add NEVER_SKIP and SMART_PREPARE driver flags
-Date: Tue, 17 Oct 2017 00:07:37 +0200
-Message-ID: <1545766.cfb3OTroPT@aspire.rjw.lan>
-In-Reply-To: <20171016063122.GB28732@kroah.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <1998650.Q52BuGQTI4@aspire.rjw.lan> <20171016063122.GB28732@kroah.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out6.electric.net ([192.162.217.182]:59732 "EHLO
+        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932189AbdJ3P6U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 11:58:20 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Manikanta Maddireddy' <mmaddireddy@nvidia.com>,
+        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jonathanh@nvidia.com" <jonathanh@nvidia.com>
+CC: "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "vidyas@nvidia.com" <vidyas@nvidia.com>,
+        "kthota@nvidia.com" <kthota@nvidia.com>
+Subject: RE: [PATCH 07/12] PCI: tegra: Disable AFI dynamic clock gating
+Date: Mon, 30 Oct 2017 15:58:36 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00A90B0@AcuExch.aculab.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, October 16, 2017 8:31:22 AM CEST Greg Kroah-Hartman wrote:
-> On Mon, Oct 16, 2017 at 03:29:02AM +0200, Rafael J. Wysocki wrote:
-> > +static inline void dev_pm_set_driver_flags(struct device *dev, unsigned int flags)
-> > +{
-> > +	dev->power.driver_flags = flags;
-> > +}
+From: Manikanta Maddireddy
+> Sent: 27 October 2017 20:29
+> When there are 32 outstanding writes from AFI to memory, the outstanding
+> write counter overflows and indicates that there are "0" outstanding write
+> transactions. This outstanding write counter is used to generate IDLE
+> signal to dynamically gate the AFI clock.
 > 
-> Should this function just set the specific bit?  Or is it going to be ok
-> to set the whole value, meaning you aren't going to care about turning
-> on and off specific flags over the lifetime of the driver/device, you
-> are just going to set them once and then just test them as needed?
+> When memory controller is under heavy load, its possible that write
+> completions will come back to AFI after long delay and AFI write counter
+> overflows. AFI clock gets gated even when there are outstanding
+> transactions towards memory controller resutling in system hang.
+> 
+> Disable dynamic clock gating of AFI clock to avoid system hang.
 
-The idea is to set them once and they should not be touched again until
-the driver (or device) goes away, so that would be the whole value at once
-(and one of the i2c-designware-platdrv patches actually sets multiple flags
-in one go).
+At least some of the above really ought to be comments in the code.
+(and with the earlier fix for limiting the number of writes.)
 
-Thanks,
-Rafael
-
+	David
