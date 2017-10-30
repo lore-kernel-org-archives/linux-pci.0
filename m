@@ -1,132 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:32922 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752376AbdJFNaF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 6 Oct 2017 09:30:05 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 26/36] iommu/arm-smmu-v3: Add support for Hardware Translation Table Update
-Date: Fri,  6 Oct 2017 14:31:53 +0100
-Message-Id: <20171006133203.22803-27-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:3684 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751989AbdJ3Khf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 06:37:35 -0400
+Subject: Re: [PATCH V2 01/12] PCI: tegra: Start LTSSM after programming root
+ port
+To: Mikko Perttunen <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <jonathanh@nvidia.com>, <vidyas@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509337143-25963-2-git-send-email-mmaddireddy@nvidia.com>
+ <5911b4d5-cc54-9fed-f6be-5c9b7ca05c2e@kapsi.fi>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <42a902fb-1481-9fd3-77c7-e18d0d0c306d@nvidia.com>
+Date: Mon, 30 Oct 2017 16:06:24 +0530
+MIME-Version: 1.0
+In-Reply-To: <5911b4d5-cc54-9fed-f6be-5c9b7ca05c2e@kapsi.fi>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the SMMU supports it and the kernel was built with HTTU support, enable
-hardware update of access and dirty flags. This is essential for shared
-page tables, to reduce the number of access faults on the fault queue.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 32 ++++++++++++++++++++++++++++----
- 1 file changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index b7355630526a..2b2e2be03de7 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -67,6 +67,8 @@
- #define IDR0_ASID16			(1 << 12)
- #define IDR0_ATS			(1 << 10)
- #define IDR0_HYP			(1 << 9)
-+#define IDR0_HD				(1 << 7)
-+#define IDR0_HA				(1 << 6)
- #define IDR0_BTM			(1 << 5)
- #define IDR0_COHACC			(1 << 4)
- #define IDR0_TTF_SHIFT			2
-@@ -342,7 +344,16 @@
- #define ARM64_TCR_TBI0_SHIFT		37
- #define ARM64_TCR_TBI0_MASK		0x1UL
- 
-+#define ARM64_TCR_HA_SHIFT		39
-+#define ARM64_TCR_HA_MASK		0x1UL
-+#define ARM64_TCR_HD_SHIFT		40
-+#define ARM64_TCR_HD_MASK		0x1UL
-+
- #define CTXDESC_CD_0_AA64		(1UL << 41)
-+#define CTXDESC_CD_0_TCR_HD_SHIFT	42
-+#define CTXDESC_CD_0_TCR_HA_SHIFT	43
-+#define CTXDESC_CD_0_HD			(1UL << CTXDESC_CD_0_TCR_HD_SHIFT)
-+#define CTXDESC_CD_0_HA			(1UL << CTXDESC_CD_0_TCR_HA_SHIFT)
- #define CTXDESC_CD_0_S			(1UL << 44)
- #define CTXDESC_CD_0_R			(1UL << 45)
- #define CTXDESC_CD_0_A			(1UL << 46)
-@@ -670,6 +681,8 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_E2H		(1 << 14)
- #define ARM_SMMU_FEAT_BTM		(1 << 15)
- #define ARM_SMMU_FEAT_SVM		(1 << 16)
-+#define ARM_SMMU_FEAT_HA		(1 << 17)
-+#define ARM_SMMU_FEAT_HD		(1 << 18)
- 	u32				features;
- 
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -1157,7 +1170,7 @@ static __u64 *arm_smmu_get_cd_ptr(struct arm_smmu_domain *smmu_domain, u32 ssid)
- 	return l1_desc->cdptr + idx * CTXDESC_CD_DWORDS;
- }
- 
--static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
-+static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_device *smmu, u64 tcr)
- {
- 	u64 val = 0;
- 
-@@ -1172,6 +1185,12 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
- 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
- 	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
- 
-+	if (smmu->features & ARM_SMMU_FEAT_HA)
-+		val |= ARM_SMMU_TCR2CD(tcr, HA);
-+
-+	if (smmu->features & ARM_SMMU_FEAT_HD)
-+		val |= ARM_SMMU_TCR2CD(tcr, HD);
-+
- 	return val;
- }
- 
-@@ -1235,7 +1254,7 @@ static void arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
- 			 */
- 			arm_smmu_sync_cd(smmu_domain, ssid, true);
- 
--		val = arm_smmu_cpu_tcr_to_cd(cd->tcr) |
-+		val = arm_smmu_cpu_tcr_to_cd(smmu_domain->smmu, cd->tcr) |
- #ifdef __BIG_ENDIAN
- 		      CTXDESC_CD_0_ENDI |
- #endif
-@@ -2203,8 +2222,7 @@ static int arm_smmu_process_init_pgtable(struct arm_smmu_process *smmu_process,
- 	reg = read_sanitised_ftr_reg(SYS_ID_AA64MMFR0_EL1);
- 	par = cpuid_feature_extract_unsigned_field(reg, ID_AA64MMFR0_PARANGE_SHIFT);
- 	tcr |= par << ARM_LPAE_TCR_IPS_SHIFT;
--
--	tcr |= TCR_TBI0;
-+	tcr |= TCR_TBI0 | TCR_HA | TCR_HD;
- 
- 	cfg->asid       = asid;
- 	cfg->ttbr       = virt_to_phys(mm->pgd);
-@@ -3275,6 +3293,12 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 			smmu->features |= ARM_SMMU_FEAT_E2H;
- 	}
- 
-+	if (IS_ENABLED(CONFIG_ARM64_HW_AFDBM) && (reg & (IDR0_HA | IDR0_HD))) {
-+		smmu->features |= ARM_SMMU_FEAT_HA;
-+		if (reg & IDR0_HD)
-+			smmu->features |= ARM_SMMU_FEAT_HD;
-+	}
-+
- 	/*
- 	 * If the CPU is using VHE, but the SMMU doesn't support it, the SMMU
- 	 * will create TLB entries for NH-EL1 world and will miss the
--- 
-2.13.3
+On 30-Oct-17 2:38 PM, Mikko Perttunen wrote:
+> On 30.10.2017 06:18, Manikanta Maddireddy wrote:
+>> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
+>> after all the required root port register programming is completed.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>> V2:
+>> * no change in this patch
+>>
+>>  drivers/pci/host/pci-tegra.c | 9 +++++----
+>>  1 file changed, 5 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index 96e8038c3019..b41c60c7414c 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>>          }
+>>      }
+>>
+>> -    /* take the PCIe interface module out of reset */
+>> -    reset_control_deassert(pcie->pcie_xrst);
+>> -
+>>      /* finally enable PCIe */
+>>      value = afi_readl(pcie, AFI_CONFIGURATION);
+>>      value |= AFI_CONFIGURATION_EN_FPCI;
+>> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+>>              dev_err(dev, "failed to power off PHY(s): %d\n", err);
+>>      }
+>>
+>> -    reset_control_assert(pcie->pcie_xrst);
+> 
+> Why is this change being made? Is there a reason we cannot leave this reset asserted when the controller is powered off?
+In this change I moved deassert pcie_xrst to tegra_pcie_enable_ports. tegra_pcie_power_off() will not come into picture after deasserting pcie xrst.
+So this asserting pcie xrst redundant now.
+> 
+>>      reset_control_assert(pcie->afi_rst);
+>>      reset_control_assert(pcie->pex_rst);
+>>
+>> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>>               port->index, port->lanes);
+>>
+>>          tegra_pcie_port_enable(port);
+>> +    }
+>>
+>> +    /* take the PCIe interface module out of reset */
+>> +    reset_control_deassert(pcie->pcie_xrst);
+>> +
+>> +    list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>>          if (tegra_pcie_port_check_link(port))
+>>              continue;
+>>
+>>
