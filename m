@@ -1,131 +1,102 @@
-Return-Path: <SRS0=Bqkc=BK=gmail.com=karolherbst@kernel.org>
-Return-Path: <SRS0=Bqkc=BK=gmail.com=karolherbst@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:3155 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932352AbdJ3RPU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 13:15:20 -0400
+Subject: Re: [PATCH 1/4] PCI/ASPM: Add API to supply LTR L1.2 threshold
+To: Rajat Jain <rajatja@google.com>
+CC: <treding@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        David Daney <david.daney@cavium.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>
+References: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
+ <1509361385-21224-2-git-send-email-vidyas@nvidia.com>
+ <CACK8Z6EUEKU8ke8giKOyxyLbsGv_0SZmSngLs-n+x3kqty0Fzw@mail.gmail.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <4cba6cf2-7805-27a9-2653-be4f5399cba8@nvidia.com>
+Date: Mon, 30 Oct 2017 22:42:32 +0530
 MIME-Version: 1.0
-In-Reply-To: <CAKb7Uvg34QsDGNfG8qDhnJX8rjaQhJp4ri2vrUyfgpy=0nS7LQ@mail.gmail.com>
-References: <CAKb7UvjFYoZZCQ8p6gMx_7crUjEA0d29gCB8g7rJz4k=NPcDAA@mail.gmail.com>
- <20171011114735.GE25517@bhelgaas-glaptop.roam.corp.google.com>
- <CAKb7Uvid3024Ja=YEzcSmjgnXp5Ti19i07yD7EZz3+POkkjq-A@mail.gmail.com>
- <20171011134652.GH25517@bhelgaas-glaptop.roam.corp.google.com> <CAKb7Uvg34QsDGNfG8qDhnJX8rjaQhJp4ri2vrUyfgpy=0nS7LQ@mail.gmail.com>
-From: Karol Herbst <karolherbst@gmail.com>
-Date: Wed, 11 Oct 2017 16:53:31 +0200
-Message-ID: <CAEXux-anyoug=FniWgEh-1naMoTQKS57mwny-puAsxSyg75NKw@mail.gmail.com>
-Subject: Re: Dynamically adding a PCI subfunction
-To: Ilia Mirkin <imirkin@alum.mit.edu>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Ben Skeggs <bskeggs@redhat.com>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CACK8Z6EUEKU8ke8giKOyxyLbsGv_0SZmSngLs-n+x3kqty0Fzw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 11, 2017 at 4:18 PM, Ilia Mirkin <imirkin@alum.mit.edu> wrote:
-> On Wed, Oct 11, 2017 at 9:46 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Wed, Oct 11, 2017 at 08:54:05AM -0400, Ilia Mirkin wrote:
->>> On Wed, Oct 11, 2017 at 7:47 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>> >   /* do magic */
->>> >   nvif_mask(&device->object, 0x088488, (1 << 25), (1 << 25));
->>> >
->>> > Wow, that *is* inscrutable magic.  I gave up trying to convince myself
->>> > that this turns into pci_write_config_word() eventually.
->>> >
->>> > 0x88000 is way too big for an offset into PCI config space (it's only
->>> > 4096 bytes per device at most), so I don't know what sort of alias it
->>> > could be.  It doesn't look like a MMCONFIG address (which the driver
->>> > shouldn't be using directly anyway).
->>>
->>> 0x88000 is an offset into one of the BARs. At this offset is a mirror
->>> of the PCI config space (or you could say that the PCI config space is
->>> a mirror of these registers... we'll never know). The "magic" comment
->>> probably refers to flipping the bit though, since it's the "make it
->>> work" bit.
->>
->> OK, that makes sense.  If you made a quirk, you might want to use a
->> config access, since using MMIO means you depend on the BAR having
->> been assigned space.  Often the BIOS will have assigned the BAR, but
->> there's no requirement for it to do so.
->
-> Oh yeah, we'd definitely do it via the PCI config space. Mapping the
-> bar in early pci setup doesn't seem like the wise move. I was just
-> mentioning the 88000 thing so that the code made sense. I guess that
-> didn't go to plan...
->
->>> >> This works for runtime pm resume, since the device was originally
->>> >> there and we just have to make sure the underlying device agrees with
->>> >> it, but when it's missing on boot, we have to convince linux that it
->>> >> exists, bind a driver, etc.
->>> >>
->>> >> What's the best way of going about doing that?
->>> >
->>> > If you make an early quirk for the GPU device, we'll run the quirk
->>> > while enumerating it.  If it can enable the audio device, and if the
->>> > audio device is at a higher device number, the PCI core should try to
->>> > enumerate it later.  But there might be wrinkles if setting the bit
->>> > turns a single-function device into a multi-function one, because the
->>> > core might have already decided it didn't need to scan for more
->>> > functions.  DECLARE_PCI_FIXUP_CLASS_EARLY() is the place to start.
->>>
->>> I thought about this type of approach but I have two concerns:
->>>  - We can't just do this willy-nilly on *any* NVIDIA GPU, only on
->>> "new" ones. The definition of "new" here, of course, is like 2010, and
->>> there have been a lot of chips released since then. Each chip is
->>> allocated a group of 0x20 or 0x40 PCI device ids, but it'll still be a
->>> lot of code. Do you really want this in drivers/pci/quirks.c?
->>
->> It sounds like this is basically a workaround for a BIOS bug -- it
->> forgot to enable the audio device.  If you complain to the vendor,
->> they might eventually fix it and you won't need to add new devices.
->
-> I was thinking of just blanket applying it to all GT215+ chips after
-> we do some spot checks for safety -- the chip can be determined based
-> on PCI id (http://envytools.readthedocs.io/en/latest/hw/pciid.html).
-> There are more GPU pci ids than there are users of nouveau... and the
-> failure has nothing to do with the pci id but rather with the platform
-> and/or vbios author. It's a somewhat widespread problem among laptops
-> and still happens with new ones.
->
-> I suspect it was treated as a BIOS feature rather than a bug -- you
-> get a second audio device and confuse the user about which one is the
-> "real audio". There are even some laptops which make the audio
-> function appear based on HDMI cable presence at boot (and I think make
-> it appear/disappear dynamically in Windows).
->
->>
->>>  - This fixup will be applied no matter what. I wonder if that's an OK
->>> thing to do -- feels like this sort of thing should be scoped to the
->>> driver. I was assuming there'd be some magic hotplug function that
->>> could be called. I suppose we could condition the quirk on
->>> CONFIG_NOUVEAU being built (into the kernel or otherwise), but that's
->>> still a coarse tool given that distros enable everything.
->>
->> You can have conditions in your fixup -- only certain devices, certain
->> platforms, etc.
->>
->>> How would I find out about the single-function vs multi-function
->>> issue? Is there a separate bit in the pci config that indicates a
->>> multi-function device, or do you just mean it's an implementation
->>> issue in the pci core which might not handle a quirk that adds a
->>> second device?
->>
->> There's a bit in the header that tells us whether it's a multifunction
->> device.  See pci_setup_device(), where it sets dev->multifunction.
->> That happens before we run early quirks, so if enabling the audio
->> device in the quirk changed the bit, we'd have a problem.  But you'll
->> have to experiment.  It could be that the GPU identifies as a
->> multifunction device even if the audio device is disabled.
->
-> OK, thanks for all the info! I'll try to work something up and get it
-> tested by affected users.
->
 
-With the bit 25 in 0x488, we can disable/enable the Multifunction
-reporting bit 23 in 0xc, which means if we disable the multifunction
-bit in 0x488, the GPU itself doesn't tell the system it is one either.
-So the write to 0x488 is actually required to get the GPU into a
-state, where it actually reports to be a multifunction device.
 
-> Cheers,
->
->   -ilia
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+On Monday 30 October 2017 10:25 PM, Rajat Jain wrote:
+> On Mon, Oct 30, 2017 at 4:03 AM, Vidya Sagar <vidyas@nvidia.com> wrote:
+>> adds API for host controller drivers to specify LTR L1.2
+>> threshold value if it is different from the default value.
+>> weak implementation of the API is added to supply default
+>> value
+>>
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>>   drivers/pci/pcie/aspm.c  | 11 ++++++++---
+>>   include/linux/pci-aspm.h |  6 ++++++
+>>   2 files changed, 14 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+>> index 1dfa10cc566b..c6e8604796e5 100644
+>> --- a/drivers/pci/pcie/aspm.c
+>> +++ b/drivers/pci/pcie/aspm.c
+>> @@ -436,6 +436,11 @@ static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
+>>          return NULL;
+>>   }
+>>
+>> +u32 __weak pcie_aspm_get_ltr_l_1_2_threshold(void)
+>> +{
+>> +       return LTR_L1_2_THRESHOLD_BITS;
+>> +}
+>> +
+>>   /* Calculate L1.2 PM substate timing parameters */
+>>   static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+>>                                  struct aspm_register_info *upreg,
+>> @@ -458,10 +463,10 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+>>          else
+>>                  link->l1ss.ctl1 |= val2 << 8;
+>>          /*
+>> -        * We currently use LTR L1.2 threshold to be fixed constant picked from
+>> -        * Intel's coreboot.
+>> +        * Get LTR L1.2 threshold value specific to a platform if present
+>> +        * Otherwise, get a constant value picked from Intel's coreboot.
+>>           */
+>> -       link->l1ss.ctl1 |= LTR_L1_2_THRESHOLD_BITS;
+>> +       link->l1ss.ctl1 |= pcie_aspm_get_ltr_l_1_2_threshold();
+>>
+>>          /* Choose the greater of the two T_pwr_on */
+>>          val1 = (upreg->l1ss_cap >> 19) & 0x1F;
+>> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
+>> index 207c561fb40e..7ffde0f57688 100644
+>> --- a/include/linux/pci-aspm.h
+>> +++ b/include/linux/pci-aspm.h
+>> @@ -30,6 +30,7 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+>>   void pci_disable_link_state(struct pci_dev *pdev, int state);
+>>   void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+>>   void pcie_no_aspm(void);
+>> +u32 pcie_aspm_get_ltr_l_1_2_threshold(void);
+>>   #else
+>>   static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>>   {
+>> @@ -49,6 +50,11 @@ static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
+>>   static inline void pcie_no_aspm(void)
+>>   {
+>>   }
+>> +
+>> +static inline u32 pcie_aspm_get_ltr_l_1_2_threshold(void)
+>> +{
+>> +       return 0;
+>> +}
+> Do we really need this (bogus) function definition in
+> !defined(CONFIG_PCIEASPM) case? I believe the other bogus definitions
+> in that section are needed because functions outside of
+> CONFIG_PCIEASPM call it.
+I'll remove it in my next patch.
+>>   #endif
+>>
+>>   #ifdef CONFIG_PCIEASPM_DEBUG /* this depends on CONFIG_PCIEASPM */
+>> --
+>> 2.7.4
+>>
