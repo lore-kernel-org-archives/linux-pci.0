@@ -1,99 +1,67 @@
-Return-Path: <SRS0=ASJs=BI=intel.com=adrian.hunter@kernel.org>
-Return-Path: <SRS0=ASJs=BI=intel.com=adrian.hunter@kernel.org>
-From: "Hunter, Adrian" <adrian.hunter@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Ulf Hansson <ulf.hansson@linaro.org>, linux-mmc
-	<linux-mmc@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>, "Bjorn
- Helgaas" <bhelgaas@google.com>, linux-acpi <linux-acpi@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Alan Cox <alan@linux.intel.com>
-Subject: RE: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-related
- host controllers
-Date: Mon, 9 Oct 2017 20:01:06 +0000
-Message-ID: <363DA0ED52042842948283D2FC38E4649BF3590E@IRSMSX106.ger.corp.intel.com>
-References: <1507294259-20438-1-git-send-email-adrian.hunter@intel.com>
- <20171006162048.GC25517@bhelgaas-glaptop.roam.corp.google.com>
- <ada41e9b-6fb3-82ab-e458-af4942adba2d@intel.com>
- <20171009134154.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171009134154.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:19482 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751405AbdJ3D5c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 23:57:32 -0400
+Subject: Re: [PATCH 08/12] PCI: tegra: Wait for DLLP to finish before entering
+ L1 or L2
+To: Vidya Sagar <vidyas@nvidia.com>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509132569-9398-9-git-send-email-mmaddireddy@nvidia.com>
+ <76a66fde-077b-7ced-7a4b-70d68451295d@nvidia.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <2c3d0a76-adca-60f8-e3e4-c8a896bd092a@nvidia.com>
+Date: Mon, 30 Oct 2017 09:26:21 +0530
 MIME-Version: 1.0
+In-Reply-To: <76a66fde-077b-7ced-7a4b-70d68451295d@nvidia.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Monday, October 9, 2017 4:42 PM
-> To: Hunter, Adrian <adrian.hunter@intel.com>
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>; linux-mmc <linux-
-> mmc@vger.kernel.org>; linux-pci <linux-pci@vger.kernel.org>; Bjorn Helgaa=
-s
-> <bhelgaas@google.com>; linux-acpi <linux-acpi@vger.kernel.org>; Rafael J.
-> Wysocki <rjw@rjwysocki.net>; Alan Cox <alan@linux.intel.com>
-> Subject: Re: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-relat=
-ed
-> host controllers
->=20
-> [+cc Alan]
->=20
-> On Mon, Oct 09, 2017 at 11:56:43AM +0300, Adrian Hunter wrote:
-> > On 06/10/17 19:20, Bjorn Helgaas wrote:
-> > > On Fri, Oct 06, 2017 at 03:50:59PM +0300, Adrian Hunter wrote:
-> > >> The default D3 cold delay of 100 ms can cause pauses when streaming
-> > >> audio from eMMC.
-> > >>
-> > >> Intel BYT-related host controllers do not need PCI D3 delays.
-> > >> Although the delays can be set to zero via an ACPI _DSM,
-> > >> unfortunately that is not being used in all cases. So just set the d=
-elays to
-> zero in the driver.
-> > >>
-> > >> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-> > >> ---
-> > >>  drivers/mmc/host/sdhci-pci-core.c | 17 +++++++++++++----
-> > >>  1 file changed, 13 insertions(+), 4 deletions(-)
-> > >>
-> > >> diff --git a/drivers/mmc/host/sdhci-pci-core.c
-> > >> b/drivers/mmc/host/sdhci-pci-core.c
-> > >> index 5f3f7b51299f..14ef99b6e5b7 100644
-> > >> --- a/drivers/mmc/host/sdhci-pci-core.c
-> > >> +++ b/drivers/mmc/host/sdhci-pci-core.c
-> > >> @@ -592,9 +592,18 @@ static void byt_read_dsm(struct sdhci_pci_slot
-> *slot)
-> > >>  	slot->chip->rpm_retune =3D intel_host->d3_retune;  }
-> > >>
-> > >> -static int byt_emmc_probe_slot(struct sdhci_pci_slot *slot)
-> > >> +static void byt_common_setup(struct sdhci_pci_slot *slot)
-> > >>  {
-> > >>  	byt_read_dsm(slot);
-> > >> +
-> > >> +	/* PCI D3 delays are not needed */
-> > >> +	slot->chip->pdev->d3_delay =3D 0;
-> > >> +	slot->chip->pdev->d3cold_delay =3D 0;
-> > >
-> > > The fact that it doesn't need D3 delays sounds like a property of
-> > > the device itself, regardless of which (if any) driver claims it.
-> > >
-> > > Can this be done as a quirk instead, maybe something in
-> > > arch/x86/pci/fixup.c?  Maybe quirk_remove_d3_delay() could be used
-> > > directly, or something like pci_d3_delay_fixup()?
-> >
-> > A quirk would work, but that would mean setting the quirk for each
-> > device
-> > (28 so far) and then, when we have new ids, adding them there and to
-> > the driver, so it is more convenient just to do it in the driver.
-> > Certainly, this is the only driver we have for these Intel SDHCI PCI ho=
-st
-> controllers.
->=20
-> pci_d3_delay_fixup() has code that mitigates the problem of adding new ID=
-s.
-> Maybe that quirk should simply be moved to arch/x86/pci/fixup.c?
 
-pci_d3_delay_fixup() is not setting zero.  quirk_remove_d3_delay() and crea=
-ting
-a quirk_remove_d3cold_delay() would work.
 
-> If we put this in the driver, won't we have the unnecessary delays on
-> systems where the driver isn't in use?
-
-The issue is unacceptable I/O latency (streaming audio through the device
-was the example) which means you have to have a driver.
+On 29-Oct-17 3:12 PM, Vidya Sagar wrote:
+> 
+> 
+> On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
+>> Set required bit to have LTSSM wait for DLLP to finish before entering L1
+>> or L2. This avoids truncation of PM messages which results in receiver
+>> errors.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>   drivers/pci/host/pci-tegra.c | 10 ++++++++++
+>>   1 file changed, 10 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index b8cac871712b..6028d5f3d5bb 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -217,6 +217,9 @@
+>>   #define RP_VEND_CTL1    0xf48
+>>   #define  RP_VEND_CTL1_ERPT    (1 << 13)
+>>   +#define RP_VEND_XP_BIST    0xf4c
+>> +#define  RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE    (1 << 28)
+>> +
+> BIT macro is preferred here.
+Left shift is used everywhere, so to be inline with that I used same format
+>>   #define RP_VEND_CTL2 0x00000fa8
+>>   #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
+>>   @@ -2160,6 +2163,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>>       value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
+>>       value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
+>>       writel(value, port->base + RP_VEND_XP);
+>> +
+>> +    /* LTSSM will wait for DLLP to finish before entering L1 or L2,
+>> +     * to avoid truncation of PM messages which results in receiver errors
+>> +     */
+>> +    value = readl(port->base + RP_VEND_XP_BIST);
+>> +    value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
+>> +    writel(value, port->base + RP_VEND_XP_BIST);
+>>   }
+>>   /*
+>>    * FIXME: If there are no PCIe cards attached, then calling this function
+> 
