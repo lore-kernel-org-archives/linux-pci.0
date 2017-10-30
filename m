@@ -1,75 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 18 Oct 2017 10:26:39 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Khuong Dinh <kdinh@apm.com>
-Subject: Re: [PATCH v4 pci 0/2] PCI/MSI: pci-xgene-msi: Enable MSI support in
- ACPI boot for X-Gene v1
-Message-ID: <20171018092639.GD14820@red-moon>
-References: <1506448161-30961-1-git-send-email-kdinh@apm.com>
- <CAAsHzqv-oQVNm-pNP4Q1KmiSmjaiFx1S4j8uCnij53Te3h8KKg@mail.gmail.com>
- <20171017133807.GB948@red-moon>
- <CAAsHzqsxMy8On5ThggTwYohqMCLEJTbA=b1LgUPiuKu9C+eHeQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:3788 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932182AbdJ3LGT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 07:06:19 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
+        <yinghai@kernel.org>, <david.daney@cavium.com>,
+        <Julia.Lawall@lip6.fr>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
+Subject: [PATCH 4/4] PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
+Date: Mon, 30 Oct 2017 16:33:05 +0530
+Message-ID: <1509361385-21224-5-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
+References: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <CAAsHzqsxMy8On5ThggTwYohqMCLEJTbA=b1LgUPiuKu9C+eHeQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci@vger.kernel.org, msalter@redhat.com, patches <patches@apm.com>,
- linux-kernel@vger.kernel.org, jcm@redhat.com,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[removed unintended disclaimer]
+sets CLKREQ asserted delay to a higher value to avoid
+unnecessary wake up from L1.2_ENTRY state for Tegra210
 
-On Tue, Oct 17, 2017 at 10:45:35PM -0700, Khuong Dinh wrote:
-> Hi Lorenzo,
-> 
-> On Tue, Oct 17, 2017 at 6:38 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > Hi Khuong,
-> >
-> > On Mon, Oct 16, 2017 at 02:19:50PM -0700, Khuong Dinh wrote:
-> >> Hi Lorenzo,
-> >>   Do you have any comments for this patch?
-> >
-> > I'd have some comments but given that there are related issues with ACPI
-> > probe ordering that Marc is trying to solve on his side - I will work
-> > with him to see if we can accommodate changes that can solve this issue
-> > too.
-> >
-> > Again - I recognize it is a complex problem (that is not even
-> > contemplated by the current ACPI specs), we have to try to make
-> > the solution as generic as we can to prevent reinventing the wheel
-> > anytime a sligthly different issue (related to ACPI probe ordering)
-> > comes up.
-> >
-> > Leave it to me (us) and I will get back to you on this.
-> 
-> Thanks for helping to take care of the generic ACPI probe ordering issue.
-> Given that the patch 'PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
-> boot for X-Gene v1" adds only the ACPI ID, can you pull in this patch
-> independently from the ACPI probe ordering issue?
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-No. For two reasons:
-
-1) It's Bjorn who decides whether that code can be merged or not, not me
-2) That patch sneaks in ACPI MSI support for X-gene v1 that depends on
-   kernel link ordering. As soon as it is pulled in the mainline it
-   creates a dependency on pseudo-working code that may break anytime
-   and as I said many times before I am not willing to rely on that.
-
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 08da67a82a2d..811209dedde2 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -204,6 +204,8 @@
+ #define RP_L1_PM_SUBSTATES_1_CTL			0xC04
+ #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
+ #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
++#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK		(0x1FF << 13)
++#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY		(0x27 << 13)
+ 
+ #define RP_L1_PM_SUBSTATES_2_CTL			0xC08
+ #define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
+@@ -354,6 +356,7 @@ struct tegra_pcie_soc {
+ 	bool updateFC_threshold;
+ 	bool has_aspm_l1;
+ 	bool has_aspm_l1ss;
++	bool l1ss_rp_wake_fixup;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2307,6 +2310,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
+ 		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+ 
++		if (soc->l1ss_rp_wake_fixup) {
++			/* Set CLKREQ asserted delay greater than Power_Off
++			 * time (2us) to avoid RP wakeup in L1.2_ENTRY
++			 */
++			value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
++			value &= ~RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK;
++			value |= RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY;
++			writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
++		}
++
+ 		/* Following is based on clk_m being 19.2 MHz */
+ 		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
+ 		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
+@@ -2464,6 +2477,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1 = false,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2487,6 +2501,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1 = true,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2509,6 +2524,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1 = true,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2539,6 +2555,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.updateFC_threshold = true,
+ 	.has_aspm_l1 = true,
+ 	.has_aspm_l1ss = true,
++	.l1ss_rp_wake_fixup = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2562,6 +2579,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1 = true,
+ 	.has_aspm_l1ss = true,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
+-- 
+2.7.4
