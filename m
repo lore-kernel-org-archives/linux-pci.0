@@ -1,118 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/8] PCI: Improvements for native PCIe hotplug
-Date: Fri, 13 Oct 2017 21:35:40 +0300
-Message-Id: <20171013183548.68283-1-mika.westerberg@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kapsi.fi ([91.232.154.25]:43733 "EHLO mail.kapsi.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752141AbdJ3KCL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Oct 2017 06:02:11 -0400
+Subject: Re: [PATCH V2 08/12] PCI: tegra: Wait for DLLP to finish before
+ entering L1 or L2
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509337143-25963-9-git-send-email-mmaddireddy@nvidia.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <1f714556-3411-c8d8-a95c-fc079f7380ee@kapsi.fi>
+Date: Mon, 30 Oct 2017 12:02:09 +0200
+MIME-Version: 1.0
+In-Reply-To: <1509337143-25963-9-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently when plugging PCIe device using native PCIe hotplug Linux PCI
-core tries to allocate bus space and resources so that the newly enumerated
-topology barely fits there. Now, if the PCIe topology that was just plugged
-in has more PCIe hotplug ports we will run out of bus space and resources
-pretty quickly. There is a workaround for this by passing pci=hpbussize=N
-in the kernel command line but it runs to the same situation after next
-hotplug.
+On 30.10.2017 06:18, Manikanta Maddireddy wrote:
+> Set required bit to have LTSSM wait for DLLP to finish before entering L1
+> or L2. This avoids truncation of PM messages which results in receiver
+> errors.
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V2:
+> * no change in this patch
+>
+>  drivers/pci/host/pci-tegra.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 75b408b32b8b..7f1e34e670d7 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -217,6 +217,9 @@
+>  #define RP_VEND_CTL1	0xf48
+>  #define  RP_VEND_CTL1_ERPT	(1 << 13)
+>
+> +#define RP_VEND_XP_BIST	0xf4c
+> +#define  RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE	(1 << 28)
+> +
+>  #define RP_VEND_CTL2 0x00000fa8
+>  #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
+>
+> @@ -2160,6 +2163,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>  	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
+>  	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
+>  	writel(value, port->base + RP_VEND_XP);
+> +
+> +	/* LTSSM will wait for DLLP to finish before entering L1 or L2,
+> +	 * to avoid truncation of PM messages which results in receiver errors
+> +	 */
+> +	value = readl(port->base + RP_VEND_XP_BIST);
+> +	value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
+> +	writel(value, port->base + RP_VEND_XP_BIST);
+>  }
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+>
 
-A good example where this is a problem is Thunderbolt where each
-Thunderbolt device includes PCIe switch and the topology can be extended up
-to 6 chained devices.
+This would also move to the calling function, but
 
-Future platforms will move from BIOS assisted (ACPI) hotplug from native
-PCIe hotplug because then it is possible to power down PCIe hotplug ports
-without confusing the SMI handler which is not necessary when native PCIe
-hotplug is used. Also Apple Macs have been using native PCIe hotplug from
-the beginning. Windows already knows how to handle these complex PCIe
-topologies and we will reuse the same knowledge in Linux with this patch
-series.
-
-The idea is to distribute available bus space and resources to hotplug PCIe
-downstream ports so that the PCIe chain can be extended from those points.
-The initial available space is configured by the BIOS to the root port in
-question.
-
-This series first teaches the Linux PCI core to distribute available bus
-space and resources if PCIe hotplug is used. Then following are fixes for
-issues found while testing.
-
-With this series applied I can connect the maximum length Thunderbolt PCIe
-chain (6 devices) to a Macbook Pro as can be seen from the 'lspci -t'
-output below:
-
--[0000:00]-+-00.0
-           +-02.0
-           +-14.0
-           +-16.0
-           +-19.0
-           +-1c.0-[01]----00.0
-           +-1c.4-[03-78]----00.0-[04-78]--+-00.0-[05]----00.0
-           |                               +-01.0-[07-3f]----00.0-[08-3f]--+-01.0-[09]----00.0
-           |                               |                               \-04.0-[0a-3f]----00.0-[0b-3f]--+-01.0-[0c]----00.0
-           |                               |                                                               \-04.0-[0d-3f]----00.0-[0e-3f]--+-01.0-[0f]--
-           |                               |                                                                                               \-04.0-[10-3f]----00.0-[11-3f]--+-01.0-[12]----00.0
-           |                               |                                                                                                                               \-04.0-[13-3f]----00.0-[14-3f]--+-01.0-[15]----00.0
-           |                               |                                                                                                                                                               \-04.0-[16-3f]----00.0-[17-3f]----00.0-[18-3f]----00.0
-           |                               +-02.0-[06]----00.0
-           |                               \-04.0-[40-78]--
-           +-1d.0-[79-ee]----00.0-[7a-ee]--+-00.0-[7b]----00.0
-           |                               +-01.0-[7d-b5]--
-           |                               +-02.0-[7c]----00.0
-           |                               \-04.0-[b6-ee]--
-           +-1d.3-[02]----00.0
-           +-1e.0
-           +-1e.1
-           +-1e.3
-           +-1f.0
-           +-1f.2
-           +-1f.3
-           \-1f.4
-
-The previous version (v1) of the patch series can be found here:
-
-  https://www.spinics.net/lists/linux-pci/msg64841.html
-
-Changes from v1:
-
-  * Rebase on top of Andy's for_each_pci_bridge() patch
-  * Move pci_hp_add_bridge() to drivers/pci/probe.c
-  * Split open-coding of the two pass scan loop into a separate patch
-  * Drop [PATCH 2/7] PCI: Introduce pcie_upstream_port()
-  * Keep pci_scan_bridge_extend() and pci_scan_child_bus_extend() internal
-    to drivers/pci/probe.c
-  * Add another separate loop to count number of hotplug and normal bridges
-  * Reword comment about two scans
-  * Generalize patches 4 and 5 so that they could work also on conventional
-    PCI by dropping tests for PCIe.
-
-Mika Westerberg (8):
-  PCI: Move pci_hp_add_bridge() to drivers/pci/probe.c
-  PCI: Open-code the two pass loop when scanning bridges
-  PCI: Do not allocate more buses than available in parent
-  PCI: Distribute available buses to hotplug capable bridges
-  PCI: Distribute available resources to hotplug capable bridges
-  PCI: pciehp: Fix race condition handling surprise link down
-  PCI: pciehp: Do not clear Presence Detect Changed during initialization
-  PCI: pciehp: Check that the device is really present before touching it
-
- drivers/pci/Makefile              |   3 -
- drivers/pci/hotplug-pci.c         |  29 ------
- drivers/pci/hotplug/pciehp_ctrl.c |   7 +-
- drivers/pci/hotplug/pciehp_hpc.c  |  13 ++-
- drivers/pci/hotplug/pciehp_pci.c  |  18 +++-
- drivers/pci/probe.c               | 188 +++++++++++++++++++++++++++++++++++---
- drivers/pci/setup-bus.c           | 177 +++++++++++++++++++++++++++++++++++
- 7 files changed, 379 insertions(+), 56 deletions(-)
- delete mode 100644 drivers/pci/hotplug-pci.c
-
--- 
-2.14.2
+Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
