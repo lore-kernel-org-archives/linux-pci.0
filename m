@@ -1,96 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:52251 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753706AbdJaWjp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:39:45 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 01/17] PCI: dwc: Use DMA-API for allocating MSI data
-Date: Tue, 31 Oct 2017 23:39:19 +0100
-Message-Id: <20171031223936.27549-2-niklas.cassel@axis.com>
-In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Received: from mail.kapsi.fi ([91.232.154.25]:60229 "EHLO mail.kapsi.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751735AbdJ3KJJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Oct 2017 06:09:09 -0400
+Subject: Re: [PATCH V2 10/12] PCI: tegra: Add SW fixup for RAW violations
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509337143-25963-11-git-send-email-mmaddireddy@nvidia.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <00f35628-4205-5dd4-c4ba-45bb709b8c20@kapsi.fi>
+Date: Mon, 30 Oct 2017 12:09:06 +0200
+MIME-Version: 1.0
+In-Reply-To: <1509337143-25963-11-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since it is a PCIe endpoint device, rather than the CPU, that is supposed
-to write to this location, the proper way to get the address to this this
-location is really to use the DMA API, rather than virt_to_phys.
+On 30.10.2017 06:19, Manikanta Maddireddy wrote:
+> The logic which blocks read requests till AFI gets ACK for all outstanding
+> MC writes does not behave correctly when number of outstanding write
+> becomes more than 32.
+>
+> SW fixup to prevent this issue is to limit outstanding posted writes and
+> tweak updateFC timer threshold.
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V2:
+> * no change in this patch
+>
+>  drivers/pci/host/pci-tegra.c | 30 ++++++++++++++++++++++++++++++
+>  1 file changed, 30 insertions(+)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 3c625ccfa539..d348f487f5d7 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -185,6 +185,13 @@
+>
+>  #define AFI_PEXBIAS_CTRL_0		0x168
+>
+> +#define RP_PRIV_XP_DL	0x494
+> +#define  RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD	(0x1ff << 1)
+> +
+> +#define RP_RX_HDR_LIMIT	0xe00
+> +#define  RP_RX_HDR_LIMIT_PW_MASK	(0xff << 8)
+> +#define  RP_RX_HDR_LIMIT_PW		(0x0e << 8)
+> +
+>  #define RP_ECTL_2_R1	0xe84
+>  #define  RP_ECTL_2_R1_RX_CTLE_1C_MASK		0xffff
+>
+> @@ -213,6 +220,7 @@
+>  #define  RP_VEND_XP_DL_UP			(1 << 30)
+>  #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+>  #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+> +#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+>
+>  #define RP_VEND_CTL1	0xf48
+>  #define  RP_VEND_CTL1_ERPT	(1 << 13)
+> @@ -307,6 +315,7 @@ struct tegra_pcie_soc {
+>  	bool program_uphy;
+>  	bool program_ectl_settings;
+>  	bool update_clamp_threshold;
+> +	bool RAW_violation_fixup;
 
-Using virt_to_phys might work on some systems, but by using the DMA API,
-we know that it will work on all systems.
+This needs to be 'raw_violation_fixup'. Otherwise looks good to me. (To 
+be funny you could call it 'raw_violation_war' ..but maybe not :)
 
-This is essentially the same thing as allocating a buffer in a driver,
-to which the endpoint will write to. To do this, we use the DMA API.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
-V3:
-* No change.
-
- drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
- drivers/pci/dwc/pcie-designware.h      |  3 ++-
- 2 files changed, 14 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 81e2157a7cfb..33b52fe98a01 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -83,10 +83,19 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 
- void dw_pcie_msi_init(struct pcie_port *pp)
- {
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct device *dev = pci->dev;
-+	struct page *page;
- 	u64 msi_target;
- 
--	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
--	msi_target = virt_to_phys((void *)pp->msi_data);
-+	page = alloc_page(GFP_KERNEL | GFP_DMA32);
-+	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
-+	if (dma_mapping_error(dev, pp->msi_data)) {
-+		dev_err(dev, "failed to map MSI data\n");
-+		__free_page(page);
-+		return;
-+	}
-+	msi_target = (u64)pp->msi_data;
- 
- 	/* program the msi_data */
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-@@ -187,7 +196,7 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
- 	if (pp->ops->get_msi_addr)
- 		msi_target = pp->ops->get_msi_addr(pp);
- 	else
--		msi_target = virt_to_phys((void *)pp->msi_data);
-+		msi_target = (u64)pp->msi_data;
- 
- 	msg.address_lo = (u32)(msi_target & 0xffffffff);
- 	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index e5d9d77b778e..ecdede68522a 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -14,6 +14,7 @@
- #ifndef _PCIE_DESIGNWARE_H
- #define _PCIE_DESIGNWARE_H
- 
-+#include <linux/dma-mapping.h>
- #include <linux/irq.h>
- #include <linux/msi.h>
- #include <linux/pci.h>
-@@ -168,7 +169,7 @@ struct pcie_port {
- 	const struct dw_pcie_host_ops *ops;
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
--	unsigned long		msi_data;
-+	dma_addr_t		msi_data;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
- };
- 
--- 
-2.14.2
+>  };
+>
+>  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+> @@ -2189,6 +2198,22 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>  				RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD);
+>  	}
+>  	writel(value, port->base + RP_PRIV_MISC);
+> +
+> +	/* Fixup for read after write violation in T124 & T132 platforms */
+> +	if (soc->RAW_violation_fixup) {
+> +		value = readl(port->base + RP_RX_HDR_LIMIT);
+> +		value &= ~RP_RX_HDR_LIMIT_PW_MASK;
+> +		value |= RP_RX_HDR_LIMIT_PW;
+> +		writel(value, port->base + RP_RX_HDR_LIMIT);
+> +
+> +		value = readl(port->base + RP_PRIV_XP_DL);
+> +		value |= RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD;
+> +		writel(value, port->base + RP_PRIV_XP_DL);
+> +
+> +		value = readl(port->base + RP_VEND_XP);
+> +		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
+> +		writel(value, port->base + RP_VEND_XP);
+> +	}
+>  }
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+> @@ -2326,6 +2351,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.program_uphy = true,
+>  	.program_ectl_settings = false,
+>  	.update_clamp_threshold = false,
+> +	.RAW_violation_fixup = false,
+>  };
+>
+>  static const struct tegra_pcie_soc tegra30_pcie = {
+> @@ -2344,6 +2370,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>  	.program_uphy = true,
+>  	.program_ectl_settings = false,
+>  	.update_clamp_threshold = false,
+> +	.RAW_violation_fixup = false,
+>  };
+>
+>  static const struct tegra_pcie_soc tegra124_pcie = {
+> @@ -2361,6 +2388,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>  	.program_uphy = true,
+>  	.program_ectl_settings = false,
+>  	.update_clamp_threshold = true,
+> +	.RAW_violation_fixup = true,
+>  };
+>
+>  static const struct tegra_pcie_soc tegra210_pcie = {
+> @@ -2386,6 +2414,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>  	.program_uphy = true,
+>  	.program_ectl_settings = true,
+>  	.update_clamp_threshold = true,
+> +	.RAW_violation_fixup = false,
+>  };
+>
+>  static const struct tegra_pcie_soc tegra186_pcie = {
+> @@ -2404,6 +2433,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>  	.program_uphy = false,
+>  	.program_ectl_settings = false,
+>  	.update_clamp_threshold = false,
+> +	.RAW_violation_fixup = false,
+>  };
+>
+>  static const struct of_device_id tegra_pcie_of_match[] = {
+>
