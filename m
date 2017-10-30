@@ -1,137 +1,72 @@
-Return-Path: <SRS0=6/CK=BQ=gmail.com=thierry.reding@kernel.org>
-Return-Path: <SRS0=6/CK=BQ=gmail.com=thierry.reding@kernel.org>
-Date: Tue, 17 Oct 2017 22:28:14 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
-	jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org, mperttunen@nvidia.com
-Subject: Re: [PATCH V2 0/4] Add Tegra186 PCIe support
-Message-ID: <20171017202814.GC10482@ulmo>
-References: <1506513517-25870-1-git-send-email-mmaddireddy@nvidia.com>
- <20171017173740.GF5641@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:13931 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751209AbdJ3D5c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 Oct 2017 23:57:32 -0400
+Subject: Re: [PATCH 07/12] PCI: tegra: Disable AFI dynamic clock gating
+To: Vidya Sagar <vidyas@nvidia.com>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <jonathanh@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>
+References: <1509132569-9398-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509132569-9398-8-git-send-email-mmaddireddy@nvidia.com>
+ <171c265a-c1f9-913c-54e5-02b325a7487c@nvidia.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <7c478bcc-3ee0-51c1-0e5a-b0febc4dff8c@nvidia.com>
+Date: Mon, 30 Oct 2017 09:25:50 +0530
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="/Uq4LBwYP4y1W6pO"
-In-Reply-To: <20171017173740.GF5641@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <171c265a-c1f9-913c-54e5-02b325a7487c@nvidia.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
---/Uq4LBwYP4y1W6pO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Oct 17, 2017 at 12:37:40PM -0500, Bjorn Helgaas wrote:
-> On Wed, Sep 27, 2017 at 05:28:33PM +0530, Manikanta Maddireddy wrote:
-> > Tegra186 has three PCIe controllers which can be operated
-> > in 401, 211 or 111 lane configurations. Tegra TX2 platform
-> > has x4 and M.2 Key E PCIe slots, these patches enables
-> > x4 slot. BPMP programs UPHY lane0 ownership to USB,
-> > so M.2 Key E PCIe will not work.
-> >=20
-> > Testing: x4 slot is verified with PCIe based USB3.1 card.
-> > PCIe link up, usb flash drive mounting and file copy are
-> > verified. These patches are also verified by
-> > Mikko Perttunen <mperttunen@nvidia.com> with an Intel 82574L
-> > ethernet card.
-> >=20
-> > Patch V2 adds soc->program_uphy check for phy_exit call.
-> >=20
-> > Pasting PCIe link up logs below.
-> >=20
-> > [    1.452512] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
-> > [    1.452723] tegra-pcie 10003000.pcie: Failed to get supply 'dvdd-pex=
-': -517
-> > [    1.561824] ehci-pci: EHCI PCI platform driver
-> > [    1.591587] ohci-pci: OHCI PCI platform driver
-> > [    3.072464] tegra-pcie 10003000.pcie: 4x1, 1x1 configuration
-> > [    3.078989] tegra-pcie 10003000.pcie: probing port 0, using 4 lanes
-> > [    3.087272] tegra-pcie 10003000.pcie: Slot present pin change, signa=
-ture: 00000018
-> > [    3.128818] tegra-pcie 10003000.pcie: PCI host bridge to bus 0000:00
-> > [    3.135174] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
-> > [    3.141352] pci_bus 0000:00: root bus resource [mem 0x50100000-0x57f=
-fffff]
-> > [    3.148221] pci_bus 0000:00: root bus resource [mem 0x58000000-0x7ff=
-fffff pref]
-> > [    3.155542] pci_bus 0000:00: root bus resource [bus 00-ff]
-> > [    3.161173] pci 0000:00:01.0: [10de:10e5] type 01 class 0x060400
-> > [    3.161188] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
-set 0x4 may corrupt adjacent RW1C bits
-> > [    3.170838] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
-set 0x4 may corrupt adjacent RW1C bits
-> > [    3.180532] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
-set 0x52 may corrupt adjacent RW1C bits
-> > [    3.190305] pci 0000:00:01.0: PME# supported from D0 D1 D2 D3hot D3c=
-old
-> > [    3.190312] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
-set 0x4c may corrupt adjacent RW1C bits
-> > [    3.200158] pci 0000:00:01.0: bridge configuration invalid ([bus 00-=
-00]), reconfiguring
-> > [    3.208158] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
-set 0x3e may corrupt adjacent RW1C bits
-> > [    3.217918] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
-set 0x3e may corrupt adjacent RW1C bits
-> > [    3.227649] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
-set 0x3e may corrupt adjacent RW1C bits
-> > [    3.237382] pci_bus 0000:00: 2-byte config write to 0000:00:01.0 off=
-set 0x6 may corrupt adjacent RW1C bits
-> > [    3.247135] pci 0000:01:00.0: [1b21:1242] type 00 class 0x0c0330
-> > [    3.247157] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 off=
-set 0x4 may corrupt adjacent RW1C bits
-> > [    3.256807] pci_bus 0000:01: 2-byte config write to 0000:01:00.0 off=
-set 0x4 may corrupt adjacent RW1C bits
-> > [    3.266477] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00007fff 6=
-4bit]
-> > [    3.266544] pci 0000:01:00.0: enabling Extended Tags
-> > [    3.271622] pci 0000:01:00.0: PME# supported from D3hot D3cold
-> > [    3.271775] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to=
- 01
-> > [    3.271798] pci 0000:00:01.0: BAR 14: assigned [mem 0x50100000-0x501=
-fffff]
-> > [    3.278671] pci 0000:01:00.0: BAR 0: assigned [mem 0x50100000-0x5010=
-7fff 64bit]
-> > [    3.285993] pci 0000:00:01.0: PCI bridge to [bus 01]
-> > [    3.290959] pci 0000:00:01.0:   bridge window [mem 0x50100000-0x501f=
-ffff]
-> > [    3.297763] pci 0000:00:01.0: nv_msi_ht_cap_quirk didn't locate host=
- bridge
-> > [    3.304784] pcieport 0000:00:01.0: enabling device (0000 -> 0002)
-> > [    3.311014] pcieport 0000:00:01.0: Signaling PME with IRQ 57
-> > [    3.316768] pci 0000:01:00.0: enabling device (0000 -> 0002)
-> >=20
-> >=20
-> > Manikanta Maddireddy (4):
-> >   dt-bindings: pci: tegra: Document Tegra186 PCIe DT
-> >   PCI: tegra: Add Tegra186 PCIe support
->=20
-> I applied these two with Thierry's tested-by and acks to
-> pci/host-tegra for v4.15, thanks!  If you have a changelog update for
-> the pm_domain question, I can fold that in.
-
-Thanks!
-
-Thierry
-
---/Uq4LBwYP4y1W6pO
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlnmZ94ACgkQ3SOs138+
-s6FMUhAAgoD+BPGEVUXULpGAgUFuh8OpnM1W0NLh2Cz5F5CqRCVYo98nuIYmUjd9
-0oIASQnil7GsZkv0STPAkvCh4CKu1cLX7DOEeEDCAkn47+lJYkJtqPSQRSl/QC/G
-03ccknaATAu+oJVdTVZaASucBUE0YvRs5djnLzNKVQtUF2CMCbe9rL0EvvhjaN1S
-+/Jbn/ssDE6Yd3GckyqTqHIxMCZDFRaBZry6hZu0H6UNA5EKrgQwPbZYyq8YVewq
-nq6xUPRYYoJjencjFP6EHHWcNWSAUt86ToDHwqL+TcYDVD392q22GroC3zbPrvq3
-0w5aVOhvQcA5ugGguuBOfQmhXV/L8/kA9MCAshWBaZKvFB047gds7Wkdt4YZ7D5R
-g0iVDqSNuOTyzync2adOCmdrMNeSx8ZsMqhtDhiG4P1nspIsx5dL3iEzUI3ZuaOj
-mB1mGDI8F1cjgCBGiuDdWhxwxy0PfkD7kTwN5VDxpdlLcvaIshLcLAn/IkjfCw9J
-/7K57u1rPXCaMv0YFnqBQY8T0s3j9Aq1pMB/zvlCOTe+NWxHUZVUapuGWU7gsfKZ
-4JOy4IPv2DLmJk2C6kH0HzXeO4emNEdCqThxPqCCbukVyazs34zU+rIWYes+awaQ
-z1ouvTsIjSlOxG9MGa73pRgPabSWOpirhKQla9wdEOpbkE7vxiQ=
-=2Krb
------END PGP SIGNATURE-----
-
---/Uq4LBwYP4y1W6pO--
+On 29-Oct-17 3:12 PM, Vidya Sagar wrote:
+> 
+> 
+> On Saturday 28 October 2017 12:59 AM, Manikanta Maddireddy wrote:
+>> When there are 32 outstanding writes from AFI to memory, the outstanding
+>> write counter overflows and indicates that there are "0" outstanding write
+>> transactions. This outstanding write counter is used to generate IDLE
+>> signal to dynamically gate the AFI clock.
+>>
+>> When memory controller is under heavy load, its possible that write
+>> completions will come back to AFI after long delay and AFI write counter
+>> overflows. AFI clock gets gated even when there are outstanding
+>> transactions towards memory controller resutling in system hang.
+>>
+>> Disable dynamic clock gating of AFI clock to avoid system hang.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>   drivers/pci/host/pci-tegra.c | 10 ++++++----
+>>   1 file changed, 6 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index 27a8211c48b2..b8cac871712b 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -103,8 +103,9 @@
+>>   #define AFI_MSI_EN_VEC6        0xa4
+>>   #define AFI_MSI_EN_VEC7        0xa8
+>>   -#define AFI_CONFIGURATION        0xac
+>> -#define  AFI_CONFIGURATION_EN_FPCI    (1 << 0)
+>> +#define AFI_CONFIGURATION            0xac
+>> +#define  AFI_CONFIGURATION_EN_FPCI        (1 << 0)
+>> +#define  AFI_CONFIGURATION_CLKEN_OVERRIDE    (1 << 31)
+> BIT macro is preferred here.
+Left shift is used everywhere, so to be inline with that I used same format
+>>     #define AFI_FPCI_ERROR_MASKS    0xb0
+>>   @@ -1057,9 +1058,10 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>>           }
+>>       }
+>>   -    /* finally enable PCIe */
+>> +    /* Disable AFI dynamic clock gating and enable PCIe */
+>>       value = afi_readl(pcie, AFI_CONFIGURATION);
+>> -    value |= AFI_CONFIGURATION_EN_FPCI;
+>> +    value |= (AFI_CONFIGURATION_EN_FPCI |
+>> +            AFI_CONFIGURATION_CLKEN_OVERRIDE);
+>>       afi_writel(pcie, value, AFI_CONFIGURATION);
+>>         value = AFI_INTR_EN_INI_SLVERR | AFI_INTR_EN_INI_DECERR |
+> 
