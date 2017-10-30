@@ -1,78 +1,99 @@
-Return-Path: <SRS0=d13r=BL=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=d13r=BL=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH 2/5] PCI: handle FLR failure and allow other reset types
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-References: <1506212218-29103-1-git-send-email-okaya@codeaurora.org>
- <1506212218-29103-2-git-send-email-okaya@codeaurora.org>
- <20171011210057.GU25517@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <972aee6d-7f55-12f5-08ef-7809b7f133e0@codeaurora.org>
-Date: Thu, 12 Oct 2017 12:42:08 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kapsi.fi ([91.232.154.25]:45312 "EHLO mail.kapsi.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932291AbdJ3JNH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Oct 2017 05:13:07 -0400
+Subject: Re: [PATCH V2 02/12] PCI: tegra: Move REFCLK pad settings out of
+ phy_power_on()
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509337143-25963-3-git-send-email-mmaddireddy@nvidia.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <0b471cf9-c43d-2708-28b3-74e65d5b60ab@kapsi.fi>
+Date: Mon, 30 Oct 2017 11:13:05 +0200
 MIME-Version: 1.0
-In-Reply-To: <20171011210057.GU25517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1509337143-25963-3-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/11/2017 5:00 PM, Bjorn Helgaas wrote:
-> On Sat, Sep 23, 2017 at 08:16:55PM -0400, Sinan Kaya wrote:
->> pci_flr_wait() and pci_af_flr() functions assume graceful return even
->> though the device is inaccessible under error conditions.
->>
->> Return -ENOTTY in error cases so that __pci_reset_function_locked() can
->> try other reset types if AF_FLR/FLR reset fails.
-> 
-> This makes sense to me, but I think the error handling in
-> __pci_reset_function_locked() is confusing.  It currently is:
-> 
->   rc = pci_dev_specific_reset(dev, 0);
->   if (rc != -ENOTTY)
->     return rc;
->   if (pcie_has_flr(dev)) {
->     pcie_flr(dev);
->     return 0;
->   }
->   rc = pci_af_flr(dev, 0);
->   if (rc != -ENOTTY)
->     return rc;
-> 
-> Would it make sense to change this to the following?
-> 
->   rc = pci_dev_specific_reset(dev, 0);
->   if (rc == 0)
->     return 0;
-> 
->   if (pcie_has_flr(dev)) {
->     pcie_flr(dev);
->     return 0;
->   }
-> 
->   rc = pci_af_flr(dev, 0);
->   if (rc == 0)
->     return 0;
-> 
+On 30.10.2017 06:18, Manikanta Maddireddy wrote:
+> In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
+> in driver. REFCLK pad settings are independent of PHY and should be
+> programmed by driver. So move REFCLK pad settings out of phy_power_on().
+> These pad settings improves REFCLK peak to peak amplitude.
 
-Yeah, this is cleaner. I'll create a separate patch for that. 
+s/improves/improve/.
 
-> I found two cases where this would make a difference: reset_ivb_igd()
-> returns -ENOMEM if pci_iomap() fails, and pci_pm_reset() returns
-> -EINVAL if the device is not in D0.
-> 
-> In both cases we currently return the failure, but it would seem
-> reasonable to me to try another reset method.
-> 
-> That could be done in a new patch before this one.  Then *this* patch
-> could use -ETIMEDOUT instead of -ENOTTY, and I think the whole thing
-> would become a little more readable.
-> 
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V2:
+> * no change in this patch
+>
+>  drivers/pci/host/pci-tegra.c | 19 ++++++++++++-------
+>  1 file changed, 12 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index b41c60c7414c..2c64eb6cc3cc 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -910,7 +910,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
+>  static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+>  {
+>  	struct device *dev = pcie->dev;
+> -	const struct tegra_pcie_soc *soc = pcie->soc;
+>  	struct tegra_pcie_port *port;
+>  	int err;
+>
+> @@ -936,12 +935,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+>  		}
+>  	}
+>
+> -	/* Configure the reference clock driver */
+> -	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+> -
+> -	if (soc->num_ports > 2)
+> -		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+> -
+>  	return 0;
+>  }
+>
+> @@ -2049,6 +2042,17 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>  	return 0;
+>  }
+>
+> +static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
+> +{
+> +	const struct tegra_pcie_soc *soc = pcie->soc;
+> +
+> +	/* Configure the reference clock driver */
+> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+> +
+> +	if (soc->num_ports > 2)
+> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+> +}
+> +
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+>   * can result in the increase of the bootup time as there are big timeout
+> @@ -2107,6 +2111,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>  	struct device *dev = pcie->dev;
+>  	struct tegra_pcie_port *port, *tmp;
+>
+> +	tegra_pcie_apply_pad_settings(pcie);
 
+Perhaps an empty line after this.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>  		dev_info(dev, "probing port %u, using %u lanes\n",
+>  			 port->index, port->lanes);
+>
+
+With that,
+
+Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
