@@ -1,57 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:4807 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932182AbdJ3LEh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 07:04:37 -0400
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
-        <yinghai@kernel.org>, <david.daney@cavium.com>,
-        <Julia.Lawall@lip6.fr>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:5565 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbdJ3EWx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:22:53 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
 CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH 0/4] Add ASPM-L1 Substates support for Tegra
-Date: Mon, 30 Oct 2017 16:33:01 +0530
-Message-ID: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 06/12] PCI: tegra: Enable opportunistic update FC and ACK
+Date: Mon, 30 Oct 2017 09:48:57 +0530
+Message-ID: <1509337143-25963-7-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra chips T210 and T186 support ASPM-L1 Substates (i.e. L1.1 and L1.2)
-This patch series
-- adds a generic API for root port controller drivers to
-  override the default value of LTR L1.2 Threhold which otherwise comes from
-  the same APIs weak implementation in aspm.c file
-- applies fixups to reflect correct capability values for
-  T_cmrt (Common Mode Restore Time) and
-  T_pwr_on (Power On)
-  and adjusts counter values for 19.2 MHz of clk_m
-- applies fixup specific to T210 to avoid unnecessary wake ups from L1.2 state
+This patch ensures that DL sends pending ACKs and update FC packets when
+link is idle instead of waiting for timers to expire which improves PCIe
+bandwidth.
 
-PCIe - ASPM L1 Sub States spec
-https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V2:
+* no change in this patch
 
-Testing Done on T210 and T186
-- ASPM-L1:
-  Verified ASPM-L1 enablement by selecting PCIEASPM_POWERSAVE config
-  With the help of Tegra rootport's internal counter registers, confirmed
-  link entry in and out of ASPM-L1 state using USB3.0 add-on card, NVMe and NIC
-  cards
-- ASPM-L1 SubStates:
-  Verified ASPM-L1 Substates enablement by selecting PCIEASPM_POWER_SUPERSAVE config
-  Confirmed link's entry into L1SS using Westren Digital NVMe card (with Sandisk
-  Controller) using Tegra rootport's internal counter registers
+ drivers/pci/host/pci-tegra.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-Vidya Sagar (4):
-  PCI/ASPM: Add API to supply LTR L1.2 threshold
-  PCI: tegra: Enable ASPM-L1 capability advertisement
-  PCI: tegra: Apply sw fixups to support ASPM-L1 Sub-States
-  PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
-
- drivers/pci/host/pci-tegra.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pcie/aspm.c      | 11 +++--
- include/linux/pci-aspm.h     |  6 +++
- 3 files changed, 113 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 51b7821646eb..bf615c5e6b78 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -209,7 +209,9 @@
+ #define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+ 
+ #define RP_VEND_XP	0x00000f00
+-#define  RP_VEND_XP_DL_UP	(1 << 30)
++#define  RP_VEND_XP_DL_UP			(1 << 30)
++#define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
++#define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ 
+ #define RP_VEND_CTL1	0xf48
+ #define  RP_VEND_CTL1_ERPT	(1 << 13)
+@@ -2147,6 +2149,16 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+ 	writel(value, port->base + RP_VEND_CTL1);
+ }
+ 
++static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
++{
++	unsigned long value;
++
++	/* Optimal settings to enhance bandwidth */
++	value = readl(port->base + RP_VEND_XP);
++	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
++	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
++	writel(value, port->base + RP_VEND_XP);
++}
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+  * can result in the increase of the bootup time as there are big timeout
+@@ -2215,6 +2227,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ 		if (soc->program_ectl_settings)
+ 			tegra_pcie_program_ectl_settings(port);
+ 		tegra_pcie_enable_rp_features(port);
++		tegra_pcie_apply_sw_fixup(port);
+ 	}
+ 
+ 	/* take the PCIe interface module out of reset */
 -- 
-2.7.4
+2.1.4
