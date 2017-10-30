@@ -1,44 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 26 Oct 2017 09:54:47 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Meelis Roos <mroos@linux.ee>
-Cc: linux-alpha@vger.kernel.org,
-        Linux Kernel list <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: alpha boot hang - 4.14-rc* regression
-Message-ID: <20171026085447.GA16024@red-moon>
-References: <alpine.LRH.2.21.1710251043170.7098@math.ut.ee>
- <alpine.LRH.2.21.1710251109150.7098@math.ut.ee>
- <alpine.LRH.2.21.1710251129520.7098@math.ut.ee>
- <20171025092159.GA14222@red-moon>
- <alpine.LRH.2.21.1710251511090.10071@math.ut.ee>
- <20171025133730.GA5487@red-moon>
- <alpine.LRH.2.21.1710251748170.10071@math.ut.ee>
- <20171025151413.GA6499@red-moon>
- <alpine.LRH.2.21.1710252100080.16994@math.ut.ee>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:8386 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752019AbdJ3OAD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 10:00:03 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
+        <mperttunen@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root port
+Date: Mon, 30 Oct 2017 19:27:12 +0530
+Message-ID: <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.21.1710252100080.16994@math.ut.ee>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 25, 2017 at 09:01:07PM +0300, Meelis Roos wrote:
-> > It is probably because I patched the wrong map_irq() function,
-> > I am trying to detect which one you are _actually_ using, if
-> > the patch below fails I will patch them all (which is what I
-> > have to do anyway).
-> > 
-> > Please give this a go - this _has_ to make a difference, it is not
-> > correct to leave map_irq() pointers as __init memory, IRQ routing
-> > for modules can't work.
-> 
-> This works for mainline git too.
-> 
-> If you have another round that fixes all subarches, I will try it on a 
-> PC164 too.
+This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
+after all the required root port register programming is completed.
 
-Sure, I will send one patch shortly updating all map/swizzle functions
-to remove the __init markers.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V3:
+* no change in this patch
+V2:
+* no change in this patch
 
-Thanks,
-Lorenzo
+ drivers/pci/host/pci-tegra.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 96e8038c3019..b41c60c7414c 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 		}
+ 	}
+ 
+-	/* take the PCIe interface module out of reset */
+-	reset_control_deassert(pcie->pcie_xrst);
+-
+ 	/* finally enable PCIe */
+ 	value = afi_readl(pcie, AFI_CONFIGURATION);
+ 	value |= AFI_CONFIGURATION_EN_FPCI;
+@@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+ 			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+ 	}
+ 
+-	reset_control_assert(pcie->pcie_xrst);
+ 	reset_control_assert(pcie->afi_rst);
+ 	reset_control_assert(pcie->pex_rst);
+ 
+@@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ 			 port->index, port->lanes);
+ 
+ 		tegra_pcie_port_enable(port);
++	}
+ 
++	/* take the PCIe interface module out of reset */
++	reset_control_deassert(pcie->pcie_xrst);
++
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+ 		if (tegra_pcie_port_check_link(port))
+ 			continue;
+ 
+-- 
+2.1.4
