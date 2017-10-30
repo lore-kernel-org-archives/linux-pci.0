@@ -1,112 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:8266 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751572AbdJ3N6W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 09:58:22 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
-        <mperttunen@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V3 03/12] PCI: tegra: Retrain link for Gen2 speed
-Date: Mon, 30 Oct 2017 19:27:14 +0530
-Message-ID: <1509371843-22931-4-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 05/17] PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+Date: Mon, 30 Oct 2017 13:42:08 +0100
+Message-Id: <20171030124221.20690-6-niklas.cassel@axis.com>
+In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra124, 132, 210 and 186 support Gen2 link speed. After the link is up
-in Gen1, set target link speed as Gen2 and retrain link. Link switches to
-Gen2 speed if Gen2 capable end point is connected, else link stays in Gen1.
+This way pci-dra7xx.c does not need its own copy of dw_pcie_ep_reset_bar().
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
-V3:
-* Corrected commit log
-* Replaced jiffies with ktime
 V2:
-* no change in this patch
+* New patch in this series.
 
- drivers/pci/host/pci-tegra.c | 42 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+ drivers/pci/dwc/pci-dra7xx.c         | 9 ---------
+ drivers/pci/dwc/pcie-designware-ep.c | 2 +-
+ drivers/pci/dwc/pcie-designware.h    | 5 +++++
+ 3 files changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 068510b40c1a..ed5e8acfdc32 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -232,6 +232,8 @@
- #define PADS_REFCLK_CFG_PREDI_SHIFT		8  /* 11:8 */
- #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
- 
-+#define LINK_RETRAIN_TIMEOUT 100000
-+
- struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
-@@ -2134,6 +2136,42 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 	}
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index d0848006945a..a743545da4d4 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -336,15 +336,6 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
  }
  
-+static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
-+					 struct pci_dev *pci_dev)
+-static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+-{
+-	u32 reg;
+-
+-	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+-	dw_pcie_writel_dbi2(pci, reg, 0x0);
+-	dw_pcie_writel_dbi(pci, reg, 0x0);
+-}
+-
+ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index c291da2a10ba..47134a85a342 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -30,7 +30,7 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ 	pci_epc_linkup(epc);
+ }
+ 
+-static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ 	u32 reg;
+ 
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 5a1da459eda5..37dfad8d003f 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -338,6 +338,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ {
+@@ -351,5 +352,9 @@ static inline int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
++
++static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
 +{
-+	struct device *dev = pcie->dev;
-+	ktime_t deadline;
-+	unsigned short val;
-+
-+	/* Skip if the current device is not a root port */
-+	if (pci_pcie_type(pci_dev) != PCI_EXP_TYPE_ROOT_PORT)
-+		return;
-+
-+	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL2, &val);
-+	val &= ~PCI_EXP_LNKSTA_CLS;
-+	val |= PCI_EXP_LNKSTA_CLS_5_0GB;
-+	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL2, val);
-+
-+	/* Retrain the link */
-+	pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &val);
-+	val |= PCI_EXP_LNKCTL_RL;
-+	pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, val);
-+
-+	deadline = ktime_add_us(ktime_get(), LINK_RETRAIN_TIMEOUT);
-+	for (;;) {
-+		pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &val);
-+		if (!(val & PCI_EXP_LNKSTA_LT))
-+			break;
-+		if (ktime_after(ktime_get(), deadline))
-+			break;
-+		usleep_range(2000, 3000);
-+	}
-+
-+	if (val & PCI_EXP_LNKSTA_LT)
-+		dev_err(dev, "link retrain of PCIe slot %u failed\n",
-+			PCI_SLOT(pci_dev->devfn));
 +}
-+
- static const struct tegra_pcie_soc tegra20_pcie = {
- 	.num_ports = 2,
- 	.msi_base_shift = 0,
-@@ -2335,6 +2373,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	struct pci_host_bridge *host;
- 	struct tegra_pcie *pcie;
- 	struct pci_bus *child;
-+	struct pci_dev *pci_dev = NULL;
- 	int err;
- 
- 	host = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
-@@ -2400,6 +2439,9 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	pci_bus_add_devices(host->bus);
- 
-+	for_each_pci_dev(pci_dev)
-+		tegra_pcie_change_link_speed(pcie, pci_dev);
-+
- 	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
- 		err = tegra_pcie_debugfs_init(pcie);
- 		if (err < 0)
+ #endif
+ #endif /* _PCIE_DESIGNWARE_H */
 -- 
-2.1.4
+2.14.2
