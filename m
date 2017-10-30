@@ -1,140 +1,119 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 6 Oct 2017 11:02:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: Re: [PATCH v6 3/3] PCI: iproc: Implement PCI hotplug support
-Message-ID: <20171006160206.GB25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504155029-24729-1-git-send-email-oza.oza@broadcom.com>
- <1504155029-24729-4-git-send-email-oza.oza@broadcom.com>
- <20171006113700.GA25517@bhelgaas-glaptop.roam.corp.google.com>
- <CAK1A=4z6T9MLmCBBCmr5jVkVOySpw6fMTiTPqb=Nr-pjxhuARw@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAK1A=4z6T9MLmCBBCmr5jVkVOySpw6fMTiTPqb=Nr-pjxhuARw@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, linux-kernel@vger.kernel.org,
- Vikram Prakash <vikram.prakash@broadcom.com>, Rob Herring <robh+dt@kernel.org>,
- Oza Pawandeep <oza.oza@broadcom.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, bcm-kernel-feedback-list@broadcom.com,
- Andy Gospodarek <gospo@broadcom.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:42992 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751907AbdJ3MnB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:43:01 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 06/17] PCI: designware-ep: Add generic function for raising MSI irq
+Date: Mon, 30 Oct 2017 13:42:09 +0100
+Message-Id: <20171030124221.20690-7-niklas.cassel@axis.com>
+In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 06, 2017 at 08:03:52PM +0530, Oza Pawandeep wrote:
-> On Fri, Oct 6, 2017 at 5:07 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Thu, Aug 31, 2017 at 10:20:29AM +0530, Oza Pawandeep wrote:
-> >> This patch implements PCI hotplug support for iproc family chipsets.
-> >>
-> >> iproc based SOC (e.g. Stingray) does not have hotplug controller
-> >> integrated.
-> >> Hence, standard PCI hotplug framework hooks can-not be used.
-> >> e.g. controlled power up/down of slot.
-> >>
-> >> The mechanism, for e.g. Stingray has adopted for PCI hotplug is as follows:
-> >> PCI present lines are input to GPIOs depending on the type of
-> >> connector (x2, x4, x8).
-> >>
-> >> GPIO array needs to be present if hotplug is supported.
-> >> HW implementation is SOC/Board specific, and also it depends on how
-> >> add-in card is designed
-> >> (e.g. how many present pins are implemented).
-> >>
-> >> If x8 card is connected, then it might be possible that all the
-> >> 3 present pins could go low, or at least one pin goes low.
-> >> If x4 card is connected, then it might be possible that 2 present
-> >> pins go low, or at least one pin goes low.
-> >>
-> >> The implementation essentially takes care of following:
-> >> > Initializing hotplug irq thread.
-> >> > Detecting the endpoint device based on link state.
-> >> > Handling PERST and detecting the plugged devices.
-> >> > Ordered Hot plug-out, where User is expected
-> >>   to write 1 to /sys/bus/pci/devices/<pci_dev>/remove
-> >> > Handling spurious interrupt
-> >> > Handling multiple interrupts and makes sure that card is
-> >>   enumerated only once.
-> >
-> > I haven't forgotten this, but I am dragging my feet a little bit.
-> > There is a standard way for hardware to support PCIe hotplug, and it's
-> > hard enough to get the software for that right.  I really, really
-> > don't want to see a bunch of one-off implementations that sort of look
-> > like standard hotplug but not really.
-> >
-> > I have a few trivial comments below but haven't really reviewed the
-> > whole thing.
-> ...
+This function can be used by all DWC based controllers to raise a MSI
+irq. However, certain controllers, like DRA7xx, has a special
+convenience register for raising MSI irqs that doesn't require you to
+explicitly map the MSI address.
 
-> >> -     list_splice_init(res, &host->windows);
-> >> -     host->busnr = 0;
-> >> -     host->dev.parent = dev;
-> >> -     host->ops = &iproc_pcie_ops;
-> >> -     host->sysdata = sysdata;
-> >> -     host->map_irq = pcie->map_irq;
-> >> -     host->swizzle_irq = pci_common_swizzle;
-> >> +     if (!link_not_active) {
-> >
-> > Double negation.  If you pick a better name, e.g., "link_active", this
-> > will read much better.  But I don't understand why you want to check
-> > whether the link is active here anyway.  pci_scan_root_bus_bridge()
-> > should work fine even if there's no device present below the bridge.
-> > Won't the root port be there always, even if there's no downstream
-> > device?
-> ...
-> 
-> pci_scan_root_bus_bridge crashes when link is not active. when I last
-> tested, that is what I observed.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+V2:
+* New patch in this series. The other changes in the changelog are against
+  the version that was included in pcie-artpec6.c in V1.
+* raise_msi_irq now uses readw/writew instead of masking.
+* raise_msi_irq now uses fixed offset for MSI cap in raise_msi, since it is
+  always at the same offset for this IP.
+* raise_msi_irq now uses PCI_MSI_FLAGS_64BIT rather than BIT(7).
 
-I think that would mean a bug in your config accessors.  The PCI core
-enumeration itself doesn't depend on the link being up.  But I don't
-see anything obvious in your accessors that looks like an issue.
+ drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++++++++++
+ drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
+ 2 files changed, 43 insertions(+)
 
-If you post details about the crash, maybe we can help figure it out.
-
-> because in previous code when we dont support hotplug, we just got to
-> err, and remove root-bus in case link is not active.
-> we dont do scan bus.
-> 
-> if fact so far none of the RC driver implements hotplug so this might
-> not have been exercised.
-
-If the RC implements PCIe hotplug correctly, the RC driver shouldn't
-need to do anything special to support hotplug.  It should just work.
-That's why I'm so reluctant to merge stuff like this.  Your hardware
-folks are making work for themselves by designing a new scheme, and
-that makes work for software folks to support it.  None of that should
-be necessary.
-
-> ...
-> >> @@ -104,6 +108,9 @@ struct iproc_pcie {
-> >>       struct iproc_pcie_ib ib;
-> >>       const struct iproc_pcie_ib_map *ib_map;
-> >>
-> >> +     bool enable_hotplug;
-> >> +     bool ep_is_present;
-> >
-> > Are you suggesting that only an endpoint can be hotplugged?  You can't
-> > hotplug a switch?
-> >
-> 
-> ok, we can change the name, PCI switch also can be hot-plugged.
-
-I'm dubious about the need for such a variable in the first place.
-It's always going to be unreliable because you might test it after a
-device has been hotplugged but before the variable has been updated.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 47134a85a342..92b7ca36bae4 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -282,6 +282,40 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
+ 
++int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
++			     u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct pci_epc *epc = ep->epc;
++	u16 msg_ctrl, msg_data;
++	u32 msg_addr_lower, msg_addr_upper;
++	u64 msg_addr;
++	bool has_upper;
++	int ret;
++
++	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
++	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
++	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
++	if (has_upper) {
++		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
++		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
++	} else {
++		msg_addr_upper = 0;
++		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
++	}
++	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
++	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr, PAGE_SIZE);
++	if (ret)
++		return ret;
++
++	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
++
++	dw_pcie_ep_unmap_addr(epc, ep->msi_mem_phys);
++
++	return 0;
++}
++
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ 	struct pci_epc *epc = ep->epc;
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 37dfad8d003f..24edac035160 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -106,6 +106,8 @@
+ #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+ #define MSI_MESSAGE_ADDR_L32		0x54
+ #define MSI_MESSAGE_ADDR_U32		0x58
++#define MSI_MESSAGE_DATA_32		0x58
++#define MSI_MESSAGE_DATA_64		0x5C
+ 
+ /*
+  * Maximum number of MSI IRQs can be 256 per controller. But keep
+@@ -338,6 +340,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 interrupt_num);
+ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+@@ -353,6 +356,12 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
+ 
++static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
++					   u8 interrupt_num)
++{
++	return 0;
++}
++
+ static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ }
+-- 
+2.14.2
