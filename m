@@ -1,131 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 27 Oct 2017 09:37:18 -0500
-From: Rob Herring <robh@kernel.org>
-To: Jim Quinlan <jim2101024@gmail.com>
-Subject: Re: [PATCH 2/8] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
- device
-Message-ID: <20171027130538.lb2hs4umew4cgovv@rob-hp-laptop>
-References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
- <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Florian Fainelli <f.fainelli@gmail.com>, linux-mips@linux-mips.org,
- Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
- bcm-kernel-feedback-list@broadcom.com, Gregory Fong <gregory.0xf0@gmail.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Cc: Niklas Cassel <niklass@axis.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 00/17] dwc MSI fixes, ARTPEC-6 EP mode support, ARTPEC-7 SoC support
+Date: Mon, 30 Oct 2017 13:42:03 +0100
+Message-Id: <20171030124221.20690-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 24, 2017 at 02:15:43PM -0400, Jim Quinlan wrote:
-> The DT bindings description of the Brcmstb PCIe device is described.  This
-> node can be used by almost all Broadcom settop box chips, using
-> ARM, ARM64, or MIPS CPU architectures.
+This is a series that adds:
+- PCI endpoint mode support in the ARTPEC-6 driver.
+- ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
+- Small fixes for MSI in designware-ep and designware-host,
+  needed to get endpoint mode support working for ARTPEC-6.
 
-"dt-bindings: pci: ..." for the subject please.
+New in V2:
+Capitalized first letter in summary for all patches.
+Moved DT binding changes to self contained patches.
+Fixed all review comments, for detailed changes, see the note for in patch.
 
-> 
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> ---
->  .../devicetree/bindings/pci/brcmstb-pci.txt        | 63 ++++++++++++++++++++++
->  1 file changed, 63 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> new file mode 100644
-> index 0000000..49f9852
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
-> @@ -0,0 +1,63 @@
-> +Brcmstb PCIe Host Controller Device Tree Bindings
-> +
-> +Required Properties:
-> +- compatible
-> +  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
-> +  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
-> +  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
-> +      the 7278).
-> +  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
-> +
-> +- reg -- the register start address and length for the PCIe reg block.
-> +- interrupts -- two interrupts are specified; the first interrupt is for
-> +     the PCI host controller and the second is for MSI if the built-in
-> +     MSI controller is to be used.
-> +- interrupt-names -- names of the interrupts (above): "pcie" and "msi".
-> +- #address-cells -- set to <3>.
-> +- #size-cells -- set to <2>.
-> +- #interrupt-cells: set to <1>.
-> +- interrupt-map-mask and interrupt-map, standard PCI properties to define the
-> +     mapping of the PCIe interface to interrupt numbers.
-> +- ranges: ranges for the PCI memory and I/O regions.
-> +- linux,pci-domain -- should be unique per host controller.
-> +
-> +Optional Properties:
-> +- clocks -- phandle of pcie clock.
-> +- clock-names -- set to "sw_pcie" if clocks is used.
-> +- dma-ranges -- Specifies the inbound memory mapping regions when
-> +     an "identity map" is not possible.
-> +- msi-controller -- this property is typically specified to have the
-> +     PCIe controller use its internal MSI controller.
-> +- msi-parent -- set to use an external MSI interrupt controller.
-> +- brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
+Niklas Cassel (17):
+  PCI: dwc: Use DMA-API for allocating MSI data
+  PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
+  PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be
+    writable
+  PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
+  PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+  PCI: designware-ep: Add generic function for raising MSI irq
+  PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep
+    mode
+  PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than
+    in probe
+  PCI: dwc: dra7xx: Add ifdefs for host/ep specific code
+  PCI: dwc: artpec6: Remove unused defines
+  PCI: dwc: artpec6: Use BIT and GENMASK macros
+  PCI: dwc: artpec6: Split artpec6_pcie_establish_link to smaller
+    functions
+  bindings: PCI: artpec: Add support for endpoint mode
+  PCI: dwc: artpec6: Add support for endpoint mode
+  PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
+  bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
+  PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
 
-Use the same one already defined for Broadcom SATA phy.
+ .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   5 +-
+ drivers/pci/dwc/Kconfig                            |  68 ++--
+ drivers/pci/dwc/Makefile                           |   4 +-
+ drivers/pci/dwc/pci-dra7xx.c                       |  53 +--
+ drivers/pci/dwc/pcie-artpec6.c                     | 416 ++++++++++++++++++---
+ drivers/pci/dwc/pcie-designware-ep.c               |  56 ++-
+ drivers/pci/dwc/pcie-designware-host.c             |  15 +-
+ drivers/pci/dwc/pcie-designware.c                  |   2 +-
+ drivers/pci/dwc/pcie-designware.h                  |  22 +-
+ 9 files changed, 530 insertions(+), 111 deletions(-)
 
-> +- max-link-speed --  (integer) indicates desired generation of link:
-> +     1 => 2.5 Gbps (gen1), 2 => 5.0 Gbps (gen2), 3 => 8.0 Gbps (gen3).
-> +- xyz-supply -- set to a voltage regulator phandle  that the root
-> +     complex should turn off/on/on on suspend/resume/boot.  Any property
-> +     matching '-supply' will be added to an internal list of phandles.
-
-Still not really liking this...
-
-> +
-> +
-> +Example Node:
-> +
-> +pcie0: pcie@f0460000 {
-> +		reg = <0x0 0xf0460000 0x0 0x9310>;
-> +		interrupts = <0x0 0x0 0x4>;
-> +		compatible = "brcm,pci-plat-dev";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
-> +			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0 0 0 1 &intc 0 47 3
-> +				 0 0 0 2 &intc 0 48 3
-> +				 0 0 0 3 &intc 0 49 3
-> +				 0 0 0 4 &intc 0 50 3>;
-> +		clocks = <&sw_pcie0>;
-> +		clock-names = "sw_pcie";
-> +		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
-> +		msi-controller;         /* use PCIe's internal MSI controller */
-> +		brcm,ssc;
-> +		max-link-speed = <1>;
-> +		linux,pci-domain = <0>;
-> +	};
-> -- 
-> 1.9.0.138.g2de3478
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+2.14.2
