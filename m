@@ -1,86 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38664 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751906AbdJKTcK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 11 Oct 2017 15:32:10 -0400
-Date: Wed, 11 Oct 2017 14:32:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keerthy <j-keerthy@ti.com>
-Cc: kishon@ti.com, bhelgaas@google.com, t-kristo@ti.com,
-        linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4] pci: dwc: dra7xx: Add shutdown handler to cleanly
- turn off clocks
-Message-ID: <20171011193207.GO25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1505885055-30657-1-git-send-email-j-keerthy@ti.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:18606 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752053AbdJ3OBE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 10:01:04 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
+        <mperttunen@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V3 12/12] PCI: tegra: Update flow control threshold in Tegra210
+Date: Mon, 30 Oct 2017 19:27:23 +0530
+Message-ID: <1509371843-22931-13-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1505885055-30657-1-git-send-email-j-keerthy@ti.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 20, 2017 at 10:54:15AM +0530, Keerthy wrote:
-> Add shutdown handler to cleanly turn off clocks. This will help
-> in cases of kexec where in a new kernel can boot abruptly.
-> 
-> Signed-off-by: Keerthy <j-keerthy@ti.com>
-> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Recommended update FC threshold in Tegra210 is 0x60 for best performance
+of x1 link. Setting this to 0x60 provides the best balance between number
+of UpdateFC and read data sent over the link.
 
-Applied to pci/host-dra7xx for v4.15, thanks!
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V3:
+* changed soc parameter name
+V2:
+* no change in this patch
 
-> ---
-> 
-> Changes in v4:
-> 
->   * Added the missing changes from v2!
-> 
-> Changes in v3:
-> 
->   * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
->   * Added more details to commit log.
-> 
-> Changes in v2:
-> 
->   * used a local dev pointer instead of dereferencing dev at multiple places.
->   * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
-> 
->  drivers/pci/dwc/pci-dra7xx.c | 17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 34427a6..d084800 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -794,6 +794,22 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->  }
->  #endif
->  
-> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-> +	int ret;
-> +
-> +	dra7xx_pcie_stop_link(dra7xx->pci);
-> +
-> +	ret = pm_runtime_put_sync(dev);
-> +	if (ret < 0)
-> +		dev_dbg(dev, "pm_runtime_put_sync failed\n");
-> +
-> +	pm_runtime_disable(dev);
-> +	dra7xx_pcie_disable_phy(dra7xx);
-> +}
-> +
->  static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
->  	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
->  	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
-> @@ -807,5 +823,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->  		.suppress_bind_attrs = true,
->  		.pm	= &dra7xx_pcie_pm_ops,
->  	},
-> +	.shutdown = dra7xx_pcie_shutdown,
->  };
->  builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
-> -- 
-> 1.9.1
-> 
+ drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index b29329226e3d..812d32cfdd0e 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -223,6 +223,7 @@
+ #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+ #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
++#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
+ 
+ #define RP_VEND_CTL0	0xf44
+ #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+@@ -323,6 +324,7 @@ struct tegra_pcie_soc {
+ 	bool update_clamp_threshold;
+ 	bool raw_violation_fixup;
+ 	bool program_deskew_time;
++	bool update_fc_threshold;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2231,6 +2233,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
+ 		writel(value, port->base + RP_VEND_CTL0);
+ 	}
++
++	if (soc->update_fc_threshold) {
++		value = readl(port->base + RP_VEND_XP);
++		value &= ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
++		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
++		writel(value, port->base + RP_VEND_XP);
++	}
+ }
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+@@ -2371,6 +2380,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.raw_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.update_fc_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2391,6 +2401,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.raw_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.update_fc_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2410,6 +2421,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.update_clamp_threshold = true,
+ 	.raw_violation_fixup = true,
+ 	.program_deskew_time = false,
++	.update_fc_threshold = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2437,6 +2449,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.update_clamp_threshold = true,
+ 	.raw_violation_fixup = false,
+ 	.program_deskew_time = true,
++	.update_fc_threshold = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2457,6 +2470,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.raw_violation_fixup = false,
+ 	.program_deskew_time = false,
++	.update_fc_threshold = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
+-- 
+2.1.4
