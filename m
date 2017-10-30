@@ -1,141 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.138]:47883 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932464AbdJZN3d (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Oct 2017 09:29:33 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-pci@vger.kernel.org
-Subject: [RFC PATCH v8 5/7] PCI: Make pci_platform_pm_ops's callbacks optional
-Date: Thu, 26 Oct 2017 21:28:38 +0800
-Message-Id: <20171026132840.20946-6-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
-References: <20171026132840.20946-1-jeffy.chen@rock-chips.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:42958 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751772AbdJ3Mmq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:42:46 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 04/17] PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
+Date: Mon, 30 Oct 2017 13:42:07 +0100
+Message-Id: <20171030124221.20690-5-niklas.cassel@axis.com>
+In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow platforms not to provide some of the pci_platform_pm_ops's
-callbacks.
+Certain SoCs need to map the MSI address in raise_irq.
+To map an address, you first need to call pci_epc_mem_alloc_addr,
+however, pci_epc_mem_alloc_addr calls ioremap (which can sleep).
 
-Also change the return value -ENOSYS to -ENODEV for:
-warning: drivers/pci/pci.c,594: ENOSYS means 'invalid syscall nr' and nothing else
+Since raise_irq is only called from atomic context, we can't call
+pci_epc_mem_alloc_addr from raise_irq, instead we pre-allocate
+a page in dw_pcie_ep_init, so this page can later be used to map/unmap
+the MSI address in raise_irq.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
+V2:
+* No change.
 
-Changes in v8: None
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v3: None
-Changes in v2: None
+ drivers/pci/dwc/pcie-designware-ep.c | 8 ++++++++
+ drivers/pci/dwc/pcie-designware.h    | 2 ++
+ 2 files changed, 10 insertions(+)
 
- drivers/pci/pci.c | 38 +++++++++++++++++++++++++-------------
- drivers/pci/pci.h |  5 +----
- 2 files changed, 26 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index f0d68066c726..e120b00a9017 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -572,46 +572,58 @@ static void pci_restore_bars(struct pci_dev *dev)
- 
- static const struct pci_platform_pm_ops *pci_platform_pm;
- 
--int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
-+void pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 3fb34be99715..c291da2a10ba 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -286,6 +286,8 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
  {
--	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
--	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
--		return -EINVAL;
- 	pci_platform_pm = ops;
--	return 0;
- }
+ 	struct pci_epc *epc = ep->epc;
  
- static inline bool platform_pci_power_manageable(struct pci_dev *dev)
- {
--	return pci_platform_pm ? pci_platform_pm->is_manageable(dev) : false;
-+	if (pci_platform_pm && pci_platform_pm->is_manageable)
-+		return pci_platform_pm->is_manageable(dev);
++	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem, PAGE_SIZE);
 +
-+	return false;
+ 	pci_epc_mem_exit(epc);
  }
  
- static inline int platform_pci_set_power_state(struct pci_dev *dev,
- 					       pci_power_t t)
- {
--	return pci_platform_pm ? pci_platform_pm->set_state(dev, t) : -ENOSYS;
-+	if (pci_platform_pm && pci_platform_pm->set_state)
-+		return pci_platform_pm->set_state(dev, t);
+@@ -341,6 +343,12 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return ret;
+ 	}
+ 
++	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys, PAGE_SIZE);
++	if (!ep->msi_mem) {
++		dev_err(dev, "Failed to reserve memory for MSI\n");
++		return -ENOMEM;
++	}
 +
-+	return -ENODEV;
- }
- 
- static inline pci_power_t platform_pci_get_power_state(struct pci_dev *dev)
- {
--	return pci_platform_pm ? pci_platform_pm->get_state(dev) : PCI_UNKNOWN;
-+	if (pci_platform_pm && pci_platform_pm->get_state)
-+		return pci_platform_pm->get_state(dev);
-+
-+	return PCI_UNKNOWN;
- }
- 
- static inline pci_power_t platform_pci_choose_state(struct pci_dev *dev)
- {
--	return pci_platform_pm ?
--			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
-+	if (pci_platform_pm && pci_platform_pm->choose_state)
-+		return pci_platform_pm->choose_state(dev);
-+
-+	return PCI_POWER_ERROR;
- }
- 
- static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
- {
--	return pci_platform_pm ?
--			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
-+	if (pci_platform_pm && pci_platform_pm->set_wakeup)
-+		return pci_platform_pm->set_wakeup(dev, enable);
-+
-+	return -ENODEV;
- }
- 
- static inline bool platform_pci_need_resume(struct pci_dev *dev)
- {
--	return pci_platform_pm ? pci_platform_pm->need_resume(dev) : false;
-+	if (pci_platform_pm && pci_platform_pm->need_resume)
-+		return pci_platform_pm->need_resume(dev);
-+
-+	return false;
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e816a13e6259..048668271014 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -52,9 +52,6 @@ int pci_probe_reset_function(struct pci_dev *dev);
-  * @need_resume: returns 'true' if the given device (which is currently
-  *		suspended) needs to be resumed to be configured for system
-  *		wakeup.
-- *
-- * If given platform is generally capable of power managing PCI devices, all of
-- * these callbacks are mandatory.
-  */
- struct pci_platform_pm_ops {
- 	bool (*is_manageable)(struct pci_dev *dev);
-@@ -65,7 +62,7 @@ struct pci_platform_pm_ops {
- 	bool (*need_resume)(struct pci_dev *dev);
+ 	ep->epc = epc;
+ 	epc_set_drvdata(epc, ep);
+ 	dw_pcie_setup(pci);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 9aaf0cd04dd6..5a1da459eda5 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -198,6 +198,8 @@ struct dw_pcie_ep {
+ 	unsigned long		ob_window_map;
+ 	u32			num_ib_windows;
+ 	u32			num_ob_windows;
++	void __iomem		*msi_mem;
++	phys_addr_t		msi_mem_phys;
  };
  
--int pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
-+void pci_set_platform_pm(const struct pci_platform_pm_ops *ops);
- void pci_update_current_state(struct pci_dev *dev, pci_power_t state);
- void pci_power_up(struct pci_dev *dev);
- void pci_disable_enabled_device(struct pci_dev *dev);
+ struct dw_pcie_ops {
 -- 
-2.11.0
+2.14.2
