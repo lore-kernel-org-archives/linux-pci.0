@@ -1,60 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0077.outbound.protection.outlook.com ([104.47.34.77]:30750
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1761883AbdJQMsS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 17 Oct 2017 08:48:18 -0400
-From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alex.williamson@redhat.com
-Cc: Wilson.Snyder@cavium.com, robert.richter@cavium.com,
-        david.daney@cavium.com, mjaggi@caviumnetworks.com,
-        Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
-Subject: [PATCH v7 0/2] PCI: quirks: Cavium ThunderX ACS quirk update
-Date: Tue, 17 Oct 2017 05:47:37 -0700
-Message-Id: <1508244459-2615-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-In-Reply-To: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
-References: <1506536439-29318-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:4878 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932182AbdJ3LG2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 07:06:28 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
+        <yinghai@kernel.org>, <david.daney@cavium.com>,
+        <Julia.Lawall@lip6.fr>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
+Subject: [PATCH 2/4] PCI: tegra: Enable ASPM-L1 capability advertisement
+Date: Mon, 30 Oct 2017 16:33:03 +0530
+Message-ID: <1509361385-21224-3-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
+References: <1509361385-21224-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Vadim Lomovtsev <Vadim.Lomovtsev@cavium.com>
+Enables advertisement of ASPM-L1 support in capability
+registers of applicable Tegra chips
 
-version 7:
-- update patch description accordingly to review comments;
-- split for two patches: for ACS mask change and device id match change;
-- remove macro #define of ACS flags, put it back to quirk function;
-- remove '__inline_' from device id matching function;
-- wrap code comments to fit into 80 columns;
-- comment fix: change 0xa00 to 0xf800 for matching function description;
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-version 6:
-- comment typo fix: change 0xa00 to 0xa000;
-
-version 5:
-- update code comments accordingly to review comments;
-
-version 4:
-- update ACS mask (remove TB and TD bits), update commit message (remove
-  ACS register printout);
-
-version 3:
-- update subject: remove CN8XXX from subject line, replace it with ThunderX;
-
-version 2:
-- update match function in order to filter only ThunderX devices by device
-  ids to properly filter CN8XXX devices, update subject & description with
-  ACS register info (v2 was rejected by maillist due to triple X in subject);
-  
-Vadim Lomovtsev (2):
-  PCI: quirks: Set Cavium ACS capability quirk flags to assert
-    RR/CR/SV/UF.
-  PCI: quirks: Apply Cavium ThunderX ACS quirk only to Root Ports
-
- drivers/pci/quirks.c | 26 ++++++++++++++++++++------
- 1 file changed, 20 insertions(+), 6 deletions(-)
-
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index adae03d671ab..e1526cc5d381 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -226,6 +226,9 @@
+ #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+ #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
+ 
++#define RP_VEND_XP1	0xf04
++#define RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT	BIT(21)
++
+ #define RP_VEND_CTL0	0xf44
+ #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+ #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
+@@ -327,6 +330,7 @@ struct tegra_pcie_soc {
+ 	bool RAW_violation_fixup;
+ 	bool program_deskew_time;
+ 	bool updateFC_threshold;
++	bool has_aspm_l1;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2188,6 +2192,13 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+ 	value = readl(port->base + RP_VEND_CTL1);
+ 	value |= RP_VEND_CTL1_ERPT;
+ 	writel(value, port->base + RP_VEND_CTL1);
++
++	if (port->pcie->soc->has_aspm_l1) {
++		/* Advertise ASPM-L1 state capability*/
++		value = readl(port->base + RP_VEND_XP1);
++		value |= RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT;
++		writel(value, port->base + RP_VEND_XP1);
++	}
+ }
+ 
+ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+@@ -2391,6 +2402,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
+ 	.updateFC_threshold = false,
++	.has_aspm_l1 = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2412,6 +2424,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
+ 	.updateFC_threshold = false,
++	.has_aspm_l1 = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2432,6 +2445,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.RAW_violation_fixup = true,
+ 	.program_deskew_time = false,
+ 	.updateFC_threshold = false,
++	.has_aspm_l1 = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2460,6 +2474,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = true,
+ 	.updateFC_threshold = true,
++	.has_aspm_l1 = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2481,6 +2496,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.RAW_violation_fixup = false,
+ 	.program_deskew_time = false,
+ 	.updateFC_threshold = false,
++	.has_aspm_l1 = true,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
-2.13.6
+2.7.4
