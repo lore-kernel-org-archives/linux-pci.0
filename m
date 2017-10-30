@@ -1,77 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:18588 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752455AbdJ3OAy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 10:00:54 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
-        <mperttunen@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V3 06/12] PCI: tegra: Enable opportunistic update FC and ACK
-Date: Mon, 30 Oct 2017 19:27:17 +0530
-Message-ID: <1509371843-22931-7-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 01/17] PCI: dwc: Use DMA-API for allocating MSI data
+Date: Mon, 30 Oct 2017 13:42:04 +0100
+Message-Id: <20171030124221.20690-2-niklas.cassel@axis.com>
+In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch ensures that DL sends pending ACKs and update FC packets when
-link is idle instead of waiting for timers to expire which improves PCIe
-bandwidth.
+Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+to write to this location, the proper way to get the address to this this
+location is really to use the DMA API, rather than virt_to_phys.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Using virt_to_phys might work on some systems, but by using the DMA API,
+we know that it will work on all systems.
+
+This is essentially the same thing as allocating a buffer in a driver,
+to which the endpoint will write to. To do this, we use the DMA API.
+
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
-V3:
-* no change in this patch
 V2:
-* no change in this patch
+* Sort headers.
+* MSI with captial letters in error print.
+* Don't change to lower_32_bits/upper_32_bits, since that should in that
+  case be its own patch.
 
- drivers/pci/host/pci-tegra.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
+ drivers/pci/dwc/pcie-designware.h      |  3 ++-
+ 2 files changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index c862facfd6e9..4562b0c113a8 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -211,7 +211,9 @@
- #define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 81e2157a7cfb..33b52fe98a01 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -83,10 +83,19 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
  
- #define RP_VEND_XP	0x00000f00
--#define  RP_VEND_XP_DL_UP	(1 << 30)
-+#define  RP_VEND_XP_DL_UP			(1 << 30)
-+#define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
-+#define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ void dw_pcie_msi_init(struct pcie_port *pp)
+ {
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct device *dev = pci->dev;
++	struct page *page;
+ 	u64 msi_target;
  
- #define RP_VEND_CTL1	0xf48
- #define  RP_VEND_CTL1_ERPT	(1 << 13)
-@@ -2149,6 +2151,16 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
- 	writel(value, port->base + RP_VEND_CTL1);
- }
+-	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+-	msi_target = virt_to_phys((void *)pp->msi_data);
++	page = alloc_page(GFP_KERNEL | GFP_DMA32);
++	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
++	if (dma_mapping_error(dev, pp->msi_data)) {
++		dev_err(dev, "failed to map MSI data\n");
++		__free_page(page);
++		return;
++	}
++	msi_target = (u64)pp->msi_data;
  
-+static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
-+{
-+	unsigned long value;
-+
-+	/* Optimal settings to enhance bandwidth */
-+	value = readl(port->base + RP_VEND_XP);
-+	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
-+	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
-+	writel(value, port->base + RP_VEND_XP);
-+}
- /*
-  * FIXME: If there are no PCIe cards attached, then calling this function
-  * can result in the increase of the bootup time as there are big timeout
-@@ -2218,6 +2230,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 		if (soc->program_ectl_settings)
- 			tegra_pcie_program_ectl_settings(port);
- 		tegra_pcie_enable_rp_features(port);
-+		tegra_pcie_apply_sw_fixup(port);
- 	}
+ 	/* program the msi_data */
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+@@ -187,7 +196,7 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ 	if (pp->ops->get_msi_addr)
+ 		msi_target = pp->ops->get_msi_addr(pp);
+ 	else
+-		msi_target = virt_to_phys((void *)pp->msi_data);
++		msi_target = (u64)pp->msi_data;
  
- 	/* take the PCIe interface module out of reset */
+ 	msg.address_lo = (u32)(msi_target & 0xffffffff);
+ 	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index e5d9d77b778e..ecdede68522a 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -14,6 +14,7 @@
+ #ifndef _PCIE_DESIGNWARE_H
+ #define _PCIE_DESIGNWARE_H
+ 
++#include <linux/dma-mapping.h>
+ #include <linux/irq.h>
+ #include <linux/msi.h>
+ #include <linux/pci.h>
+@@ -168,7 +169,7 @@ struct pcie_port {
+ 	const struct dw_pcie_host_ops *ops;
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+-	unsigned long		msi_data;
++	dma_addr_t		msi_data;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+ };
+ 
 -- 
-2.1.4
+2.14.2
