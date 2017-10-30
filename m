@@ -1,53 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0081.outbound.protection.outlook.com ([104.47.36.81]:59091
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932419AbdJXItV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Oct 2017 04:49:21 -0400
-From: Bao Xiaowei <xiaowei.bao@nxp.com>
-To: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <bhelgaas@google.com>, <shawnguo@kernel.org>,
-        <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
-        <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>,
-        <leoyang.li@nxp.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <pbrobinson@gmail.com>, <songxiaowei@hisilicon.com>,
-        <devicetree@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <Zhiqiang.Hou@nxp.com>,
-        <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
-CC: Bao Xiaowei <xiaowei.bao@nxp.com>
-Subject: [PATCH 3/3] ARMv8: pcie: make the DWC EP driver support for layerscape
-Date: Tue, 24 Oct 2017 16:30:45 +0800
-Message-ID: <20171024083045.31135-4-xiaowei.bao@nxp.com>
-In-Reply-To: <20171024083045.31135-1-xiaowei.bao@nxp.com>
-References: <20171024083045.31135-1-xiaowei.bao@nxp.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:16082 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751302AbdJ3EXX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:23:23 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 10/12] PCI: tegra: Add SW fixup for RAW violations
+Date: Mon, 30 Oct 2017 09:49:01 +0530
+Message-ID: <1509337143-25963-11-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Layerscape pcie controllers support RC or EP mode, Add the EP mode
-support in Kconfig, the driver will support both RC and EP mode, and
-the driver is able to judge the pcie controllers work on RC or EP mode.
+The logic which blocks read requests till AFI gets ACK for all outstanding
+MC writes does not behave correctly when number of outstanding write
+becomes more than 32.
 
-Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
+SW fixup to prevent this issue is to limit outstanding posted writes and
+tweak updateFC timer threshold.
+
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
- drivers/pci/dwc/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+V2:
+* no change in this patch
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 22ec82fcdea2..b5f507795779 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -108,6 +108,7 @@ config PCI_LAYERSCAPE
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select MFD_SYSCON
- 	select PCIE_DW_HOST
-+	select PCIE_DW_EP
- 	help
- 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+ drivers/pci/host/pci-tegra.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 3c625ccfa539..d348f487f5d7 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -185,6 +185,13 @@
  
+ #define AFI_PEXBIAS_CTRL_0		0x168
+ 
++#define RP_PRIV_XP_DL	0x494
++#define  RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD	(0x1ff << 1)
++
++#define RP_RX_HDR_LIMIT	0xe00
++#define  RP_RX_HDR_LIMIT_PW_MASK	(0xff << 8)
++#define  RP_RX_HDR_LIMIT_PW		(0x0e << 8)
++
+ #define RP_ECTL_2_R1	0xe84
+ #define  RP_ECTL_2_R1_RX_CTLE_1C_MASK		0xffff
+ 
+@@ -213,6 +220,7 @@
+ #define  RP_VEND_XP_DL_UP			(1 << 30)
+ #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+ #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
++#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+ 
+ #define RP_VEND_CTL1	0xf48
+ #define  RP_VEND_CTL1_ERPT	(1 << 13)
+@@ -307,6 +315,7 @@ struct tegra_pcie_soc {
+ 	bool program_uphy;
+ 	bool program_ectl_settings;
+ 	bool update_clamp_threshold;
++	bool RAW_violation_fixup;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2189,6 +2198,22 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 				RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD);
+ 	}
+ 	writel(value, port->base + RP_PRIV_MISC);
++
++	/* Fixup for read after write violation in T124 & T132 platforms */
++	if (soc->RAW_violation_fixup) {
++		value = readl(port->base + RP_RX_HDR_LIMIT);
++		value &= ~RP_RX_HDR_LIMIT_PW_MASK;
++		value |= RP_RX_HDR_LIMIT_PW;
++		writel(value, port->base + RP_RX_HDR_LIMIT);
++
++		value = readl(port->base + RP_PRIV_XP_DL);
++		value |= RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD;
++		writel(value, port->base + RP_PRIV_XP_DL);
++
++		value = readl(port->base + RP_VEND_XP);
++		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
++		writel(value, port->base + RP_VEND_XP);
++	}
+ }
+ /*
+  * FIXME: If there are no PCIe cards attached, then calling this function
+@@ -2326,6 +2351,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.program_uphy = true,
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
++	.RAW_violation_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2344,6 +2370,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.program_uphy = true,
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
++	.RAW_violation_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2361,6 +2388,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.program_uphy = true,
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = true,
++	.RAW_violation_fixup = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2386,6 +2414,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.program_uphy = true,
+ 	.program_ectl_settings = true,
+ 	.update_clamp_threshold = true,
++	.RAW_violation_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2404,6 +2433,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.program_uphy = false,
+ 	.program_ectl_settings = false,
+ 	.update_clamp_threshold = false,
++	.RAW_violation_fixup = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
-2.14.1
+2.1.4
