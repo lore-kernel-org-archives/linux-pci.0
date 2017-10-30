@@ -1,52 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        okaya@codeaurora.org, rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-Subject: [RFCv2 PATCH 25/36] iommu/arm-smmu-v3: Use shared ASID set
-Date: Fri,  6 Oct 2017 14:31:52 +0100
-Message-Id: <20171006133203.22803-26-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:43052 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752173AbdJ3MnX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:43:23 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 11/17] PCI: dwc: artpec6: Use BIT and GENMASK macros
+Date: Mon, 30 Oct 2017 13:42:14 +0100
+Message-Id: <20171030124221.20690-12-niklas.cassel@axis.com>
+In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We now have two exclusive sets of ASIDs: private and shared. SMMUv3 allows
-for contexts to take part in distributed TLB maintenance via the ASET bit.
-When this bit is 0 for a given context, TLB entries tagged with its ASID
-are invalidated by broadcast TLB maintenance. Set ASET=0 for process
-contexts.
+This greatly improves readability.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/iommu/arm-smmu-v3.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+V2:
+* No change.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index e89e6d1263d9..b7355630526a 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -1240,7 +1240,8 @@ static void arm_smmu_write_ctx_desc(struct arm_smmu_domain *smmu_domain,
- 		      CTXDESC_CD_0_ENDI |
- #endif
- 		      CTXDESC_CD_0_R | CTXDESC_CD_0_A |
--		      CTXDESC_CD_0_ASET_PRIVATE |
-+		      (ssid ? CTXDESC_CD_0_ASET_SHARED :
-+			      CTXDESC_CD_0_ASET_PRIVATE) |
- 		      CTXDESC_CD_0_AA64 |
- 		      (u64)cd->asid << CTXDESC_CD_0_ASID_SHIFT |
- 		      CTXDESC_CD_0_V;
+ drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 4b8ef266dc2f..18075e0fab80 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -39,28 +39,28 @@ struct artpec6_pcie {
+ 
+ /* ARTPEC-6 specific registers */
+ #define PCIECFG				0x18
+-#define  PCIECFG_DBG_OEN		(1 << 24)
+-#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
+-#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
+-#define  PCIECFG_CLKREQ_B		(1 << 11)
+-#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
+-#define  PCIECFG_PLL_ENABLE		(1 << 9)
+-#define  PCIECFG_PCLK_ENABLE		(1 << 8)
+-#define  PCIECFG_RISRCREN		(1 << 4)
+-#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
+-#define  PCIECFG_CISRREN		(1 << 2)
+-#define  PCIECFG_MACRO_ENABLE		(1 << 0)
++#define  PCIECFG_DBG_OEN		BIT(24)
++#define  PCIECFG_CORE_RESET_REQ		BIT(21)
++#define  PCIECFG_LTSSM_ENABLE		BIT(20)
++#define  PCIECFG_CLKREQ_B		BIT(11)
++#define  PCIECFG_REFCLK_ENABLE		BIT(10)
++#define  PCIECFG_PLL_ENABLE		BIT(9)
++#define  PCIECFG_PCLK_ENABLE		BIT(8)
++#define  PCIECFG_RISRCREN		BIT(4)
++#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
++#define  PCIECFG_CISRREN		BIT(2)
++#define  PCIECFG_MACRO_ENABLE		BIT(0)
+ 
+ #define NOCCFG				0x40
+-#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
+-#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
+-#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
+-#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
++#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
++#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
++#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
++#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
+ 
+ #define PHY_STATUS			0x118
+-#define PHY_COSPLLLOCK			(1 << 0)
++#define  PHY_COSPLLLOCK			BIT(0)
+ 
+-#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
++#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
+ 
+ static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+ {
 -- 
-2.13.3
-
+2.14.2
