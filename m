@@ -1,41 +1,81 @@
-Return-Path: <SRS0=zFL7=BS=axis.com=niklas.cassel@kernel.org>
-Return-Path: <SRS0=zFL7=BS=axis.com=niklas.cassel@kernel.org>
-Subject: Re: [PATCH 08/10] PCI: dwc: artpec6: add support for endpoint mode
-To: Christoph Hellwig <hch@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Jesper Nilsson <jespern@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-	"Kishon Vijay Abraham I" <kishon@ti.com>, Jingoo Han <jingoohan1@gmail.com>,
-	"Xiaowei Song" <songxiaowei@hisilicon.com>, Peter Robinson
-	<pbrobinson@gmail.com>, Tomasz Nowicki <tn@semihalf.com>, Gabriele Paoloni
-	<gabriele.paoloni@huawei.com>, Duc Dang <dhdang@apm.com>,
-	<linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-9-niklas.cassel@axis.com>
- <20171016234326.GM25517@bhelgaas-glaptop.roam.corp.google.com>
- <20171019075912.GA10089@infradead.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <9a294a12-4f9e-74cf-b7c0-7e45a9ca91f5@axis.com>
-Date: Thu, 19 Oct 2017 12:57:33 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kapsi.fi ([91.232.154.25]:37097 "EHLO mail.kapsi.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752103AbdJ3J6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 30 Oct 2017 05:58:07 -0400
+Subject: Re: [PATCH V2 06/12] PCI: tegra: Enable opportunistic update FC and
+ ACK
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com
+References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509337143-25963-7-git-send-email-mmaddireddy@nvidia.com>
+Cc: linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Message-ID: <f3dbdb48-3a3c-399d-de8e-5a9aeda0ac1d@kapsi.fi>
+Date: Mon, 30 Oct 2017 11:58:04 +0200
 MIME-Version: 1.0
-In-Reply-To: <20171019075912.GA10089@infradead.org>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1509337143-25963-7-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/19/2017 09:59 AM, Christoph Hellwig wrote:
-> On Mon, Oct 16, 2017 at 06:43:26PM -0500, Bjorn Helgaas wrote:
->> understand it.  I guess the idea is to build pcie-artpec6.o if either
->> CONFIG_PCIE_ARTPEC6_HOST or CONFIG_PCIE_ARTPEC6_EP is set (or both).
->>
->> Is this really the simplest way to express that in Kconfig?  Both the
->> "if PCIE_ARTPEC6" and this ifneq thing are complicated and relatively
->> unusual.
-> 
-> I thĳnk the right style is to make PCIE_ARTPEC6 a hidden kconfig
-> symbol without help text, and then have PCIE_ARTPEC6_HOST and
-> PCIE_ARTPEC6_EP select it.
-> 
+On 30.10.2017 06:18, Manikanta Maddireddy wrote:
+> This patch ensures that DL sends pending ACKs and update FC packets when
+> link is idle instead of waiting for timers to expire which improves PCIe
+> bandwidth.
+>
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V2:
+> * no change in this patch
+>
+>  drivers/pci/host/pci-tegra.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 51b7821646eb..bf615c5e6b78 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -209,7 +209,9 @@
+>  #define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+>
+>  #define RP_VEND_XP	0x00000f00
+> -#define  RP_VEND_XP_DL_UP	(1 << 30)
+> +#define  RP_VEND_XP_DL_UP			(1 << 30)
+> +#define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+> +#define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+>
+>  #define RP_VEND_CTL1	0xf48
+>  #define  RP_VEND_CTL1_ERPT	(1 << 13)
+> @@ -2147,6 +2149,16 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+>  	writel(value, port->base + RP_VEND_CTL1);
+>  }
+>
+> +static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+> +{
+> +	unsigned long value;
+> +
+> +	/* Optimal settings to enhance bandwidth */
+> +	value = readl(port->base + RP_VEND_XP);
+> +	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
+> +	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
+> +	writel(value, port->base + RP_VEND_XP);
+> +}
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+>   * can result in the increase of the bootup time as there are big timeout
+> @@ -2215,6 +2227,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>  		if (soc->program_ectl_settings)
+>  			tegra_pcie_program_ectl_settings(port);
+>  		tegra_pcie_enable_rp_features(port);
+> +		tegra_pcie_apply_sw_fixup(port);
 
-Thanks for the suggestion Christoph!
-I will make this change for both pci-dra7xx and pcie-artpec6 in
-the next version of the patch series, and then Kishon can ACK/NACK.
+As in the AER patch, I think this can be done in-line here. Otherwise 
+looks good.
+
+>  	}
+>
+>  	/* take the PCIe interface module out of reset */
+>
