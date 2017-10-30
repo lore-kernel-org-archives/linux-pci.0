@@ -1,156 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43464 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753421AbdJMDoJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Oct 2017 23:44:09 -0400
-Date: Thu, 12 Oct 2017 22:44:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Julien Thierry <julien.thierry@arm.com>
-Cc: Daniel Vetter <daniel.vetter@intel.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-        dri-devel@lists.freedesktop.org,
-        Xinliang Liu <z.liuxinliang@hisilicon.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Rongrong Zou <zourongrong@gmail.com>,
-        Dave Airlie <airlied@redhat.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org,
-        Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH 1/2] vgaarb: Select a default VGA device even if there's
- no legacy VGA
-Message-ID: <20171013034406.GD25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171006221358.12211.42879.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171006222428.12211.3635.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <b5373cbb-7d0d-a626-159b-dee0b82d32d0@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b5373cbb-7d0d-a626-159b-dee0b82d32d0@arm.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:42914 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751251AbdJ3Mmb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:42:31 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 02/17] PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
+Date: Mon, 30 Oct 2017 13:42:05 +0100
+Message-Id: <20171030124221.20690-3-niklas.cassel@axis.com>
+In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 12:24:10PM +0100, Julien Thierry wrote:
-> Hi Bjorn,
-> 
-> On 06/10/17 23:24, Bjorn Helgaas wrote:
-> >From: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> >Daniel Axtens reported that on the HiSilicon D05 board, the VGA device is
-> >behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so the VGA arbiter
-> >never selects it as the default, which means Xorg auto-detection doesn't
-> >work.
-> >
-> >VGA is a legacy PCI feature: a VGA device can respond to addresses, e.g.,
-> >[mem 0xa0000-0xbffff], [io 0x3b0-0x3bb], [io 0x3c0-0x3df], etc., that are
-> >not configurable by BARs.  Consequently, multiple VGA devices can conflict
-> >with each other.  The VGA arbiter avoids conflicts by ensuring that those
-> >legacy resources are only routed to one VGA device at a time.
-> >
-> >The arbiter identifies the "default VGA" device, i.e., a legacy VGA device
-> >that was used by boot firmware.  It selects the first device that:
-> >
-> >   - is of PCI_CLASS_DISPLAY_VGA,
-> >   - has both PCI_COMMAND_IO and PCI_COMMAND_MEMORY enabled, and
-> >   - has PCI_BRIDGE_CTL_VGA set in all upstream bridges.
-> >
-> >Some systems don't have such a device.  For example, if a host bridge
-> >doesn't support I/O space, PCI_COMMAND_IO probably won't be enabled for any
-> >devices below it.  Or, as on the HiSilicon D05, the VGA device may be
-> >behind a bridge that doesn't support PCI_BRIDGE_CTL_VGA, so accesses to the
-> >legacy VGA resources will never reach the device.
-> >
-> >This patch extends the arbiter so that if it doesn't find a device that
-> >meets all the above criteria, it selects the first device that:
-> >
-> >   - is of PCI_CLASS_DISPLAY_VGA and
-> >   - has PCI_COMMAND_IO or PCI_COMMAND_MEMORY enabled
-> >
-> >If it doesn't find even that, it selects the first device that:
-> >
-> >   - is of class PCI_CLASS_DISPLAY_VGA.
-> >
-> >Such a device may not be able to use the legacy VGA resources, but most
-> >drivers can operate the device without those.  Setting it as the default
-> >device means its "boot_vga" sysfs file will contain "1", which Xorg (via
-> >libpciaccess) uses to help select its default output device.
-> >
-> >This fixes Xorg auto-detection on some arm64 systems (HiSilicon D05 in
-> >particular; see the link below).
-> >
-> >It also replaces the powerpc fixup_vga() quirk, albeit with slightly
-> >different semantics: the quirk selected the first VGA device we found, and
-> >overrode that selection with any enabled VGA device we found.  If there
-> >were several enabled VGA devices, the *last* one we found would become the
-> >default.
-> >
-> >The code here instead selects the *first* enabled VGA device we find, and
-> >if none are enabled, the first VGA device we find.
-> >
-> >Link: http://lkml.kernel.org/r/20170901072744.2409-1-dja@axtens.net
-> >Tested-by: Daniel Axtens <dja@axtens.net>    # arm64, ppc64-qemu-tcg
-> >Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >---
-> >  arch/powerpc/kernel/pci-common.c |   12 ------------
-> >  drivers/gpu/vga/vgaarb.c         |   25 +++++++++++++++++++++++++
-> >  2 files changed, 25 insertions(+), 12 deletions(-)
-> >
-> >diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> >index 02831a396419..0ac7aa346c69 100644
-> >--- a/arch/powerpc/kernel/pci-common.c
-> >+++ b/arch/powerpc/kernel/pci-common.c
-> >@@ -1740,15 +1740,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
-> >  }
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
-> >-
-> >-static void fixup_vga(struct pci_dev *pdev)
-> >-{
-> >-	u16 cmd;
-> >-
-> >-	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> >-	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-> >-		vga_set_default_device(pdev);
-> >-
-> >-}
-> >-DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
-> >-			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
-> >diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> >index 76875f6299b8..aeb41f793ed4 100644
-> >--- a/drivers/gpu/vga/vgaarb.c
-> >+++ b/drivers/gpu/vga/vgaarb.c
-> >@@ -1468,6 +1468,31 @@ static int __init vga_arb_device_init(void)
-> >  			vgaarb_info(dev, "no bridge control possible\n");
-> >  	}
-> >+	if (!vga_default_device()) {
-> >+		list_for_each_entry(vgadev, &vga_list, list) {
-> >+			struct device *dev = &vgadev->pdev->dev;
-> >+			u16 cmd;
-> >+
-> >+			pdev = vgadev->pdev;
-> >+			pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> >+			if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-> >+				vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
-> >+				vga_set_default_device(pdev);
-> >+				break;
-> >+			}
-> >+		}
-> >+	}
-> >+
-> >+	if (!vga_default_device()) {
-> >+		vgadev = list_first_entry_or_null(&vga_list,
-> >+						  struct vga_device, list);
-> >+		if (vgadev) {
-> >+			struct device *dev = &vgadev->pdev->dev;
-> >+			vgaarb_info(dev, "setting as boot device (VGA legacy resources not available)\n");
-> >+			vga_set_default_device(pdev);
-> 
-> Isn't 'pdev' NULL here? shouldn't it be vgadev->pdev instead?
+Previously, dw_pcie_ep_set_msi() wrote all bits in the Message Control
+register, thus overwriting the PCI_MSI_FLAGS_64BIT bit.
+By clearing the PCI_MSI_FLAGS_64BIT bit, we break MSI
+on systems where the RC has set a 64 bit MSI address.
 
-Yes, vgadev->pdev is what I intended, thanks a lot for pointing that out!
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+V2:
+* Clarified commit message.
 
-Bjorn
+ drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
+ drivers/pci/dwc/pcie-designware.h    | 1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index d53d5f168363..c92ab87fd660 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -220,7 +220,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	val = (encode_int << MSI_CAP_MMC_SHIFT);
++	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	val &= ~MSI_CAP_MMC_MASK;
++	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
+ 	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
+ 
+ 	return 0;
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index ecdede68522a..9aaf0cd04dd6 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -101,6 +101,7 @@
+ 
+ #define MSI_MESSAGE_CONTROL		0x52
+ #define MSI_CAP_MMC_SHIFT		1
++#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
+ #define MSI_CAP_MME_SHIFT		4
+ #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+ #define MSI_MESSAGE_ADDR_L32		0x54
+-- 
+2.14.2
