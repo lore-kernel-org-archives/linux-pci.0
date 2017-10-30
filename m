@@ -1,17 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 12 Oct 2017 14:47:38 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to
- and from devices
-Message-ID: <20171012124738.r5lihlxaedwkw4oq@8bytes.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-6-jean-philippe.brucker@arm.com>
- <20171011113348.GE30803@8bytes.org>
- <ee7f80e3-ca30-0ee7-53f3-3e57b2b58df6@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <ee7f80e3-ca30-0ee7-53f3-3e57b2b58df6@arm.com>
+In-Reply-To: <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
+References: <1508868949-16652-1-git-send-email-jim2101024@gmail.com>
+ <1508868949-16652-3-git-send-email-jim2101024@gmail.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Mon, 30 Oct 2017 15:07:58 +0100
+Message-ID: <CAOiHx=kYf0pOrSvRHuj6+cy6qzSuz23RfNbB8ADLy_dRwZhiAg@mail.gmail.com>
+Subject: Re: [PATCH 2/8] PCI: host: brcmstb: add DT docs for Brcmstb PCIe
+ device
+To: Jim Quinlan <jim2101024@gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,124 +17,71 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- Catalin Marinas <Catalin.Marinas@arm.com>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+Cc: Mark Rutland <mark.rutland@arm.com>,
  "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+ Florian Fainelli <f.fainelli@gmail.com>,
+ MIPS Mailing List <linux-mips@linux-mips.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean-Philippe,
+Hi,
 
-On Thu, Oct 12, 2017 at 12:13:20PM +0100, Jean-Philippe Brucker wrote:
-> On 11/10/17 12:33, Joerg Roedel wrote:
-> > Here is how I think the base API should look like:
-> > 
-> > 	* iommu_iovm_device_init(struct device *dev);
-> > 	  iommu_iovm_device_shutdown(struct device *dev);
-> > 
-> > 	  These two functions do the device specific setup/shutdown. For
-> > 	  PCI this would include enabling the PRI, PASID, and ATS
-> > 	  capabilities and setting up a PASID table for the device.
-> 
-> Ok. On SMMU the PASID table also hosts the non-PASID page table pointer,
-> so the table and capability cannot be setup later than attach_device (and
-> we'll probably have to enable PASID in add_device). But I suppose it's an
-> implementation detail.
+On 24 October 2017 at 20:15, Jim Quinlan <jim2101024@gmail.com> wrote:
+> The DT bindings description of the Brcmstb PCIe device is described.  This
+> node can be used by almost all Broadcom settop box chips, using
+> ARM, ARM64, or MIPS CPU architectures.
+>
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> ---
+>  .../devicetree/bindings/pci/brcmstb-pci.txt        | 63 ++++++++++++++++++++++
+>  1 file changed, 63 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+>
+> diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pci.txt b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+> new file mode 100644
+> index 0000000..49f9852
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/brcmstb-pci.txt
+> @@ -0,0 +1,63 @@
+> +Brcmstb PCIe Host Controller Device Tree Bindings
+> +
+> +Required Properties:
+> +- compatible
+> +  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
+> +  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
+> +  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
+> +      the 7278).
+> +  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
+> +
 
-Right, when the capabilities are enabled is an implementation detail of
-the iommu-drivers. 
+(snip)
 
-> Some device drivers will want to use ATS alone, for accelerating IOVA
-> traffic. Should we enable it automatically, or provide device drivers with
-> a way to enable it manually? According to the PCI spec, PASID has to be
-> enabled before ATS, so device_init would have to first disable ATS in that
-> case.
+> +
+> +Example Node:
+> +
+> +pcie0: pcie@f0460000 {
+> +               reg = <0x0 0xf0460000 0x0 0x9310>;
+> +               interrupts = <0x0 0x0 0x4>;
+> +               compatible = "brcm,pci-plat-dev";
 
-Yes, driver can enable ATS for normal use of a device, and
-disable/re-enable it when the driver requests PASID/PRI functionality.
-That is also an implementation detail. You should probably also document
-that the init/shutdown functions may interrupt device operation, so that
-driver writers are aware of that.
-
-> 
-> > 	* iommu_iovm_bind_mm(struct device *dev, struct mm_struct *mm,
-> > 			     iovm_shutdown_cb *cb);
-> > 	  iommu_iovm_unbind_mm(struct device *dev, struct mm_struct *mm);
-> > 
-> > 	  These functions add and delete the entries in the PASID table
-> > 	  for the device and setup mmu_notifiers for the mm_struct to
-> > 	  keep IOMMU TLBs in sync with the CPU TLBs.
-> > 
-> > 	  The shutdown_cb is invoked by the IOMMU core code when the
-> > 	  mm_struct goes away, for example because the process
-> > 	  segfaults.
-> > 
-> > 	The PASID handling is best done these functions as well, unless
-> > 	there is a strong reason to allow device drivers to do the
-> > 	handling themselves.
-> > 
-> > The context data can be stored directly in mm_struct, including the
-> > PASID for that mm.
-> 
-> Changing mm_struct probably isn't required at the moment, since the mm
-> subsystem won't use the context data or the PASID. Outside of
-> drivers/iommu/, only the caller of bind_mm needs the PASID in order to
-> program it into the device. The only advantage I see would be slightly
-> faster bind(), when finding out if a mm is already bound to devices. But
-> we don't really need fast bind(), so I don't think we'd have enough
-> material to argue for a change in mm_struct.
-
-The idea behind storing the PASID in mm_struct is that we have a
-system-wide PASID-allocator and only one PASID per address space, even
-when accessed from multiple devices.
-
-There will be hardware implemenations where this is required, afaik. It
-doesn't mean that it _needs_ to be part of mm_struct, but it is
-certainly easier than tracking this 1-1 relation separatly.
-
-> We do need to allocate a separate "iommu_mm_struct" wrapper to store the
-> mmu_notifier. Maybe bind() could return this structure (that contains the
-> PASID), and unbind() would take this iommu_mm_struct as argument?
-
-I'd like to track this iommu_mm_struct only in iommu-code, otherwise
-drivers need to track the pointer somewhere. And we need to track the
-mm_struct->iommu_mm_struct relation anyway in core-code to handle events
-like segfaults, when the whole mm_struct goes away under us. So when we
-track this in core code, there is no need to track this again in the
-device drivers.
+This is not one of the valid compatibles mentioned above.
 
 
-Regards,
-
-	Joerg
-
+Regards
+Jonas
 
 _______________________________________________
 linux-arm-kernel mailing list
