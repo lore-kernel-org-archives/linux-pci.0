@@ -1,58 +1,73 @@
-Return-Path: <SRS0=czIE=BR=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=czIE=BR=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH 0/2] phy: ti-pipe3: Update PCIe PHY settings
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20171009090338.26033-1-kishon@ti.com>
- <20171017193129.GM5641@bhelgaas-glaptop.roam.corp.google.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Roger Quadros <rogerq@ti.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <1f583d30-fdf4-e104-271c-8a36704cbaf2@ti.com>
-Date: Wed, 18 Oct 2017 17:38:15 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: David Laight <David.Laight@ACULAB.COM>, "catalin.marinas@arm.com"
+ <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>, "frowand.list@gmail.com"
+ <frowand.list@gmail.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "rafael@kernel.org" <rafael@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "lorenzo.pieralisi@arm.com"
+ <lorenzo.pieralisi@arm.com>
+Subject: RE: [PATCH v10 0/9] LPC: legacy ISA I/O support
+Date: Mon, 30 Oct 2017 11:32:14 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40CAE73B@FRAEML521-MBX.china.huawei.com>
+References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
+ <063D6719AE5E284EB5DD2968C1650D6DD00A6F5C@AcuExch.aculab.com>
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD00A6F5C@AcuExch.aculab.com>
 MIME-Version: 1.0
-In-Reply-To: <20171017193129.GM5641@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ John Garry <john.garry@huawei.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "olof@lixom.net" <olof@lixom.net>,
+ "brian.starkey@arm.com" <brian.starkey@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi David
 
+[...]
 
-On Wednesday 18 October 2017 01:01 AM, Bjorn Helgaas wrote:
-> On Mon, Oct 09, 2017 at 02:33:36PM +0530, Kishon Vijay Abraham I wrote:
->> This was supposed to only update ti-pipe3 PHY registers. However because
->> of the way the ti-pipe3 PHY, OCP2SCP and PCIe controller are connected
->> in dra7xx where
->>
->> PCIe controller --------------> ti-pipe3 PHY --------------> OCP2SCP
->> 		  depends on		       depends on
->>
->> updating ti-pipe3 PHY registers results in an abort.
->>
->> Though the dependency between ti-pipe3 PHY and OCP2SCP is created
->> (OCP2SCP is parent of ti-pipe3 PHY), and enabling ti-pipe3 PHY clocks
->> should in turn enable OCP2SCP (with the help of pm_runtime framework),
->> this doesn't work in no_irq stage since pm_runtime is disabled during
->> no_irq stage. Since pci-dra7xx enables/initializes ti-pipe3 phy in
->> no_irq stage, OCP2SCP is not enabled resulting in an abort with ti-pipe3
->> PHY registers are accessed.
->>
->> In order to solve this a functional dependency is created between
->> PCIe and ti-pipe3 PHY so that PCIe is suspended before PHY/OCP2SCP
->> and resumed after PCIe PHY/OCP2SCP
->>
->> Kishon Vijay Abraham I (2):
->>   PCI: dwc: dra7xx: Create functional dependency between PCIe and PHY
+> FWIW my thoughts on this are WTF!
 > 
-> s/PCI: dwc: dra7xx: Create functional dependency between PCIe and PHY/
->   PCI: dra7xx: Create functional dependency between PCIe and PHY/
+> Looks to me horribly over complicated and over generalised.
 > 
-> Should these be merged together?  If it makes sense for you to merge them
-> together, here's my ack for the PCI piece:
+> Surely is it could be done the same way that x86 does IO cycles?
+
+No
+
+> So you encode the information into the 'address' the driver passes
+> to ioread16() (etc) to allow it to do either a normal bus cycle or
+> the indirect cycle onto the external bus.
+
+In order to do that you need to have a special PCI bridge that is able
+to detect the special IO addresses and initiate such special IO cycles
+on the external bus. This is not supported by our HW (and this why
+we need the LPC accessors)
+
+Gab
+
 > 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> So you have one kernel option that makes these real functions.
+> 
+> 	David
 
-Yeah both should be merged together. I'll make the change you suggested, add
-your Ack and merge myself.
 
-Thanks
-Kishon
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
