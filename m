@@ -1,175 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, rjw@rjwysocki.net, lenb@kernel.org,
-        alexander.shishkin@linux.intel.com, jic23@kernel.org,
-        knaack.h@gmx.de, lars@metafoo.de, pmeerw@pmeerw.net,
-        dledford@redhat.com, sean.hefty@intel.com,
-        hal.rosenstock@gmail.com, hch@lst.de, sagi@grimberg.me,
-        kishon@ti.com, bhelgaas@google.com, nab@linux-iscsi.org,
-        balbi@kernel.org, gregkh@linuxfoundation.org,
-        laurent.pinchart@ideasonboard.com, jlbec@evilplan.org,
-        ccaulfie@redhat.com, teigland@redhat.com, mfasheh@versity.com,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-usb@vger.kernel.org,
-        cluster-devel@redhat.com, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH v2 08/15] nvmet: make config_item_type const
-Date: Mon, 16 Oct 2017 17:18:47 +0200
-Message-Id: <1508167134-6243-9-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-References: <1508167134-6243-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17801 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751572AbdJ3N6y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 09:58:54 -0400
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
+        <mperttunen@nvidia.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V3 04/12] PCI: tegra: Advertise PCIe Advanced Error Reporting (AER) capability
+Date: Mon, 30 Oct 2017 19:27:15 +0530
+Message-ID: <1509371843-22931-5-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make config_item_type structures const as they are either passed to a
-function having the argument as const or used inside an if statement or
-stored in the const "ci_type" field of a config_item structure.
+Default root port settings hide AER capability. This patch enables the
+advertisement of AER capability by root port.
 
-Done using Coccinelle
-
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
-* Changes in v2- Combine all the followup patches and the constification
-patches into a series.
+V3:
+* updated commit log
+V2:
+* no change in this patch
 
- drivers/nvme/target/configfs.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/nvme/target/configfs.c b/drivers/nvme/target/configfs.c
-index b6aeb1d..e6b2d2a 100644
---- a/drivers/nvme/target/configfs.c
-+++ b/drivers/nvme/target/configfs.c
-@@ -20,8 +20,8 @@
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index ed5e8acfdc32..46896aaab81d 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -187,6 +187,9 @@
+ #define RP_VEND_XP	0x00000f00
+ #define  RP_VEND_XP_DL_UP	(1 << 30)
  
- #include "nvmet.h"
++#define RP_VEND_CTL1	0xf48
++#define  RP_VEND_CTL1_ERPT	(1 << 13)
++
+ #define RP_VEND_CTL2 0x00000fa8
+ #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
  
--static struct config_item_type nvmet_host_type;
--static struct config_item_type nvmet_subsys_type;
-+static const struct config_item_type nvmet_host_type;
-+static const struct config_item_type nvmet_subsys_type;
+@@ -2055,6 +2058,16 @@ static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
+ 		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+ }
  
++static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
++{
++	unsigned long value;
++
++	/* Enable AER capability */
++	value = readl(port->base + RP_VEND_CTL1);
++	value |= RP_VEND_CTL1_ERPT;
++	writel(value, port->base + RP_VEND_CTL1);
++}
++
  /*
-  * nvmet_port Generic ConfigFS definitions.
-@@ -425,7 +425,7 @@ static void nvmet_ns_release(struct config_item *item)
- 	.release		= nvmet_ns_release,
- };
+  * FIXME: If there are no PCIe cards attached, then calling this function
+  * can result in the increase of the bootup time as there are big timeout
+@@ -2120,6 +2133,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ 			 port->index, port->lanes);
  
--static struct config_item_type nvmet_ns_type = {
-+static const struct config_item_type nvmet_ns_type = {
- 	.ct_item_ops		= &nvmet_ns_item_ops,
- 	.ct_attrs		= nvmet_ns_attrs,
- 	.ct_owner		= THIS_MODULE,
-@@ -464,7 +464,7 @@ static struct config_group *nvmet_ns_make(struct config_group *group,
- 	.make_group		= nvmet_ns_make,
- };
+ 		tegra_pcie_port_enable(port);
++		tegra_pcie_enable_rp_features(port);
+ 	}
  
--static struct config_item_type nvmet_namespaces_type = {
-+static const struct config_item_type nvmet_namespaces_type = {
- 	.ct_group_ops		= &nvmet_namespaces_group_ops,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -540,7 +540,7 @@ static void nvmet_port_subsys_drop_link(struct config_item *parent,
- 	.drop_link		= nvmet_port_subsys_drop_link,
- };
- 
--static struct config_item_type nvmet_port_subsys_type = {
-+static const struct config_item_type nvmet_port_subsys_type = {
- 	.ct_item_ops		= &nvmet_port_subsys_item_ops,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -613,7 +613,7 @@ static void nvmet_allowed_hosts_drop_link(struct config_item *parent,
- 	.drop_link		= nvmet_allowed_hosts_drop_link,
- };
- 
--static struct config_item_type nvmet_allowed_hosts_type = {
-+static const struct config_item_type nvmet_allowed_hosts_type = {
- 	.ct_item_ops		= &nvmet_allowed_hosts_item_ops,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -729,7 +729,7 @@ static void nvmet_subsys_release(struct config_item *item)
- 	.release		= nvmet_subsys_release,
- };
- 
--static struct config_item_type nvmet_subsys_type = {
-+static const struct config_item_type nvmet_subsys_type = {
- 	.ct_item_ops		= &nvmet_subsys_item_ops,
- 	.ct_attrs		= nvmet_subsys_attrs,
- 	.ct_owner		= THIS_MODULE,
-@@ -767,7 +767,7 @@ static struct config_group *nvmet_subsys_make(struct config_group *group,
- 	.make_group		= nvmet_subsys_make,
- };
- 
--static struct config_item_type nvmet_subsystems_type = {
-+static const struct config_item_type nvmet_subsystems_type = {
- 	.ct_group_ops		= &nvmet_subsystems_group_ops,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -827,7 +827,7 @@ static void nvmet_referral_release(struct config_item *item)
- 	.release	= nvmet_referral_release,
- };
- 
--static struct config_item_type nvmet_referral_type = {
-+static const struct config_item_type nvmet_referral_type = {
- 	.ct_owner	= THIS_MODULE,
- 	.ct_attrs	= nvmet_referral_attrs,
- 	.ct_item_ops	= &nvmet_referral_item_ops,
-@@ -852,7 +852,7 @@ static struct config_group *nvmet_referral_make(
- 	.make_group		= nvmet_referral_make,
- };
- 
--static struct config_item_type nvmet_referrals_type = {
-+static const struct config_item_type nvmet_referrals_type = {
- 	.ct_owner	= THIS_MODULE,
- 	.ct_group_ops	= &nvmet_referral_group_ops,
- };
-@@ -880,7 +880,7 @@ static void nvmet_port_release(struct config_item *item)
- 	.release		= nvmet_port_release,
- };
- 
--static struct config_item_type nvmet_port_type = {
-+static const struct config_item_type nvmet_port_type = {
- 	.ct_attrs		= nvmet_port_attrs,
- 	.ct_item_ops		= &nvmet_port_item_ops,
- 	.ct_owner		= THIS_MODULE,
-@@ -921,7 +921,7 @@ static struct config_group *nvmet_ports_make(struct config_group *group,
- 	.make_group		= nvmet_ports_make,
- };
- 
--static struct config_item_type nvmet_ports_type = {
-+static const struct config_item_type nvmet_ports_type = {
- 	.ct_group_ops		= &nvmet_ports_group_ops,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -940,7 +940,7 @@ static void nvmet_host_release(struct config_item *item)
- 	.release		= nvmet_host_release,
- };
- 
--static struct config_item_type nvmet_host_type = {
-+static const struct config_item_type nvmet_host_type = {
- 	.ct_item_ops		= &nvmet_host_item_ops,
- 	.ct_owner		= THIS_MODULE,
- };
-@@ -963,14 +963,14 @@ static struct config_group *nvmet_hosts_make_group(struct config_group *group,
- 	.make_group		= nvmet_hosts_make_group,
- };
- 
--static struct config_item_type nvmet_hosts_type = {
-+static const struct config_item_type nvmet_hosts_type = {
- 	.ct_group_ops		= &nvmet_hosts_group_ops,
- 	.ct_owner		= THIS_MODULE,
- };
- 
- static struct config_group nvmet_hosts_group;
- 
--static struct config_item_type nvmet_root_type = {
-+static const struct config_item_type nvmet_root_type = {
- 	.ct_owner		= THIS_MODULE,
- };
- 
+ 	/* take the PCIe interface module out of reset */
 -- 
-1.9.1
-
+2.1.4
