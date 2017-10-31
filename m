@@ -1,145 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:8494 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752763AbdJ3MG3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:06:29 -0400
-Subject: Re: [PATCH V2 09/12] PCI: tegra: Enable PCIe xclk clock clamping
-To: Mikko Perttunen <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
-        <bhelgaas@google.com>, <jonathanh@nvidia.com>, <vidyas@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
- <1509337143-25963-10-git-send-email-mmaddireddy@nvidia.com>
- <61bed209-ec8f-cafb-5214-6f55e68c0610@kapsi.fi>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <0eec4a21-e198-89ca-7aa7-95a6d2c36d96@nvidia.com>
-Date: Mon, 30 Oct 2017 17:33:19 +0530
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v4 0/3] Prepartion for SR-IOV PowerVM Enablement
+To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, linuxppc-dev@lists.ozlabs.org
+References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Tue, 31 Oct 2017 09:51:56 -0500
 MIME-Version: 1.0
-In-Reply-To: <61bed209-ec8f-cafb-5214-6f55e68c0610@kapsi.fi>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <d5bdfddc-d5fc-5b5c-9ee7-85122d46f92f@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+Add linuxppc-dev@lists.ozlabs.org
 
 
-On 30-Oct-17 3:36 PM, Mikko Perttunen wrote:
-> 
-> 
-> On 30.10.2017 06:19, Manikanta Maddireddy wrote:
->> This patch enables PCIe xlck clock clamping by pad control. Pad control
->> asserts UPHY lane sleep signal when L1 entry signal received from PCIe.
->> UPHY sleep signal assertion is done per lane. Default clamp threshold
->> margin is not enough to assert all UPHY lane sleep signals. Increase
->> the clamp threshold in Tegra124, 132, 210 and 186.
->>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->> V2:
->> * no change in this patch
->>
->>  drivers/pci/host/pci-tegra.c | 28 ++++++++++++++++++++++++++--
->>  1 file changed, 26 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->> index 7f1e34e670d7..3c625ccfa539 100644
->> --- a/drivers/pci/host/pci-tegra.c
->> +++ b/drivers/pci/host/pci-tegra.c
->> @@ -224,8 +224,14 @@
->>  #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
->>
->>  #define RP_PRIV_MISC    0x00000fe0
->> -#define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT (0xe << 0)
->> -#define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT (0xf << 0)
->> +#define  RP_PRIV_MISC_PRSNT_MAP_EP_PRSNT        (0xe << 0)
->> +#define  RP_PRIV_MISC_PRSNT_MAP_EP_ABSNT        (0xf << 0)
->> +#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD_MASK    (0x7f << 16)
->> +#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD        (0xf << 16)
->> +#define  RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE        (1 << 23)
->> +#define  RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD_MASK    (0x7f << 24)
->> +#define  RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD        (0xf << 24)
->> +#define  RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE        (1 << 31)
->>
->>  #define RP_LINK_CONTROL_STATUS            0x00000090
->>  #define  RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE    0x20000000
->> @@ -300,6 +306,7 @@ struct tegra_pcie_soc {
->>      bool force_pca_enable;
->>      bool program_uphy;
->>      bool program_ectl_settings;
->> +    bool update_clamp_threshold;
->>  };
->>
->>  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
->> @@ -2156,6 +2163,7 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
->>
->>  static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
->>  {
->> +    const struct tegra_pcie_soc *soc = port->pcie->soc;
->>      unsigned long value;
->>
->>      /* Optimal settings to enhance bandwidth */
->> @@ -2170,6 +2178,17 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
->>      value = readl(port->base + RP_VEND_XP_BIST);
->>      value |= RP_VEND_XP_BIST_GOTO_L1_L2_AFTER_DLLP_DONE;
->>      writel(value, port->base + RP_VEND_XP_BIST);
->> +
->> +    value = readl(port->base + RP_PRIV_MISC);
->> +    value |= (RP_PRIV_MISC_CTLR_CLK_CLAMP_ENABLE |
->> +             RP_PRIV_MISC_TMS_CLK_CLAMP_ENABLE);
->> +    if (soc->update_clamp_threshold) {
->> +        value &= ~(RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD_MASK |
->> +                RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD_MASK);
->> +        value |= (RP_PRIV_MISC_CTLR_CLK_CLAMP_THRESHOLD |
->> +                RP_PRIV_MISC_TMS_CLK_CLAMP_THRESHOLD);
-> 
-> Parentheses not needed in the OR operation.
-> 
-> We're starting to accumulate enough stuff here that maybe a separate function is warranted after all :) However, I'm not sure about the apply_sw_fixup name. It sounds like we're applying a fix for some broken software. So maybe something like tegra_pcie_apply_port_configuration or such?
-Ideally PCIe HW should work fine with default values of these registers.
-However in internal testing HW team found these issues and suggested SW fixups for them, Hence named it as apply_sw_fixup.
-> 
->> +    }
->> +    writel(value, port->base + RP_PRIV_MISC);
->>  }
->>  /*
->>   * FIXME: If there are no PCIe cards attached, then calling this function
->> @@ -2306,6 +2325,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
->>      .force_pca_enable = false,
->>      .program_uphy = true,
->>      .program_ectl_settings = false,
->> +    .update_clamp_threshold = false,
->>  };
->>
->>  static const struct tegra_pcie_soc tegra30_pcie = {
->> @@ -2323,6 +2343,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
->>      .force_pca_enable = false,
->>      .program_uphy = true,
->>      .program_ectl_settings = false,
->> +    .update_clamp_threshold = false,
->>  };
->>
->>  static const struct tegra_pcie_soc tegra124_pcie = {
->> @@ -2339,6 +2360,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
->>      .force_pca_enable = false,
->>      .program_uphy = true,
->>      .program_ectl_settings = false,
->> +    .update_clamp_threshold = true,
->>  };
->>
->>  static const struct tegra_pcie_soc tegra210_pcie = {
->> @@ -2363,6 +2385,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
->>      .force_pca_enable = true,
->>      .program_uphy = true,
->>      .program_ectl_settings = true,
->> +    .update_clamp_threshold = true,
->>  };
->>
->>  static const struct tegra_pcie_soc tegra186_pcie = {
->> @@ -2380,6 +2403,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
->>      .force_pca_enable = false,
->>      .program_uphy = false,
->>      .program_ectl_settings = false,
->> +    .update_clamp_threshold = false,
->>  };
->>
->>  static const struct of_device_id tegra_pcie_of_match[] = {
->>
+On 10/31/17 9:47 AM, Bryant G. Ly wrote:
+> v1 - Initial patch
+> v2 - Addressed Bjorn's comment on creating a highly platform
+>      dependent global exported symbol.
+> v3 - Based patch off linux-ppc/master
+> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
+>
+> Bryant G. Ly (3):
+>   powerpc/kernel: Separate SR-IOV Calls
+>   pseries: Add PSeries SR-IOV Machine dependent calls
+>   pci/iov: Expose VF drivers Auto Probe Globally
+>
+>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
+>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
+>  drivers/pci/iov.c                            | 12 ++++++++++
+>  include/linux/pci.h                          |  2 ++
+>  11 files changed, 119 insertions(+), 33 deletions(-)
+>
