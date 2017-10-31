@@ -1,97 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <2094189.3ZuY7TBjup@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <2094189.3ZuY7TBjup@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Mon, 23 Oct 2017 21:06:05 +0200
-Message-ID: <CAPDyKFpHXkfu2izg1vK0c1wEDnaV4TUyHbdXWQEk=5db-5MBOw@mail.gmail.com>
-Subject: Re: [PATCH 05/12] PCI / PM: Drop unnecessary invocations of
- pcibios_pm_ops callbacks
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:52360 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932953AbdJaWlF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:41:05 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-        Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 16/17] bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
+Date: Tue, 31 Oct 2017 23:39:34 +0100
+Message-Id: <20171031223936.27549-17-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16 October 2017 at 03:29, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> The only user of non-empty pcibios_pm_ops is s390 and it only uses
-> "noirq" callbacks, so drop the invocations of the other pcibios_pm_ops
-> callbacks from the PCI PM code.
->
-> That will allow subsequent changes to be somewhat simpler.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The ARTPEC-6 SoC and the ARTPEC-7 SoC are very similar.
+Unfortunately, some fields in the PCIECFG and PCIESTAT
+register have changed.
 
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+V3:
+* No change.
 
-> ---
->  drivers/pci/pci-driver.c |   18 ------------------
->  1 file changed, 18 deletions(-)
->
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -918,9 +918,6 @@ static int pci_pm_freeze(struct device *
->                         return error;
->         }
->
-> -       if (pcibios_pm_ops.freeze)
-> -               return pcibios_pm_ops.freeze(dev);
-> -
->         return 0;
->  }
->
-> @@ -982,12 +979,6 @@ static int pci_pm_thaw(struct device *de
->         const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->         int error = 0;
->
-> -       if (pcibios_pm_ops.thaw) {
-> -               error = pcibios_pm_ops.thaw(dev);
-> -               if (error)
-> -                       return error;
-> -       }
-> -
->         if (pci_has_legacy_pm_support(pci_dev))
->                 return pci_legacy_resume(dev);
->
-> @@ -1032,9 +1023,6 @@ static int pci_pm_poweroff(struct device
->   Fixup:
->         pci_fixup_device(pci_fixup_suspend, pci_dev);
->
-> -       if (pcibios_pm_ops.poweroff)
-> -               return pcibios_pm_ops.poweroff(dev);
-> -
->         return 0;
->  }
->
-> @@ -1107,12 +1095,6 @@ static int pci_pm_restore(struct device
->         const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->         int error = 0;
->
-> -       if (pcibios_pm_ops.restore) {
-> -               error = pcibios_pm_ops.restore(dev);
-> -               if (error)
-> -                       return error;
-> -       }
-> -
->         /*
->          * This is necessary for the hibernation error path in which restore is
->          * called without restoring the standard config registers of the device.
->
->
+ Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+index 33eef7ae5a23..979dc7b6cfe8 100644
+--- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+@@ -6,6 +6,8 @@ and thus inherits all the common properties defined in designware-pcie.txt.
+ Required properties:
+ - compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+ 	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
++	      "axis,artpec7-pcie", "snps,dw-pcie" for ARTPEC-7 in RC mode;
++	      "axis,artpec7-pcie-ep", "snps,dw-pcie" for ARTPEC-7 in EP mode;
+ - reg: base addresses and lengths of the PCIe controller (DBI),
+ 	the PHY controller, and configuration address space.
+ - reg-names: Must include the following entries:
+-- 
+2.14.2
