@@ -1,100 +1,310 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:32817 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751255AbdJBERD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Oct 2017 00:17:03 -0400
-Received: by mail-pf0-f193.google.com with SMTP id m28so4286497pfi.0
-        for <linux-pci@vger.kernel.org>; Sun, 01 Oct 2017 21:17:03 -0700 (PDT)
-Date: Sun, 1 Oct 2017 21:17:01 -0700
-From: Yinghai Lu <yinghai@kernel.org>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [RFC PATCH] PCI: Fix prefetchable range broken in
- pci_bridge_check_ranges
-Message-ID: <20171002041700.GA3834@localhost.localdomain>
-References: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@axis.com
+Subject: [PATCH v3 14/17] PCI: dwc: artpec6: Add support for endpoint mode
+Date: Tue, 31 Oct 2017 23:39:32 +0100
+Message-Id: <20171031223936.27549-15-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 23, 2017 at 03:24:42PM +0800, Zhou Wang wrote:
->                                         -> pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, 0xffffffff)
-> 
-> This will change the prefetch range of 00:00.0 in a time slot, so traffic of
-> 01:00.0 or 01:00.1 may be broken.
-> 
-> In fact, we can get if one bridge supports 64bit range by the bottom 4bits of
-> prefetchable memory base/limit. Honestly speaking, I don't know why 1f82de10d6b1
-> ("PCI/86: don't assume prefetchable ranges are 64bit") has added the double
-> check code.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+V3:
+* Removed ifdefs around match table and match table data.
+* Removed ifdefs in probe, use dummy implementations instead.
 
-some chip even that flags say that 64bit is support from that bits, but its upper 32 bits
-actually can not be changed.
+ drivers/pci/dwc/Kconfig        |  23 ++++--
+ drivers/pci/dwc/pcie-artpec6.c | 162 +++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 174 insertions(+), 11 deletions(-)
 
-> 
-> So Can we remove the double checking of prefetchable range to avoid this problem?
-> 
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> ---
->  drivers/pci/setup-bus.c | 14 --------------
->  1 file changed, 14 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 958da7d..23010a9 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -778,20 +778,6 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
->  		}
->  	}
-> -
-> -	/* double check if bridge does support 64 bit pref */
-> -	if (b_res[2].flags & IORESOURCE_MEM_64) {
-> -		u32 mem_base_hi, tmp;
-> -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> -					 &mem_base_hi);
-> -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> -					       0xffffffff);
-> -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
-> -		if (!tmp)
-> -			b_res[2].flags &= ~IORESOURCE_MEM_64;
-> -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> -				       mem_base_hi);
-> -	}
->  }
->  
->  /* Helper function for sizing routines: find first available
-
-Maybe we can try this: only touch upper 32bits after we touched low 32bits ?
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 958da7db9033..2ac4d20e5c11 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -744,6 +744,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 	u32 pmem;
- 	struct pci_dev *bridge = bus->self;
- 	struct resource *b_res;
-+	int pref_memory_base_touched = 0;
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 3954353e3e2e..0fb96c7754de 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -148,15 +148,28 @@ config PCIE_ARMADA_8K
+ 	  DesignWare core functions to implement the driver.
  
- 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
- 	b_res[1].flags |= IORESOURCE_MEM;
-@@ -769,6 +770,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 					       0xffe0fff0);
- 		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
- 		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
-+		pref_memory_base_touched = 1;
- 	}
- 	if (pmem) {
- 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-@@ -780,7 +782,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 	}
+ config PCIE_ARTPEC6
+-	bool "Axis ARTPEC-6 PCIe controller"
+-	depends on PCI
++	bool
++
++config PCIE_ARTPEC6_HOST
++	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+ 	depends on MACH_ARTPEC6
+-	depends on PCI_MSI_IRQ_DOMAIN
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
++	select PCIE_ARTPEC6
++	help
++	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
++	  host mode. This uses the DesignWare core.
++
++config PCIE_ARTPEC6_EP
++	bool "Axis ARTPEC-6 PCIe controller Endpoint Mode"
++	depends on MACH_ARTPEC6
++	depends on PCI_ENDPOINT
++	select PCIE_DW_EP
++	select PCIE_ARTPEC6
+ 	help
+-	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+-	  SoCs.  This PCIe controller uses the DesignWare core.
++	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
++	  endpoint mode. This uses the DesignWare core.
  
- 	/* double check if bridge does support 64 bit pref */
--	if (b_res[2].flags & IORESOURCE_MEM_64) {
-+	if (pref_memory_base_touched && b_res[2].flags & IORESOURCE_MEM_64) {
- 		u32 mem_base_hi, tmp;
- 		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
- 					 &mem_base_hi);
+ config PCIE_KIRIN
+ 	depends on OF && ARM64
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 3b635e745d25..413683d7bd9d 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -13,6 +13,7 @@
+ #include <linux/delay.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/of_device.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/resource.h>
+@@ -30,8 +31,15 @@ struct artpec6_pcie {
+ 	struct dw_pcie		*pci;
+ 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
+ 	void __iomem		*phy_base;	/* DT phy */
++	enum dw_pcie_device_mode mode;
+ };
+ 
++struct artpec_pcie_of_data {
++	enum dw_pcie_device_mode mode;
++};
++
++static const struct of_device_id artpec6_pcie_of_match[];
++
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET			0x700
+ #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
+@@ -42,6 +50,7 @@ struct artpec6_pcie {
+ #define  PCIECFG_DBG_OEN		BIT(24)
+ #define  PCIECFG_CORE_RESET_REQ		BIT(21)
+ #define  PCIECFG_LTSSM_ENABLE		BIT(20)
++#define  PCIECFG_DEVICE_TYPE_MASK	GENMASK(19, 16)
+ #define  PCIECFG_CLKREQ_B		BIT(11)
+ #define  PCIECFG_REFCLK_ENABLE		BIT(10)
+ #define  PCIECFG_PLL_ENABLE		BIT(9)
+@@ -92,6 +101,22 @@ static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ 	return 0;
+ }
+ 
++static void artpec6_pcie_stop_link(struct dw_pcie *pci)
++{
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	u32 val;
++
++	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++	val &= ~PCIECFG_LTSSM_ENABLE;
++	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++}
++
++static const struct dw_pcie_ops dw_pcie_ops = {
++	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++	.start_link = artpec6_pcie_establish_link,
++	.stop_link = artpec6_pcie_stop_link,
++};
++
+ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+ {
+ 	u32 val;
+@@ -157,6 +182,7 @@ static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
+ 	usleep_range(100, 200);
+ }
+ 
++#ifdef CONFIG_PCIE_ARTPEC6_HOST
+ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+ {
+ 	struct dw_pcie *pci = artpec6_pcie->pci;
+@@ -231,11 +257,92 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 
+ 	return 0;
+ }
++#else
++static inline int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
++					struct platform_device *pdev)
++{
++	return -ENODEV;
++}
++#endif
+ 
+-static const struct dw_pcie_ops dw_pcie_ops = {
+-	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++#ifdef CONFIG_PCIE_ARTPEC6_EP
++static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	enum pci_barno bar;
++
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++
++	for (bar = BAR_0; bar <= BAR_5; bar++)
++		dw_pcie_ep_reset_bar(pci, bar);
++}
++
++static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep,
++				  enum pci_epc_irq_type type, u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++
++	switch (type) {
++	case PCI_EPC_IRQ_LEGACY:
++		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
++		return -EINVAL;
++	case PCI_EPC_IRQ_MSI:
++		return dw_pcie_ep_raise_msi_irq(ep, interrupt_num);
++	default:
++		dev_err(pci->dev, "UNKNOWN IRQ type\n");
++	}
++
++	return 0;
++}
++
++static struct dw_pcie_ep_ops pcie_ep_ops = {
++	.ep_init = artpec6_pcie_ep_init,
++	.raise_irq = artpec6_pcie_raise_irq,
+ };
+ 
++static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
++			       struct platform_device *pdev)
++{
++	int ret;
++	struct dw_pcie_ep *ep;
++	struct resource *res;
++	struct device *dev = &pdev->dev;
++	struct dw_pcie *pci = artpec6_pcie->pci;
++
++	ep = &pci->ep;
++	ep->ops = &pcie_ep_ops;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
++	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
++	if (IS_ERR(pci->dbi_base2))
++		return PTR_ERR(pci->dbi_base2);
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
++	if (!res)
++		return -EINVAL;
++
++	ep->phys_base = res->start;
++	ep->addr_size = resource_size(res);
++
++	ret = dw_pcie_ep_init(ep);
++	if (ret) {
++		dev_err(dev, "failed to initialize endpoint\n");
++		return ret;
++	}
++
++	return 0;
++}
++#else
++static inline int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
++				      struct platform_device *pdev)
++{
++	return -ENODEV;
++}
++#endif
++
+ static int artpec6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -244,6 +351,16 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	struct resource *dbi_base;
+ 	struct resource *phy_base;
+ 	int ret;
++	const struct of_device_id *match;
++	const struct artpec_pcie_of_data *data;
++	enum dw_pcie_device_mode mode;
++
++	match = of_match_device(artpec6_pcie_of_match, dev);
++	if (!match)
++		return -EINVAL;
++
++	data = (struct artpec_pcie_of_data *)match->data;
++	mode = (enum dw_pcie_device_mode)data->mode;
+ 
+ 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
+ 	if (!artpec6_pcie)
+@@ -257,6 +374,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	pci->ops = &dw_pcie_ops;
+ 
+ 	artpec6_pcie->pci = pci;
++	artpec6_pcie->mode = mode;
+ 
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+ 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
+@@ -276,15 +394,47 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, artpec6_pcie);
+ 
+-	ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
+-	if (ret < 0)
+-		return ret;
++	switch (artpec6_pcie->mode) {
++	case DW_PCIE_RC_TYPE:
++		ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
++		if (ret < 0)
++			return ret;
++		break;
++	case DW_PCIE_EP_TYPE: {
++		u32 val;
++
++		val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++		val &= ~PCIECFG_DEVICE_TYPE_MASK;
++		artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++		ret = artpec6_add_pcie_ep(artpec6_pcie, pdev);
++		if (ret < 0)
++			return ret;
++		break;
++	}
++	default:
++		dev_err(dev, "INVALID device type %d\n", artpec6_pcie->mode);
++	}
+ 
+ 	return 0;
+ }
+ 
++static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
+ static const struct of_device_id artpec6_pcie_of_match[] = {
+-	{ .compatible = "axis,artpec6-pcie", },
++	{
++		.compatible = "axis,artpec6-pcie",
++		.data = &artpec6_pcie_rc_of_data,
++	},
++	{
++		.compatible = "axis,artpec6-pcie-ep",
++		.data = &artpec6_pcie_ep_of_data,
++	},
+ 	{},
+ };
+ 
+-- 
+2.14.2
