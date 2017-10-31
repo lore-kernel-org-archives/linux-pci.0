@@ -1,239 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
-To: <lorenzo.pieralisi@arm.com>, <marc.zyngier@arm.com>,
-        <sudeep.holla@arm.com>, <will.deacon@arm.com>,
-        <robin.murphy@arm.com>, <joro@8bytes.org>, <bhelgaas@google.com>,
-        <gabriele.paoloni@huawei.com>
-CC: <john.garry@huawei.com>, <iommu@lists.linux-foundation.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devel@acpica.org>, <linuxarm@huawei.com>,
-        <wangzhou1@hisilicon.com>, <guohanjun@huawei.com>,
-        Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
-Subject: [PATCH v9 1/4] ACPI/IORT: Add msi address regions reservation helper
-Date: Fri, 6 Oct 2017 15:04:47 +0100
-Message-ID: <20171006140450.89652-2-shameerali.kolothum.thodi@huawei.com>
-In-Reply-To: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
-References: <20171006140450.89652-1-shameerali.kolothum.thodi@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:6036 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751119AbdJaEZX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 00:25:23 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
+        <yinghai@kernel.org>, <david.daney@cavium.com>,
+        <Julia.Lawall@lip6.fr>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
+Subject: [PATCH V2 0/4] Add ASPM-L1 Substates support for Tegra
+Date: Tue, 31 Oct 2017 09:52:45 +0530
+Message-ID: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms msi parent address regions have to be excluded from
-normal IOVA allocation in that they are detected and decoded in a HW
-specific way by system components and so they cannot be considered normal
-IOVA address space.
+Tegra chips T210 and T186 support ASPM-L1 Substates (i.e. L1.1 and L1.2)
+This patch series
+- adds a generic API for root port controller drivers to
+  override the default value of LTR L1.2 Threhold which otherwise comes from
+  the same APIs weak implementation in aspm.c file
+- applies fixups to reflect correct capability values for
+  T_cmrt (Common Mode Restore Time) and
+  T_pwr_on (Power On)
+  and adjusts counter values for 19.2 MHz of clk_m
+- applies fixup specific to T210 to avoid unnecessary wake ups from L1.2 state
 
-Add a helper function that retrieves ITS address regions - the msi
-parent - through IORT device <-> ITS mappings and reserves it so that
-these regions will not be translated by IOMMU and will be excluded from
-IOVA allocations.
+PCIe - ASPM L1 Sub States spec
+https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
 
-Signed-off-by: Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>
-[lorenzo.pieralisi@arm.com: updated commit log/added comments]
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/acpi/arm64/iort.c        | 97 ++++++++++++++++++++++++++++++++++++++--
- drivers/irqchip/irq-gic-v3-its.c |  3 +-
- include/linux/acpi_iort.h        |  7 ++-
- 3 files changed, 102 insertions(+), 5 deletions(-)
+Testing Done on T210 and T186
+- ASPM-L1:
+  Verified ASPM-L1 enablement by selecting PCIEASPM_POWERSAVE config
+  With the help of Tegra rootport's internal counter registers, confirmed
+  link entry in and out of ASPM-L1 state using USB3.0 add-on card, NVMe and NIC
+  cards
+- ASPM-L1 SubStates:
+  Verified ASPM-L1 Substates enablement by selecting PCIEASPM_POWER_SUPERSAVE config
+  Confirmed link's entry into L1SS using Westren Digital NVMe card (with Sandisk
+  Controller) using Tegra rootport's internal counter registers
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 9565d57..876c0e1 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -39,6 +39,7 @@
- struct iort_its_msi_chip {
- 	struct list_head	list;
- 	struct fwnode_handle	*fw_node;
-+	phys_addr_t		base_addr;
- 	u32			translation_id;
- };
- 
-@@ -136,14 +137,16 @@ typedef acpi_status (*iort_find_node_callback)
- static DEFINE_SPINLOCK(iort_msi_chip_lock);
- 
- /**
-- * iort_register_domain_token() - register domain token and related ITS ID
-- * to the list from where we can get it back later on.
-+ * iort_register_domain_token() - register domain token along with related
-+ * ITS ID and base address to the list from where we can get it back later on.
-  * @trans_id: ITS ID.
-+ * @base: ITS base address.
-  * @fw_node: Domain token.
-  *
-  * Returns: 0 on success, -ENOMEM if no memory when allocating list element
-  */
--int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
-+int iort_register_domain_token(int trans_id, phys_addr_t base,
-+			       struct fwnode_handle *fw_node)
- {
- 	struct iort_its_msi_chip *its_msi_chip;
- 
-@@ -153,6 +156,7 @@ int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node)
- 
- 	its_msi_chip->fw_node = fw_node;
- 	its_msi_chip->translation_id = trans_id;
-+	its_msi_chip->base_addr = base;
- 
- 	spin_lock(&iort_msi_chip_lock);
- 	list_add(&its_msi_chip->list, &iort_msi_chip_list);
-@@ -481,6 +485,24 @@ int iort_pmsi_get_dev_id(struct device *dev, u32 *dev_id)
- 	return -ENODEV;
- }
- 
-+static int __maybe_unused iort_find_its_base(u32 its_id, phys_addr_t *base)
-+{
-+	struct iort_its_msi_chip *its_msi_chip;
-+	bool match = false;
-+
-+	spin_lock(&iort_msi_chip_lock);
-+	list_for_each_entry(its_msi_chip, &iort_msi_chip_list, list) {
-+		if (its_msi_chip->translation_id == its_id) {
-+			*base = its_msi_chip->base_addr;
-+			match = true;
-+			break;
-+		}
-+	}
-+	spin_unlock(&iort_msi_chip_lock);
-+
-+	return match ? 0 : -ENODEV;
-+}
-+
- /**
-  * iort_dev_find_its_id() - Find the ITS identifier for a device
-  * @dev: The device.
-@@ -639,6 +661,73 @@ int iort_add_device_replay(const struct iommu_ops *ops, struct device *dev)
- 
- 	return err;
- }
-+
-+/**
-+ * iort_iommu_msi_get_resv_regions - Reserved region driver helper
-+ * @dev: Device from iommu_get_resv_regions()
-+ * @head: Reserved region list from iommu_get_resv_regions()
-+ *
-+ * Returns: Number of reserved regions on success (0 if no associated msi
-+ *          regions), appropriate error value otherwise. The ITS interrupt
-+ *          translation space(ITS_base + 0x010000) associated with the device
-+ *          are the msi reserved regions.
-+ */
-+int iort_iommu_msi_get_resv_regions(struct device *dev, struct list_head *head)
-+{
-+	struct acpi_iort_its_group *its;
-+	struct acpi_iort_node *node, *its_node = NULL;
-+	int i, resv = 0;
-+
-+	node = iort_find_dev_node(dev);
-+	if (!node)
-+		return -ENODEV;
-+
-+	/*
-+	 * Current logic to reserve ITS regions relies on HW topologies
-+	 * where a given PCI or named component maps its IDs to only one
-+	 * ITS group; if a PCI or named component can map its IDs to
-+	 * different ITS groups through IORT mappings this function has
-+	 * to be reworked to ensure we reserve regions for all ITS groups
-+	 * a given PCI or named component may map IDs to.
-+	 */
-+	if (dev_is_pci(dev)) {
-+		u32 rid;
-+
-+		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid, &rid);
-+		its_node = iort_node_map_id(node, rid, NULL, IORT_MSI_TYPE);
-+	} else {
-+		for (i = 0; i < node->mapping_count; i++) {
-+			its_node = iort_node_map_platform_id(node, NULL,
-+							 IORT_MSI_TYPE, i);
-+			if (its_node)
-+				break;
-+		}
-+	}
-+
-+	if (!its_node)
-+		return 0;
-+
-+	/* Move to ITS specific data */
-+	its = (struct acpi_iort_its_group *)its_node->node_data;
-+
-+	for (i = 0; i < its->its_count; i++) {
-+		phys_addr_t base;
-+
-+		if (!iort_find_its_base(its->identifiers[i], &base)) {
-+			int prot = IOMMU_WRITE | IOMMU_NOEXEC | IOMMU_MMIO;
-+			struct iommu_resv_region *region;
-+
-+			region = iommu_alloc_resv_region(base + SZ_64K, SZ_64K,
-+							 prot, IOMMU_RESV_MSI);
-+			if (region) {
-+				list_add_tail(&region->list, head);
-+				resv++;
-+			}
-+		}
-+	}
-+
-+	return (resv == its->its_count) ? resv : -ENODEV;
-+}
- #else
- static inline
- const struct iommu_ops *iort_fwspec_iommu_ops(struct iommu_fwspec *fwspec)
-@@ -646,6 +735,8 @@ const struct iommu_ops *iort_fwspec_iommu_ops(struct iommu_fwspec *fwspec)
- static inline
- int iort_add_device_replay(const struct iommu_ops *ops, struct device *dev)
- { return 0; }
-+int iort_iommu_msi_get_resv_regions(struct device *dev, struct list_head *head)
-+{ return -ENODEV; }
- #endif
- 
- static int iort_iommu_xlate(struct device *dev, struct acpi_iort_node *node,
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index e8d8934..19d1ff6 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -3197,7 +3197,8 @@ static int __init gic_acpi_parse_madt_its(struct acpi_subtable_header *header,
- 		return -ENOMEM;
- 	}
- 
--	err = iort_register_domain_token(its_entry->translation_id, dom_handle);
-+	err = iort_register_domain_token(its_entry->translation_id, res.start,
-+					 dom_handle);
- 	if (err) {
- 		pr_err("ITS@%pa: Unable to register GICv3 ITS domain token (ITS ID %d) to IORT\n",
- 		       &res.start, its_entry->translation_id);
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index 8d3f0bf..182a577 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -26,7 +26,8 @@
- #define IORT_IRQ_MASK(irq)		(irq & 0xffffffffULL)
- #define IORT_IRQ_TRIGGER_MASK(irq)	((irq >> 32) & 0xffffffffULL)
- 
--int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
-+int iort_register_domain_token(int trans_id, phys_addr_t base,
-+			       struct fwnode_handle *fw_node);
- void iort_deregister_domain_token(int trans_id);
- struct fwnode_handle *iort_find_domain_token(int trans_id);
- #ifdef CONFIG_ACPI_IORT
-@@ -38,6 +39,7 @@
- /* IOMMU interface */
- void iort_dma_setup(struct device *dev, u64 *dma_addr, u64 *size);
- const struct iommu_ops *iort_iommu_configure(struct device *dev);
-+int iort_iommu_msi_get_resv_regions(struct device *dev, struct list_head *head);
- #else
- static inline void acpi_iort_init(void) { }
- static inline u32 iort_msi_map_rid(struct device *dev, u32 req_id)
-@@ -52,6 +54,9 @@ static inline void iort_dma_setup(struct device *dev, u64 *dma_addr,
- static inline
- const struct iommu_ops *iort_iommu_configure(struct device *dev)
- { return NULL; }
-+static inline
-+int iort_iommu_msi_get_resv_regions(struct device *dev, struct list_head *head)
-+{ return -ENODEV; }
- #endif
- 
- #endif /* __ACPI_IORT_H__ */
+Vidya Sagar (4):
+  PCI/ASPM: Add API to supply LTR L1.2 threshold
+  PCI: tegra: Enable ASPM-L1 capability advertisement
+  PCI: tegra: Apply sw fixups to support ASPM-L1 Sub-States
+  PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
+
+ drivers/pci/host/pci-tegra.c | 99 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/aspm.c      | 11 +++--
+ include/linux/pci-aspm.h     |  1 +
+ 3 files changed, 108 insertions(+), 3 deletions(-)
+
 -- 
-1.9.1
-
-
+2.7.4
