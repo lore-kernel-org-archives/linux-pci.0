@@ -1,134 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 01/10] PCI: dwc: use DMA-API for allocating MSI data
-To: David Laight <David.Laight@ACULAB.COM>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
- <20171013160914.3220-2-niklas.cassel@axis.com>
- <063D6719AE5E284EB5DD2968C1650D6DD009511B@AcuExch.aculab.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <2057f883-0c02-3e56-f3c2-ecc90e778e8e@axis.com>
-Date: Mon, 16 Oct 2017 13:43:46 +0200
+Return-Path: <SRS0=KG+I=B6=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=KG+I=B6=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH 1/2] misc: pci_endpoint_test: Prevent some integer
+ overflows
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Dan Carpenter
+	<dan.carpenter@oracle.com>
+References: <20170930081552.rm4tjhxcyegpg3vn@mwanda>
+ <20171017185813.GH5641@bhelgaas-glaptop.roam.corp.google.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman
+	<gregkh@linuxfoundation.org>,
+        <linux-pci@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <2c5c717a-f9e8-952a-16e5-d20115561236@ti.com>
+Date: Tue, 31 Oct 2017 12:23:34 +0530
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD009511B@AcuExch.aculab.com>
+In-Reply-To: <20171017185813.GH5641@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/13/2017 06:42 PM, David Laight wrote:
-> From: Behalf Of Niklas Cassel
->> Sent: 13 October 2017 17:09
->> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
->> to write to this location, the proper way to get the address to this this
->> location is really to use the DMA API, rather than virt_to_phys.
+
+
+On Wednesday 18 October 2017 12:28 AM, Bjorn Helgaas wrote:
+> On Sat, Sep 30, 2017 at 11:15:52AM +0300, Dan Carpenter wrote:
+>> "size + max" can have an arithmetic overflow when we're allocating:
 >>
->> Using virt_to_phys might work on some systems, but by using the DMA API,
->> we know that it will work on all systems.
+>> 	orig_src_addr = dma_alloc_coherent(dev, size + alignment, ...
 >>
->> This is essentially the same thing as allocating a buffer in a driver,
->> to which the endpoint will write to. To do this, we use the DMA API.
+>> I've added a few checks to prevent that.
 >>
->> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->> ---
->>  drivers/pci/dwc/pcie-designware-host.c | 23 ++++++++++++++++-------
->>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
->>  2 files changed, 18 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
->> index 81e2157a7cfb..f6d152ea2a03 100644
->> --- a/drivers/pci/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/dwc/pcie-designware-host.c
->> @@ -83,16 +83,25 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->>
->>  void dw_pcie_msi_init(struct pcie_port *pp)
->>  {
->> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->> +	struct device *dev = pci->dev;
->> +	struct page *page;
->>  	u64 msi_target;
->>
->> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
->> -	msi_target = virt_to_phys((void *)pp->msi_data);
->> +	page = alloc_page(GFP_KERNEL | GFP_DMA32);
->> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
+>> Fixes: 13107c60681f ("misc: pci_endpoint_test: Add support to provide aligned buffer addresses")
+>> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> Where are the matching frees?
-
-Hello David.
-
-I couldn't find any matching free_pages call to the
-__get_free_pages() allocation, so following the same design,
-I did not add a dma_unmap_page.
-
-The current design of most (all?) DWC PCI drivers is that
-they can only be built-in (i.e. not built as a module),
-and that they cannot be unbinded (suppress_bind_attrs
-= true in the platform_driver struct).
-
-I will be happy to add a dma_unmap_page (and free_pages),
-if the maintainer suggests somewhere where I should put it.
-
-Regards,
-Niklas
-
+> Both applied to pci/endpoint for v4.15, thanks!
 > 
-> 	David
+> Kishon, if you want to ack/nack this, I'll act accordingly.
+
+patch looks correct
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 > 
->> +	if (dma_mapping_error(dev, pp->msi_data)) {
->> +		dev_err(dev, "failed to map msi data\n");
->> +		__free_page(page);
->> +		return;
->> +	}
->> +	msi_target = (u64)pp->msi_data;
->>
->>  	/* program the msi_data */
->>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
->> -			    (u32)(msi_target & 0xffffffff));
->> +			    lower_32_bits(msi_target));
->>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
->> -			    (u32)(msi_target >> 32 & 0xffffffff));
->> +			    upper_32_bits(msi_target));
->>  }
->>
->>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
->> @@ -187,10 +196,10 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
->>  	if (pp->ops->get_msi_addr)
->>  		msi_target = pp->ops->get_msi_addr(pp);
->>  	else
->> -		msi_target = virt_to_phys((void *)pp->msi_data);
->> +		msi_target = (u64)pp->msi_data;
->>
->> -	msg.address_lo = (u32)(msi_target & 0xffffffff);
->> -	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
->> +	msg.address_lo = lower_32_bits(msi_target);
->> +	msg.address_hi = upper_32_bits(msi_target);
->>
->>  	if (pp->ops->get_msi_data)
->>  		msg.data = pp->ops->get_msi_data(pp, pos);
->> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
->> index e5d9d77b778e..547352a317f8 100644
->> --- a/drivers/pci/dwc/pcie-designware.h
->> +++ b/drivers/pci/dwc/pcie-designware.h
->> @@ -17,6 +17,7 @@
->>  #include <linux/irq.h>
->>  #include <linux/msi.h>
->>  #include <linux/pci.h>
->> +#include <linux/dma-mapping.h>
->>
->>  #include <linux/pci-epc.h>
->>  #include <linux/pci-epf.h>
->> @@ -168,7 +169,7 @@ struct pcie_port {
->>  	const struct dw_pcie_host_ops *ops;
->>  	int			msi_irq;
->>  	struct irq_domain	*irq_domain;
->> -	unsigned long		msi_data;
->> +	dma_addr_t		msi_data;
->>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->>  };
->>
->> --
->> 2.11.0
-> 
+>> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+>> index deb203026496..c0d323077ad0 100644
+>> --- a/drivers/misc/pci_endpoint_test.c
+>> +++ b/drivers/misc/pci_endpoint_test.c
+>> @@ -226,6 +226,9 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+>>  	u32 src_crc32;
+>>  	u32 dst_crc32;
+>>  
+>> +	if (size > SIZE_MAX - alignment)
+>> +		goto err;
+>> +
+>>  	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
+>>  					   &orig_src_phys_addr, GFP_KERNEL);
+>>  	if (!orig_src_addr) {
+>> @@ -311,6 +314,9 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+>>  	size_t alignment = test->alignment;
+>>  	u32 crc32;
+>>  
+>> +	if (size > SIZE_MAX - alignment)
+>> +		goto err;
+>> +
+>>  	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+>>  				       GFP_KERNEL);
+>>  	if (!orig_addr) {
+>> @@ -369,6 +375,9 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+>>  	size_t alignment = test->alignment;
+>>  	u32 crc32;
+>>  
+>> +	if (size > SIZE_MAX - alignment)
+>> +		goto err;
+>> +
+>>  	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
+>>  				       GFP_KERNEL);
+>>  	if (!orig_addr) {
