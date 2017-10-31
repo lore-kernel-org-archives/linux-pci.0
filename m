@@ -1,115 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:50384 "EHLO
-        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751937AbdJLSM5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Oct 2017 14:12:57 -0400
-Received: by mail-qk0-f175.google.com with SMTP id o187so2222872qke.7
-        for <linux-pci@vger.kernel.org>; Thu, 12 Oct 2017 11:12:57 -0700 (PDT)
-From: Andy Gospodarek <andrew.gospodarek@broadcom.com>
-Date: Thu, 12 Oct 2017 14:12:48 -0400
-To: Jiri Pirko <jiri@resnulli.us>
-Cc: Steve Lin <steven.lin1@broadcom.com>, netdev@vger.kernel.org,
-        jiri@mellanox.com, davem@davemloft.net, michael.chan@broadcom.com,
-        linux-pci@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [RFC 1/3] devlink: Add config parameter get/set operations
-Message-ID: <20171012181248.GA66136@C02RW35GFVH8.dhcp.broadcom.net>
-References: <1507815262-33294-1-git-send-email-steven.lin1@broadcom.com>
- <1507815262-33294-2-git-send-email-steven.lin1@broadcom.com>
- <20171012140317.GC14672@nanopsycho>
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v4 3/3] pci/iov: Expose VF drivers Auto Probe Globally
+To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, linuxppc-dev@lists.ozlabs.org
+References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+ <20171031144724.27808-4-bryantly@linux.vnet.ibm.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Tue, 31 Oct 2017 09:52:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171012140317.GC14672@nanopsycho>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171031144724.27808-4-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <01c04bf3-36bf-31f6-c714-a616ea2fcf56@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Oct 12, 2017 at 04:03:17PM +0200, Jiri Pirko wrote:
-> Thu, Oct 12, 2017 at 03:34:20PM CEST, steven.lin1@broadcom.com wrote:
-> >Add support for config parameter get/set commands. Initially used by
-> >bnxt driver, but other drivers can use the same, or new, attributes.
-> >The config_get() and config_set() operations operate as expected, but
-> >note that the driver implementation of the config_set() operation can
-> >indicate whether a restart is necessary for the setting to take
-> >effect.
-> >
-> 
-> First of all, I like this approach.
-> 
-> I would like to see this patch split into:
-> 1) config-options infrastructure introduction
-> 2) specific config options introductions - would be best to have it
->    per-option. We need to make sure every option is very well described
->    and explained usecases. This is needed in order vendors to share
->    attributes among drivers.
-> 
-> More nits inlined.
-> 
-> 
-> >Signed-off-by: Steve Lin <steven.lin1@broadcom.com>
-> >Acked-by: Andy Gospodarek <gospo@broadcom.com>
-> >---
-> > include/net/devlink.h        |   4 +
-> > include/uapi/linux/devlink.h | 108 ++++++++++++++++++++++
-> > net/core/devlink.c           | 207 +++++++++++++++++++++++++++++++++++++++++++
-> > 3 files changed, 319 insertions(+)
-> >
-> > static inline void *devlink_priv(struct devlink *devlink)
-> >diff --git a/include/uapi/linux/devlink.h b/include/uapi/linux/devlink.h
-> >index 0cbca96..e959716 100644
-> >--- a/include/uapi/linux/devlink.h
-> >+++ b/include/uapi/linux/devlink.h
-[...]
-> >@@ -202,6 +267,49 @@ enum devlink_attr {
-> > 
-> > 	DEVLINK_ATTR_ESWITCH_ENCAP_MODE,	/* u8 */
-> > 
-> >+	/* Configuration Parameters */
-> >+	DEVLINK_ATTR_SRIOV_ENABLED,		/* u8 */
-> >+	DEVLINK_ATTR_NUM_VF_PER_PF,		/* u32 */
-> >+	DEVLINK_ATTR_MAX_NUM_PF_MSIX_VECT,	/* u32 */
-> >+	DEVLINK_ATTR_MSIX_VECTORS_PER_VF,	/* u32 */
-> >+	DEVLINK_ATTR_NPAR_NUM_PARTITIONS_PER_PORT,	/* u32 */
-> >+	DEVLINK_ATTR_NPAR_BW_IN_PERCENT,	/* u8 */
-> >+	DEVLINK_ATTR_NPAR_BW_RESERVATION,	/* u8 */
-> >+	DEVLINK_ATTR_NPAR_BW_RESERVATION_VALID,	/* u8 */
-> >+	DEVLINK_ATTR_NPAR_BW_LIMIT,		/* u8 */
-> >+	DEVLINK_ATTR_NPAR_BW_LIMIT_VALID,	/* u8 */
-> >+	DEVLINK_ATTR_DCBX_MODE,			/* u8 */
-> >+	DEVLINK_ATTR_RDMA_ENABLED,		/* u8 */
-> >+	DEVLINK_ATTR_MULTIFUNC_MODE,		/* u8 */
-> >+	DEVLINK_ATTR_SECURE_NIC_ENABLED,	/* u8 */
-> >+	DEVLINK_ATTR_IGNORE_ARI_CAPABILITY,	/* u8 */
-> >+	DEVLINK_ATTR_LLDP_NEAREST_BRIDGE_ENABLED,	/* u8 */
-> >+	DEVLINK_ATTR_LLDP_NEAREST_NONTPMR_BRIDGE_ENABLED,	/* u8 */
-> >+	DEVLINK_ATTR_PME_CAPABILITY_ENABLED,	/* u8 */
-> >+	DEVLINK_ATTR_MAGIC_PACKET_WOL_ENABLED,	/* u8 */
-> >+	DEVLINK_ATTR_EEE_PWR_SAVE_ENABLED,	/* u8 */
-> >+	DEVLINK_ATTR_AUTONEG_PROTOCOL,		/* u8 */
-> >+	DEVLINK_ATTR_MEDIA_AUTO_DETECT,		/* u8 */
-> >+	DEVLINK_ATTR_PHY_SELECT,		/* u8 */
-> >+	DEVLINK_ATTR_PRE_OS_LINK_SPEED_D0,	/* u8 */
-> >+	DEVLINK_ATTR_PRE_OS_LINK_SPEED_D3,	/* u8 */
-> >+	DEVLINK_ATTR_MBA_ENABLED,		/* u8 */
-> >+	DEVLINK_ATTR_MBA_BOOT_TYPE,		/* u8 */
-> >+	DEVLINK_ATTR_MBA_DELAY_TIME,		/* u32 */
-> >+	DEVLINK_ATTR_MBA_SETUP_HOT_KEY,		/* u8 */
-> >+	DEVLINK_ATTR_MBA_HIDE_SETUP_PROMPT,	/* u8 */
-> >+	DEVLINK_ATTR_MBA_BOOT_RETRY_COUNT,	/* u32 */
-> >+	DEVLINK_ATTR_MBA_VLAN_ENABLED,		/* u8 */
-> >+	DEVLINK_ATTR_MBA_VLAN_TAG,		/* u16 */
-> >+	DEVLINK_ATTR_MBA_BOOT_PROTOCOL,		/* u8 */
-> >+	DEVLINK_ATTR_MBA_LINK_SPEED,		/* u8 */
-> 
-> Okay, I think it is about the time we should start thinking about
-> putting this new config attributes under nester attribute. What do you
-> think?
-> 
+Add linuxppc-dev@lists.ozlabs.org
 
-Steve and I actually had a similar discussion yesterday when I was doing
-a final review of the patches.
+On 10/31/17 9:47 AM, Bryant G. Ly wrote:
 
-My only objection to nesting was coming up with a way to describe these
-functions that made them seem different than existing configuration
-options.  In this case of the hardware we are trying to support these
-are all permanent config options, so we would call them
-DEVLINK_ATTR_NVRAM or DEVLINK_ATTR_PERM.  Does that seem reasonable to
-others?
+> When SR-IOV is supported in pci_dev struct the
+> member variable drivers_autoprobe controls the
+> VF drivers auto probe functionality. This
+> patch exposes a gloabal function to be used
+> if needed when configuring the pci_dev sriov object.
+>
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/platforms/pseries/pci.c |  2 ++
+>  drivers/pci/iov.c                    | 12 ++++++++++++
+>  include/linux/pci.h                  |  2 ++
+>  3 files changed, 16 insertions(+)
+>
+> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+> index 14a90cf471cc..48d3af026f90 100644
+> --- a/arch/powerpc/platforms/pseries/pci.c
+> +++ b/arch/powerpc/platforms/pseries/pci.c
+> @@ -63,6 +63,7 @@ int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>  {
+>  	/* Allocate PCI data */
+>  	add_dev_pci_data(pdev);
+> +	pci_vf_drivers_autoprobe(pdev, false);
+>  	return 0;
+>  }
+>
+> @@ -70,6 +71,7 @@ int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
+>  {
+>  	/* Release PCI data */
+>  	remove_dev_pci_data(pdev);
+> +	pci_vf_drivers_autoprobe(pdev, true);
+>  	return 0;
+>  }
+>  #endif
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ac41c8be9200..41465c06975c 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -634,6 +634,18 @@ void pci_restore_iov_state(struct pci_dev *dev)
+>  }
+>
+>  /**
+> + * pci_vf_drivers_autoprobe - set pf property drivers_autoprobe for vfs
+> + * @dev: the PCI device
+> + * @auto_probe: set vf drivers auto probe flag
+> + */
+> +void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool auto_probe)
+> +{
+> +	if (dev->is_physfn)
+> +		dev->sriov->drivers_autoprobe = auto_probe;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_vf_drivers_autoprobe);
+> +
+> +/**
+>   * pci_iov_bus_range - find bus range used by Virtual Function
+>   * @bus: the PCI bus
+>   *
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index f4f8ee5a7362..17a08554baa2 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1965,6 +1965,7 @@ int pci_vfs_assigned(struct pci_dev *dev);
+>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+>  int pci_sriov_get_totalvfs(struct pci_dev *dev);
+>  resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
+> +void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+>  #else
+>  static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+>  {
+> @@ -1992,6 +1993,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+>  { return 0; }
+>  static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+>  { return 0; }
+> +static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
+>  #endif
+>
+>  #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
