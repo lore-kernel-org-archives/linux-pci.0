@@ -1,177 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFCv2 PATCH 01/36] iommu: Keep track of processes and PASIDs
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, devicetree@vger.kernel.org,
-        iommu@lists.linux-foundation.org
-Cc: joro@8bytes.org, robh+dt@kernel.org, mark.rutland@arm.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        robin.murphy@arm.com, bhelgaas@google.com,
-        alex.williamson@redhat.com, tn@semihalf.com, liubo95@huawei.com,
-        thunder.leizhen@huawei.com, xieyisheng1@huawei.com,
-        gabriele.paoloni@huawei.com, nwatters@codeaurora.org,
-        rfranz@cavium.com, dwmw2@infradead.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        ashok.raj@intel.com, robdclark@gmail.com
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-2-jean-philippe.brucker@arm.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <29100eb4-ab8a-a10e-f23b-356658d9a925@codeaurora.org>
-Date: Fri, 20 Oct 2017 19:32:47 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42792 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751691AbdJaImp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 31 Oct 2017 04:42:45 -0400
+Subject: Cleaning up non-standard PCIe ECAM on Arm servers
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        linux-pci@vger.kernel.org
+References: <20171006163919.14898-1-ard.biesheuvel@linaro.org>
+ <20171006163919.14898-2-ard.biesheuvel@linaro.org>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Leif Lindholm <leif.lindholm@linaro.org>,
+        Graeme Gregory <graeme.gregory@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Will Deacon <will.deacon@arm.com>
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <2621d6ac-3b5c-7191-02eb-2f4980890d03@redhat.com>
+Date: Tue, 31 Oct 2017 04:42:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <20171006133203.22803-2-jean-philippe.brucker@arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20171006163919.14898-2-ard.biesheuvel@linaro.org>
+Content-Type: text/plain; charset=gbk
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-few nits below.
+On 10/06/2017 12:39 PM, Ard Biesheuvel wrote:
+> Some implementations of the Synopsys DesignWare PCIe controller implement
+> a so-called ECAM shift mode, which allows a static memory window to be
+> configured that covers the configuration space of the entire bus range.
 
-> +/*
-> + * Allocate a iommu_process structure for the given task.
-> + *
-> + * Ideally we shouldn't need the domain parameter, since iommu_process is
-> + * system-wide, but we use it to retrieve the driver's allocation ops and a
-> + * PASID range.
-> + */
-> +static struct iommu_process *
-> +iommu_process_alloc(struct iommu_domain *domain, struct task_struct *task)
-> +{
-> +	int err;
-> +	int pasid;
-> +	struct iommu_process *process;
-> +
-> +	if (WARN_ON(!domain->ops->process_alloc || !domain->ops->process_free))
-> +		return ERR_PTR(-ENODEV);
-> +
-> +	process = domain->ops->process_alloc(task);
-> +	if (IS_ERR(process))
-> +		return process;
-> +	if (!process)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	process->pid		= get_task_pid(task, PIDTYPE_PID);
-> +	process->release	= domain->ops->process_free;
-> +	INIT_LIST_HEAD(&process->domains);
-> +	kref_init(&process->kref);
-> +
-nit, I think you should place this check right after the pid assignment.
+Side note that we gave a presentation at Arm TechCon last week with
+Cadence about a new program they're offering to perform verification of
+PCIe pre-silicon using Palladium with speedbridges and running full
+server Operating Systems booting using UEFI/ACPI under emulation. We've
+been able to boot RHEL for Arm on these Palladium based platforms for a
+while and are collaborating to turn this into a comprehensive program.
 
-> +	if (!process->pid) {
-> +		err = -EINVAL;
-> +		goto err_free_process;
-> +	}
-> +
-> +	idr_preload(GFP_KERNEL);
-> +	spin_lock(&iommu_process_lock);
-> +	pasid = idr_alloc_cyclic(&iommu_process_idr, process, domain->min_pasid,
-> +				 domain->max_pasid + 1, GFP_ATOMIC);
-> +	process->pasid = pasid;
-> +	spin_unlock(&iommu_process_lock);
-> +	idr_preload_end();
-> +
+Once that was Cadence effort was announced, I pinged Synopsys to ask
+them to go clean things up properly for their IP as well. Ultimately
+we'll get to all the major IP vendors, and a number of PCIe specific
+vendors have already had prodding from me directly over the years. So if
+folks see this thread, are in the business of selling PCIe RC IP for Arm
+server designs, and we haven't spoken yet, you should ping me. And you
+should also talk with smart folks like Ard on how to do this right.
 
-nit, You can maybe return here if pasid is not negative.
-
-> +	if (pasid < 0) {
-> +		err = pasid;
-> +		goto err_put_pid;
-> +	}
-> +
-> +	return process;
-> +
-> +err_put_pid:
-> +	put_pid(process->pid);
-> +
-> +err_free_process:
-> +	domain->ops->process_free(process);
-> +
-> +	return ERR_PTR(err);
-> +}
-> +
-> +static void iommu_process_release(struct kref *kref)
-> +{
-> +	struct iommu_process *process;
-> +	void (*release)(struct iommu_process *);
-> +
-> +	assert_spin_locked(&iommu_process_lock);
-> +
-> +	process = container_of(kref, struct iommu_process, kref);
-
-if we are concerned about things going wrong (assert above), we should
-also add some pointer check here (WARN) for process and release pointers as well.
-
-> +	release = process->release;
-> +
-> +	WARN_ON(!list_empty(&process->domains));
-> +
-> +	idr_remove(&iommu_process_idr, process->pasid);
-> +	put_pid(process->pid);
-> +	release(process);
-> +}
-> +
-> +/*
-> + * Returns non-zero if a reference to the process was successfully taken.
-> + * Returns zero if the process is being freed and should not be used.
-> + */
-> +static int iommu_process_get_locked(struct iommu_process *process)
-> +{
-> +	assert_spin_locked(&iommu_process_lock);
-> +
-> +	if (process)
-> +		return kref_get_unless_zero(&process->kref);
-> +
-> +	return 0;
-> +}
-> +
-> +static void iommu_process_put_locked(struct iommu_process *process)
-> +{
-> +	assert_spin_locked(&iommu_process_lock);
-> +
-> +	kref_put(&process->kref, iommu_process_release);
-> +}
-> +
-> +static int iommu_process_attach(struct iommu_domain *domain, struct device *dev,
-> +				struct iommu_process *process)
-> +{
-> +	int err;
-> +	int pasid = process->pasid;
-> +	struct iommu_context *context;
-> +
-> +	if (WARN_ON(!domain->ops->process_attach || !domain->ops->process_detach))
-> +		return -ENODEV;
-> +
-> +	if (pasid > domain->max_pasid || pasid < domain->min_pasid)
-> +		return -ENOSPC;
-> +
-> +	context = kzalloc(sizeof(*context), GFP_KERNEL);
-> +	if (!context)
-> +		return -ENOMEM;
-> +
-
-devm_kzalloc maybe?
-
-> +	context->process	= process;
-> +	context->domain		= domain;
-> +	refcount_set(&context->ref, 1);
-> +
-> +	spin_lock(&iommu_process_lock);
-> +	err = domain->ops->process_attach(domain, dev, process, true);
-> +	if (err) {
-> +		kfree(context);
-> +		spin_unlock(&iommu_process_lock);
-> +		return err;
-> +	}
-> +
-> +	list_add(&context->process_head, &process->domains);
-> +	list_add(&context->domain_head, &domain->processes);
-> +	spin_unlock(&iommu_process_lock);
-> +
-> +	return 0;
-> +}
+Jon.
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Computer Architect | Sent from my Fedora powered laptop
