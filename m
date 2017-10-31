@@ -1,123 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:43081 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751732AbdJ3Mnh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 08:43:37 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 12/17] PCI: dwc: artpec6: Split artpec6_pcie_establish_link to smaller functions
-Date: Mon, 30 Oct 2017 13:42:15 +0100
-Message-Id: <20171030124221.20690-13-niklas.cassel@axis.com>
-In-Reply-To: <20171030124221.20690-1-niklas.cassel@axis.com>
-References: <20171030124221.20690-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        "Juan J . Alvarez" <jjalvare@us.ibm.com>
+Subject: [PATCH v4 2/3] pseries: Add PSeries SR-IOV Machine dependent calls
+Date: Tue, 31 Oct 2017 09:47:23 -0500
+In-Reply-To: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171031144724.27808-3-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This is done to better match other drivers such as dra7xx and imx6,
-but also to prepare for endpoint mode support.
+Add calls for PSeries platform to configure/deconfigure
+SR-IOV.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
 ---
-V2:
-* Changed the order of the functions to be more logical.
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 24 +++++++++++++++++++++++
+ arch/powerpc/platforms/pseries/pci.c         | 29 ++++++++++++++++++++++++----
+ 2 files changed, 49 insertions(+), 4 deletions(-)
 
- drivers/pci/dwc/pcie-artpec6.c | 53 +++++++++++++++++++++++-------------------
- 1 file changed, 29 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 18075e0fab80..3b635e745d25 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -80,18 +80,23 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
- 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index 6b812ad990e4..2295f117e2d3 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -55,6 +55,27 @@ static int ibm_get_config_addr_info;
+ static int ibm_get_config_addr_info2;
+ static int ibm_configure_pe;
+ 
++void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++
++	if (!pdev->is_virtfn)
++		return;
++
++	pdn->device_id  =  pdev->device;
++	pdn->vendor_id  =  pdev->vendor;
++	pdn->class_code =  pdev->class;
++
++	/*
++	 * The following operations will fail if VF's sysfs files
++	 * aren't created or its resources aren't finalized.
++	 */
++	eeh_add_device_early(pdn);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
++
++}
++
+ /*
+  * Buffer for reporting slot-error-detail rtas calls. Its here
+  * in BSS, and not dynamically alloced, so that it ends up in
+@@ -120,6 +141,9 @@ static int pseries_eeh_init(void)
+ 	/* Set EEH probe mode */
+ 	eeh_add_flag(EEH_PROBE_MODE_DEVTREE | EEH_ENABLE_IO_FOR_LOG);
+ 
++	/* Set EEH machine dependent code */
++	ppc_md.pcibios_bus_add_device = pseries_pcibios_bus_add_device;
++
+ 	return 0;
  }
  
--static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
-+static int artpec6_pcie_establish_link(struct dw_pcie *pci)
- {
--	struct dw_pcie *pci = artpec6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 	u32 val;
--	unsigned int retries;
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index 09eba5a9929a..14a90cf471cc 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -3,17 +3,17 @@
+  * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
+  *
+  * pSeries specific routines for PCI.
+- * 
++ *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation; either version 2 of the License, or
+  * (at your option) any later version.
+- *    
++ *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+- * 
++ *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+@@ -54,10 +54,26 @@ void pcibios_name_device(struct pci_dev *dev)
+ 			}
+ 		}
+ 	}
+-}   
++}
+ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
+ #endif
  
--	/* Hold DW core in reset */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_CORE_RESET_REQ;
-+	val |= PCIECFG_LTSSM_ENABLE;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- 
++#ifdef CONFIG_PCI_IOV
++int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
++{
++	/* Allocate PCI data */
++	add_dev_pci_data(pdev);
 +	return 0;
 +}
 +
-+static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
 +{
-+	u32 val;
-+	unsigned int retries;
-+
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
- 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
- 		PCIECFG_MODE_TX_DRV_EN |
-@@ -131,30 +136,25 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
- 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
- 		retries--;
- 	} while (retries && !(val & PHY_COSPLLLOCK));
++	/* Release PCI data */
++	remove_dev_pci_data(pdev);
++	return 0;
 +}
++#endif
 +
-+static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
+ static void __init pSeries_request_regions(void)
+ {
+ 	if (!isa_io_base)
+@@ -76,6 +92,11 @@ void __init pSeries_final_fixup(void)
+ 	pSeries_request_regions();
  
--	/* Take DW core out of reset */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val &= ~PCIECFG_CORE_RESET_REQ;
-+	val |= PCIECFG_CORE_RESET_REQ;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--	usleep_range(100, 200);
-+}
- 
--	/* setup root complex */
--	dw_pcie_setup_rc(pp);
-+static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
- 
--	/* assert LTSSM enable */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_LTSSM_ENABLE;
-+	val &= ~PCIECFG_CORE_RESET_REQ;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--
--	/* check if the link is up or not */
--	if (!dw_pcie_wait_for_link(pci))
--		return 0;
--
--	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
--
--	return -ETIMEDOUT;
-+	usleep_range(100, 200);
+ 	eeh_addr_cache_build();
++
++#ifdef CONFIG_PCI_IOV
++	ppc_md.pcibios_sriov_enable = pseries_pcibios_sriov_enable;
++	ppc_md.pcibios_sriov_disable = pseries_pcibios_sriov_disable;
++#endif
  }
  
- static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
-@@ -171,7 +171,12 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 
--	artpec6_pcie_establish_link(artpec6_pcie);
-+	artpec6_pcie_assert_core_reset(artpec6_pcie);
-+	artpec6_pcie_init_phy(artpec6_pcie);
-+	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-+	dw_pcie_setup_rc(pp);
-+	artpec6_pcie_establish_link(pci);
-+	dw_pcie_wait_for_link(pci);
- 	artpec6_pcie_enable_interrupts(artpec6_pcie);
- 
- 	return 0;
+ /*
 -- 
-2.14.2
+2.13.5 (Apple Git-94)
