@@ -1,47 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:45040 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750821AbdJPG2o (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Oct 2017 02:28:44 -0400
-Date: Mon, 16 Oct 2017 08:28:52 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org,
-        Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 01/12] PM / core: Add NEVER_SKIP and SMART_PREPARE driver
- flags
-Message-ID: <20171016062852.GA28732@kroah.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
- <1998650.Q52BuGQTI4@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1998650.Q52BuGQTI4@aspire.rjw.lan>
+Received: from bastet.se.axis.com ([195.60.68.11]:52335 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932583AbdJaWks (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:40:48 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 12/17] PCI: dwc: artpec6: Split artpec6_pcie_establish_link to smaller functions
+Date: Tue, 31 Oct 2017 23:39:30 +0100
+Message-Id: <20171031223936.27549-13-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 16, 2017 at 03:29:02AM +0200, Rafael J. Wysocki wrote:
->  struct dev_pm_info {
->  	pm_message_t		power_state;
->  	unsigned int		can_wakeup:1;
-> @@ -561,6 +580,7 @@ struct dev_pm_info {
->  	bool			is_late_suspended:1;
->  	bool			early_init:1;	/* Owned by the PM core */
->  	bool			direct_complete:1;	/* Owned by the PM core */
-> +	unsigned int		driver_flags;
+This is done to better match other drivers such as dra7xx and imx6,
+but also to prepare for endpoint mode support.
 
-Minor nit, u32 or u64?
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+V3:
+* No change.
 
-thanks,
+ drivers/pci/dwc/pcie-artpec6.c | 53 +++++++++++++++++++++++-------------------
+ 1 file changed, 29 insertions(+), 24 deletions(-)
 
-greg k-h
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 18075e0fab80..3b635e745d25 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -80,18 +80,23 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
+ 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
+ }
+ 
+-static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
++static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ {
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 	u32 val;
+-	unsigned int retries;
+ 
+-	/* Hold DW core in reset */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_CORE_RESET_REQ;
++	val |= PCIECFG_LTSSM_ENABLE;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ 
++	return 0;
++}
++
++static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
++	unsigned int retries;
++
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
+ 		PCIECFG_MODE_TX_DRV_EN |
+@@ -131,30 +136,25 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
+ 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
+ 		retries--;
+ 	} while (retries && !(val & PHY_COSPLLLOCK));
++}
++
++static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
+ 
+-	/* Take DW core out of reset */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val &= ~PCIECFG_CORE_RESET_REQ;
++	val |= PCIECFG_CORE_RESET_REQ;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-	usleep_range(100, 200);
++}
+ 
+-	/* setup root complex */
+-	dw_pcie_setup_rc(pp);
++static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
+ 
+-	/* assert LTSSM enable */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_LTSSM_ENABLE;
++	val &= ~PCIECFG_CORE_RESET_REQ;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-
+-	/* check if the link is up or not */
+-	if (!dw_pcie_wait_for_link(pci))
+-		return 0;
+-
+-	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
+-
+-	return -ETIMEDOUT;
++	usleep_range(100, 200);
+ }
+ 
+ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+@@ -171,7 +171,12 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 
+-	artpec6_pcie_establish_link(artpec6_pcie);
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	dw_pcie_setup_rc(pp);
++	artpec6_pcie_establish_link(pci);
++	dw_pcie_wait_for_link(pci);
+ 	artpec6_pcie_enable_interrupts(artpec6_pcie);
+ 
+ 	return 0;
+-- 
+2.14.2
