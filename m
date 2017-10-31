@@ -1,91 +1,57 @@
-Return-Path: <SRS0=YcHh=BR=ozlabs.ru=aik@kernel.org>
-Return-Path: <SRS0=YcHh=BR=ozlabs.ru=aik@kernel.org>
-Subject: Re: [PATCH v3 2/2] pseries/eeh: Add Pseries pcibios_bus_add_device
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
- seroyer@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, "Juan J . Alvarez" <jjalvare@us.ibm.com>,
- jjalvare@linux.vnet.ibm.com
-References: <20170922141928.49141-1-bryantly@linux.vnet.ibm.com>
- <20170922141928.49141-3-bryantly@linux.vnet.ibm.com>
- <20171011200524.GR25517@bhelgaas-glaptop.roam.corp.google.com>
- <87efq92ei6.fsf@concordia.ellerman.id.au>
- <20171012182932.GA653@bhelgaas-glaptop.roam.corp.google.com>
- <e77da565-e9e1-75e1-55ee-cfc9a8bf1424@linux.vnet.ibm.com>
- <87r2u2jvfb.fsf@concordia.ellerman.id.au>
- <3507ee2e-00ee-7bd0-36a3-292af5112734@linux.vnet.ibm.com>
- <e5bc893a-03f7-4ca7-4e46-938421dfc1c5@ozlabs.ru>
-Message-ID: <5b7b8e8f-2d16-875f-ef53-ccf593064a53@ozlabs.ru>
-Date: Wed, 18 Oct 2017 12:36:30 +1100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <e5bc893a-03f7-4ca7-4e46-938421dfc1c5@ozlabs.ru>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20171031150933.oho2ffvuj3iagx4m@dell>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <5094729.JAaD38WncM@aspire.rjw.lan>
+ <20171031150933.oho2ffvuj3iagx4m@dell>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 31 Oct 2017 17:28:57 +0100
+Message-ID: <CAJZ5v0ipSJv0PWPrD3P-yeyD0JWe6EqSJSuZXgjtnFTrMEvpfQ@mail.gmail.com>
+Subject: Re: [PATCH 09/12] PM / mfd: intel-lpss: Use DPM_FLAG_SMART_SUSPEND
+To: Lee Jones <lee.jones@linaro.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-i2c <linux-i2c@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18/10/17 12:01, Alexey Kardashevskiy wrote:
-> On 18/10/17 01:11, Bryant G. Ly wrote:
->> Adding Juan back into the cc: jjalvare@linux.vnet.ibm.com
+On Tue, Oct 31, 2017 at 4:09 PM, Lee Jones <lee.jones@linaro.org> wrote:
+> On Mon, 16 Oct 2017, Rafael J. Wysocki wrote:
+>
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 >>
+>> Make the intel-lpss driver set DPM_FLAG_SMART_SUSPEND for its
+>> devices which will allow them to stay in runtime suspend during
+>> system suspend unless they need to be reconfigured for some reason.
 >>
->> On 10/16/17 10:38 PM, Michael Ellerman wrote:
->>> "Bryant G. Ly" <bryantly@linux.vnet.ibm.com> writes:
->>>> On 10/12/17 1:29 PM, Bjorn Helgaas wrote:
->>> ...
->>>>> If that's the case, how to you ever bind a driver to these VFs?  The
->>>>> changelog says you don't want VF drivers to load *immediately*, so I
->>>>> assume you do want them to load eventually.
->>>>>
->>>> The VF's that get dynamically created within the configure SR-IOV call, 
->>>> on the Pseries Platform, wont be matched with a driver. - We do not
->>>> want it to match.
->>>>
->>>> The Power Hypervisor will load the VFs. The VF's will get assigned(by 
->>>> the user) > via the HMC or Novalink in this environment which will
->>>> then trigger PHYP to load the VF device node to the device tree.
->>> What about the other "Power Hypervisor"? ie. KVM running on Power.
->> This path is only exercised when configuring SR-IOV for Pseries LPAR,
->> therefore it will not affect PowerNV or KVM(opal).
-> 
-> PowerNV KVM guest is a pseries machine so this code will execute there.
-> 
->> Which is the reason for
->> the separation of calls to the machine dependent stuff.
->>> We also use the pseries platform when running under KVM.
->>>
->>> cheers
->>>
->> If anyone plans to enable SR-IOV on Pseries platform, firmware must provide the
->> resources to enable the VFs and map them with system resources.
-> 
-> This is what the PowerNV platform does.
-> 
->> A new version
->> of the PAPR Document will be added to document these system resources.
-> 
-> The guest simply gets yet another PCI device, how is IOV different here?
-> 
-> In regard of EEH, the API does not change afaik, it is up to the hypervisor
-> (KVM+QEMU) to handle IOV case correctly.
-> 
-> 
->> Lastly,
->> we were not aware that there is an intention to enable SR-IOV in adapters assigned
->> to a VM with Pseries running on KVM.
-> 
-> There is no any special enablement of IOV for a VM on powernv, once
-> configured in the powernv host, we can just pass VFs to QEMU and therefore
-> to a pseries guest, it is just a normal PCI device.
-> 
-> Do you assign a PF to a VM and create VFs from inside the VM? Or only pHyp
-> is allowed to do that? Sorry, I know nothing about pHyp on this matter.
-> 
+>> Also make it avoid resuming its child devices if they have
+>> DPM_FLAG_SMART_SUSPEND set to allow them to remain in runtime
+>> suspend during system suspend.
+>>
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> ---
+>>  drivers/mfd/intel-lpss.c |    6 +++++-
+>>  1 file changed, 5 insertions(+), 1 deletion(-)
+>
+> Is this patch independent?
 
-Never mind this last question, I've just read the entire thread about this
-hosting partition thing.
+It depends on the flag definition at least, but functionally it also
+depends on the PCI support for the flag.
 
+> For my own reference:
+>   Acked-for-MFD-by: Lee Jones <lee.jones@linaro.org>
 
-
--- 
-Alexey
+Thanks,
+Rafael
