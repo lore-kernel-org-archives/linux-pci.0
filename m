@@ -1,127 +1,86 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <d0467282-a44a-bd1e-e449-0bba953c4cfd@broadcom.com>
-References: <20171007120851.20230-1-sbodomerle@gmail.com>
- <d0467282-a44a-bd1e-e449-0bba953c4cfd@broadcom.com>
-From: Sandor Bodo-Merle <sbodomerle@gmail.com>
-Date: Wed, 11 Oct 2017 10:26:39 +0200
-Message-ID: <CABLWAfR+Nk85wurWnPArpmFPXVhxn0jZ+7H13WnKEPCMJVU0XA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: iproc: Allow allocation of multiple MSIs
-To: Ray Jui <ray.jui@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- Ray Jui <rjui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org, Bodo-Merle Sandor <esndbod@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 05/17] PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+Date: Tue, 31 Oct 2017 23:39:23 +0100
+Message-Id: <20171031223936.27549-6-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ray,
+This way pci-dra7xx.c does not need its own copy of dw_pcie_ep_reset_bar().
 
-we tested on a custom board based on BCM56260. SMP affinity was not
-tested as our board runs on a single core.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+V3:
+* Added Kishon's ack.
 
-br,
+ drivers/pci/dwc/pci-dra7xx.c         | 9 ---------
+ drivers/pci/dwc/pcie-designware-ep.c | 2 +-
+ drivers/pci/dwc/pcie-designware.h    | 5 +++++
+ 3 files changed, 6 insertions(+), 10 deletions(-)
 
-Sandor
-
-ps - sorry for the duplicate, but by default gmail sent out html
-formatted mail :(
-
-On Tue, Oct 10, 2017 at 8:09 PM, Ray Jui <ray.jui@broadcom.com> wrote:
-> Hi Bodo,
->
->
-> On 10/7/2017 5:08 AM, Bodo-Merle Sandor wrote:
->>
->> From: Sandor Bodo-Merle <sbodomerle@gmail.com>
->>
->> Add support for allocating multiple MSIs at the same time, so that the
->> MSI_FLAG_MULTI_PCI_MSI flag can be added to the msi_domain_info
->> structure.
->>
->> Avoid storing the hwirq in the low 5 bits of the message data, as it is
->> used by the device. Also fix an endianness problem by using readl().
->>
->> Signed-off-by: Sandor Bodo-Merle <sbodomerle@gmail.com>
->> ---
->>   drivers/pci/host/pcie-iproc-msi.c | 19 ++++++++++++-------
->>   1 file changed, 12 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-iproc-msi.c
->> b/drivers/pci/host/pcie-iproc-msi.c
->> index 2d0f535a2f69..990fc906d73d 100644
->> --- a/drivers/pci/host/pcie-iproc-msi.c
->> +++ b/drivers/pci/host/pcie-iproc-msi.c
->> @@ -179,7 +179,7 @@ static struct irq_chip iproc_msi_irq_chip = {
->>     static struct msi_domain_info iproc_msi_domain_info = {
->>         .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
->> -               MSI_FLAG_PCI_MSIX,
->> +               MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
->>         .chip = &iproc_msi_irq_chip,
->>   };
->>   @@ -237,7 +237,7 @@ static void iproc_msi_irq_compose_msi_msg(struct
->> irq_data *data,
->>         addr = msi->msi_addr + iproc_msi_addr_offset(msi, data->hwirq);
->>         msg->address_lo = lower_32_bits(addr);
->>         msg->address_hi = upper_32_bits(addr);
->> -       msg->data = data->hwirq;
->> +       msg->data = data->hwirq << 5; >   }
->>     static struct irq_chip iproc_msi_bottom_irq_chip = {
->> @@ -251,7 +251,7 @@ static int iproc_msi_irq_domain_alloc(struct
->> irq_domain *domain,
->>                                       void *args)
->>   {
->>         struct iproc_msi *msi = domain->host_data;
->> -       int hwirq;
->> +       int hwirq, i;
->>         mutex_lock(&msi->bitmap_lock);
->>   @@ -267,10 +267,14 @@ static int iproc_msi_irq_domain_alloc(struct
->> irq_domain *domain,
->>         mutex_unlock(&msi->bitmap_lock);
->>   -     irq_domain_set_info(domain, virq, hwirq,
->> &iproc_msi_bottom_irq_chip,
->> -                           domain->host_data, handle_simple_irq, NULL,
->> NULL);
->> +       for (i = 0; i < nr_irqs; i++) {
->> +               irq_domain_set_info(domain, virq + i, hwirq + i,
->> +                                   &iproc_msi_bottom_irq_chip,
->> +                                   domain->host_data, handle_simple_irq,
->> +                                   NULL, NULL);
->> +       }
->>   -     return 0;
->> +       return hwirq;
->>   }
->>     static void iproc_msi_irq_domain_free(struct irq_domain *domain,
->> @@ -302,7 +306,8 @@ static inline u32 decode_msi_hwirq(struct iproc_msi
->> *msi, u32 eq, u32 head)
->>         offs = iproc_msi_eq_offset(msi, eq) + head * sizeof(u32);
->>         msg = (u32 *)(msi->eq_cpu + offs);
->> -       hwirq = *msg & IPROC_MSI_EQ_MASK;
->> +       hwirq = readl(msg);
->> +       hwirq = (hwirq >> 5) + (hwirq & 0x1f);
->>         /*
->>          * Since we have multiple hwirq mapped to a single MSI vector,nnn
->>
->
-> Change looks okay to me in general. May I know which platform you tested
-> this patch on and was SMP affinity configuration tested?
->
-> Thanks,
->
-> Ray
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index d0848006945a..a743545da4d4 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -336,15 +336,6 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+-{
+-	u32 reg;
+-
+-	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+-	dw_pcie_writel_dbi2(pci, reg, 0x0);
+-	dw_pcie_writel_dbi(pci, reg, 0x0);
+-}
+-
+ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 2684090b782b..9c3820ca6358 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -30,7 +30,7 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ 	pci_epc_linkup(epc);
+ }
+ 
+-static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ 	u32 reg;
+ 
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 5a1da459eda5..37dfad8d003f 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -338,6 +338,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ {
+@@ -351,5 +352,9 @@ static inline int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
++
++static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++{
++}
+ #endif
+ #endif /* _PCIE_DESIGNWARE_H */
+-- 
+2.14.2
