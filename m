@@ -1,54 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55230 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755907AbdJJLD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Oct 2017 07:03:56 -0400
-Date: Tue, 10 Oct 2017 06:03:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alan Cox <alan@linux.intel.com>
-Cc: "Hunter, Adrian" <adrian.hunter@intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi <linux-acpi@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH] mmc: sdhci-pci: Remove D3 delays for Intel BYT-related
- host controllers
-Message-ID: <20171010110351.GU25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1507294259-20438-1-git-send-email-adrian.hunter@intel.com>
- <20171006162048.GC25517@bhelgaas-glaptop.roam.corp.google.com>
- <ada41e9b-6fb3-82ab-e458-af4942adba2d@intel.com>
- <20171009134154.GJ25517@bhelgaas-glaptop.roam.corp.google.com>
- <363DA0ED52042842948283D2FC38E4649BF3590E@IRSMSX106.ger.corp.intel.com>
- <20171009202502.GN25517@bhelgaas-glaptop.roam.corp.google.com>
- <1507626095.26339.5.camel@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1507626095.26339.5.camel@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v4 3/3] pci/iov: Expose VF drivers Auto Probe Globally
+Date: Tue, 31 Oct 2017 09:47:24 -0500
+In-Reply-To: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171031144724.27808-4-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 10, 2017 at 10:01:35AM +0100, Alan Cox wrote:
-> > Your concern was that a quirk would require a long list of device IDs
-> > and we'd have to add new ones.  I share that concern,
-> 
-> I'm not sure I do. The bus topology tells you what is on die, and the
-> id of the root bridge tells you if it's one of the parts you can do
-> this.
+When SR-IOV is supported in pci_dev struct the
+member variable drivers_autoprobe controls the
+VF drivers auto probe functionality. This
+patch exposes a gloabal function to be used
+if needed when configuring the pci_dev sriov object.
 
-Your a49d25364dfb ("staging/atomisp: Add support for the Intel IPU
-v2") added the most generic version (pci_d3_delay_fixup() uses
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/pseries/pci.c |  2 ++
+ drivers/pci/iov.c                    | 12 ++++++++++++
+ include/linux/pci.h                  |  2 ++
+ 3 files changed, 16 insertions(+)
 
-  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_d3_delay_fixup);
-
-so there's no list of device IDs.  If this is really a property of the
-family (BYT/CHT/etc), it makes sense to me to do it that way, but if
-you think it's better to have a list, that's OK too.
-
-The more interesting question to me is whether the quirk should be in
-an optional driver or in the always-present arch code.  My assumption
-is that putting it in the driver means that if the driver isn't
-enabled, we're doing unnecessary delays.
-
-Bjorn
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index 14a90cf471cc..48d3af026f90 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -63,6 +63,7 @@ int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ {
+ 	/* Allocate PCI data */
+ 	add_dev_pci_data(pdev);
++	pci_vf_drivers_autoprobe(pdev, false);
+ 	return 0;
+ }
+ 
+@@ -70,6 +71,7 @@ int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
+ {
+ 	/* Release PCI data */
+ 	remove_dev_pci_data(pdev);
++	pci_vf_drivers_autoprobe(pdev, true);
+ 	return 0;
+ }
+ #endif
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ac41c8be9200..41465c06975c 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -634,6 +634,18 @@ void pci_restore_iov_state(struct pci_dev *dev)
+ }
+ 
+ /**
++ * pci_vf_drivers_autoprobe - set pf property drivers_autoprobe for vfs
++ * @dev: the PCI device
++ * @auto_probe: set vf drivers auto probe flag
++ */
++void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool auto_probe)
++{
++	if (dev->is_physfn)
++		dev->sriov->drivers_autoprobe = auto_probe;
++}
++EXPORT_SYMBOL_GPL(pci_vf_drivers_autoprobe);
++
++/**
+  * pci_iov_bus_range - find bus range used by Virtual Function
+  * @bus: the PCI bus
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f4f8ee5a7362..17a08554baa2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1965,6 +1965,7 @@ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
++void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+ #else
+ static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+ {
+@@ -1992,6 +1993,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
+ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ { return 0; }
++static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
+ #endif
+ 
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
+-- 
+2.13.5 (Apple Git-94)
