@@ -1,63 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:52368 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932329AbdJaWlH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:41:07 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Pankaj Dubey <pankaj.dubey@samsung.com>
-Subject: [PATCH] PCI: endpoint: handle probable NULL pointer access
-Date: Thu, 12 Oct 2017 09:27:57 +0530
-Message-id: <1507780677-7983-1-git-send-email-pankaj.dubey@samsung.com>
-References: <CGME20171012035806epcas1p16df484a0565cfe780416253710464a8f@epcas1p1.samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
+Subject: [PATCH v3 15/17] PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
+Date: Tue, 31 Oct 2017 23:39:33 +0100
+Message-Id: <20171031223936.27549-16-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-controller_group allocation in pci_ep_cfs_init function can fail
-so we should have a check while using it in pci_ep_cfs_add_epc_group
-for registering group, else we will hit NULL pointer access.
+There is no need to hard code the cpu to bus address fixup mask.
+The PCIe controller has a global address on the AXI bus, however,
+from the perspective of the PCIe controller, its base starts at 0x0,
+so the local address is 0x0. To get the bus address, simply subtract
+the global address from the cpu address. The global address is taken
+from device tree.
 
-This patch adds required check for the same and returns -EPROBE_DEFER,
-so that endpoint controller driver probe can be reattempted later
-in case controller_group is not allocated because pci_ep_cfs_init is
-not yet called.
+Also for ARTPEC-7, hard coding the cpu to bus address fixup mask is
+not possible, since it uses a High Address Bits Look Up Table, which
+means that it can, at runtime, map the PCIe window to an arbitrary
+address in the 32-bit address space.
 
-Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+This also fixes a bug for ARTPEC-6, where the cpu to bus address
+fixup mask previously was off by one (GENMASK(27, 0), rather than
+GENMASK(28, 0)), which is another reason why the it is a good idea
+to calculate the mask by using values from device tree.
+
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/endpoint/pci-ep-cfs.c   | 7 ++++++-
- drivers/pci/endpoint/pci-epc-core.c | 4 ++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+V3:
+* No change.
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 424fdd6..3cac818 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -172,7 +172,12 @@ struct config_group *pci_ep_cfs_add_epc_group(const char *name)
- 	group = &epc_group->group;
+ drivers/pci/dwc/pci-dra7xx.c      |  2 +-
+ drivers/pci/dwc/pcie-artpec6.c    | 18 ++++++++++++++----
+ drivers/pci/dwc/pcie-designware.c |  2 +-
+ drivers/pci/dwc/pcie-designware.h |  2 +-
+ 4 files changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index b4c204aa932a..4d5cff76e64a 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -109,7 +109,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
+ 	writel(value, pcie->base + offset);
+ }
  
- 	config_group_init_type_name(group, name, &pci_epc_type);
--	ret = configfs_register_group(controllers_group, group);
-+
-+	if (controllers_group)
-+		ret = configfs_register_group(controllers_group, group);
-+	else
-+		ret = -EPROBE_DEFER;
-+
- 	if (ret) {
- 		pr_err("failed to register configfs group for %s\n", name);
- 		goto err_register_group;
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 42c2a11..d327a2a 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -518,6 +518,10 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
- 		goto put_dev;
+-static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
++static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
+ {
+ 	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
+ }
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 413683d7bd9d..e5b5665786ab 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -69,8 +69,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
+ #define PHY_STATUS			0x118
+ #define  PHY_COSPLLLOCK			BIT(0)
  
- 	epc->group = pci_ep_cfs_add_epc_group(dev_name(dev));
-+	if (IS_ERR(epc->group)) {
-+		ret = -EPROBE_DEFER;
-+		goto put_dev;
+-#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
+-
+ static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+ {
+ 	u32 val;
+@@ -84,9 +82,21 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
+ 	regmap_write(artpec6_pcie->regmap, offset, val);
+ }
+ 
+-static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
++static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
+ {
+-	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	struct pcie_port *pp = &pci->pp;
++	struct dw_pcie_ep *ep = &pci->ep;
++
++	switch (artpec6_pcie->mode) {
++	case DW_PCIE_RC_TYPE:
++		return pci_addr - pp->cfg0_base;
++	case DW_PCIE_EP_TYPE:
++		return pci_addr - ep->phys_base;
++	default:
++		dev_err(pci->dev, "UNKNOWN device type\n");
 +	}
++	return pci_addr;
+ }
  
- 	return epc;
+ static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 88abdddee2ad..800be7a4f087 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+ 	u32 retries, val;
  
+ 	if (pci->ops->cpu_addr_fixup)
+-		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
++		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
+ 
+ 	if (pci->iatu_unroll_enabled) {
+ 		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 24edac035160..cca5a81c1c74 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -205,7 +205,7 @@ struct dw_pcie_ep {
+ };
+ 
+ struct dw_pcie_ops {
+-	u64	(*cpu_addr_fixup)(u64 cpu_addr);
++	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
+ 	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+ 			    size_t size);
+ 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
 -- 
-2.7.4
+2.14.2
