@@ -1,74 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:54926 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754265AbdJQH43 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Oct 2017 03:56:29 -0400
-Message-Id: <20171017075600.527569354@linutronix.de>
-Date: Tue, 17 Oct 2017 09:54:59 +0200
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Dexuan Cui <decui@microsoft.com>, x86@kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        linux-pci@vger.kernel.org, devel@linuxdriverproject.org,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>
-Subject: [patch 3/3] x86/vector/msi: Select CONFIG_GENERIC_IRQ_RESERVATION_MODE
-References: <20171017075456.694047687@linutronix.de>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:33466 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753312AbdJaGBp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 02:01:45 -0400
+Subject: Re: [PATCH v2 04/17] PCI: designware-ep: Pre-allocate memory for MSI
+ in dw_pcie_ep_init
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
+ <20171030124221.20690-5-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <9d4c17b7-94ec-fd79-4bd8-8165019f04ce@ti.com>
+Date: Tue, 31 Oct 2017 11:31:34 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20171030124221.20690-5-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Select CONFIG_GENERIC_IRQ_RESERVATION_MODE so PCI/MSI domains get the
-MSI_FLAG_MUST_REACTIVATE flag set in pci_msi_create_irq_domain().
+Hi Niklas,
 
-Remove the explicit setters of this flag in the apic/msi code as they are
-not longer required.
+On Monday 30 October 2017 06:12 PM, Niklas Cassel wrote:
+> Certain SoCs need to map the MSI address in raise_irq.
+> To map an address, you first need to call pci_epc_mem_alloc_addr,
+> however, pci_epc_mem_alloc_addr calls ioremap (which can sleep).
+> 
+> Since raise_irq is only called from atomic context, we can't call
+> pci_epc_mem_alloc_addr from raise_irq, instead we pre-allocate
+> a page in dw_pcie_ep_init, so this page can later be used to map/unmap
+> the MSI address in raise_irq.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+> V2:
+> * No change.
+> 
+>  drivers/pci/dwc/pcie-designware-ep.c | 8 ++++++++
+>  drivers/pci/dwc/pcie-designware.h    | 2 ++
+>  2 files changed, 10 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index 3fb34be99715..c291da2a10ba 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -286,6 +286,8 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+>  {
+>  	struct pci_epc *epc = ep->epc;
+>  
+> +	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem, PAGE_SIZE);
+> +
+>  	pci_epc_mem_exit(epc);
+>  }
+>  
+> @@ -341,6 +343,12 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>  		return ret;
+>  	}
+>  
+> +	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys, PAGE_SIZE);
 
-Fixes: 4900be83602b ("x86/vector/msi: Switch to global reservation mode")
-Reported-by: Dexuan Cui <decui@microsoft.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/Kconfig           |    2 +-
- arch/x86/kernel/apic/msi.c |    5 ++---
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ep->page_size instead of PAGE_SIZE?
 
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -95,7 +95,7 @@ config X86
- 	select GENERIC_IRQ_MATRIX_ALLOCATOR	if X86_LOCAL_APIC
- 	select GENERIC_IRQ_MIGRATION		if SMP
- 	select GENERIC_IRQ_PROBE
--	select GENERIC_IRQ_SHOW
-+	select GENERIC_IRQ_RESERVATION_MODE
- 	select GENERIC_PENDING_IRQ		if SMP
- 	select GENERIC_SMP_IDLE_THREAD
- 	select GENERIC_STRNCPY_FROM_USER
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -129,7 +129,7 @@ static struct msi_domain_ops pci_msi_dom
- 
- static struct msi_domain_info pci_msi_domain_info = {
- 	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--			  MSI_FLAG_PCI_MSIX | MSI_FLAG_MUST_REACTIVATE,
-+			  MSI_FLAG_PCI_MSIX,
- 	.ops		= &pci_msi_domain_ops,
- 	.chip		= &pci_msi_controller,
- 	.handler	= handle_edge_irq,
-@@ -167,8 +167,7 @@ static struct irq_chip pci_msi_ir_contro
- 
- static struct msi_domain_info pci_msi_ir_domain_info = {
- 	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX |
--			  MSI_FLAG_MUST_REACTIVATE,
-+			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
- 	.ops		= &pci_msi_domain_ops,
- 	.chip		= &pci_msi_ir_controller,
- 	.handler	= handle_edge_irq,
+Thanks
+Kishon
