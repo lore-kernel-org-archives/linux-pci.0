@@ -1,74 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:5565 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbdJ3EWx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:22:53 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 06/12] PCI: tegra: Enable opportunistic update FC and ACK
-Date: Mon, 30 Oct 2017 09:48:57 +0530
-Message-ID: <1509337143-25963-7-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from bastet.se.axis.com ([195.60.68.11]:52307 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753619AbdJaWkU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:40:20 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 07/17] PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode
+Date: Tue, 31 Oct 2017 23:39:25 +0100
+Message-Id: <20171031223936.27549-8-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch ensures that DL sends pending ACKs and update FC packets when
-link is idle instead of waiting for timers to expire which improves PCIe
-bandwidth.
+The previous handling was a bit unorthodox and would have been a bit
+bloated once more DWC based controllers added support for ep mode.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
-V2:
-* no change in this patch
+V3:
+* Added Kishon's ack.
 
- drivers/pci/host/pci-tegra.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ drivers/pci/dwc/Kconfig  | 45 ++++++++++++++++++++++-----------------------
+ drivers/pci/dwc/Makefile |  4 +---
+ 2 files changed, 23 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 51b7821646eb..bf615c5e6b78 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -209,7 +209,9 @@
- #define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 113e09440f85..3954353e3e2e 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -15,39 +15,38 @@ config PCIE_DW_EP
+ 	select PCIE_DW
  
- #define RP_VEND_XP	0x00000f00
--#define  RP_VEND_XP_DL_UP	(1 << 30)
-+#define  RP_VEND_XP_DL_UP			(1 << 30)
-+#define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
-+#define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ config PCI_DRA7XX
+-	bool "TI DRA7xx PCIe controller"
+-	depends on SOC_DRA7XX || COMPILE_TEST
+-	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+-	depends on OF && HAS_IOMEM && TI_PIPE3
+-	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC. There
+-	 are two instances of PCIe controller in DRA7xx. This controller can
+-	 work either as EP or RC. In order to enable host-specific features
+-	 PCI_DRA7XX_HOST must be selected and in order to enable device-
+-	 specific features PCI_DRA7XX_EP must be selected. This uses
+-	 the DesignWare core.
+-
+-if PCI_DRA7XX
++	bool
  
- #define RP_VEND_CTL1	0xf48
- #define  RP_VEND_CTL1_ERPT	(1 << 13)
-@@ -2147,6 +2149,16 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
- 	writel(value, port->base + RP_VEND_CTL1);
- }
+ config PCI_DRA7XX_HOST
+-	bool "PCI DRA7xx Host Mode"
+-	depends on PCI
+-	depends on PCI_MSI_IRQ_DOMAIN
++	bool "TI DRA7xx PCIe controller Host Mode"
++	depends on SOC_DRA7XX || COMPILE_TEST
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	select PCIE_DW_HOST
++	select PCI_DRA7XX
+ 	default y
+ 	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+-	 host mode.
++	  Enables support for the PCIe controller in the DRA7xx SoC to work in
++	  host mode. There are two instances of PCIe controller in DRA7xx.
++	  This controller can work either as EP or RC. In order to enable
++	  host-specific features PCI_DRA7XX_HOST must be selected and in order
++	  to enable device-specific features PCI_DRA7XX_EP must be selected.
++	  This uses the DesignWare core.
  
-+static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
-+{
-+	unsigned long value;
-+
-+	/* Optimal settings to enhance bandwidth */
-+	value = readl(port->base + RP_VEND_XP);
-+	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
-+	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
-+	writel(value, port->base + RP_VEND_XP);
-+}
- /*
-  * FIXME: If there are no PCIe cards attached, then calling this function
-  * can result in the increase of the bootup time as there are big timeout
-@@ -2215,6 +2227,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 		if (soc->program_ectl_settings)
- 			tegra_pcie_program_ectl_settings(port);
- 		tegra_pcie_enable_rp_features(port);
-+		tegra_pcie_apply_sw_fixup(port);
- 	}
+ config PCI_DRA7XX_EP
+-	bool "PCI DRA7xx Endpoint Mode"
++	bool "TI DRA7xx PCIe controller Endpoint Mode"
++	depends on SOC_DRA7XX || COMPILE_TEST
+ 	depends on PCI_ENDPOINT
++	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	select PCIE_DW_EP
++	select PCI_DRA7XX
+ 	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+-	 endpoint mode.
+-
+-endif
++	  Enables support for the PCIe controller in the DRA7xx SoC to work in
++	  endpoint mode. There are two instances of PCIe controller in DRA7xx.
++	  This controller can work either as EP or RC. In order to enable
++	  host-specific features PCI_DRA7XX_HOST must be selected and in order
++	  to enable device-specific features PCI_DRA7XX_EP must be selected.
++	  This uses the DesignWare core.
  
- 	/* take the PCIe interface module out of reset */
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index 54f56f6e9236..260589bd4e1d 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -2,9 +2,7 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+ obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+ obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+-ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+-        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+-endif
++obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
 -- 
-2.1.4
+2.14.2
