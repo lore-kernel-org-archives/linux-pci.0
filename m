@@ -1,156 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 12 Oct 2017 22:04:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v5 1/3] PCI: rockchip: Add support for pcie wake irq
-Message-ID: <20171013030441.GA25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170911151029.25185-1-jeffy.chen@rock-chips.com>
- <20170911151029.25185-2-jeffy.chen@rock-chips.com>
-MIME-Version: 1.0
-In-Reply-To: <20170911151029.25185-2-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pm@vger.kernel.org,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-kernel@vger.kernel.org,
- dianders@chromium.org, linux-rockchip@lists.infradead.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:52245 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753797AbdJaWjm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:39:42 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Cc: Niklas Cassel <niklass@axis.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 00/17] dwc MSI fixes, ARTPEC-6 EP mode support, ARTPEC-7 SoC support
+Date: Tue, 31 Oct 2017 23:39:18 +0100
+Message-Id: <20171031223936.27549-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-pm]
+This is a series that adds:
+- PCI endpoint mode support in the ARTPEC-6 driver.
+- ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
+- Small fixes for MSI in designware-ep and designware-host,
+  needed to get endpoint mode support working for ARTPEC-6.
+- Cleanups in pci-dra7xx to better prepare for endpoint mode in other
+  DWC based PCIe drivers.
 
-On Mon, Sep 11, 2017 at 11:10:27PM +0800, Jeffy Chen wrote:
-> Add support for PCIE_WAKE pin in rockchip pcie driver.
-> 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
-> 
-> Changes in v5:
-> Rebase
-> 
-> Changes in v3:
-> Fix error handling
-> 
-> Changes in v2:
-> Use dev_pm_set_dedicated_wake_irq
->         -- Suggested by Brian Norris <briannorris@chromium.com>
-> 
->  drivers/pci/host/pcie-rockchip.c | 19 +++++++++++++++++--
->  1 file changed, 17 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 9051c6c8fea4..a8b7272597a7 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -37,6 +37,7 @@
->  #include <linux/pci_ids.h>
->  #include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
-> +#include <linux/pm_wakeirq.h>
->  #include <linux/reset.h>
->  #include <linux/regmap.h>
->  
-> @@ -995,6 +996,15 @@ static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
->  		return err;
->  	}
->  
-> +	/* Must init wakeup before setting dedicated wakeup irq. */
-> +	device_init_wakeup(dev, true);
-> +	irq = platform_get_irq_byname(pdev, "wakeup");
-> +	if (irq >= 0) {
-> +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
+New in V3:
+Fixed all review comments, for detailed changes, see the changelog
+in each patch.
 
-I'm a little skeptical about dev_pm_set_dedicated_wake_irq(), not
-because I know anything at all about it, but because there are only
-five callers in the whole tree, three of which are in UART code, and
-none in anything resembling PCI code.
+Niklas Cassel (17):
+  PCI: dwc: Use DMA-API for allocating MSI data
+  PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
+  PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be
+    writable
+  PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
+  PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+  PCI: designware-ep: Add generic function for raising MSI irq
+  PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep
+    mode
+  PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than
+    in probe
+  PCI: dwc: dra7xx: Add ifdefs for host/ep specific code
+  PCI: dwc: artpec6: Remove unused defines
+  PCI: dwc: artpec6: Use BIT and GENMASK macros
+  PCI: dwc: artpec6: Split artpec6_pcie_establish_link to smaller
+    functions
+  bindings: PCI: artpec: Add support for endpoint mode
+  PCI: dwc: artpec6: Add support for endpoint mode
+  PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
+  bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
+  PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
 
-Is Rockchip really that special, or are we going about this the wrong
-way?
+ .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   5 +-
+ drivers/pci/dwc/Kconfig                            |  68 ++--
+ drivers/pci/dwc/Makefile                           |   4 +-
+ drivers/pci/dwc/pci-dra7xx.c                       | 214 ++++++-----
+ drivers/pci/dwc/pcie-artpec6.c                     | 416 ++++++++++++++++++---
+ drivers/pci/dwc/pcie-designware-ep.c               |  58 ++-
+ drivers/pci/dwc/pcie-designware-host.c             |  15 +-
+ drivers/pci/dwc/pcie-designware.c                  |   2 +-
+ drivers/pci/dwc/pcie-designware.h                  |  22 +-
+ 9 files changed, 613 insertions(+), 191 deletions(-)
 
-> +		if (err)
-> +			dev_err(dev, "failed to setup PCIe wakeup IRQ\n");
-> +	}
-> +
->  	return 0;
-
-The above could be structured as:
-
-  irq = platform_get_irq_byname(pdev, "wakeup");
-  if (irq < 0)
-    return 0;
-
-  device_init_wakeup(dev, true);
-  err = dev_pm_set_dedicated_wake_irq(dev, irq);
-  if (err) {
-    dev_pm_clear_wake_irq(dev);
-    device_init_wakeup(dev, false);
-  }
-
-  return 0;
-
-to unindent the mainline non-error code.
-
->  }
->  
-> @@ -1542,11 +1552,11 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  
->  	err = rockchip_pcie_parse_dt(rockchip);
->  	if (err)
-> -		return err;
-> +		goto err_disable_wake;
->  
->  	err = rockchip_pcie_enable_clocks(rockchip);
->  	if (err)
-> -		return err;
-> +		goto err_disable_wake;
->  
->  	err = rockchip_pcie_set_vpcie(rockchip);
->  	if (err) {
-> @@ -1656,6 +1666,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  		regulator_disable(rockchip->vpcie0v9);
->  err_set_vpcie:
->  	rockchip_pcie_disable_clocks(rockchip);
-> +err_disable_wake:
-> +	dev_pm_clear_wake_irq(dev);
-> +	device_init_wakeup(dev, false);
-
-I think this error cleanup should be done in rockchip_pcie_setup_irq()
-as shown above.  There's no real connection between
-rockchip_pcie_probe() and the wake setup.
-
->  	return err;
->  }
->  
-> @@ -1682,6 +1695,8 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
->  	if (!IS_ERR(rockchip->vpcie0v9))
->  		regulator_disable(rockchip->vpcie0v9);
->  
-> +	dev_pm_clear_wake_irq(dev);
-> +	device_init_wakeup(dev, false);
->  	return 0;
->  }
->  
-> -- 
-> 2.11.0
-> 
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+2.14.2
