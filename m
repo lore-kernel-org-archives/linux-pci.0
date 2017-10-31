@@ -1,94 +1,269 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 9 Oct 2017 12:18:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: patrik.r.jakobsson@gmail.com, airlied@linux.ie,
-        bhelgaas@google.com, forest@alittletooquiet.net,
-        gregkh@linuxfoundation.org, simon@nikanor.nu, scott@matheina.com,
-        tvboxspy@gmail.com, dan.a.cashman@gmail.com,
-        golubev.mikhail@gmail.com, devel@driverdev.osuosl.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
-Subject: Re: [PATCH] pci: Fix a possible sleep-in-atomic bug in
- pci_set_power_state
-Message-ID: <20171009171837.GM25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1507536980-9345-1-git-send-email-baijiaju1990@163.com>
- <20171009171517.GL25517@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v4 1/3] powerpc/kernel: Separate SR-IOV Calls
+To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Juan J . Alvarez" <jjalvare@us.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+ <20171031144724.27808-2-bryantly@linux.vnet.ibm.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Tue, 31 Oct 2017 09:52:18 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171009171517.GL25517@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171031144724.27808-2-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <6d3eb7e9-858e-9b04-3506-b58c979f44a6@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 09, 2017 at 12:15:17PM -0500, Bjorn Helgaas wrote:
-> [+cc Rafael, linux-pm]
-> 
-> Hi Jia-Ju,
-> 
-> On Mon, Oct 09, 2017 at 04:16:20PM +0800, Jia-Ju Bai wrote:
-> > The drivers vt6655 and gma500 call pci_set_power_state under a spinlock, which may sleep.
-> > The function call paths are:
-> > gma_power_begin (acquire the spinlock) (drivers/gpu/drm/gma500/power.c)
-> >   gma_resume_pci
-> >     pci_set_power_state
-> >       __pci_start_power_transition (drivers/pci/pci.c)
-> >         msleep --> may sleep
-> > 
-> > gma_power_begin (acquire the spinlock) (drivers/gpu/drm/gma500/power.c)
-> >   gma_resume_pci
-> >     pci_enable_device
-> >       pci_enable_device_flags (drivers/pci/pci.c)
-> >         do_pci_enable_device
-> >           pci_set_power_state
-> >             __pci_start_power_transition
-> >               msleep --> may sleep
-> > 
-> > vt6655_suspend (acquire the spinlock) (drivers/staging/vt6655/device_main.c)
-> >   pci_set_power_state
-> >     __pci_start_power_transition (drivers/pci/pci.c)
-> >       msleep --> may sleep
-> > 
-> > To fix these bugs, msleep is replaced with mdelay in __pci_start_power_transition
-> > 
-> > These bugs are found by my static analysis tool and my code review.
-> 
-> We can either
-> 
->   - change pci_set_power_state() so it can be called while holding a
->     spinlock (as this patch does), or
->     
->   - change the drivers so they don't hold the spinlock while calling 
->     pci_set_power_state().
-> 
-> I think the latter is better because d3cold_delay is typically 100ms,
-> and that's a long time to spin with interrupts disabled.
-> 
-> I assume it's easy to produce an actual failure here?  Why haven't we
-> seen bug reports about this?
+Add linuxppc-dev@lists.ozlabs.org
 
-Sigh, could have saved myself some time if I'd read the whole thread
-before responding :)  Sorry for repeating what Greg already said!
+On 10/31/17 9:47 AM, Bryant G. Ly wrote:
 
-> > Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> > ---
-> >  drivers/pci/pci.c |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 6078dfc..7b763a3 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -823,7 +823,7 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
-> >  		 */
-> >  		if (dev->runtime_d3cold) {
-> >  			if (dev->d3cold_delay)
-> > -				msleep(dev->d3cold_delay);
-> > +				mdelay(dev->d3cold_delay);
-> >  			/*
-> >  			 * When powering on a bridge from D3cold, the
-> >  			 * whole hierarchy may be powered on into
-> > -- 
-> > 1.7.9.5
-> > 
-> > 
+> SR-IOV can now be enabled in PowerNV platforms and Pseries
+> platforms. Therefore, the appropriate calls were moved to
+> machine dependent code instead of definition at compile time.
+>
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+> ---
+>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>  7 files changed, 54 insertions(+), 29 deletions(-)
+>
+> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+> index 73b92017b6d7..20f68d36af8c 100644
+> --- a/arch/powerpc/include/asm/machdep.h
+> +++ b/arch/powerpc/include/asm/machdep.h
+> @@ -172,11 +172,18 @@ struct machdep_calls {
+>  	/* Called after scan and before resource survey */
+>  	void (*pcibios_fixup_phb)(struct pci_controller *hose);
+>
+> +	/* Called after device has been added to bus and
+> +	 * before sysfs has been created
+> +	 */
+> +	void (*pcibios_bus_add_device)(struct pci_dev *pdev);
+> +
+>  	resource_size_t (*pcibios_default_alignment)(void);
+>
+>  #ifdef CONFIG_PCI_IOV
+>  	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
+>  	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *, int resno);
+> +	int (*pcibios_sriov_enable)(struct pci_dev *pdev, u16 num_vfs);
+> +	int (*pcibios_sriov_disable)(struct pci_dev *pdev);
+>  #endif /* CONFIG_PCI_IOV */
+>
+>  	/* Called to shutdown machine specific hardware not already controlled
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 0b8aa1fe2d5f..323628ca4d6d 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -203,10 +203,9 @@ struct pci_dn {
+>  	struct eeh_dev *edev;		/* eeh device */
+>  #endif
+>  #define IODA_INVALID_PE		0xFFFFFFFF
+> -#ifdef CONFIG_PPC_POWERNV
+>  	unsigned int pe_number;
+> -	int     vf_index;		/* VF index in the PF */
+>  #ifdef CONFIG_PCI_IOV
+> +	int     vf_index;		/* VF index in the PF */
+>  	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+>  	u16     num_vfs;		/* number of VFs enabled*/
+>  	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
+> @@ -215,7 +214,6 @@ struct pci_dn {
+>  	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+>  #endif /* CONFIG_PCI_IOV */
+>  	int	mps;			/* Maximum Payload Size */
+> -#endif
+>  	struct list_head child_list;
+>  	struct list_head list;
+>  };
+> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+> index 8b840191df59..f2d1b369974d 100644
+> --- a/arch/powerpc/kernel/eeh_driver.c
+> +++ b/arch/powerpc/kernel/eeh_driver.c
+> @@ -440,7 +440,7 @@ static void *eeh_add_virt_device(void *data, void *userdata)
+>  			return NULL;
+>  	}
+>
+> -#ifdef CONFIG_PPC_POWERNV
+> +#ifdef CONFIG_PCI_IOV
+>  	pci_iov_add_virtfn(edev->physfn, pdn->vf_index, 0);
+>  #endif
+>  	return NULL;
+> @@ -496,7 +496,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+>  		(*removed)++;
+>
+>  	if (edev->physfn) {
+> -#ifdef CONFIG_PPC_POWERNV
+> +#ifdef CONFIG_PCI_IOV
+>  		struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+>
+>  		pci_iov_remove_virtfn(edev->physfn, pdn->vf_index, 0);
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 02831a396419..d45b956d2e3a 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -249,8 +249,31 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev, int resno)
+>
+>  	return pci_iov_resource_size(pdev, resno);
+>  }
+> +
+> +int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+> +{
+> +	if (ppc_md.pcibios_sriov_enable)
+> +		return ppc_md.pcibios_sriov_enable(pdev, num_vfs);
+> +
+> +	return 0;
+> +}
+> +
+> +int pcibios_sriov_disable(struct pci_dev *pdev)
+> +{
+> +	if (ppc_md.pcibios_sriov_disable)
+> +		return ppc_md.pcibios_sriov_disable(pdev);
+> +
+> +	return 0;
+> +}
+> +
+>  #endif /* CONFIG_PCI_IOV */
+>
+> +void pcibios_bus_add_device(struct pci_dev *pdev)
+> +{
+> +	if (ppc_md.pcibios_bus_add_device)
+> +		ppc_md.pcibios_bus_add_device(pdev);
+> +}
+> +
+>  static resource_size_t pcibios_io_size(const struct pci_controller *hose)
+>  {
+>  #ifdef CONFIG_PPC64
+> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+> index 0e395afbf0f4..ab147a1909c8 100644
+> --- a/arch/powerpc/kernel/pci_dn.c
+> +++ b/arch/powerpc/kernel/pci_dn.c
+> @@ -156,10 +156,8 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+>  	pdn->parent = parent;
+>  	pdn->busno = busno;
+>  	pdn->devfn = devfn;
+> -#ifdef CONFIG_PPC_POWERNV
+>  	pdn->vf_index = vf_index;
+>  	pdn->pe_number = IODA_INVALID_PE;
+> -#endif
+>  	INIT_LIST_HEAD(&pdn->child_list);
+>  	INIT_LIST_HEAD(&pdn->list);
+>  	list_add_tail(&pdn->list, &parent->child_list);
+> @@ -226,9 +224,7 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+>  	 */
+>  	if (pdev->is_virtfn) {
+>  		pdn = pci_get_pdn(pdev);
+> -#ifdef CONFIG_PPC_POWERNV
+>  		pdn->pe_number = IODA_INVALID_PE;
+> -#endif
+>  		return;
+>  	}
+>
+> @@ -294,9 +290,7 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+>  		return NULL;
+>  	dn->data = pdn;
+>  	pdn->phb = hose;
+> -#ifdef CONFIG_PPC_POWERNV
+>  	pdn->pe_number = IODA_INVALID_PE;
+> -#endif
+>  	regs = of_get_property(dn, "reg", NULL);
+>  	if (regs) {
+>  		u32 addr = of_read_number(regs, 1);
+> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> index 8864065eba22..9de55bcf484a 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> @@ -44,6 +44,22 @@
+>  static bool pnv_eeh_nb_init = false;
+>  static int eeh_event_irq = -EINVAL;
+>
+> +void pnv_pcibios_bus_add_device(struct pci_dev *pdev)
+> +{
+> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +
+> +	if (!pdev->is_virtfn)
+> +		return;
+> +
+> +	/*
+> +	 * The following operations will fail if VF's sysfs files
+> +	 * aren't created or its resources aren't finalized.
+> +	 */
+> +	eeh_add_device_early(pdn);
+> +	eeh_add_device_late(pdev);
+> +	eeh_sysfs_add_device(pdev);
+> +}
+> +
+>  static int pnv_eeh_init(void)
+>  {
+>  	struct pci_controller *hose;
+> @@ -87,6 +103,7 @@ static int pnv_eeh_init(void)
+>  	}
+>
+>  	eeh_set_pe_aux_size(max_diag_size);
+> +	ppc_md.pcibios_bus_add_device = pnv_pcibios_bus_add_device;
+>
+>  	return 0;
+>  }
+> @@ -1747,22 +1764,6 @@ static struct eeh_ops pnv_eeh_ops = {
+>  	.restore_config		= pnv_eeh_restore_config
+>  };
+>
+> -void pcibios_bus_add_device(struct pci_dev *pdev)
+> -{
+> -	struct pci_dn *pdn = pci_get_pdn(pdev);
+> -
+> -	if (!pdev->is_virtfn)
+> -		return;
+> -
+> -	/*
+> -	 * The following operations will fail if VF's sysfs files
+> -	 * aren't created or its resources aren't finalized.
+> -	 */
+> -	eeh_add_device_early(pdn);
+> -	eeh_add_device_late(pdev);
+> -	eeh_sysfs_add_device(pdev);
+> -}
+> -
+>  #ifdef CONFIG_PCI_IOV
+>  static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
+>  {
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 57f9e55f4352..f7fed25e06ba 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -1674,7 +1674,7 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>  	return ret;
+>  }
+>
+> -int pcibios_sriov_disable(struct pci_dev *pdev)
+> +int pnv_pcibios_sriov_disable(struct pci_dev *pdev)
+>  {
+>  	pnv_pci_sriov_disable(pdev);
+>
+> @@ -1683,7 +1683,7 @@ int pcibios_sriov_disable(struct pci_dev *pdev)
+>  	return 0;
+>  }
+>
+> -int pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+> +int pnv_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>  {
+>  	/* Allocate PCI data */
+>  	add_dev_pci_data(pdev);
+> @@ -4002,6 +4002,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>  #ifdef CONFIG_PCI_IOV
+>  	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
+>  	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
+> +	ppc_md.pcibios_sriov_enable = pnv_pcibios_sriov_enable;
+> +	ppc_md.pcibios_sriov_disable = pnv_pcibios_sriov_disable;
+>  #endif
+>
+>  	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
