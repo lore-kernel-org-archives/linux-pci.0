@@ -1,229 +1,298 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43436 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756728AbdJJVA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Oct 2017 17:00:26 -0400
-Date: Tue, 10 Oct 2017 16:00:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Mason <jon.mason@broadcom.com>
-Cc: Ray Jui <ray.jui@broadcom.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: pci_bus warnings about adjacent RW1C bits w/ iproc-pci
-Message-ID: <20171010210016.GX25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <fbda4c0b-8db7-bc93-3bc7-6bac577c4f07@gmail.com>
- <CAJ8Y1dQPtGbwt+O9uWrfY9xKaZqSYZ_z5=TKHgNY1=GR+PMLwQ@mail.gmail.com>
- <20171010111024.GV25517@bhelgaas-glaptop.roam.corp.google.com>
- <CAC3K-4qy09zdRuCw+OO1XsBha4LagXDVe_yp9SOY-0ZpaiNKUQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAC3K-4qy09zdRuCw+OO1XsBha4LagXDVe_yp9SOY-0ZpaiNKUQ@mail.gmail.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:52329 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932583AbdJaWkg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:40:36 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 09/17] PCI: dwc: dra7xx: Add ifdefs for host/ep specific code
+Date: Tue, 31 Oct 2017 23:39:27 +0100
+Message-Id: <20171031223936.27549-10-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 10, 2017 at 10:59:53AM -0400, Jon Mason wrote:
-> On Tue, Oct 10, 2017 at 7:10 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Mon, Oct 09, 2017 at 10:33:01PM -0700, Ray Jui wrote:
-> >> Hi Florian,
-> >>
-> >> This is from the following commit:
-> >>
-> >> commit fb26592301200dbbe4a9943fe188b57a46716900
-> >> Author: Bjorn Helgaas <bhelgaas@google.com>
-> >> Date:   Mon Oct 31 16:00:01 2016 -0500
-> >>
-> >>     PCI: Warn on possible RW1C corruption for sub-32 bit config writes
-> >>
-> >>     Hardware that supports only 32-bit config writes is not spec-compliant.
-> >>     For example, if software performs a 16-bit write, we must do a 32-bit read,
-> >>     merge in the 16 bits we intend to write, followed by a 32-bit write.  If
-> >>     the 16 bits we *don't* intend to write happen to have any RW1C (write-one-
-> >>     to-clear) bits set, we just inadvertently cleared something we shouldn't
-> >>     have.
-> >>
-> >>     Add a rate-limited warning when we do sub-32 bit config writes.  Remove
-> >>     similar probe-time warnings from some of the affected host bridge drivers.
-> >>
-> >>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >>     Enthusiastically-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
-> >>     Acked-by: Shawn Lin <shawn.lin@rock-chips.com>      # rockchip
-> >>     Acked-by: Thierry Reding <treding@nvidia.com>
-> >>
-> >> This warning message will show up on every root complex that can only
-> >> support 32-bit config register write (instead of 8-bit, 16-bit writes)
-> >> and iProc based host controller happens to be one of them.
-> >>
-> >> This limitation violates the PCIe spec as the 32-bit write may clear
-> >> RW1C bits of a config register. But I believe those registers are
-> >> usually used in AER which we do not currently support in the iProc
-> >> based hos controllers.
-> >
-> > This warning is ratelimited, but maybe even that is overkill.  It
-> > looks like we currently warn on every config write of less than 32
-> > bits.  How many of those do you see?  Once per boot might be enough,
-> > or maybe once per device (so we get a hint when loading a new driver).
-> 
-> It's fairly trivial to change the warning in question to
-> dev_warn_once().  If this is acceptable, I can crank it out.
+This way you will not build and include unused code when only building
+for one mode.
 
-I think my rationale was to make dmesg greppable for the device, e.g.,
-if we had a problem with device 0000:00:00.0, "dmesg | grep
-0000:00:00.0" would show this warning.
+Moved dra7xx_pcie_enable_wrapper_interrupts() and dra7xx_add_pcie_port()
+in order to keep all host specific code inside a single ifdef block.
 
-If we do a dev_warn_once(), we'll only see the warning once per
-system, so we may see the warning for "pci_bus 0000:00", but we could
-have an RW1C problem with a device on a different bus.  So I'm a
-little hesitant to do that.
+Moved dra7xx_pcie_ep_unaligned_memaccess() in order to keep all ep
+specific code inside a single ifdef block.
 
-I'd really like it if we had the pci_dev; then we could add a bit in
-the pci_dev and print the warning once for each device that's
-vulnerable.  But we don't.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+V3:
+* Fixed commit message.
+* Moved functions in order to have just a single ifdef for host,
+  and a single ifdef for ep.
+* Removed ifdefs around match table and match table data.
+* Removed ifdefs in probe, use dummy implementations instead.
 
-We used to have the host bridge driver emit one warning, but that was
-unreliable because several drivers with this hardware limitation
-didn't emit a warning.  fb2659230120 only removed the warning from
-hisi and rockchip.  At least mach-ks8695, mach-sa1100, tegra, xgene,
-hisi, iproc, and qcom also have the limitation but didn't emit a
-warning.
+ drivers/pci/dwc/pci-dra7xx.c | 201 ++++++++++++++++++++++++-------------------
+ 1 file changed, 111 insertions(+), 90 deletions(-)
 
-Ironically, rockchip still has the hardware limitation but doesn't
-emit a warning because it doesn't use pci_generic_config_write32().
-
-> >> On Mon, Oct 9, 2017 at 8:58 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
-> >> > Hi,
-> >> >
-> >> > With 4.14-rc3 on a BCM5301x device I am seeing the following PCI core
-> >> > warnings using pcie_iproc; is this something to be worried about?
-> >> >
-> >> > [    2.626059] pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
-> >> >
-> >> >
-> >> >
-> >> > [    2.632358] pci_bus 0000:00: root bus resource [mem
-> >> > 0x08000000-0x0fffffff]
-> >> >
-> >> >
-> >> > [    2.639207] pci_bus 0000:00: No busn resource found for root bus,
-> >> > will use [bus 00-ff]
-> >> >
-> >> >
-> >> > [    2.647188] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0x4 may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.656838] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0x4 may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.666565] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0x4c may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.676524] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0x3e may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.686270] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0x4 may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.695903] pci_bus 0000:00: 1-byte config write to 0000:00:00.0
-> >> > offset 0xc may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.705531] PCI: bus0: Fast back to back transfers disabled
-> >> >
-> >> >
-> >> >
-> >> > [    2.711086] pci 0000:00:00.0: bridge configuration invalid ([bus
-> >> > 00-00]), reconfiguring
-> >> >
-> >> >
-> >> > [    2.719076] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0x3e may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.728796] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0xc8 may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.738513] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0x3e may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.748225] pci_bus 0000:00: 2-byte config write to 0000:00:00.0
-> >> > offset 0x3e may corrupt adjacent RW1C bits
-> >> >
-> >> >
-> >> > [    2.758262] pci 0000:01:00.0: enabling Extended Tags
-> >> >
-> >> >
-> >> >
-> >> > [    2.763577] PCI: bus1: Fast back to back transfers disabled
-> >> >
-> >> >
-> >> >
-> >> > [    2.769205] pci 0000:00:00.0: BAR 8: assigned [mem
-> >> > 0x08000000-0x080fffff]
-> >> >
-> >> >
-> >> > [    2.776017] pci 0000:01:00.0: BAR 0: assigned [mem
-> >> > 0x08000000-0x08003fff 64bit]
-> >> >
-> >> >
-> >> > [    2.783338] pci 0000:00:00.0: PCI bridge to [bus 01]
-> >> >
-> >> >
-> >> >
-> >> > [    2.788293] pci 0000:00:00.0:   bridge window [mem
-> >> > 0x08000000-0x080fffff]
-> >> >
-> >> >
-> >> > [    2.911536] pcie_iproc_bcma bcma0:8: link: UP
-> >> >
-> >> >
-> >> >
-> >> > [    2.916052] pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
-> >> >
-> >> >
-> >> >
-> >> > [    2.922349] pci_bus 0001:00: root bus resource [mem
-> >> > 0x40000000-0x47ffffff]
-> >> >
-> >> >
-> >> > [    2.929200] pci_bus 0001:00: No busn resource found for root bus,
-> >> > will use [bus 00-ff]
-> >> >
-> >> >
-> >> > [    2.937482] PCI: bus0: Fast back to back transfers disabled
-> >> >
-> >> >
-> >> >
-> >> > [    2.943075] pci 0001:00:00.0: bridge configuration invalid ([bus
-> >> > 00-00]), reconfiguring
-> >> >
-> >> >
-> >> > [    2.951713] PCI: bus1: Fast back to back transfers disabled
-> >> >
-> >> >
-> >> >
-> >> > [    2.957354] pci 0001:00:00.0: BAR 8: assigned [mem
-> >> > 0x40000000-0x400fffff]
-> >> >
-> >> >
-> >> > [    2.964166] pci 0001:01:00.0: BAR 0: assigned [mem
-> >> > 0x40000000-0x40007fff 64bit]
-> >> >
-> >> >
-> >> > [    2.971461] pci 0001:00:00.0: PCI bridge to [bus 01]
-> >> >
-> >> >
-> >> >
-> >> > [    2.976434] pci 0001:00:00.0:   bridge window [mem
-> >> > 0x40000000-0x400fffff]
-> >> > --
-> >> > Florian
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 009f6aeeee1c..b4c204aa932a 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -171,6 +171,15 @@ static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
+ 	return 0;
+ }
+ 
++static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
++{
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
++			   INTERRUPTS);
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
++			   INTERRUPTS);
++}
++
++#ifdef CONFIG_PCI_DRA7XX_HOST
+ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+@@ -181,14 +190,6 @@ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ 			   MSI | LEG_EP_INTERRUPTS);
+ }
+ 
+-static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
+-{
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+-			   INTERRUPTS);
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
+-			   INTERRUPTS);
+-}
+-
+ static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+ 	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
+@@ -277,6 +278,56 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
++static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
++				       struct platform_device *pdev)
++{
++	int ret;
++	struct dw_pcie *pci = dra7xx->pci;
++	struct pcie_port *pp = &pci->pp;
++	struct device *dev = pci->dev;
++	struct resource *res;
++
++	pp->irq = platform_get_irq(pdev, 1);
++	if (pp->irq < 0) {
++		dev_err(dev, "missing IRQ resource\n");
++		return pp->irq;
++	}
++
++	ret = devm_request_irq(dev, pp->irq, dra7xx_pcie_msi_irq_handler,
++			       IRQF_SHARED | IRQF_NO_THREAD,
++			       "dra7-pcie-msi",	dra7xx);
++	if (ret) {
++		dev_err(dev, "failed to request irq\n");
++		return ret;
++	}
++
++	ret = dra7xx_pcie_init_irq_domain(pp);
++	if (ret < 0)
++		return ret;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
++	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
++	if (!pci->dbi_base)
++		return -ENOMEM;
++
++	pp->ops = &dra7xx_pcie_host_ops;
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++#else
++static inline int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
++					      struct platform_device *pdev)
++{
++	return -ENODEV;
++}
++#endif
++
+ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ {
+ 	struct dra7xx_pcie *dra7xx = arg;
+@@ -336,6 +387,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
++#ifdef CONFIG_PCI_DRA7XX_EP
+ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+@@ -390,6 +442,48 @@ static struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.raise_irq = dra7xx_pcie_raise_irq,
+ };
+ 
++/*
++ * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
++ * @dra7xx: the dra7xx device where the workaround should be applied
++ *
++ * Access to the PCIe slave port that are not 32-bit aligned will result
++ * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
++ * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
++ * 0x3.
++ *
++ * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
++ */
++static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
++{
++	int ret;
++	struct device_node *np = dev->of_node;
++	struct of_phandle_args args;
++	struct regmap *regmap;
++
++	regmap = syscon_regmap_lookup_by_phandle(np,
++						 "ti,syscon-unaligned-access");
++	if (IS_ERR(regmap)) {
++		dev_dbg(dev, "can't get ti,syscon-unaligned-access\n");
++		return -EINVAL;
++	}
++
++	ret = of_parse_phandle_with_fixed_args(np, "ti,syscon-unaligned-access",
++					       2, 0, &args);
++	if (ret) {
++		dev_err(dev, "failed to parse ti,syscon-unaligned-access\n");
++		return ret;
++	}
++
++	ret = regmap_update_bits(regmap, args.args[0], args.args[1],
++				 args.args[1]);
++	if (ret)
++		dev_err(dev, "failed to enable unaligned access\n");
++
++	of_node_put(args.np);
++
++	return ret;
++}
++
+ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+ 				     struct platform_device *pdev)
+ {
+@@ -427,49 +521,18 @@ static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+ 
+ 	return 0;
+ }
+-
+-static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+-				       struct platform_device *pdev)
++#else
++static inline int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+ {
+-	int ret;
+-	struct dw_pcie *pci = dra7xx->pci;
+-	struct pcie_port *pp = &pci->pp;
+-	struct device *dev = pci->dev;
+-	struct resource *res;
+-
+-	pp->irq = platform_get_irq(pdev, 1);
+-	if (pp->irq < 0) {
+-		dev_err(dev, "missing IRQ resource\n");
+-		return pp->irq;
+-	}
+-
+-	ret = devm_request_irq(dev, pp->irq, dra7xx_pcie_msi_irq_handler,
+-			       IRQF_SHARED | IRQF_NO_THREAD,
+-			       "dra7-pcie-msi",	dra7xx);
+-	if (ret) {
+-		dev_err(dev, "failed to request irq\n");
+-		return ret;
+-	}
+-
+-	ret = dra7xx_pcie_init_irq_domain(pp);
+-	if (ret < 0)
+-		return ret;
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbics");
+-	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pci->dbi_base)
+-		return -ENOMEM;
+-
+-	pp->ops = &dra7xx_pcie_host_ops;
+-
+-	ret = dw_pcie_host_init(pp);
+-	if (ret) {
+-		dev_err(dev, "failed to initialize host\n");
+-		return ret;
+-	}
++	return -ENODEV;
++}
+ 
+-	return 0;
++static inline int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
++					    struct platform_device *pdev)
++{
++	return -ENODEV;
+ }
++#endif
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
+@@ -537,48 +600,6 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ 	{},
+ };
+ 
+-/*
+- * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+- * @dra7xx: the dra7xx device where the workaround should be applied
+- *
+- * Access to the PCIe slave port that are not 32-bit aligned will result
+- * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
+- * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
+- * 0x3.
+- *
+- * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+- */
+-static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+-{
+-	int ret;
+-	struct device_node *np = dev->of_node;
+-	struct of_phandle_args args;
+-	struct regmap *regmap;
+-
+-	regmap = syscon_regmap_lookup_by_phandle(np,
+-						 "ti,syscon-unaligned-access");
+-	if (IS_ERR(regmap)) {
+-		dev_dbg(dev, "can't get ti,syscon-unaligned-access\n");
+-		return -EINVAL;
+-	}
+-
+-	ret = of_parse_phandle_with_fixed_args(np, "ti,syscon-unaligned-access",
+-					       2, 0, &args);
+-	if (ret) {
+-		dev_err(dev, "failed to parse ti,syscon-unaligned-access\n");
+-		return ret;
+-	}
+-
+-	ret = regmap_update_bits(regmap, args.args[0], args.args[1],
+-				 args.args[1]);
+-	if (ret)
+-		dev_err(dev, "failed to enable unaligned access\n");
+-
+-	of_node_put(args.np);
+-
+-	return ret;
+-}
+-
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+-- 
+2.14.2
