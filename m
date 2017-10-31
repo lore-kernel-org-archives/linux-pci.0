@@ -1,72 +1,142 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFCv2 PATCH 12/36] dt-bindings: document stall and PASID
- properties for IOMMU masters
-To: Rob Herring <robh@kernel.org>
-Cc: "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        Sudeep Holla <Sudeep.Holla@arm.com>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-13-jean-philippe.brucker@arm.com>
- <20171013191051.lgxbcobkzzj5guhv@rob-hp-laptop>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <e7288f51-1cfa-44ce-e3ce-e9f3daf91579@arm.com>
-Date: Mon, 16 Oct 2017 11:23:02 +0100
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=UrI8=B6=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v4 2/3] pseries: Add PSeries SR-IOV Machine dependent
+ calls
+To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-devel@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Juan J . Alvarez" <jjalvare@us.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com>
+ <20171031144724.27808-3-bryantly@linux.vnet.ibm.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Tue, 31 Oct 2017 09:52:36 -0500
 MIME-Version: 1.0
-In-Reply-To: <20171013191051.lgxbcobkzzj5guhv@rob-hp-laptop>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20171031144724.27808-3-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <b8d76f23-1db7-13b9-29fd-4f5b13cf078a@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/10/17 20:10, Rob Herring wrote:
-> On Fri, Oct 06, 2017 at 02:31:39PM +0100, Jean-Philippe Brucker wrote:
->> On ARM systems, some platform devices behind an IOMMU may support stall
->> and PASID features. Stall is the ability to recover from page faults and
->> PASID offers multiple process address spaces to the device. Together they
->> allow to do paging with a device. Let the firmware tell us when a device
->> supports stall and PASID.
-> 
-> Can't these be implied by the compatible string of the devices?
+Add linuxppc-dev@lists.ozlabs.org
 
-I think that PASID capacity can be deduced from the compatible string but
-don't know how these devices will be implemented (the only known example
-being a software model for testing). In any case implementing PASID based
-on the compatible string is tricky, because the IOMMU driver needs to know
-PASID capacity before the device driver has had time to probe the device.
-Maybe we could get away with a static table associating compatible string
-to PASID capacity, but it's not very nice.
+On 10/31/17 9:47 AM, Bryant G. Ly wrote:
 
-For stall it's a property of the integration between device and IOMMU,
-much like the "iommus" property, so it can't be deduced only from the
-compatible string. It's crucial that the firmware validates that stalling
-is safe, because we don't have any other way to discover it.
-
-Thanks,
-Jean
+> Add calls for PSeries platform to configure/deconfigure
+> SR-IOV.
+>
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+> ---
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 +++++++++++++++++++++++
+>  arch/powerpc/platforms/pseries/pci.c         | 29 ++++++++++++++++++++++++----
+>  2 files changed, 49 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> index 6b812ad990e4..2295f117e2d3 100644
+> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
+> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> @@ -55,6 +55,27 @@ static int ibm_get_config_addr_info;
+>  static int ibm_get_config_addr_info2;
+>  static int ibm_configure_pe;
+>
+> +void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+> +{
+> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +
+> +	if (!pdev->is_virtfn)
+> +		return;
+> +
+> +	pdn->device_id  =  pdev->device;
+> +	pdn->vendor_id  =  pdev->vendor;
+> +	pdn->class_code =  pdev->class;
+> +
+> +	/*
+> +	 * The following operations will fail if VF's sysfs files
+> +	 * aren't created or its resources aren't finalized.
+> +	 */
+> +	eeh_add_device_early(pdn);
+> +	eeh_add_device_late(pdev);
+> +	eeh_sysfs_add_device(pdev);
+> +
+> +}
+> +
+>  /*
+>   * Buffer for reporting slot-error-detail rtas calls. Its here
+>   * in BSS, and not dynamically alloced, so that it ends up in
+> @@ -120,6 +141,9 @@ static int pseries_eeh_init(void)
+>  	/* Set EEH probe mode */
+>  	eeh_add_flag(EEH_PROBE_MODE_DEVTREE | EEH_ENABLE_IO_FOR_LOG);
+>
+> +	/* Set EEH machine dependent code */
+> +	ppc_md.pcibios_bus_add_device = pseries_pcibios_bus_add_device;
+> +
+>  	return 0;
+>  }
+>
+> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+> index 09eba5a9929a..14a90cf471cc 100644
+> --- a/arch/powerpc/platforms/pseries/pci.c
+> +++ b/arch/powerpc/platforms/pseries/pci.c
+> @@ -3,17 +3,17 @@
+>   * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
+>   *
+>   * pSeries specific routines for PCI.
+> - * 
+> + *
+>   * This program is free software; you can redistribute it and/or modify
+>   * it under the terms of the GNU General Public License as published by
+>   * the Free Software Foundation; either version 2 of the License, or
+>   * (at your option) any later version.
+> - *    
+> + *
+>   * This program is distributed in the hope that it will be useful,
+>   * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>   * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>   * GNU General Public License for more details.
+> - * 
+> + *
+>   * You should have received a copy of the GNU General Public License
+>   * along with this program; if not, write to the Free Software
+>   * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+> @@ -54,10 +54,26 @@ void pcibios_name_device(struct pci_dev *dev)
+>  			}
+>  		}
+>  	}
+> -}   
+> +}
+>  DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
+>  #endif
+>
+> +#ifdef CONFIG_PCI_IOV
+> +int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+> +{
+> +	/* Allocate PCI data */
+> +	add_dev_pci_data(pdev);
+> +	return 0;
+> +}
+> +
+> +int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
+> +{
+> +	/* Release PCI data */
+> +	remove_dev_pci_data(pdev);
+> +	return 0;
+> +}
+> +#endif
+> +
+>  static void __init pSeries_request_regions(void)
+>  {
+>  	if (!isa_io_base)
+> @@ -76,6 +92,11 @@ void __init pSeries_final_fixup(void)
+>  	pSeries_request_regions();
+>
+>  	eeh_addr_cache_build();
+> +
+> +#ifdef CONFIG_PCI_IOV
+> +	ppc_md.pcibios_sriov_enable = pseries_pcibios_sriov_enable;
+> +	ppc_md.pcibios_sriov_disable = pseries_pcibios_sriov_disable;
+> +#endif
+>  }
+>
+>  /*
