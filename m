@@ -1,124 +1,112 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 07/10] PCI: dwc: artpec6: split artpec6_pcie_establish_link to smaller functions
-Date: Fri, 13 Oct 2017 18:09:10 +0200
-Message-Id: <20171013160914.3220-8-niklas.cassel@axis.com>
-In-Reply-To: <20171013160914.3220-1-niklas.cassel@axis.com>
-References: <20171013160914.3220-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:15616 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751499AbdJaEXp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 00:23:45 -0400
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>, <rajatja@google.com>,
+        <yinghai@kernel.org>, <david.daney@cavium.com>,
+        <Julia.Lawall@lip6.fr>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
+Subject: [PATCH V2 4/4] PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
+Date: Tue, 31 Oct 2017 09:52:49 +0530
+Message-ID: <1509423769-10522-5-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
+References: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is done to better match other drivers such as dra7xx and imx6,
-but also to prepare for endpoint mode support.
+sets CLKREQ asserted delay to a higher value to avoid
+unnecessary wake up from L1.2_ENTRY state for Tegra210
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
- drivers/pci/dwc/pcie-artpec6.c | 59 +++++++++++++++++++++++-------------------
- 1 file changed, 32 insertions(+), 27 deletions(-)
+V2:
+* no change in this patch
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 18075e0fab80..c5d7f98dc6b2 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -80,18 +80,11 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
- 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
- }
+ drivers/pci/host/pci-tegra.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 08da67a82a2d..811209dedde2 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -204,6 +204,8 @@
+ #define RP_L1_PM_SUBSTATES_1_CTL			0xC04
+ #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
+ #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
++#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK		(0x1FF << 13)
++#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY		(0x27 << 13)
  
--static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
-+static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
- {
--	struct dw_pcie *pci = artpec6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
- 	u32 val;
- 	unsigned int retries;
+ #define RP_L1_PM_SUBSTATES_2_CTL			0xC08
+ #define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
+@@ -354,6 +356,7 @@ struct tegra_pcie_soc {
+ 	bool updateFC_threshold;
+ 	bool has_aspm_l1;
+ 	bool has_aspm_l1ss;
++	bool l1ss_rp_wake_fixup;
+ };
  
--	/* Hold DW core in reset */
--	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_CORE_RESET_REQ;
--	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
- 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
- 		PCIECFG_MODE_TX_DRV_EN |
-@@ -131,30 +124,18 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
- 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
- 		retries--;
- 	} while (retries && !(val & PHY_COSPLLLOCK));
-+}
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2307,6 +2310,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
+ 		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
  
--	/* Take DW core out of reset */
--	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val &= ~PCIECFG_CORE_RESET_REQ;
--	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--	usleep_range(100, 200);
--
--	/* setup root complex */
--	dw_pcie_setup_rc(pp);
-+static int artpec6_pcie_establish_link(struct dw_pcie *pci)
-+{
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-+	u32 val;
- 
--	/* assert LTSSM enable */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
- 	val |= PCIECFG_LTSSM_ENABLE;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- 
--	/* check if the link is up or not */
--	if (!dw_pcie_wait_for_link(pci))
--		return 0;
--
--	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
--
--	return -ETIMEDOUT;
-+	return 0;
- }
- 
- static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
-@@ -166,12 +147,36 @@ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
- 		dw_pcie_msi_init(pp);
- }
- 
-+static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
++		if (soc->l1ss_rp_wake_fixup) {
++			/* Set CLKREQ asserted delay greater than Power_Off
++			 * time (2us) to avoid RP wakeup in L1.2_ENTRY
++			 */
++			value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
++			value &= ~RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK;
++			value |= RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY;
++			writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
++		}
 +
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
-+	val |= PCIECFG_CORE_RESET_REQ;
-+	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
-+}
-+
-+static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
-+	val &= ~PCIECFG_CORE_RESET_REQ;
-+	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
-+	usleep_range(100, 200);
-+}
-+
- static int artpec6_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 		/* Following is based on clk_m being 19.2 MHz */
+ 		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
+ 		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
+@@ -2464,6 +2477,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1 = false,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
  
--	artpec6_pcie_establish_link(artpec6_pcie);
-+	artpec6_pcie_assert_core_reset(artpec6_pcie);
-+	artpec6_pcie_init_phy(artpec6_pcie);
-+	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-+	dw_pcie_setup_rc(pp);
-+	artpec6_pcie_establish_link(pci);
-+	dw_pcie_wait_for_link(pci);
- 	artpec6_pcie_enable_interrupts(artpec6_pcie);
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2487,6 +2501,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1 = true,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
  
- 	return 0;
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2509,6 +2524,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1 = true,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2539,6 +2555,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.updateFC_threshold = true,
+ 	.has_aspm_l1 = true,
+ 	.has_aspm_l1ss = true,
++	.l1ss_rp_wake_fixup = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2562,6 +2579,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1 = true,
+ 	.has_aspm_l1ss = true,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
-2.11.0
+2.7.4
