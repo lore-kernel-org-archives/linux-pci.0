@@ -1,55 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:13939 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751478AbdJ3EVB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2017 00:21:01 -0400
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 00/12] Enable Tegra root port features and apply SW fixups
-Date: Mon, 30 Oct 2017 09:48:51 +0530
-Message-ID: <1509337143-25963-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 02/17] PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
+Date: Tue, 31 Oct 2017 23:39:20 +0100
+Message-Id: <20171031223936.27549-3-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These series of patches does the following things,
-- Deasserting pcie_xrst after programming root port to make sure that
-  register programming is reflected during LTSSM
-- Apply REFCLK pad settings to make sure P2P amplitude requirement is met
-- Enable Gen2 link speed
-- Advertise AER capability
-- Program UPHY electrical settings for meeting eye diagram requirements
-- Bunch of SW fixups explained in their respective commit log
+Previously, dw_pcie_ep_set_msi() wrote all bits in the Message Control
+register, thus overwriting the PCI_MSI_FLAGS_64BIT bit.
+By clearing the PCI_MSI_FLAGS_64BIT bit, we break MSI
+on systems where the RC has set a 64 bit MSI address.
 
-Testing done on Tegra124, 210 and 186:
-- PCIe link up, config read, BAR read and basic functionality of Ethernet
-  card
-- Link speed switch to Gen2 after link retrain
-- Link speed stays in Gen1 after retrain if end point is only Gen1 capable
-- Simulated AER errors and verified dmesg logs for them
-- Rest of the programming is verified by dumping the registers after PCIe
-link up
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+V3:
+* No change.
 
-Manikanta Maddireddy (12):
-  PCI: tegra: Start LTSSM after programming root port
-  PCI: tegra: Move REFCLK pad settings out of phy_power_on()
-  PCI: tegra: Retrain link for Gen2 speed
-  PCI: tegra: Advertise AER capability
-  PCI: tegra: Program UPHY electrical settings in Tegra210
-  PCI: tegra: Enable opportunistic update FC and ACK
-  PCI: tegra: Disable AFI dynamic clock gating
-  PCI: tegra: Wait for DLLP to finish before entering L1 or L2
-  PCI: tegra: Enable PCIe xclk clock clamping
-  PCI: tegra: Add SW fixup for RAW violations
-  PCI: tegra: Increase the deskew retry time
-  PCI: tegra: Update flow control threshold in Tegra210
+ drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
+ drivers/pci/dwc/pcie-designware.h    | 1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
- drivers/pci/host/pci-tegra.c | 306 ++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 288 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index d53d5f168363..c92ab87fd660 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -220,7 +220,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	val = (encode_int << MSI_CAP_MMC_SHIFT);
++	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	val &= ~MSI_CAP_MMC_MASK;
++	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
+ 	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
+ 
+ 	return 0;
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index ecdede68522a..9aaf0cd04dd6 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -101,6 +101,7 @@
+ 
+ #define MSI_MESSAGE_CONTROL		0x52
+ #define MSI_CAP_MMC_SHIFT		1
++#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
+ #define MSI_CAP_MME_SHIFT		4
+ #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+ #define MSI_MESSAGE_ADDR_L32		0x54
 -- 
-2.1.4
+2.14.2
