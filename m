@@ -1,54 +1,61 @@
-Return-Path: <SRS0=JRhQ=BU=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=JRhQ=BU=linutronix.de=tglx@kernel.org>
-Date: Sat, 21 Oct 2017 09:19:24 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: LKML <linux-kernel@vger.kernel.org>, Dexuan Cui <decui@microsoft.com>,
-    x86@kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-    Marc Zyngier <marc.zyngier@arm.com>, KY Srinivasan <kys@microsoft.com>,
-    Stephen Hemminger <sthemmin@microsoft.com>, linux-pci@vger.kernel.org,
-    devel@linuxdriverproject.org, Josh Poulson <jopoulso@microsoft.com>,
-    Haiyang Zhang <haiyangz@microsoft.com>, Simon Xiao <sixiao@microsoft.com>,
-    Saeed Mahameed <saeedm@mellanox.com>,
-    Mihai Costache <v-micos@microsoft.com>,
-    Jork Loeser <Jork.Loeser@microsoft.com>
-Subject: Re: [patch 0/3] x86/PCI/MSI: Make sure that irq reservation mode
- works everywhere
-In-Reply-To: <20171020230127.GW6332@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.DEB.2.20.1710210918270.3428@nanos>
-References: <20171017075456.694047687@linutronix.de> <20171020230127.GW6332@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 09/17] PCI: dwc: dra7xx: Add ifdefs for host/ep
+ specific code
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20171030124221.20690-1-niklas.cassel@axis.com>
+ <20171030124221.20690-10-niklas.cassel@axis.com>
+ <32dd0d05-4ed0-1c8b-6ea4-ea4d560c5570@ti.com>
+ <669377ab-b859-24ed-5a2b-36bf826d426b@axis.com>
+Message-ID: <f99d17a1-19c3-a63d-3758-7def12d634e5@axis.com>
+Date: Tue, 31 Oct 2017 22:38:34 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <669377ab-b859-24ed-5a2b-36bf826d426b@axis.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 20 Oct 2017, Bjorn Helgaas wrote:
-> On Tue, Oct 17, 2017 at 09:54:56AM +0200, Thomas Gleixner wrote:
-> > Dexuan reported that the recent rework of the vector allocation mode in x86
-> > broke HyperV PCI passtrough because the rework missed to add the
-> > MSI_FLAG_MUST_REACTIVATE flag to the HyperV/PCI interrupt domain info.
-> > 
-> > The simple solution would be to set the flag in the HyperV/PCI driver but
-> > it's better to make this generic and let the PCI/MSI core code set the flag
-> > when reservation mode is enabled. That ensures that future users of this
-> > wont trip over the same problem.
-> > 
-> > Thanks,
-> > 
-> > 	tglx
-> > 
-> > ---
-> >  arch/x86/Kconfig           |    2 +-
-> >  arch/x86/kernel/apic/msi.c |    5 ++---
-> >  drivers/pci/msi.c          |    2 ++
-> >  kernel/irq/Kconfig         |    3 +++
-> >  4 files changed, 8 insertions(+), 4 deletions(-)
+>>>  
+>>>  static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>>>  {
+>>> @@ -681,6 +697,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>>>  		dra7xx->link_gen = 2;
+>>>  
+>>>  	switch (mode) {
+>>> +#ifdef CONFIG_PCI_DRA7XX_HOST
+>>>  	case DW_PCIE_RC_TYPE:
+>>>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+>>>  				   DEVICE_TYPE_RC);
+>>> @@ -688,6 +705,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>>>  		if (ret < 0)
+>>>  			goto err_gpio;
+>>>  		break;
+>>> +#endif
+>>> +#ifdef CONFIG_PCI_DRA7XX_EP
+>>>  	case DW_PCIE_EP_TYPE:
+>>>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+>>>  				   DEVICE_TYPE_EP);
+>>> @@ -700,6 +719,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>>>  		if (ret < 0)
+>>>  			goto err_gpio;
+>>>  		break;
+>>> +#endif
 > 
-> This mentions 4900be83602b ("x86/vector/msi: Switch to global reservation
-> mode"), which I don't have, so I assume it's an x86 thing.  So I guess
-> you'll probably merge this via the same tree?
+> Actually, these ifdefs has to stay, otherwise we get build warnings, since we
+> are calling functions that aren't defined (dra7xx_pcie_ep_unaligned_memaccess,
+> dra7xx_add_pcie_ep, dra7xx_add_pcie_port).
+> We could add dummy implementations for these inside an #else block following
+> the ifdef blocks. However, I think that adding dummy implementations in the
+> #else block is uglier and more verbose than keeping the ifdefs around the
+> two cases.
+> 
 
-Yes, it's in tip/x86/apic branch and the fixups are applied there now as well.
+..however, if you prefer dummy implementations inside the #else blocks,
+I will of course do that.
 
-Thanks,
 
-	tglx
+Regards,
+Niklas
