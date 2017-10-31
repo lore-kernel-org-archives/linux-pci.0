@@ -1,111 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56770 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756214AbdJKAJM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 10 Oct 2017 20:09:12 -0400
-Date: Tue, 10 Oct 2017 19:09:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>,
-        Vidya Sagar <sagar.tv@gmail.com>,
-        Erik Faye-Lund <kusmabite@gmail.com>,
-        Tomasz Maciej Nowak <tmn505@gmail.com>,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] Revert "PCI: tegra: Do not allocate MSI target memory"
-Message-ID: <20171011000909.GA25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171002201924.GC5407@bhelgaas-glaptop.roam.corp.google.com>
- <20171009102935.14515-1-thierry.reding@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171009102935.14515-1-thierry.reding@gmail.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:52287 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753619AbdJaWkL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2017 18:40:11 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 06/17] PCI: designware-ep: Add generic function for raising MSI irq
+Date: Tue, 31 Oct 2017 23:39:24 +0100
+Message-Id: <20171031223936.27549-7-niklas.cassel@axis.com>
+In-Reply-To: <20171031223936.27549-1-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Oct 09, 2017 at 12:29:35PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> This reverts commit d7bd554f27c942e6b8b54100b4044f9be1038edf.
-> 
-> It turns out that Tegra20 has a bug in the implementation of the MSI
-> target address register (which is worked around by the existence of the
-> struct tegra_pcie_soc.msi_base_shift parameter) that restricts the MSI
-> target memory to the lower 32 bits of physical memory on that particular
-> generation. The offending patch causes a regression on TrimSlice, which
-> is a Tegra20-based device and has a PCI network interface card.
-> 
-> An initial, simpler fix was to change the MSI target address for Tegra20
-> only, but it was pointed out that the offending commit also prevents the
-> use of 32-bit only MSI capable devices, even on later chips. Technically
-> this was never guaranteed to work with the prior code in the first place
-> because the allocated page could have resided beyond the 4 GiB boundary,
-> but it is still possible that this could've introduced a regression.
-> 
-> The proper fix that was settled on is to select a fixed address within
-> the lowest 32 bits of physical address space that is otherwise unused,
-> but testing of that patch has provided mixed results that are not fully
-> understood yet.
-> 
-> Given all of the above and the relative urgency to get this fixed in
-> v4.13, revert the offending commit until a universal fix is found.
-> 
-> Cc: stable@vger.kernel.org # 4.13.x
-> Reported-by: Tomasz Maciej Nowak <tmn505@gmail.com>
-> Reported-by: Erik Faye-Lund <kusmabite@gmail.com>
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+This function can be used by all DWC based controllers to raise a MSI
+irq. However, certain controllers, like DRA7xx, has a special
+convenience register for raising MSI irqs that doesn't require you to
+explicitly map the MSI address.
 
-I applied this revert to for-linus for v4.14, thanks!
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+V3:
+* No change.
 
-> ---
->  drivers/pci/host/pci-tegra.c | 22 ++++++----------------
->  1 file changed, 6 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 9c40da54f88a..1987fec1f126 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -233,6 +233,7 @@ struct tegra_msi {
->  	struct msi_controller chip;
->  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
->  	struct irq_domain *domain;
-> +	unsigned long pages;
->  	struct mutex lock;
->  	u64 phys;
->  	int irq;
-> @@ -1529,22 +1530,9 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
->  		goto err;
->  	}
->  
-> -	/*
-> -	 * The PCI host bridge on Tegra contains some logic that intercepts
-> -	 * MSI writes, which means that the MSI target address doesn't have
-> -	 * to point to actual physical memory. Rather than allocating one 4
-> -	 * KiB page of system memory that's never used, we can simply pick
-> -	 * an arbitrary address within an area reserved for system memory
-> -	 * in the FPCI address map.
-> -	 *
-> -	 * However, in order to avoid confusion, we pick an address that
-> -	 * doesn't map to physical memory. The FPCI address map reserves a
-> -	 * 1012 GiB region for system memory and memory-mapped I/O. Since
-> -	 * none of the Tegra SoCs that contain this PCI host bridge can
-> -	 * address more than 16 GiB of system memory, the last 4 KiB of
-> -	 * these 1012 GiB is a good candidate.
-> -	 */
-> -	msi->phys = 0xfcfffff000;
-> +	/* setup AFI/FPCI range */
-> +	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> +	msi->phys = virt_to_phys((void *)msi->pages);
->  
->  	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
->  	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
-> @@ -1596,6 +1584,8 @@ static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
->  	afi_writel(pcie, 0, AFI_MSI_EN_VEC6);
->  	afi_writel(pcie, 0, AFI_MSI_EN_VEC7);
->  
-> +	free_pages(msi->pages, 0);
-> +
->  	if (msi->irq > 0)
->  		free_irq(msi->irq, pcie);
->  
-> -- 
-> 2.14.1
-> 
+ drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++++++++++
+ drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
+ 2 files changed, 43 insertions(+)
+
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 9c3820ca6358..be874df8003d 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -282,6 +282,40 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
+ 
++int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
++			     u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct pci_epc *epc = ep->epc;
++	u16 msg_ctrl, msg_data;
++	u32 msg_addr_lower, msg_addr_upper;
++	u64 msg_addr;
++	bool has_upper;
++	int ret;
++
++	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
++	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
++	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
++	if (has_upper) {
++		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
++		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
++	} else {
++		msg_addr_upper = 0;
++		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
++	}
++	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
++	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr, PAGE_SIZE);
++	if (ret)
++		return ret;
++
++	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
++
++	dw_pcie_ep_unmap_addr(epc, ep->msi_mem_phys);
++
++	return 0;
++}
++
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ 	struct pci_epc *epc = ep->epc;
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 37dfad8d003f..24edac035160 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -106,6 +106,8 @@
+ #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+ #define MSI_MESSAGE_ADDR_L32		0x54
+ #define MSI_MESSAGE_ADDR_U32		0x58
++#define MSI_MESSAGE_DATA_32		0x58
++#define MSI_MESSAGE_DATA_64		0x5C
+ 
+ /*
+  * Maximum number of MSI IRQs can be 256 per controller. But keep
+@@ -338,6 +340,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 interrupt_num);
+ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+@@ -353,6 +356,12 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
+ 
++static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
++					   u8 interrupt_num)
++{
++	return 0;
++}
++
+ static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ }
+-- 
+2.14.2
