@@ -1,123 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:53326 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752483AbdKLApi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 11 Nov 2017 19:45:38 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Received: from kirsty.vergenet.net ([202.4.237.240]:53623 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753244AbdKAISf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Nov 2017 04:18:35 -0400
+Date: Wed, 1 Nov 2017 09:18:31 +0100
+From: Simon Horman <horms@verge.net.au>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
         LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Subject: [PATCH v3 2/6] PCI / PM: Support for LEAVE_SUSPENDED driver flag
-Date: Sun, 12 Nov 2017 01:40:12 +0100
-Message-ID: <2614719.dlpqdpUTnM@aspire.rjw.lan>
-In-Reply-To: <4184911.zoJM7jZeH4@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan> <4184911.zoJM7jZeH4@aspire.rjw.lan>
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar: Use common error handling code in
+ rcar_pcie_enable_msi()
+Message-ID: <20171101081831.ssnuqp5b75lbfu5p@verge.net.au>
+References: <c598933b-b14f-91a1-c7a3-f4a46ec98e77@users.sourceforge.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c598933b-b14f-91a1-c7a3-f4a46ec98e77@users.sourceforge.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, Oct 30, 2017 at 08:35:30AM +0100, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Mon, 30 Oct 2017 08:28:06 +0100
+> 
+> Adjust a jump target so that a specific error message is stored only once
+> at the end of this function implementation.
+> Replace two calls of the function "dev_err" by goto statements.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-Add support for DPM_FLAG_LEAVE_SUSPENDED to the PCI bus type by
-making it (a) set the power.may_skip_resume status bit for devices
-that, from its perspective, may be left in suspend after system
-wakeup from sleep and (b) return early from pci_pm_resume_noirq()
-for devices whose remaining resume callbacks during the transition
-under way are going to be skipped by the PM core.
+This is fine by me except that the change in the name of the goto label
+seems spurious. If think it should be left as-is. But if you really want to
+change it then as it is an error path I should suggest it describe that its
+an error and what unwinding is done, f.e.  err_remove_domain.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
-
-v2 -> v3: Add the Acked-by from Bjorn, no changes in the patch.
-
----
- Documentation/power/pci.txt |   11 +++++++++++
- drivers/pci/pci-driver.c    |   19 +++++++++++++++++--
- 2 files changed, 28 insertions(+), 2 deletions(-)
-
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -699,7 +699,7 @@ static void pci_pm_complete(struct devic
- 	pm_generic_complete(dev);
- 
- 	/* Resume device if platform firmware has put it in reset-power-on */
--	if (dev->power.direct_complete && pm_resume_via_firmware()) {
-+	if (pm_runtime_suspended(dev) && pm_resume_via_firmware()) {
- 		pci_power_t pre_sleep_state = pci_dev->current_state;
- 
- 		pci_update_current_state(pci_dev, pci_dev->current_state);
-@@ -783,8 +783,10 @@ static int pci_pm_suspend_noirq(struct d
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
--	if (dev_pm_smart_suspend_and_suspended(dev))
-+	if (dev_pm_smart_suspend_and_suspended(dev)) {
-+		dev->power.may_skip_resume = true;
- 		return 0;
-+	}
- 
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_suspend_late(dev, PMSG_SUSPEND);
-@@ -838,6 +840,16 @@ static int pci_pm_suspend_noirq(struct d
- Fixup:
- 	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
- 
-+	/*
-+	 * If the target system sleep state is suspend-to-idle, it is sufficient
-+	 * to check whether or not the device's wakeup settings are good for
-+	 * runtime PM.  Otherwise, the pm_resume_via_firmware() check will cause
-+	 * pci_pm_complete() to take care of fixing up the device's state
-+	 * anyway, if need be.
-+	 */
-+	dev->power.may_skip_resume = device_may_wakeup(dev) ||
-+					!device_can_wakeup(dev);
-+
- 	return 0;
- }
- 
-@@ -847,6 +859,9 @@ static int pci_pm_resume_noirq(struct de
- 	struct device_driver *drv = dev->driver;
- 	int error = 0;
- 
-+	if (dev_pm_may_skip_resume(dev))
-+		return 0;
-+
- 	/*
- 	 * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
- 	 * during system suspend, so update their runtime PM status to "active"
-Index: linux-pm/Documentation/power/pci.txt
-===================================================================
---- linux-pm.orig/Documentation/power/pci.txt
-+++ linux-pm/Documentation/power/pci.txt
-@@ -994,6 +994,17 @@ into D0 going forward), but if it is in
- the function will set the power.direct_complete flag for it (to make the PM core
- skip the subsequent "thaw" callbacks for it) and return.
- 
-+Setting the DPM_FLAG_LEAVE_SUSPENDED flag means that the driver prefers the
-+device to be left in suspend after system-wide transitions to the working state.
-+This flag is checked by the PM core, but the PCI bus type informs the PM core
-+which devices may be left in suspend from its perspective (that happens during
-+the "noirq" phase of system-wide suspend and analogous transitions) and next it
-+uses the dev_pm_may_skip_resume() helper to decide whether or not to return from
-+pci_pm_resume_noirq() early, as the PM core will skip the remaining resume
-+callbacks for the device during the transition under way and will set its
-+runtime PM status to "suspended" if dev_pm_may_skip_resume() returns "true" for
-+it.
-+
- 3.2. Device Runtime Power Management
- ------------------------------------
- In addition to providing device power management callbacks PCI device drivers
+> ---
+>  drivers/pci/host/pcie-rcar.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 12796eccb2be..38101f8bebf1 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -873,18 +873,14 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>  	err = devm_request_irq(dev, msi->irq1, rcar_pcie_msi_irq,
+>  			       IRQF_SHARED | IRQF_NO_THREAD,
+>  			       rcar_msi_irq_chip.name, pcie);
+> -	if (err < 0) {
+> -		dev_err(dev, "failed to request IRQ: %d\n", err);
+> -		goto err;
+> -	}
+> +	if (err < 0)
+> +		goto report_request_failure;
+>  
+>  	err = devm_request_irq(dev, msi->irq2, rcar_pcie_msi_irq,
+>  			       IRQF_SHARED | IRQF_NO_THREAD,
+>  			       rcar_msi_irq_chip.name, pcie);
+> -	if (err < 0) {
+> -		dev_err(dev, "failed to request IRQ: %d\n", err);
+> -		goto err;
+> -	}
+> +	if (err < 0)
+> +		goto report_request_failure;
+>  
+>  	/* setup MSI data target */
+>  	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> @@ -898,7 +894,8 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>  
+>  	return 0;
+>  
+> -err:
+> +report_request_failure:
+> +	dev_err(dev, "failed to request IRQ: %d\n", err);
+>  	irq_domain_remove(msi->domain);
+>  	return err;
+>  }
+> -- 
+> 2.14.3
+> 
