@@ -1,79 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:39624 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751415AbdKTNd2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:33:28 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 11/18] PCI: dwc: artpec6: Use BIT and GENMASK macros
-Date: Mon, 20 Nov 2017 14:32:14 +0100
-Message-Id: <20171120133222.27771-12-niklas.cassel@axis.com>
-In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:50323 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752301AbdKAJ2X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Nov 2017 05:28:23 -0400
+Received: by mail-wm0-f65.google.com with SMTP id s66so3516626wmf.5
+        for <linux-pci@vger.kernel.org>; Wed, 01 Nov 2017 02:28:22 -0700 (PDT)
+Date: Wed, 1 Nov 2017 09:28:19 +0000
+From: Lee Jones <lee.jones@linaro.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-i2c <linux-i2c@vger.kernel.org>
+Subject: Re: [PATCH 09/12] PM / mfd: intel-lpss: Use DPM_FLAG_SMART_SUSPEND
+Message-ID: <20171101092819.thhofiwwjxblef4a@dell>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
+ <5094729.JAaD38WncM@aspire.rjw.lan>
+ <20171031150933.oho2ffvuj3iagx4m@dell>
+ <CAJZ5v0ipSJv0PWPrD3P-yeyD0JWe6EqSJSuZXgjtnFTrMEvpfQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAJZ5v0ipSJv0PWPrD3P-yeyD0JWe6EqSJSuZXgjtnFTrMEvpfQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use BIT and GENMASK macros to improve readability.
+On Tue, 31 Oct 2017, Rafael J. Wysocki wrote:
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+> On Tue, Oct 31, 2017 at 4:09 PM, Lee Jones <lee.jones@linaro.org> wrote:
+> > On Mon, 16 Oct 2017, Rafael J. Wysocki wrote:
+> >
+> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>
+> >> Make the intel-lpss driver set DPM_FLAG_SMART_SUSPEND for its
+> >> devices which will allow them to stay in runtime suspend during
+> >> system suspend unless they need to be reconfigured for some reason.
+> >>
+> >> Also make it avoid resuming its child devices if they have
+> >> DPM_FLAG_SMART_SUSPEND set to allow them to remain in runtime
+> >> suspend during system suspend.
+> >>
+> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> ---
+> >>  drivers/mfd/intel-lpss.c |    6 +++++-
+> >>  1 file changed, 5 insertions(+), 1 deletion(-)
+> >
+> > Is this patch independent?
+> 
+> It depends on the flag definition at least, but functionally it also
+> depends on the PCI support for the flag.
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 4b8ef266dc2f..18075e0fab80 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -39,28 +39,28 @@ struct artpec6_pcie {
- 
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
--#define  PCIECFG_DBG_OEN		(1 << 24)
--#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
--#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
--#define  PCIECFG_CLKREQ_B		(1 << 11)
--#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
--#define  PCIECFG_PLL_ENABLE		(1 << 9)
--#define  PCIECFG_PCLK_ENABLE		(1 << 8)
--#define  PCIECFG_RISRCREN		(1 << 4)
--#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
--#define  PCIECFG_CISRREN		(1 << 2)
--#define  PCIECFG_MACRO_ENABLE		(1 << 0)
-+#define  PCIECFG_DBG_OEN		BIT(24)
-+#define  PCIECFG_CORE_RESET_REQ		BIT(21)
-+#define  PCIECFG_LTSSM_ENABLE		BIT(20)
-+#define  PCIECFG_CLKREQ_B		BIT(11)
-+#define  PCIECFG_REFCLK_ENABLE		BIT(10)
-+#define  PCIECFG_PLL_ENABLE		BIT(9)
-+#define  PCIECFG_PCLK_ENABLE		BIT(8)
-+#define  PCIECFG_RISRCREN		BIT(4)
-+#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
-+#define  PCIECFG_CISRREN		BIT(2)
-+#define  PCIECFG_MACRO_ENABLE		BIT(0)
- 
- #define NOCCFG				0x40
--#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
--#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
--#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
--#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
-+#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
-+#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
-+#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
-+#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
- 
- #define PHY_STATUS			0x118
--#define PHY_COSPLLLOCK			(1 << 0)
-+#define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
-+#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
- 
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
+No problem.  Which tree to you propose this goes through?
+
+> > For my own reference:
+> >   Acked-for-MFD-by: Lee Jones <lee.jones@linaro.org>
+
+
 -- 
-2.14.2
+Lee Jones
+Linaro STMicroelectronics Landing Team Lead
+Linaro.org │ Open source software for ARM SoCs
+Follow Linaro: Facebook | Twitter | Blog
