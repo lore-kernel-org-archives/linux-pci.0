@@ -1,80 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34916 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751221AbdKUOk0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Nov 2017 09:40:26 -0500
-Date: Tue, 21 Nov 2017 08:40:24 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Peter W Newton <peter.newton@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Raj Raina <rajesh.raina@nxp.com>,
-        Rajan Kapoor <rajan.kapoor@nxp.com>,
-        Prabhjot Singh <prabhjot.singh@nxp.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH 1/1 v2 ] PCI: Mobiveil: Add Mobiveil PCIe Host Bridge IP
- driver
-Message-ID: <20171121144024.GF16362@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAFZiPx3yvDY-qOkTeakyKuk+G=bXGFxjEvPxeQLy+qW0jwpBiA@mail.gmail.com>
- <0ebbcfea-4186-5987-bdf1-3288a4e1f907@mobiveil.co.in>
- <20171109234331.GC7629@bhelgaas-glaptop.roam.corp.google.com>
- <CAFZiPx14ABgM8kCxoQVyxS6bbhMpmMmF5+fEg1UEFEgC3RmA2A@mail.gmail.com>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:56347 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933288AbdKAVFo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Nov 2017 17:05:44 -0400
+Date: Wed, 1 Nov 2017 16:05:41 -0500
+From: Rob Herring <robh@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, rjw@rjwysocki.net, dianders@chromium.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [RFC PATCH v10 1/7] dt-bindings: PCI: Add definition of PCIe
+ WAKE# irq and PCI irq
+Message-ID: <20171101210541.vacfufnn2ms65xrw@rob-hp-laptop>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+ <20171027072612.26565-2-jeffy.chen@rock-chips.com>
+ <20171027204513.GA105121@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFZiPx14ABgM8kCxoQVyxS6bbhMpmMmF5+fEg1UEFEgC3RmA2A@mail.gmail.com>
+In-Reply-To: <20171027204513.GA105121@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo, Tanmay]
+On Fri, Oct 27, 2017 at 01:45:17PM -0700, Brian Norris wrote:
+> Hi,
+> 
+> On Fri, Oct 27, 2017 at 03:26:06PM +0800, Jeffy Chen wrote:
+> > We are going to handle PCIe WAKE# pin for PCI bus bridges and PCI
+> > devices in the pci core, so add definitions of the optional PCIe
+> > WAKE# pin for PCI bus bridges and PCI devices.
+> > 
+> > Also add an definition of the optional PCI interrupt pin for PCI
+> > devices to distinguish it from the PCIe WAKE# pin.
+> > 
+> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> > ---
+> > 
+> > Changes in v10: None
+> > Changes in v9:
+> > Add section for PCI devices and rewrite the commit message.
+> > 
+> > Changes in v8:
+> > Add optional "pci", and rewrite commit message.
+> > 
+> > Changes in v7: None
+> > Changes in v6: None
+> > Changes in v5:
+> > Move to pci.txt
+> > 
+> > Changes in v3: None
+> > Changes in v2: None
+> > 
+> >  Documentation/devicetree/bindings/pci/pci.txt | 8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+> > index c77981c5dd18..d4406d4e15ad 100644
+> > --- a/Documentation/devicetree/bindings/pci/pci.txt
+> > +++ b/Documentation/devicetree/bindings/pci/pci.txt
+> > @@ -24,3 +24,11 @@ driver implementation may support the following properties:
+> >     unsupported link speed, for instance, trying to do training for
+> >     unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+> >     for gen2, and '1' for gen1. Any other values are invalid.
+> > +- interrupts: Interrupt specifier for each name in interrupt-names.
+> > +- interrupt-names: May contains "wakeup" for PCIe WAKE# interrupt.
+> 
+> s/contains/contain/
+> 
+> > +
+> > +PCI devices have standardized Device Tree bindings:
+> 
+> This line is a little unclear, especially since there *is* an old
+> documented standard, yet the following text is actually introducing new,
+> non-standard additions.
+> 
+> > +
+> > +- interrupts: Interrupt specifier for each name in interrupt-names.
+> > +- interrupt-names: May contains "wakeup" for PCIe WAKE# interrupt and "pci" for
+> 
+> s/contains/contain/
+> 
+> > +  PCI interrupt.
+> 
+> IMO, since you're trying to augment a standardized binding, you need to
+> be a lot clearer here. I expect you should mention the existing standard
+> (that devices may optionally include an 'interrupts' property that
+> represents the legacy PCI interrupt) and how you're augmenting it (that
+> additional interrupts can be supported optionally, but they require a
+> corresponding 'interrupt-names' property).
 
-On Tue, Nov 21, 2017 at 05:45:16PM +0530, Subrahmanya Lingappa wrote:
-> On Fri, Nov 10, 2017 at 5:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Thu, Nov 09, 2017 at 05:33:03PM +0530, subrahmanya_lingappa wrote:
+There's an additional complication that I'd guess the wakeup is 
+typically a GPIO line and hence a different parent. We have 2 options 
+there. The first is interrupts-extended which is generally implicitly 
+supported (i.e. we only document interrupts). The second is we already 
+have interrupt-map if we have legacy interrupts and can map to different 
+parents. For this to work, we'd have to use a number >4 for the wakeup 
+interrupts.
 
-> >> +     /* create the PCIe root bus */
-> >> +     bus =
-> >> +         pci_create_root_bus(&pdev->dev, 0, &mobiveil_pcie_ops, pcie, &res);
-> >> +     if (!bus)
-> >> +             return -ENOMEM;
-> >> +
-> >> +     /* setup MSI, if enabled */
-> >> +     if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> >> +             mobiveil_pcie_msi_chip.dev = &pcie->pdev->dev;
-> >> +             bus->msi = &mobiveil_pcie_msi_chip;
-> >> +     }
-> >> +
-> >> +     /* setup the kernel resources for the newly added PCIe root bus */
-> >> +     pci_scan_child_bus(bus);
-> >
-> > Use pci_scan_root_bus_bridge().  For example, see
-> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=123db533072e
-> >
-> >> +     pci_assign_unassigned_bus_resources(bus);
-> >> +
-> >> +     list_for_each_entry(child, &bus->children, node)
-> >> +             pcie_bus_configure_settings(child);
-> >> +
-> >> +     pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> >
-> > pci_scan_root_bus_bridge() also takes care of this pci_fixup_irqs()
-> > (which doesn't exist anymore); see
-> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=6ab380957838
-> >
-> I am testing this driver on a board whcih supports  Xilinx's latest
-> Petalinux build environment has Linux-4.9 kernel version with all
-> the patches from Xilinx included in it. But these
-> pci_scan_root_bus_bridge() and friends we added in recent versions
-> will it be ok keeping pci_scan_child_bus() for now ?
-
-I would strongly prefer to use pci_scan_root_bus_bridge().  As I
-mentioned, pci_fixup_irqs() doesn't even exist upstream anymore, so
-this can't be merged as-is.
-
-BTW, Lorenzo, it looks like 9af275be15f7 ("PCI: xgene: Convert PCI
-scan API to pci_scan_root_bus_bridge()") forgot to remove the
-pci_scan_child_bus() call from xgene_pcie_probe().
-
-Bjorn
+Rob
