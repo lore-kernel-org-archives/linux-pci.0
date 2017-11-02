@@ -1,108 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:37815 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750932AbdKJV7D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2017 16:59:03 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1 handling
-Date: Fri, 10 Nov 2017 22:58:42 +0100
-Message-Id: <20171110215843.432-5-marek.vasut+renesas@gmail.com>
-In-Reply-To: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
-References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to and
+ from devices
+To: Sinan Kaya <okaya@codeaurora.org>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-6-jean-philippe.brucker@arm.com>
+ <683a518d-0e22-c855-2416-2e097ec3291d@codeaurora.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <146ab3f9-6031-fba8-6aea-86e392ad7ec5@arm.com>
+Date: Thu, 2 Nov 2017 16:21:17 +0000
+MIME-Version: 1.0
+In-Reply-To: <683a518d-0e22-c855-2416-2e097ec3291d@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Phil Edworthy <phil.edworthy@renesas.com>
+On 21/10/17 16:47, Sinan Kaya wrote:
+> Just some improvement suggestions.
+> 
+> On 10/6/2017 9:31 AM, Jean-Philippe Brucker wrote:
+>> +	spin_lock(&iommu_process_lock);
+>> +	idr_for_each_entry(&iommu_process_idr, process, i) {
+>> +		if (process->pid != pid)
+>> +			continue;
+> if you see this construct a lot, this could be a for_each_iommu_process.
+> 
+>> +
+>> +		if (!iommu_process_get_locked(process)) {
+>> +			/* Process is defunct, create a new one */
+>> +			process = NULL;
+>> +			break;
+>> +		}
+>> +
+>> +		/* Great, is it also bound to this domain? */
+>> +		list_for_each_entry(cur_context, &process->domains,
+>> +				    process_head) {
+>> +			if (cur_context->domain != domain)
+>> +				continue;
+> if you see this construct a lot, this could be a for_each_iommu_process_domain.
+> 
+>> +
+>> +			context = cur_context;
+>> +			*pasid = process->pasid;
+>> +
+>> +			/* Splendid, tell the driver and increase the ref */
+>> +			err = iommu_process_attach_locked(context, dev);
+>> +			if (err)
+>> +				iommu_process_put_locked(process);
+>> +
+>> +			break;
+>> +		}
+>> +		break;
+>> +	}
+>> +	spin_unlock(&iommu_process_lock);
+>> +	put_pid(pid);
+>> +
+>> +	if (context)
+>> +		return err;
+> 
+> I think you should make the section above a independent function and return here when the
+> context is found.
 
-Most PCIe host controllers support L0s and L1 power states via ASPM.
-The R-Car hardware only supports L0s, so when the system suspends and
-resumes we have to manually handle L1.
+Hopefully this code will only be needed for bind(), but moving it to a
+separate function should look better.
 
-When the system suspends, cards can put themselves into L1 and send a
-PM_ENTER_L1 DLLP to the host controller. At this point, we can no longer
-access the card's config registers.
+Thanks,
+Jean
 
-The R-Car host controller will handle taking cards out of L1 as long as
-the host controller has also been transitioned to L1 link state.
 
-Ideally, we would detect the PM_ENTER_L1 DLLP using an interrupt and
-transition the host to L1 immediately. However, this patch just ensures
-that we can talk to cards after they have gone into L1.
-When attempting a config access, it checks to see if the card has gone
-into L1, and if so, does the same for the host controller.
-
-This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
-
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: - Drop extra parenthesis
-    - Use GENMASK()
-    - Fix comment "The HW will handle coming of of L1.", s/of of/out of/
----
- drivers/pci/host/pcie-rcar.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index ab61829db389..068bf9067ec1 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -92,6 +92,13 @@
- #define MACCTLR			0x011058
- #define  SPEED_CHANGE		BIT(24)
- #define  SCRAMBLE_DISABLE	BIT(27)
-+#define PMSR			0x01105c
-+#define  L1FAEG			BIT(31)
-+#define  PM_ENTER_L1RX		BIT(23)
-+#define  PMSTATE		GENMASK(18, 16)
-+#define  PMSTATE_L1		GENMASK(17, 16)
-+#define PMCTLR			0x011060
-+#define  L1_INIT		BIT(31)
- #define MACS2R			0x011078
- #define MACCGSPSETR		0x011084
- #define  SPCNGRSN		BIT(31)
-@@ -191,6 +198,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
- 		unsigned int devfn, int where, u32 *data)
- {
- 	int dev, func, reg, index;
-+	u32 val;
- 
- 	dev = PCI_SLOT(devfn);
- 	func = PCI_FUNC(devfn);
-@@ -232,6 +240,22 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
- 	if (pcie->root_bus_nr < 0)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
-+	/*
-+	 * If we are not in L1 link state and we have received PM_ENTER_L1 DLLP,
-+	 * transition to L1 link state. The HW will handle coming out of L1.
-+	 */
-+	val = rcar_pci_read_reg(pcie, PMSR);
-+	if (val & PM_ENTER_L1RX && (val & PMSTATE) != PMSTATE_L1) {
-+		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
-+
-+		/* Wait until we are in L1 */
-+		while (!(val & L1FAEG))
-+			val = rcar_pci_read_reg(pcie, PMSR);
-+
-+		/* Clear flags indicating link has transitioned to L1 */
-+		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
-+	}
-+
- 	/* Clear errors */
- 	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
- 
--- 
-2.11.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
