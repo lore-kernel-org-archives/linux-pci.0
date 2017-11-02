@@ -1,72 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 30/30] PCI: remove pci_get_bus_and_slot() function
-To: Greg KH <greg@kroah.com>, Timur Tabi <timur@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-31-git-send-email-okaya@codeaurora.org>
- <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
- <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
- <25ec431a-2c1b-d352-f9ef-c663864664b6@codeaurora.org>
- <20171122075124.GA26583@kroah.com>
- <a443e88e-3abd-0dab-2828-9753326e8d5d@codeaurora.org>
- <20171122144959.GA8081@kroah.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <3b1e00b6-c193-8767-ba23-8a8b3eb41e90@codeaurora.org>
-Date: Wed, 22 Nov 2017 10:18:15 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:44300 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934009AbdKBTZw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 15:25:52 -0400
 MIME-Version: 1.0
-In-Reply-To: <20171122144959.GA8081@kroah.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <a55409b0-9839-d9b5-5c90-606c22d0c58b@users.sourceforge.net>
+References: <c598933b-b14f-91a1-c7a3-f4a46ec98e77@users.sourceforge.net>
+ <20171101081831.ssnuqp5b75lbfu5p@verge.net.au> <7047eb7a-cf93-6a56-08db-a5e8bedbfc57@users.sourceforge.net>
+ <20171102081239.bzaunax3uotejqja@verge.net.au> <a55409b0-9839-d9b5-5c90-606c22d0c58b@users.sourceforge.net>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 2 Nov 2017 20:25:50 +0100
+Message-ID: <CAMuHMdVgte--7gOnp9DFZCKUsneT-S9ttO3gninnfhv43BOyKQ@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: rcar: Use common error handling code in rcar_pcie_enable_msi()
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        Simon Horman <horms@verge.net.au>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/22/2017 9:49 AM, Greg KH wrote:
->>> If you have out-of-tree drivers, then yes, they can make a wrapper for
->>> this function like this if they really feel the need, or they can get
->>> their code merged:)
->> Sorry, I guess I should have been clearer.  My suggestion was to fix some of
->> the drivers where the domain can be determined, and for the rest, just mark
->> the old function as deprecated.
-> So the build now gets warnings?  That's annoying, and then someone else
-> will have to make the exact same patches that were created here?
-> 
->> If that's still a terrible idea, well, okay.  I'm just unsure that simply
->> hard-coding a 0 for the domain for some drivers is really a solution.  Don't
->> we really want all drivers to properly support all domains?
-> I bet all of those drivers don't care because they are running only in
-> systems with 1 domain, otherwise they would be broken today, right?  But
-> really, it shouldn't be that hard to get to the "real" PCI device to
-> provide the correct pointer to the domain for most of these, as I
-> pointed out in one patch review already.
+On Thu, Nov 2, 2017 at 2:00 PM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Thu, 2 Nov 2017 13:35:17 +0100
+>
+> * Adjust a jump target so that a specific error message is stored only once
+>   at the end of this function implementation.
+>
+> * Replace two calls of the function "dev_err" by goto statements.
+>
+> This issue was detected by using the Coccinelle software.
+>
+> Link: https://lkml.org/lkml/2017/11/2/140
+> Link: https://lkml.kernel.org/r/<20171102081239.bzaunax3uotejqja@verge.net.au>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>
+> v2:
+> An other jump label was requested by Simon Horman.
+>
+>  drivers/pci/host/pcie-rcar.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 12796eccb2be..f3c1ffdf8072 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -873,18 +873,14 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>         err = devm_request_irq(dev, msi->irq1, rcar_pcie_msi_irq,
+>                                IRQF_SHARED | IRQF_NO_THREAD,
+>                                rcar_msi_irq_chip.name, pcie);
+> -       if (err < 0) {
+> -               dev_err(dev, "failed to request IRQ: %d\n", err);
+> -               goto err;
+> -       }
+> +       if (err < 0)
+> +               goto err_remove_domain;
+>
+>         err = devm_request_irq(dev, msi->irq2, rcar_pcie_msi_irq,
+>                                IRQF_SHARED | IRQF_NO_THREAD,
+>                                rcar_msi_irq_chip.name, pcie);
+> -       if (err < 0) {
+> -               dev_err(dev, "failed to request IRQ: %d\n", err);
+> -               goto err;
+> -       }
+> +       if (err < 0)
+> +               goto err_remove_domain;
+>
+>         /* setup MSI data target */
+>         msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> @@ -898,7 +894,8 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>
+>         return 0;
+>
+> -err:
+> +err_remove_domain:
+> +       dev_err(dev, "failed to request IRQ: %d\n", err);
 
-I agree. Point is 95% drivers do support multiple segments. These are the
-exceptions. 
+Moving the error message is confusing and counter-productive:
+if you need to add another error case + goto err_remove_domain
+later, you'll have to move it back to all the older cases.
 
-We should try to fix them as much as we can. (I'll take a look at Greg's
-suggestion)
+Hence
+NAKed-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-In the end, this API is a backdoor and workarounds the proper APIs and
-usual practices like carrying struct pci_dev pointer.
+>         irq_domain_remove(msi->domain);
+>         return err;
+>  }
 
-I'm trying to shoot that API in the foot so that a developer thinks twice
-before putting number 0 there.
+Gr{oetje,eeting}s,
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+                        Geert
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
