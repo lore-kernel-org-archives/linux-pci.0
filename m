@@ -1,50 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:13824 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751631AbdKYTcp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 14:32:45 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
-CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 1/9] genirq: Export irq_set_msi_desc()
-Date: Sun, 26 Nov 2017 01:02:05 +0530
-Message-ID: <1511638333-22951-2-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:56279 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932173AbdKBUxJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 16:53:09 -0400
+Date: Thu, 2 Nov 2017 21:53:06 +0100
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Subject: Re: [PATCH v2] pci/switchtec: Don't use completion's wait queue
+Message-ID: <20171102205306.bk6ykgmdn7gh37mq@linutronix.de>
+References: <20171004095007.19148-1-bigeasy@linutronix.de>
+ <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
+ <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
+ <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
+ <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
+ <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
+ <20171102171736.rpdlemzw5jueuq5w@linutronix.de>
+ <31ed36b3-2328-8cc4-3aea-8c13a39e63bf@deltatee.com>
+ <20171102180548.f6sc2edxbvw7qeu7@linutronix.de>
+ <2b025b79-b625-dab0-5b68-c77ca0c2bd74@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2b025b79-b625-dab0-5b68-c77ca0c2bd74@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI MSI driver allocates MSI entry for each pci dev which creates msi_desc,
-host driver maps each msi domain with hwirq and then sets msi_desc for
-that irq number. Need to export irq_set_msi_desc() to allow Tegra PCIe
-driver to be compiled as a loadable kernel module.
+On 2017-11-02 14:02:23 [-0600], Logan Gunthorpe wrote:
+> And you still missed what I said and the entire point of the article.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* commit message update
+I'm sorry.
 
- kernel/irq/chip.c | 1 +
- 1 file changed, 1 insertion(+)
+> > See 7c34e3180a01 ("sched/completion: Add lock-free checking of the
+> > blocking case")
+> 
+> Sounds questionable. I don't see how that function could be inlined, even
+> then.
 
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 043bfc35b353..0e74b1051267 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -136,6 +136,7 @@ int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
- {
- 	return irq_set_msi_desc_off(irq, 0, entry);
- }
-+EXPORT_SYMBOL(irq_set_msi_desc);
- 
- /**
-  *	irq_set_chip_data - set irq chip data for an irq
--- 
-2.1.4
+It would have made sense if that function would be used also within the
+file where it was declared but it is not the case.
+So you see the questionable way the READ_ONCE got in there and now you
+may understand that I did not see much of big loss if it wasn't there
+after the rewrite/change.
+
+> Logan
+
+Sebastian
