@@ -1,66 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:5717 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932509AbdKOTLV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Nov 2017 14:11:21 -0500
-From: Neo Jia <cjia@nvidia.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
-        Neo Jia <cjia@nvidia.com>,
-        Kirti Wankhede <kwankhede@nvidia.com>
-Subject: [PATCH 1/1] Change pci_enable_sriov, pci_disable_sriov and pci_reset_function to non-GPL symbol.
-Date: Wed, 15 Nov 2017 11:10:58 -0800
-Message-ID: <1510773058-1482-1-git-send-email-cjia@nvidia.com>
+Return-Path: <SRS0=ZHUD=CA=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=ZHUD=CA=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <wangzhou1@hisilicon.com>
+Subject: [PATCH] MAINTAINERS: Remove Gabriele Paoloni as HiSilicon PCI maintainer
+Date: Thu, 2 Nov 2017 12:01:26 +0000
+Message-ID: <1509624086-9076-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This will allow proprietary linux drivers to adopt SR-IOV spec from
-PCI-SIG, also switch pci_reset_function to non-GPL symbol as it mainly
-does pci config space access per spec.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Signed-off-by: Neo Jia <cjia@nvidia.com>
-Signed-off-by: Kirti Wankhede <kwankhede@nvidia.com>
+Gabriele is now moving to a different role, therefore remove him
+as HiSilicon PCI maintainer
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Acked-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
- drivers/pci/iov.c | 4 ++--
- drivers/pci/pci.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ MAINTAINERS | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 6bacb8995e96..ecc6e7cddc57 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -673,7 +673,7 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+diff --git a/MAINTAINERS b/MAINTAINERS
+index af0cb69..6eb7141 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10471,7 +10471,6 @@ F:	drivers/pci/host/pci-thunder-*
  
- 	return sriov_enable(dev, nr_virtfn);
- }
--EXPORT_SYMBOL_GPL(pci_enable_sriov);
-+EXPORT_SYMBOL(pci_enable_sriov);
- 
- /**
-  * pci_disable_sriov - disable the SR-IOV capability
-@@ -688,7 +688,7 @@ void pci_disable_sriov(struct pci_dev *dev)
- 
- 	sriov_disable(dev);
- }
--EXPORT_SYMBOL_GPL(pci_disable_sriov);
-+EXPORT_SYMBOL(pci_disable_sriov);
- 
- /**
-  * pci_num_vf - return number of VFs associated with a PF device_release_driver
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4a7c6864fdf4..e8318abedc73 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4367,7 +4367,7 @@ int pci_reset_function(struct pci_dev *dev)
- 
- 	return rc;
- }
--EXPORT_SYMBOL_GPL(pci_reset_function);
-+EXPORT_SYMBOL(pci_reset_function);
- 
- /**
-  * pci_reset_function_locked - quiesce and reset a PCI device function
+ PCIE DRIVER FOR HISILICON
+ M:	Zhou Wang <wangzhou1@hisilicon.com>
+-M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
 -- 
 2.7.4
