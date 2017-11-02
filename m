@@ -1,81 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 Nov 2017 16:44:06 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: designware-ep: Fix find_first_zero_bit()
- usage
-Message-ID: <20171121164406.GA15713@red-moon>
-References: <20171117150041.30509-1-niklas.cassel@axis.com>
- <20171117150041.30509-2-niklas.cassel@axis.com>
- <20171117184337.GA26321@red-moon>
- <4376af2c-7e90-f9b4-7f53-65c00de55e90@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:54650 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755757AbdKBPHc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 11:07:32 -0400
+Date: Thu, 2 Nov 2017 16:07:29 +0100
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Subject: Re: [PATCH v2] pci/switchtec: Don't use completion's wait queue
+Message-ID: <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
+References: <20171004095007.19148-1-bigeasy@linutronix.de>
+ <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
+ <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
+ <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4376af2c-7e90-f9b4-7f53-65c00de55e90@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 21, 2017 at 01:24:53PM +0530, Kishon Vijay Abraham I wrote:
-> Hi Lorenzo,
+On 2017-10-05 12:46:34 [-0600], Logan Gunthorpe wrote:
+> I still don't want this merged as it makes the code less clear, but I tested
+> it and it does not work.
 > 
-> On Saturday 18 November 2017 12:13 AM, Lorenzo Pieralisi wrote:
-> > [+Kishon - please CC him next time]
-> > 
-> > On Fri, Nov 17, 2017 at 04:00:40PM +0100, Niklas Cassel wrote:
-> >> find_first_zero_bit()'s parameter 'size' is defined in bits,
-> >> not in bytes.
-> >>
-> >> find_first_zero_bit() was called with size in bytes rather than bits,
-> >> which thus defined a too low upper limit, causing
-> >> dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
-> >> and bar 5, which made bar 5 overwrite the settings set by bar 4.
-> >>
-> >> Fix this by using replacing find_first_zero_bit() with ffz(),
-> >> since ffz() only works on a single 'unsigned long' and therefore
-> >> does not need a size argument.
-> >>
-> >> Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
-> >> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> >> ---
-> >>  drivers/pci/dwc/pcie-designware-ep.c | 6 ++----
-> >>  1 file changed, 2 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> >> index d53d5f168363..ab9a9e160daf 100644
-> >> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> >> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> >> @@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
-> >>  	u32 free_win;
-> >>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> >>  
-> >> -	free_win = find_first_zero_bit(&ep->ib_window_map,
-> >> -				       sizeof(ep->ib_window_map));
-> >> +	free_win = ffz(ep->ib_window_map);
-> > 
-> > You fix the bug at hand but code suffers from the same issue since we
-> > should be checking the value against ~0UL first ie if size in bits <
-> > num_ib_windows (that I think it is unlikely anyway but while at it let's
-> > think if we can improve this).
-> > 
-> > @Kishon: maybe we should add a static upper size and declare a
-> > static bitmap accordingly (and still use find_first_zero_bit()) ?
-> > 
-> > I think the check against ~0UL should be added anyway, let's get
-> > Kishon's opinion before a v3 (if any).
+> On 05/10/17 04:51 AM, Sebastian Andrzej Siewior wrote:
 > 
-> Yeah, for both ffz and find_first_zero_bit, the results are undefined if no
-> zero exists.
+> > @@ -451,7 +452,7 @@ static void mrpc_complete_cmd(struct switchtec_dev *stdev)
+> >   		      stuser->read_len);
+> >   out:
+> > -	complete_all(&stuser->comp);
+> > +	wake_up_interruptible(&stuser->cmd_comp);
 > 
-> I'm thinking if we should just use
-> find_first_zero_bit(&ep->ib_window_map, ep->num_ib_windows) after checking if
-> there are some '0' bits left.
+> I think you forgot to set cmd_done here. Once I add that, it did start
+> working correctly.
 
-Well yes but first the &ep->ib_window_map must be sized accordingly.
+oh, makes sense.
 
-Lorenzo
+> >   	list_del_init(&stuser->list);
+> >   	stuser_put(stuser);
+> >   	stdev->mrpc_busy = 0;
+> > @@ -721,10 +722,11 @@ static ssize_t switchtec_dev_read(struct file *filp, char __user *data,
+> >   	mutex_unlock(&stdev->mrpc_mutex);
+> >   	if (filp->f_flags & O_NONBLOCK) {
+> > -		if (!try_wait_for_completion(&stuser->comp))
+> > +		if (!stuser->cmd_done)
+> >   			return -EAGAIN;
+> 
+> I'd probably also suggest using READ_ONCE when reading cmd_done.
+
+Why so? There is no way the compiler could have cached the value
+somehow.
+
+> Logan
+
+Sebastian
