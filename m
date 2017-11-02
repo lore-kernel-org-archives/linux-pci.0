@@ -1,73 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V2 1/7] PCI: protect restore with device lock to be consistent
-Date: Mon, 27 Nov 2017 01:20:22 -0500
-Message-Id: <1511763628-11856-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:39148 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932547AbdKBUCZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Nov 2017 16:02:25 -0400
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+References: <20171004095007.19148-1-bigeasy@linutronix.de>
+ <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
+ <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
+ <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
+ <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
+ <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
+ <20171102171736.rpdlemzw5jueuq5w@linutronix.de>
+ <31ed36b3-2328-8cc4-3aea-8c13a39e63bf@deltatee.com>
+ <20171102180548.f6sc2edxbvw7qeu7@linutronix.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <2b025b79-b625-dab0-5b68-c77ca0c2bd74@deltatee.com>
+Date: Thu, 2 Nov 2017 14:02:23 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171102180548.f6sc2edxbvw7qeu7@linutronix.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2] pci/switchtec: Don't use completion's wait queue
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit b014e96d1abb ("PCI: Protect pci_error_handlers->reset_notify() usage
-with device_lock()") added protection around pci_dev_restore() function so
-that device specific remove callback does not cause a race condition
-against hotplug.
-
-pci_dev_lock() usage has been forgotten in two different places in the
-code. Adding locks for pci_slot_restore() and moving pci_dev_restore()
-inside the locks for pci_try_reset_function().
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6078dfc..23681f4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4344,9 +4344,9 @@ int pci_try_reset_function(struct pci_dev *dev)
- 
- 	pci_dev_save_and_disable(dev);
- 	rc = __pci_reset_function_locked(dev);
-+	pci_dev_restore(dev);
- 	pci_dev_unlock(dev);
- 
--	pci_dev_restore(dev);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(pci_try_reset_function);
-@@ -4546,7 +4546,9 @@ static void pci_slot_restore(struct pci_slot *slot)
- 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
- 		if (!dev->slot || dev->slot != slot)
- 			continue;
-+		pci_dev_lock(dev);
- 		pci_dev_restore(dev);
-+		pci_dev_unlock(dev);
- 		if (dev->subordinate)
- 			pci_bus_restore(dev->subordinate);
- 	}
--- 
-1.9.1
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 02/11/17 12:05 PM, Sebastian Andrzej Siewior wrote:
+> On 2017-11-02 11:23:16 [-0600], Logan Gunthorpe wrote:
+>>
+>> Well, you clearly didn't read the article I sent or even what I said. But
+> 
+> I did, I just didn't manage to make the link.
+> The futex example looks like compiler optimisation which should not have
+> happen and would be ideal for READ_ONCE, yes. But this is not the case
+> here and this is what I pointed out.
+
+And you still missed what I said and the entire point of the article.
+
+> See 7c34e3180a01 ("sched/completion: Add lock-free checking of the
+> blocking case")
+
+Sounds questionable. I don't see how that function could be inlined, 
+even then.
+
+Logan
