@@ -1,82 +1,42 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:39478 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934407AbdKBUzO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Nov 2017 16:55:14 -0400
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+References: <20171004095007.19148-1-bigeasy@linutronix.de>
+ <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
+ <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
+ <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
+ <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
+ <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
+ <20171102171736.rpdlemzw5jueuq5w@linutronix.de>
+ <31ed36b3-2328-8cc4-3aea-8c13a39e63bf@deltatee.com>
+ <20171102180548.f6sc2edxbvw7qeu7@linutronix.de>
+ <2b025b79-b625-dab0-5b68-c77ca0c2bd74@deltatee.com>
+ <20171102205306.bk6ykgmdn7gh37mq@linutronix.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <0f0c55dc-591b-e32f-b366-057f254edc11@deltatee.com>
+Date: Thu, 2 Nov 2017 14:55:12 -0600
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0i4yFGyqAZ6QqG7q1_xNfjMNHkPk3o0WuBvwKFeM2nXeg@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
- <6330680.LdxjlP4uri@aspire.rjw.lan> <2932219.eEdIVn6WWf@aspire.rjw.lan>
- <CAPDyKFrbnLjBzY3yE1OyXOpG3--K+C-1BCWQtyL9S6zQ5cmdhw@mail.gmail.com> <CAJZ5v0i4yFGyqAZ6QqG7q1_xNfjMNHkPk3o0WuBvwKFeM2nXeg@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Sat, 11 Nov 2017 01:41:51 +0100
-Message-ID: <CAJZ5v0i1LEAdfjDAbLfEKTiYR3MT+69-BR2eR=ie-oioXHWCwg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20171102205306.bk6ykgmdn7gh37mq@linutronix.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v2] pci/switchtec: Don't use completion's wait queue
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Nov 11, 2017 at 12:45 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> On Fri, Nov 10, 2017 at 10:09 AM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
->> On 8 November 2017 at 14:25, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>
->>> Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
->>> instruct the PM core and middle-layer (bus type, PM domain, etc.)
->>> code that it is desirable to leave the device in runtime suspend
->>> after system-wide transitions to the working state (for example,
->>> the device may be slow to resume and it may be better to avoid
->>> resuming it right away).
->>>
->>> Generally, the middle-layer code involved in the handling of the
->>> device is expected to indicate to the PM core whether or not the
->>> device may be left in suspend with the help of the device's
->>> power.may_skip_resume status bit.  That has to happen in the "noirq"
->>> phase of the preceding system suspend (or analogous) transition.
->>> The middle layer is then responsible for handling the device as
->>> appropriate in its "noirq" resume callback which is executed
->>> regardless of whether or not the device may be left suspended, but
->>> the other resume callbacks (except for ->complete) will be skipped
->>> automatically by the core if the device really can be left in
->>> suspend.
->>
->> I don't understand the reason to why you need to skip invoking resume
->> callbacks to achieve this behavior, could you elaborate on that?
->
-> The reason why it is done this way is because that takes less code and
-> is easier (or at least less error-prone, because it avoids repeating
-> patterns in middle layers).
 
-Actually, it also is a matter of correctness, at least to some extent.
 
-Namely, if the parent or any supplier of the device has
-power.must_resume clear in dpm_noirq_resume_devices(), then the device
-should not be touched during the whole system resume transition
-(because the access may very well go through the suspended parent or
-supplier) and the most straightforward way to make that happen is to
-avoid running the code that may touch the device.  [Arguably, if
-middle layers were made responsible for handling that, they would need
-to do pretty much the same thing and so there is no reason for not
-doing it in the core.]
+On 02/11/17 02:53 PM, Sebastian Andrzej Siewior wrote:
+> It would have made sense if that function would be used also within the
+> file where it was declared but it is not the case.
+> So you see the questionable way the READ_ONCE got in there and now you
+> may understand that I did not see much of big loss if it wasn't there
+> after the rewrite/change.
 
-Allowing the "noirq" callback from middle layers to run in that case
-is a stretch already, but since genpd needs that, well, tough nuggets.
+Yes, but I feel like it still makes sense for it to be there (per the 
+article I linked), despite the incorrect justification.
 
-All of that said, if there is a middle layer wanting to set
-power.skip_resume and needing to do something different for the resume
-callbacks, then this piece can be moved from the core to the middle
-layers at any time later.  So far there's none, though.  At least not
-in this patch series.
-
-Thanks,
-Rafael
+Logan
