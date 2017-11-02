@@ -1,101 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:42224 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752406AbdKTTdL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 14:33:11 -0500
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v15 3/5] hinic: Replace PCI pool old API
-Date: Mon, 20 Nov 2017 20:32:45 +0100
-Message-Id: <20171120193247.8187-4-romain.perier@gmail.com>
-In-Reply-To: <20171120193247.8187-1-romain.perier@gmail.com>
-References: <20171120193247.8187-1-romain.perier@gmail.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:46164 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750836AbdKBJN0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 05:13:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <20171031223936.27549-15-niklas.cassel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com> <20171031223936.27549-15-niklas.cassel@axis.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 2 Nov 2017 10:13:25 +0100
+Message-ID: <CAK8P3a1yGwyZPzd2-usqLe=BiQpdFsyyFOhpP1ZyaCb16rzCSQ@mail.gmail.com>
+Subject: Re: [PATCH v3 14/17] PCI: dwc: artpec6: Add support for endpoint mode
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-arm-kernel@axis.com
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
+On Tue, Oct 31, 2017 at 11:39 PM, Niklas Cassel <niklas.cassel@axis.com> wrote:
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+It seems like you are missing a changelog text. Please explain what
+your work is good for
+in any patch you send.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
----
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++++-----
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+> V3:
+> * Removed ifdefs around match table and match table data.
+> * Removed ifdefs in probe, use dummy implementations instead.
 
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-index 7d95f0866fb0..28a81ac97af5 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-@@ -143,7 +143,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
- 	struct hinic_hwif *hwif = cmdqs->hwif;
- 	struct pci_dev *pdev = hwif->pdev;
- 
--	cmdq_buf->buf = pci_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
-+	cmdq_buf->buf = dma_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
- 				       &cmdq_buf->dma_addr);
- 	if (!cmdq_buf->buf) {
- 		dev_err(&pdev->dev, "Failed to allocate cmd from the pool\n");
-@@ -161,7 +161,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
- void hinic_free_cmdq_buf(struct hinic_cmdqs *cmdqs,
- 			 struct hinic_cmdq_buf *cmdq_buf)
- {
--	pci_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
-+	dma_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
- }
- 
- static unsigned int cmdq_wqe_size_from_bdlen(enum bufdesc_len len)
-@@ -875,7 +875,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
- 	int err;
- 
- 	cmdqs->hwif = hwif;
--	cmdqs->cmdq_buf_pool = pci_pool_create("hinic_cmdq", pdev,
-+	cmdqs->cmdq_buf_pool = dma_pool_create("hinic_cmdq", &pdev->dev,
- 					       HINIC_CMDQ_BUF_SIZE,
- 					       HINIC_CMDQ_BUF_SIZE, 0);
- 	if (!cmdqs->cmdq_buf_pool)
-@@ -916,7 +916,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
- 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
- 
- err_saved_wqs:
--	pci_pool_destroy(cmdqs->cmdq_buf_pool);
-+	dma_pool_destroy(cmdqs->cmdq_buf_pool);
- 	return err;
- }
- 
-@@ -942,5 +942,5 @@ void hinic_free_cmdqs(struct hinic_cmdqs *cmdqs)
- 
- 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
- 
--	pci_pool_destroy(cmdqs->cmdq_buf_pool);
-+	dma_pool_destroy(cmdqs->cmdq_buf_pool);
- }
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-index b35583400cb6..23f8d39eab68 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-@@ -157,7 +157,7 @@ struct hinic_cmdq {
- struct hinic_cmdqs {
- 	struct hinic_hwif       *hwif;
- 
--	struct pci_pool         *cmdq_buf_pool;
-+	struct dma_pool         *cmdq_buf_pool;
- 
- 	struct hinic_wq         *saved_wqs;
- 
--- 
-2.14.1
+I think there is room for more of the same ;-)
+
+>
+> +#ifdef CONFIG_PCIE_ARTPEC6_HOST
+>  static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+>  {
+>         struct dw_pcie *pci = artpec6_pcie->pci;
+> @@ -231,11 +257,92 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+>
+>         return 0;
+>  }
+> +#else
+> +static inline int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+> +                                       struct platform_device *pdev)
+> +{
+> +       return -ENODEV;
+> +}
+> +#endif
+
+
+Can you try replacing the #ifdef with
+
+
+        if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_HOST))
+                 return -ENODEV;
+
+at the start of artpec6_pcie_enable_interrupts? I think that would improve
+readability here.
+
+> +static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
+> +                              struct platform_device *pdev)
+> +{
+> +       int ret;
+> +       struct dw_pcie_ep *ep;
+> +       struct resource *res;
+> +       struct device *dev = &pdev->dev;
+> +       struct dw_pcie *pci = artpec6_pcie->pci;
+
+The same trick should work here with the other symbol.
+
+        Arnd
