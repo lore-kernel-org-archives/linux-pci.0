@@ -1,47 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:50982 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750777AbdKHJPw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:15:52 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH] PCI: rcar: Add compatible string for r8a7796
-Date: Wed,  8 Nov 2017 10:15:21 +0100
-Message-Id: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
+Received: from mout.web.de ([212.227.15.4]:64772 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750858AbdKBNAX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Nov 2017 09:00:23 -0400
+Subject: [PATCH v2] PCI: rcar: Use common error handling code in
+ rcar_pcie_enable_msi()
+To: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        Simon Horman <horms@verge.net.au>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+References: <c598933b-b14f-91a1-c7a3-f4a46ec98e77@users.sourceforge.net>
+ <20171101081831.ssnuqp5b75lbfu5p@verge.net.au>
+ <7047eb7a-cf93-6a56-08db-a5e8bedbfc57@users.sourceforge.net>
+ <20171102081239.bzaunax3uotejqja@verge.net.au>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <a55409b0-9839-d9b5-5c90-606c22d0c58b@users.sourceforge.net>
+Date: Thu, 2 Nov 2017 14:00:10 +0100
+MIME-Version: 1.0
+In-Reply-To: <20171102081239.bzaunax3uotejqja@verge.net.au>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Thu, 2 Nov 2017 13:35:17 +0100
 
-Add compatible string for the RCar M3 R8A7796 SoC.
+* Adjust a jump target so that a specific error message is stored only once
+  at the end of this function implementation.
 
-Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
+* Replace two calls of the function "dev_err" by goto statements.
+
+This issue was detected by using the Coccinelle software.
+
+Link: https://lkml.org/lkml/2017/11/2/140
+Link: https://lkml.kernel.org/r/<20171102081239.bzaunax3uotejqja@verge.net.au>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/pci/host/pcie-rcar.c | 1 +
- 1 file changed, 1 insertion(+)
+
+v2:
+An other jump label was requested by Simon Horman.
+
+ drivers/pci/host/pcie-rcar.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 12796eccb2be..8b51208875fc 100644
+index 12796eccb2be..f3c1ffdf8072 100644
 --- a/drivers/pci/host/pcie-rcar.c
 +++ b/drivers/pci/host/pcie-rcar.c
-@@ -1062,6 +1062,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
- 	{ .compatible = "renesas,pcie-rcar-gen2",
- 	  .data = rcar_pcie_hw_init_gen2 },
- 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
-+	{ .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
- 	{ .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
- 	{},
- };
+@@ -873,18 +873,14 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+ 	err = devm_request_irq(dev, msi->irq1, rcar_pcie_msi_irq,
+ 			       IRQF_SHARED | IRQF_NO_THREAD,
+ 			       rcar_msi_irq_chip.name, pcie);
+-	if (err < 0) {
+-		dev_err(dev, "failed to request IRQ: %d\n", err);
+-		goto err;
+-	}
++	if (err < 0)
++		goto err_remove_domain;
+ 
+ 	err = devm_request_irq(dev, msi->irq2, rcar_pcie_msi_irq,
+ 			       IRQF_SHARED | IRQF_NO_THREAD,
+ 			       rcar_msi_irq_chip.name, pcie);
+-	if (err < 0) {
+-		dev_err(dev, "failed to request IRQ: %d\n", err);
+-		goto err;
+-	}
++	if (err < 0)
++		goto err_remove_domain;
+ 
+ 	/* setup MSI data target */
+ 	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+@@ -898,7 +894,8 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+ 
+ 	return 0;
+ 
+-err:
++err_remove_domain:
++	dev_err(dev, "failed to request IRQ: %d\n", err);
+ 	irq_domain_remove(msi->domain);
+ 	return err;
+ }
 -- 
-2.11.0
+2.15.0
