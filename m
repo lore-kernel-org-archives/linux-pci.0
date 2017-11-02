@@ -1,188 +1,130 @@
-Return-Path: <SRS0=OllH=CI=nvidia.com=treding@kernel.org>
-Return-Path: <SRS0=OllH=CI=nvidia.com=treding@kernel.org>
-Date: Fri, 10 Nov 2017 10:44:56 +0100
-From: Thierry Reding <treding@nvidia.com>
-To: subrahmanya_lingappa <l.subrahmanya@mobiveil.co.in>
-CC: Bjorn Helgaas <helgaas@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
-	<bhelgaas@google.com>, <linux-tegra@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <kthota@nvidia.com>, <swarren@nvidia.com>,
-	<mmaddireddy@nvidia.com>, Michal Simek <michal.simek@xilinx.com>,
-	=?utf-8?B?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>, Simon Horman
-	<horms@verge.net.au>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
-Message-ID: <20171110094456.GB25067@ulmo>
-References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
- <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
- <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
- <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
- <1686e861-79ac-75eb-b905-769253c6f79e@mobiveil.co.in>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:55516 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751587AbdKBRT5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 13:19:57 -0400
+Date: Thu, 2 Nov 2017 18:19:56 +0100
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Subject: [PATCH v3] pci/switchtec: Don't use completion's wait queue
+Message-ID: <20171102171955.lvnvqnwl4qwhlmdk@linutronix.de>
+References: <20171004095007.19148-1-bigeasy@linutronix.de>
+ <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
+ <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
+ <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
+ <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
+ <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <1686e861-79ac-75eb-b905-769253c6f79e@mobiveil.co.in>
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="+pHx0qQiF2pBVqBT"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---+pHx0qQiF2pBVqBT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The poll callback is using completion's wait_queue_head_t member and
+puts it in poll_wait() so the poll() caller gets a wakeup after command
+completed. This does not work on RT because we don't have a
+wait_queue_head_t in our completion implementation. Nobody in tree does
+like that in tree so this is the only driver that breaks.
 
-On Fri, Nov 10, 2017 at 06:17:16AM +0530, subrahmanya_lingappa wrote:
-> Bjorn,
->=20
-> On 11/9/2017 11:44 PM, Bjorn Helgaas wrote:
-> > [+cc Lorenzo]
-> >=20
-> > On Thu, Nov 09, 2017 at 12:48:14PM +0530, Vidya Sagar wrote:
-> > > On Thursday 09 November 2017 02:55 AM, Bjorn Helgaas wrote:
-> > > > On Mon, Nov 06, 2017 at 11:33:07PM +0530, Vidya Sagar wrote:
-> > > > > limits MSI target address to only 32-bit region to enable
-> > > > > some of the PCIe end points where only 32-bit MSIs
-> > > > > are supported work properly.
-> > > > > One example being Marvel SATA controller
-> > > > >=20
-> > > > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> > > > > ---
-> > > > >  drivers/pci/host/pci-tegra.c | 2 +-
-> > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > >=20
-> > > > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-=
-tegra.c
-> > > > > index 1987fec1f126..03d3dcdd06c2 100644
-> > > > > --- a/drivers/pci/host/pci-tegra.c
-> > > > > +++ b/drivers/pci/host/pci-tegra.c
-> > > > > @@ -1531,7 +1531,7 @@ static int tegra_pcie_enable_msi(struct teg=
-ra_pcie *pcie)
-> > > > >  	}
-> > > > >  	/* setup AFI/FPCI range */
-> > > > > -	msi->pages =3D __get_free_pages(GFP_KERNEL, 0);
-> > > > > +	msi->pages =3D __get_free_pages(GFP_DMA, 0);
-> > > > >  	msi->phys =3D virt_to_phys((void *)msi->pages);
-> > >=20
-> > > > Should this be GFP_DMA32?  See the comment above the GFP_DMA
-> > > > definition.
-> > >=20
-> > > looking at the comments for both GFP_DMA32 and GFP_DMA, I thought GFP=
-_DMA32
-> > > is the correct one to use, but, even with that I got >32-bit addresse=
-s.
-> > > GFP_DMA always gives addresses in <4GB boundary (i.e. 32-bit).
-> > > I didn't dig into it to find out why is this the case.
-> >=20
-> > This sounds worth looking into (but maybe we don't need the
-> > __get_free_pages() at all; see below).  Maybe there's some underlying
-> > bug.  My laptop shows this, which looks like it might be related:
-> >=20
-> >   Zone ranges:
-> >     DMA      [mem 0x0000000000001000-0x0000000000ffffff]
-> >     DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
-> >     Normal   [mem 0x0000000100000000-0x00000004217fffff]
-> >     Device   empty
-> >=20
-> > What does your machine show?
-> >=20
-> > > > Should we be using virt_to_phys() here?  Where exactly is the
-> > > > result ("msi->phys") used, i.e., what bus will that address appear
-> > > > on?  If it appears on the PCI side, this should probably use
-> > > > something like pcibios_resource_to_bus().
-> > >=20
-> > > This address is written to two places.  First, into host's internal
-> > > register to let it know that when an incoming memory write comes
-> > > with this address, raise an MSI interrupt instead of forwarding it
-> > > to memory subsystem.  Second, into 'Message Address' field of
-> > > 'Message Address Register for MSI' register in end point's
-> > > configuration space (this is done by MSI framework) for end point to
-> > > know which address to be used to generate MSI interrupt.
-> >=20
-> > Hmmm, ISTR some past discussion about this.  Here's a little: [1, 2].
-> > And this commit [3] sounds like it describes a similar hardware
-> > situation with Tegra where the host bridge intercepts the MSI target
-> > address, so writes to it never reach system memory.  That means that
-> > Tegra doesn't need to allocate system memory at all.
-> >=20
-> > Is your system similar?  Can you just statically allocate a little bus
-> > address space, use that for the MSI target address, and skip the
-> > __get_free_pages()?
-> >=20
-> > > > Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a
-> > > > similar problem?  They both use GFP_KERNEL, then virt_to_phys(),
-> > > > then write the result of virt_to_phys() using a 32-bit register
-> > > > write.
-> > >=20
-> > > Well, if those systems deal with 64-bit addresses and when an end
-> > > point is connected which supports only 32-bit MSI addresses, this
-> > > problem will surface when __get_free_pages() returns an address that
-> > > translates to a >32-bit address after virt_to_phys() call on it.
-> >=20
-> > I'd like to hear from the R-Car and Xilinx folks about (1) whether
-> > there's a potential issue with truncating a 64-bit address, and
-> > (2) whether that hardware works like Tegra, where the MSI write never
-> > reaches memory so we don't actually need to allocate a page.
-> >=20
->=20
-> it is so, at least drivers/pci/host/pcie-xilinx.c driver, MSI data is nev=
-er
-> read from the msi_pages physical
-> memory allocated, data is always intercepted, caught and fed from one of =
-the
-> HW FIFO register XILINX_PCIE_REG_RPIFR2. Here too __get_free_pages was us=
-ed
-> to allocate msi_pages just to get a real memory address to program in the
-> MSI address in PCIe endpoints config register.
->=20
-> MSI handling code from pcie-xilinx.c
->=20
-> 	if (status & (XILINX_PCIE_INTR_INTX | XILINX_PCIE_INTR_MSI)) {
-> 		.
-> 		.
->=20
-> 		/* Decode the IRQ number */
-> 		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
-> 			val =3D pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
-> 				XILINX_PCIE_RPIFR2_MSG_DATA;
-> 		} else {
-> 			val =3D (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
-> 				XILINX_PCIE_RPIFR1_INTR_SHIFT;
-> 			val =3D irq_find_mapping(port->leg_domain, val);
-> 		}
-> 	=09
-> 		.
-> 		.
-> 	=09
-> 		/* Handle the interrupt */
-> 		if (IS_ENABLED(CONFIG_PCI_MSI) ||
-> 		    !(val & XILINX_PCIE_RPIFR1_MSI_INTR))
-> 			generic_handle_irq(val);
-> 	}
+Instead of using the completion here is waitqueue with a status flag as
+suggested by Logan.
 
-A side-note: this looks like a bug to me. In case of an MSI, the val
-variable will have been overwritten by the MSI decode branch above, so
-it seems to me like the conditional down here isn't guaranteed to work
-and depends on what MSI was actually received?
+I don't have the HW so I have no idea if it works as expected, so please
+test it.
 
-Don't you need to store the interrupt status in a variable separate from
-the value that you're using to find which interrupt was received?
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+v2…v3: add a READ_ONCE while accessing ->cmd_done
 
-Thierry
+ drivers/pci/switch/switchtec.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
---+pHx0qQiF2pBVqBT
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloFdRcACgkQ3SOs138+
-s6EAcQ/7BAQt8ZPpv4Xdh2hk5u4+RXaFvQXRLuFzdC5p69dwOmllBpWvatk6/WWb
-dCYjc96wRLTGrUgvfMMIrcd4DKfkOFdcS+Ok5haoOftMhuWM05FCSFqgmQLnz9Mo
-mXusMYSVVxtPMZ9VDh9gUNjWd51tjZmiOEmOnfbBzW2n8BnQQz5W+6JNRkeLX+dx
-NfiD3Hv0M217lLJPNaD10KHS2RPaPzUzlvWktNvt1gq3vZHkLHKTMutgm0n1Ps6z
-joJFjWUAA0rlV59NEde9w93mXR5ra2+uDGosqZfBKnmg+WLyw4jZUvHbwgzPsKWY
-y2qNgg1BnK+tsBX+mgKqot3wR4rHdhx6NaCwyi2fcVLLqLGvlrD83wUSzty+4+t+
-dplbavwbFUOxZX2/xghlplXhDtr8bTnx7vQUPdPxd4/IigQKcFZV/rzivsXRNzNK
-AQXXprSa2XNG6rRt/0GFMZjpQj6aymnvHxtXUhvITXrV+np/+MwBXk38vqhiX3Ir
-EijOV1thB7bpMKI2iPGT/DFRFTj0yImDddggkKxRjTEb0HwUT5klmF+nKbiKp5PL
-agsCAfFOLbKrovroVzcjJ+5BR7oVofzG0LrRETKEvb0yoFPUTz9EliT2K3YW/K5s
-THsoEALGohT7wRMJPs0n5dypB+MPi/rmpDreGhztPm0lXbVynWw=
-=B8Q2
------END PGP SIGNATURE-----
-
---+pHx0qQiF2pBVqBT--
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -306,10 +306,11 @@ struct switchtec_user {
+ 
+ 	enum mrpc_state state;
+ 
+-	struct completion comp;
++	wait_queue_head_t cmd_comp;
+ 	struct kref kref;
+ 	struct list_head list;
+ 
++	bool cmd_done;
+ 	u32 cmd;
+ 	u32 status;
+ 	u32 return_code;
+@@ -331,7 +332,7 @@ static struct switchtec_user *stuser_cre
+ 	stuser->stdev = stdev;
+ 	kref_init(&stuser->kref);
+ 	INIT_LIST_HEAD(&stuser->list);
+-	init_completion(&stuser->comp);
++	init_waitqueue_head(&stuser->cmd_comp);
+ 	stuser->event_cnt = atomic_read(&stdev->event_cnt);
+ 
+ 	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
+@@ -414,7 +415,7 @@ static int mrpc_queue_cmd(struct switcht
+ 	kref_get(&stuser->kref);
+ 	stuser->read_len = sizeof(stuser->data);
+ 	stuser_set_state(stuser, MRPC_QUEUED);
+-	init_completion(&stuser->comp);
++	stuser->cmd_done = false;
+ 	list_add_tail(&stuser->list, &stdev->mrpc_queue);
+ 
+ 	mrpc_cmd_submit(stdev);
+@@ -451,7 +452,8 @@ static void mrpc_complete_cmd(struct swi
+ 		      stuser->read_len);
+ 
+ out:
+-	complete_all(&stuser->comp);
++	stuser->cmd_done = true;
++	wake_up_interruptible(&stuser->cmd_comp);
+ 	list_del_init(&stuser->list);
+ 	stuser_put(stuser);
+ 	stdev->mrpc_busy = 0;
+@@ -721,10 +723,11 @@ static ssize_t switchtec_dev_read(struct
+ 	mutex_unlock(&stdev->mrpc_mutex);
+ 
+ 	if (filp->f_flags & O_NONBLOCK) {
+-		if (!try_wait_for_completion(&stuser->comp))
++		if (!READ_ONCE(stuser->cmd_done))
+ 			return -EAGAIN;
+ 	} else {
+-		rc = wait_for_completion_interruptible(&stuser->comp);
++		rc = wait_event_interruptible(stuser->cmd_comp,
++					      stuser->cmd_done);
+ 		if (rc < 0)
+ 			return rc;
+ 	}
+@@ -772,7 +775,7 @@ static unsigned int switchtec_dev_poll(s
+ 	struct switchtec_dev *stdev = stuser->stdev;
+ 	int ret = 0;
+ 
+-	poll_wait(filp, &stuser->comp.wait, wait);
++	poll_wait(filp, &stuser->cmd_comp, wait);
+ 	poll_wait(filp, &stdev->event_wq, wait);
+ 
+ 	if (lock_mutex_and_test_alive(stdev))
+@@ -780,7 +783,7 @@ static unsigned int switchtec_dev_poll(s
+ 
+ 	mutex_unlock(&stdev->mrpc_mutex);
+ 
+-	if (try_wait_for_completion(&stuser->comp))
++	if (READ_ONCE(stuser->cmd_done))
+ 		ret |= POLLIN | POLLRDNORM;
+ 
+ 	if (stuser->event_cnt != atomic_read(&stdev->event_cnt))
+@@ -1255,7 +1258,8 @@ static void stdev_kill(struct switchtec_
+ 
+ 	/* Wake up and kill any users waiting on an MRPC request */
+ 	list_for_each_entry_safe(stuser, tmpuser, &stdev->mrpc_queue, list) {
+-		complete_all(&stuser->comp);
++		stuser->cmd_done = true;
++		wake_up_interruptible(&stuser->cmd_comp);
+ 		list_del_init(&stuser->list);
+ 		stuser_put(stuser);
+ 	}
