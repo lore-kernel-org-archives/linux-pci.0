@@ -1,44 +1,116 @@
-Return-Path: <SRS0=99Jw=C2=suse.com=JBeulich@kernel.org>
-Return-Path: <SRS0=99Jw=C2=suse.com=JBeulich@kernel.org>
-Message-Id: <5A1D3E9D0200007800192A44@prv-mh.provo.novell.com>
-Date: Tue, 28 Nov 2017 02:46:53 -0700
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "=?UTF-8?Q?Christian=20K=C3=B6nig?=" <christian.koenig@amd.com>
-Cc: <helgaas@kernel.org>,<amd-gfx@lists.freedesktop.org>,
- <dri-devel@lists.freedesktop.org>,
- "xen-devel" <xen-devel@lists.xen.org>,
- "Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [Xen-devel] [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on
- AMD Family 15h (Models 30h-3fh) Processors v5
-References: <20171018135821.3248-1-deathsimple@vodafone.de>
- <20171018135821.3248-5-deathsimple@vodafone.de>
- <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
- <d81d50e6-c267-fe43-214f-278e57903448@gmail.com>
- <26df0a78-8028-e42c-ce50-4cefe612a7e1@oracle.com>
- <3443aad0-8c3b-b97e-685a-96b0866827be@amd.com>
- <b937778c-556e-5587-c557-abba8cefe100@oracle.com>
- <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
- <c2d52d00-8c3c-9944-29b3-3cab2f7c35f7@oracle.com>
- <7936fdd3-1615-ac1f-7b75-330ccb6a1a3f@amd.com>
- <0bb468d9-bc1d-e3c5-e313-1cf9408380f0@oracle.com>
- <275e859a-0ddd-ea7f-a681-67e42a5233fe@amd.com>
- <38bc76d9-2ed5-61f3-24b3-085031825181@oracle.com>
- <65885386-3dde-de23-7e95-7d96dfdf6033@oracle.com>
- <0ab28334-3ccc-2a93-9991-396ee01a3662@amd.com>
-In-Reply-To: <0ab28334-3ccc-2a93-9991-396ee01a3662@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4 07/17] PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode
+Date: Fri,  3 Nov 2017 14:47:11 +0100
+Message-Id: <20171103134722.5532-8-niklas.cassel@axis.com>
+In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 28.11.17 at 10:12, <christian.koenig@amd.com> wrote:
-> In theory the BIOS would search for address space and won't find=20
-> anything, so the hotplug operation should fail even before it reaches=20
-> the kernel in the first place.
+Refactor the Kconfig and Makefile handling for host/ep mode, since
+the previous handling was a bit unorthodox and would have been a bit
+bloated once more DWC based controllers added support for ep mode.
 
-How would the BIOS know what the OS does or plans to do? I think
-it's the other way around - the OS needs to avoid using any regions
-for MMIO which are marked as hotpluggable in SRAT. Since there is
-no vNUMA yet for Xen Dom0, that would need special handling.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/Kconfig  | 45 ++++++++++++++++++++++-----------------------
+ drivers/pci/dwc/Makefile |  4 +---
+ 2 files changed, 23 insertions(+), 26 deletions(-)
 
-Jan
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 113e09440f85..3954353e3e2e 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -15,39 +15,38 @@ config PCIE_DW_EP
+ 	select PCIE_DW
+ 
+ config PCI_DRA7XX
+-	bool "TI DRA7xx PCIe controller"
+-	depends on SOC_DRA7XX || COMPILE_TEST
+-	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+-	depends on OF && HAS_IOMEM && TI_PIPE3
+-	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC. There
+-	 are two instances of PCIe controller in DRA7xx. This controller can
+-	 work either as EP or RC. In order to enable host-specific features
+-	 PCI_DRA7XX_HOST must be selected and in order to enable device-
+-	 specific features PCI_DRA7XX_EP must be selected. This uses
+-	 the DesignWare core.
+-
+-if PCI_DRA7XX
++	bool
+ 
+ config PCI_DRA7XX_HOST
+-	bool "PCI DRA7xx Host Mode"
+-	depends on PCI
+-	depends on PCI_MSI_IRQ_DOMAIN
++	bool "TI DRA7xx PCIe controller Host Mode"
++	depends on SOC_DRA7XX || COMPILE_TEST
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	select PCIE_DW_HOST
++	select PCI_DRA7XX
+ 	default y
+ 	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+-	 host mode.
++	  Enables support for the PCIe controller in the DRA7xx SoC to work in
++	  host mode. There are two instances of PCIe controller in DRA7xx.
++	  This controller can work either as EP or RC. In order to enable
++	  host-specific features PCI_DRA7XX_HOST must be selected and in order
++	  to enable device-specific features PCI_DRA7XX_EP must be selected.
++	  This uses the DesignWare core.
+ 
+ config PCI_DRA7XX_EP
+-	bool "PCI DRA7xx Endpoint Mode"
++	bool "TI DRA7xx PCIe controller Endpoint Mode"
++	depends on SOC_DRA7XX || COMPILE_TEST
+ 	depends on PCI_ENDPOINT
++	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	select PCIE_DW_EP
++	select PCI_DRA7XX
+ 	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+-	 endpoint mode.
+-
+-endif
++	  Enables support for the PCIe controller in the DRA7xx SoC to work in
++	  endpoint mode. There are two instances of PCIe controller in DRA7xx.
++	  This controller can work either as EP or RC. In order to enable
++	  host-specific features PCI_DRA7XX_HOST must be selected and in order
++	  to enable device-specific features PCI_DRA7XX_EP must be selected.
++	  This uses the DesignWare core.
+ 
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index 54f56f6e9236..260589bd4e1d 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -2,9 +2,7 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+ obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+ obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+-ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+-        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+-endif
++obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+-- 
+2.14.2
