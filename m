@@ -1,53 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1511353247.3539.10.camel@linux.intel.com>
-Subject: Re: [PATCH 23/30] [media] atomisp: deprecate pci_get_bus_and_slot()
-From: Alan Cox <alan@linux.intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org
-Date: Wed, 22 Nov 2017 12:20:47 +0000
-In-Reply-To: <1511328675-21981-24-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-24-git-send-email-okaya@codeaurora.org>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arushi Singhal <arushisinghal19971997@gmail.com>,
- Kate Stewart <kstewart@linuxfoundation.org>,
- kbuild test robot <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>,
- Valentin Vidic <Valentin.Vidic@CARNet.hr>, linux-arm-msm@vger.kernel.org,
- Philippe Ombredanne <pombredanne@nexb.com>,
- open list <linux-kernel@vger.kernel.org>,
- Hans Verkuil <hans.verkuil@cisco.com>,
- Avraham Shukron <avraham.shukron@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "open list:STAGING
- SUBSYSTEM" <devel@driverdev.osuosl.org>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- linux-arm-kernel@lists.infradead.org, "open list:MEDIA INPUT
- INFRASTRUCTURE \(V4L/DVB\)" <linux-media@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 12/17] PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller functions
+Date: Fri,  3 Nov 2017 14:47:16 +0100
+Message-Id: <20171103134722.5532-13-niklas.cassel@axis.com>
+In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-11-22 at 00:31 -0500, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0
-> as
-> where a PCI device is present. This restricts the device drivers to
-> be
-> reused for other domain numbers.
+Split artpec6_pcie_establish_link() into smaller functions
+to better match other drivers such as dra7xx and imx6.
+This is also done to prepare for endpoint mode support.
 
-The ISP v2 will always been in domain 0.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 53 +++++++++++++++++++++++-------------------
+ 1 file changed, 29 insertions(+), 24 deletions(-)
 
-Alan
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 18075e0fab80..3b635e745d25 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -80,18 +80,23 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
+ 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
+ }
+ 
+-static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
++static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ {
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 	u32 val;
+-	unsigned int retries;
+ 
+-	/* Hold DW core in reset */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_CORE_RESET_REQ;
++	val |= PCIECFG_LTSSM_ENABLE;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ 
++	return 0;
++}
++
++static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
++	unsigned int retries;
++
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
+ 		PCIECFG_MODE_TX_DRV_EN |
+@@ -131,30 +136,25 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
+ 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
+ 		retries--;
+ 	} while (retries && !(val & PHY_COSPLLLOCK));
++}
++
++static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
+ 
+-	/* Take DW core out of reset */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val &= ~PCIECFG_CORE_RESET_REQ;
++	val |= PCIECFG_CORE_RESET_REQ;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-	usleep_range(100, 200);
++}
+ 
+-	/* setup root complex */
+-	dw_pcie_setup_rc(pp);
++static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
+ 
+-	/* assert LTSSM enable */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_LTSSM_ENABLE;
++	val &= ~PCIECFG_CORE_RESET_REQ;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-
+-	/* check if the link is up or not */
+-	if (!dw_pcie_wait_for_link(pci))
+-		return 0;
+-
+-	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
+-
+-	return -ETIMEDOUT;
++	usleep_range(100, 200);
+ }
+ 
+ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+@@ -171,7 +171,12 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 
+-	artpec6_pcie_establish_link(artpec6_pcie);
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	dw_pcie_setup_rc(pp);
++	artpec6_pcie_establish_link(pci);
++	dw_pcie_wait_for_link(pci);
+ 	artpec6_pcie_enable_interrupts(artpec6_pcie);
+ 
+ 	return 0;
+-- 
+2.14.2
