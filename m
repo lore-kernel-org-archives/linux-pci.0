@@ -1,89 +1,76 @@
-Return-Path: <SRS0=GAvn=C4=nvidia.com=mmaddireddy@kernel.org>
-Return-Path: <SRS0=GAvn=C4=nvidia.com=mmaddireddy@kernel.org>
-Subject: Re: [PATCH V2 5/9] PCI: Export pci_flags
-To: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>
-CC: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-	<frowand.list@gmail.com>, <bhelgaas@google.com>, <rjw@rjwysocki.net>,
-	<tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-	<linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>
-References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
- <1511638333-22951-6-git-send-email-mmaddireddy@nvidia.com>
- <20171129170133.GC6469@bhelgaas-glaptop.roam.corp.google.com>
- <20171130102436.GB10349@red-moon>
- <20171130184224.GA19640@bhelgaas-glaptop.roam.corp.google.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <1edda714-5dba-3673-1f98-a6c5f2869e41@nvidia.com>
-Date: Fri, 1 Dec 2017 01:08:56 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59922 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751786AbdKCNy7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Nov 2017 09:54:59 -0400
+Date: Fri, 3 Nov 2017 08:54:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Michal Simek <michal.simek@xilinx.com>
+Cc: Ruben Guerra Marin <ruben.guerra.marin@axon.tv>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "soren.brinkmann@xilinx.com" <soren.brinkmann@xilinx.com>,
+        "bharat.kumar.gogada@xilinx.com" <bharat.kumar.gogada@xilinx.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>
+Subject: Re: Performance issues writing to PCIe in a Zynq
+Message-ID: <20171103135457.GA8457@bhelgaas-glaptop.roam.corp.google.com>
+References: <1509636637116.27702@axon.tv>
+ <eca01e58-3da1-d5c4-00f7-71dd6a926870@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <20171130184224.GA19640@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <eca01e58-3da1-d5c4-00f7-71dd6a926870@xilinx.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Nov 03, 2017 at 09:12:04AM +0100, Michal Simek wrote:
+> On 2.11.2017 16:30, Ruben Guerra Marin wrote:
+> > 
+> > I have the a Zynq board running petalinux, and it is connected
+> > through PCIe to a Virtex Ultrascale board. I configured the
+> > Ultrascale for Tandem PCIe, which the second stage bitstream is
+> > being programmed from the Zynq board (I crossed compiled the mcap
+> > application that Xilinx provides).
+> > 
+> > This works perfectly, but takes around ~12 seconds to program the
+> > second stage bitstream (compressed is ~12 MB), which is quite
+> > slow. We also tried debugging the mcap application and pciutils.
+> > We found out the operation that takes long to execute: In
+> > pciutils, the instruction to actually call the write to the driver
+> > (pwrite) takes approximately 6uS, so if you add up this for 12 MB
+> > then you can see why it takes so long. Why is this so slow? Is
+> > this maybe a problem with the driver?
+> > 
+> > For testing, I added an ILA to the AXI bus in between the Zynq GP1
+> > and the PCIe IP control registers port. I triggered halfway the
+> > programming of the bitstream using the mcap program provided by
+> > Xilinx. I can see that it is writing to address x358, which
+> > according to the *datasheet*
+> > (https://www.xilinx.com/Attachment/Xilinx_Answer_64761__UltraScale_Devices.pdf)
+> > is the Write Data Register, which is correct (and again, I know
+> > the whole bitstream gets programmed correctly).
+> > 
+> > But what I also see is that a "awvalid" being asserted to the next
+> > one it takes 245 cycles, and I can imagine this is why it takes 12
+> > seconds to program a 12MB bitstream.
 
+How long do you expect this to take?  What are the corresponding times
+on other hardware or other OSes?
 
-On 01-Dec-17 12:12 AM, Bjorn Helgaas wrote:
-> On Thu, Nov 30, 2017 at 10:24:37AM +0000, Lorenzo Pieralisi wrote:
->> On Wed, Nov 29, 2017 at 11:01:33AM -0600, Bjorn Helgaas wrote:
->>> [+cc Lorenzo]
->>>
->>> On Sun, Nov 26, 2017 at 01:02:09AM +0530, Manikanta Maddireddy wrote:
->>>> pci_flags variable is used in inline functions in 'pci.h', Tegra PCIe
->>>> driver use one of these functions pci_add_flags() and includes 'pci.h'.
->>>> Export pci_flags to allow Tegra PCIe host controller driver to be
->>>> compiled as loadable kernel module.
->>>
->>> Here's the usage in tegra_pcie_probe():
->>>
->>>   pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
->>>
->>> We've probably had this discussion before, but  I don't know why Tegra
->>> needs PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS.
->>>
->>> I would prefer to drop this usage of pci_add_flags() if possible.  It
->>> seems to be just an arm/powerpc thing and I'm not convinced it's
->>> really necessary.
->>
->> It is hard to say if it is really necessary (because it depends
->> on firmware configuration - ie pci_scan_bridge()), that's the
->> problem.
->>
->> I suspect it can trigger regressions if we do not set it (since
->> it affects what pcibios_assign_all_busses() returns on eg arm/arm64).
->>
->> There are two things we can do:
->>
->> 1) Set it unconditionally in arch code (in a hook to be defined)
->> 2) We remove it on a per-host bridge basis and ask for testing
->>
->> I agree this may have trickled from host bridge to host bridge through
->> copy'n'paste and it is not based on any firmware assumtpion but I can't
->> say if it is really needed.
-> 
-> My basic position is that if resources are not assigned correctly, the
-> PCI core should automatically try to assign them, regardless of
-> whether PCI_REASSIGN_ALL_RSRC or PCI_REASSIGN_ALL_BUS is set.  If that
-> doesn't work, I think there's something wrongin the PCI core and we
-> should fix that.
-> 
-> This might be an opportunity to try removing the use of
-> pci_add_flags() and see what breaks.
-> 
-> Bjorn
-> 
+It sounds like this programming is done via config accesses, which are
+definitely not a fast path, so I don't know if 12s is unreasonably
+slow or not.  The largest config write is 4 bytes, which means 12MB
+requires 3M writes, and if each takes 6us, that's 18s total.
 
-As per the Tegra TRM primary, secondary and subordinate default
-bus numbers are 0 and it is expecting SW to program these numbers.
-I believe this is the reason for adding PCI_REASSIGN_ALL_RSRC and
-PCI_REASSIGN_ALL_BUS flags.
+Most platforms serialize config accesses with a lock, which also slows
+things down.  It looks like your hardware might support ECAM, which
+means you might be able to remove the locking overhead by using
+lockless config (see CONFIG_PCI_LOCKLESS_CONFIG).  This is a new
+feature currently only used by x86, and it's currently a system-wide
+compile-time switch, so it would require some work for you to use it.
 
-Looking at the function pci_scan_bridge_extend(), if secondary and
-subordinate bus numbers are 0 it is assigning bus numbers even if
-these flags are not set.
+The high bandwidth way to do this would be use a BAR and do PCI memory
+writes instead of PCI config writes.  Obviously the adapter determines
+whether this is possible.
 
-In the basic testing with one endpoint PCIe link up is working
-fine without these flags, however I would like test with PCIe switch
-and multiple endpoints connected to Tegra.
-
-Manikanta
+Bjorn
