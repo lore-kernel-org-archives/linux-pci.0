@@ -1,124 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:34291 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752720AbdK2MBt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Nov 2017 07:01:49 -0500
-Subject: Re: [PATCH V2 7/9] PCI: tegra: Add loadable kernel module support
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com, jonathanh@nvidia.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com, rjw@rjwysocki.net,
-        tglx@linutronix.de
-References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
- <1511638333-22951-8-git-send-email-mmaddireddy@nvidia.com>
-Cc: vidyas@nvidia.com, kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <e49cb27d-6803-2ca5-6ee6-2bb862968451@kapsi.fi>
-Date: Wed, 29 Nov 2017 14:01:47 +0200
+Return-Path: <SRS0=VtSK=CB=gmail.com=nks.gnu@kernel.org>
+Return-Path: <SRS0=VtSK=CB=gmail.com=nks.gnu@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1511638333-22951-8-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171011193207.GO25517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1505885055-30657-1-git-send-email-j-keerthy@ti.com> <20171011193207.GO25517@bhelgaas-glaptop.roam.corp.google.com>
+From: Niklas Cassel <nks.gnu@gmail.com>
+Date: Fri, 3 Nov 2017 15:30:42 +0100
+Message-ID: <CAD5ja62_fT+xg6G_ygN+8GScMYa62M7jNEoDxD89n7AUBjwPDw@mail.gmail.com>
+Subject: Re: [PATCH v4] pci: dwc: dra7xx: Add shutdown handler to cleanly turn
+ off clocks
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keerthy <j-keerthy@ti.com>, kishon@ti.com, bhelgaas@google.com, t-kristo@ti.com,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25.11.2017 21:32, Manikanta Maddireddy wrote:
-> Implement remove callback function for Tegra PCIe driver to add
-> loadable kernel module support. Change PCI_TEGRA config to tristate to
-> allow pci-tegra driver to be build as a module.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
->
->  drivers/pci/host/Kconfig     |  2 +-
->  drivers/pci/host/pci-tegra.c | 31 ++++++++++++++++++++++++++++++-
->  2 files changed, 31 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 38d12980db0f..6fd2a5937804 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -34,7 +34,7 @@ config PCI_FTPCI100
->  	default ARCH_GEMINI
->
->  config PCI_TEGRA
-> -	bool "NVIDIA Tegra PCIe controller"
-> +	tristate "NVIDIA Tegra PCIe controller"
->  	depends on ARCH_TEGRA
->  	help
->  	  Say Y here if you want support for the PCIe host controller found
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 7f7b8c9c1e84..bbc2807bcd4a 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -35,6 +35,7 @@
->  #include <linux/irqdomain.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
-> +#include <linux/module.h>
->  #include <linux/msi.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> @@ -2720,6 +2721,12 @@ static int tegra_pcie_debugfs_init(struct tegra_pcie *pcie)
->  	return -ENOMEM;
->  }
->
-> +static void tegra_pcie_debugfs_exit(struct tegra_pcie *pcie)
-> +{
-> +	debugfs_remove_recursive(pcie->debugfs);
-> +	pcie->debugfs = NULL;
-> +}
-> +
+dra7xx_pcie_shutdown should be static.
 
-I think it's unnecessary to have a helper function for this - just 
-inline it in the remove function.
+This patch introduces a new sparse warning.
 
->  static int tegra_pcie_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> @@ -2734,6 +2741,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  		return -ENOMEM;
+On Wed, Oct 11, 2017 at 9:32 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Sep 20, 2017 at 10:54:15AM +0530, Keerthy wrote:
+>> Add shutdown handler to cleanly turn off clocks. This will help
+>> in cases of kexec where in a new kernel can boot abruptly.
+>>
+>> Signed-off-by: Keerthy <j-keerthy@ti.com>
+>> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 >
->  	pcie = pci_host_bridge_priv(host);
-> +	platform_set_drvdata(pdev, pcie);
+> Applied to pci/host-dra7xx for v4.15, thanks!
 >
->  	pcie->soc = of_device_get_match_data(dev);
->  	INIT_LIST_HEAD(&pcie->buses);
-> @@ -2816,6 +2824,25 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  	return err;
->  }
->
-> +static int tegra_pcie_remove(struct platform_device *pdev)
-> +{
-> +	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
-> +	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-> +
-> +	if (IS_ENABLED(CONFIG_DEBUG_FS))
-> +		tegra_pcie_debugfs_exit(pcie);
-> +	pci_stop_root_bus(host->bus);
-> +	pci_remove_root_bus(host->bus);
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		tegra_pcie_disable_msi(pcie);
-> +	tegra_pcie_disable_ports(pcie);
-> +	tegra_pcie_free_resources(pcie);
-> +	tegra_pcie_disable_controller(pcie);
-> +	tegra_pcie_put_resources(pcie);
-> +
-> +	return 0;
-> +}
-> +
->  static struct platform_driver tegra_pcie_driver = {
->  	.driver = {
->  		.name = "tegra-pcie",
-> @@ -2823,5 +2850,7 @@ static struct platform_driver tegra_pcie_driver = {
->  		.suppress_bind_attrs = true,
->  	},
->  	.probe = tegra_pcie_probe,
-> +	.remove = tegra_pcie_remove,
->  };
-> -builtin_platform_driver(tegra_pcie_driver);
-> +module_platform_driver(tegra_pcie_driver);
-> +MODULE_LICENSE("GPL");
->
+>> ---
+>>
+>> Changes in v4:
+>>
+>>   * Added the missing changes from v2!
+>>
+>> Changes in v3:
+>>
+>>   * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
+>>   * Added more details to commit log.
+>>
+>> Changes in v2:
+>>
+>>   * used a local dev pointer instead of dereferencing dev at multiple places.
+>>   * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
+>>
+>>  drivers/pci/dwc/pci-dra7xx.c | 17 +++++++++++++++++
+>>  1 file changed, 17 insertions(+)
+>>
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index 34427a6..d084800 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -794,6 +794,22 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>>  }
+>>  #endif
+>>
+>> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
+>> +{
+>> +     struct device *dev = &pdev->dev;
+>> +     struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+>> +     int ret;
+>> +
+>> +     dra7xx_pcie_stop_link(dra7xx->pci);
+>> +
+>> +     ret = pm_runtime_put_sync(dev);
+>> +     if (ret < 0)
+>> +             dev_dbg(dev, "pm_runtime_put_sync failed\n");
+>> +
+>> +     pm_runtime_disable(dev);
+>> +     dra7xx_pcie_disable_phy(dra7xx);
+>> +}
+>> +
+>>  static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+>>       SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
+>>       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
+>> @@ -807,5 +823,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>>               .suppress_bind_attrs = true,
+>>               .pm     = &dra7xx_pcie_pm_ops,
+>>       },
+>> +     .shutdown = dra7xx_pcie_shutdown,
+>>  };
+>>  builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
+>> --
+>> 1.9.1
+>>
