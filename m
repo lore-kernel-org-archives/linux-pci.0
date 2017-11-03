@@ -1,97 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:19130 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753978AbdKMR0y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 12:26:54 -0500
-From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Johan Hovold <johan@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        stable <stable@vger.kernel.org>
-Subject: RE: [PATCH] PCI: keystone: fix interrupt-controller-node lookup
-Date: Mon, 13 Nov 2017 17:26:48 +0000
-Message-ID: <02ce9c8c8e1e4f3ea18989cc515e8ff1@ti.com>
-References: <20171112122850.30804-1-johan@kernel.org>
- <20171113104306.GA27700@red-moon>
-In-Reply-To: <20171113104306.GA27700@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ruben Guerra Marin <ruben.guerra.marin@axon.tv>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Subject: Performance issues writing to PCIe in a Zynq
+Date: Fri, 3 Nov 2017 07:10:09 +0000
+Message-ID: <1509693009315.39595@axon.tv>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
------Original Message-----
-From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]=20
-Sent: Monday, November 13, 2017 5:43 AM
-To: Johan Hovold
-Cc: Karicheri, Muralidharan; Bjorn Helgaas; linux-pci@vger.kernel.org; linu=
-x-kernel@vger.kernel.org; stable
-Subject: Re: [PATCH] PCI: keystone: fix interrupt-controller-node lookup
-
-Hi Johan,
-
-On Sun, Nov 12, 2017 at 01:28:50PM +0100, Johan Hovold wrote:
-> Fix child-node lookup during initialisation, which ended up searching=20
-> the whole device tree depth-first starting at the parent rather than=20
-> just matching on its children.
->=20
-> To make things worse, the parent pci node was prematurely freed, while=20
-> the child interrupt-controller node was leaked.
-
-Thanks for fixing this. I would kindly ask you please to split the patch in=
- two since there are two bugs you are fixing at once.
-
-Murali: please test/ack accordingly.
-
-Thanks!
-
-Acked-by: Murali Karicheri <m-karicheri2@ti.com>
-
-Thanks !
-Lorenzo
-
-> Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
-> Cc: stable <stable@vger.kernel.org>     # 3.18
-> Cc: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  drivers/pci/dwc/pci-keystone.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/pci/dwc/pci-keystone.c=20
-> b/drivers/pci/dwc/pci-keystone.c index 5bee3af47588..39405598b22d=20
-> 100644
-> --- a/drivers/pci/dwc/pci-keystone.c
-> +++ b/drivers/pci/dwc/pci-keystone.c
-> @@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct key=
-stone_pcie *ks_pcie,
->  	}
-> =20
->  	/* interrupt controller is in a child node */
-> -	*np_temp =3D of_find_node_by_name(np_pcie, controller);
-> +	*np_temp =3D of_get_child_by_name(np_pcie, controller);
->  	if (!(*np_temp)) {
->  		dev_err(dev, "Node for %s is absent\n", controller);
->  		return -EINVAL;
-> @@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct key=
-stone_pcie *ks_pcie,
->  	temp =3D of_irq_count(*np_temp);
->  	if (!temp) {
->  		dev_err(dev, "No IRQ entries in %s\n", controller);
-> +		of_node_put(*np_temp);
->  		return -EINVAL;
->  	}
-> =20
-> @@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct key=
-stone_pcie *ks_pcie,
->  			break;
->  	}
-> =20
-> +	of_node_put(*np_temp);
-> +
->  	if (temp) {
->  		*num_irqs =3D temp;
->  		return 0;
-> --
-> 2.15.0
->=20
+4oCLCkhpLAoKSSBoYXZlIHRoZSBhIFp5bnEgYm9hcmQgcnVubmluZyBwZXRhbGludXgsIGFuZCBp
+dCBpcyBjb25uZWN0ZWQgdGhyb3VnaCBQQ0llIHRvIGEgVmlydGV4IFVsdHJhc2NhbGUgYm9hcmQu
+IEkgY29uZmlndXJlZCB0aGUgVWx0cmFzY2FsZSBmb3IgVGFuZGVtIFBDSWUsIHdoaWNoIHRoZSBz
+ZWNvbmQgc3RhZ2UgYml0c3RyZWFtIGlzIGJlaW5nIHByb2dyYW1tZWQgZnJvbSB0aGUgWnlucSBi
+b2FyZCAoSSBjcm9zc2VkIGNvbXBpbGVkIHRoZSBtY2FwIGFwcGxpY2F0aW9uIHRoYXQgWGlsaW54
+IHByb3ZpZGVzKS4KIApUaGlzIHdvcmtzIHBlcmZlY3RseSwgYnV0IHRha2VzIGFyb3VuZCB+MTIg
+c2Vjb25kcyB0byBwcm9ncmFtIHRoZSBzZWNvbmQgc3RhZ2UgYml0c3RyZWFtIChjb21wcmVzc2Vk
+IGlzIH4xMiBNQiksIHdoaWNoIGlzIHF1aXRlIHNsb3cuIFdlIGFsc28gdHJpZWQgZGVidWdnaW5n
+IHRoZSBtY2FwIGFwcGxpY2F0aW9uIGFuZCBwY2l1dGlscy4gV2UgZm91bmQgb3V0IHRoZSBvcGVy
+YXRpb24gdGhhdCB0YWtlcyBsb25nIHRvIGV4ZWN1dGU6IEluIHBjaXV0aWxzLCB0aGUgaW5zdHJ1
+Y3Rpb24gdG8gYWN0dWFsbHkgY2FsbCB0aGUgd3JpdGUgdG8gdGhlIGRyaXZlciAocHdyaXRlKSB0
+YWtlcyBhcHByb3hpbWF0ZWx5IDZ1Uywgc28gaWYgeW91IGFkZCB1cCB0aGlzIGZvciAxMiBNQiB0
+aGVuIHlvdSBjYW4gc2VlIHdoeSBpdCB0YWtlcyBzbyBsb25nLiBXaHkgaXMgdGhpcyBzbyBzbG93
+PyBJcyB0aGlzIG1heWJlIGEgcHJvYmxlbSB3aXRoIHRoZSBkcml2ZXI/CgpGb3IgdGVzdGluZywg
+SSBhZGRlZCBhbiBJTEEgdG8gdGhlIEFYSSBidXMgaW4gYmV0d2VlbiB0aGUgWnlucSBHUDEgYW5k
+IHRoZSBQQ0llIElQIGNvbnRyb2wgcmVnaXN0ZXJzIHBvcnQuIEkgdHJpZ2dlcmVkIGhhbGZ3YXkg
+dGhlIHByb2dyYW1taW5nIG9mIHRoZSBiaXRzdHJlYW0gdXNpbmcgdGhlIG1jYXAgcHJvZ3JhbSBw
+cm92aWRlZCBieSBYaWxpbnguIEkgY2FuIHNlZSB0aGF0IGl0IGlzIHdyaXRpbmcgdG8gYWRkcmVz
+cyB4MzU4LCB3aGljaCBhY2NvcmRpbmcgdG8gdGhlICpkYXRhc2hlZXQqIChodHRwczovL3d3dy54
+aWxpbnguY29tL0F0dGFjaG1lbnQvWGlsaW54X0Fuc3dlcl82NDc2MV9fVWx0cmFTY2FsZV9EZXZp
+Y2VzLnBkZikgaXMgdGhlIFdyaXRlIERhdGEgUmVnaXN0ZXIsIHdoaWNoIGlzIGNvcnJlY3QgKGFu
+ZCBhZ2FpbiwgSSBrbm93IHRoZSB3aG9sZSBiaXRzdHJlYW0gZ2V0cyBwcm9ncmFtbWVkIGNvcnJl
+Y3RseSkuCiAKQnV0IHdoYXQgSSBhbHNvIHNlZSBpcyB0aGF0IGEgImF3dmFsaWQiIGJlaW5nIGFz
+c2VydGVkIHRvIHRoZSBuZXh0IG9uZSBpdCB0YWtlcyAyNDUgY3ljbGVzLCBhbmQgSSBjYW4gaW1h
+Z2luZSB0aGlzIGlzIHdoeSBpdCB0YWtlcyAxMiBzZWNvbmRzIHRvIHByb2dyYW0gYSAxMk1CIGJp
+dHN0cmVhbS4K4oCLClRoYW5rcyBhIGxvdCwKCiAgCiBSdWJlbiBHdWVycmEgTWFyaW4gCnJ1YmVu
+Lmd1ZXJyYS5tYXJpbkBheG9uLnR2CiAgICAKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJt
+LWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21h
+aWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
