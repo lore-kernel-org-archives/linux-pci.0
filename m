@@ -1,163 +1,295 @@
-Return-Path: <SRS0=pIj7=CI=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=pIj7=CI=arm.com=robin.murphy@kernel.org>
-Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-Cc: Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com, bhelgaas@google.com,
- linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org, kthota@nvidia.com,
- swarren@nvidia.com, mmaddireddy@nvidia.com,
- Michal Simek <michal.simek@xilinx.com>,
- =?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
- Simon Horman <horms@verge.net.au>
-References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
- <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
- <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
- <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
- <20171110112201.GA25235@red-moon>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <3887d62c-98bb-04d5-5b40-96d5b7b43e63@arm.com>
-Date: Fri, 10 Nov 2017 12:04:21 +0000
-MIME-Version: 1.0
-In-Reply-To: <20171110112201.GA25235@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:51663 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933274AbdKCNsq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 09:48:46 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Jianguo Sun <sunjianguo1@huawei.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@axis.com
+Subject: [PATCH v4 14/17] PCI: dwc: artpec6: Add support for endpoint mode
+Date: Fri,  3 Nov 2017 14:47:18 +0100
+Message-Id: <20171103134722.5532-15-niklas.cassel@axis.com>
+In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/11/17 11:22, Lorenzo Pieralisi wrote:
-> [+Robin]
-> 
-> On Thu, Nov 09, 2017 at 12:14:35PM -0600, Bjorn Helgaas wrote:
->> [+cc Lorenzo]
->>
->> On Thu, Nov 09, 2017 at 12:48:14PM +0530, Vidya Sagar wrote:
->>> On Thursday 09 November 2017 02:55 AM, Bjorn Helgaas wrote:
->>>> On Mon, Nov 06, 2017 at 11:33:07PM +0530, Vidya Sagar wrote:
->>>>> limits MSI target address to only 32-bit region to enable
->>>>> some of the PCIe end points where only 32-bit MSIs
->>>>> are supported work properly.
->>>>> One example being Marvel SATA controller
->>>>>
->>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->>>>> ---
->>>>>   drivers/pci/host/pci-tegra.c | 2 +-
->>>>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->>>>> index 1987fec1f126..03d3dcdd06c2 100644
->>>>> --- a/drivers/pci/host/pci-tegra.c
->>>>> +++ b/drivers/pci/host/pci-tegra.c
->>>>> @@ -1531,7 +1531,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
->>>>>   	}
->>>>>   	/* setup AFI/FPCI range */
->>>>> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
->>>>> +	msi->pages = __get_free_pages(GFP_DMA, 0);
->>>>>   	msi->phys = virt_to_phys((void *)msi->pages);
->>>
->>>> Should this be GFP_DMA32?  See the comment above the GFP_DMA
->>>> definition.
->>>
->>> looking at the comments for both GFP_DMA32 and GFP_DMA, I thought GFP_DMA32
->>> is the correct one to use, but, even with that I got >32-bit addresses.
->>> GFP_DMA always gives addresses in <4GB boundary (i.e. 32-bit).
->>> I didn't dig into it to find out why is this the case.
->>
->> This sounds worth looking into (but maybe we don't need the
->> __get_free_pages() at all; see below).  Maybe there's some underlying
->> bug.  My laptop shows this, which looks like it might be related:
->>
->>    Zone ranges:
->>      DMA      [mem 0x0000000000001000-0x0000000000ffffff]
->>      DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
->>      Normal   [mem 0x0000000100000000-0x00000004217fffff]
->>      Device   empty
->>
->> What does your machine show?
+The PCIe controller integrated in ARTPEC-6 SoCs is capable of operating in
+endpoint mode. Add endpoint mode support to the artpec6 driver.
 
-The great thing about ZONE_DMA is that it has completely different 
-meanings per platform. ZONE_DMA32 is even worse as it's more or less 
-just an x86 thing, and isn't implemented (thus does nothing) on most 
-other architectures, including ARM/arm64 where Tegra is relevant.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/Kconfig        |  23 +++++--
+ drivers/pci/dwc/pcie-artpec6.c | 152 +++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 164 insertions(+), 11 deletions(-)
 
-Fun.
-
->>>> Should we be using virt_to_phys() here?  Where exactly is the
->>>> result ("msi->phys") used, i.e., what bus will that address appear
->>>> on?  If it appears on the PCI side, this should probably use
->>>> something like pcibios_resource_to_bus().
-> 
-> I had a quick chat with Robin (CC'ed, who has dealt/is dealing with most
-> of the work this thread relates to) and I think that as things stand,
-> for MSI physical addresses, an offset between PCI->host address shift is
-> not really contemplated (ie 1:1 host<->pci is assumed).
-
-I think the most correct way to generate an address would actually be 
-via the DMA mapping API (i.e. dma_map_page() with the host bridge's PCI 
-device), which would take any relevant offsets into account. It's a bit 
-funky, but there's some method in the madness.
-
->>> This address is written to two places.  First, into host's internal
->>> register to let it know that when an incoming memory write comes
->>> with this address, raise an MSI interrupt instead of forwarding it
->>> to memory subsystem.  Second, into 'Message Address' field of
->>> 'Message Address Register for MSI' register in end point's
->>> configuration space (this is done by MSI framework) for end point to
->>> know which address to be used to generate MSI interrupt.
->>
->> Hmmm, ISTR some past discussion about this.  Here's a little: [1, 2].
->> And this commit [3] sounds like it describes a similar hardware
->> situation with Tegra where the host bridge intercepts the MSI target
->> address, so writes to it never reach system memory.  That means that
->> Tegra doesn't need to allocate system memory at all.
->>
->> Is your system similar?  Can you just statically allocate a little bus
->> address space, use that for the MSI target address, and skip the
->> __get_free_pages()?
-> 
-> IIUC, all these host bridges need is a physical address that is routed
-> upstream to the host bridge by the PCIe tree (ie it is not part of the
-> host bridge windows), as long as the host bridge intercepts it (and
-> endpoints do _not_ reuse it for something else) that should be fine, as
-> it has been pointed out in this thread, allocating a page is a solution
-> - there may be others (which are likely to be platform specific).
-> 
->>>> Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a
->>>> similar problem?  They both use GFP_KERNEL, then virt_to_phys(),
->>>> then write the result of virt_to_phys() using a 32-bit register
->>>> write.
->>>
->>> Well, if those systems deal with 64-bit addresses and when an end
->>> point is connected which supports only 32-bit MSI addresses, this
->>> problem will surface when __get_free_pages() returns an address that
->>> translates to a >32-bit address after virt_to_phys() call on it.
->>
->> I'd like to hear from the R-Car and Xilinx folks about (1) whether
->> there's a potential issue with truncating a 64-bit address, and
->> (2) whether that hardware works like Tegra, where the MSI write never
->> reaches memory so we don't actually need to allocate a page.
->>
->> If all we need is to allocate a little bus address space for the MSI
->> target, I'd like to figure out a better way to do that than
->> __get_free_pages().  The current code seems a little buggy, and
->> it's getting propagated through several drivers.
-
-The really neat version is to take a known non-memory physical address 
-like the host controller's own MMIO region, which has no legitimate 
-reason to ever be used as a DMA address. pcie-mediatek almost gets this 
-right, but by using virt_to_phys() on an ioremapped address they end up 
-with nonsense rather than the correct address (although realistically 
-you would have to be extremely unlucky for said nonsense to collide with 
-a real DMA address given to a PCI endpoint later). Following on from 
-above, dma_map_resource() would be the foolproof way to get that right.
-
-Robin.
-
-> 
-> I will look into this with Robin's help.
-> 
-> Thanks,
-> Lorenzo
-> 
->>>>>   	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
->>
->> [1] https://lkml.kernel.org/r/20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com
->> [2] https://lkml.kernel.org/r/86efs3wesi.fsf@arm.com
->> [3] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d7bd554f27c9
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 3954353e3e2e..0fb96c7754de 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -148,15 +148,28 @@ config PCIE_ARMADA_8K
+ 	  DesignWare core functions to implement the driver.
+ 
+ config PCIE_ARTPEC6
+-	bool "Axis ARTPEC-6 PCIe controller"
+-	depends on PCI
++	bool
++
++config PCIE_ARTPEC6_HOST
++	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+ 	depends on MACH_ARTPEC6
+-	depends on PCI_MSI_IRQ_DOMAIN
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
++	select PCIE_ARTPEC6
++	help
++	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
++	  host mode. This uses the DesignWare core.
++
++config PCIE_ARTPEC6_EP
++	bool "Axis ARTPEC-6 PCIe controller Endpoint Mode"
++	depends on MACH_ARTPEC6
++	depends on PCI_ENDPOINT
++	select PCIE_DW_EP
++	select PCIE_ARTPEC6
+ 	help
+-	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+-	  SoCs.  This PCIe controller uses the DesignWare core.
++	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
++	  endpoint mode. This uses the DesignWare core.
+ 
+ config PCIE_KIRIN
+ 	depends on OF && ARM64
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 3b635e745d25..840013cdc29d 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -13,6 +13,7 @@
+ #include <linux/delay.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/of_device.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/resource.h>
+@@ -30,8 +31,15 @@ struct artpec6_pcie {
+ 	struct dw_pcie		*pci;
+ 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
+ 	void __iomem		*phy_base;	/* DT phy */
++	enum dw_pcie_device_mode mode;
+ };
+ 
++struct artpec_pcie_of_data {
++	enum dw_pcie_device_mode mode;
++};
++
++static const struct of_device_id artpec6_pcie_of_match[];
++
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET			0x700
+ #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
+@@ -42,6 +50,7 @@ struct artpec6_pcie {
+ #define  PCIECFG_DBG_OEN		BIT(24)
+ #define  PCIECFG_CORE_RESET_REQ		BIT(21)
+ #define  PCIECFG_LTSSM_ENABLE		BIT(20)
++#define  PCIECFG_DEVICE_TYPE_MASK	GENMASK(19, 16)
+ #define  PCIECFG_CLKREQ_B		BIT(11)
+ #define  PCIECFG_REFCLK_ENABLE		BIT(10)
+ #define  PCIECFG_PLL_ENABLE		BIT(9)
+@@ -92,6 +101,22 @@ static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ 	return 0;
+ }
+ 
++static void artpec6_pcie_stop_link(struct dw_pcie *pci)
++{
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	u32 val;
++
++	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++	val &= ~PCIECFG_LTSSM_ENABLE;
++	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++}
++
++static const struct dw_pcie_ops dw_pcie_ops = {
++	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++	.start_link = artpec6_pcie_establish_link,
++	.stop_link = artpec6_pcie_stop_link,
++};
++
+ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+ {
+ 	u32 val;
+@@ -232,10 +257,76 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 	return 0;
+ }
+ 
+-static const struct dw_pcie_ops dw_pcie_ops = {
+-	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	enum pci_barno bar;
++
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++
++	for (bar = BAR_0; bar <= BAR_5; bar++)
++		dw_pcie_ep_reset_bar(pci, bar);
++}
++
++static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep,
++				  enum pci_epc_irq_type type, u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++
++	switch (type) {
++	case PCI_EPC_IRQ_LEGACY:
++		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
++		return -EINVAL;
++	case PCI_EPC_IRQ_MSI:
++		return dw_pcie_ep_raise_msi_irq(ep, interrupt_num);
++	default:
++		dev_err(pci->dev, "UNKNOWN IRQ type\n");
++	}
++
++	return 0;
++}
++
++static struct dw_pcie_ep_ops pcie_ep_ops = {
++	.ep_init = artpec6_pcie_ep_init,
++	.raise_irq = artpec6_pcie_raise_irq,
+ };
+ 
++static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
++			       struct platform_device *pdev)
++{
++	int ret;
++	struct dw_pcie_ep *ep;
++	struct resource *res;
++	struct device *dev = &pdev->dev;
++	struct dw_pcie *pci = artpec6_pcie->pci;
++
++	ep = &pci->ep;
++	ep->ops = &pcie_ep_ops;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
++	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
++	if (IS_ERR(pci->dbi_base2))
++		return PTR_ERR(pci->dbi_base2);
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
++	if (!res)
++		return -EINVAL;
++
++	ep->phys_base = res->start;
++	ep->addr_size = resource_size(res);
++
++	ret = dw_pcie_ep_init(ep);
++	if (ret) {
++		dev_err(dev, "failed to initialize endpoint\n");
++		return ret;
++	}
++
++	return 0;
++}
++
+ static int artpec6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -244,6 +335,16 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	struct resource *dbi_base;
+ 	struct resource *phy_base;
+ 	int ret;
++	const struct of_device_id *match;
++	const struct artpec_pcie_of_data *data;
++	enum dw_pcie_device_mode mode;
++
++	match = of_match_device(artpec6_pcie_of_match, dev);
++	if (!match)
++		return -EINVAL;
++
++	data = (struct artpec_pcie_of_data *)match->data;
++	mode = (enum dw_pcie_device_mode)data->mode;
+ 
+ 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
+ 	if (!artpec6_pcie)
+@@ -257,6 +358,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	pci->ops = &dw_pcie_ops;
+ 
+ 	artpec6_pcie->pci = pci;
++	artpec6_pcie->mode = mode;
+ 
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+ 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
+@@ -276,15 +378,53 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, artpec6_pcie);
+ 
+-	ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
+-	if (ret < 0)
+-		return ret;
++	switch (artpec6_pcie->mode) {
++	case DW_PCIE_RC_TYPE:
++		if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_HOST))
++			return -ENODEV;
++
++		ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
++		if (ret < 0)
++			return ret;
++		break;
++	case DW_PCIE_EP_TYPE: {
++		u32 val;
++
++		if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_EP))
++			return -ENODEV;
++
++		val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++		val &= ~PCIECFG_DEVICE_TYPE_MASK;
++		artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++		ret = artpec6_add_pcie_ep(artpec6_pcie, pdev);
++		if (ret < 0)
++			return ret;
++		break;
++	}
++	default:
++		dev_err(dev, "INVALID device type %d\n", artpec6_pcie->mode);
++	}
+ 
+ 	return 0;
+ }
+ 
++static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
+ static const struct of_device_id artpec6_pcie_of_match[] = {
+-	{ .compatible = "axis,artpec6-pcie", },
++	{
++		.compatible = "axis,artpec6-pcie",
++		.data = &artpec6_pcie_rc_of_data,
++	},
++	{
++		.compatible = "axis,artpec6-pcie-ep",
++		.data = &artpec6_pcie_ep_of_data,
++	},
+ 	{},
+ };
+ 
+-- 
+2.14.2
