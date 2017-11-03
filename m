@@ -1,47 +1,112 @@
-Return-Path: <SRS0=Tsn0=CB=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=Tsn0=CB=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org,
-	helgaas@kernel.org
-Subject: [PATCH 1/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 00h-0fh) Processors
-Date: Fri,  3 Nov 2017 14:51:34 +0100
-Message-Id: <1509717097-1847-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:54118 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751623AbdKCJ5O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 05:57:14 -0400
+Subject: Re: [PATCH v3 14/17] PCI: dwc: artpec6: Add support for endpoint mode
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Shawn Guo <shawn.guo@linaro.org>,
+        Peter Robinson <pbrobinson@gmail.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@axis.com>
+References: <20171031223936.27549-1-niklas.cassel@axis.com>
+ <20171031223936.27549-15-niklas.cassel@axis.com>
+ <CAK8P3a1yGwyZPzd2-usqLe=BiQpdFsyyFOhpP1ZyaCb16rzCSQ@mail.gmail.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <5a8c7aaf-552c-7170-2a36-13b50168a9cc@axis.com>
+Date: Fri, 3 Nov 2017 10:56:55 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAK8P3a1yGwyZPzd2-usqLe=BiQpdFsyyFOhpP1ZyaCb16rzCSQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On 11/02/2017 10:13 AM, Arnd Bergmann wrote:
+> On Tue, Oct 31, 2017 at 11:39 PM, Niklas Cassel <niklas.cassel@axis.com> wrote:
+>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> 
+> It seems like you are missing a changelog text. Please explain what
+> your work is good for
+> in any patch you send.
 
-Just add the extra PCI-ID to the existing fixup.
+You are correct, this patch is missing a changelog text.
+I will send a V4 of the patch series for this.
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- arch/x86/pci/fixup.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+>> V3:
+>> * Removed ifdefs around match table and match table data.
+>> * Removed ifdefs in probe, use dummy implementations instead.
+> 
+> I think there is room for more of the same ;-)
+> 
+>>
+>> +#ifdef CONFIG_PCIE_ARTPEC6_HOST
+>>  static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+>>  {
+>>         struct dw_pcie *pci = artpec6_pcie->pci;
+>> @@ -231,11 +257,92 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+>>
+>>         return 0;
+>>  }
+>> +#else
+>> +static inline int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+>> +                                       struct platform_device *pdev)
+>> +{
+>> +       return -ENODEV;
+>> +}
+>> +#endif
+> 
+> 
+> Can you try replacing the #ifdef with
+> 
+> 
+>         if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_HOST))
+>                  return -ENODEV;
+> 
+> at the start of artpec6_pcie_enable_interrupts? I think that would improve
+> readability here.
+> 
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 7b6bd76..1d2238d 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -639,7 +639,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-  * configuring host bridge windows using the _PRS and _SRS methods.
-  *
-  * But this is rarely implemented, so we manually enable a large 64bit BAR for
-- * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
-+ * PCIe device on AMD Family 15h (Models 00h-0fh, 30h-3fh) Processors here.
-  */
- static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- {
-@@ -696,5 +696,6 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- 	pci_bus_add_resource(dev->bus, res, 0);
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
- 
- #endif
--- 
-2.7.4
+artpec6_pcie_enable_interrupts is a void function, so
+I guess that you meant at the start of artpec6_add_pcie_port.
+That would not really help since artpec6_add_pcie_port
+calls artpec6_pcie_msi_handler, and uses artpec6_pcie_host_ops,
+which is still inside the CONFIG_PCIE_ARTPEC6_HOST ifdef block.
+
+Please note that there are several functions, as well as
+artpec6_pcie_host_ops inside the 
+CONFIG_PCIE_ARTPEC6_HOST ifdef block.
+
+The reason for this is because Bjorn was surprised that
+this driver at V1 didn't have any ifdefs, even though
+it supports two different modes: HOST and EP.
+I suspected that his reasoning was that if you compile
+the driver with only one of the modes, it is wasteful
+to compile and include the functions that belong to the
+mode that we are not using in the vmlinux.
+
+>> +static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
+>> +                              struct platform_device *pdev)
+>> +{
+>> +       int ret;
+>> +       struct dw_pcie_ep *ep;
+>> +       struct resource *res;
+>> +       struct device *dev = &pdev->dev;
+>> +       struct dw_pcie *pci = artpec6_pcie->pci;
+> 
+> The same trick should work here with the other symbol.
+
+While artpec6_add_pcie_ep doesn't call any other
+function in this file, it does use pcie_ep_ops,
+which does reference other functions in this file
+(which are inside the ifdef block).
+
+
+Regards,
+Niklas
