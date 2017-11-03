@@ -1,185 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:51158 "EHLO mail.kapsi.fi"
+Received: from ale.deltatee.com ([207.54.116.67]:44910 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751295AbdK2MS5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Nov 2017 07:18:57 -0500
-Subject: Re: [PATCH V2 8/9] PCI: tegra: Broadcast PME_turn_Off message before
- link goes to L2
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com, jonathanh@nvidia.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com, rjw@rjwysocki.net,
-        tglx@linutronix.de
-References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
- <1511638333-22951-9-git-send-email-mmaddireddy@nvidia.com>
-Cc: vidyas@nvidia.com, kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <dd3cb6a5-76ec-98c2-4132-54678c2d74ce@kapsi.fi>
-Date: Wed, 29 Nov 2017 14:18:54 +0200
+        id S1756065AbdKCQdG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Nov 2017 12:33:06 -0400
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+References: <20171004095007.19148-1-bigeasy@linutronix.de>
+ <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
+ <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
+ <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
+ <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
+ <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
+ <20171102171955.lvnvqnwl4qwhlmdk@linutronix.de>
+ <b41e83ae-a687-3118-16cb-5ee92e70fc2b@deltatee.com>
+ <20171103082227.zzbeee54pd2bf72u@linutronix.de>
+ <83b6c876-6595-5b2c-e82c-2f75f559c20b@deltatee.com>
+ <20171103161954.557idpkckag7j7j5@linutronix.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <ceab9bab-3c6d-4800-fa44-386e5fe9e71f@deltatee.com>
+Date: Fri, 3 Nov 2017 10:33:04 -0600
 MIME-Version: 1.0
-In-Reply-To: <1511638333-22951-9-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20171103161954.557idpkckag7j7j5@linutronix.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v3] pci/switchtec: Don't use completion's wait queue
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25.11.2017 21:32, Manikanta Maddireddy wrote:
-> Per PCIe r3.0, sec 5.3.3.2.1, PCIe root port shoould broadcast PME_turn_Off
-> message before PCIe link goes to L2. PME_turn_Off broadcast mechanism is
-> implemented in AFI module. Each Tegra PCIe root port has its own
-> PME_turn_Off and PME_TO_Ack bitmap in AFI_PME register, program this
-> register to broadcast PME_turn_Off message.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
->
->  drivers/pci/host/pci-tegra.c | 76 ++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 76 insertions(+)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index bbc2807bcd4a..b380958a3deb 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -155,6 +155,8 @@
->  #define  AFI_INTR_EN_FPCI_TIMEOUT	(1 << 7)
->  #define  AFI_INTR_EN_PRSNT_SENSE	(1 << 8)
->
-> +#define AFI_PCIE_PME		0xf0
-> +
->  #define AFI_PCIE_CONFIG					0x0f8
->  #define  AFI_PCIE_CONFIG_PCIE_DISABLE(x)		(1 << ((x) + 1))
->  #define  AFI_PCIE_CONFIG_PCIE_DISABLE_ALL		0xe
-> @@ -315,6 +317,7 @@
->  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
->
->  #define LINK_RETRAIN_TIMEOUT 100000
-> +#define PME_ACK_TIMEOUT 10000
->
->  struct tegra_msi {
->  	struct msi_controller chip;
-> @@ -1503,6 +1506,76 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
->  	return 0;
->  }
->
-> +static inline u32 get_pme_turnoff_bitmap(struct tegra_pcie_port *port)
-> +{
-> +	struct device *dev = port->pcie->dev;
-> +	struct device_node *np = dev->of_node;
-> +	int ret = 0;
-> +
-> +	switch (port->index) {
-> +	case 0:
-> +		ret = 0;
-> +	case 1:
-> +		ret = 8;
-> +	case 2:
-> +		if (of_device_is_compatible(np, "nvidia,tegra30-pcie"))
-> +			ret = 16;
-> +		else
-> +			ret = 12;
-> +	}
-> +	return ret;
-> +}
-> +
-> +static inline u32 get_pme_ack_bitmap(struct tegra_pcie_port *port)
-> +{
-> +	struct device *dev = port->pcie->dev;
-> +	struct device_node *np = dev->of_node;
-> +	int ret = 0;
-> +
-> +	switch (port->index) {
-> +	case 0:
-> +		ret = 5;
-> +	case 1:
-> +		ret = 10;
-> +	case 2:
-> +		if (of_device_is_compatible(np, "nvidia,tegra30-pcie"))
-> +			ret = 18;
-> +		else
-> +			ret = 14;
-> +	}
-> +	return ret;
-> +}
 
- From what I can tell, the port 2 bit is 12/14 on everything after 
-Tegra30 as well, so I don't think this actually works?
 
-I think simpler would be to add a SoC data fields 'u8 
-pme_turnoff_bit[3]' and 'u8 pme_ack_bit[3]' and then set that
-to '.pme_turnoff_bit = { 0, 8, 16 }' and so on.
+On 03/11/17 10:19 AM, Sebastian Andrzej Siewior wrote:
+> never addressed? After the first patch you asked for a different
+> approach which you got. Followed by the READ_ONCE() you asked for. So I
+> am not aware of anything I skipped.
 
-> +
-> +static void tegra_pcie_pme_turnoff(struct tegra_pcie_port *port)
-> +{
-> +	struct tegra_pcie *pcie = port->pcie;
-> +	ktime_t deadline;
-> +	unsigned int data;
-> +
-> +	data = afi_readl(pcie, AFI_PCIE_PME);
-> +	data |= (0x1 << get_pme_turnoff_bitmap(port));
-> +	afi_writel(pcie, data, AFI_PCIE_PME);
-> +
-> +	deadline = ktime_add_us(ktime_get(), PME_ACK_TIMEOUT);
-> +	do {
-> +		data = afi_readl(pcie, AFI_PCIE_PME);
-> +		data &= (0x1 << get_pme_ack_bitmap(port));
-> +		udelay(1);
-> +		if (ktime_after(ktime_get(), deadline))
-> +			break;
-> +	} while (!data);
+Quoting myself along the way:
 
-Since this is a normal MMIO read, we could replace the whole loop with a 
-call to readl_poll_timeout (or readl_relaxed_poll_timeout, or if we 
-really must delay and not sleep, readl_poll_timeout_atomic etc.) from 
-iopoll.h
+v1: "I'm sorry but this seems a bit crazy to me. Driver's can't poll on 
+completions because an out of tree implementation changes them in a 
+weird way??! Just because no one in-tree does it now doesn't make it 
+invalid."
 
-   int err;
-   u32 val;
+v2: "I still don't want this merged as it makes the code less clear, but 
+I tested it and it does not work."
 
-   err = readl_poll_timeout(pcie->afi + AFI_PCIE_PME, val,
-                            val & (0x1 << pcie->soc->pme_ack_bit[port]),
-                            1, PME_ACK_TIMEOUT);
-   if (err)
-     ...
+v3: "However, this whole concept still gets a NAK from me. I think it 
+makes the code less clear for no obvious reason."
 
-> +
-> +	if (data)
-> +		dev_err(pcie->dev, "PME Ack is not receieved on port: %d\n",
-> +			port->index);
-> +
+I feel like I was pretty clear from the beginning. These are the 
+comments that you never addressed. Just because you picked up on the 
+minor issues and fixed them doesn't mean you can ignore the other feedback.
 
-Typo here, s/receieved/received/
-
-Cheers,
-Mikko
-
-> +	usleep_range(10000, 11000);
-> +
-> +	data = afi_readl(pcie, AFI_PCIE_PME);
-> +	data &= ~(0x1 << get_pme_turnoff_bitmap(port));
-> +	afi_writel(pcie, data, AFI_PCIE_PME);
-> +}
-> +
->  static int tegra_msi_alloc(struct tegra_msi *chip)
->  {
->  	int msi;
-> @@ -2828,6 +2901,7 @@ static int tegra_pcie_remove(struct platform_device *pdev)
->  {
->  	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
->  	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-> +	struct tegra_pcie_port *port, *tmp;
->
->  	if (IS_ENABLED(CONFIG_DEBUG_FS))
->  		tegra_pcie_debugfs_exit(pcie);
-> @@ -2835,6 +2909,8 @@ static int tegra_pcie_remove(struct platform_device *pdev)
->  	pci_remove_root_bus(host->bus);
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		tegra_pcie_disable_msi(pcie);
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-> +		tegra_pcie_pme_turnoff(port);
->  	tegra_pcie_disable_ports(pcie);
->  	tegra_pcie_free_resources(pcie);
->  	tegra_pcie_disable_controller(pcie);
->
+Logan
