@@ -1,120 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [RFCv2 PATCH 01/36] iommu: Keep track of processes and PASIDs
-To: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        Sudeep Holla <Sudeep.Holla@arm.com>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-2-jean-philippe.brucker@arm.com>
- <BLUPR0201MB150538FDD455F6042803B54FA5560@BLUPR0201MB1505.namprd02.prod.outlook.com>
-Message-ID: <16b6ba80-b15b-b278-0d06-350ae0201e82@arm.com>
-Date: Thu, 9 Nov 2017 12:16:20 +0000
-MIME-Version: 1.0
-In-Reply-To: <BLUPR0201MB150538FDD455F6042803B54FA5560@BLUPR0201MB1505.namprd02.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:51481 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756276AbdKCNrj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 09:47:39 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Cc: Niklas Cassel <niklass@axis.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 00/17] dwc MSI fixes, ARTPEC-6 EP mode support, ARTPEC-7 SoC support
+Date: Fri,  3 Nov 2017 14:47:04 +0100
+Message-Id: <20171103134722.5532-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bharat,
+This is a series that adds:
+- PCI endpoint mode support in the ARTPEC-6 driver.
+- ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
+- Small fixes for MSI in designware-ep and designware-host,
+  needed to get endpoint mode support working for ARTPEC-6.
+- Cleanups in pci-dra7xx to better prepare for endpoint mode in other
+  DWC based PCIe drivers.
 
-On 11/08/2017 05:50 PM, Bharat Kumar Gogada wrote:
-> Hi Jean,
-> 
-> +static struct iommu_process *
-> +iommu_process_alloc(struct iommu_domain *domain, struct task_struct
-> +*task) {
-> +       int err;
-> +       int pasid;
-> +       struct iommu_process *process;
-> +
-> +       if (WARN_ON(!domain->ops->process_alloc ||
-> !domain->ops->process_free))
-> +               return ERR_PTR(-ENODEV);
-> +
-> +       process = domain->ops->process_alloc(task);
-> +       if (IS_ERR(process))
-> +               return process;
-> +       if (!process)
-> +               return ERR_PTR(-ENOMEM);
-> +
-> +       process->pid            = get_task_pid(task, PIDTYPE_PID);
-> +       process->release        = domain->ops->process_free;
-> +       INIT_LIST_HEAD(&process->domains);
-> +       kref_init(&process->kref);
-> +
-> +       if (!process->pid) {
-> +               err = -EINVAL;
-> +               goto err_free_process;
-> +       }
-> +
-> +       idr_preload(GFP_KERNEL);
-> +       spin_lock(&iommu_process_lock);
-> +       pasid = idr_alloc_cyclic(&iommu_process_idr, process,
-> domain->min_pasid,
-> +                                domain->max_pasid + 1, GFP_ATOMIC);
-> If EP supports only one pasid; domain->min_pasid=1 and domain->max_pasid=0.
-> When idr_alloc_cyclic is called it invokes idr_get_free_cmn function
-> where we have following condition. (Based on kernel 4.14-rc6)
->         if (!radix_tree_tagged(root, IDR_FREE))
->                 start = max(start, maxindex + 1);
->               if (start > max)
->                 return ERR_PTR(-ENOSPC);
-> Here max is being assigned zero by the time this function is invoked,
-> this value is based on domain->max_pasid.
-> This condition fails and ENOSPC is returned.
->        
-> In this case even though hardware supports PASID, BIND flow fails.
+New in V4:
+Fixed all commit messages so that they are readable without the title.
+Replaced ifdefs in pci-dra7xx and pcie-artpec6 by using the
+IS_ENABLED macro. (Thanks Arnd!)
 
-It should fail, since we're reserving PASID 0 for non-PASID transactions
-with S1DSS=0b10. In addition, the SMMUv3 specification does not allow
-using PASID with a single entry. See the description of S1CDMax in 5.2
-Stream Table Entry:
+Niklas Cassel (17):
+  PCI: dwc: Use the DMA-API to get the MSI address
+  PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
+  PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be
+    writable
+  PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
+  PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+  PCI: designware-ep: Add generic function for raising MSI irq
+  PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep
+    mode
+  PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than
+    in probe
+  PCI: dwc: dra7xx: Help compiler to remove unused code
+  PCI: dwc: artpec6: Remove unused defines
+  PCI: dwc: artpec6: Use BIT and GENMASK macros
+  PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller
+    functions
+  bindings: PCI: artpec: Add support for endpoint mode
+  PCI: dwc: artpec6: Add support for endpoint mode
+  PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
+  bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
+  PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
 
-"when this field is 0, the substreams of the STE are disabled and one CD
-is available. (The minimum useful number of substreams is 2.) Any
-transaction with a SubstreamID will be terminated with an abort and a
-C_BAD_SUBSTREAMID event recorded."
+ .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   5 +-
+ drivers/pci/dwc/Kconfig                            |  68 ++--
+ drivers/pci/dwc/Makefile                           |   4 +-
+ drivers/pci/dwc/pci-dra7xx.c                       |  27 +-
+ drivers/pci/dwc/pcie-artpec6.c                     | 406 ++++++++++++++++++---
+ drivers/pci/dwc/pcie-designware-ep.c               |  58 ++-
+ drivers/pci/dwc/pcie-designware-host.c             |  15 +-
+ drivers/pci/dwc/pcie-designware.c                  |   2 +-
+ drivers/pci/dwc/pcie-designware.h                  |  22 +-
+ 9 files changed, 504 insertions(+), 103 deletions(-)
 
-> Any reason why pasid allocation moved to idr allocations rather than
-> bitmap allocations as in v1 patches ?
-
-Yes, idr provides a convenient way to quickly retrieve the context
-associated with a PASID, when handling a fault. v1 had the allocation in a
-bitmap and storing in a rb-tree. By using an idr we combine both and rely
-on a well-tested infrastructure.
-
-Note that in the future we might need to go back to handcrafting the PASID
-allocation, but it will probably still be based on idr.
-
-Thanks,
-Jean
+-- 
+2.14.2
