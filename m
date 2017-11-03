@@ -1,118 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5] PCI: hotplug: Drop checking of PCI_BRIDGE_CONTROL in *_unconfigure_device()
-Date: Thu,  9 Nov 2017 14:15:08 +0300
-Message-Id: <20171109111508.47678-1-mika.westerberg@linux.intel.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 11/17] PCI: dwc: artpec6: Use BIT and GENMASK macros
+Date: Fri,  3 Nov 2017 14:47:15 +0100
+Message-Id: <20171103134722.5532-12-niklas.cassel@axis.com>
+In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During PCIe surprise hot-unplug the device is not accessible anymore and
-register reads return 0xffffffff. When that happens pciehp_unconfigure_device()
-may inadvertently think the device below the bridge may be a display
-device of somesort as reading PCI_BRIDGE_CONTROL register also returns
-0xff. This results failure of the remove operation:
+Use BIT and GENMASK macros to improve readability.
 
-  pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
-  pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
-  pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
-
-Because of this the hierarchy is left untouched preventing further
-hotplug operations.
-
-Now, it is not clear why the check is there in the first place and why
-we would like to prevent removing a bridge if it has PCI_BRIDGE_CTL_VGA
-set. In case of PCIe surprise hot-unplug, it would not even be possible
-to prevent the removal.
-
-Given this and the issue described above, I think it makes sense to drop
-the whole PCI_BRIDGE_CONTROL check from pciehp_unconfigure_device().
-While there do the same for shpchp_configure_device() based on the same
-reasoning and the fact that the same bug might trigger in standard PCI
-hotplug as well.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
-The previous version (v4) of the patch can be found here:
+ drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-  https://patchwork.kernel.org/patch/10026551/
-
-Changes from v4:
-
-  - Drop the check from shpchp_configure_device() as well
-
- drivers/pci/hotplug/pciehp_pci.c | 12 ------------
- drivers/pci/hotplug/shpchp_pci.c | 12 ------------
- 2 files changed, 24 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index 2a1ca020cf5a..acc360d1a1fb 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -79,7 +79,6 @@ int pciehp_configure_device(struct slot *p_slot)
- int pciehp_unconfigure_device(struct slot *p_slot)
- {
- 	int rc = 0;
--	u8 bctl = 0;
- 	u8 presence = 0;
- 	struct pci_dev *dev, *temp;
- 	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
-@@ -101,17 +100,6 @@ int pciehp_unconfigure_device(struct slot *p_slot)
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
- 					 bus_list) {
- 		pci_dev_get(dev);
--		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
--			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
--			if (bctl & PCI_BRIDGE_CTL_VGA) {
--				ctrl_err(ctrl,
--					 "Cannot remove display device %s\n",
--					 pci_name(dev));
--				pci_dev_put(dev);
--				rc = -EINVAL;
--				break;
--			}
--		}
- 		if (!presence) {
- 			pci_dev_set_disconnected(dev, NULL);
- 			if (pci_has_subordinate(dev))
-diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
-index ea63db58b4b1..79f1682c858e 100644
---- a/drivers/pci/hotplug/shpchp_pci.c
-+++ b/drivers/pci/hotplug/shpchp_pci.c
-@@ -78,7 +78,6 @@ int shpchp_configure_device(struct slot *p_slot)
- int shpchp_unconfigure_device(struct slot *p_slot)
- {
- 	int rc = 0;
--	u8 bctl = 0;
- 	struct pci_bus *parent = p_slot->ctrl->pci_dev->subordinate;
- 	struct pci_dev *dev, *temp;
- 	struct controller *ctrl = p_slot->ctrl;
-@@ -93,17 +92,6 @@ int shpchp_unconfigure_device(struct slot *p_slot)
- 			continue;
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 4b8ef266dc2f..18075e0fab80 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -39,28 +39,28 @@ struct artpec6_pcie {
  
- 		pci_dev_get(dev);
--		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
--			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
--			if (bctl & PCI_BRIDGE_CTL_VGA) {
--				ctrl_err(ctrl,
--					 "Cannot remove display device %s\n",
--					 pci_name(dev));
--				pci_dev_put(dev);
--				rc = -EINVAL;
--				break;
--			}
--		}
- 		pci_stop_and_remove_bus_device(dev);
- 		pci_dev_put(dev);
- 	}
+ /* ARTPEC-6 specific registers */
+ #define PCIECFG				0x18
+-#define  PCIECFG_DBG_OEN		(1 << 24)
+-#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
+-#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
+-#define  PCIECFG_CLKREQ_B		(1 << 11)
+-#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
+-#define  PCIECFG_PLL_ENABLE		(1 << 9)
+-#define  PCIECFG_PCLK_ENABLE		(1 << 8)
+-#define  PCIECFG_RISRCREN		(1 << 4)
+-#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
+-#define  PCIECFG_CISRREN		(1 << 2)
+-#define  PCIECFG_MACRO_ENABLE		(1 << 0)
++#define  PCIECFG_DBG_OEN		BIT(24)
++#define  PCIECFG_CORE_RESET_REQ		BIT(21)
++#define  PCIECFG_LTSSM_ENABLE		BIT(20)
++#define  PCIECFG_CLKREQ_B		BIT(11)
++#define  PCIECFG_REFCLK_ENABLE		BIT(10)
++#define  PCIECFG_PLL_ENABLE		BIT(9)
++#define  PCIECFG_PCLK_ENABLE		BIT(8)
++#define  PCIECFG_RISRCREN		BIT(4)
++#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
++#define  PCIECFG_CISRREN		BIT(2)
++#define  PCIECFG_MACRO_ENABLE		BIT(0)
+ 
+ #define NOCCFG				0x40
+-#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
+-#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
+-#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
+-#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
++#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
++#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
++#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
++#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
+ 
+ #define PHY_STATUS			0x118
+-#define PHY_COSPLLLOCK			(1 << 0)
++#define  PHY_COSPLLLOCK			BIT(0)
+ 
+-#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
++#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
+ 
+ static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+ {
 -- 
 2.14.2
