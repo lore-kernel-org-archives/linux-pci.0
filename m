@@ -1,88 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0123.outbound.protection.outlook.com ([104.47.40.123]:6272
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0089.outbound.protection.outlook.com ([104.47.36.89]:41696
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751274AbdKVOcN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 22 Nov 2017 09:32:13 -0500
-From: Chris Welch <Chris.Welch@viavisolutions.com>
-To: Vignesh R <vigneshr@ti.com>, "Quadros, Roger" <rogerq@ti.com>
-CC: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Joao Pinto <jpinto@synopsys.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>
-Subject: =?utf-8?B?UkU6IHhoY2lfaGNkIEhDIGRpZWQ7IGNsZWFuaW5nIHVwIHdpdGggVFVTQjcz?=
- =?utf-8?B?NDAgYW5kIMK1UEQ3MjAyMDE=?=
-Date: Wed, 22 Nov 2017 14:32:11 +0000
-Message-ID: <BN6PR18MB1249076278D8984FF0A6506586200@BN6PR18MB1249.namprd18.prod.outlook.com>
-References: <BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com>
- <3dd7a4fc-da86-03cc-9b01-a0d29dd73230@ti.com>
- <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
- <124458f9-f824-6acb-becb-12d768b6e501@ti.com>
- <9dcdbc2a-9296-b260-10ed-08fde0c6f67c@ti.com>
- <d07f7bc9-0064-e84f-6a53-0768d1fe83b7@ti.com>
- <0c095d7f-4bc1-2306-248f-035fd06c1ed8@ti.com>
- <BN6PR18MB1249B64650CF0E38AFF87A9386230@BN6PR18MB1249.namprd18.prod.outlook.com>
- <32b12781-e4db-289d-2a73-cd0efb056fe8@ti.com>
-In-Reply-To: <32b12781-e4db-289d-2a73-cd0efb056fe8@ti.com>
-Content-Type: text/plain; charset="utf-8"
+        id S932788AbdKCJuE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Nov 2017 05:50:04 -0400
+From: Bao Xiaowei <xiaowei.bao@nxp.com>
+To: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <bhelgaas@google.com>, <shawnguo@kernel.org>,
+        <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
+        <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>,
+        <leoyang.li@nxp.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <pbrobinson@gmail.com>, <songxiaowei@hisilicon.com>,
+        <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <Zhiqiang.Hou@nxp.com>,
+        <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
+CC: Bao Xiaowei <xiaowei.bao@nxp.com>
+Subject: [PATCH 3/3] ARMv8: pcie: make the DWC EP driver support for layerscape
+Date: Fri, 3 Nov 2017 17:31:15 +0800
+Message-ID: <20171103093115.14915-4-xiaowei.bao@nxp.com>
+In-Reply-To: <20171103093115.14915-1-xiaowei.bao@nxp.com>
+References: <20171103093115.14915-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBWaWduZXNoIFIgW21haWx0bzp2
-aWduZXNockB0aS5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgTm92ZW1iZXIgMjIsIDIwMTcgNTo0
-MSBBTQ0KPiBUbzogQ2hyaXMgV2VsY2ggPENocmlzLldlbGNoQHZpYXZpc29sdXRpb25zLmNvbT47
-IFF1YWRyb3MsIFJvZ2VyDQo+IDxyb2dlcnFAdGkuY29tPg0KPiBDYzogbGludXgtdXNiQHZnZXIu
-a2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgSm9hbyBQaW50bw0KPiA8anBp
-bnRvQHN5bm9wc3lzLmNvbT47IEtJU0hPTiBWSUpBWSBBQlJBSEFNIDxraXNob25AdGkuY29tPg0K
-PiBTdWJqZWN0OiBSZTogeGhjaV9oY2QgSEMgZGllZDsgY2xlYW5pbmcgdXAgd2l0aCBUVVNCNzM0
-MCBhbmQgwrVQRDcyMDIwMQ0KPiANCj4gDQo+IA0KPiBPbiBUdWVzZGF5IDIxIE5vdmVtYmVyIDIw
-MTcgMDg6MjAgUE0sIENocmlzIFdlbGNoIHdyb3RlOg0KPiA+DQo+ID4NCj4gPj4gLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4gRnJvbTogVmlnbmVzaCBSIFttYWlsdG86dmlnbmVzaHJA
-dGkuY29tXQ0KPiA+PiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAyMSwgMjAxNyAxMjo0OCBBTQ0K
-PiA+PiBUbzogUm9nZXIgUXVhZHJvcyA8cm9nZXJxQHRpLmNvbT4NCj4gPj4gQ2M6IENocmlzIFdl
-bGNoIDxDaHJpcy5XZWxjaEB2aWF2aXNvbHV0aW9ucy5jb20+Ow0KPiA+PiBsaW51eC11c2JAdmdl
-ci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBKb2FvIFBpbnRvDQo+ID4+
-IDxqcGludG9Ac3lub3BzeXMuY29tPjsgS0lTSE9OIFZJSkFZIEFCUkFIQU0gPGtpc2hvbkB0aS5j
-b20+DQo+ID4+IFN1YmplY3Q6IFJlOiB4aGNpX2hjZCBIQyBkaWVkOyBjbGVhbmluZyB1cCB3aXRo
-IFRVU0I3MzQwIGFuZA0KPiA+PiDCtVBENzIwMjAxDQo+ID4+DQo+ID4+DQo+ID4+DQo+ID4+IE9u
-IE1vbmRheSAyMCBOb3ZlbWJlciAyMDE3IDA3OjAxIFBNLCBSb2dlciBRdWFkcm9zIHdyb3RlOg0K
-PiA+Pj4gT24gMjAvMTEvMTcgMTU6MTksIFZpZ25lc2ggUiB3cm90ZToNCj4gPj4+Pg0KPiA+Pj4+
-DQo+ID4+Pj4gT24gTW9uZGF5IDIwIE5vdmVtYmVyIDIwMTcgMDE6MzEgUE0sIFJvZ2VyIFF1YWRy
-b3Mgd3JvdGU6DQo+ID4+Pj4gWy4uLl0NCj4gPj4+Pj4+DQo+ID4+Pj4+PiBTbywgY291bGQgeW91
-IHRyeSByZXZlcnRpbmcgY29tbWl0IDhjOTM0MDk1ZmEyZjMgYW5kIGFsc28gYXBwbHkNCj4gPj4+
-Pj4+IGJlbG93IHBhdGNoIGFuZCBsZXQgbWUga25vdyBpZiB0aGF0IGZpeGVzIHRoZSBpc3N1ZT8N
-Cj4gPj4+Pj4+DQo+ID4+Pj4+PiAtLS0tLS0tLS0tLQ0KPiA+Pj4+Pj4NCj4gPj4+Pj4+IGRpZmYg
-LS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWRyYTd4eC5jDQo+ID4+Pj4+PiBiL2RyaXZlcnMv
-cGNpL2R3Yy9wY2ktZHJhN3h4LmMgaW5kZXggZTc3YTRjZWVkNzRjLi44MjgwYWJjNTZmMzANCj4g
-Pj4+Pj4+IDEwMDY0NA0KPiA+Pj4+Pj4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaS1kcmE3eHgu
-Yw0KPiA+Pj4+Pj4gKysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaS1kcmE3eHguYw0KPiA+Pj4+Pj4g
-QEAgLTI1OSwxMCArMjU5LDE3IEBAIHN0YXRpYyBpcnFyZXR1cm5fdA0KPiA+PiBkcmE3eHhfcGNp
-ZV9tc2lfaXJxX2hhbmRsZXIoaW50IGlycSwgdm9pZCAqYXJnKQ0KPiA+Pj4+Pj4gICAgICAgICB1
-MzIgcmVnOw0KPiA+Pj4+Pj4NCj4gPj4+Pj4+ICAgICAgICAgcmVnID0gZHJhN3h4X3BjaWVfcmVh
-ZGwoZHJhN3h4LA0KPiA+Pj4+Pj4gUENJRUNUUkxfRFJBN1hYX0NPTkZfSVJRU1RBVFVTX01TSSk7
-DQo+ID4+Pj4+PiArICAgICAgIGRyYTd4eF9wY2llX3dyaXRlbChkcmE3eHgsDQo+ID4+Pj4+PiAr
-IFBDSUVDVFJMX0RSQTdYWF9DT05GX0lSUVNUQVRVU19NU0ksIHJlZyk7DQo+ID4+Pj4+Pg0KPiA+
-Pj4+Pj4gICAgICAgICBzd2l0Y2ggKHJlZykgew0KPiA+Pj4+Pj4gICAgICAgICBjYXNlIE1TSToN
-Cj4gPj4+Pj4+IC0gICAgICAgICAgICAgICBkd19oYW5kbGVfbXNpX2lycShwcCk7DQo+ID4+Pj4+
-PiArICAgICAgICAgICAgICAgLyoNCj4gPj4+Pj4+ICsgICAgICAgICAgICAgICAgKiBOZWVkIHRv
-IG1ha2Ugc3VyZSBubyBNU0kgSVJRcyBhcmUgcGVuZGluZyBiZWZvcmUNCj4gPj4+Pj4+ICsgICAg
-ICAgICAgICAgICAgKiBleGl0aW5nIGhhbmRsZXIsIGVsc2UgdGhlIHdyYXBwZXIgd2lsbCBub3Qg
-Y2F0Y2ggbmV3DQo+ID4+Pj4+PiArICAgICAgICAgICAgICAgICogSVJRcy4gU28gbG9vcCBhcm91
-bmQgdGlsbCBkd19oYW5kbGVfbXNpX2lycSgpIHJldHVybnMNCj4gPj4+Pj4+ICsgICAgICAgICAg
-ICAgICAgKiBJUlFfTk9ORQ0KPiA+Pj4+Pj4gKyAgICAgICAgICAgICAgICAqLw0KPiA+Pj4+Pj4g
-KyAgICAgICAgICAgICAgIHdoaWxlIChkd19oYW5kbGVfbXNpX2lycShwcCkgIT0gSVJRX05PTkUp
-Ow0KPiA+DQo+ID4gVGhlIHBhdGNoIGxvb2tzIGdvb2QsIEkgaGF2ZW4ndCBoYWQgYSBmYWlsdXJl
-IGluIGEgZmV3IGRheXMgb2YgdGVzdGluZy4NCj4gPg0KPiA+IFlvdSBzaG91bGQgYWxzbyBsb29r
-IGF0IGluY29ycG9yYXRpbmcgdGhlIGZvbGxvd2luZyB0aGF0IEkgbmVlZGVkIHRvIGNoYW5nZSB0
-bw0KPiBnZXQgb3VyIHByb2R1Y3Qgd29ya2luZy4gIFRoZSBmaXJzdCBjaGFuZ2UgZml4ZXMgYSBt
-aXNzIGJ5IG9uZSBlcnJvciB3aXRoIHRoZQ0KPiBpbnRlcnJ1cHQgbGluZXMuDQo+ID4NCj4gPiBU
-aGUgc2Vjb25kIGNoYW5nZSBleHRlbmRzIGEgcGF0Y2ggeW91IGRldmVsb3BlZCBmb3IgZXJyYXRh
-IGk4NzAgYnV0IHdlDQo+IGZvdW5kIGlzIGFwcGxpY2FibGUgdG8gUkMgb3BlcmF0aW9uIGFzIHdl
-bGwgYXMgRVBzLiAgVGhhbmtzIHZlcnkgbXVjaCBmb3IgeW91cg0KPiBoZWxwIQ0KPiANCj4gQlRX
-LCBkbyB5b3UgaGF2ZSBhIHRlc3QgY2FzZSB3aGljaCBmYWlscyB3L28gZXJyYXRhIGk4NzAgd29y
-a2Fyb3VuZD8NCg0KWWVzLCB3ZSBoYXZlIGEgUEVYODYwNiBQQ0kgc3dpdGNoIGF0dGFjaGVkIHRv
-IHRoZSBSQyB3aGljaCBmYWlscyB0byBwcm9iZSBpZiB0aGUgaTg3MCB3b3JrYXJvdW5kIGlzIG5v
-dCB1c2VkLg0KDQpUaGUgY29kZSBwaWNrcyB1cCB0aGUgd3JvbmcgY2xhc3MgZm9yIHRoZSBzd2l0
-Y2ggaWYgdGhlIHdvcmsgYXJvdW5kIGlzIG5vdCBpbiBwbGFjZS4NCg0KPiANCj4gDQo+IC0tDQo+
-IFJlZ2FyZHMNCj4gVmlnbmVzaA0K
+Layerscape pcie controllers support RC or EP mode, Add the EP mode
+support in Kconfig, the driver will support both RC and EP mode, and
+the driver is able to judge the pcie controllers work on RC or EP mode.
+
+Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
+Acked-by: Minghuan Lian <minghuan.Lian@nxp.com>
+---
+ v2:
+ - no change
+
+ drivers/pci/dwc/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 22ec82fcdea2..b5f507795779 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -108,6 +108,7 @@ config PCI_LAYERSCAPE
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+ 	select PCIE_DW_HOST
++	select PCIE_DW_EP
+ 	help
+ 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+ 
+-- 
+2.14.1
