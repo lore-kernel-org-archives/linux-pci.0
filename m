@@ -1,68 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40034 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751799AbdKVFcX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:23 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 18/30] PCI: ibmphp: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:31:03 -0500
-Message-Id: <1511328675-21981-19-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:51564 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756402AbdKCNsH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 09:48:07 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 06/17] PCI: designware-ep: Add generic function for raising MSI irq
+Date: Fri,  3 Nov 2017 14:47:10 +0100
+Message-Id: <20171103134722.5532-7-niklas.cassel@axis.com>
+In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Add a generic function for raising MSI irqs that can be used by all
+DWC based controllers.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
+Note that certain controllers, like DRA7xx, have a special convenience
+register for raising MSI irqs that doesn't require you to explicitly map
+the MSI address. Therefore, it is likely that certain drivers will
+not use this generic function, even if they can.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/hotplug/ibmphp_core.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++++++++++
+ drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
+ 2 files changed, 43 insertions(+)
 
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 73cf846..92dd882 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -707,7 +707,8 @@ static void ibm_unconfigure_device(struct pci_func *func)
- 	pci_lock_rescan_remove();
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 9c3820ca6358..be874df8003d 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -282,6 +282,40 @@ static const struct pci_epc_ops epc_ops = {
+ 	.stop			= dw_pcie_ep_stop,
+ };
  
- 	for (j = 0; j < 0x08; j++) {
--		temp = pci_get_bus_and_slot(func->busno, (func->device << 3) | j);
-+		temp = pci_get_domain_bus_and_slot(0, func->busno,
-+						   (func->device << 3) | j);
- 		if (temp) {
- 			pci_stop_and_remove_bus_device(temp);
- 			pci_dev_put(temp);
-@@ -780,7 +781,7 @@ static int ibm_configure_device(struct pci_func *func)
- 	if (!(bus_structure_fixup(func->busno)))
- 		flag = 1;
- 	if (func->dev == NULL)
--		func->dev = pci_get_bus_and_slot(func->busno,
-+		func->dev = pci_get_domain_bus_and_slot(0, func->busno,
- 				PCI_DEVFN(func->device, func->function));
++int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
++			     u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct pci_epc *epc = ep->epc;
++	u16 msg_ctrl, msg_data;
++	u32 msg_addr_lower, msg_addr_upper;
++	u64 msg_addr;
++	bool has_upper;
++	int ret;
++
++	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
++	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
++	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
++	if (has_upper) {
++		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
++		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
++	} else {
++		msg_addr_upper = 0;
++		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
++	}
++	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
++	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr, PAGE_SIZE);
++	if (ret)
++		return ret;
++
++	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
++
++	dw_pcie_ep_unmap_addr(epc, ep->msi_mem_phys);
++
++	return 0;
++}
++
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ 	struct pci_epc *epc = ep->epc;
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 37dfad8d003f..24edac035160 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -106,6 +106,8 @@
+ #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+ #define MSI_MESSAGE_ADDR_L32		0x54
+ #define MSI_MESSAGE_ADDR_U32		0x58
++#define MSI_MESSAGE_DATA_32		0x58
++#define MSI_MESSAGE_DATA_64		0x5C
  
- 	if (func->dev == NULL) {
-@@ -793,7 +794,7 @@ static int ibm_configure_device(struct pci_func *func)
- 		if (num)
- 			pci_bus_add_devices(bus);
+ /*
+  * Maximum number of MSI IRQs can be 256 per controller. But keep
+@@ -338,6 +340,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 interrupt_num);
+ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+@@ -353,6 +356,12 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
  
--		func->dev = pci_get_bus_and_slot(func->busno,
-+		func->dev = pci_get_domain_bus_and_slot(0, func->busno,
- 				PCI_DEVFN(func->device, func->function));
- 		if (func->dev == NULL) {
- 			err("ERROR... : pci_dev still NULL\n");
++static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
++					   u8 interrupt_num)
++{
++	return 0;
++}
++
+ static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ }
 -- 
-1.9.1
+2.14.2
