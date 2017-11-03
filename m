@@ -1,56 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:49083 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753882AbdKIMDA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 07:03:00 -0500
-Received: by mail-pf0-f193.google.com with SMTP id b79so4113540pfk.5
-        for <linux-pci@vger.kernel.org>; Thu, 09 Nov 2017 04:03:00 -0800 (PST)
-Subject: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Peter W Newton <peter.newton@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Raj Raina <rajesh.raina@nxp.com>,
-        Rajan Kapoor <rajan.kapoor@nxp.com>,
-        Prabhjot Singh <prabhjot.singh@nxp.com>, tglx@linutronix.de
-References: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
-From: subrahmanya_lingappa <l.subrahmanya@mobiveil.co.in>
-Message-ID: <697da40c-7cdd-3d05-5846-37eae31bb729@mobiveil.co.in>
-Date: Thu, 9 Nov 2017 17:33:12 +0530
+Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
+From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
+To: linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org,
+	helgaas@kernel.org
+Subject: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 60h-6fh) Processors
+Date: Fri,  3 Nov 2017 14:52:43 +0100
+Message-Id: <1509717164-1946-3-git-send-email-christian.koenig@amd.com>
+In-Reply-To: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
+References: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
- From e38b741006856f3a3623109dd5ddf5f99326ce61 Mon Sep 17 00:00:00 2001
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Thu, 9 Nov 2017 04:25:21 -0500
-Subject: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
+Just add the extra PCI-ID to the existing fixup.
 
-This patch exports irq_set_msi_desc symbol which is used by
-few PCIe root port drivers.
-
-Cc: bhelgaas@google.com
-Cc: tglx@linutronix.de
-
-Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Signed-off-by: Christian König <christian.koenig@amd.com>
 ---
-  kernel/irq/chip.c | 1 +
-  1 file changed, 1 insertion(+)
+ arch/x86/pci/fixup.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index be3c34e..c4222c4 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -137,6 +137,7 @@ int irq_set_msi_desc(unsigned int irq, struct 
-msi_desc *entry)
-  	return irq_set_msi_desc_off(irq, 0, entry);
-  }
-
-+EXPORT_SYMBOL(irq_set_msi_desc);
-  /**
-   *	irq_set_chip_data - set irq chip data for an irq
-   *	@irq:	Interrupt number
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index aa8b20e..3eebb0e 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -639,7 +639,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
+  * configuring host bridge windows using the _PRS and _SRS methods.
+  *
+  * But this is rarely implemented, so we manually enable a large 64bit BAR for
+- * PCIe device on AMD Family 15h (Models 00h-1fh, 30h-3fh) Processors here.
++ * PCIe device on AMD Family 15h (Models 00h-1fh, 30h-3fh, 60h-6fh) Processors
++ * here.
+  */
+ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ {
+@@ -697,6 +698,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1401, pci_amd_enable_64bit_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1571, pci_amd_enable_64bit_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
+ 
+ #endif
 -- 
-1.8.3.1
+2.7.4
