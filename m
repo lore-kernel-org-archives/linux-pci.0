@@ -1,53 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41786 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753205AbdKVWtm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:49:42 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Tejun Heo <tj@kernel.org>,
-        linux-ide@vger.kernel.org (open list:LIBATA PATA DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2 04/29] ata: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 17:48:59 -0500
-Message-Id: <1511390964-9979-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 04/17] PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
+Date: Fri,  3 Nov 2017 14:47:08 +0100
+Message-Id: <20171103134722.5532-5-niklas.cassel@axis.com>
+In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Certain SoCs need to map the MSI address in raise_irq.
+To map an address, you first need to call pci_epc_mem_alloc_addr(),
+however, pci_epc_mem_alloc_addr() calls ioremap() (which can sleep).
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+Since raise_irq is only called from atomic context, we can't call
+pci_epc_mem_alloc_addr() from raise_irq.
 
-Use pci_get_domain_bus_and_slot() and extract the actual domain number
-from the pdev passed in.
+Pre-allocate a page in dw_pcie_ep_init(), so that this page can later
+be used to map/unmap the MSI address in raise_irq.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/ata/pata_ali.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/dwc/pcie-designware-ep.c | 10 ++++++++++
+ drivers/pci/dwc/pcie-designware.h    |  2 ++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index d19cd88..0b122f9 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -466,7 +466,8 @@ static void ali_init_chipset(struct pci_dev *pdev)
- 			tmp |= 0x01;	/* CD_ROM enable for DMA */
- 		pci_write_config_byte(pdev, 0x53, tmp);
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 3fb34be99715..2684090b782b 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -286,6 +286,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ 	struct pci_epc *epc = ep->epc;
+ 
++	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
++			      ep->page_size);
++
+ 	pci_epc_mem_exit(epc);
+ }
+ 
+@@ -341,6 +344,13 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		return ret;
  	}
--	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
-+	north = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus), 0,
-+					    PCI_DEVFN(0, 0));
- 	if (north && north->vendor == PCI_VENDOR_ID_AL && ali_isa_bridge) {
- 		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
- 		   Set the south bridge enable bit */
+ 
++	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
++					     ep->page_size);
++	if (!ep->msi_mem) {
++		dev_err(dev, "Failed to reserve memory for MSI\n");
++		return -ENOMEM;
++	}
++
+ 	ep->epc = epc;
+ 	epc_set_drvdata(epc, ep);
+ 	dw_pcie_setup(pci);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 9aaf0cd04dd6..5a1da459eda5 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -198,6 +198,8 @@ struct dw_pcie_ep {
+ 	unsigned long		ob_window_map;
+ 	u32			num_ib_windows;
+ 	u32			num_ob_windows;
++	void __iomem		*msi_mem;
++	phys_addr_t		msi_mem_phys;
+ };
+ 
+ struct dw_pcie_ops {
 -- 
-1.9.1
+2.14.2
