@@ -1,120 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 28/29] i7300_idle: remove unused file
-Date: Mon, 27 Nov 2017 11:58:05 -0500
-Message-Id: <1511801886-6753-29-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:59229 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755883AbdKCQj0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 12:39:26 -0400
+Date: Fri, 3 Nov 2017 17:39:24 +0100
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Subject: Re: [PATCH v3] pci/switchtec: Don't use completion's wait queue
+Message-ID: <20171103163924.7rtdkkst3yl7ghcm@linutronix.de>
+References: <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
+ <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
+ <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
+ <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
+ <20171102171955.lvnvqnwl4qwhlmdk@linutronix.de>
+ <b41e83ae-a687-3118-16cb-5ee92e70fc2b@deltatee.com>
+ <20171103082227.zzbeee54pd2bf72u@linutronix.de>
+ <83b6c876-6595-5b2c-e82c-2f75f559c20b@deltatee.com>
+ <20171103161954.557idpkckag7j7j5@linutronix.de>
+ <ceab9bab-3c6d-4800-fa44-386e5fe9e71f@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <ceab9bab-3c6d-4800-fa44-386e5fe9e71f@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-i7300_idle.h is not being called by any source file and contains calls to
-pci_get_bus_and_slot() that we are trying to deprecate. Remove unused file.
+On 2017-11-03 10:33:04 [-0600], Logan Gunthorpe wrote:
+> Quoting myself along the way:
+> 
+> v1: "I'm sorry but this seems a bit crazy to me. Driver's can't poll on
+> completions because an out of tree implementation changes them in a weird
+> way??! Just because no one in-tree does it now doesn't make it invalid."
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- include/linux/i7300_idle.h | 84 ----------------------------------------------
- 1 file changed, 84 deletions(-)
- delete mode 100644 include/linux/i7300_idle.h
+You forgot:
+On 2017-10-04 10:13:15 [-0600], Logan Gunthorpe wrote:
+> But at the very least, if we _absolutely_ have to patch this out, you
+> shouldn't make it so convoluted. Just replace the struct completion with a
 
-diff --git a/include/linux/i7300_idle.h b/include/linux/i7300_idle.h
-deleted file mode 100644
-index 4dbe651..0000000
---- a/include/linux/i7300_idle.h
-+++ /dev/null
-@@ -1,84 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--
--#ifndef I7300_IDLE_H
--#define I7300_IDLE_H
--
--#include <linux/pci.h>
--
--/*
-- * I/O AT controls (PCI bus 0 device 8 function 0)
-- * DIMM controls (PCI bus 0 device 16 function 1)
-- */
--#define IOAT_BUS 0
--#define IOAT_DEVFN PCI_DEVFN(8, 0)
--#define MEMCTL_BUS 0
--#define MEMCTL_DEVFN PCI_DEVFN(16, 1)
--
--struct fbd_ioat {
--	unsigned int vendor;
--	unsigned int ioat_dev;
--	unsigned int enabled;
--};
--
--/*
-- * The i5000 chip-set has the same hooks as the i7300
-- * but it is not enabled by default and must be manually
-- * manually enabled with "forceload=1" because it is
-- * only lightly validated.
-- */
--
--static const struct fbd_ioat fbd_ioat_list[] = {
--	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_CNB, 1},
--	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT, 0},
--	{0, 0}
--};
--
--/* table of devices that work with this driver */
--static const struct pci_device_id pci_tbl[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_FBD_CNB) },
--	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5000_ERR) },
--	{ } /* Terminating entry */
--};
--
--/* Check for known platforms with I/O-AT */
--static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
--						struct pci_dev **ioat_dev,
--						int enable_all)
--{
--	int i;
--	struct pci_dev *memdev, *dmadev;
--
--	memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
--	if (!memdev)
--		return -ENODEV;
--
--	for (i = 0; pci_tbl[i].vendor != 0; i++) {
--		if (memdev->vendor == pci_tbl[i].vendor &&
--		    memdev->device == pci_tbl[i].device) {
--			break;
--		}
--	}
--	if (pci_tbl[i].vendor == 0)
--		return -ENODEV;
--
--	dmadev = pci_get_bus_and_slot(IOAT_BUS, IOAT_DEVFN);
--	if (!dmadev)
--		return -ENODEV;
--
--	for (i = 0; fbd_ioat_list[i].vendor != 0; i++) {
--		if (dmadev->vendor == fbd_ioat_list[i].vendor &&
--		    dmadev->device == fbd_ioat_list[i].ioat_dev) {
--			if (!(fbd_ioat_list[i].enabled || enable_all))
--				continue;
--			if (fbd_dev)
--				*fbd_dev = memdev;
--			if (ioat_dev)
--				*ioat_dev = dmadev;
--
--			return 0;
--		}
--	}
--	return -ENODEV;
--}
--
--#endif
--- 
-1.9.1
+:)
+
+> v2: "I still don't want this merged as it makes the code less clear, but I
+> tested it and it does not work."
+
+and you provided the missing bit that was missing.
+
+> v3: "However, this whole concept still gets a NAK from me. I think it makes
+> the code less clear for no obvious reason."
+> 
+> I feel like I was pretty clear from the beginning. These are the comments
+> that you never addressed. Just because you picked up on the minor issues and
+> fixed them doesn't mean you can ignore the other feedback.
+
+and this piece is needed to get it working on RT. In longer term we
+would want completions based on simple waitqueues upstream, too.
+
+> Logan
+
+Sebastian
