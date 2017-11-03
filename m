@@ -1,79 +1,84 @@
-Return-Path: <SRS0=RmR9=CF=infradead.org=rdunlap@kernel.org>
-Return-Path: <SRS0=RmR9=CF=infradead.org=rdunlap@kernel.org>
-Subject: Re: [PATCH] pci: fix kernel-doc build warning
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, LKML <linux-kernel@vger.kernel.org>
-References: <85dcffe7-1e6b-5735-2552-d35d127e392b@infradead.org>
- <20171107003355.GE9538@bhelgaas-glaptop.roam.corp.google.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <e756ace6-f821-db39-5a3b-11192ae55803@infradead.org>
-Date: Mon, 6 Nov 2017 16:50:53 -0800
-MIME-Version: 1.0
-In-Reply-To: <20171107003355.GE9538@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4 05/17] PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+Date: Fri,  3 Nov 2017 14:47:09 +0100
+Message-Id: <20171103134722.5532-6-niklas.cassel@axis.com>
+In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/06/2017 04:33 PM, Bjorn Helgaas wrote:
-> On Sun, Oct 29, 2017 at 05:07:11PM -0700, Randy Dunlap wrote:
->> From: Randy Dunlap <rdunlap@infradead.org>
->>
->> Fix build error in kernel-doc notation:
->>
->> ../drivers/pci/pci.c:3479: ERROR: Unexpected indentation.
->>
->> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
->> Cc:	Bjorn Helgaas <bhelgaas@google.com>
->> Cc:	linux-pci@vger.kernel.org
->> ---
->>  drivers/pci/pci.c |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> --- lnx-414-rc7.orig/drivers/pci/pci.c
->> +++ lnx-414-rc7/drivers/pci/pci.c
->> @@ -3471,7 +3471,7 @@ EXPORT_SYMBOL(devm_pci_remap_cfgspace);
->>   * All operations are managed and will be undone on driver detach.
->>   *
->>   * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
->> - * on failure. Usage example:
->> + * on failure. Usage example::
-> 
-> I don't understand what's going on here.  Apparently there's something
-> special about two colons?  I saw plenty of double colons in
-> Documentation/, but I couldn't quickly find out what it means.
+Remove the static keyword from dw_pcie_ep_reset_bar() so that
+pci-dra7xx.c does not need its own copy of dw_pcie_ep_reset_bar().
 
-Sorry about my terseness.  The ending colon is not the problem.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c         | 9 ---------
+ drivers/pci/dwc/pcie-designware-ep.c | 2 +-
+ drivers/pci/dwc/pcie-designware.h    | 5 +++++
+ 3 files changed, 6 insertions(+), 10 deletions(-)
 
-The problem is in indentation in the example code, and changing to use
-"::" tells the kernel-doc "reStructuredText" processor that the following
-block is a literal block of some blob that should be kept as is.
-
-> If kernel-doc thinks "example:" is a mistake, maybe we could recast
-> the sentence as "Example usage:"?  Putting a double colon here makes
-> the text look like a mistake to this human reader.
-> 
->>   *
->>   *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->>   *	base = devm_pci_remap_cfg_resource(&pdev->dev, res);
->>
-
-Like you said, there will be lots of these "::" in source files.
-There is one slight alternate, if it looks any better to you, to put the
-"::" on a line by itself, like so:
-
- * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
- * on failure. Usage example:
- *::
- *
- *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- *	base = devm_pci_remap_cfg_resource(&pdev->dev, res);
- *	if (IS_ERR(base))
- *		return PTR_ERR(base);
- */
-
-
-I can resend the patch like that if you prefer it.
-
-thanks,
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index d0848006945a..a743545da4d4 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -336,15 +336,6 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+-{
+-	u32 reg;
+-
+-	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+-	dw_pcie_writel_dbi2(pci, reg, 0x0);
+-	dw_pcie_writel_dbi(pci, reg, 0x0);
+-}
+-
+ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 2684090b782b..9c3820ca6358 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -30,7 +30,7 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ 	pci_epc_linkup(epc);
+ }
+ 
+-static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ 	u32 reg;
+ 
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 5a1da459eda5..37dfad8d003f 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -338,6 +338,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ {
+@@ -351,5 +352,9 @@ static inline int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
++
++static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++{
++}
+ #endif
+ #endif /* _PCIE_DESIGNWARE_H */
 -- 
-~Randy
+2.14.2
