@@ -1,47 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:56458 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751193AbdLAGNY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Dec 2017 01:13:24 -0500
-From: Vignesh R <vigneshr@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Chris Welch <Chris.Welch@viavisolutions.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, Vignesh R <vigneshr@ti.com>
-Subject: [PATCH 0/4] pci-dra7xx: Fix legacy IRQ handling and errata handling
-Date: Fri, 1 Dec 2017 11:43:07 +0530
-Message-ID: <20171201061311.16691-1-vigneshr@ti.com>
+Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
+From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
+To: linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org,
+	helgaas@kernel.org
+Subject: [PATCH 1/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 00h-0fh) Processors
+Date: Fri,  3 Nov 2017 14:52:41 +0100
+Message-Id: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-This series contains two fixes:
-1. Make workaround for errata i870 applicable in Host mode as
-well(previously it was enabled only for EP mode) as per errata
-documentation: http://www.ti.com/lit/er/sprz429k/sprz429k.pdf
-2. Fix problem with handling of legacy INTD interrupts.
+Just add the extra PCI-ID to the existing fixup.
 
-Tested on 66AK2G EVM and ICE boards
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ arch/x86/pci/fixup.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
-Vignesh R (4):
-  pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
-  dt-bindings: PCI: dra7xx: Add bindings for unaligned access in host
-    mode
-  ARM: dts: dra7: Add DT property to allow unaligned mem access to PCIe
-    RC
-  PCI: dwc: pci-dra7xx: Fix legacy IRQ handling
-
- Documentation/devicetree/bindings/pci/ti-pci.txt |  5 +++++
- arch/arm/boot/dts/dra7.dtsi                      |  2 ++
- drivers/pci/dwc/pci-dra7xx.c                     | 23 ++++++++++++++---------
- 3 files changed, 21 insertions(+), 9 deletions(-)
-
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 7b6bd76..1d2238d 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -639,7 +639,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
+  * configuring host bridge windows using the _PRS and _SRS methods.
+  *
+  * But this is rarely implemented, so we manually enable a large 64bit BAR for
+- * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
++ * PCIe device on AMD Family 15h (Models 00h-0fh, 30h-3fh) Processors here.
+  */
+ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ {
+@@ -696,5 +696,6 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ 	pci_bus_add_resource(dev->bus, res, 0);
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
+ 
+ #endif
 -- 
-2.15.0
+2.7.4
