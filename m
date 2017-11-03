@@ -1,74 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 11/17] PCI: dwc: artpec6: Use BIT and GENMASK macros
-Date: Fri,  3 Nov 2017 14:47:15 +0100
-Message-Id: <20171103134722.5532-12-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Leo Li <leoyang.li@nxp.com>
+To: Xiaowei Bao <xiaowei.bao@nxp.com>, "robh+dt@kernel.org"
+ <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
+ <will.deacon@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "shawnguo@kernel.org" <shawnguo@kernel.org>, Madalin-cristian Bucur
+ <madalin.bucur@nxp.com>, Sumit Garg <sumit.garg@nxp.com>, "Y.b. Lu"
+ <yangbo.lu@nxp.com>, "hongtao.jia@nxp.com" <hongtao.jia@nxp.com>, Andy Tang
+ <andy.tang@nxp.com>, "kishon@ti.com" <kishon@ti.com>, "jingoohan1@gmail.com"
+ <jingoohan1@gmail.com>, "pbrobinson@gmail.com" <pbrobinson@gmail.com>,
+ "songxiaowei@hisilicon.com" <songxiaowei@hisilicon.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org"
+ <linuxppc-dev@lists.ozlabs.org>, "Z.q. Hou" <zhiqiang.hou@nxp.com>, "Mingkai
+ Hu" <mingkai.hu@nxp.com>, "M.h. Lian" <minghuan.lian@nxp.com>
+Subject: RE: [PATCH 0/3] dts: Add the property of IB and OB
+Date: Fri, 3 Nov 2017 17:06:58 +0000
+Message-ID: <AM4PR0401MB1699C33E678BB7DD027307568F5D0@AM4PR0401MB1699.eurprd04.prod.outlook.com>
+References: <20171103093115.14915-1-xiaowei.bao@nxp.com>
+In-Reply-To: <20171103093115.14915-1-xiaowei.bao@nxp.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Xiaowei Bao <xiaowei.bao@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use BIT and GENMASK macros to improve readability.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 4b8ef266dc2f..18075e0fab80 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -39,28 +39,28 @@ struct artpec6_pcie {
- 
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
--#define  PCIECFG_DBG_OEN		(1 << 24)
--#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
--#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
--#define  PCIECFG_CLKREQ_B		(1 << 11)
--#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
--#define  PCIECFG_PLL_ENABLE		(1 << 9)
--#define  PCIECFG_PCLK_ENABLE		(1 << 8)
--#define  PCIECFG_RISRCREN		(1 << 4)
--#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
--#define  PCIECFG_CISRREN		(1 << 2)
--#define  PCIECFG_MACRO_ENABLE		(1 << 0)
-+#define  PCIECFG_DBG_OEN		BIT(24)
-+#define  PCIECFG_CORE_RESET_REQ		BIT(21)
-+#define  PCIECFG_LTSSM_ENABLE		BIT(20)
-+#define  PCIECFG_CLKREQ_B		BIT(11)
-+#define  PCIECFG_REFCLK_ENABLE		BIT(10)
-+#define  PCIECFG_PLL_ENABLE		BIT(9)
-+#define  PCIECFG_PCLK_ENABLE		BIT(8)
-+#define  PCIECFG_RISRCREN		BIT(4)
-+#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
-+#define  PCIECFG_CISRREN		BIT(2)
-+#define  PCIECFG_MACRO_ENABLE		BIT(0)
- 
- #define NOCCFG				0x40
--#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
--#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
--#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
--#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
-+#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
-+#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
-+#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
-+#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
- 
- #define PHY_STATUS			0x118
--#define PHY_COSPLLLOCK			(1 << 0)
-+#define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
-+#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
- 
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
--- 
-2.14.2
+> -----Original Message-----
+> From: Bao Xiaowei [mailto:xiaowei.bao@nxp.com]
+> Sent: Friday, November 03, 2017 4:31 AM
+> To: robh+dt@kernel.org; mark.rutland@arm.com; catalin.marinas@arm.com;
+> will.deacon@arm.com; bhelgaas@google.com; shawnguo@kernel.org;
+> Madalin-cristian Bucur <madalin.bucur@nxp.com>; Sumit Garg
+> <sumit.garg@nxp.com>; Y.b. Lu <yangbo.lu@nxp.com>; hongtao.jia@nxp.com;
+> Andy Tang <andy.tang@nxp.com>; Leo Li <leoyang.li@nxp.com>;
+> kishon@ti.com; jingoohan1@gmail.com; pbrobinson@gmail.com;
+> songxiaowei@hisilicon.com; devicetree@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; linux-kernel@vger.kernel.org; linux-
+> pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; Z.q. Hou
+> <zhiqiang.hou@nxp.com>; Mingkai Hu <mingkai.hu@nxp.com>; M.h. Lian
+> <minghuan.lian@nxp.com>
+> Cc: Xiaowei Bao <xiaowei.bao@nxp.com>
+> Subject: [PATCH 0/3] dts: Add the property of IB and OB
+
+When you send a v2 series, please include v2 in the title of all patches like "[PATCH v2 0/3]"...
+
+Also the title of this summary email should really be the summary of all 3 patches like "Adding PCIe EP support to ls1046a".
+
+-Leo
+
+
+> 
+> Depend on
+> https://emea01.safelinks.protection.outlook.com/?url=http%3A%2F%2Fpatchw
+> ork.ozlabs.org%2Fpatch%2F815382%2F&data=02%7C01%7Cleoyang.li%40nxp.c
+> om%7C7db015020c8a414f57e708d522a03165%7C686ea1d3bc2b4c6fa92cd99c
+> 5c301635%7C0%7C0%7C636452993777387982&sdata=19Fmzg%2FOJGl%2Bgizv
+> xfY1yELlFgWKRuZ%2FVNbx49yz2Wk%3D&reserved=0
+> 
+> Bao Xiaowei (3):
+>   ARMv8: dts: ls1046a: add the property of IB and OB
+>   ARMv8: layerscape: add the pcie ep function support
+>   ARMv8: pcie: make the DWC EP driver support for layerscape
+> 
+>  arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi |   6 ++
+>  drivers/pci/dwc/Kconfig                        |   1 +
+>  drivers/pci/dwc/pci-layerscape.c               | 122 +++++++++++++++++++++++--
+>  3 files changed, 123 insertions(+), 6 deletions(-)
+> 
+> --
+> 2.14.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
