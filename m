@@ -1,102 +1,80 @@
-Return-Path: <SRS0=90sa=CO=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=90sa=CO=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH v2 4/4] PCI/AER: Dont do recovery when DPC is enabled
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dongdong Liu <liudongdong3@huawei.com>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org
-References: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
- <1510721808-27164-5-git-send-email-poza@codeaurora.org>
- <20171115211447.GA7266@bhelgaas-glaptop.roam.corp.google.com>
- <16e82fb4-dda8-3790-e831-675f9a6fd388@codeaurora.org>
- <20171116201745.GB7266@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <16b9ac67-042d-1010-0c8c-205b2fa40a7f@codeaurora.org>
-Date: Thu, 16 Nov 2017 15:52:47 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:38258 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753076AbdKFX1P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Nov 2017 18:27:15 -0500
+Date: Mon, 6 Nov 2017 16:27:13 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Wang, Liang-min" <liang-min.wang@intel.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
+        "O'riordain, Seosamh" <seosamh.oriordain@intel.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
+Message-ID: <20171106162713.0a49ac3f@t450s.home>
+In-Reply-To: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5BB50@FMSMSX110.amr.corp.intel.com>
+References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
+        <20171024234351.0af0ff4a@t450s.home>
+        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
+        <20171025000654.7621b84e@t450s.home>
+        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
+        <20171028001907.7b8fa60d@t450s.home>
+        <1509146439.11655.60.camel@intel.com>
+        <20171029061646.GA28105@infradead.org>
+        <1509367141.11641.51.camel@infradead.org>
+        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5BB50@FMSMSX110.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20171116201745.GB7266@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>
->> Whether the AER driver reads ~0 or not really depends on timing. The
->> link may come up from the DPC driver by the time AER driver reaches
->> here as an example.
->>
->> Bad things do happen. We have seen this with e1000e driver.
+On Tue, 31 Oct 2017 12:55:20 +0000
+"Wang, Liang-min" <liang-min.wang@intel.com> wrote:
+
+> > -----Original Message-----
+> > From: David Woodhouse [mailto:dwmw2@infradead.org]
+> > Sent: Monday, October 30, 2017 8:39 AM
+> > To: Christoph Hellwig <hch@infradead.org>; Duyck, Alexander H
+> > <alexander.h.duyck@intel.com>
+> > Cc: Wang, Liang-min <liang-min.wang@intel.com>;
+> > alex.williamson@redhat.com; linux-kernel@vger.kernel.org; Kirsher, Jeffrey T
+> > <jeffrey.t.kirsher@intel.com>; kvm@vger.kernel.org; bhelgaas@google.com;
+> > linux-pci@vger.kernel.org
+> > Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
+> > 
+> > On Sat, 2017-10-28 at 23:16 -0700, Christoph Hellwig wrote:  
+> > > On Fri, Oct 27, 2017 at 11:20:41PM +0000, Duyck, Alexander H wrote:  
+> > > >
+> > > > I don't see this so much as a security problem per-se. It all depends
+> > > > on the hardware setup. If I recall correctly, there are devices where
+> > > > the PF function doesn't really do much other than act as a bit more
+> > > > heavy-weight VF, and the actual logic is handled by a firmware engine
+> > > > on the device.  
+> > >
+> > > Can you cite an example?  While those surely could exist in theory,
+> > > I can't think of a practical example.  
+> > 
+> > I have them, which is why I'm patching the UIO driver to allow num_vfs
+> > to be set. I don't even want to *use* the UIO driver for any purpose
+> > except to make that appear in sysfs. It's all handled in the device.
+> > 
+> > (I think we might be able to just give the PF out to a guest as if it
+> > were just another VF, but I don't think we actually *do* that right
+> > now).  
 > 
-> I don't doubt that bad things happen.  I'm just trying to understand
-> exactly *what* bad things happen and how, so we can fix them cleanly.
-> 
+> Under UEFI secure boot environment, kernel puts restrictions on UIO and its derivatives.
+> So, user-space function/driver based upon UIO is no longer working under UEFI secure
+> boot environment. The next viable option is vfio-pci, hence this patch in parallel with
+> UIO work.
 
-This was random crashes in the e1000e drivers accompanied with stack
-traces coming from WARN and msi allocation routines.
+If you want a PF driver that does nothing other than allow SR-IOV to be
+enabled, doesn't that scream pci-stub?  Trying to overlay it onto a
+driver that also allows userspace driver access to that device seems
+like the worst idea.  Thanks,
 
-> I don't know exactly what you mean by "DPC stops the drivers
-> immediately".  Since the DPC hardware disables the Link, I *think*
-> you probably mean that driver accesses to the device start failing
-> (whether the driver notices this is a whole different question).
-
-Sorry for not being clear.
-
-I was talking about the pci_stop_and_remove_bus_device() call in DPC's
-interrupt_event_handler() function as the "stop command".
-
-> 
-> When the DPC hardware disables the Link, it causes a hot reset for
-> downstream components.  The DPC interrupt_event_handler() doesn't do
-> much except remove the device (which detaches the driver) and clear
-> the DPC Trigger Status bit (which allows hardware to try to retrain
-> the Link).
-> 
-
-That's true.
-
-> So the "stop" and "recover" commands you mention must be related to
-> AER.  
-
-I was talking about pci_stop_and_remove_bus_device() vs. error_detected()
-as "stop" and "recover"
-
-> I guess these would be some of the driver callbacks
-> (error_detected(), mmio_enabled(), slot_reset(), reset_prepare(),
-> reset_done(), resume())?
-> 
-> In any case, I agree that it probably doesn't make sense to call any
-> of these callbacks if the DPC driver has already detached the driver
-> and re-attached it.  The device state is gone because of the hot reset
-> and the driver state is gone because of the detach/re-attach.
-> 
-> However, I'm not so sure about the period *before* the DPC driver
-> detaches the driver.  The description of error_detected() says it
-> cannot assume the device is accessible, so I think there might be an
-> argument that AER *should* call this for DPC events so the driver has
-> a chance to clean up before being unceremoniously detached.
-
-Makes sense. Let us work on this.
-
-> 
-> I suspect this all probably requires tighter integration between DPC
-> and AER, and I'm totally fine with that.  I think the current
-> separation as separate "drivers" is pretty artificial anyway.
-
-Got it. We will try to plumb DPC error handling into AER driver's error
-handling mechanism.
-
-Another question:
-
-What do you think about the rescan following link up? The only entity
-that does rescan today is hotplug after DPC recovery. There could be
-a platform with DPC support but no hotplug support. 
-
-How should we handle it?
-
-We can call rescan from DPC all the time.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Alex
