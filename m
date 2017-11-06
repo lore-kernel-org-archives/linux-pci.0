@@ -1,103 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:36750 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753185AbdKFTvZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Nov 2017 14:51:25 -0500
+Date: Mon, 6 Nov 2017 13:51:23 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: treding@nvidia.com, bhelgaas@google.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com, mmaddireddy@nvidia.com, robh+dt@kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH V3 0/2] Tegra PCIe end point config space map code
+ refactoring
+Message-ID: <20171106195123.GG31930@bhelgaas-glaptop.roam.corp.google.com>
+References: <1508827489-10842-1-git-send-email-vidyas@nvidia.com>
+ <20171024201512.GG21840@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <2654404.6YT5rmSnae@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <5556673.MXo6XDN1f4@aspire.rjw.lan>
- <CAPDyKFpzSd4zwW_awuxuim0gzyKV5s9dm66X+szsSUKRnBakbA@mail.gmail.com> <2654404.6YT5rmSnae@aspire.rjw.lan>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 17 Nov 2017 13:45:16 +0100
-Message-ID: <CAJZ5v0iAC+NoiSs5mMvt37mVtyG+2qp=cap40Ju6y+UG44TJSQ@mail.gmail.com>
-Subject: Re: [PATCH v3 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171024201512.GG21840@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 17, 2017 at 12:07 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Thursday, November 16, 2017 4:10:16 PM CET Ulf Hansson wrote:
->> On 12 November 2017 at 01:37, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> >
->> > Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
->> > instruct the PM core and middle-layer (bus type, PM domain, etc.)
->> > code that it is desirable to leave the device in runtime suspend
->> > after system-wide transitions to the working state (for example,
->> > the device may be slow to resume and it may be better to avoid
->> > resuming it right away).
->> >
->> > Generally, the middle-layer code involved in the handling of the
->> > device is expected to indicate to the PM core whether or not the
->> > device may be left in suspend with the help of the device's
->> > power.may_skip_resume status bit.  That has to happen in the "noirq"
->> > phase of the preceding system suspend (or analogous) transition.
->> > The middle layer is then responsible for handling the device as
->> > appropriate in its "noirq" resume callback which is executed
->> > regardless of whether or not the device may be left suspended, but
->> > the other resume callbacks (except for ->complete) will be skipped
->> > automatically by the core if the device really can be left in
->> > suspend.
->> >
->> > The additional power.must_resume status bit introduced for the
->> > implementation of this mechanisn is used internally by the PM core
->> > to track the requirement to resume the device (which may depend on
->> > its children etc).
->> >
->> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->> > ---
->> >
->> > v2 -> v3: Take dev->power.usage_count when updating power.must_resume in
->> >           __device_suspend_noirq().
->> >
->> > ---
+On Tue, Oct 24, 2017 at 03:15:12PM -0500, Bjorn Helgaas wrote:
+> On Tue, Oct 24, 2017 at 12:14:47PM +0530, Vidya Sagar wrote:
+> > PCIe host controller in Tegra SoCs has 1GB of aperture available
+> > for mapping end points config space, IO and BARs. In that, currently
+> > 256MB is being reserved for mapping end points configuration space
+> > which leaves less memory space available for mapping end points BARs
+> > on some of the platforms.
+> > This patch series attempts to map only 4K space from 1GB aperture to
+> > access end points configuration space.
+> > 
+> > Currently, this change can benefit T20 and T186 in saving (i.e. repurposed
+> > to use for BAR mapping) physical space as well as kernel virtual mapping space,
+> > it saves only kernel virtual address space in T30, T124, T132 and T210.
+> > 
+> > NOTE: Since T186 PCIe DT entry is not yet present in main line (it is currently
+> > merged to 'for-4.15/arm64/dt' branch), nothing gets broken with this change for T186.
+> > For older platforms (T20, T30, T124, T132, T210), this change works fine without any
+> > DT modifications
+> > 
+> > Testing Done on T124, T210 & T186:
+> >  Enumeration and basic functionality of immediate devices
+> >  Enumeration of devices behind a PCIe switch
+> >  Complete 4K configuration space access
+> > 
+> > Vidya Sagar (2):
+> >   PCI: tegra: refactor config space mapping code
+> >   ARM64: tegra: limit PCIe config space mapping to 4K for T186
+> > 
+> >  arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +-
+> >  drivers/pci/host/pci-tegra.c             | 125 ++++++++++---------------------
+> >  2 files changed, 44 insertions(+), 89 deletions(-)
+> 
+> Seems OK to me; waiting for Thierry's ack.
 
-[...]
-
->> > +       } else {
->> > +               dev->power.must_resume = true;
->> > +       }
->> > +
->> > +       if (dev->power.must_resume)
->> > +               dpm_superior_set_must_resume(dev);
->> >
->> >  Complete:
->> >         complete_all(&dev->power.completion);
->> > @@ -1487,6 +1539,9 @@ static int __device_suspend(struct devic
->> >                 dev->power.direct_complete = false;
->> >         }
->> >
->> > +       dev->power.may_skip_resume = false;
->> > +       dev->power.must_resume = false;
->> > +
->>
->> First, these assignment could be bypassed if the direct_complete path
->> is used. Perhaps it's more robust to reset these flags already in
->> device_prepare().
->
-> In the direct-complete case may_skip_resume doesn't matter.
->
-> must_resume should be set to "false", however, so that parents of
-> direct-complete devices may be left in suspend (in case they don't
-> fall under direct-complete themselves), so good catch.
-
-Actually, not really.
-
-must_resume for parents/suppliers is not updated if the device has
-direct_complete set and the device's own must_resume doesn't matter
-then.
-
-So this part is good as is AFAICS.
-
-Thanks,
-Rafael
+Dropping for lack of an ack.  Please repost if/when Thierry acks it.
