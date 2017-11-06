@@ -1,56 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 30/30] PCI: remove pci_get_bus_and_slot() function
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-31-git-send-email-okaya@codeaurora.org>
- <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
- <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
-From: Timur Tabi <timur@codeaurora.org>
-Message-ID: <25ec431a-2c1b-d352-f9ef-c663864664b6@codeaurora.org>
-Date: Wed, 22 Nov 2017 00:08:45 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54790 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751568AbdKFUwg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Nov 2017 15:52:36 -0500
+Date: Mon, 6 Nov 2017 13:52:35 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ilya Lesokhin <ilyal@mellanox.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Devices behind a non-ACS switch are assigned different
+ iommu-groups
+Message-ID: <20171106135235.643ca4ec@t450s.home>
+In-Reply-To: <AM4PR0501MB2723EC01DCA37976AE4EABA4D4580@AM4PR0501MB2723.eurprd05.prod.outlook.com>
+References: <AM4PR0501MB2723EC01DCA37976AE4EABA4D4580@AM4PR0501MB2723.eurprd05.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/21/17 11:55 PM, Sinan Kaya wrote:
-> For places where domain number information is available, I extracted domain number
-> and added into pci_get_domain_bus_and_slot() call such as xen or bn drivers.
+On Sun, 29 Oct 2017 07:56:52 +0000
+Ilya Lesokhin <ilyal@mellanox.com> wrote:
 
-My suggestion is that you restrict your first patch set to only these 
-patches.
+> Hi,
+> I was testing devices assignment behind a non-ACS switch and to my surprise,
+> Devices connected to different ports were assigned different iommu-groups.
+> 
+> The reason for this behavior is that pci_acs_enabled(...) considers the switch 
+> Upstream port to have ACS enabled.
+> http://elixir.free-electrons.com/linux/v4.13.1/source/drivers/pci/pci.c#L2914
+> (the upstream port is not a multifunction device).
+> 
+> I'm not sure what the correct solution is but I believe, the upstream port
+> Shouldn't be considered in pci_acs_path_enable(...).
 
-> The assumption at this point is for pci_get_bus_and_slot() usages to be caught
-> in code-review.
+Yes, this seems like a bug.  We should fix it, but we're likely to make
+some people unhappy by doing so :-\  My guess it that this works
+correctly if the switch enumerates downstream ports as separate
+functions within the same slot, but fails if the downstream ports are
+exposed as separate slots.  We like to assume that separate slots are
+isolated, but of course they're all within the internal implementation
+of the switch here.  Patches welcome, otherwise I'll try to look at it
+soon.  Thanks,
 
-How about this:
-
-static inline struct pci_dev * __deprecated 
-pci_get_bus_and_slot(unsigned int bus,
-						   unsigned int devfn)
-{
-	return pci_get_domain_bus_and_slot(0, bus, devfn);
-}
-
-
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
-Technologies, Inc.  Qualcomm Technologies, Inc. is a member of the
-Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Alex
