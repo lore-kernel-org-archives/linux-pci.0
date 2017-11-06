@@ -1,130 +1,125 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 15 Nov 2017 15:14:47 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 6 Nov 2017 13:29:23 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <poza@codeaurora.org>
-Subject: Re: [PATCH v2 4/4] PCI/AER: Dont do recovery when DPC is enabled
-Message-ID: <20171115211447.GA7266@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
- <1510721808-27164-5-git-send-email-poza@codeaurora.org>
+To: Pankaj Dubey <pankaj.dubey@samsung.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: endpoint: handle probable NULL pointer access
+Message-ID: <20171106192923.GD31930@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20171012035806epcas1p16df484a0565cfe780416253710464a8f@epcas1p1.samsung.com>
+ <1507780677-7983-1-git-send-email-pankaj.dubey@samsung.com>
+ <20171024200200.GE21840@bhelgaas-glaptop.roam.corp.google.com>
+ <6ee65418-8589-01c1-2156-67fbf881260a@ti.com>
+ <CAGcde9E=DTTS01_FjGG2=_q-Luit_GfaXe3cVRToYxbnuKAy+w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1510721808-27164-5-git-send-email-poza@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, okaya@codeaurora.org,
- linux-arm-kernel@lists.infradead.org, Dongdong Liu <liudongdong3@huawei.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGcde9E=DTTS01_FjGG2=_q-Luit_GfaXe3cVRToYxbnuKAy+w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 15, 2017 at 10:26:48AM +0530, Oza Pawandeep wrote:
-> PCI Express Base Specification, Rev. 4.0 Version 0.9
-> 6.2.10: Downstream Port Containment (DPC)
+On Sat, Oct 28, 2017 at 04:13:56PM +0530, Pankaj Dubey wrote:
+> On 25 October 2017 at 17:32, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> > Hi,
+> >
+> > On Wednesday 25 October 2017 01:32 AM, Bjorn Helgaas wrote:
+> >> On Thu, Oct 12, 2017 at 09:27:57AM +0530, Pankaj Dubey wrote:
+> >>> controller_group allocation in pci_ep_cfs_init function can fail
+> >>> so we should have a check while using it in pci_ep_cfs_add_epc_group
+> >>> for registering group, else we will hit NULL pointer access.
+> >>>
+> >>> This patch adds required check for the same and returns -EPROBE_DEFER,
+> >>> so that endpoint controller driver probe can be reattempted later
+> >>> in case controller_group is not allocated because pci_ep_cfs_init is
+> >>> not yet called.
+> >>>
+> >>> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+> >>
+> >> Looking for Kishon's ack here.
+> >>
+> >>> ---
+> >>>  drivers/pci/endpoint/pci-ep-cfs.c   | 7 ++++++-
+> >>>  drivers/pci/endpoint/pci-epc-core.c | 4 ++++
+> >>>  2 files changed, 10 insertions(+), 1 deletion(-)
+> >>>
+> >>> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> >>> index 424fdd6..3cac818 100644
+> >>> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> >>> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> >>> @@ -172,7 +172,12 @@ struct config_group *pci_ep_cfs_add_epc_group(const char *name)
+> >>>      group = &epc_group->group;
+> >>>
+> >>>      config_group_init_type_name(group, name, &pci_epc_type);
+> >>> -    ret = configfs_register_group(controllers_group, group);
+> >>> +
+> >>> +    if (controllers_group)
+> >>> +            ret = configfs_register_group(controllers_group, group);
+> >>> +    else
+> >>> +            ret = -EPROBE_DEFER;
+> >>> +
+> >
+> > Do you ever face this issue?
 > 
-> DPC is an optional normative feature of a Downstream Port. DPC halts PCI
-> Express traffic below a Downstream Port after an unmasked uncorrectable
-> error is detected at or below the Port, avoiding the potential spread of
-> any data corruption, and permitting error recovery if supported by
-> software
+> Yes, I was adding support for PCIe endpoint in Exynos driver and if we
+> see pci-exynos.c,
+> platform_driver_probe is called via subsys_initcall, which will happen
+> much before that module_init
+> and during endpoint probe sequence I got kernel panic for NULL pointer access.
 > 
-> Triggering DPC disables its Link by directing the LTSSM to the Disabled
-> state. Once the LTSSM reaches the Disabled state, it remains in that
-> state until the DPC Trigger Status bit is Cleared
+> > Ideally controllers_group should always be
+> > initialized if the dependencies are modeled properly.
 > 
-> So when DPC service is active and registered to port driver, AER should
-> not attempt to recover, since DPC will be removing downstream devices,
-> and do the recovery.
+> Ideally Yes.
 > 
-> Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 7448052..a9108ea 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -482,6 +482,27 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
->  }
->  
->  /**
-> + * pcie_port_query_uptream_service - query upstream service
-> + * @dev: pointer to a pci_dev data structure of agent detecting an error
-> + * @service: service to be queried
-> + *
-> + * Invoked to know the status of the service for pci device.
-> + */
-> +static bool pcie_port_query_uptream_service(struct pci_dev *dev, u32 service)
-> +{
-> +	struct pci_dev *upstream_dev = dev;
-> +
-> +	do {
-> +		if (pcie_port_query_service(upstream_dev, service))
-> +			return true;
-> +		upstream_dev = pcie_port_upstream_bridge(upstream_dev);
-> +	} while (upstream_dev);
-> +
-> +	return false;
-> +}
-> +
-> +
-> +/**
->   * do_recovery - handle nonfatal/fatal error recovery process
->   * @dev: pointer to a pci_dev data structure of agent detecting an error
->   * @severity: error severity type
-> @@ -495,6 +516,18 @@ static void do_recovery(struct pci_dev *dev, int severity)
->  	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
->  	enum pci_channel_state state;
->  
-> +	/*
-> +	 * If DPC is enabled, there is no need to attempt recovery.
-> +	 * Since DPC disables its Link by directing the LTSSM to
-> +	 * the Disabled state.
-> +	 * DPC driver will take care of the recovery, there is no need
-> +	 * for AER driver to race.
-> +	 */
-> +	if (pcie_port_query_uptream_service(dev, PCIE_PORT_SERVICE_DPC)) {
-> +		dev_info(&dev->dev, "AER: Device recovery to be done by DPC\n");
-> +		return;
-> +	}
+> But we can't ignore error cases. Even though dependencies are modeled properly,
+> this check is mandatory, if we see pci_ep_cfs_init function where
+> "controllers_group" is suppose
+> to be allocated via call to "configfs_register_default_group", is
+> prone to failure as allocated via
+> kzalloc. We are handling error condition in pci_ep_cfs_init if it
+> fails to allocate "controllers_group"
+> but during EP initialization sequence, there is no check on
+> "controllers_group" pointer in
+> "configfs_register_default_group" function. So I feel it should have a
+> check for valid pointer.
 
-What happens without this test?
+It seems plausible to me to check whether controllers_group is NULL,
+but it'd be nicer to do it *first* in the function so there's no
+cleanup to do, e.g.,
 
-Does AER read registers from the now-disabled device and get ~0 data?
-Or is AER reading registers from the port upstream from the disabled
-device and trying to reset the device?
+  if (!controllers_group)
+    return -EPROBE_DEFER;
 
-It looks like get_device_error_info() reads registers and doesn't
-check to see whether it gets ~0 back.  I'm wondering if we *should* be
-checking there and whether doing that would help mitigate the issue
-here.
+  epc_group = kzalloc(sizeof(*epc_group), GFP_KERNEL);
+  ...
 
-I don't really like the pcie_port_query_uptream_service() approach
-(BTW, the name is misspelled) because it feels a little ad hoc and it
-makes assumptions here in the AER code about what the DPC code is
-doing, e.g., how it has configured PCI_EXP_DPC_CTL.
-
->  	if (severity == AER_FATAL)
->  		state = pci_channel_io_frozen;
->  	else
-> -- 
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-> a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> >>>      if (ret) {
+> >>>              pr_err("failed to register configfs group for %s\n", name);
+> >>>              goto err_register_group;
+> >>> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> >>> index 42c2a11..d327a2a 100644
+> >>> --- a/drivers/pci/endpoint/pci-epc-core.c
+> >>> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> >>> @@ -518,6 +518,10 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
+> >>>              goto put_dev;
+> >>>
+> >>>      epc->group = pci_ep_cfs_add_epc_group(dev_name(dev));
+> >>> +    if (IS_ERR(epc->group)) {
+> >>> +            ret = -EPROBE_DEFER;
+> >
+> > should use the return value of pci_ep_cfs_add_epc_group().
+> >
+> 
+> OK. Will modify in next version.
+> 
+> > However I don't think this is required since drivers might not actually need cfs.
+> 
+> Ok, we can avoid propagating error to the caller here, but in case if
+> ERR_PTR there should be
+> at least one warn message. What do you say?
 > 
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Thanks,
+> Pankaj Dubey
+> >
+> > Thanks
+> > Kishon
