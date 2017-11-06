@@ -1,256 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:19025 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751664AbdKYTcp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 14:32:45 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
-CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 6/9] PCI: tegra: free resources on probe failure
-Date: Sun, 26 Nov 2017 01:02:10 +0530
-Message-ID: <1511638333-22951-7-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail-it0-f68.google.com ([209.85.214.68]:56339 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750888AbdKFIJs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Nov 2017 03:09:48 -0500
+Received: by mail-it0-f68.google.com with SMTP id r127so4111321itb.5
+        for <linux-pci@vger.kernel.org>; Mon, 06 Nov 2017 00:09:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5769060.47kJca3s00@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
+ <5769060.47kJca3s00@aspire.rjw.lan>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 6 Nov 2017 09:09:46 +0100
+Message-ID: <CAPDyKFqXqiBzoE3Bo9u9WOo3aVqvEP4s_6oyTFZ_Cy6==DxYug@mail.gmail.com>
+Subject: Re: [PATCH v2 3/6] PM / core: Add SMART_SUSPEND driver flag
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-tegra_pcie_probe() can fail in multiple instances, this patch takes care
-of freeing the resources which are allocated before probe fail.
+On 28 October 2017 at 00:22, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Define and document a SMART_SUSPEND flag to instruct bus types and PM
+> domains that the system suspend callbacks provided by the driver can
+> cope with runtime-suspended devices, so from the driver's perspective
+> it should be safe to leave devices in runtime suspend during system
+> suspend.
+>
+> Setting that flag may also cause middle-layer code (bus types,
+> PM domains etc.) to skip invocations of the ->suspend_late and
+> ->suspend_noirq callbacks provided by the driver if the device
+> is in runtime suspend at the beginning of the "late" phase of
+> the system-wide suspend transition, in which case the driver's
+> system-wide resume callbacks may be invoked back-to-back with
+> its ->runtime_suspend callback, so the driver has to be able to
+> cope with that too.
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
+If not too late:
 
- drivers/pci/host/pci-tegra.c | 102 ++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 86 insertions(+), 16 deletions(-)
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e9b3ff95e259..7f7b8c9c1e84 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -701,14 +701,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- 	pci_add_resource(windows, &pcie->busn);
- 
- 	err = devm_request_pci_bus_resources(dev, windows);
--	if (err < 0)
-+	if (err < 0) {
-+		pci_free_resource_list(windows);
- 		return err;
-+	}
- 
- 	pci_remap_iospace(&pcie->pio, pcie->io.start);
- 
- 	return 0;
- }
- 
-+static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
-+{
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
-+
-+	pci_unmap_iospace(&pcie->pio);
-+	pci_free_resource_list(windows);
-+}
-+
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
- 	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
-@@ -1109,29 +1120,40 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
--static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
- 	int err;
- 
--	/* TODO: disable and unprepare clocks? */
--
- 	if (soc->program_uphy) {
- 		err = tegra_pcie_phy_power_off(pcie);
- 		if (err < 0)
- 			dev_err(dev, "failed to power off PHY(s): %d\n", err);
- 	}
-+}
-+
-+static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+{
-+	struct device *dev = pcie->dev;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	int err;
- 
- 	reset_control_assert(pcie->afi_rst);
- 	reset_control_assert(pcie->pex_rst);
- 
--	if (!dev->pm_domain)
--		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-+	clk_disable_unprepare(pcie->pll_e);
-+	if (soc->has_cml_clk)
-+		clk_disable_unprepare(pcie->cml_clk);
-+	clk_disable_unprepare(pcie->afi_clk);
-+	clk_disable_unprepare(pcie->pex_clk);
- 
- 	err = regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
- 	if (err < 0)
- 		dev_warn(dev, "failed to disable regulators: %d\n", err);
-+
-+	if (!dev->pm_domain)
-+		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
- }
- 
- static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-@@ -1262,6 +1284,15 @@ static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_phys_put_legacy(struct tegra_pcie *pcie)
-+{
-+	int err;
-+
-+	err = phy_exit(pcie->phy);
-+	if (err < 0)
-+		dev_err(pcie->dev, "failed to teardown PHY: %d\n", err);
-+}
-+
- static struct phy *devm_of_phy_optional_get_index(struct device *dev,
- 						  struct device_node *np,
- 						  const char *consumer,
-@@ -1315,6 +1346,19 @@ static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
- 	return 0;
- }
- 
-+static void tegra_pcie_port_put_phys(struct tegra_pcie_port *port)
-+{
-+	struct device *dev = port->pcie->dev;
-+	unsigned int i;
-+	int err;
-+
-+	for (i = 0; i < port->lanes; i++) {
-+		err = phy_exit(port->phys[i]);
-+		if (err < 0)
-+			dev_err(dev, "failed to teardown PHY#%u: %d\n", i, err);
-+	}
-+}
-+
- static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- {
- 	const struct tegra_pcie_soc *soc = pcie->soc;
-@@ -1334,6 +1378,19 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
-+{
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	struct device_node *np = pcie->dev->of_node;
-+	struct tegra_pcie_port *port;
-+
-+	if (!soc->has_gen2 || of_find_property(np, "phys", NULL) != NULL)
-+		tegra_pcie_phys_put_legacy(pcie);
-+
-+	list_for_each_entry(port, &pcie->ports, list)
-+		tegra_pcie_port_put_phys(port);
-+}
-+
- static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -1366,7 +1423,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	err = tegra_pcie_power_on(pcie);
- 	if (err) {
- 		dev_err(dev, "failed to power up: %d\n", err);
--		return err;
-+		goto phys_put;
- 	}
- 
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
-@@ -1424,25 +1481,23 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 
- poweroff:
- 	tegra_pcie_power_off(pcie);
-+phys_put:
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- 	return err;
- }
- 
- static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- {
--	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
--	int err;
- 
- 	if (pcie->irq > 0)
- 		free_irq(pcie->irq, pcie);
- 
- 	tegra_pcie_power_off(pcie);
- 
--	if (soc->program_uphy) {
--		err = phy_exit(pcie->phy);
--		if (err < 0)
--			dev_err(dev, "failed to teardown PHY: %d\n", err);
--	}
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- 
- 	return 0;
- }
-@@ -2371,6 +2426,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 	}
- }
- 
-+static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port, *tmp;
-+
-+	reset_control_assert(pcie->pcie_xrst);
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		tegra_pcie_port_disable(port);
-+}
-+
- static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
- 					 struct pci_dev *pci_dev)
- {
-@@ -2691,7 +2756,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	err = tegra_pcie_request_resources(pcie);
- 	if (err)
--		goto put_resources;
-+		goto disable_controller;
- 
- 	/* setup the AFI address translations */
- 	tegra_pcie_setup_translations(pcie);
-@@ -2700,7 +2765,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		err = tegra_pcie_enable_msi(pcie);
- 		if (err < 0) {
- 			dev_err(dev, "failed to enable MSI support: %d\n", err);
--			goto put_resources;
-+			goto free_resources;
- 		}
- 	}
- 
-@@ -2741,6 +2806,11 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- disable_msi:
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
-+	tegra_pcie_disable_ports(pcie);
-+free_resources:
-+	tegra_pcie_free_resources(pcie);
-+disable_controller:
-+	tegra_pcie_disable_controller(pcie);
- put_resources:
- 	tegra_pcie_put_resources(pcie);
- 	return err;
--- 
-2.1.4
+> ---
+>
+> -> v2: Drop the changes in main.c, as the logic implemented by them
+>        previously is now going to be implemented in the PCI bus type
+>        and the ACPI PM domain directly.
+>
+> ---
+>  Documentation/driver-api/pm/devices.rst |   20 ++++++++++++++++++++
+>  drivers/base/power/main.c               |    3 +++
+>  include/linux/pm.h                      |    8 ++++++++
+>  3 files changed, 31 insertions(+)
+>
+> Index: linux-pm/Documentation/driver-api/pm/devices.rst
+> ===================================================================
+> --- linux-pm.orig/Documentation/driver-api/pm/devices.rst
+> +++ linux-pm/Documentation/driver-api/pm/devices.rst
+> @@ -766,6 +766,26 @@ the state of devices (possibly except fo
+>  from their ``->prepare`` and ``->suspend`` callbacks (or equivalent) *before*
+>  invoking device drivers' ``->suspend`` callbacks (or equivalent).
+>
+> +Some bus types and PM domains have a policy to resume all devices from runtime
+> +suspend upfront in their ``->suspend`` callbacks, but that may not be really
+> +necessary if the driver of the device can cope with runtime-suspended devices.
+> +The driver can indicate that by setting ``DPM_FLAG_SMART_SUSPEND`` in
+> +:c:member:`power.driver_flags` at the probe time, by passing it to the
+> +:c:func:`dev_pm_set_driver_flags` helper.  That also may cause middle-layer code
+> +(bus types, PM domains etc.) to skip the ``->suspend_late`` and
+> +``->suspend_noirq`` callbacks provided by the driver if the device remains in
+> +runtime suspend at the beginning of the ``suspend_late`` phase of system-wide
+> +suspend (or in the ``poweroff_late`` phase of hibernation), when runtime PM
+> +has been disabled for it, under the assumption that its state should not change
+> +after that point until the system-wide transition is over.  If that happens, the
+> +driver's system-wide resume callbacks, if present, may still be invoked during
+> +the subsequent system-wide resume transition and the device's runtime power
+> +management status may be set to "active" before enabling runtime PM for it,
+> +so the driver must be prepared to cope with the invocation of its system-wide
+> +resume callbacks back-to-back with its ``->runtime_suspend`` one (without the
+> +intervening ``->runtime_resume`` and so on) and the final state of the device
+> +must reflect the "active" status for runtime PM in that case.
+> +
+>  During system-wide resume from a sleep state it's easiest to put devices into
+>  the full-power state, as explained in :file:`Documentation/power/runtime_pm.txt`.
+>  Refer to that document for more information regarding this particular issue as
+> Index: linux-pm/drivers/base/power/main.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/main.c
+> +++ linux-pm/drivers/base/power/main.c
+> @@ -1652,6 +1652,9 @@ static int device_prepare(struct device
+>         if (dev->power.syscore)
+>                 return 0;
+>
+> +       WARN_ON(dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
+> +               !pm_runtime_enabled(dev));
+> +
+>         /*
+>          * If a device's parent goes into runtime suspend at the wrong time,
+>          * it won't be possible to resume the device.  To prevent this we
+> Index: linux-pm/include/linux/pm.h
+> ===================================================================
+> --- linux-pm.orig/include/linux/pm.h
+> +++ linux-pm/include/linux/pm.h
+> @@ -558,6 +558,7 @@ struct pm_subsys_data {
+>   *
+>   * NEVER_SKIP: Do not skip system suspend/resume callbacks for the device.
+>   * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
+> + * SMART_SUSPEND: No need to resume the device from runtime suspend.
+>   *
+>   * Setting SMART_PREPARE instructs bus types and PM domains which may want
+>   * system suspend/resume callbacks to be skipped for the device to return 0 from
+> @@ -565,9 +566,16 @@ struct pm_subsys_data {
+>   * other words, the system suspend/resume callbacks can only be skipped for the
+>   * device if its driver doesn't object against that).  This flag has no effect
+>   * if NEVER_SKIP is set.
+> + *
+> + * Setting SMART_SUSPEND instructs bus types and PM domains which may want to
+> + * runtime resume the device upfront during system suspend that doing so is not
+> + * necessary from the driver's perspective.  It also may cause them to skip
+> + * invocations of the ->suspend_late and ->suspend_noirq callbacks provided by
+> + * the driver if they decide to leave the device in runtime suspend.
+>   */
+>  #define DPM_FLAG_NEVER_SKIP    BIT(0)
+>  #define DPM_FLAG_SMART_PREPARE BIT(1)
+> +#define DPM_FLAG_SMART_SUSPEND BIT(2)
+>
+>  struct dev_pm_info {
+>         pm_message_t            power_state;
+>
