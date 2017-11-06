@@ -1,181 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <5556673.MXo6XDN1f4@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan>
- <4184911.zoJM7jZeH4@aspire.rjw.lan> <5556673.MXo6XDN1f4@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Thu, 16 Nov 2017 16:10:16 +0100
-Message-ID: <CAPDyKFpzSd4zwW_awuxuim0gzyKV5s9dm66X+szsSUKRnBakbA@mail.gmail.com>
-Subject: Re: [PATCH v3 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 6 Nov 2017 13:31:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Pankaj Dubey <pankaj.dubey@samsung.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH] PCI: designware: move dw_pcie_iatu_unroll_enabled to
+ pcie-designware.c
+Message-ID: <20171106193118.GF31930@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20171012044055epcas1p44b2e6b7cc21d42319529a518197aca9f@epcas1p4.samsung.com>
+ <1507783268-9022-1-git-send-email-pankaj.dubey@samsung.com>
+ <20171020174108.GK6332@bhelgaas-glaptop.roam.corp.google.com>
+ <CAGcde9GiL2U45xRyFnKo=u8RbiMNYNyNJsv3dEkbVum38t1dRg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGcde9GiL2U45xRyFnKo=u8RbiMNYNyNJsv3dEkbVum38t1dRg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 November 2017 at 01:37, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
-> instruct the PM core and middle-layer (bus type, PM domain, etc.)
-> code that it is desirable to leave the device in runtime suspend
-> after system-wide transitions to the working state (for example,
-> the device may be slow to resume and it may be better to avoid
-> resuming it right away).
->
-> Generally, the middle-layer code involved in the handling of the
-> device is expected to indicate to the PM core whether or not the
-> device may be left in suspend with the help of the device's
-> power.may_skip_resume status bit.  That has to happen in the "noirq"
-> phase of the preceding system suspend (or analogous) transition.
-> The middle layer is then responsible for handling the device as
-> appropriate in its "noirq" resume callback which is executed
-> regardless of whether or not the device may be left suspended, but
-> the other resume callbacks (except for ->complete) will be skipped
-> automatically by the core if the device really can be left in
-> suspend.
->
-> The additional power.must_resume status bit introduced for the
-> implementation of this mechanisn is used internally by the PM core
-> to track the requirement to resume the device (which may depend on
-> its children etc).
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->
-> v2 -> v3: Take dev->power.usage_count when updating power.must_resume in
->           __device_suspend_noirq().
->
-> ---
->  Documentation/driver-api/pm/devices.rst |   24 ++++++++++-
->  drivers/base/power/main.c               |   66 +++++++++++++++++++++++++++++---
->  drivers/base/power/runtime.c            |    9 ++--
->  include/linux/pm.h                      |   14 +++++-
->  include/linux/pm_runtime.h              |    9 ++--
->  5 files changed, 104 insertions(+), 18 deletions(-)
->
-> Index: linux-pm/include/linux/pm.h
-> ===================================================================
-> --- linux-pm.orig/include/linux/pm.h
-> +++ linux-pm/include/linux/pm.h
-> @@ -559,6 +559,7 @@ struct pm_subsys_data {
->   * NEVER_SKIP: Do not skip system suspend/resume callbacks for the device.
->   * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
->   * SMART_SUSPEND: No need to resume the device from runtime suspend.
-> + * LEAVE_SUSPENDED: Avoid resuming the device during system resume if possible.
->   *
->   * Setting SMART_PREPARE instructs bus types and PM domains which may want
->   * system suspend/resume callbacks to be skipped for the device to return 0 from
-> @@ -572,10 +573,14 @@ struct pm_subsys_data {
->   * necessary from the driver's perspective.  It also may cause them to skip
->   * invocations of the ->suspend_late and ->suspend_noirq callbacks provided by
->   * the driver if they decide to leave the device in runtime suspend.
-> + *
-> + * Setting LEAVE_SUSPENDED informs the PM core and middle-layer code that the
-> + * driver prefers the device to be left in runtime suspend after system resume.
->   */
+On Tue, Oct 24, 2017 at 07:10:55PM +0530, Pankaj Dubey wrote:
+> On 20 October 2017 at 23:11, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > On Thu, Oct 12, 2017 at 10:11:08AM +0530, Pankaj Dubey wrote:
+> > > IATU unroll feature can be enabled in EP mode as well, so we need to
+> > > have this check in pcie-designware-ep.c, so instead of making this
+> > > function as static in pcie-desigware-host.c, let's move this in
+> > > pcie-designware.c so that both pcie-designware-host.c and
+> > > pcie-designware-ep.c can use it.
+> > >
+> > > Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+> >
+> > This is fine with me but I'm looking for an ack from Jingoo and/or Joao.
+> 
+> Jingoo / Joao any comments on this?
 
-Question: Can LEAVE_SUSPENDED and NEVER_SKIP be valid combination? I
-guess not!? Should we validate for wrong combinations?
+Dropping for lack of ack.  Please repost if/when we have an ack.
 
-[...]
-
->  /**
->   * __device_suspend_noirq - Execute a "noirq suspend" callback for given device.
->   * @dev: Device to handle.
-> @@ -1127,10 +1161,28 @@ static int __device_suspend_noirq(struct
->         }
->
->         error = dpm_run_callback(callback, dev, state, info);
-> -       if (!error)
-> -               dev->power.is_noirq_suspended = true;
-> -       else
-> +       if (error) {
->                 async_error = error;
-> +               goto Complete;
-> +       }
-> +
-> +       dev->power.is_noirq_suspended = true;
-> +
-> +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED)) {
-> +               /*
-> +                * The only safe strategy here is to require that if the device
-> +                * may not be left in suspend, resume callbacks must be invoked
-> +                * for it.
-> +                */
-> +               dev->power.must_resume = dev->power.must_resume ||
-> +                                       !dev->power.may_skip_resume ||
-> +                                       atomic_read(&dev->power.usage_count);
-
-dev->power.usage_count is always > 0 at this point, meaning that
-dev->power.must_resume always becomes true. :-)
-
-You should rather use "atomic_read(&dev->power.usage_count) > 1".
-
-> +       } else {
-> +               dev->power.must_resume = true;
-> +       }
-> +
-> +       if (dev->power.must_resume)
-> +               dpm_superior_set_must_resume(dev);
->
->  Complete:
->         complete_all(&dev->power.completion);
-> @@ -1487,6 +1539,9 @@ static int __device_suspend(struct devic
->                 dev->power.direct_complete = false;
->         }
->
-> +       dev->power.may_skip_resume = false;
-> +       dev->power.must_resume = false;
-> +
-
-First, these assignment could be bypassed if the direct_complete path
-is used. Perhaps it's more robust to reset these flags already in
-device_prepare().
-
-Second, have you considered setting the default value of
-dev->power.may_skip_resume to true? That would means the subsystem
-instead need to implement an opt-out method. I am thinking that it may
-not be an issue, since we anyway at this point, don't have drivers
-using the LEAVE_SUSPENDED flag.
-
-[...]
-
-> +However, it may be desirable to leave some devices in runtime suspend after
-> +system transitions to the working state and device drivers can use the
-> +``DPM_FLAG_LEAVE_SUSPENDED`` flag to indicate to the PM core (and middle-layer
-> +code) that this is the case.  Whether or not the devices will actually be left
-> +in suspend may depend on their state before the given system suspend-resume
-> +cycle and on the type of the system transition under way.  In particular,
-> +devices are not left suspended if that transition is a restore from hibernation,
-> +as device states are not guaranteed to be reflected by the information stored in
-> +the hibernation image in that case.
-> +
-> +The middle-layer code involved in the handling of the device has to indicate to
-> +the PM core if the device may be left in suspend with the help of its
-> +:c:member:`power.may_skip_resume` status bit.  That has to happen in the "noirq"
-> +phase of the preceding system-wide suspend (or analogous) transition.  The
-
-Does it have to be managed in the "noirq" phase? Wouldn't be perfectly
-okay do this in the suspend and suspend_late phases as well?
-
-> +middle layer is then responsible for handling the device as appropriate in its
-> +"noirq" resume callback, which is executed regardless of whether or not the
-> +device may be left suspended, but the other resume callbacks (except for
-> +``->complete``) will be skipped automatically by the PM core if the device
-> +really can be left in suspend.
->
-
-Kind regards
-Uffe
+> > > ---
+> > >  drivers/pci/dwc/pcie-designware-ep.c   |  4 ++++
+> > >  drivers/pci/dwc/pcie-designware-host.c | 11 -----------
+> > >  drivers/pci/dwc/pcie-designware.c      | 11 +++++++++++
+> > >  drivers/pci/dwc/pcie-designware.h      |  1 +
+> > >  4 files changed, 16 insertions(+), 11 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> > > index d53d5f1..64803a9 100644
+> > > --- a/drivers/pci/dwc/pcie-designware-ep.c
+> > > +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> > > @@ -314,6 +314,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+> > >       if (ep->ops->ep_init)
+> > >               ep->ops->ep_init(ep);
+> > >
+> > > +     pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
+> > > +     dev_dbg(dev, "iATU unroll: %s\n",
+> > > +             pci->iatu_unroll_enabled ? "enabled" : "disabled");
+> > > +
+> > >       epc = devm_pci_epc_create(dev, &epc_ops);
+> > >       if (IS_ERR(epc)) {
+> > >               dev_err(dev, "failed to create epc device\n");
+> > > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> > > index 81e2157..d3f579e 100644
+> > > --- a/drivers/pci/dwc/pcie-designware-host.c
+> > > +++ b/drivers/pci/dwc/pcie-designware-host.c
+> > > @@ -574,17 +574,6 @@ static struct pci_ops dw_pcie_ops = {
+> > >       .write = dw_pcie_wr_conf,
+> > >  };
+> > >
+> > > -static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+> > > -{
+> > > -     u32 val;
+> > > -
+> > > -     val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
+> > > -     if (val == 0xffffffff)
+> > > -             return 1;
+> > > -
+> > > -     return 0;
+> > > -}
+> > > -
+> > >  void dw_pcie_setup_rc(struct pcie_port *pp)
+> > >  {
+> > >       u32 val;
+> > > diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> > > index 88abddd..f15da90 100644
+> > > --- a/drivers/pci/dwc/pcie-designware.c
+> > > +++ b/drivers/pci/dwc/pcie-designware.c
+> > > @@ -92,6 +92,17 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> > >               dev_err(pci->dev, "write DBI address failed\n");
+> > >  }
+> > >
+> > > +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+> >
+> > I know this is just moved verbatim, but it's more conventional to simply
+> > return an int (or possibly bool) for a predicate like this.  There's really
+> > no point in going out of your way to specify "u8" for the return type.
+> >
+> 
+> Ok, it can be done, will wait for comments from Jingoo and or Joao and
+> then update.
+> 
+> Thanks,
+> Pankaj
+> 
+> 
+> > > +{
+> > > +     u32 val;
+> > > +
+> > > +     val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
+> > > +     if (val == 0xffffffff)
+> > > +             return 1;
+> > > +
+> > > +     return 0;
+> > > +}
+> > > +
+> > >  static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+> > >  {
+> > >       u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+> > > diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> > > index e5d9d77..8d6829c 100644
+> > > --- a/drivers/pci/dwc/pcie-designware.h
+> > > +++ b/drivers/pci/dwc/pcie-designware.h
+> > > @@ -242,6 +242,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
+> > >  void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
+> > >                        enum dw_pcie_region_type type);
+> > >  void dw_pcie_setup(struct dw_pcie *pci);
+> > > +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci);
+> > >
+> > >  static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
+> > >  {
+> > > --
+> > > 2.7.4
+> > >
