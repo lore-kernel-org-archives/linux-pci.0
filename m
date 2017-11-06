@@ -1,264 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:41396 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751783AbdK2L7m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Nov 2017 06:59:42 -0500
-Subject: Re: [PATCH V2 6/9] PCI: tegra: free resources on probe failure
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com, jonathanh@nvidia.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com, rjw@rjwysocki.net,
-        tglx@linutronix.de
-References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
- <1511638333-22951-7-git-send-email-mmaddireddy@nvidia.com>
-Cc: vidyas@nvidia.com, kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Message-ID: <2c8b33f4-1524-cd0f-05f5-15f87bf59e31@kapsi.fi>
-Date: Wed, 29 Nov 2017 13:59:39 +0200
+Received: from smtp64.ord1c.emailsrvr.com ([108.166.43.64]:49332 "EHLO
+        smtp64.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750739AbdKFIva (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Nov 2017 03:51:30 -0500
+From: Ruben Guerra Marin <ruben.guerra.marin@axon.tv>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Michal Simek <michal.simek@xilinx.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "soren.brinkmann@xilinx.com" <soren.brinkmann@xilinx.com>,
+        "bharat.kumar.gogada@xilinx.com" <bharat.kumar.gogada@xilinx.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>
+Subject: Re: Performance issues writing to PCIe in a Zynq
+Date: Mon, 6 Nov 2017 08:51:28 +0000
+Message-ID: <1509958288489.45871@axon.tv>
+References: <1509636637116.27702@axon.tv>
+ <eca01e58-3da1-d5c4-00f7-71dd6a926870@xilinx.com>,<20171103135457.GA8457@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171103135457.GA8457@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <1511638333-22951-7-git-send-email-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25.11.2017 21:32, Manikanta Maddireddy wrote:
-> tegra_pcie_probe() can fail in multiple instances, this patch takes care
-> of freeing the resources which are allocated before probe fail.
->
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
->
->  drivers/pci/host/pci-tegra.c | 102 ++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 86 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index e9b3ff95e259..7f7b8c9c1e84 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -701,14 +701,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
->  	pci_add_resource(windows, &pcie->busn);
->
->  	err = devm_request_pci_bus_resources(dev, windows);
-> -	if (err < 0)
-> +	if (err < 0) {
-> +		pci_free_resource_list(windows);
->  		return err;
-> +	}
->
->  	pci_remap_iospace(&pcie->pio, pcie->io.start);
->
->  	return 0;
->  }
->
-> +static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
-> +{
-> +	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-> +	struct list_head *windows = &host->windows;
-> +
-> +	pci_unmap_iospace(&pcie->pio);
-> +	pci_free_resource_list(windows);
-> +}
-> +
->  static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
->  {
->  	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
-> @@ -1109,29 +1120,40 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  	return 0;
->  }
->
-> -static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-> +static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
->  {
->  	struct device *dev = pcie->dev;
->  	const struct tegra_pcie_soc *soc = pcie->soc;
->  	int err;
->
-> -	/* TODO: disable and unprepare clocks? */
-> -
->  	if (soc->program_uphy) {
->  		err = tegra_pcie_phy_power_off(pcie);
->  		if (err < 0)
->  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
->  	}
-> +}
-> +
-> +static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-> +{
-> +	struct device *dev = pcie->dev;
-> +	const struct tegra_pcie_soc *soc = pcie->soc;
-> +	int err;
->
->  	reset_control_assert(pcie->afi_rst);
->  	reset_control_assert(pcie->pex_rst);
->
-> -	if (!dev->pm_domain)
-> -		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> +	clk_disable_unprepare(pcie->pll_e);
-> +	if (soc->has_cml_clk)
-> +		clk_disable_unprepare(pcie->cml_clk);
-> +	clk_disable_unprepare(pcie->afi_clk);
-> +	clk_disable_unprepare(pcie->pex_clk);
->
->  	err = regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
->  	if (err < 0)
->  		dev_warn(dev, "failed to disable regulators: %d\n", err);
-> +
-> +	if (!dev->pm_domain)
-> +		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
->  }
->
->  static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-> @@ -1262,6 +1284,15 @@ static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
->  	return 0;
->  }
->
-> +static void tegra_pcie_phys_put_legacy(struct tegra_pcie *pcie)
-> +{
-> +	int err;
-> +
-> +	err = phy_exit(pcie->phy);
-> +	if (err < 0)
-> +		dev_err(pcie->dev, "failed to teardown PHY: %d\n", err);
-> +}
-> +
->  static struct phy *devm_of_phy_optional_get_index(struct device *dev,
->  						  struct device_node *np,
->  						  const char *consumer,
-> @@ -1315,6 +1346,19 @@ static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
->  	return 0;
->  }
->
-> +static void tegra_pcie_port_put_phys(struct tegra_pcie_port *port)
-> +{
-> +	struct device *dev = port->pcie->dev;
-> +	unsigned int i;
-> +	int err;
-> +
-> +	for (i = 0; i < port->lanes; i++) {
-> +		err = phy_exit(port->phys[i]);
-> +		if (err < 0)
-> +			dev_err(dev, "failed to teardown PHY#%u: %d\n", i, err);
-> +	}
-> +}
-> +
->  static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
->  {
->  	const struct tegra_pcie_soc *soc = pcie->soc;
-> @@ -1334,6 +1378,19 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
->  	return 0;
->  }
->
-> +static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
-> +{
-> +	const struct tegra_pcie_soc *soc = pcie->soc;
-> +	struct device_node *np = pcie->dev->of_node;
-> +	struct tegra_pcie_port *port;
-> +
-> +	if (!soc->has_gen2 || of_find_property(np, "phys", NULL) != NULL)
-> +		tegra_pcie_phys_put_legacy(pcie);
+Hi, according to Xilinx, from a computer host it happens in a second, while for us in the Zynq (ARM) takes way more than that as explained before. And indeed the programming is done via config accesses, and can't happen otherwise as this is the way Xilinx created its FPGA IP (Intellectual Property) cores. Still if I do a baremetal test (so no Linux) and write from the ARMs to the FPGA via those registers, it takes only 17 cycles instead of the Linux implementation which takes 250 cycles. 
 
-I think it would be nicer to just check if legacy_phy is true, since 
-tegra_pcie_phys_get_legacy sets it. That way we don't need to have the 
-complicated check in two places.
+Ruben Guerra Marin
+ruben.guerra.marin@axon.tv
 
-Mikko
+________________________________________
+From: Bjorn Helgaas <helgaas@kernel.org>
+Sent: Friday, November 3, 2017 2:54 PM
+To: Michal Simek
+Cc: Ruben Guerra Marin; bhelgaas@google.com; soren.brinkmann@xilinx.com; bharat.kumar.gogada@xilinx.com; linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+Subject: Re: Performance issues writing to PCIe in a Zynq
 
-> +
-> +	list_for_each_entry(port, &pcie->ports, list)
-> +		tegra_pcie_port_put_phys(port);
-> +}
-> +
->  static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->  {
->  	struct device *dev = pcie->dev;
-> @@ -1366,7 +1423,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->  	err = tegra_pcie_power_on(pcie);
->  	if (err) {
->  		dev_err(dev, "failed to power up: %d\n", err);
-> -		return err;
-> +		goto phys_put;
->  	}
->
->  	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
-> @@ -1424,25 +1481,23 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->
->  poweroff:
->  	tegra_pcie_power_off(pcie);
-> +phys_put:
-> +	if (soc->program_uphy)
-> +		tegra_pcie_phys_put(pcie);
->  	return err;
->  }
->
->  static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
->  {
-> -	struct device *dev = pcie->dev;
->  	const struct tegra_pcie_soc *soc = pcie->soc;
-> -	int err;
->
->  	if (pcie->irq > 0)
->  		free_irq(pcie->irq, pcie);
->
->  	tegra_pcie_power_off(pcie);
->
-> -	if (soc->program_uphy) {
-> -		err = phy_exit(pcie->phy);
-> -		if (err < 0)
-> -			dev_err(dev, "failed to teardown PHY: %d\n", err);
-> -	}
-> +	if (soc->program_uphy)
-> +		tegra_pcie_phys_put(pcie);
->
->  	return 0;
->  }
-> @@ -2371,6 +2426,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->  	}
->  }
->
-> +static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
-> +{
-> +	struct tegra_pcie_port *port, *tmp;
-> +
-> +	reset_control_assert(pcie->pcie_xrst);
-> +
-> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-> +		tegra_pcie_port_disable(port);
-> +}
-> +
->  static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
->  					 struct pci_dev *pci_dev)
->  {
-> @@ -2691,7 +2756,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->
->  	err = tegra_pcie_request_resources(pcie);
->  	if (err)
-> -		goto put_resources;
-> +		goto disable_controller;
->
->  	/* setup the AFI address translations */
->  	tegra_pcie_setup_translations(pcie);
-> @@ -2700,7 +2765,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  		err = tegra_pcie_enable_msi(pcie);
->  		if (err < 0) {
->  			dev_err(dev, "failed to enable MSI support: %d\n", err);
-> -			goto put_resources;
-> +			goto free_resources;
->  		}
->  	}
->
-> @@ -2741,6 +2806,11 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  disable_msi:
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		tegra_pcie_disable_msi(pcie);
-> +	tegra_pcie_disable_ports(pcie);
-> +free_resources:
-> +	tegra_pcie_free_resources(pcie);
-> +disable_controller:
-> +	tegra_pcie_disable_controller(pcie);
->  put_resources:
->  	tegra_pcie_put_resources(pcie);
->  	return err;
->
+On Fri, Nov 03, 2017 at 09:12:04AM +0100, Michal Simek wrote:
+> On 2.11.2017 16:30, Ruben Guerra Marin wrote:
+> >
+> > I have the a Zynq board running petalinux, and it is connected
+> > through PCIe to a Virtex Ultrascale board. I configured the
+> > Ultrascale for Tandem PCIe, which the second stage bitstream is
+> > being programmed from the Zynq board (I crossed compiled the mcap
+> > application that Xilinx provides).
+> >
+> > This works perfectly, but takes around ~12 seconds to program the
+> > second stage bitstream (compressed is ~12 MB), which is quite
+> > slow. We also tried debugging the mcap application and pciutils.
+> > We found out the operation that takes long to execute: In
+> > pciutils, the instruction to actually call the write to the driver
+> > (pwrite) takes approximately 6uS, so if you add up this for 12 MB
+> > then you can see why it takes so long. Why is this so slow? Is
+> > this maybe a problem with the driver?
+> >
+> > For testing, I added an ILA to the AXI bus in between the Zynq GP1
+> > and the PCIe IP control registers port. I triggered halfway the
+> > programming of the bitstream using the mcap program provided by
+> > Xilinx. I can see that it is writing to address x358, which
+> > according to the *datasheet*
+> > (https://www.xilinx.com/Attachment/Xilinx_Answer_64761__UltraScale_Devices.pdf)
+> > is the Write Data Register, which is correct (and again, I know
+> > the whole bitstream gets programmed correctly).
+> >
+> > But what I also see is that a "awvalid" being asserted to the next
+> > one it takes 245 cycles, and I can imagine this is why it takes 12
+> > seconds to program a 12MB bitstream.
+
+How long do you expect this to take?  What are the corresponding times
+on other hardware or other OSes?
+
+It sounds like this programming is done via config accesses, which are
+definitely not a fast path, so I don't know if 12s is unreasonably
+slow or not.  The largest config write is 4 bytes, which means 12MB
+requires 3M writes, and if each takes 6us, that's 18s total.
+
+Most platforms serialize config accesses with a lock, which also slows
+things down.  It looks like your hardware might support ECAM, which
+means you might be able to remove the locking overhead by using
+lockless config (see     CONFIG_    PCI_LOCKLESS_CONFIG).  This is a new
+feature currently only used by x86, and it's currently a system-wide
+compile-time switch, so it would require some work for you to use it.
+
+The high bandwidth way to do this would be use a BAR and do PCI memory
+writes instead of PCI config writes.  Obviously the adapter determines
+whether this is possible.
+
+Bjorn
