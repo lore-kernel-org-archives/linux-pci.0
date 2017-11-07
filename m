@@ -1,57 +1,215 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 02/18] PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
-Date: Mon, 20 Nov 2017 14:32:05 +0100
-Message-Id: <20171120133222.27771-3-niklas.cassel@axis.com>
-In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39494 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751967AbdKGWuK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Nov 2017 17:50:10 -0500
+Date: Tue, 7 Nov 2017 16:50:07 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: treding@nvidia.com, bhelgaas@google.com, rajatja@google.com,
+        yinghai@kernel.org, david.daney@cavium.com, Julia.Lawall@lip6.fr,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com, mmaddireddy@nvidia.com
+Subject: Re: [PATCH V2 3/4] PCI: tegra: Apply sw fixups to support ASPM-L1
+ Sub-States
+Message-ID: <20171107225007.GA22847@bhelgaas-glaptop.roam.corp.google.com>
+References: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
+ <1509423769-10522-4-git-send-email-vidyas@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1509423769-10522-4-git-send-email-vidyas@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, dw_pcie_ep_set_msi() wrote all bits in the Message Control
-register, thus overwriting the PCI_MSI_FLAGS_64BIT bit.
-By clearing the PCI_MSI_FLAGS_64BIT bit, we break MSI
-on systems where the RC has set a 64 bit MSI address.
-Fix dw_pcie_ep_set_msi() so that it only sets MMC bits.
+Hi Vidya,
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
- drivers/pci/dwc/pcie-designware.h    | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
+On Tue, Oct 31, 2017 at 09:52:48AM +0530, Vidya Sagar wrote:
+> Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
+> values to get them reflected in ASPM-L1 Sub-States capability registers
+> Also adjusts internal counter values according to 19.2 MHz clk_m value
+> 
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+> V2:
+> * no change in this patch
+> 
+>  drivers/pci/host/pci-tegra.c | 65 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 65 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index e1526cc5d381..08da67a82a2d 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -40,6 +40,7 @@
+>  #include <linux/of_pci.h>
+>  #include <linux/of_platform.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-aspm.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/reset.h>
+> @@ -191,6 +192,27 @@
+>  #define RP_PRIV_XP_DL	0x494
+>  #define  RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD	(0x1ff << 1)
+>  
+> +#define RP_L1_PM_SUBSTATES_CTL				0xC00
+> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK		(0xFF << 8)
+> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT		8
+> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK		(0x3 << 16)
+> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT		16
+> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK		(0x1F << 19)
+> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT		19
+> +#define RP_L1_PM_SUBSTATES_CTL_HIDE_CAP			(0x1 << 24)
+> +
+> +#define RP_L1_PM_SUBSTATES_1_CTL			0xC04
+> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
+> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
+> +
+> +#define RP_L1_PM_SUBSTATES_2_CTL			0xC08
+> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
+> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY		0x4D
+> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK	(0xFF << 13)
+> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND		(0x13 << 13)
+> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK	(0xF << 21)
+> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP	(0x2 << 21)
+> +
+>  #define RP_RX_HDR_LIMIT	0xe00
+>  #define  RP_RX_HDR_LIMIT_PW_MASK	(0xff << 8)
+>  #define  RP_RX_HDR_LIMIT_PW		(0x0e << 8)
+> @@ -331,6 +353,7 @@ struct tegra_pcie_soc {
+>  	bool program_deskew_time;
+>  	bool updateFC_threshold;
+>  	bool has_aspm_l1;
+> +	bool has_aspm_l1ss;
+>  };
+>  
+>  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+> @@ -423,6 +446,12 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
+>  	return readl(pcie->pads + offset);
+>  }
+>  
+> +u32 pcie_aspm_get_ltr_l_1_2_threshold(void)
+> +{
+> +	/* LTR L1.2 Threshold = 55us for all ports */
+> +	return ((0x37 << 16) | (0x02 << 29));
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index d53d5f168363..c92ab87fd660 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -220,7 +220,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
--	val = (encode_int << MSI_CAP_MMC_SHIFT);
-+	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	val &= ~MSI_CAP_MMC_MASK;
-+	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
- 	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
- 
- 	return 0;
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index ecdede68522a..9aaf0cd04dd6 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -101,6 +101,7 @@
- 
- #define MSI_MESSAGE_CONTROL		0x52
- #define MSI_CAP_MMC_SHIFT		1
-+#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
- #define MSI_CAP_MME_SHIFT		4
- #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
- #define MSI_MESSAGE_ADDR_L32		0x54
--- 
-2.14.2
+I know you've already worked through this, but let me think out loud
+to try to figure this out myself.
+
+ASPM defines Link power states L0, L0s, and L1.  L1 PM Substates
+extend that by adding L1.1 and L1.2.  L1.2 presumably uses less power
+and has a longer exit delay than L1.1 [sec 5.5].
+
+Ports that support L1.2 must support Latency Tolerance Reporting (LTR)
+[sec 6.18].  When LTR is enabled, a device periodically sends LTR
+messages.
+
+When ASPM puts a Link into L1, it chooses either L1.1 or L1.2 based on
+LTR_L1.2_THRESHOLD and recent LTR messages.  If there's no LTR
+information it looks like LTR_L1.2_THRESHOLD doesn't matter and it
+always chooses L1.2 [sec 5.5.1].
+
+I don't see anything that writes PCI_EXP_DEVCTL2_LTR_EN, so I don't
+think Linux ever enables LTR.  Some BIOSes apparently enable it
+(Google for "LTR enabled").
+
+1) It seems like the LTR_L1.2_THRESHOLD value should be computed based
+   on the latency requirements of downstream devices.  How did you
+   come up with 55us?
+
+2) The spec requires [sec 5.5.4] that LTR_L1.2_THRESHOLD at both ends
+   of a Link be the same, but as far as I can see, there's no
+   requirement that it be the same across the whole system, so this
+   interface doesn't seem like quite the right approach.
+
+3) We must support kernels with multiple host bridge drivers compiled
+   in, and the weak/strong symbol approach doesn't support using the
+   correct version, e.g., if we merge this patch, every system
+   containing the tegra driver would use this function, even if the
+   hardware had a different host bridge.  Also, if another driver
+   implemented its own version, we'd have duplicate symbols.
+
+>  /*
+>   * The configuration space mapping on Tegra is somewhat similar to the ECAM
+>   * defined by PCIe. However it deviates a bit in how the 4 bits for extended
+> @@ -2262,6 +2291,37 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>  		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
+>  		writel(value, port->base + RP_VEND_XP);
+>  	}
+> +
+> +	if (soc->has_aspm_l1ss) {
+> +		/* Set Common Mode Restore Time to 30us */
+> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
+> +		value &= ~RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK;
+> +		value |= (0x1E << RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT);
+> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+> +
+> +		/* set T_Power_On to 70us */
+> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
+> +		value &= ~(RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK |
+> +			RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK);
+> +		value |= (1 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT) |
+> +			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
+> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+> +
+> +		/* Following is based on clk_m being 19.2 MHz */
+> +		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
+> +		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
+> +		value |= RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY;
+> +		writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
+> +
+> +		value = readl(port->base + RP_L1_PM_SUBSTATES_2_CTL);
+> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK;
+> +		value |= RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY;
+> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK;
+> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND;
+> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK;
+> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP;
+> +		writel(value, port->base + RP_L1_PM_SUBSTATES_2_CTL);
+> +	}
+>  }
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+> @@ -2403,6 +2463,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+>  	.has_aspm_l1 = false,
+> +	.has_aspm_l1ss = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra30_pcie = {
+> @@ -2425,6 +2486,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+>  	.has_aspm_l1 = true,
+> +	.has_aspm_l1ss = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra124_pcie = {
+> @@ -2446,6 +2508,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+>  	.has_aspm_l1 = true,
+> +	.has_aspm_l1ss = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra210_pcie = {
+> @@ -2475,6 +2538,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>  	.program_deskew_time = true,
+>  	.updateFC_threshold = true,
+>  	.has_aspm_l1 = true,
+> +	.has_aspm_l1ss = true,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra186_pcie = {
+> @@ -2497,6 +2561,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+>  	.has_aspm_l1 = true,
+> +	.has_aspm_l1ss = true,
+>  };
+>  
+>  static const struct of_device_id tegra_pcie_of_match[] = {
+> -- 
+> 2.7.4
+> 
