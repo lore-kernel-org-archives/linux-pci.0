@@ -1,117 +1,79 @@
-Return-Path: <SRS0=PMJS=CF=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=PMJS=CF=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Return-Path: <SRS0=RmR9=CF=infradead.org=rdunlap@kernel.org>
+Return-Path: <SRS0=RmR9=CF=infradead.org=rdunlap@kernel.org>
+Subject: Re: [PATCH] pci: fix kernel-doc build warning
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com"
-	<bhelgaas@google.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "lorenzo.pieralisi@arm.com"
-	<lorenzo.pieralisi@arm.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "brian.starkey@arm.com" <brian.starkey@arm.com>,
-        "olof@lixom.net"
-	<olof@lixom.net>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        Linuxarm
-	<linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        John Garry
-	<john.garry@huawei.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: RE: [PATCH v10 9/9] MANTAINERS: Add maintainer for HiSilicon LPC
- driver
-Date: Tue, 7 Nov 2017 10:49:12 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40CC3305@FRAEML521-MBX.china.huawei.com>
-References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
- <1509120687-7352-10-git-send-email-gabriele.paoloni@huawei.com>
- <20171107002120.GB9538@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171107002120.GB9538@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Cc: linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, LKML <linux-kernel@vger.kernel.org>
+References: <85dcffe7-1e6b-5735-2552-d35d127e392b@infradead.org>
+ <20171107003355.GE9538@bhelgaas-glaptop.roam.corp.google.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <e756ace6-f821-db39-5a3b-11192ae55803@infradead.org>
+Date: Mon, 6 Nov 2017 16:50:53 -0800
 MIME-Version: 1.0
+In-Reply-To: <20171107003355.GE9538@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+On 11/06/2017 04:33 PM, Bjorn Helgaas wrote:
+> On Sun, Oct 29, 2017 at 05:07:11PM -0700, Randy Dunlap wrote:
+>> From: Randy Dunlap <rdunlap@infradead.org>
+>>
+>> Fix build error in kernel-doc notation:
+>>
+>> ../drivers/pci/pci.c:3479: ERROR: Unexpected indentation.
+>>
+>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+>> Cc:	Bjorn Helgaas <bhelgaas@google.com>
+>> Cc:	linux-pci@vger.kernel.org
+>> ---
+>>  drivers/pci/pci.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> --- lnx-414-rc7.orig/drivers/pci/pci.c
+>> +++ lnx-414-rc7/drivers/pci/pci.c
+>> @@ -3471,7 +3471,7 @@ EXPORT_SYMBOL(devm_pci_remap_cfgspace);
+>>   * All operations are managed and will be undone on driver detach.
+>>   *
+>>   * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
+>> - * on failure. Usage example:
+>> + * on failure. Usage example::
+> 
+> I don't understand what's going on here.  Apparently there's something
+> special about two colons?  I saw plenty of double colons in
+> Documentation/, but I couldn't quickly find out what it means.
 
-Many Thanks for reviewing
+Sorry about my terseness.  The ending colon is not the problem.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 07 November 2017 00:21
-> To: Gabriele Paoloni
-> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> frowand.list@gmail.com; bhelgaas@google.com; rafael@kernel.org;
-> arnd@arndb.de; linux-arm-kernel@lists.infradead.org;
-> lorenzo.pieralisi@arm.com; mark.rutland@arm.com; brian.starkey@arm.com;
-> olof@lixom.net; benh@kernel.crashing.org; linux-kernel@vger.kernel.org;
-> linux-acpi@vger.kernel.org; Linuxarm; linux-pci@vger.kernel.org;
-> minyard@acm.org; John Garry; xuwei (O)
-> Subject: Re: [PATCH v10 9/9] MANTAINERS: Add maintainer for HiSilicon
-> LPC driver
->=20
-> s/MANTAINERS/MAINTAINERS/
+The problem is in indentation in the example code, and changing to use
+"::" tells the kernel-doc "reStructuredText" processor that the following
+block is a literal block of some blob that should be kept as is.
 
-Oops thanks
+> If kernel-doc thinks "example:" is a mistake, maybe we could recast
+> the sentence as "Example usage:"?  Putting a double colon here makes
+> the text look like a mistake to this human reader.
+> 
+>>   *
+>>   *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>>   *	base = devm_pci_remap_cfg_resource(&pdev->dev, res);
+>>
 
->=20
-> On Fri, Oct 27, 2017 at 05:11:27PM +0100, Gabriele Paoloni wrote:
-> > Added maintainer for drivers/bus/hisi_lpc.c
-> >
-> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > ---
-> >  MAINTAINERS | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> >
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index f66488d..b49d4c0 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -6130,6 +6130,13 @@ F:	include/uapi/linux/if_hippi.h
-> >  F:	net/802/hippi.c
-> >  F:	drivers/net/hippi/
-> >
-> > +HISILICON LPC BUS DRIVER
-> > +L:	linuxarm@huawei.com
-> > +W:	http://www.hisilicon.com
-> > +S:	Maintained
-> > +F:	drivers/bus/hisi_lpc.c
-> > +F:	Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-
-> pin-count.txt
->=20
-> Does this really count as a "maintainer" since it's only a mailing
-> list, not a real person?  I personally prefer a specific person
-> because there's no accountability with a mailing list.
+Like you said, there will be lots of these "::" in source files.
+There is one slight alternate, if it looks any better to you, to put the
+"::" on a line by itself, like so:
 
-Right; before the maintainer was meant to be me but as I am moving
-to a different role we decided to put down a mailing list.
-However after discussing internally we agreed to have a person as
-maintainer and we'll specify him in the next patchset.
+ * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
+ * on failure. Usage example:
+ *::
+ *
+ *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ *	base = devm_pci_remap_cfg_resource(&pdev->dev, res);
+ *	if (IS_ERR(base))
+ *		return PTR_ERR(base);
+ */
 
-Cheers
-Gab
 
->=20
-> > +
-> >  HISILICON NETWORK SUBSYSTEM DRIVER
-> >  M:	Yisen Zhuang <yisen.zhuang@huawei.com>
-> >  M:	Salil Mehta <salil.mehta@huawei.com>
-> > --
-> > 2.7.4
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-acpi"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I can resend the patch like that if you prefer it.
+
+thanks,
+-- 
+~Randy
