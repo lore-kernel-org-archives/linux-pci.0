@@ -1,66 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V3 11/29] Drivers: ide: deprecate pci_get_bus_and_slot()
-Date: Mon, 27 Nov 2017 11:57:48 -0500
-Message-Id: <1511801886-6753-12-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, intel-gfx@lists.freedesktop.org,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- "open list:IDE SUBSYSTEM" <linux-ide@vger.kernel.org>,
- "David S. Miller" <davem@davemloft.net>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Return-Path: <SRS0=PMJS=CF=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=PMJS=CF=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com"
+	<bhelgaas@google.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        "lorenzo.pieralisi@arm.com"
+	<lorenzo.pieralisi@arm.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "brian.starkey@arm.com" <brian.starkey@arm.com>,
+        "olof@lixom.net"
+	<olof@lixom.net>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Linuxarm
+	<linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        John Garry
+	<john.garry@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: RE: [PATCH v10 2/9] PCI: remove unused __weak attribute in
+ pci_register_io_range()
+Date: Tue, 7 Nov 2017 10:50:35 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40CC3351@FRAEML521-MBX.china.huawei.com>
+References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1509120687-7352-3-git-send-email-gabriele.paoloni@huawei.com>
+ <20171107002325.GC9538@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171107002325.GC9538@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
-
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
-
-Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
-and extract the domain number from struct pci_dev.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/ide/sl82c105.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/sl82c105.c b/drivers/ide/sl82c105.c
-index 8755df3..3300dac 100644
---- a/drivers/ide/sl82c105.c
-+++ b/drivers/ide/sl82c105.c
-@@ -239,8 +239,9 @@ static u8 sl82c105_bridge_revision(struct pci_dev *dev)
- 	/*
- 	 * The bridge should be part of the same device, but function 0.
- 	 */
--	bridge = pci_get_bus_and_slot(dev->bus->number,
--			       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-+	bridge = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
-+					dev->bus->number,
-+					PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
- 	if (!bridge)
- 		return -1;
- 
--- 
-1.9.1
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 07 November 2017 00:23
+> To: Gabriele Paoloni
+> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> frowand.list@gmail.com; bhelgaas@google.com; rafael@kernel.org;
+> arnd@arndb.de; linux-arm-kernel@lists.infradead.org;
+> lorenzo.pieralisi@arm.com; mark.rutland@arm.com; brian.starkey@arm.com;
+> olof@lixom.net; benh@kernel.crashing.org; linux-kernel@vger.kernel.org;
+> linux-acpi@vger.kernel.org; Linuxarm; linux-pci@vger.kernel.org;
+> minyard@acm.org; John Garry; xuwei (O)
+> Subject: Re: [PATCH v10 2/9] PCI: remove unused __weak attribute in
+> pci_register_io_range()
+>=20
+> > PCI: remove unused __weak attribute in pci_register_io_range()
+>=20
+> Please capitalize to follow drivers/pci convention, e.g.,
+>=20
+>   PCI: Remove __weak attribute from pci_register_io_range()
+>=20
+> (Also do the same for the other PCI patches.)
+
+Agreed, many thanks
+
+Gab
+
+>=20
+> On Fri, Oct 27, 2017 at 05:11:20PM +0100, Gabriele Paoloni wrote:
+> > From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> >
+> > Currently pci_register_io_range() has only one definition;
+> > therefore there is no use of the __weak attribute.
+> >
+> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > Acked-by: Bjorn Helgaas <helgaas@kernel.org>
+> > ---
+> >  drivers/pci/pci.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index af0cc34..eee967c 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -3270,7 +3270,7 @@ static DEFINE_SPINLOCK(io_range_lock);
+> >   * Record the PCI IO range (expressed as CPU physical address +
+> size).
+> >   * Return a negative value if an error has occured, zero otherwise
+> >   */
+> > -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t
+> size)
+> > +int pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> >  {
+> >  	int err =3D 0;
+> >
+> > --
+> > 2.7.4
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi"
+> in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
