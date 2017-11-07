@@ -1,57 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v15 5/5] PCI: Remove PCI pool macro functions
-Date: Mon, 20 Nov 2017 20:32:47 +0100
-Message-Id: <20171120193247.8187-6-romain.perier@gmail.com>
-In-Reply-To: <20171120193247.8187-1-romain.perier@gmail.com>
-References: <20171120193247.8187-1-romain.perier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=RQ+y=CF=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=RQ+y=CF=linux.intel.com=mika.westerberg@kernel.org>
+Date: Tue, 7 Nov 2017 12:33:46 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ashok Raj <ashok.raj@intel.com>,
+	Keith Busch <keith.busch@intel.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Michael Jamet <michael.jamet@intel.com>,
+	Yehezkel Bernat <yehezkel.bernat@intel.com>,
+	Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4] PCI: pciehp: Drop checking of PCI_BRIDGE_CONTROL in
+ pciehp_unconfigure_device()
+Message-ID: <20171107103346.GR18997@lahna.fi.intel.com>
+References: <20171025112940.77890-1-mika.westerberg@linux.intel.com>
+ <20171106231409.GI31930@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171106231409.GI31930@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
+On Mon, Nov 06, 2017 at 05:14:09PM -0600, Bjorn Helgaas wrote:
+> As you mention, shpchp_unconfigure_device() contains the same code; is
+> there any reason not to remove it from there as well?
 
-Now that all the drivers use dma pool API, we can remove the macro
-functions for PCI pool.
+I don't see why we cannot remove that as well. But I have to admit that
+I don't know much about conventional PCI hotplug.
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- include/linux/pci.h | 9 ---------
- 1 file changed, 9 deletions(-)
+> I know you probably can't test shpchp, and neither can I, but it looks
+> like it has the same issue, and I don't want to avoid fixing it there
+> just for want of testing.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 96c94980d1ff..d03b4a20033d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1324,15 +1324,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- #include <linux/pci-dma.h>
- #include <linux/dmapool.h>
- 
--#define	pci_pool dma_pool
--#define pci_pool_create(name, pdev, size, align, allocation) \
--		dma_pool_create(name, &pdev->dev, size, align, allocation)
--#define	pci_pool_destroy(pool) dma_pool_destroy(pool)
--#define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
--#define	pci_pool_zalloc(pool, flags, handle) \
--		dma_pool_zalloc(pool, flags, handle)
--#define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
--
- struct msix_entry {
- 	u32	vector;	/* kernel uses to write allocated vector */
- 	u16	entry;	/* driver uses to specify entry, OS writes */
--- 
-2.14.1
+Yeah, I can't test it but no problem removing that code from shpchp as
+well. I think it should be a separate patch, though.
+
+> I wish we knew more about why that PCI_BRIDGE_CTL_VGA check was there
+> in the first place.  I think it was added by Dely Sy in 2004 [1].
+> LinkedIn thinks he's still at Intel; any chance you could ping him and
+> see if he has any insight?
+
+I checked from our internal "phone book" and could not find him there,
+unfortunately.
+
+> My guess is that it was originally in a
+> path that didn't have to worry about surprise unplug.  But I still
+> don't know why it would be a problem.
+
+One reason might be that if you do unplug through sysfs and you are
+running some graphics console (X) or so, you will suddenly lose access
+to the system. However, even in that case you can just ssh to the box
+and re-enable the card...
