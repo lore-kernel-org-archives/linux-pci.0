@@ -1,345 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:39733 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751580AbdKTNeM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:34:12 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 18/18] PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
-Date: Mon, 20 Nov 2017 14:32:21 +0100
-Message-Id: <20171120133222.27771-19-niklas.cassel@axis.com>
-In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 6 Nov 2017 18:21:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH v10 9/9] MANTAINERS: Add maintainer for HiSilicon LPC
+ driver
+Message-ID: <20171107002120.GB9538@bhelgaas-glaptop.roam.corp.google.com>
+References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1509120687-7352-10-git-send-email-gabriele.paoloni@huawei.com>
+MIME-Version: 1.0
+In-Reply-To: <1509120687-7352-10-git-send-email-gabriele.paoloni@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, minyard@acm.org, lorenzo.pieralisi@arm.com,
+ linux-acpi@vger.kernel.org, arnd@arndb.de, rafael@kernel.org,
+ linux-pci@vger.kernel.org, catalin.marinas@arm.com, john.garry@huawei.com,
+ will.deacon@arm.com, linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
+ linuxarm@huawei.com, olof@lixom.net, robh+dt@kernel.org,
+ benh@kernel.crashing.org, bhelgaas@google.com, frowand.list@gmail.com,
+ brian.starkey@arm.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for	the ARTPEC-7 SoC in the	artpec6	driver.
-The ARTPEC-6 SoC and the ARTPEC-7 SoC are very similar.
-Unfortunately, some fields in the PCIECFG and PCIESTAT
-register have changed.
+s/MANTAINERS/MAINTAINERS/
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 187 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 183 insertions(+), 4 deletions(-)
+On Fri, Oct 27, 2017 at 05:11:27PM +0100, Gabriele Paoloni wrote:
+> Added maintainer for drivers/bus/hisi_lpc.c
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> ---
+>  MAINTAINERS | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index f66488d..b49d4c0 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6130,6 +6130,13 @@ F:	include/uapi/linux/if_hippi.h
+>  F:	net/802/hippi.c
+>  F:	drivers/net/hippi/
+>  
+> +HISILICON LPC BUS DRIVER
+> +L:	linuxarm@huawei.com
+> +W:	http://www.hisilicon.com
+> +S:	Maintained
+> +F:	drivers/bus/hisi_lpc.c
+> +F:	Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 064c5a93ea80..312f21b6e013 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -27,14 +27,21 @@
- 
- #define to_artpec6_pcie(x)	dev_get_drvdata((x)->dev)
- 
-+enum artpec_pcie_variants {
-+	ARTPEC6,
-+	ARTPEC7,
-+};
-+
- struct artpec6_pcie {
- 	struct dw_pcie		*pci;
- 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
- 	void __iomem		*phy_base;	/* DT phy */
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- };
- 
- struct artpec_pcie_of_data {
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- };
- 
-@@ -43,6 +50,13 @@ static const struct of_device_id artpec6_pcie_of_match[];
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET			0x700
- 
-+#define ACK_F_ASPM_CTRL_OFF		(PL_OFFSET + 0xc)
-+#define ACK_N_FTS_MASK			GENMASK(15, 8)
-+#define ACK_N_FTS(x)			(((x) << 8) & ACK_N_FTS_MASK)
-+
-+#define FAST_TRAINING_SEQ_MASK		GENMASK(7, 0)
-+#define FAST_TRAINING_SEQ(x)		(((x) << 0) & FAST_TRAINING_SEQ_MASK)
-+
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
- #define  PCIECFG_DBG_OEN		BIT(24)
-@@ -57,6 +71,13 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
- #define  PCIECFG_CISRREN		BIT(2)
- #define  PCIECFG_MACRO_ENABLE		BIT(0)
-+/* ARTPEC-7 specific fields */
-+#define  PCIECFG_REFCLKSEL		BIT(23)
-+#define  PCIECFG_NOC_RESET		BIT(3)
-+
-+#define PCIESTAT			0x1c
-+/* ARTPEC-7 specific fields */
-+#define  PCIESTAT_EXTREFCLK		BIT(3)
- 
- #define NOCCFG				0x40
- #define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
-@@ -67,6 +88,12 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define PHY_STATUS			0x118
- #define  PHY_COSPLLLOCK			BIT(0)
- 
-+#define PHY_TX_ASIC_OUT			0x4040
-+#define  PHY_TX_ASIC_OUT_TX_ACK		BIT(0)
-+
-+#define PHY_RX_ASIC_OUT			0x405c
-+#define  PHY_RX_ASIC_OUT_ACK		BIT(0)
-+
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
- 	u32 val;
-@@ -125,7 +152,7 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- 	.stop_link = artpec6_pcie_stop_link,
- };
- 
--static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
-+static void artpec6_pcie_wait_for_phy_a6(struct artpec6_pcie *artpec6_pcie)
- {
- 	struct dw_pcie *pci = artpec6_pcie->pci;
- 	struct device *dev = pci->dev;
-@@ -152,7 +179,49 @@ static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
- 		dev_err(dev, "PHY PLL did not lock\n");
- }
- 
--static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+static void artpec6_pcie_wait_for_phy_a7(struct artpec6_pcie *artpec6_pcie)
-+{
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	struct device *dev = pci->dev;
-+	u32 val;
-+	u16 phy_status_tx, phy_status_rx;
-+	unsigned int retries;
-+
-+	retries = 50;
-+	do {
-+		usleep_range(1000, 2000);
-+		val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+		retries--;
-+	} while (retries &&
-+		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
-+	if (!retries)
-+		dev_err(dev, "PCIe clock manager did not leave idle state\n");
-+
-+	retries = 50;
-+	do {
-+		usleep_range(1000, 2000);
-+		phy_status_tx = readw(artpec6_pcie->phy_base + PHY_TX_ASIC_OUT);
-+		phy_status_rx = readw(artpec6_pcie->phy_base + PHY_RX_ASIC_OUT);
-+		retries--;
-+	} while (retries && ((phy_status_tx & PHY_TX_ASIC_OUT_TX_ACK) ||
-+				(phy_status_rx & PHY_RX_ASIC_OUT_ACK)));
-+	if (!retries)
-+		dev_err(dev, "PHY did not enter Pn state\n");
-+}
-+
-+static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
-+{
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		artpec6_pcie_wait_for_phy_a6(artpec6_pcie);
-+		break;
-+	case ARTPEC7:
-+		artpec6_pcie_wait_for_phy_a7(artpec6_pcie);
-+		break;
-+	}
-+}
-+
-+static void artpec6_pcie_init_phy_a6(struct artpec6_pcie *artpec6_pcie)
- {
- 	u32 val;
- 
-@@ -182,12 +251,90 @@ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
- 	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
- }
- 
-+static void artpec6_pcie_init_phy_a7(struct artpec6_pcie *artpec6_pcie)
-+{
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	u32 val;
-+	bool extrefclk;
-+
-+	/* Check if external reference clock is connected */
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIESTAT);
-+	extrefclk = !!(val & PCIESTAT_EXTREFCLK);
-+	dev_dbg(pci->dev, "Using reference clock: %s\n",
-+		extrefclk ? "external" : "internal");
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
-+	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
-+		PCIECFG_PCLK_ENABLE;
-+	if (extrefclk)
-+		val |= PCIECFG_REFCLKSEL;
-+	else
-+		val &= ~PCIECFG_REFCLKSEL;
-+	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
-+	usleep_range(10, 20);
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+	val |= NOCCFG_ENABLE_CLK_PCIE;
-+	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
-+	usleep_range(20, 30);
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+	val &= ~NOCCFG_POWER_PCIE_IDLEREQ;
-+	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
-+}
-+
-+static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+{
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		artpec6_pcie_init_phy_a6(artpec6_pcie);
-+		break;
-+	case ARTPEC7:
-+		artpec6_pcie_init_phy_a7(artpec6_pcie);
-+		break;
-+	}
-+}
-+
-+static void artpec6_pcie_set_nfts(struct artpec6_pcie *artpec6_pcie)
-+{
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	u32 val;
-+
-+	if (artpec6_pcie->variant != ARTPEC7)
-+		return;
-+
-+	/*
-+	 * Increase the N_FTS (Number of Fast Training Sequences)
-+	 * to be transmitted when transitioning from L0s to L0.
-+	 */
-+	val = dw_pcie_readl_dbi(pci, ACK_F_ASPM_CTRL_OFF);
-+	val &= ~ACK_N_FTS_MASK;
-+	val |= ACK_N_FTS(180);
-+	dw_pcie_writel_dbi(pci, ACK_F_ASPM_CTRL_OFF, val);
-+
-+	/*
-+	 * Set the Number of Fast Training Sequences that the core
-+	 * advertises as its N_FTS during Gen2 or Gen3 link training.
-+	 */
-+	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val &= ~FAST_TRAINING_SEQ_MASK;
-+	val |= FAST_TRAINING_SEQ(180);
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
-+}
-+
- static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
- {
- 	u32 val;
- 
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_CORE_RESET_REQ;
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		val |= PCIECFG_CORE_RESET_REQ;
-+		break;
-+	case ARTPEC7:
-+		val &= ~PCIECFG_NOC_RESET;
-+		break;
-+	}
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- }
- 
-@@ -196,7 +343,14 @@ static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
- 	u32 val;
- 
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val &= ~PCIECFG_CORE_RESET_REQ;
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		val &= ~PCIECFG_CORE_RESET_REQ;
-+		break;
-+	case ARTPEC7:
-+		val |= PCIECFG_NOC_RESET;
-+		break;
-+	}
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- 	usleep_range(100, 200);
- }
-@@ -219,6 +373,7 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
- 	artpec6_pcie_wait_for_phy(artpec6_pcie);
-+	artpec6_pcie_set_nfts(artpec6_pcie);
- 	dw_pcie_setup_rc(pp);
- 	artpec6_pcie_establish_link(pci);
- 	dw_pcie_wait_for_link(pci);
-@@ -287,6 +442,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
- 	artpec6_pcie_wait_for_phy(artpec6_pcie);
-+	artpec6_pcie_set_nfts(artpec6_pcie);
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++)
- 		dw_pcie_ep_reset_bar(pci, bar);
-@@ -358,6 +514,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	int ret;
- 	const struct of_device_id *match;
- 	const struct artpec_pcie_of_data *data;
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- 
- 	match = of_match_device(artpec6_pcie_of_match, dev);
-@@ -365,6 +522,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 
- 	data = (struct artpec_pcie_of_data *)match->data;
-+	variant = (enum artpec_pcie_variants)data->variant;
- 	mode = (enum dw_pcie_device_mode)data->mode;
- 
- 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
-@@ -379,6 +537,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &dw_pcie_ops;
- 
- 	artpec6_pcie->pci = pci;
-+	artpec6_pcie->variant = variant;
- 	artpec6_pcie->mode = mode;
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-@@ -430,10 +589,22 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- }
- 
- static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
-+	.variant = ARTPEC6,
- 	.mode = DW_PCIE_RC_TYPE,
- };
- 
- static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
-+	.variant = ARTPEC6,
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
-+static const struct artpec_pcie_of_data artpec7_pcie_rc_of_data = {
-+	.variant = ARTPEC7,
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct artpec_pcie_of_data artpec7_pcie_ep_of_data = {
-+	.variant = ARTPEC7,
- 	.mode = DW_PCIE_EP_TYPE,
- };
- 
-@@ -446,6 +617,14 @@ static const struct of_device_id artpec6_pcie_of_match[] = {
- 		.compatible = "axis,artpec6-pcie-ep",
- 		.data = &artpec6_pcie_ep_of_data,
- 	},
-+	{
-+		.compatible = "axis,artpec7-pcie",
-+		.data = &artpec7_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "axis,artpec7-pcie-ep",
-+		.data = &artpec7_pcie_ep_of_data,
-+	},
- 	{},
- };
- 
--- 
-2.14.2
+Does this really count as a "maintainer" since it's only a mailing
+list, not a real person?  I personally prefer a specific person
+because there's no accountability with a mailing list.
+
+> +
+>  HISILICON NETWORK SUBSYSTEM DRIVER
+>  M:	Yisen Zhuang <yisen.zhuang@huawei.com>
+>  M:	Salil Mehta <salil.mehta@huawei.com>
+> -- 
+> 2.7.4
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
