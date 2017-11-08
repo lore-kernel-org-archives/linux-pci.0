@@ -1,60 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.192]:62347 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751596AbdK1Jwz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Nov 2017 04:52:55 -0500
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Niklas Cassel' <niklas.cassel@axis.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Niklas Cassel <niklass@axis.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v3 3/3] PCI: endpoint: Fix find_first_zero_bit() usage
-Date: Tue, 28 Nov 2017 09:53:12 +0000
-Message-ID: <227791f09ccd4aa8972ba334fd948f4e@AcuMS.aculab.com>
-References: <20171127154955.22214-1-niklas.cassel@axis.com>
- <20171127154955.22214-4-niklas.cassel@axis.com>
-In-Reply-To: <20171127154955.22214-4-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:54505 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752143AbdKHQYL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 11:24:11 -0500
+Received: by mail-wm0-f42.google.com with SMTP id r68so12025014wmr.3
+        for <linux-pci@vger.kernel.org>; Wed, 08 Nov 2017 08:24:11 -0800 (PST)
 MIME-Version: 1.0
+From: subrahmanya l <l.subrahmanya@mobiveil.co.in>
+Date: Wed, 8 Nov 2017 21:54:09 +0530
+Message-ID: <CAFZiPx1sgxr8X9mtW11fK1XMPuk+4jUFb5Cc-pVJn06ZztHwng@mail.gmail.com>
+Subject: [Patch] export irq_set_msi_desc
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Content-Type: multipart/mixed; boundary="001a1144262e0f63bc055d7b1ea8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Niklas Cassel
-> Sent: 27 November 2017 15:50
-> find_first_zero_bit()'s parameter 'size' is defined in bits,
-> not in bytes.
-> 
-> Calling find_first_zero_bit() with the wrong size unit
-> will lead to insidious bugs.
-> 
-> Fix this by calling find_first_zero_bit() with size
-> BITS_PER_LONG, rather than sizeof().
-> 
-> Also add proper error handling for find_first_zero_bit(),
-> since this was missing.
-> 
-> Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/endpoint/pci-ep-cfs.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-> index e1f5adc9e113..0a22a7976580 100644
-> --- a/drivers/pci/endpoint/pci-ep-cfs.c
-> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
-> @@ -109,7 +109,12 @@ static int pci_epc_epf_link(struct config_item *epc_item,
->  		return ret;
-> 
->  	func_no = find_first_zero_bit(&epc_group->function_num_map,
-> -				      sizeof(epc_group->function_num_map));
-> +				      BITS_PER_LONG);
+--001a1144262e0f63bc055d7b1ea8
+Content-Type: text/plain; charset="UTF-8"
 
-Surely this should be either 8 * sizeof() or you should use ffz()
-that takes a numeric argument rather than the function designed
-for arbitrary size bitmaps.
+Few of the PCIe driver compilation fails with undefined symbol
+"irq_set_msi_desc".
+This patch is to export it.
 
-	David
+-- 
+Mobiveil INC., CONFIDENTIALITY NOTICE: This e-mail message, including any 
+attachments, is for the sole use of the intended recipient(s) and may 
+contain proprietary confidential or privileged information or otherwise be 
+protected by law. Any unauthorized review, use, disclosure or distribution 
+is prohibited. If you are not the intended recipient, please notify the 
+sender and destroy all copies and the original message.
+
+--001a1144262e0f63bc055d7b1ea8
+Content-Type: application/octet-stream; name="0001-linux-driver-fix.patch"
+Content-Disposition: attachment; filename="0001-linux-driver-fix.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_j9r97pxv0
+
+DQpTaWduZWQtb2ZmLWJ5OiBTdWJyYWhtYW55YSBMaW5nYXBwYSA8bC5zdWJyYWhtYW55YUBtb2Jp
+dmVpbC5jby5pbj4NCg0KZGlmZiAtTmF1ciBrZXJuZWwtc291cmNlL2tlcm5lbC9pcnEvY2hpcC5j
+IGtlcm5lbC1zb3VyY2UubW9kL2tlcm5lbC9pcnEvY2hpcC5jDQotLS0ga2VybmVsLXNvdXJjZS9r
+ZXJuZWwvaXJxL2NoaXAuYwkyMDE3LTEwLTE3IDA0OjQyOjEyLjAyNzY4NDg0NCAtMDQwMA0KKysr
+IGtlcm5lbC1zb3VyY2UubW9kL2tlcm5lbC9pcnEvY2hpcC5jCTIwMTctMTAtMTcgMDQ6NDM6NDQu
+OTA0MTk4MTM4IC0wNDAwDQpAQCAtMTM3LDYgKzEzNyw3IEBADQogCXJldHVybiBpcnFfc2V0X21z
+aV9kZXNjX29mZihpcnEsIDAsIGVudHJ5KTsNCiB9DQogDQorRVhQT1JUX1NZTUJPTChpcnFfc2V0
+X21zaV9kZXNjKTsNCiAvKioNCiAgKglpcnFfc2V0X2NoaXBfZGF0YSAtIHNldCBpcnEgY2hpcCBk
+YXRhIGZvciBhbiBpcnENCiAgKglAaXJxOglJbnRlcnJ1cHQgbnVtYmVyDQo=
+--001a1144262e0f63bc055d7b1ea8--
