@@ -1,45 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3845 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753646AbdKXPyJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 10:54:09 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
-CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 01/10] genirq: Export irq_set_msi_desc()
-Date: Fri, 24 Nov 2017 21:23:11 +0530
-Message-ID: <1511538800-8275-2-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:36158 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752033AbdKHUPN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Nov 2017 15:15:13 -0500
+Subject: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
+ drivers
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-kernel@vger.kernel.org,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Date: Wed, 08 Nov 2017 14:15:10 -0600
+Message-ID: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI bus support MSI interrupts, allow PCI host driver to set MSI descriptor
-data for an irq.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+the endpoint driver framework.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- kernel/irq/chip.c | 1 +
- 1 file changed, 1 insertion(+)
+ MAINTAINERS |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 5a2ef92c2782..bfbd17386bc4 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -136,6 +136,7 @@ int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
- {
- 	return irq_set_msi_desc_off(irq, 0, entry);
- }
-+EXPORT_SYMBOL(irq_set_msi_desc);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index db412a627d96..a1f9653234cc 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10429,6 +10429,16 @@ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
  
- /**
-  *	irq_set_chip_data - set irq chip data for an irq
--- 
-2.1.4
++PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
++M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
++L:	linux-pci@vger.kernel.org
++Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
++S:	Supported
++F:	drivers/pci/host/
++F:	drivers/pci/dwc/
++F:	drivers/pci/endpoint
++
+ PCIE DRIVER FOR AXIS ARTPEC
+ M:	Niklas Cassel <niklas.cassel@axis.com>
+ M:	Jesper Nilsson <jesper.nilsson@axis.com>
