@@ -1,43 +1,47 @@
-Return-Path: <SRS0=ofcB=C3=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Return-Path: <SRS0=ofcB=C3=gmail.com=ckoenig.leichtzumerken@kernel.org>
-From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] x86/PCI: fix infinity loop in search for 64bit BAR placement
-Date: Wed, 29 Nov 2017 15:12:27 +0100
-Message-Id: <20171129141229.6107-2-christian.koenig@amd.com>
-In-Reply-To: <20171129141229.6107-1-christian.koenig@amd.com>
-References: <20171129141229.6107-1-christian.koenig@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:50982 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750777AbdKHJPw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:15:52 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH] PCI: rcar: Add compatible string for r8a7796
+Date: Wed,  8 Nov 2017 10:15:21 +0100
+Message-Id: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Break the loop if we can't find some address space for a 64bit BAR.
+From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Add compatible string for the RCar M3 R8A7796 SoC.
+
+Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
 ---
- arch/x86/pci/fixup.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/host/pcie-rcar.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index e59378bf37d9..e857b3ac5755 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -695,8 +695,13 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- 	res->end = 0xfd00000000ull - 1;
- 
- 	/* Just grab the free area behind system memory for this */
--	while ((conflict = request_resource_conflict(&iomem_resource, res)))
-+	while ((conflict = request_resource_conflict(&iomem_resource, res))) {
-+		if (conflict->end >= res->end) {
-+			kfree(res);
-+			return;
-+		}
- 		res->start = conflict->end + 1;
-+	}
- 
- 	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
- 
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 12796eccb2be..8b51208875fc 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -1062,6 +1062,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-rcar-gen2",
+ 	  .data = rcar_pcie_hw_init_gen2 },
+ 	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
++	{ .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
+ 	{},
+ };
 -- 
 2.11.0
