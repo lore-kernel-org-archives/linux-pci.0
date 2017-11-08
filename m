@@ -1,94 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:44651 "EHLO
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:47928 "EHLO
         mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752400AbdKTTdJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 14:33:09 -0500
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        with ESMTP id S1751954AbdKHJ7I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:59:08 -0500
+Subject: Re: [PATCH] PCI: rcar: Add compatible string for r8a7796
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
         linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v15 2/5] net: e100: Replace PCI pool old API
-Date: Mon, 20 Nov 2017 20:32:44 +0100
-Message-Id: <20171120193247.8187-3-romain.perier@gmail.com>
-In-Reply-To: <20171120193247.8187-1-romain.perier@gmail.com>
-References: <20171120193247.8187-1-romain.perier@gmail.com>
+Cc: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
+ <538f7964-0f69-2ed2-35f2-e14244a7e6ba@cogentembedded.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <b5f4014e-7574-ef0a-cec5-576cfaa99a2f@gmail.com>
+Date: Wed, 8 Nov 2017 10:31:14 +0100
+MIME-Version: 1.0
+In-Reply-To: <538f7964-0f69-2ed2-35f2-e14244a7e6ba@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
+On 11/08/2017 10:28 AM, Sergei Shtylyov wrote:
+> Hello!
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+Hi
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
----
- drivers/net/ethernet/intel/e100.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+> On 11/8/2017 12:15 PM, Marek Vasut wrote:
+> 
+>> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+>>
+>> Add compatible string for the RCar M3 R8A7796 SoC.
+> 
+>    It's M3-W.
+> 
+>> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> ---
+>>   drivers/pci/host/pcie-rcar.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+>> index 12796eccb2be..8b51208875fc 100644
+>> --- a/drivers/pci/host/pcie-rcar.c
+>> +++ b/drivers/pci/host/pcie-rcar.c
+>> @@ -1062,6 +1062,7 @@ static const struct of_device_id
+>> rcar_pcie_of_match[] = {
+>>       { .compatible = "renesas,pcie-rcar-gen2",
+>>         .data = rcar_pcie_hw_init_gen2 },
+>>       { .compatible = "renesas,pcie-r8a7795", .data =
+>> rcar_pcie_hw_init },
+>> +    { .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
+> 
+>    Why, if we already have the line below?
 
-diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
-index 44b3937f7e81..29486478836e 100644
---- a/drivers/net/ethernet/intel/e100.c
-+++ b/drivers/net/ethernet/intel/e100.c
-@@ -607,7 +607,7 @@ struct nic {
- 	struct mem *mem;
- 	dma_addr_t dma_addr;
- 
--	struct pci_pool *cbs_pool;
-+	struct dma_pool *cbs_pool;
- 	dma_addr_t cbs_dma_addr;
- 	u8 adaptive_ifs;
- 	u8 tx_threshold;
-@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
- 			nic->cb_to_clean = nic->cb_to_clean->next;
- 			nic->cbs_avail++;
- 		}
--		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
-+		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
- 		nic->cbs = NULL;
- 		nic->cbs_avail = 0;
- 	}
-@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
- 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
- 	nic->cbs_avail = 0;
- 
--	nic->cbs = pci_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
-+	nic->cbs = dma_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
- 				   &nic->cbs_dma_addr);
- 	if (!nic->cbs)
- 		return -ENOMEM;
-@@ -2960,8 +2960,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
- 		goto err_out_free;
- 	}
--	nic->cbs_pool = pci_pool_create(netdev->name,
--			   nic->pdev,
-+	nic->cbs_pool = dma_pool_create(netdev->name,
-+			   &nic->pdev->dev,
- 			   nic->params.cbs.max * sizeof(struct cb),
- 			   sizeof(u32),
- 			   0);
-@@ -3001,7 +3001,7 @@ static void e100_remove(struct pci_dev *pdev)
- 		unregister_netdev(netdev);
- 		e100_free(nic);
- 		pci_iounmap(pdev, nic->csr);
--		pci_pool_destroy(nic->cbs_pool);
-+		dma_pool_destroy(nic->cbs_pool);
- 		free_netdev(netdev);
- 		pci_release_regions(pdev);
- 		pci_disable_device(pdev);
+For the sake of completeness, but I'll reply to Geerts email about this.
+
+> And don't you need to update the bindings?
+
+Nope, the bindings already have this entry.
+
+>>       { .compatible = "renesas,pcie-rcar-gen3", .data =
+>> rcar_pcie_hw_init },
+>>       {},
+>>   };
+> 
+> MBR, Sergei
+
+
 -- 
-2.14.1
+Best regards,
+Marek Vasut
