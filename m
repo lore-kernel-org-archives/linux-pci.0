@@ -1,71 +1,196 @@
-Return-Path: <SRS0=H+2A=C2=amd.com=Christian.Koenig@kernel.org>
-Return-Path: <SRS0=H+2A=C2=amd.com=Christian.Koenig@kernel.org>
-Subject: Re: [Xen-devel] [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD
- Family 15h (Models 30h-3fh) Processors v5
-To: Jan Beulich <JBeulich@suse.com>
-Cc: helgaas@kernel.org, amd-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org, xen-devel <xen-devel@lists.xen.org>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20171018135821.3248-1-deathsimple@vodafone.de>
- <20171018135821.3248-5-deathsimple@vodafone.de>
- <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
- <d81d50e6-c267-fe43-214f-278e57903448@gmail.com>
- <26df0a78-8028-e42c-ce50-4cefe612a7e1@oracle.com>
- <3443aad0-8c3b-b97e-685a-96b0866827be@amd.com>
- <b937778c-556e-5587-c557-abba8cefe100@oracle.com>
- <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
- <c2d52d00-8c3c-9944-29b3-3cab2f7c35f7@oracle.com>
- <7936fdd3-1615-ac1f-7b75-330ccb6a1a3f@amd.com>
- <0bb468d9-bc1d-e3c5-e313-1cf9408380f0@oracle.com>
- <275e859a-0ddd-ea7f-a681-67e42a5233fe@amd.com>
- <38bc76d9-2ed5-61f3-24b3-085031825181@oracle.com>
- <65885386-3dde-de23-7e95-7d96dfdf6033@oracle.com>
- <0ab28334-3ccc-2a93-9991-396ee01a3662@amd.com>
- <5A1D3E9D0200007800192A44@prv-mh.provo.novell.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
-Message-ID: <af7e8d49-4c3c-f9dc-4ddc-26ce7a1721d0@amd.com>
-Date: Tue, 28 Nov 2017 11:17:33 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v2 6/6] PM / core: DPM_FLAG_SMART_SUSPEND optimization
+Date: Wed, 08 Nov 2017 14:39:30 +0100
+Message-ID: <2333055.m4hB34HY7x@aspire.rjw.lan>
+In-Reply-To: <6330680.LdxjlP4uri@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <5A1D3E9D0200007800192A44@prv-mh.provo.novell.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 28.11.2017 um 10:46 schrieb Jan Beulich:
->>>> On 28.11.17 at 10:12, <christian.koenig@amd.com> wrote:
->> In theory the BIOS would search for address space and won't find
->> anything, so the hotplug operation should fail even before it reaches
->> the kernel in the first place.
-> How would the BIOS know what the OS does or plans to do?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-As far as I know the ACPI BIOS should work directly with the register 
-content.
+Make the PM core avoid invoking the "late" and "noirq" system-wide
+suspend (or analogous) callbacks for devices that are in runtime
+suspend during the corresponding phases of system-wide suspend
+(or analogous) transitions.
 
-So when we update the register content to enable the MMIO decoding the 
-BIOS should know that as well.
+The underlying observation is that runtime PM is disabled for
+devices during those system-wide suspend phases, so their runtime
+PM status should not change going forward and if it has not changed
+so far, their state should be compatible with the target system
+sleep state.
 
-> I think
-> it's the other way around - the OS needs to avoid using any regions
-> for MMIO which are marked as hotpluggable in SRAT.
+This change really makes it possible for, say, platform device
+drivers to re-use runtime PM suspend and resume callbacks by
+pointing ->suspend_late and ->resume_early, respectively (and
+possibly the analogous hibernation-related callback pointers too),
+to them without adding any extra "is the device already suspended?"
+type of checks to the callback routines, as long as they will be
+invoked directly by the core.
 
-I was under the impression that this is exactly what 
-acpi_numa_memory_affinity_init() does.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ Documentation/driver-api/pm/devices.rst |   18 +++++----
+ drivers/base/power/main.c               |   62 ++++++++++++++++++++++++++++----
+ 2 files changed, 66 insertions(+), 14 deletions(-)
 
-> Since there is
-> no vNUMA yet for Xen Dom0, that would need special handling.
+Index: linux-pm/drivers/base/power/main.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/main.c
++++ linux-pm/drivers/base/power/main.c
+@@ -536,6 +536,24 @@ static pm_callback_t dpm_subsys_suspend_
+ /*------------------------- Resume routines -------------------------*/
+ 
+ /**
++ * suspend_event - Return a "suspend" message for given "resume" one.
++ * @resume_msg: PM message representing a system-wide resume transition.
++ */
++static pm_message_t suspend_event(pm_message_t resume_msg)
++{
++	switch (resume_msg.event) {
++	case PM_EVENT_RESUME:
++		return PMSG_SUSPEND;
++	case PM_EVENT_THAW:
++	case PM_EVENT_RESTORE:
++		return PMSG_FREEZE;
++	case PM_EVENT_RECOVER:
++		return PMSG_HIBERNATE;
++	}
++	return PMSG_ON;
++}
++
++/**
+  * dev_pm_may_skip_resume - System-wide device resume optimization check.
+  * @dev: Target device.
+  *
+@@ -609,6 +627,25 @@ static int device_resume_noirq(struct de
+ 	if (callback)
+ 		goto Run;
+ 
++	if (dev_pm_smart_suspend_and_suspended(dev)) {
++		pm_message_t suspend_msg = suspend_event(state);
++
++		/*
++		 * If "freeze" callbacks have been skipped during a transition
++		 * related to hibernation, the subsequent "thaw" callbacks must
++		 * be skipped too or bad things may happen.  Otherwise, if the
++		 * device is to be resumed, its runtime PM status must be
++		 * changed to reflect the new configuration.
++		 */
++		if (!dpm_subsys_suspend_late_cb(dev, suspend_msg, NULL) &&
++		    !dpm_subsys_suspend_noirq_cb(dev, suspend_msg, NULL)) {
++			if (state.event == PM_EVENT_THAW)
++				skip_resume = true;
++			else if (!skip_resume)
++				pm_runtime_set_active(dev);
++		}
++	}
++
+ 	if (skip_resume)
+ 		goto Skip;
+ 
+@@ -1228,7 +1265,10 @@ static int __device_suspend_noirq(struct
+ 	if (callback)
+ 		goto Run;
+ 
+-	direct_cb = true;
++	direct_cb = !dpm_subsys_suspend_late_cb(dev, state, NULL);
++
++	if (dev_pm_smart_suspend_and_suspended(dev) && direct_cb)
++		goto Skip;
+ 
+ 	if (dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+@@ -1242,6 +1282,7 @@ Run:
+ 		goto Complete;
+ 	}
+ 
++Skip:
+ 	dev->power.is_noirq_suspended = true;
+ 
+ 	if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED)) {
+@@ -1249,7 +1290,6 @@ Run:
+ 		bool skip_resume;
+ 
+ 		if (direct_cb &&
+-		    !dpm_subsys_suspend_late_cb(dev, state, NULL) &&
+ 		    !dpm_subsys_resume_early_cb(dev, resume_msg, NULL) &&
+ 		    !dpm_subsys_resume_noirq_cb(dev, resume_msg, NULL)) {
+ 			/*
+@@ -1445,17 +1485,27 @@ static int __device_suspend_late(struct
+ 		goto Complete;
+ 
+ 	callback = dpm_subsys_suspend_late_cb(dev, state, &info);
++	if (callback)
++		goto Run;
+ 
+-	if (!callback && dev->driver && dev->driver->pm) {
++	if (dev_pm_smart_suspend_and_suspended(dev) &&
++	    !dpm_subsys_suspend_noirq_cb(dev, state, NULL))
++		goto Skip;
++
++	if (dev->driver && dev->driver->pm) {
+ 		info = "late driver ";
+ 		callback = pm_late_early_op(dev->driver->pm, state);
+ 	}
+ 
++Run:
+ 	error = dpm_run_callback(callback, dev, state, info);
+-	if (!error)
+-		dev->power.is_late_suspended = true;
+-	else
++	if (error) {
+ 		async_error = error;
++		goto Complete;
++	}
++
++Skip:
++	dev->power.is_late_suspended = true;
+ 
+ Complete:
+ 	TRACE_SUSPEND(error);
+Index: linux-pm/Documentation/driver-api/pm/devices.rst
+===================================================================
+--- linux-pm.orig/Documentation/driver-api/pm/devices.rst
++++ linux-pm/Documentation/driver-api/pm/devices.rst
+@@ -777,14 +777,16 @@ The driver can indicate that by setting
+ runtime suspend at the beginning of the ``suspend_late`` phase of system-wide
+ suspend (or in the ``poweroff_late`` phase of hibernation), when runtime PM
+ has been disabled for it, under the assumption that its state should not change
+-after that point until the system-wide transition is over.  If that happens, the
+-driver's system-wide resume callbacks, if present, may still be invoked during
+-the subsequent system-wide resume transition and the device's runtime power
+-management status may be set to "active" before enabling runtime PM for it,
+-so the driver must be prepared to cope with the invocation of its system-wide
+-resume callbacks back-to-back with its ``->runtime_suspend`` one (without the
+-intervening ``->runtime_resume`` and so on) and the final state of the device
+-must reflect the "active" status for runtime PM in that case.
++after that point until the system-wide transition is over (the PM core itself
++does that for devices whose "noirq", "late" and "early" system-wide PM callbacks
++are executed directly by it).  If that happens, the driver's system-wide resume
++callbacks, if present, may still be invoked during the subsequent system-wide
++resume transition and the device's runtime power management status may be set
++to "active" before enabling runtime PM for it, so the driver must be prepared to
++cope with the invocation of its system-wide resume callbacks back-to-back with
++its ``->runtime_suspend`` one (without the intervening ``->runtime_resume`` and
++so on) and the final state of the device must reflect the "active" status for
++runtime PM in that case.
+ 
+ During system-wide resume from a sleep state it's easiest to put devices into
+ the full-power state, as explained in :file:`Documentation/power/runtime_pm.txt`.
 
-I think that the problem is rather that SRAT is NUMA specific and if I'm 
-not totally mistaken the content is ignored when NUMA support isn't 
-compiled into the kernel.
-
-When Xen steals some memory from Dom0 by hocking up itself into the e820 
-call then I would say the cleanest way is to report this memory in e820 
-as reserved as well. But take that with a grain of salt, I'm seriously 
-not a Xen expert.
-
-Regards,
-Christian.
-
->
-> Jan
->
