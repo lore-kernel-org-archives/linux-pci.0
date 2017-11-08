@@ -1,55 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33591 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750871AbdKIKZL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 05:25:11 -0500
-Received: by mail-wm0-f66.google.com with SMTP id r68so1635981wmr.0
-        for <linux-pci@vger.kernel.org>; Thu, 09 Nov 2017 02:25:10 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.99]:39600 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751489AbdKHR1q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Nov 2017 12:27:46 -0500
+Date: Wed, 8 Nov 2017 11:27:45 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 01/17] PCI: dwc: Use the DMA-API to get the MSI address
+Message-ID: <20171108172745.GD28427@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
+ <20171103134722.5532-2-niklas.cassel@axis.com>
+ <20171108005614.GF22847@bhelgaas-glaptop.roam.corp.google.com>
+ <1c059ad0-aa57-fca4-6d92-e68736ffad5f@synopsys.com>
 MIME-Version: 1.0
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Thu, 9 Nov 2017 15:55:09 +0530
-Message-ID: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
-Subject: [PATCH 1/2] PCI: Mobiveil: export irq_set_msi_desc symbol
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Peter W Newton <peter.newton@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Raj Raina <rajesh.raina@nxp.com>,
-        Rajan Kapoor <rajan.kapoor@nxp.com>,
-        Prabhjot Singh <prabhjot.singh@nxp.com>, tglx@linutronix.de
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1c059ad0-aa57-fca4-6d92-e68736ffad5f@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From e38b741006856f3a3623109dd5ddf5f99326ce61 Mon Sep 17 00:00:00 2001
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Thu, 9 Nov 2017 04:25:21 -0500
-Subject: [PATCH 1/2] PCI: Mobiveil: export irq_set_msi_desc symbol
+On Wed, Nov 08, 2017 at 12:45:49PM +0000, Joao Pinto wrote:
+> Hello to all,
+> 
+> Às 12:56 AM de 11/8/2017, Bjorn Helgaas escreveu:
+> > On Fri, Nov 03, 2017 at 02:47:05PM +0100, Niklas Cassel wrote:
+> >> Use the DMA-API to get the MSI address. This address will be written to
+> >> our PCI config space and to the register which determines which AXI
+> >> address the DWC IP will spoof for incoming MSI irqs.
+> >>
+> >> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+> >> to write to the MSI address, the proper way to get the MSI address is by
+> >> using the DMA API, not by using virt_to_phys().
+> >>
+> >> Using virt_to_phys() might work on some systems, but using the DMA API
+> >> should work on all systems.
+> >>
+> >> This is essentially the same thing as allocating a buffer in a driver
+> >> to which the endpoint will write to. To do this, we use the DMA API.
+> >>
+> >> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > 
+> > I'm expecting Jingoo and/or Joao to chime in and ack the
+> > DesignWare-related patches.  I think all the others are in
+> > pretty good shape.
+> > 
+> >> ---
+> >>  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
+> >>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
+> >>  2 files changed, 14 insertions(+), 4 deletions(-)
+> >> ...
+> 
+> Let me test this patch-set in my setup first!
+> I will give feedback until Friday.
 
-This patch exports irq_set_msi_desc symbol which is used by
-few PCIe root port drivers.
-Tested against kernel : 4.9.0-xilinx-v2017.2.
+OK, thanks.  This may push this series out until v4.16 because the
+v4.15 merge window will probably open Sunday, and I don't like to add
+code during the window and merge it immediately.
 
-Cc: bhelgaas@google.com
-Cc: tglx@linutronix.de
-
-Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
----
- kernel/irq/chip.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index be3c34e..c4222c4 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -137,6 +137,7 @@ int irq_set_msi_desc(unsigned int irq, struct
-msi_desc *entry)
-  return irq_set_msi_desc_off(irq, 0, entry);
- }
-
-+EXPORT_SYMBOL(irq_set_msi_desc);
- /**
-  * irq_set_chip_data - set irq chip data for an irq
-  * @irq: Interrupt number
--- 
-1.8.3.1
+Bjorn
