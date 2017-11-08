@@ -1,133 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f67.google.com ([209.85.160.67]:43744 "EHLO
-        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752034AbdK1OR7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Nov 2017 09:17:59 -0500
-Received: by mail-pl0-f67.google.com with SMTP id s23so257040plk.10
-        for <linux-pci@vger.kernel.org>; Tue, 28 Nov 2017 06:17:59 -0800 (PST)
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com
-Cc: devicetree@vger.kernel.org, mingkai.hu@nxp.com,
-        peter.newton@nxp.com, minghuan.lian@nxp.com, rajesh.raina@nxp.com,
-        rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Subject: [PATCH v4 1/2] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver DT bindings
-Date: Tue, 28 Nov 2017 09:17:28 -0500
-Message-Id: <1511878648-8188-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:48248 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751181AbdKHJ7J (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:59:09 -0500
+Subject: Re: [PATCH] PCI: rcar: Add compatible string for r8a7796
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdV=SHkjpBqCXPzcEnunhWRNLdw+1GwLAS7nbkfQQz3zyA@mail.gmail.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <b53e4694-3f5b-57f7-2b9b-45e780c4c65a@gmail.com>
+Date: Wed, 8 Nov 2017 10:31:52 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAMuHMdV=SHkjpBqCXPzcEnunhWRNLdw+1GwLAS7nbkfQQz3zyA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the DT bindings for Mobiveil PCIe Host Bridge
-IP driver and updates the vendor prefixes file.
+On 11/08/2017 10:29 AM, Geert Uytterhoeven wrote:
+> Hi Marek,
 
-Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: bhelgaas@google.com
-Cc: lorenzo.pieralisi@arm.com
-Cc: linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org
+Hi,
 
----
-Fixes:
-- used git mailer, as tabs were converted to spaces by thunderbird before
-- moved the entry to corrrect alphabetical order in vendor-prefixes.txt
-- DT binding file was modified to take care of v3 review comments
+> On Wed, Nov 8, 2017 at 10:15 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+>>
+>> Add compatible string for the RCar M3 R8A7796 SoC.
+>>
+>> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> 
+> This patch is not needed, as the DT bindings specify that the DTS should use
+> both "renesas,pcie-r8a7796" and "renesas,pcie-rcar-gen3", and the driver
+> already matches against the latter.
 
- .../devicetree/bindings/pci/mobiveil-pcie.txt      | 73 ++++++++++++++++++++++
- .../devicetree/bindings/vendor-prefixes.txt        |  1 +
- 2 files changed, 74 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+OK, then please just drop this one. I'll keep this in mind next time I
+add redundant bindings, thanks :)
 
-diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-new file mode 100644
-index 0000000..9f3160d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-@@ -0,0 +1,73 @@
-+* Mobiveil AXI PCIe Root Port Bridge DT description
-+
-+Mobiveil's GPEX 4.0 is PCIe gen4 a root port bridge IP. This configurable IP
-+has upto 8 outbound and inbound windows for the address translation.
-+
-+Required properties:
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- compatible: Should contain "mbvl,gpex40-pcie"
-+- reg: Should contain PCIe registers location and length
-+	"config_axi_slave": PCIe controller registers
-+	"csr_axi_slave"	  : Bridge config registers
-+	"gpio_slave"	  : GPIO registers to control slot power
-+	"apb_csr"	  : MSI registers
-+
-+- device_type: must be "pci"
-+- apio-wins : number of requested apio outbound windows
-+		default 2 outbound windows are configured -
-+		1. Config window
-+		2. Memory window
-+- ppio-wins : number of requested ppio inbound windows
-+		default 1 inbound memory window is configured.
-+- bus-range: PCI bus numbers covered
-+- interrupt-controller: identifies the node as an interrupt controller
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- interrupt-parent : phandle to the interrupt controller that
-+		it is attached to, it should be set to gic to point to
-+		ARM's Generic Interrupt Controller node in system DT.
-+- interrupts: The interrupt line of the PCIe controller
-+		last cell of this fild is set to 4 to
-+		denote it as IRQ_TYPE_LEVEL_HIGH type interrupt.
-+- interrupt-map-mask,
-+	interrupt-map: standard PCI properties to define the mapping of the
-+	PCI interface to interrupt numbers.
-+- ranges: ranges for the PCI memory regions (I/O space region is not
-+	supported by hardware)
-+	Please refer to the standard PCI bus binding document for a more
-+	detailed explanation
-+
-+
-+Example:
-+++++++++
-+	pcie0: pcie@a0000000 {
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		compatible = "mbvl,gpex40-pcie";
-+		reg =	<0xa0000000 0x00001000>,
-+			<0xb0000000 0x00010000>,
-+			<0xff000000 0x00200000>,
-+			<0xb0010000 0x00001000>;
-+		reg-names =	"config_axi_slave",
-+				"csr_axi_slave",
-+				"gpio_slave",
-+				"apb_csr";
-+		device_type = "pci";
-+		apio-wins = <2>;
-+		ppio-wins = <1>;
-+		bus-range = <0x00000000 0x000000ff>;
-+		interrupt-controller;
-+		interrupt-parent = <&gic>;
-+		#interrupt-cells = <1>;
-+		interrupts = < 0 89 4 >;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pci_express 1>,
-+				<0 0 0 2 &pci_express 2>,
-+				<0 0 0 3 &pci_express 3>,
-+				<0 0 0 4 &pci_express 4>;
-+		ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
-+
-+	};
-diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
-index 0994bdd..8263cc7 100644
---- a/Documentation/devicetree/bindings/vendor-prefixes.txt
-+++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
-@@ -197,6 +197,7 @@ lwn	Liebherr-Werk Nenzing GmbH
- macnica	Macnica Americas
- marvell	Marvell Technology Group Ltd.
- maxim	Maxim Integrated Products
-+mbvl	Mobiveil Inc.
- mcube	mCube
- meas	Measurement Specialties
- mediatek	MediaTek Inc.
+>> --- a/drivers/pci/host/pcie-rcar.c
+>> +++ b/drivers/pci/host/pcie-rcar.c
+>> @@ -1062,6 +1062,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
+>>         { .compatible = "renesas,pcie-rcar-gen2",
+>>           .data = rcar_pcie_hw_init_gen2 },
+>>         { .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
+>> +       { .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
+>>         { .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
+> 
+> Gr{oetje,eeting}s,
+> 
+>                         Geert
+> 
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+> 
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+>                                 -- Linus Torvalds
+> 
+
+
 -- 
-1.8.3.1
+Best regards,
+Marek Vasut
