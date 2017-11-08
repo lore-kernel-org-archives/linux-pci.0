@@ -1,106 +1,128 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to and
- from devices
-To: Yisheng Xie <xieyisheng1@huawei.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-6-jean-philippe.brucker@arm.com>
- <9c364147-12c4-5a8a-9cd9-0642a6b92555@huawei.com>
- <3338635f-f2ba-4b78-a72b-2568645f7df3@arm.com>
- <7ba3d70a-2364-2a92-39a8-ed112807b83c@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <c4ba0a3d-ef11-6e1a-9c47-7c574233d4fb@arm.com>
-Date: Thu, 30 Nov 2017 13:39:31 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:58245 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752568AbdKHNw6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 08:52:58 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v2 0/6] PM / sleep: Driver flags for system suspend/resume (part 2)
+Date: Wed, 08 Nov 2017 01:41:35 +0100
+Message-ID: <6330680.LdxjlP4uri@aspire.rjw.lan>
+In-Reply-To: <16592954.7Zo1mAdIIH@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <7ba3d70a-2364-2a92-39a8-ed112807b83c@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/11/17 01:11, Yisheng Xie wrote:
-> Hi, Jean,
-> 
-> On 2017/11/29 23:01, Jean-Philippe Brucker wrote:
->> On 29/11/17 06:08, Yisheng Xie wrote:
->>>
->>>
->>> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
->>>> +int iommu_process_bind_device(struct device *dev, struct task_struct *task,
->>>> +			      int *pasid, int flags)
->>>> +{
->>> [..]
->>>> +			err = iommu_process_attach_locked(context, dev);
->>>> +			if (err)
->>>> +				iommu_process_put_locked(process);
->>> one ref for a context is enough right? so also need call iommu_process_put_locked()
->>> if attach ok, or will be leak if user call bind twice for the same device and task.
->>
->> I wasn't sure, I think I prefer taking one ref for each bind. If user
->> calls bind twice, it should call unbind twice as well (in case of leak we
->> free the context on process exit).
->>
->> Also with this implementation, user can call bind for two devices in the
->> same domain, which will share the same context structure. So we have to
->> take as many refs as bind() calls.
-> 
-> 
-> hmm, it has two ref, one for _context_ and the other for *process* (or maybe mm for
-> your next version), right? For each bind it will take a ref of context as present
-> design. but why also process ref need be taken for each bind? I mean it seems does
-> not break _user can call bind for two devices in the same domain_.
-> 
-> And if you really want to take a ref of *process* for echo bind, you should put it when
-> unbind, right? I just not find where you put the ref of process when unbind. But just put
-> the process ref when free context.
-> 
-> Maybe I just miss something.
+Hi All,
 
-No you're right I misunderstood, sorry about that. Each context has a
-single ref to a process, so we do need to drop the process ref here as you
-pointed out.
+This is a follow-up for the first part of the PM driver flags series
+sent previously some time ago with an intro as follows:
 
-I thought I exercised this path though, I'll update my test suite. Also
-attach_locked shouldn't take a context ref if attach fails...
+On Saturday, October 28, 2017 12:11:55 AM CET Rafael J. Wysocki wrote:
+> The following part of the original cover letter still applies:
+> 
+> On Monday, October 16, 2017 3:12:35 AM CEST Rafael J. Wysocki wrote:
+> > 
+> > This work was triggered by attempts to fix and optimize PM in the
+> > i2c-designware-platdev driver that ended up with adding a couple of
+> > flags to the driver's internal data structures for the tracking of
+> > device state (https://marc.info/?l=linux-acpi&m=150629646805636&w=2).
+> > That approach is sort of suboptimal, though, because other drivers will
+> > probably want to do similar things and if all of them need to use internal
+> > flags for that, quite a bit of code duplication may ensue at least.
+> > 
+> > That can be avoided in a couple of ways and one of them is to provide a means
+> > for drivers to tell the core what to do and to make the core take care of it
+> > if told to do so.  Hence, the idea to use driver flags for system-wide PM
+> > that was briefly discussed during the LPC in LA last month.
+> 
+> [...]
+> 
+> > What can work (and this is the only strategy that can work AFAICS) is to
+> > point different callback pointers *in* *a* *driver* to the same routine
+> > if the driver wants to reuse that code.  That actually will work for PCI
+> > and USB drivers today, at least most of the time, but unfortunately there
+> > are problems with it for, say, platform devices.
+> > 
+> > The first problem is the requirement to track the status of the device
+> > (suspended vs not suspended) in the callbacks, because the system-wide PM
+> > code in the PM core doesn't do that.  The runtime PM framework does it, so
+> > this means adding some extra code which isn't necessary for runtime PM to
+> > the callback routines and that is not particularly nice.
+> > 
+> > The second problem is that, if the driver wants to do anything in its
+> > ->suspend callback, it generally has to prevent runtime suspend of the
+> > device from taking place in parallel with that, which is quite cumbersome.
+> > Usually, that is taken care of by resuming the device from runtime suspend
+> > upfront, but generally doing that is wasteful (there may be no real need to
+> > resume the device except for the fact that the code is designed this way).
+> > 
+> > On top of the above, there are optimizations to be made, like leaving certain
+> > devices in suspend after system resume to avoid wasting time on waiting for
+> > them to resume before user space can run again and similar.
+> > 
+> > This patch series focuses on addressing those problems so as to make it
+> > easier to reuse callback routines by pointing different callback pointers
+> > to them in device drivers.  The flags introduced here are to instruct the
+> > PM core and middle layers (whatever they are) on how the driver wants the
+> > device to be handled and then the driver has to provide callbacks to match
+> > these instructions and the rest should be taken care of by the code above it.
+> > 
+> > The flags are introduced one by one to avoid making too many changes in
+> > one go and to allow things to be explained better (hopefully).  They mostly
+> > are mutually independent with some clearly documented exceptions.
+> 
+> but I had to rework the core patches to address the problem pointed with the
+> generic power domains (genpd) framework pointed out by Ulf.
+> 
+> Namely, genpd expects its "noirq" callbacks to be invoked for devices in
+> runtime suspend too and it has valid reasons for that, so its "noirq"
+> callbacks can never be skipped, even for devices with the SMART_SUSPEND
+> flag set.  For this reason, the logic related to DPM_FLAG_SMART_SUSPEND
+> had to be moved from the core to the PCI bus type and the ACPI PM domain
+> which are mostly affected by it anyway.  The code after the changes looks
+> more straightforward to me, but it generally is more code and some patterns
+> had to be repeated in a few places.
 
-Thanks a lot,
-Jean
+I promised to send the rest of the series then:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> I will send the core patches for the remaining two flags introduced by the
+> original series separately and the intel-lpss and i2c-designware ones will
+> be posted when the core patches have been reviewed and agreed on.
+
+and here it goes.
+
+It actually only adds support for one additional flag, namely for
+DPM_FLAG_LEAVE_SUSPENDED, to the PM core (basic bits), PCI bus type and the
+ACPI PM domain.
+
+That part of the series (patches [1-3/6]) is rather straightforward and, as PCI
+and the ACPI PM domain are concerned, it should be functionally equivalent to
+the previous version of the set, so I retained the Greg's ACKs on these patches.
+
+The other part (patches [4-6/6]) is sort of new, as it makes the PM core
+carry out optimizations for devices with DPM_FLAG_LEAVE_SUSPENDED and/or
+DPM_FLAG_SMART_SUSPEND set where the "noirq", "early" and "late" system-wide
+PM callbacks provided by the drivers are invoked by the core directly.  That
+part basically allows platform drivers, for instance, to reuse runtime PM
+callbacks (by pointing ->suspend_late and ->resume_early to them) without
+adding extra checks to them, as long as they are called directly by the core
+(or the ACPI PM domain).
+
+The series should apply on top of linux-next from today.
+
+Thanks,
+Rafael
