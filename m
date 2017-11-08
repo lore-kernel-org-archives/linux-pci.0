@@ -1,12 +1,24 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ruben Guerra Marin <ruben.guerra.marin@axon.tv>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Subject: Performance issues writing to PCIe in a Zynq
-Date: Fri, 3 Nov 2017 07:10:09 +0000
-Message-ID: <1509693009315.39595@axon.tv>
+Subject: Re: [RFCv2 PATCH 00/36] Process management for IOMMU + SVM for SMMUv3
+To: Bob Liu <liubo95@huawei.com>, Yisheng Xie <xieyisheng1@huawei.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <0c6778d8-741f-0db7-fe3c-df88a75ebbb2@huawei.com>
+ <0fecd29e-eaf7-9503-b087-7bfbc251da88@arm.com>
+ <c6b7fb4b-4f2b-0d81-8bb5-8fa6b62aca3a@huawei.com>
+ <8a1e090d-22e8-0295-a53f-bc3b5b7d7971@arm.com>
+ <79f3610e-e522-29ad-8a93-be7e05df2973@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <8734355c-d0c8-a02a-ab47-46803700c467@arm.com>
+Date: Wed, 8 Nov 2017 10:50:56 +0000
 MIME-Version: 1.0
+In-Reply-To: <79f3610e-e522-29ad-8a93-be7e05df2973@huawei.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,38 +26,80 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4oCLCkhpLAoKSSBoYXZlIHRoZSBhIFp5bnEgYm9hcmQgcnVubmluZyBwZXRhbGludXgsIGFuZCBp
-dCBpcyBjb25uZWN0ZWQgdGhyb3VnaCBQQ0llIHRvIGEgVmlydGV4IFVsdHJhc2NhbGUgYm9hcmQu
-IEkgY29uZmlndXJlZCB0aGUgVWx0cmFzY2FsZSBmb3IgVGFuZGVtIFBDSWUsIHdoaWNoIHRoZSBz
-ZWNvbmQgc3RhZ2UgYml0c3RyZWFtIGlzIGJlaW5nIHByb2dyYW1tZWQgZnJvbSB0aGUgWnlucSBi
-b2FyZCAoSSBjcm9zc2VkIGNvbXBpbGVkIHRoZSBtY2FwIGFwcGxpY2F0aW9uIHRoYXQgWGlsaW54
-IHByb3ZpZGVzKS4KIApUaGlzIHdvcmtzIHBlcmZlY3RseSwgYnV0IHRha2VzIGFyb3VuZCB+MTIg
-c2Vjb25kcyB0byBwcm9ncmFtIHRoZSBzZWNvbmQgc3RhZ2UgYml0c3RyZWFtIChjb21wcmVzc2Vk
-IGlzIH4xMiBNQiksIHdoaWNoIGlzIHF1aXRlIHNsb3cuIFdlIGFsc28gdHJpZWQgZGVidWdnaW5n
-IHRoZSBtY2FwIGFwcGxpY2F0aW9uIGFuZCBwY2l1dGlscy4gV2UgZm91bmQgb3V0IHRoZSBvcGVy
-YXRpb24gdGhhdCB0YWtlcyBsb25nIHRvIGV4ZWN1dGU6IEluIHBjaXV0aWxzLCB0aGUgaW5zdHJ1
-Y3Rpb24gdG8gYWN0dWFsbHkgY2FsbCB0aGUgd3JpdGUgdG8gdGhlIGRyaXZlciAocHdyaXRlKSB0
-YWtlcyBhcHByb3hpbWF0ZWx5IDZ1Uywgc28gaWYgeW91IGFkZCB1cCB0aGlzIGZvciAxMiBNQiB0
-aGVuIHlvdSBjYW4gc2VlIHdoeSBpdCB0YWtlcyBzbyBsb25nLiBXaHkgaXMgdGhpcyBzbyBzbG93
-PyBJcyB0aGlzIG1heWJlIGEgcHJvYmxlbSB3aXRoIHRoZSBkcml2ZXI/CgpGb3IgdGVzdGluZywg
-SSBhZGRlZCBhbiBJTEEgdG8gdGhlIEFYSSBidXMgaW4gYmV0d2VlbiB0aGUgWnlucSBHUDEgYW5k
-IHRoZSBQQ0llIElQIGNvbnRyb2wgcmVnaXN0ZXJzIHBvcnQuIEkgdHJpZ2dlcmVkIGhhbGZ3YXkg
-dGhlIHByb2dyYW1taW5nIG9mIHRoZSBiaXRzdHJlYW0gdXNpbmcgdGhlIG1jYXAgcHJvZ3JhbSBw
-cm92aWRlZCBieSBYaWxpbnguIEkgY2FuIHNlZSB0aGF0IGl0IGlzIHdyaXRpbmcgdG8gYWRkcmVz
-cyB4MzU4LCB3aGljaCBhY2NvcmRpbmcgdG8gdGhlICpkYXRhc2hlZXQqIChodHRwczovL3d3dy54
-aWxpbnguY29tL0F0dGFjaG1lbnQvWGlsaW54X0Fuc3dlcl82NDc2MV9fVWx0cmFTY2FsZV9EZXZp
-Y2VzLnBkZikgaXMgdGhlIFdyaXRlIERhdGEgUmVnaXN0ZXIsIHdoaWNoIGlzIGNvcnJlY3QgKGFu
-ZCBhZ2FpbiwgSSBrbm93IHRoZSB3aG9sZSBiaXRzdHJlYW0gZ2V0cyBwcm9ncmFtbWVkIGNvcnJl
-Y3RseSkuCiAKQnV0IHdoYXQgSSBhbHNvIHNlZSBpcyB0aGF0IGEgImF3dmFsaWQiIGJlaW5nIGFz
-c2VydGVkIHRvIHRoZSBuZXh0IG9uZSBpdCB0YWtlcyAyNDUgY3ljbGVzLCBhbmQgSSBjYW4gaW1h
-Z2luZSB0aGlzIGlzIHdoeSBpdCB0YWtlcyAxMiBzZWNvbmRzIHRvIHByb2dyYW0gYSAxMk1CIGJp
-dHN0cmVhbS4K4oCLClRoYW5rcyBhIGxvdCwKCiAgCiBSdWJlbiBHdWVycmEgTWFyaW4gCnJ1YmVu
-Lmd1ZXJyYS5tYXJpbkBheG9uLnR2CiAgICAKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJt
-LWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21h
-aWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+Hi Liubo,
+
+On 08/11/17 01:21, Bob Liu wrote:
+> Hi Jean,
+> 
+> On 2017/10/12 20:55, Jean-Philippe Brucker wrote:
+>> On 12/10/17 13:05, Yisheng Xie wrote:
+>> [...]
+>>>>>> * An iommu_process can be bound to multiple domains, and a domain can have
+>>>>>>   multiple iommu_process.
+>>>>> when bind a task to device, can we create a single domain for it? I am thinking
+>>>>> about process management without shared PT(for some device only support PASID
+>>>>> without pri ability), it seems hard to expand if a domain have multiple iommu_process?
+>>>>> Do you have any idea about this?
+>>>>
+>>>> A device always has to be in a domain, as far as I know. Not supporting
+>>>> PRI forces you to pin down all user mappings (or just the ones you use for
+>>>> DMA) but you should sill be able to share PT. Now if you don't support
+>>>> shared PT either, but only PASID, then you'll have to use io-pgtable and a
+>>>> new map/unmap API on an iommu_process. I don't understand your concern
+>>>> though, how would the link between process and domains prevent this use-case?
+>>>>
+>>> So you mean that if an iommu_process bind to multiple devices it should create
+>>> multiple io-pgtables? or just share the same io-pgtable?
+>>
+>> I don't know to be honest, I haven't thought much about the io-pgtable
+>> case, I'm all about sharing the mm :)
+>>
+> 
+> Sorry to get back to this thread, but traditional DMA_MAP use case may also want to
+> enable Substreamid/PASID.
+> As a general framework, you may also consider SubStreamid/Pasid support for dma map/io-pgtable.
+> 
+> We're considering make io-pgtables per SubStreamid/Pasid, but haven't decide put all 
+> io-pgtables into a single domain or iommu_process.
+
+Yes they should be in a single domain, see also my other reply here:
+http://www.spinics.net/lists/arm-kernel/msg613586.html
+
+I've only been thinking about the IOMMU API for the moment, but I guess
+the VFIO API would use this extension? I suppose it would be a new PASID
+field to DMA_MAP along with a flag. The PASID would probably be allocated
+with BIND + some special flag.
+
+Thanks,
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
