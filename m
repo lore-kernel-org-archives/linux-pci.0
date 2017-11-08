@@ -1,66 +1,136 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 17/29] PCI: ibmphp: deprecate pci_get_bus_and_slot()
-Date: Mon, 27 Nov 2017 11:57:54 -0500
-Message-Id: <1511801886-6753-18-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:46643 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751829AbdKHJ6b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:58:31 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH V2] PCI: rcar: Use runtime PM to control controller clock
+Date: Wed,  8 Nov 2017 10:58:16 +0100
+Message-Id: <20171108095816.14192-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+From: Dien Pham <dien.pham.ry@rvc.renesas.com>
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+The controller clock can be switched off during suspend/resume,
+let runtime PM take care of that.
 
-Hard-coding the domain parameter as 0 since the code doesn't seem to be
-ready for multiple domains.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+To: linux-pci@vger.kernel.org
 ---
- drivers/pci/hotplug/ibmphp_core.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
+      reordering of function calls in probe
+    - Dispose of fail_clk in rcar_pcie_get_resources()
+---
+ drivers/pci/host/pcie-rcar.c | 37 ++++++++++++-------------------------
+ 1 file changed, 12 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 73cf846..92dd882 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -707,7 +707,8 @@ static void ibm_unconfigure_device(struct pci_func *func)
- 	pci_lock_rescan_remove();
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 12796eccb2be..1a7254ec16da 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -145,7 +145,6 @@ struct rcar_pcie {
+ 	void __iomem		*base;
+ 	struct list_head	resources;
+ 	int			root_bus_nr;
+-	struct clk		*clk;
+ 	struct clk		*bus_clk;
+ 	struct			rcar_msi msi;
+ };
+@@ -917,24 +916,14 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
+ 	if (IS_ERR(pcie->base))
+ 		return PTR_ERR(pcie->base);
  
- 	for (j = 0; j < 0x08; j++) {
--		temp = pci_get_bus_and_slot(func->busno, (func->device << 3) | j);
-+		temp = pci_get_domain_bus_and_slot(0, func->busno,
-+						   (func->device << 3) | j);
- 		if (temp) {
- 			pci_stop_and_remove_bus_device(temp);
- 			pci_dev_put(temp);
-@@ -780,7 +781,7 @@ static int ibm_configure_device(struct pci_func *func)
- 	if (!(bus_structure_fixup(func->busno)))
- 		flag = 1;
- 	if (func->dev == NULL)
--		func->dev = pci_get_bus_and_slot(func->busno,
-+		func->dev = pci_get_domain_bus_and_slot(0, func->busno,
- 				PCI_DEVFN(func->device, func->function));
+-	pcie->clk = devm_clk_get(dev, "pcie");
+-	if (IS_ERR(pcie->clk)) {
+-		dev_err(dev, "cannot get platform clock\n");
+-		return PTR_ERR(pcie->clk);
+-	}
+-	err = clk_prepare_enable(pcie->clk);
+-	if (err)
+-		return err;
+-
+ 	pcie->bus_clk = devm_clk_get(dev, "pcie_bus");
+ 	if (IS_ERR(pcie->bus_clk)) {
+ 		dev_err(dev, "cannot get pcie bus clock\n");
+-		err = PTR_ERR(pcie->bus_clk);
+-		goto fail_clk;
++		return PTR_ERR(pcie->bus_clk);
+ 	}
+ 	err = clk_prepare_enable(pcie->bus_clk);
+ 	if (err)
+-		goto fail_clk;
++		return err;
  
- 	if (func->dev == NULL) {
-@@ -793,7 +794,7 @@ static int ibm_configure_device(struct pci_func *func)
- 		if (num)
- 			pci_bus_add_devices(bus);
+ 	i = irq_of_parse_and_map(dev->of_node, 0);
+ 	if (!i) {
+@@ -956,8 +945,6 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
  
--		func->dev = pci_get_bus_and_slot(func->busno,
-+		func->dev = pci_get_domain_bus_and_slot(0, func->busno,
- 				PCI_DEVFN(func->device, func->function));
- 		if (func->dev == NULL) {
- 			err("ERROR... : pci_dev still NULL\n");
+ err_map_reg:
+ 	clk_disable_unprepare(pcie->bus_clk);
+-fail_clk:
+-	clk_disable_unprepare(pcie->clk);
+ 
+ 	return err;
+ }
+@@ -1125,6 +1112,13 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 
+ 	rcar_pcie_parse_request_of_pci_ranges(pcie);
+ 
++	pm_runtime_enable(pcie->dev);
++	err = pm_runtime_get_sync(pcie->dev);
++	if (err < 0) {
++		dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
++		goto err_pm_disable;
++	}
++
+ 	err = rcar_pcie_get_resources(pcie);
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to request resources: %d\n", err);
+@@ -1135,13 +1129,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	if (err)
+ 		goto err_free_bridge;
+ 
+-	pm_runtime_enable(dev);
+-	err = pm_runtime_get_sync(dev);
+-	if (err < 0) {
+-		dev_err(dev, "pm_runtime_get_sync failed\n");
+-		goto err_pm_disable;
+-	}
+-
+ 	/* Failure to get a link might just be that no cards are inserted */
+ 	hw_init_fn = of_device_get_match_data(dev);
+ 	err = hw_init_fn(pcie);
+@@ -1173,13 +1160,13 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ err_pm_put:
+ 	pm_runtime_put(dev);
+ 
+-err_pm_disable:
+-	pm_runtime_disable(dev);
+-
+ err_free_bridge:
+ 	pci_free_host_bridge(bridge);
+ 	pci_free_resource_list(&pcie->resources);
+ 
++err_pm_disable:
++	pm_runtime_disable(dev);
++
+ 	return err;
+ }
+ 
 -- 
-1.9.1
+2.11.0
