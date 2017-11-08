@@ -1,45 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3870 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753570AbdKXPzD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 10:55:03 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
-CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 05/10] PCI: Export pci_find_host_bridge()
-Date: Fri, 24 Nov 2017 21:23:15 +0530
-Message-ID: <1511538800-8275-6-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:53232 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753091AbdKHAhS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Nov 2017 19:37:18 -0500
+Date: Tue, 7 Nov 2017 18:37:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: bhelgaas@google.com, linuxarm@huawei.com,
+        linux-pci@vger.kernel.org, wangzhou1@hisilicon.com
+Subject: Re: [PATCH] MAINTAINERS: Remove Gabriele Paoloni as HiSilicon PCI
+ maintainer
+Message-ID: <20171108003715.GD22847@bhelgaas-glaptop.roam.corp.google.com>
+References: <1509624086-9076-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1509624086-9076-1-git-send-email-gabriele.paoloni@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow PCI host driver to use pci_find_host_bridge() to get
-pci_host_bridge from pci_bus.
+On Thu, Nov 02, 2017 at 12:01:26PM +0000, Gabriele Paoloni wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> 
+> Gabriele is now moving to a different role, therefore remove him
+> as HiSilicon PCI maintainer
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Acked-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
- drivers/pci/host-bridge.c | 1 +
- 1 file changed, 1 insertion(+)
+Thanks for all your help, Gabriele!
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index add66236215c..e0942fc086ad 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -22,6 +22,7 @@ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
- 
- 	return to_pci_host_bridge(root_bus->bridge);
- }
-+EXPORT_SYMBOL(pci_find_host_bridge);
- 
- struct device *pci_get_host_bridge_device(struct pci_dev *dev)
- {
--- 
-2.1.4
+Applied to for-linus for v4.14 so you don't get spammed unnecessarily.
+
+> ---
+>  MAINTAINERS | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index af0cb69..6eb7141 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -10471,7 +10471,6 @@ F:	drivers/pci/host/pci-thunder-*
+>  
+>  PCIE DRIVER FOR HISILICON
+>  M:	Zhou Wang <wangzhou1@hisilicon.com>
+> -M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>  L:	linux-pci@vger.kernel.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> -- 
+> 2.7.4
+> 
+> 
