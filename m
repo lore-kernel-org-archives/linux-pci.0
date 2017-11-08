@@ -1,59 +1,93 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 09/17] PCI: dwc: dra7xx: Help compiler to remove unused code
-Date: Fri,  3 Nov 2017 14:47:13 +0100
-Message-Id: <20171103134722.5532-10-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v2 3/6] ACPI / PM: Support for LEAVE_SUSPENDED driver flag in ACPI PM domain
+Date: Wed, 08 Nov 2017 14:34:04 +0100
+Message-ID: <2554940.NTGGD0NJQ9@aspire.rjw.lan>
+In-Reply-To: <6330680.LdxjlP4uri@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The dra7xx driver supports both host and ep mode.
-When enabling support for only one of the modes, help the compiler
-to remove code for the mode that we have not enabled in the driver.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-By adding if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) return -ENODEV;
-anything after that statement will get silently dropped by the compiler,
-including static functions and structures that are referenced indirectly
-from there.
+Add support for DPM_FLAG_LEAVE_SUSPENDED to the ACPI PM domain by
+making it (a) set the power.may_skip_resume status bit for devices
+that, from its perspective, may be left in suspend after system
+wakeup from sleep and (b) return early from acpi_subsys_resume_noirq()
+for devices whose remaining resume callbacks during the transition
+under way are going to be skipped by the PM core.
 
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/pci/dwc/pci-dra7xx.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/acpi/device_pm.c |   27 ++++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 009f6aeeee1c..4b02b2040eda 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -682,6 +682,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 
- 	switch (mode) {
- 	case DW_PCIE_RC_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
-+			ret = -ENODEV;
-+			goto err_gpio;
-+		}
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -987,7 +987,7 @@ void acpi_subsys_complete(struct device
+ 	 * the sleep state it is going out of and it has never been resumed till
+ 	 * now, resume it in case the firmware powered it up.
+ 	 */
+-	if (dev->power.direct_complete && pm_resume_via_firmware())
++	if (pm_runtime_suspended(dev) && pm_resume_via_firmware())
+ 		pm_request_resume(dev);
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_complete);
+@@ -1036,10 +1036,28 @@ EXPORT_SYMBOL_GPL(acpi_subsys_suspend_la
+  */
+ int acpi_subsys_suspend_noirq(struct device *dev)
+ {
+-	if (dev_pm_smart_suspend_and_suspended(dev))
++	int ret;
 +
- 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
- 				   DEVICE_TYPE_RC);
- 		ret = dra7xx_add_pcie_port(dra7xx, pdev);
-@@ -689,6 +694,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 			goto err_gpio;
- 		break;
- 	case DW_PCIE_EP_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_EP)) {
-+			ret = -ENODEV;
-+			goto err_gpio;
-+		}
-+
- 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
- 				   DEVICE_TYPE_EP);
++	if (dev_pm_smart_suspend_and_suspended(dev)) {
++		dev->power.may_skip_resume = true;
+ 		return 0;
++	}
  
--- 
-2.14.2
+-	return pm_generic_suspend_noirq(dev);
++	ret = pm_generic_suspend_noirq(dev);
++	if (ret)
++		return ret;
++
++	/*
++	 * If the target system sleep state is suspend-to-idle, it is sufficient
++	 * to check whether or not the device's wakeup settings are good for
++	 * runtime PM.  Otherwise, the pm_resume_via_firmware() check will cause
++	 * acpi_subsys_complete() to take care of fixing up the device's state
++	 * anyway, if need be.
++	 */
++	dev->power.may_skip_resume = device_may_wakeup(dev) ||
++					!device_can_wakeup(dev);
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_suspend_noirq);
+ 
+@@ -1049,6 +1067,9 @@ EXPORT_SYMBOL_GPL(acpi_subsys_suspend_no
+  */
+ int acpi_subsys_resume_noirq(struct device *dev)
+ {
++	if (dev_pm_may_skip_resume(dev))
++		return 0;
++
+ 	/*
+ 	 * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
+ 	 * during system suspend, so update their runtime PM status to "active"
