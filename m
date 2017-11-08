@@ -1,46 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f172.google.com ([74.125.82.172]:33311 "EHLO
-        mail-ot0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753590AbdKXQun (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 11:50:43 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Nov 2017 21:01:33 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dexuan Cui <decui@microsoft.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Jake Oshins <jakeo@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
+        "Chris Valean (Cloudbase Solutions SRL)" <v-chvale@microsoft.com>,
+        "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        'Eyal Mizrachi' <eyalmi@mellanox.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        Armen Guezalian <armeng@mellanox.com>,
+        Firas Mahameed <firas@mellanox.com>,
+        Tziporet Koren <tziporet@mellanox.com>,
+        Daniel Jurgens <danielj@mellanox.com>
+Subject: Re: [PATCH] PCI: hv: use effective affinity mask
+Message-ID: <20171108030133.GB28427@bhelgaas-glaptop.roam.corp.google.com>
+References: <PS1P15301MB00112EE79DE499E8B2BA338BBF5F0@PS1P15301MB0011.APCP153.PROD.OUTLOOK.COM>
+ <20171108010736.GA28427@bhelgaas-glaptop.roam.corp.google.com>
+ <KL1P15301MB00061170992D6D998A590B9CBF560@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-In-Reply-To: <1511538800-8275-4-git-send-email-mmaddireddy@nvidia.com>
-References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com> <1511538800-8275-4-git-send-email-mmaddireddy@nvidia.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 24 Nov 2017 17:50:42 +0100
-Message-ID: <CAJZ5v0ghcwSHdrbZd_=XA=tHz7=aTUVd66dHkMYRNyXpnqP84w@mail.gmail.com>
-Subject: Re: [PATCH 03/10] PM / QoS: Fix device resume latency for non PM QoS devices
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-        Jon Hunter <jonathanh@nvidia.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Thomas Gleixner <tglx@linutronix.de>, vidyas@nvidia.com,
-        kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <KL1P15301MB00061170992D6D998A590B9CBF560@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 24, 2017 at 4:53 PM, Manikanta Maddireddy
-<mmaddireddy@nvidia.com> wrote:
-> In 'commit 0cc2b4e5a020 ("PM / QoS: Fix device resume latency PM QoS")'
-> PM QoS resume latency modified 0 as "no latency at all". However
-> dev_pm_qos_raw_read_value() returns 0 for devices which doesn't have
-> PM QoS constraints. This is blocking runtime suspend for these devices
-> in rpm_check_suspend_allowed(). Return PM_QOS_RESUME_LATENCY_NO_CONSTRAINT
-> when PM QoS constraints are not available for a particular device.
->
-> Fixes: 0cc2b4e5a020 ("PM / QoS: Fix device resume latency PM QoS")
+On Wed, Nov 08, 2017 at 01:27:02AM +0000, Dexuan Cui wrote:
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Tuesday, November 7, 2017 5:08 PM
+> > On Wed, Nov 01, 2017 at 08:30:53PM +0000, Dexuan Cui wrote:
+> > >
+> > > Please consider this for v4.14, if it's not too late.
+> > 
+> > What would be the rationale for putting it in v4.14?  After the merge
+> > window, I usually only merge fixes for problems introduced during the
+> > merge window, or for serious regressions.  I can't tell if this fits
+> > into that or not.
+> 
+> The patch was sent last Wednesday and I hoped it could catch the 
+> merge window to be in v4.14 so we won't have to request a backport
+> for the v4.14 stable kernel in future. And I was not exactly sure when
+> the merge window was. Sorry :-)
+> 
+> The patch is not fixing a serious regression. It just fixes a long standing
+> issue from the beginning of the Hyper-V vPCI driver: 1 of 7 Mellanox 
+> VFs of a 32-vCPU VM running on Hyper-V may not receive interrupts.
 
-That commit has been reverted, so this patch is not applicable and
-therefore the whole series isn't.
+No problem.  I added a stable tag so the backport should happen
+automatically and put it on my pci/host-hv branch for v4.15, with Jake's
+Reviewed-by.  Thanks!
 
-What kernel is it based off?
-
-Thanks,
-Rafael
+Bjorn
