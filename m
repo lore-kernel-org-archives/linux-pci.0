@@ -1,52 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40414 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751702AbdKVFc0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:26 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        sparclinux@vger.kernel.org (open list:SPARC + UltraSPARC
-        (sparc/sparc64)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 22/30] openprom: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:31:07 -0500
-Message-Id: <1511328675-21981-23-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:58600 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752900AbdKHWc0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 17:32:26 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, briannorris@chromium.org,
+        dianders@chromium.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>
+Subject: Re: [RFC PATCH v10 6/7] PCI / PM: Move acpi wakeup code to pci core
+Date: Wed, 08 Nov 2017 23:32:20 +0100
+Message-ID: <1894178.xtK0vD2N4H@aspire.rjw.lan>
+In-Reply-To: <20171027072612.26565-7-jeffy.chen@rock-chips.com>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com> <20171027072612.26565-7-jeffy.chen@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Friday, October 27, 2017 9:26:11 AM CET Jeffy Chen wrote:
+> Move acpi wakeup code to pci core as pci_set_wakeup(), so that other
+> platforms could reuse it.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
+What exactly do you want to reuse?
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/sbus/char/openprom.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+It looks like that's just several lines of code in acpi_pci_wakeup()
+and acpi_pci_propagate_wakeup() which invoke ACPI-specific lower-level
+functions, so IMO not worth it at all.
 
-diff --git a/drivers/sbus/char/openprom.c b/drivers/sbus/char/openprom.c
-index 2c2e6a3..7b31f19 100644
---- a/drivers/sbus/char/openprom.c
-+++ b/drivers/sbus/char/openprom.c
-@@ -251,8 +251,9 @@ static int oprompci2node(void __user *argp, struct device_node *dp, struct openp
- 		struct pci_dev *pdev;
- 		struct device_node *dp;
- 
--		pdev = pci_get_bus_and_slot (((int *) op->oprom_array)[0],
--				      ((int *) op->oprom_array)[1]);
-+		pdev = pci_get_domain_bus_and_slot(0,
-+						((int *) op->oprom_array)[0],
-+						((int *) op->oprom_array)[1]);
- 
- 		dp = pci_device_to_OF_node(pdev);
- 		data->current_node = dp;
--- 
-1.9.1
+The structure for other platform code may be the same or similar, but
+the details will almost certainly be different and I don't think that
+having more callback pointers in pci_platform_pm_ops is necessarily better.
+
+> Also add .setup_dev() / .setup_host_bridge() / .cleanup() platform pm
+> ops's callbacks to setup and cleanup pci devices and host bridge for
+> wakeup.
+
+Why are they needed?
+
+> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+
+Thanks,
+Rafael
