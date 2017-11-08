@@ -1,95 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 15 Nov 2017 18:15:00 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Johan Hovold <johan@kernel.org>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>
-Subject: Re: [PATCH] PCI: keystone: fix interrupt-controller-node lookup
-Message-ID: <20171115181500.GB29189@red-moon>
-References: <20171112122850.30804-1-johan@kernel.org>
- <20171113104306.GA27700@red-moon>
- <20171114173437.GZ11226@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171114173437.GZ11226@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:56138 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751900AbdKHJ2W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:28:22 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH 2/3] PCI: rcar: Support runtime PM, link state L1 handling
+Date: Wed,  8 Nov 2017 10:28:05 +0100
+Message-Id: <20171108092806.10335-2-marek.vasut+renesas@gmail.com>
+In-Reply-To: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
+References: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 14, 2017 at 06:34:37PM +0100, Johan Hovold wrote:
-> On Mon, Nov 13, 2017 at 10:43:06AM +0000, Lorenzo Pieralisi wrote:
-> > Hi Johan,
-> > 
-> > On Sun, Nov 12, 2017 at 01:28:50PM +0100, Johan Hovold wrote:
-> > > Fix child-node lookup during initialisation, which ended up searching
-> > > the whole device tree depth-first starting at the parent rather than
-> > > just matching on its children.
-> > > 
-> > > To make things worse, the parent pci node was prematurely freed, while
-> > > the child interrupt-controller node was leaked.
-> > 
-> > Thanks for fixing this. I would kindly ask you please to split the
-> > patch in two since there are two bugs you are fixing at once.
-> 
-> I guess it depends on how you look at it. I'm fixing the child-node
-> lookup which just happens to broken in several ways: tree-wide search,
-> parent-node put-imbalance and node leaks in both the error and
-> success paths.
-> 
-> Fixing that in two or even three patches seems a bit excessive,
-> especially as the first patch would in a sense be broken as the
-> of_get_child_by_name() does indeed (also) return a refcounted node. And
-> furthermore, this broken lookup, in all of its aspects, was introduced
-> by a single commit.
-> 
-> But if you insist, I'll split it up of course.
+From: Phil Edworthy <phil.edworthy@renesas.com>
 
-No, your analysis is correct - I will have a final look and apply
-with Murali's ACK.
+Most PCIe host controllers support L0s and L1 power states via ASPM.
+The R-Car hardware only supports L0s, so when the system suspends and
+resumes we have to manually handle L1.
 
-Thanks,
-Lorenzo
+When the system suspends, cards can put themselves into L1 and send a
+PM_ENTER_L1 DLLP to the host controller. At this point, we can no longer
+access the card's config registers.
 
-> Thanks,
-> Johan
-> 
-> > > Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
-> > > Cc: stable <stable@vger.kernel.org>     # 3.18
-> > > Cc: Murali Karicheri <m-karicheri2@ti.com>
-> > > ---
-> > >  drivers/pci/dwc/pci-keystone.c | 5 ++++-
-> > >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-> > > index 5bee3af47588..39405598b22d 100644
-> > > --- a/drivers/pci/dwc/pci-keystone.c
-> > > +++ b/drivers/pci/dwc/pci-keystone.c
-> > > @@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
-> > >  	}
-> > >  
-> > >  	/* interrupt controller is in a child node */
-> > > -	*np_temp = of_find_node_by_name(np_pcie, controller);
-> > > +	*np_temp = of_get_child_by_name(np_pcie, controller);
-> > >  	if (!(*np_temp)) {
-> > >  		dev_err(dev, "Node for %s is absent\n", controller);
-> > >  		return -EINVAL;
-> > > @@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
-> > >  	temp = of_irq_count(*np_temp);
-> > >  	if (!temp) {
-> > >  		dev_err(dev, "No IRQ entries in %s\n", controller);
-> > > +		of_node_put(*np_temp);
-> > >  		return -EINVAL;
-> > >  	}
-> > >  
-> > > @@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
-> > >  			break;
-> > >  	}
-> > >  
-> > > +	of_node_put(*np_temp);
-> > > +
-> > >  	if (temp) {
-> > >  		*num_irqs = temp;
-> > >  		return 0;
-> > > -- 
-> > > 2.15.0
-> > > 
+The R-Car host controller will handle taking cards out of L1 as long as
+the host controller has also been transitioned to L1 link state.
+
+Ideally, we would detect the PM_ENTER_L1 DLLP using an interrupt and
+transition the host to L1 immediately. However, this patch just ensures
+that we can talk to cards after they have gone into L1.
+When attempting a config access, it checks to see if the card has gone
+into L1, and if so, does the same for the host controller.
+
+This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ drivers/pci/host/pcie-rcar.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index aa588a7d4811..2b28292de93a 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -92,6 +92,13 @@
+ #define MACCTLR			0x011058
+ #define  SPEED_CHANGE		(1 << 24)
+ #define  SCRAMBLE_DISABLE	(1 << 27)
++#define PMSR			0x01105c
++#define  L1FAEG			(1 << 31)
++#define  PM_ENTER_L1RX		(1 << 23)
++#define  PMSTATE		(7 << 16)
++#define  PMSTATE_L1		(3 << 16)
++#define PMCTLR			0x011060
++#define  L1_INIT		(1 << 31)
+ #define MACS2R			0x011078
+ #define MACCGSPSETR		0x011084
+ #define  SPCNGRSN		(1 << 31)
+@@ -191,6 +198,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+ 		unsigned int devfn, int where, u32 *data)
+ {
+ 	int dev, func, reg, index;
++	u32 val;
+ 
+ 	dev = PCI_SLOT(devfn);
+ 	func = PCI_FUNC(devfn);
+@@ -232,6 +240,22 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+ 	if (pcie->root_bus_nr < 0)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
++	/*
++	 * If we are not in L1 link state and we have received PM_ENTER_L1 DLLP,
++	 * transition to L1 link state. The HW will handle coming of of L1.
++	 */
++	val = rcar_pci_read_reg(pcie, PMSR);
++	if ((val & PM_ENTER_L1RX) && ((val & PMSTATE) != PMSTATE_L1)) {
++		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
++
++		/* Wait until we are in L1 */
++		while (!(val & L1FAEG))
++			val = rcar_pci_read_reg(pcie, PMSR);
++
++		/* Clear flags indicating link has transitioned to L1 */
++		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
++	}
++
+ 	/* Clear errors */
+ 	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
+ 
+-- 
+2.11.0
