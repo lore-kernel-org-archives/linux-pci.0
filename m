@@ -1,109 +1,82 @@
-Return-Path: <SRS0=PMJS=CF=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=PMJS=CF=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com"
-	<bhelgaas@google.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "lorenzo.pieralisi@arm.com"
-	<lorenzo.pieralisi@arm.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "brian.starkey@arm.com" <brian.starkey@arm.com>,
-        "olof@lixom.net"
-	<olof@lixom.net>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        Linuxarm
-	<linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        John Garry
-	<john.garry@huawei.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: RE: [PATCH v10 2/9] PCI: remove unused __weak attribute in
- pci_register_io_range()
-Date: Tue, 7 Nov 2017 10:50:00 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40CC332E@FRAEML521-MBX.china.huawei.com>
-References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
- <1509120687-7352-3-git-send-email-gabriele.paoloni@huawei.com>
- <20171107002501.GD9538@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171107002501.GD9538@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:56018 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751181AbdKHJ7P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:59:15 -0500
+Subject: Re: [PATCH] PCI: rcar: Use runtime PM to control controller clock
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20171108091956.8537-1-marek.vasut+renesas@gmail.com>
+ <CAMuHMdWQG+rC_HsH6MDowtNvZAvhRZESirk2+7GgcmDR3stvaw@mail.gmail.com>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <8678e99e-275c-d4c8-966c-063848eef81d@gmail.com>
+Date: Wed, 8 Nov 2017 10:55:13 +0100
 MIME-Version: 1.0
+In-Reply-To: <CAMuHMdWQG+rC_HsH6MDowtNvZAvhRZESirk2+7GgcmDR3stvaw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 11/08/2017 10:36 AM, Geert Uytterhoeven wrote:
+> Hi Marek,
+> 
+> On Wed, Nov 8, 2017 at 10:19 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+>> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>>
+>> The controller clock can be switched off during suspend/resume,
+>> let runtime PM take care of that.
+>>
+>> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> 
+> Thanks for your patch!
+> 
+>> --- a/drivers/pci/host/pcie-rcar.c
+>> +++ b/drivers/pci/host/pcie-rcar.c
+> 
+>> @@ -1126,6 +1115,13 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>>
+>>         rcar_pcie_parse_request_of_pci_ranges(pcie);
+>>
+>> +       pm_runtime_enable(pcie->dev);
+>> +       err = pm_runtime_get_sync(pcie->dev);
+>> +       if (err < 0) {
+>> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
+>> +               goto err_pm_disable;
+>> +       }
+>> +
+>>         err = rcar_pcie_get_resources(pcie);
+>>         if (err < 0) {
+>>                 dev_err(dev, "failed to request resources: %d\n", err);
+>> @@ -1136,13 +1132,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>>         if (err)
+>>                 goto err_free_bridge;
+>>
+>> -       pm_runtime_enable(dev);
+>> -       err = pm_runtime_get_sync(dev);
+>> -       if (err < 0) {
+>> -               dev_err(dev, "pm_runtime_get_sync failed\n");
+>> -               goto err_pm_disable;
+>> -       }
+>> -
+>>         /* Failure to get a link might just be that no cards are inserted */
+>>         hw_init_fn = of_device_get_match_data(dev);
+>>         err = hw_init_fn(pcie);
+> 
+> As you changed initialization order, cleanup order for error handling below
+> should be updated, too.
+> 
+> Apart from that, this patch looks good to me.
+Ah, thanks for catching this.
 
-
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 07 November 2017 00:25
-> To: Gabriele Paoloni
-> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> frowand.list@gmail.com; bhelgaas@google.com; rafael@kernel.org;
-> arnd@arndb.de; linux-arm-kernel@lists.infradead.org;
-> lorenzo.pieralisi@arm.com; mark.rutland@arm.com; brian.starkey@arm.com;
-> olof@lixom.net; benh@kernel.crashing.org; linux-kernel@vger.kernel.org;
-> linux-acpi@vger.kernel.org; Linuxarm; linux-pci@vger.kernel.org;
-> minyard@acm.org; John Garry; xuwei (O)
-> Subject: Re: [PATCH v10 2/9] PCI: remove unused __weak attribute in
-> pci_register_io_range()
->=20
-> On Fri, Oct 27, 2017 at 05:11:20PM +0100, Gabriele Paoloni wrote:
-> > From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> >
-> > Currently pci_register_io_range() has only one definition;
-> > therefore there is no use of the __weak attribute.
-> >
-> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > Acked-by: Bjorn Helgaas <helgaas@kernel.org>
->=20
-> Also, I normally use this (Google address instead of kernel.org):
->=20
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->=20
-> (Also affects your other PCI patches.)
-
-Ok no probs, we'll change all the Acked-by in the next patchset
-
-Many Thanks
-Gab=20
-
->=20
-> > ---
-> >  drivers/pci/pci.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index af0cc34..eee967c 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -3270,7 +3270,7 @@ static DEFINE_SPINLOCK(io_range_lock);
-> >   * Record the PCI IO range (expressed as CPU physical address +
-> size).
-> >   * Return a negative value if an error has occured, zero otherwise
-> >   */
-> > -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t
-> size)
-> > +int pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> >  {
-> >  	int err =3D 0;
-> >
-> > --
-> > 2.7.4
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-acpi"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Best regards,
+Marek Vasut
