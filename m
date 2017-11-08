@@ -1,57 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 8 Nov 2017 11:08:13 +0000
+From: Lee Jones <lee.jones@linaro.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org (moderated list:XEN PCI SUBSYSTEM),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 20/29] xen: deprecate pci_get_bus_and_slot()
-Date: Mon, 27 Nov 2017 11:57:57 -0500
-Message-Id: <1511801886-6753-21-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-i2c <linux-i2c@vger.kernel.org>
+Subject: Re: [PATCH 09/12] PM / mfd: intel-lpss: Use DPM_FLAG_SMART_SUSPEND
+Message-ID: <20171108110813.abqehgxdyvyahrro@dell>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan>
+ <5094729.JAaD38WncM@aspire.rjw.lan>
+ <20171031150933.oho2ffvuj3iagx4m@dell>
+ <CAJZ5v0ipSJv0PWPrD3P-yeyD0JWe6EqSJSuZXgjtnFTrMEvpfQ@mail.gmail.com>
+ <20171101092819.thhofiwwjxblef4a@dell>
+ <CAJZ5v0gbmPd=rrveH1LyOYhB2Uu8Tz54C1Y+TutYmdRJCv8G4g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAJZ5v0gbmPd=rrveH1LyOYhB2Uu8Tz54C1Y+TutYmdRJCv8G4g@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Wed, 01 Nov 2017, Rafael J. Wysocki wrote:
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
+> On Wed, Nov 1, 2017 at 10:28 AM, Lee Jones <lee.jones@linaro.org> wrote:
+> > On Tue, 31 Oct 2017, Rafael J. Wysocki wrote:
+> >
+> >> On Tue, Oct 31, 2017 at 4:09 PM, Lee Jones <lee.jones@linaro.org> wrote:
+> >> > On Mon, 16 Oct 2017, Rafael J. Wysocki wrote:
+> >> >
+> >> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> >>
+> >> >> Make the intel-lpss driver set DPM_FLAG_SMART_SUSPEND for its
+> >> >> devices which will allow them to stay in runtime suspend during
+> >> >> system suspend unless they need to be reconfigured for some reason.
+> >> >>
+> >> >> Also make it avoid resuming its child devices if they have
+> >> >> DPM_FLAG_SMART_SUSPEND set to allow them to remain in runtime
+> >> >> suspend during system suspend.
+> >> >>
+> >> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >> >> ---
+> >> >>  drivers/mfd/intel-lpss.c |    6 +++++-
+> >> >>  1 file changed, 5 insertions(+), 1 deletion(-)
+> >> >
+> >> > Is this patch independent?
+> >>
+> >> It depends on the flag definition at least, but functionally it also
+> >> depends on the PCI support for the flag.
+> >
+> > No problem.  Which tree to you propose this goes through?
+> 
+> linux-pm.git if that's not a problem as the patches it depends on will
+> go through it too.
+> 
+> That said I'll resend it when the core patches it depends on are ready.
 
-Reviewed-by: Juergen Gross <jgross@suse.com>
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/xen-pcifront.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+It's fine by me.
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 8fc2e95..94b25b5 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -595,6 +595,7 @@ static pci_ers_result_t pcifront_common_process(int cmd,
- 	struct pci_driver *pdrv;
- 	int bus = pdev->sh_info->aer_op.bus;
- 	int devfn = pdev->sh_info->aer_op.devfn;
-+	int domain = pdev->sh_info->aer_op.domain;
- 	struct pci_dev *pcidev;
- 	int flag = 0;
- 
-@@ -603,7 +604,7 @@ static pci_ers_result_t pcifront_common_process(int cmd,
- 		cmd, bus, devfn);
- 	result = PCI_ERS_RESULT_NONE;
- 
--	pcidev = pci_get_bus_and_slot(bus, devfn);
-+	pcidev = pci_get_domain_bus_and_slot(domain, bus, devfn);
- 	if (!pcidev || !pcidev->driver) {
- 		dev_err(&pdev->xdev->dev, "device or AER driver is NULL\n");
- 		pci_dev_put(pcidev);
+Please check to see if there are any clashes with MFD.  If there are,
+I'll need a (small) pull-request from you.
+
 -- 
-1.9.1
+Lee Jones
+Linaro STMicroelectronics Landing Team Lead
+Linaro.org │ Open source software for ARM SoCs
+Follow Linaro: Facebook | Twitter | Blog
