@@ -1,49 +1,102 @@
-Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
-From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
-To: linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org,
-	helgaas@kernel.org
-Subject: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 60h-6fh) Processors
-Date: Fri,  3 Nov 2017 14:52:43 +0100
-Message-Id: <1509717164-1946-3-git-send-email-christian.koenig@amd.com>
-In-Reply-To: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
-References: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:54402 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750917AbdKHKIB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 05:08:01 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20171108095816.14192-1-marek.vasut+renesas@gmail.com>
+References: <20171108095816.14192-1-marek.vasut+renesas@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 8 Nov 2017 11:08:00 +0100
+Message-ID: <CAMuHMdVqkx-eVzW=0D8eOKZ2OGc-XTenYW8FHnKgBAvjKvv4tw@mail.gmail.com>
+Subject: Re: [PATCH V2] PCI: rcar: Use runtime PM to control controller clock
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Dien Pham <dien.pham.ry@rvc.renesas.com>,
+        Hien Dang <hien.dang.eb@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just add the extra PCI-ID to the existing fixup.
+Hi Marek,
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- arch/x86/pci/fixup.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+On Wed, Nov 8, 2017 at 10:58 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+>
+> The controller clock can be switched off during suspend/resume,
+> let runtime PM take care of that.
+>
+> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
+> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index aa8b20e..3eebb0e 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -639,7 +639,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-  * configuring host bridge windows using the _PRS and _SRS methods.
-  *
-  * But this is rarely implemented, so we manually enable a large 64bit BAR for
-- * PCIe device on AMD Family 15h (Models 00h-1fh, 30h-3fh) Processors here.
-+ * PCIe device on AMD Family 15h (Models 00h-1fh, 30h-3fh, 60h-6fh) Processors
-+ * here.
-  */
- static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- {
-@@ -697,6 +698,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1401, pci_amd_enable_64bit_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1571, pci_amd_enable_64bit_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
- 
- #endif
--- 
-2.7.4
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -1125,6 +1112,13 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>
+>         rcar_pcie_parse_request_of_pci_ranges(pcie);
+>
+> +       pm_runtime_enable(pcie->dev);
+> +       err = pm_runtime_get_sync(pcie->dev);
+> +       if (err < 0) {
+> +               dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
+> +               goto err_pm_disable;
+> +       }
+> +
+>         err = rcar_pcie_get_resources(pcie);
+>         if (err < 0) {
+>                 dev_err(dev, "failed to request resources: %d\n", err);
+
+(out of context)
+                 goto err_free_bridge;
+
+But that should do pm_runtime_put(), too.
+
+> @@ -1135,13 +1129,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>         if (err)
+>                 goto err_free_bridge;
+>
+> -       pm_runtime_enable(dev);
+> -       err = pm_runtime_get_sync(dev);
+> -       if (err < 0) {
+> -               dev_err(dev, "pm_runtime_get_sync failed\n");
+> -               goto err_pm_disable;
+> -       }
+> -
+>         /* Failure to get a link might just be that no cards are inserted */
+>         hw_init_fn = of_device_get_match_data(dev);
+>         err = hw_init_fn(pcie);
+> @@ -1173,13 +1160,13 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  err_pm_put:
+>         pm_runtime_put(dev);
+
+"err_pm_put" should be moved, too.
+
+> -err_pm_disable:
+> -       pm_runtime_disable(dev);
+> -
+>  err_free_bridge:
+>         pci_free_host_bridge(bridge);
+>         pci_free_resource_list(&pcie->resources);
+>
+> +err_pm_disable:
+> +       pm_runtime_disable(dev);
+> +
+>         return err;
+>  }
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
