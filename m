@@ -1,49 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:19026 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751666AbdKYTcp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 14:32:45 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
-CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 2/9] of: Export of_pci_range_to_resource()
-Date: Sun, 26 Nov 2017 01:02:06 +0530
-Message-ID: <1511638333-22951-3-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Nov 2017 18:30:49 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: changbin.du@intel.com
+Cc: bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
+        x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fail pci_map_rom if the PCI ROM is invalid
+Message-ID: <20171108003049.GC22847@bhelgaas-glaptop.roam.corp.google.com>
+References: <1509594522-6841-1-git-send-email-changbin.du@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1509594522-6841-1-git-send-email-changbin.du@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra PCIe host driver parses of_pci_range from device tree and converts
-to resource. Export of_pci_range_to_resource() to allow Tegra PCIe host
-driver to be compiled as loadable kernel module.
+On Thu, Nov 02, 2017 at 11:48:42AM +0800, changbin.du@intel.com wrote:
+> From: Changbin Du <changbin.du@intel.com>
+> 
+> If we detected a invalid PCI ROM (e.g. Invalid PCI ROM header signature),
+> we should unmap it immediately and fail. It doesn't make any sense that
+> return a mapped area with size of 0.
+> 
+> I have seen this case on Intel GVTg vGPU, which have no vbios. It will
+> not cause a real problem, but we should skip it as early as possible.
+> 
+> Signed-off-by: Changbin Du <changbin.du@intel.com>
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* commit message update
+Applied to pci/resource for v4.15, thanks!
 
- drivers/of/address.c | 1 +
- 1 file changed, 1 insertion(+)
+I split this into two patches: (1) moving the disable to err_ioremap, and
+(2) the actual "if (!*size)" change which is the interesting part.
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index fa6cabfc3cb9..8d9b93f8701a 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -361,6 +361,7 @@ int of_pci_range_to_resource(struct of_pci_range *range,
- 	res->end = (resource_size_t)OF_BAD_ADDR;
- 	return err;
- }
-+EXPORT_SYMBOL(of_pci_range_to_resource);
- #endif /* CONFIG_PCI */
- 
- /*
--- 
-2.1.4
+> ---
+>  drivers/pci/rom.c | 19 +++++++++++++------
+>  1 file changed, 13 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+> index b6edb18..1f5e6af 100644
+> --- a/drivers/pci/rom.c
+> +++ b/drivers/pci/rom.c
+> @@ -147,12 +147,8 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
+>  		return NULL;
+>  
+>  	rom = ioremap(start, *size);
+> -	if (!rom) {
+> -		/* restore enable if ioremap fails */
+> -		if (!(res->flags & IORESOURCE_ROM_ENABLE))
+> -			pci_disable_rom(pdev);
+> -		return NULL;
+> -	}
+> +	if (!rom)
+> +		goto err_ioremap;
+>  
+>  	/*
+>  	 * Try to find the true size of the ROM since sometimes the PCI window
+> @@ -160,7 +156,18 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
+>  	 * True size is important if the ROM is going to be copied.
+>  	 */
+>  	*size = pci_get_rom_size(pdev, rom, *size);
+> +	if (!*size)
+> +		goto invalid_rom;
+> +
+>  	return rom;
+> +
+> +invalid_rom:
+> +	iounmap(rom);
+> +err_ioremap:
+> +	/* restore enable if ioremap fails */
+> +	if (!(res->flags & IORESOURCE_ROM_ENABLE))
+> +		pci_disable_rom(pdev);
+> +	return NULL;
+>  }
+>  EXPORT_SYMBOL(pci_map_rom);
+>  
+> -- 
+> 2.7.4
+> 
