@@ -1,84 +1,115 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v2 2/6] PCI / PM: Support for LEAVE_SUSPENDED driver flag
+Date: Wed, 08 Nov 2017 14:28:18 +0100
+Message-ID: <125862518.pYVN4SKj76@aspire.rjw.lan>
+In-Reply-To: <6330680.LdxjlP4uri@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan>
 MIME-Version: 1.0
-Date: Tue, 14 Nov 2017 04:56:30 +0530
-From: poza@codeaurora.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [3/4] PCI/portdrv: Implement interface to query the registered
- service
-In-Reply-To: <73379e2c-b0c3-885c-bb5d-b981863b6042@codeaurora.org>
-References: <1510260399-14886-4-git-send-email-poza@codeaurora.org>
- <73379e2c-b0c3-885c-bb5d-b981863b6042@codeaurora.org>
-Message-ID: <b98f5b7e1b64f9d5ce1ff7e52fa0887d@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, linux-arm-kernel@lists.infradead.org,
- Dongdong Liu <liudongdong3@huawei.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-11-14 02:22, Sinan Kaya wrote:
-> Some nits only.
-> 
->>  /**
->> + * pcie_port_service_query - query if particula port service is 
->> enabled.
->> + * dev: pcie device
->> + * @port service: PCI express port service
->> + */
->> +int pcie_port_query_service(struct pci_dev *dev, u32 port_service)
->> +{
->> +	struct pcie_device *pdev;
->> +	struct pci_dev *parent, *this = dev;
->> +
->> +	do {
-> 
-> While I understand the motivation why this function is searching for 
-> DPC capable
-> parent until the root port, the name of the function does not represent 
-> this.
-> 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Will change it to more relevant one.
+Add support for DPM_FLAG_LEAVE_SUSPENDED to the PCI bus type by
+making it (a) set the power.may_skip_resume status bit for devices
+that, from its perspective, may be left in suspend after system
+wakeup from sleep and (b) return early from pci_pm_resume_noirq()
+for devices whose remaining resume callbacks during the transition
+under way are going to be skipped by the PM core.
 
-> It might make sense to split this into two where the first function 
-> just queries
-> the capabilities of the immediate device (the list_for_each_section).
-> 
->> +		list_for_each_entry(pdev, &this->service_list, slist) {
->> +			if (pdev->service == port_service)
->> +				return 1;
->> +		}
-> 
-> Another function to query all parents until you reach the root port.
-> 
->> +		parent = pci_upstream_bridge(this);
->> +		this = parent;
->> +	} while (parent && pci_is_pcie(parent));
->> +
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL(pcie_port_query_service);
->> +
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ Documentation/power/pci.txt |   11 +++++++++++
+ drivers/pci/pci-driver.c    |   19 +++++++++++++++++--
+ 2 files changed, 28 insertions(+), 2 deletions(-)
 
-yes that makes sense; will split the function as you are suggesting.
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -699,7 +699,7 @@ static void pci_pm_complete(struct devic
+ 	pm_generic_complete(dev);
+ 
+ 	/* Resume device if platform firmware has put it in reset-power-on */
+-	if (dev->power.direct_complete && pm_resume_via_firmware()) {
++	if (pm_runtime_suspended(dev) && pm_resume_via_firmware()) {
+ 		pci_power_t pre_sleep_state = pci_dev->current_state;
+ 
+ 		pci_update_current_state(pci_dev, pci_dev->current_state);
+@@ -783,8 +783,10 @@ static int pci_pm_suspend_noirq(struct d
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
+-	if (dev_pm_smart_suspend_and_suspended(dev))
++	if (dev_pm_smart_suspend_and_suspended(dev)) {
++		dev->power.may_skip_resume = true;
+ 		return 0;
++	}
+ 
+ 	if (pci_has_legacy_pm_support(pci_dev))
+ 		return pci_legacy_suspend_late(dev, PMSG_SUSPEND);
+@@ -838,6 +840,16 @@ static int pci_pm_suspend_noirq(struct d
+ Fixup:
+ 	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+ 
++	/*
++	 * If the target system sleep state is suspend-to-idle, it is sufficient
++	 * to check whether or not the device's wakeup settings are good for
++	 * runtime PM.  Otherwise, the pm_resume_via_firmware() check will cause
++	 * pci_pm_complete() to take care of fixing up the device's state
++	 * anyway, if need be.
++	 */
++	dev->power.may_skip_resume = device_may_wakeup(dev) ||
++					!device_can_wakeup(dev);
++
+ 	return 0;
+ }
+ 
+@@ -847,6 +859,9 @@ static int pci_pm_resume_noirq(struct de
+ 	struct device_driver *drv = dev->driver;
+ 	int error = 0;
+ 
++	if (dev_pm_may_skip_resume(dev))
++		return 0;
++
+ 	/*
+ 	 * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
+ 	 * during system suspend, so update their runtime PM status to "active"
+Index: linux-pm/Documentation/power/pci.txt
+===================================================================
+--- linux-pm.orig/Documentation/power/pci.txt
++++ linux-pm/Documentation/power/pci.txt
+@@ -994,6 +994,17 @@ into D0 going forward), but if it is in
+ the function will set the power.direct_complete flag for it (to make the PM core
+ skip the subsequent "thaw" callbacks for it) and return.
+ 
++Setting the DPM_FLAG_LEAVE_SUSPENDED flag means that the driver prefers the
++device to be left in suspend after system-wide transitions to the working state.
++This flag is checked by the PM core, but the PCI bus type informs the PM core
++which devices may be left in suspend from its perspective (that happens during
++the "noirq" phase of system-wide suspend and analogous transitions) and next it
++uses the dev_pm_may_skip_resume() helper to decide whether or not to return from
++pci_pm_resume_noirq() early, as the PM core will skip the remaining resume
++callbacks for the device during the transition under way and will set its
++runtime PM status to "suspended" if dev_pm_may_skip_resume() returns "true" for
++it.
++
+ 3.2. Device Runtime Power Management
+ ------------------------------------
+ In addition to providing device power management callbacks PCI device drivers
 
-Regards,
-Oza.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
