@@ -1,293 +1,165 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <SRS0=JMq2=CG=microsoft.com=jakeo@kernel.org>
+Return-Path: <SRS0=JMq2=CG=microsoft.com=jakeo@kernel.org>
+From: Jake Oshins <jakeo@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Dexuan Cui <decui@microsoft.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, KY Srinivasan
+	<kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Haiyang Zhang
+	<haiyangz@microsoft.com>, Jork Loeser <Jork.Loeser@microsoft.com>, "Chris
+ Valean (Cloudbase Solutions SRL)" <v-chvale@microsoft.com>, "Adrian Suhov
+ (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>, Simon Xiao
+	<sixiao@microsoft.com>, 'Eyal Mizrachi' <eyalmi@mellanox.com>, "Jack
+ Morgenstein" <jackm@mellanox.com>, Armen Guezalian <armeng@mellanox.com>,
+	Firas Mahameed <firas@mellanox.com>, Tziporet Koren <tziporet@mellanox.com>,
+	Daniel Jurgens <danielj@mellanox.com>
+Subject: RE: [PATCH] PCI: hv: use effective affinity mask
+Date: Wed, 8 Nov 2017 00:51:30 +0000
+Message-ID: <DM5PR21MB0122728907FCBCBB4795A347AB560@DM5PR21MB0122.namprd21.prod.outlook.com>
+References: <PS1P15301MB00112EE79DE499E8B2BA338BBF5F0@PS1P15301MB0011.APCP153.PROD.OUTLOOK.COM>
+ <DM5PR21MB0122B6965EAB3181A37C14FAAB5F0@DM5PR21MB0122.namprd21.prod.outlook.com>
+ <20171108001500.GB22847@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171108001500.GB22847@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <2932219.eEdIVn6WWf@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
- <6330680.LdxjlP4uri@aspire.rjw.lan> <2932219.eEdIVn6WWf@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Fri, 10 Nov 2017 10:09:20 +0100
-Message-ID: <CAPDyKFrbnLjBzY3yE1OyXOpG3--K+C-1BCWQtyL9S6zQ5cmdhw@mail.gmail.com>
-Subject: Re: [PATCH v2 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8 November 2017 at 14:25, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
-> instruct the PM core and middle-layer (bus type, PM domain, etc.)
-> code that it is desirable to leave the device in runtime suspend
-> after system-wide transitions to the working state (for example,
-> the device may be slow to resume and it may be better to avoid
-> resuming it right away).
->
-> Generally, the middle-layer code involved in the handling of the
-> device is expected to indicate to the PM core whether or not the
-> device may be left in suspend with the help of the device's
-> power.may_skip_resume status bit.  That has to happen in the "noirq"
-> phase of the preceding system suspend (or analogous) transition.
-> The middle layer is then responsible for handling the device as
-> appropriate in its "noirq" resume callback which is executed
-> regardless of whether or not the device may be left suspended, but
-> the other resume callbacks (except for ->complete) will be skipped
-> automatically by the core if the device really can be left in
-> suspend.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Tuesday, November 7, 2017 4:15 PM
+> To: Jake Oshins <jakeo@microsoft.com>
+> Cc: Dexuan Cui <decui@microsoft.com>; Bjorn Helgaas
+> <bhelgaas@google.com>; linux-pci@vger.kernel.org; KY Srinivasan
+> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
+> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; Haiyang Zhang
+> <haiyangz@microsoft.com>; Jork Loeser <Jork.Loeser@microsoft.com>;
+> Chris Valean (Cloudbase Solutions SRL) <v-chvale@microsoft.com>; Adrian
+> Suhov (Cloudbase Solutions SRL) <v-adsuho@microsoft.com>; Simon Xiao
+> <sixiao@microsoft.com>; 'Eyal Mizrachi' <eyalmi@mellanox.com>; Jack
+> Morgenstein <jackm@mellanox.com>; Armen Guezalian
+> <armeng@mellanox.com>; Firas Mahameed <firas@mellanox.com>;
+> Tziporet Koren <tziporet@mellanox.com>; Daniel Jurgens
+> <danielj@mellanox.com>
+> Subject: Re: [PATCH] PCI: hv: use effective affinity mask
+>=20
+> On Wed, Nov 01, 2017 at 08:52:56PM +0000, Jake Oshins wrote:
+> > > -----Original Message-----
+> > > From: Dexuan Cui
+> > > Sent: Wednesday, November 1, 2017 1:31 PM
+> > > To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
+> > > Jake Oshins <jakeo@microsoft.com>; KY Srinivasan
+> > > <kys@microsoft.com>; Stephen Hemminger
+> <sthemmin@microsoft.com>
+> > > Cc: devel@linuxdriverproject.org; linux-kernel@vger.kernel.org;
+> > > Haiyang Zhang <haiyangz@microsoft.com>; Jork Loeser
+> > > <Jork.Loeser@microsoft.com>; Chris Valean (Cloudbase Solutions SRL)
+> > > <v- chvale@microsoft.com>; Adrian Suhov (Cloudbase Solutions SRL)
+> > > <v- adsuho@microsoft.com>; Simon Xiao <sixiao@microsoft.com>; 'Eyal
+> > > Mizrachi' <eyalmi@mellanox.com>; Jack Morgenstein
+> > > <jackm@mellanox.com>; Armen Guezalian <armeng@mellanox.com>;
+> Firas
+> > > Mahameed <firas@mellanox.com>; Tziporet Koren
+> > > <tziporet@mellanox.com>; Daniel Jurgens <danielj@mellanox.com>
+> > > Subject: [PATCH] PCI: hv: use effective affinity mask
+> > >
+> > >
+> > > The effective_affinity_mask is always set when an interrupt is
+> > > assigned in
+> > > __assign_irq_vector() -> apic->cpu_mask_to_apicid(), e.g. for struct
+> > > apic
+> > > apic_physflat: -> default_cpu_mask_to_apicid() ->
+> > > irq_data_update_effective_affinity(), but it looks
+> > > d->common->affinity remains all-1's before the user space or the kern=
+el
+> changes it later.
+> > >
+> > > In the early allocation/initialization phase of an irq, we should
+> > > use the effective_affinity_mask, otherwise Hyper-V may not deliver
+> > > the interrupt to the expected cpu. Without the patch, if we assign 7
+> > > Mellanox ConnectX-3 VFs to a 32-vCPU VM, one of the VFs may fail to
+> receive interrupts.
+> > >
+> > > Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> > > Cc: Jake Oshins <jakeo@microsoft.com>
+> > > Cc: Jork Loeser <jloeser@microsoft.com>
+> > > Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> > > Cc: K. Y. Srinivasan <kys@microsoft.com>
+> > > ---
+> > >
+> > > Please consider this for v4.14, if it's not too late.
+> > >
+> > >  drivers/pci/host/pci-hyperv.c | 8 +++++---
+> > >  1 file changed, 5 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/host/pci-hyperv.c
+> > > b/drivers/pci/host/pci-hyperv.c index 5ccb47d..8b5f66d 100644
+> > > --- a/drivers/pci/host/pci-hyperv.c
+> > > +++ b/drivers/pci/host/pci-hyperv.c
+> > > @@ -879,7 +879,7 @@ static void hv_irq_unmask(struct irq_data *data)
+> > >  	int cpu;
+> > >  	u64 res;
+> > >
+> > > -	dest =3D irq_data_get_affinity_mask(data);
+> > > +	dest =3D irq_data_get_effective_affinity_mask(data);
+> > >  	pdev =3D msi_desc_to_pci_dev(msi_desc);
+> > >  	pbus =3D pdev->bus;
+> > >  	hbus =3D container_of(pbus->sysdata, struct hv_pcibus_device,
+> > > sysdata); @@ -1042,6 +1042,7 @@ static void
+> > > hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> > >  	struct hv_pci_dev *hpdev;
+> > >  	struct pci_bus *pbus;
+> > >  	struct pci_dev *pdev;
+> > > +	struct cpumask *dest;
+> > >  	struct compose_comp_ctxt comp;
+> > >  	struct tran_int_desc *int_desc;
+> > >  	struct {
+> > > @@ -1056,6 +1057,7 @@ static void hv_compose_msi_msg(struct
+> irq_data
+> > > *data, struct msi_msg *msg)
+> > >  	int ret;
+> > >
+> > >  	pdev =3D msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
+> > > +	dest =3D irq_data_get_effective_affinity_mask(data);
+> > >  	pbus =3D pdev->bus;
+> > >  	hbus =3D container_of(pbus->sysdata, struct hv_pcibus_device,
+> > > sysdata);
+> > >  	hpdev =3D get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn));
+> @@
+> > > -1081,14 +1083,14 @@ static void hv_compose_msi_msg(struct irq_data
+> > > *data, struct msi_msg *msg)
+> > >  	switch (pci_protocol_version) {
+> > >  	case PCI_PROTOCOL_VERSION_1_1:
+> > >  		size =3D hv_compose_msi_req_v1(&ctxt.int_pkts.v1,
+> > > -					irq_data_get_affinity_mask(data),
+> > > +					dest,
+> > >  					hpdev->desc.win_slot.slot,
+> > >  					cfg->vector);
+> > >  		break;
+> > >
+> > >  	case PCI_PROTOCOL_VERSION_1_2:
+> > >  		size =3D hv_compose_msi_req_v2(&ctxt.int_pkts.v2,
+> > > -					irq_data_get_affinity_mask(data),
+> > > +					dest,
+> > >  					hpdev->desc.win_slot.slot,
+> > >  					cfg->vector);
+> > >  		break;
+> > > --
+> > > 2.7.4
+> >
+> > Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+>=20
+> I'm not sure what this means.
+>=20
+> Per Documentation/process/submitting-patches.rst, "Signed-off-by"
+> means you were "involved in the development of the patch, or that he/she
+> was in the patch's delivery path."  You weren't in the delivery path (I g=
+ot it
+> from Dexuan), and if you were involved in development, your Signed-off-by
+> would normally appear in the original posting.
+>=20
+> Should this be a Reviewed-by tag?
 
-I don't understand the reason to why you need to skip invoking resume
-callbacks to achieve this behavior, could you elaborate on that?
+Sorry.  I forgot the protocol.  I'll fix that.
 
-Couldn't the PM domain or the middle-layer instead decide what to do?
-To me it sounds a bit prone to errors by skipping callbacks from the
-PM core, and I wonder if the general driver author will be able to
-understand how to use this flag properly.
-
-That said, as the series don't include any changes for drivers making
-use of the flag, could please fold in such change as it would provide
-a more complete picture?
-
->
-> The additional power.must_resume status bit introduced for the
-> implementation of this mechanisn is used internally by the PM core
-> to track the requirement to resume the device (which may depend on
-> its children etc).
-
-Yeah, clearly the PM core needs to be involved, because of the need of
-dealing with parent/child relations, however as kind of indicate
-above, couldn't the PM core just set some flag/status bits, which
-instructs the middle-layer and PM domain on what to do? That sounds
-like an easier approach.
-
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
->  Documentation/driver-api/pm/devices.rst |   24 ++++++++++-
->  drivers/base/power/main.c               |   65 +++++++++++++++++++++++++++++---
->  include/linux/pm.h                      |   14 +++++-
->  3 files changed, 93 insertions(+), 10 deletions(-)
->
-> Index: linux-pm/include/linux/pm.h
-> ===================================================================
-> --- linux-pm.orig/include/linux/pm.h
-> +++ linux-pm/include/linux/pm.h
-> @@ -559,6 +559,7 @@ struct pm_subsys_data {
->   * NEVER_SKIP: Do not skip system suspend/resume callbacks for the device.
->   * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
->   * SMART_SUSPEND: No need to resume the device from runtime suspend.
-> + * LEAVE_SUSPENDED: Avoid resuming the device during system resume if possible.
->   *
->   * Setting SMART_PREPARE instructs bus types and PM domains which may want
->   * system suspend/resume callbacks to be skipped for the device to return 0 from
-> @@ -572,10 +573,14 @@ struct pm_subsys_data {
->   * necessary from the driver's perspective.  It also may cause them to skip
->   * invocations of the ->suspend_late and ->suspend_noirq callbacks provided by
->   * the driver if they decide to leave the device in runtime suspend.
-> + *
-> + * Setting LEAVE_SUSPENDED informs the PM core and middle-layer code that the
-> + * driver prefers the device to be left in runtime suspend after system resume.
->   */
-> -#define DPM_FLAG_NEVER_SKIP    BIT(0)
-> -#define DPM_FLAG_SMART_PREPARE BIT(1)
-> -#define DPM_FLAG_SMART_SUSPEND BIT(2)
-> +#define DPM_FLAG_NEVER_SKIP            BIT(0)
-> +#define DPM_FLAG_SMART_PREPARE         BIT(1)
-> +#define DPM_FLAG_SMART_SUSPEND         BIT(2)
-> +#define DPM_FLAG_LEAVE_SUSPENDED       BIT(3)
->
->  struct dev_pm_info {
->         pm_message_t            power_state;
-> @@ -597,6 +602,8 @@ struct dev_pm_info {
->         bool                    wakeup_path:1;
->         bool                    syscore:1;
->         bool                    no_pm_callbacks:1;      /* Owned by the PM core */
-> +       unsigned int            must_resume:1;  /* Owned by the PM core */
-> +       unsigned int            may_skip_resume:1;      /* Set by subsystems */
->  #else
->         unsigned int            should_wakeup:1;
->  #endif
-> @@ -765,6 +772,7 @@ extern int pm_generic_poweroff_late(stru
->  extern int pm_generic_poweroff(struct device *dev);
->  extern void pm_generic_complete(struct device *dev);
->
-> +extern bool dev_pm_may_skip_resume(struct device *dev);
->  extern bool dev_pm_smart_suspend_and_suspended(struct device *dev);
->
->  #else /* !CONFIG_PM_SLEEP */
-> Index: linux-pm/drivers/base/power/main.c
-> ===================================================================
-> --- linux-pm.orig/drivers/base/power/main.c
-> +++ linux-pm/drivers/base/power/main.c
-> @@ -528,6 +528,18 @@ static void dpm_watchdog_clear(struct dp
->  /*------------------------- Resume routines -------------------------*/
->
->  /**
-> + * dev_pm_may_skip_resume - System-wide device resume optimization check.
-> + * @dev: Target device.
-> + *
-> + * Checks whether or not the device may be left in suspend after a system-wide
-> + * transition to the working state.
-> + */
-> +bool dev_pm_may_skip_resume(struct device *dev)
-> +{
-> +       return !dev->power.must_resume && pm_transition.event != PM_EVENT_RESTORE;
-> +}
-> +
-> +/**
->   * device_resume_noirq - Execute a "noirq resume" callback for given device.
->   * @dev: Device to handle.
->   * @state: PM transition of the system being carried out.
-> @@ -575,6 +587,12 @@ static int device_resume_noirq(struct de
->         error = dpm_run_callback(callback, dev, state, info);
->         dev->power.is_noirq_suspended = false;
->
-> +       if (dev_pm_may_skip_resume(dev)) {
-> +               pm_runtime_set_suspended(dev);
-
-According to the doc, the DPM_FLAG_LEAVE_SUSPENDED intends to leave
-the device in runtime suspend state during system resume.
-However, here you are actually trying to change its runtime PM state to that.
-
-Moreover, you should check the return value from
-pm_runtime_set_suspended(). Then I wonder, what should you do when it
-fails here?
-
-Perhaps a better idea is to do this in the noirq suspend phase,
-because it allows you to bail out in case pm_runtime_set_suspended()
-fails.
-
-Another option is to leave this to the middle-layer and PM domain,
-that would make it more flexible and probably also easier for them to
-deal with the error path.
-
-> +               dev->power.is_late_suspended = false;
-> +               dev->power.is_suspended = false;pm_runtime_set_suspended(
-> +       }
-> +
->   Out:
->         complete_all(&dev->power.completion);
->         TRACE_RESUME(error);
-> @@ -1076,6 +1094,22 @@ static pm_message_t resume_event(pm_mess
->         return PMSG_ON;
->  }
->
-> +static void dpm_superior_set_must_resume(struct device *dev)
-> +{
-> +       struct device_link *link;
-> +       int idx;
-> +
-> +       if (dev->parent)
-> +               dev->parent->power.must_resume = true;
-> +
-> +       idx = device_links_read_lock();
-> +
-> +       list_for_each_entry_rcu(link, &dev->links.suppliers, c_node)
-> +               link->supplier->power.must_resume = true;
-> +
-> +       device_links_read_unlock(idx);
-> +}
-> +
->  /**
->   * __device_suspend_noirq - Execute a "noirq suspend" callback for given device.
->   * @dev: Device to handle.
-> @@ -1127,10 +1161,27 @@ static int __device_suspend_noirq(struct
->         }
->
->         error = dpm_run_callback(callback, dev, state, info);
-> -       if (!error)
-> -               dev->power.is_noirq_suspended = true;
-> -       else
-> +       if (error) {
->                 async_error = error;
-> +               goto Complete;
-> +       }
-> +
-> +       dev->power.is_noirq_suspended = true;
-> +
-> +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED)) {
-> +               /*
-> +                * The only safe strategy here is to require that if the device
-> +                * may not be left in suspend, resume callbacks must be invoked
-> +                * for it.
-> +                */
-> +               dev->power.must_resume = dev->power.must_resume ||
-> +                                       !dev->power.may_skip_resume;
-> +       } else {
-> +               dev->power.must_resume = true;
-> +       }
-> +
-> +       if (dev->power.must_resume)
-> +               dpm_superior_set_must_resume(dev);
->
->  Complete:
->         complete_all(&dev->power.completion);
-> @@ -1487,6 +1538,9 @@ static int __device_suspend(struct devic
->                 dev->power.direct_complete = false;
->         }
->
-> +       dev->power.may_skip_resume = false;
-> +       dev->power.must_resume = false;
-> +
->         dpm_watchdog_set(&wd, dev);
->         device_lock(dev);
->
-> @@ -1652,8 +1706,9 @@ static int device_prepare(struct device
->         if (dev->power.syscore)
->                 return 0;
->
-> -       WARN_ON(dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND) &&
-> -               !pm_runtime_enabled(dev));
-> +       WARN_ON(!pm_runtime_enabled(dev) &&
-> +               dev_pm_test_driver_flags(dev, DPM_FLAG_SMART_SUSPEND |
-> +                                             DPM_FLAG_LEAVE_SUSPENDED));
->
->         /*
->          * If a device's parent goes into runtime suspend at the wrong time,
-> Index: linux-pm/Documentation/driver-api/pm/devices.rst
-> ===================================================================
-> --- linux-pm.orig/Documentation/driver-api/pm/devices.rst
-> +++ linux-pm/Documentation/driver-api/pm/devices.rst
-> @@ -788,6 +788,26 @@ must reflect the "active" status for run
->
->  During system-wide resume from a sleep state it's easiest to put devices into
->  the full-power state, as explained in :file:`Documentation/power/runtime_pm.txt`.
-> -Refer to that document for more information regarding this particular issue as
-> +[Refer to that document for more information regarding this particular issue as
->  well as for information on the device runtime power management framework in
-> -general.
-> +general.]
-> +
-> +However, it may be desirable to leave some devices in runtime suspend after
-> +system transitions to the working state and device drivers can use the
-> +``DPM_FLAG_LEAVE_SUSPENDED`` flag to indicate to the PM core (and middle-layer
-> +code) that this is the case.  Whether or not the devices will actually be left
-> +in suspend may depend on their state before the given system suspend-resume
-> +cycle and on the type of the system transition under way.  In particular,
-> +devices are not left suspended if that transition is a restore from hibernation,
-> +as device states are not guaranteed to be reflected by the information stored in
-> +the hibernation image in that case.
-> +
-> +The middle-layer code involved in the handling of the device has to indicate to
-> +the PM core if the device may be left in suspend with the help of its
-> +:c:member:`power.may_skip_resume` status bit.  That has to happen in the "noirq"
-> +phase of the preceding system-wide suspend (or analogous) transition.  The
-> +middle layer is then responsible for handling the device as appropriate in its
-> +"noirq" resume callback, which is executed regardless of whether or not the
-> +device may be left suspended, but the other resume callbacks (except for
-> +``->complete``) will be skipped automatically by the PM core if the device
-> +really can be left in suspend.
->
-
-Kind regards
-Uffe
+Reviewed-by: Jake Oshins <jakeo@microsoft.com>
