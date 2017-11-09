@@ -1,42 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH 1/5] PCI: Add vendor ID for Cadence
-Date: Thu, 23 Nov 2017 16:01:46 +0100
-Message-Id: <a93032cbbe02dc9efef8536a4b2a851d1b08ab6f.1511439189.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=Qgrw=CH=mobiveil.co.in=l.subrahmanya@kernel.org>
+Return-Path: <SRS0=Qgrw=CH=mobiveil.co.in=l.subrahmanya@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20171108172349.GC28427@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAFZiPx2mc6bjJkXbjOeKqwJhFSicu3fXYSMgL8ET-mnuEvB2rQ@mail.gmail.com>
+ <20171108172349.GC28427@bhelgaas-glaptop.roam.corp.google.com>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Thu, 9 Nov 2017 18:34:08 +0530
+Message-ID: <CAFZiPx061E0MuucnTw-6uJ-+YP739Cdi2+jkLkDh+nJomGfwtA@mail.gmail.com>
+Subject: Re: [Patch] PCIe: Add Mobiveil PCIe Host Bridge IP driver
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a new PCI vendor ID for Cadence.
+Bjorn,
+I went through all the links, prepared the patches and resubmitted
+with v2  version.
+This driver follows xilinx Root port driver architecture in same folder.
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index ab20dc5db423..eb13e84e1fef 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2381,6 +2381,8 @@
- 
- #define PCI_VENDOR_ID_LENOVO		0x17aa
- 
-+#define PCI_VENDOR_ID_CDNS		0x17cd
-+
- #define PCI_VENDOR_ID_ARECA		0x17d3
- #define PCI_DEVICE_ID_ARECA_1110	0x1110
- #define PCI_DEVICE_ID_ARECA_1120	0x1120
--- 
-2.11.0
+Thanks,
+
+On Wed, Nov 8, 2017 at 10:53 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Nov 08, 2017 at 09:42:29PM +0530, subrahmanya l wrote:
+>> This is the driver for Mobiveil  AXI PCIe Host Bridge Soft IP
+>>
+>> --
+>> Mobiveil INC., CONFIDENTIALITY NOTICE: This e-mail message, including any
+>> attachments, is for the sole use of the intended recipient(s) and may
+>> contain proprietary confidential or privileged information or otherwise be
+>> protected by law. Any unauthorized review, use, disclosure or distribution
+>> is prohibited. If you are not the intended recipient, please notify the
+>> sender and destroy all copies and the original message.
+>
+> I can't do anything with email marked "confidential".
+>
+> Also, please review these hints for posting patches:
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/5.Posting.rst
+> https://lkml.kernel.org/r/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com
+>
+> Please include your patch inline (not as an attachment).  Patchwork
+> (https://patchwork.ozlabs.org/project/linux-pci/list/), the system I
+> use to track patches, doesn't pick up attachments, so they tend to get
+> lost.
+>
+> Please look at the other drivers in drivers/pci/host/ and make yours
+> look as much as possible like them.  Same coding style, same
+> organization, same function naming scheme, etc.
+>
+> Bjorn
