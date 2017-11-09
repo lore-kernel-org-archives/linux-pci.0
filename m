@@ -1,41 +1,74 @@
-Return-Path: <SRS0=u6b1=CH=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=u6b1=CH=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
-Date: Thu,  9 Nov 2017 08:00:32 -0600
-Message-Id: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFCv2 PATCH 21/36] iommu/arm-smmu-v3: Implement process
+ operations
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-22-jean-philippe.brucker@arm.com>
+CC: <joro@8bytes.org>, <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <lorenzo.pieralisi@arm.com>, <hanjun.guo@linaro.org>,
+        <sudeep.holla@arm.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+        <robin.murphy@arm.com>, <bhelgaas@google.com>,
+        <alex.williamson@redhat.com>, <tn@semihalf.com>,
+        <liubo95@huawei.com>, <thunder.leizhen@huawei.com>,
+        <gabriele.paoloni@huawei.com>, <nwatters@codeaurora.org>,
+        <okaya@codeaurora.org>, <rfranz@cavium.com>, <dwmw2@infradead.org>,
+        <jacob.jun.pan@linux.intel.com>, <yi.l.liu@intel.com>,
+        <ashok.raj@intel.com>, <robdclark@gmail.com>
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Message-ID: <084b1848-0939-5e73-3890-3aab8dc4bc70@huawei.com>
+Date: Thu, 9 Nov 2017 11:32:26 +0800
+MIME-Version: 1.0
+In-Reply-To: <20171006133203.22803-22-jean-philippe.brucker@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v1 - Initial patch
-v2 - Addressed Bjorn's comment on creating a highly platform
-     dependent global exported symbol.
-v3 - Based patch off linux-ppc/master
-v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
-v5 - Fixed comments and commit message
+Hi Jean,
 
-Bryant G. Ly (3):
-  powerpc/kernel: Separate SR-IOV Calls
-  pseries: Add PSeries SR-IOV Machine dependent calls
-  PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
+> Hook process operations to support PASID and page table sharing with the
+> SMMUv3:
+> 
+> +
+> +static void arm_smmu_process_exit(struct iommu_domain *domain,
+> +				  struct iommu_process *process)
+> +{
+> +	struct arm_smmu_master_data *master;
+> +	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
+> +
+> +	if (!domain->process_exit)
+> +		return;
 
- arch/powerpc/include/asm/machdep.h           |  7 ++++++
- arch/powerpc/include/asm/pci-bridge.h        |  4 +---
- arch/powerpc/kernel/eeh_driver.c             |  4 ++--
- arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
- arch/powerpc/kernel/pci_dn.c                 |  6 -----
- arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
- arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
- arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
- arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
- drivers/pci/iov.c                            | 11 ++++++++++
- include/linux/pci.h                          |  2 ++
- 11 files changed, 118 insertions(+), 33 deletions(-)
+If domain do not set process_exit handler, just return? smmu do not
+need invalid ATC, clear cd entry, etc.? Maybe you should check when
+call domain->process_exit?
 
--- 
-2.13.6 (Apple Git-96)
+> +
+> +	spin_lock(&smmu_domain->devices_lock);
+> +	list_for_each_entry(master, &smmu_domain->devices, list) {
+> +		if (!master->processes)
+> +			continue;
+> +
+> +		master->processes--;
+Add
+		if (domain->process_exit)
+here?
+> +		domain->process_exit(domain, master->dev, process->pasid,
+> +				     domain->process_exit_token);
+> +
+> +		/* TODO: inval ATC */
+> +	}
+> +	spin_unlock(&smmu_domain->devices_lock);
+> +
+> +	arm_smmu_write_ctx_desc(smmu_domain, process->pasid, NULL);
+> +
+> +	/* TODO: Invalidate all mappings if not DVM */
+> +}
+> +
+Thanks
+Yisheng Xie
+
