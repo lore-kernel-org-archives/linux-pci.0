@@ -1,64 +1,71 @@
-Return-Path: <SRS0=32xe=CT=axis.com=niklas.cassel@kernel.org>
-Return-Path: <SRS0=32xe=CT=axis.com=niklas.cassel@kernel.org>
-Subject: Re: [PATCH v4 01/17] PCI: dwc: Use the DMA-API to get the MSI address
-To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
- <20171103134722.5532-2-niklas.cassel@axis.com>
- <20171108005614.GF22847@bhelgaas-glaptop.roam.corp.google.com>
- <1c059ad0-aa57-fca4-6d92-e68736ffad5f@synopsys.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <233b3102-0ca3-ca28-5b43-34e55a5c87c4@axis.com>
-Date: Tue, 21 Nov 2017 13:18:18 +0100
+Return-Path: <SRS0=0FUx=CH=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=0FUx=CH=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
+ drivers
+To: Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
+Date: Thu, 9 Nov 2017 11:28:36 +0530
 MIME-Version: 1.0
-In-Reply-To: <1c059ad0-aa57-fca4-6d92-e68736ffad5f@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/11/17 13:45, Joao Pinto wrote:
-> Hello to all,
-> 
-> Às 12:56 AM de 11/8/2017, Bjorn Helgaas escreveu:
->> On Fri, Nov 03, 2017 at 02:47:05PM +0100, Niklas Cassel wrote:
->>> Use the DMA-API to get the MSI address. This address will be written to
->>> our PCI config space and to the register which determines which AXI
->>> address the DWC IP will spoof for incoming MSI irqs.
->>>
->>> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
->>> to write to the MSI address, the proper way to get the MSI address is by
->>> using the DMA API, not by using virt_to_phys().
->>>
->>> Using virt_to_phys() might work on some systems, but using the DMA API
->>> should work on all systems.
->>>
->>> This is essentially the same thing as allocating a buffer in a driver
->>> to which the endpoint will write to. To do this, we use the DMA API.
->>>
->>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Hi Bjorn,
+
+On Thursday 09 November 2017 01:56 AM, Bjorn Helgaas wrote:
+> On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
+>> From: Bjorn Helgaas <bhelgaas@google.com>
 >>
->> I'm expecting Jingoo and/or Joao to chime in and ack the
->> DesignWare-related patches.  I think all the others are in
->> pretty good shape.
+>> Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+>> the endpoint driver framework.
 >>
->>> ---
->>>  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
->>>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
->>>  2 files changed, 14 insertions(+), 4 deletions(-)
->>> ...
+>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> Let me test this patch-set in my setup first!
-> I will give feedback until Friday.
+> This is on my for-linus branch, and I intend to merge it for v4.14.
+
+There is already an entry for PCI endpoint in MAINTAINERS file. Can Lorenzo be
+added there?
+
+PCI ENDPOINT SUBSYSTEM
+M:      Kishon Vijay Abraham I <kishon@ti.com>
+L:      linux-pci@vger.kernel.org
+T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
+S:      Supported
+F:      drivers/pci/endpoint/
+F:      drivers/misc/pci_endpoint_test.c
+F:      tools/pci/
+
+Thanks
+Kishon
 > 
-
-Hello Joao,
-
-did you manage to find any time to test the designware
-related patches?
-
-If not, I posted a V5 yesterday, so in case you are still
-planning on testing them, could you please test V5 instead?
-
-
-Best regards,
-Niklas
+>> ---
+>>  MAINTAINERS |   10 ++++++++++
+>>  1 file changed, 10 insertions(+)
+>>
+>> diff --git a/MAINTAINERS b/MAINTAINERS
+>> index db412a627d96..a1f9653234cc 100644
+>> --- a/MAINTAINERS
+>> +++ b/MAINTAINERS
+>> @@ -10429,6 +10429,16 @@ F:	include/linux/pci*
+>>  F:	arch/x86/pci/
+>>  F:	arch/x86/kernel/quirks.c
+>>  
+>> +PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
+>> +M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> +L:	linux-pci@vger.kernel.org
+>> +Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
+>> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
+>> +S:	Supported
+>> +F:	drivers/pci/host/
+>> +F:	drivers/pci/dwc/
+>> +F:	drivers/pci/endpoint
+>> +
+>>  PCIE DRIVER FOR AXIS ARTPEC
+>>  M:	Niklas Cassel <niklas.cassel@axis.com>
+>>  M:	Jesper Nilsson <jesper.nilsson@axis.com>
+>>
