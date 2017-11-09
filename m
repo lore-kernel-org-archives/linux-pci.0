@@ -1,59 +1,108 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Nov 2017 21:01:33 -0600
+Date: Thu, 9 Nov 2017 09:05:28 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dexuan Cui <decui@microsoft.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Jake Oshins <jakeo@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        "Chris Valean (Cloudbase Solutions SRL)" <v-chvale@microsoft.com>,
-        "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        'Eyal Mizrachi' <eyalmi@mellanox.com>,
-        Jack Morgenstein <jackm@mellanox.com>,
-        Armen Guezalian <armeng@mellanox.com>,
-        Firas Mahameed <firas@mellanox.com>,
-        Tziporet Koren <tziporet@mellanox.com>,
-        Daniel Jurgens <danielj@mellanox.com>
-Subject: Re: [PATCH] PCI: hv: use effective affinity mask
-Message-ID: <20171108030133.GB28427@bhelgaas-glaptop.roam.corp.google.com>
-References: <PS1P15301MB00112EE79DE499E8B2BA338BBF5F0@PS1P15301MB0011.APCP153.PROD.OUTLOOK.COM>
- <20171108010736.GA28427@bhelgaas-glaptop.roam.corp.google.com>
- <KL1P15301MB00061170992D6D998A590B9CBF560@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
+ drivers
+Message-ID: <20171109150528.GA7629@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
+ <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <KL1P15301MB00061170992D6D998A590B9CBF560@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
+In-Reply-To: <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 08, 2017 at 01:27:02AM +0000, Dexuan Cui wrote:
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: Tuesday, November 7, 2017 5:08 PM
-> > On Wed, Nov 01, 2017 at 08:30:53PM +0000, Dexuan Cui wrote:
-> > >
-> > > Please consider this for v4.14, if it's not too late.
+On Thu, Nov 09, 2017 at 11:28:36AM +0530, Kishon Vijay Abraham I wrote:
+> Hi Bjorn,
+> 
+> On Thursday 09 November 2017 01:56 AM, Bjorn Helgaas wrote:
+> > On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
+> >> From: Bjorn Helgaas <bhelgaas@google.com>
+> >>
+> >> Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+> >> the endpoint driver framework.
+> >>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 > > 
-> > What would be the rationale for putting it in v4.14?  After the merge
-> > window, I usually only merge fixes for problems introduced during the
-> > merge window, or for serious regressions.  I can't tell if this fits
-> > into that or not.
+> > This is on my for-linus branch, and I intend to merge it for v4.14.
 > 
-> The patch was sent last Wednesday and I hoped it could catch the 
-> merge window to be in v4.14 so we won't have to request a backport
-> for the v4.14 stable kernel in future. And I was not exactly sure when
-> the merge window was. Sorry :-)
+> There is already an entry for PCI endpoint in MAINTAINERS file. Can Lorenzo be
+> added there?
 > 
-> The patch is not fixing a serious regression. It just fixes a long standing
-> issue from the beginning of the Hyper-V vPCI driver: 1 of 7 Mellanox 
-> VFs of a 32-vCPU VM running on Hyper-V may not receive interrupts.
+> PCI ENDPOINT SUBSYSTEM
+> M:      Kishon Vijay Abraham I <kishon@ti.com>
+> L:      linux-pci@vger.kernel.org
+> T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
+> S:      Supported
+> F:      drivers/pci/endpoint/
+> F:      drivers/misc/pci_endpoint_test.c
+> F:      tools/pci/
 
-No problem.  I added a stable tag so the backport should happen
-automatically and put it on my pci/host-hv branch for v4.15, with Jake's
-Reviewed-by.  Thanks!
+Right, thanks, I forgot all about this separate entry.  I added Lorenzo
+there, resulting in the patch below.
 
-Bjorn
+My practice has been that all the PCI patches (everything in
+drivers/pci plus some include and x86/pci stuff) have been merged via
+my tree.
+
+This includes things in drivers/pci/{host,dwc,endpoint,switch}, which
+are non-core things and usually specific to a chipset.  I try to
+ensure they have individual maintainers designated, and I ask for
+their acks for non-trivial changes because I have no specs and no
+hardware for testing them.  But I think it's still good to have one
+person look over them all to try to keep some consistency across them
+because they are all quite similar.
+
+So my hope is that Lorenzo can take over that oversight role from me,
+not that he would replace any of those designated maintainers.
+
+Ideally, this will be transparent to patch submitters except that they
+should add Lorenzo to the "To:" line (keeping linux-pci and other
+interested parties).
+
+
+commit 6b7be529634bbfbf6395f23217a66d731fbed0a0
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed Nov 8 08:49:49 2017 -0600
+
+    MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge drivers
+    
+    Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+    the endpoint driver framework.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index db412a627d96..6ce341e86fec 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10378,6 +10378,7 @@ F:	drivers/pci/dwc/*keystone*
+ 
+ PCI ENDPOINT SUBSYSTEM
+ M:	Kishon Vijay Abraham I <kishon@ti.com>
++M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+ L:	linux-pci@vger.kernel.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
+ S:	Supported
+@@ -10429,6 +10430,15 @@ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
+ 
++PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
++M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
++L:	linux-pci@vger.kernel.org
++Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
++S:	Supported
++F:	drivers/pci/host/
++F:	drivers/pci/dwc/
++
+ PCIE DRIVER FOR AXIS ARTPEC
+ M:	Niklas Cassel <niklas.cassel@axis.com>
+ M:	Jesper Nilsson <jesper.nilsson@axis.com>
