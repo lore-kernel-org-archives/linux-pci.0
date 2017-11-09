@@ -1,40 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 29 Nov 2017 09:39:05 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 6/7] PCI: add device wait after slot and bus reset
-Message-ID: <20171129173905.GG27742@infradead.org>
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
- <1511763628-11856-7-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=jtA3=CH=ellerman.id.au=mpe@kernel.org>
+Return-Path: <SRS0=jtA3=CH=ellerman.id.au=mpe@kernel.org>
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Bjorn Helgaas <helgaas@kernel.org>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org, seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com, alex.williamson@redhat.com, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com
+Subject: Re: [PATCH v4 3/3] pci/iov: Expose VF drivers Auto Probe Globally
+In-Reply-To: <20171108230537.GD21597@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171031144724.27808-1-bryantly@linux.vnet.ibm.com> <20171031144724.27808-4-bryantly@linux.vnet.ibm.com> <20171108230537.GD21597@bhelgaas-glaptop.roam.corp.google.com>
+Date: Thu, 09 Nov 2017 11:20:10 +1100
+Message-ID: <87375o2thh.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-In-Reply-To: <1511763628-11856-7-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 27, 2017 at 01:20:27AM -0500, Sinan Kaya wrote:
-> Rev 3.1 Sec 2.3.1 Request Handling Rules indicates that a device can issue
-> CRS following secondary bus reset. Handle device presence gracefully.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Bjorn Helgaas <helgaas@kernel.org> writes:
+> Please update the subject line from
+>
+>   pci/iov: Expose VF drivers Auto Probe Globally
+>
+> to
+>
+>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+...
+>
+>> + */
+>> +void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool auto_probe)
+>> +{
+>> +	if (dev->is_physfn)
+>> +		dev->sriov->drivers_autoprobe = auto_probe;
+>> +}
+>> +EXPORT_SYMBOL_GPL(pci_vf_drivers_autoprobe);
+>
+> I don't think this needs to be exported.  It's only called from arch
+> code that cannot be a module.
+>
+> With these changes,
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> I assume you'll merge these via the powerpc tree.  Let me know if you
+> need anything else from me.
 
-Looks good,
+Thanks.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Actually I'd basically missed this series because it wasn't properly
+cc'ed to linuxppc-dev, so it doesn't appear in patchwork.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bryant, please incorporate Bjorn's review comments and resend a v5 to
+linuxppc-dev. Thanks.
+
+It should show up here for me to see it:
+  http://patchwork.ozlabs.org/project/linuxppc-dev/list/?submitter=72247
+
+cheers
