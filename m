@@ -1,48 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:56279 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932173AbdKBUxJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 16:53:09 -0400
-Date: Thu, 2 Nov 2017 21:53:06 +0100
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Subject: Re: [PATCH v2] pci/switchtec: Don't use completion's wait queue
-Message-ID: <20171102205306.bk6ykgmdn7gh37mq@linutronix.de>
-References: <20171004095007.19148-1-bigeasy@linutronix.de>
- <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
- <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
- <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
- <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
- <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
- <20171102171736.rpdlemzw5jueuq5w@linutronix.de>
- <31ed36b3-2328-8cc4-3aea-8c13a39e63bf@deltatee.com>
- <20171102180548.f6sc2edxbvw7qeu7@linutronix.de>
- <2b025b79-b625-dab0-5b68-c77ca0c2bd74@deltatee.com>
+Return-Path: <SRS0=CU1K=CH=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=CU1K=CH=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 9 Nov 2017 10:47:51 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
+ drivers
+Message-ID: <20171109104751.GB18856@red-moon>
+References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <2b025b79-b625-dab0-5b68-c77ca0c2bd74@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-11-02 14:02:23 [-0600], Logan Gunthorpe wrote:
-> And you still missed what I said and the entire point of the article.
-
-I'm sorry.
-
-> > See 7c34e3180a01 ("sched/completion: Add lock-free checking of the
-> > blocking case")
+On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> Sounds questionable. I don't see how that function could be inlined, even
-> then.
+> Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+> the endpoint driver framework.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  MAINTAINERS |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
 
-It would have made sense if that function would be used also within the
-file where it was declared but it is not the case.
-So you see the questionable way the READ_ONCE got in there and now you
-may understand that I did not see much of big loss if it wasn't there
-after the rewrite/change.
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-> Logan
+Thank you !
+Lorenzo
 
-Sebastian
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index db412a627d96..a1f9653234cc 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -10429,6 +10429,16 @@ F:	include/linux/pci*
+>  F:	arch/x86/pci/
+>  F:	arch/x86/kernel/quirks.c
+>  
+> +PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
+> +M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> +L:	linux-pci@vger.kernel.org
+> +Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
+> +S:	Supported
+> +F:	drivers/pci/host/
+> +F:	drivers/pci/dwc/
+> +F:	drivers/pci/endpoint
+> +
+>  PCIE DRIVER FOR AXIS ARTPEC
+>  M:	Niklas Cassel <niklas.cassel@axis.com>
+>  M:	Jesper Nilsson <jesper.nilsson@axis.com>
+> 
