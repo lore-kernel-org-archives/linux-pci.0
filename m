@@ -1,66 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45986 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932328AbdK2RBh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Nov 2017 12:01:37 -0500
-Date: Wed, 29 Nov 2017 11:01:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, jonathanh@nvidia.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com, rjw@rjwysocki.net,
-        tglx@linutronix.de, vidyas@nvidia.com, kthota@nvidia.com,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH V2 5/9] PCI: Export pci_flags
-Message-ID: <20171129170133.GC6469@bhelgaas-glaptop.roam.corp.google.com>
-References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
- <1511638333-22951-6-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:49083 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753882AbdKIMDA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 07:03:00 -0500
+Received: by mail-pf0-f193.google.com with SMTP id b79so4113540pfk.5
+        for <linux-pci@vger.kernel.org>; Thu, 09 Nov 2017 04:03:00 -0800 (PST)
+Subject: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Peter W Newton <peter.newton@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Raj Raina <rajesh.raina@nxp.com>,
+        Rajan Kapoor <rajan.kapoor@nxp.com>,
+        Prabhjot Singh <prabhjot.singh@nxp.com>, tglx@linutronix.de
+References: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
+From: subrahmanya_lingappa <l.subrahmanya@mobiveil.co.in>
+Message-ID: <697da40c-7cdd-3d05-5846-37eae31bb729@mobiveil.co.in>
+Date: Thu, 9 Nov 2017 17:33:12 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1511638333-22951-6-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo]
+ From e38b741006856f3a3623109dd5ddf5f99326ce61 Mon Sep 17 00:00:00 2001
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Thu, 9 Nov 2017 04:25:21 -0500
+Subject: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
 
-On Sun, Nov 26, 2017 at 01:02:09AM +0530, Manikanta Maddireddy wrote:
-> pci_flags variable is used in inline functions in 'pci.h', Tegra PCIe
-> driver use one of these functions pci_add_flags() and includes 'pci.h'.
-> Export pci_flags to allow Tegra PCIe host controller driver to be
-> compiled as loadable kernel module.
+This patch exports irq_set_msi_desc symbol which is used by
+few PCIe root port drivers.
 
-Here's the usage in tegra_pcie_probe():
+Cc: bhelgaas@google.com
+Cc: tglx@linutronix.de
 
-  pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+---
+  kernel/irq/chip.c | 1 +
+  1 file changed, 1 insertion(+)
 
-We've probably had this discussion before, but  I don't know why Tegra
-needs PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS.
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index be3c34e..c4222c4 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -137,6 +137,7 @@ int irq_set_msi_desc(unsigned int irq, struct 
+msi_desc *entry)
+  	return irq_set_msi_desc_off(irq, 0, entry);
+  }
 
-I would prefer to drop this usage of pci_add_flags() if possible.  It
-seems to be just an arm/powerpc thing and I'm not convinced it's
-really necessary.
-
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V2:
-> * commit message update
-> 
->  drivers/pci/setup-bus.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index b1ad466199ad..3567e1c4e340 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -29,6 +29,7 @@
->  #include "pci.h"
->  
->  unsigned int pci_flags;
-> +EXPORT_SYMBOL(pci_flags);
->  
->  struct pci_dev_resource {
->  	struct list_head list;
-> -- 
-> 2.1.4
-> 
++EXPORT_SYMBOL(irq_set_msi_desc);
+  /**
+   *	irq_set_chip_data - set irq chip data for an irq
+   *	@irq:	Interrupt number
+-- 
+1.8.3.1
