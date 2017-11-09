@@ -1,74 +1,120 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 23/30] [media] atomisp: deprecate pci_get_bus_and_slot()
-To: Alan Cox <alan@linux.intel.com>, linux-pci@vger.kernel.org,
- timur@codeaurora.org
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-24-git-send-email-okaya@codeaurora.org>
- <1511353247.3539.10.camel@linux.intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <b87604f8-07f5-5cdc-b022-286c17ea66eb@codeaurora.org>
-Date: Wed, 22 Nov 2017 09:05:08 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [RFCv2 PATCH 01/36] iommu: Keep track of processes and PASIDs
+To: Bharat Kumar Gogada <bharatku@xilinx.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Cc: "joro@8bytes.org" <joro@8bytes.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        Mark Rutland <Mark.Rutland@arm.com>,
+        Catalin Marinas <Catalin.Marinas@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+        Sudeep Holla <Sudeep.Holla@arm.com>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "liubo95@huawei.com" <liubo95@huawei.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-2-jean-philippe.brucker@arm.com>
+ <BLUPR0201MB150538FDD455F6042803B54FA5560@BLUPR0201MB1505.namprd02.prod.outlook.com>
+Message-ID: <16b6ba80-b15b-b278-0d06-350ae0201e82@arm.com>
+Date: Thu, 9 Nov 2017 12:16:20 +0000
 MIME-Version: 1.0
-In-Reply-To: <1511353247.3539.10.camel@linux.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arushi Singhal <arushisinghal19971997@gmail.com>,
- Kate Stewart <kstewart@linuxfoundation.org>,
- kbuild test robot <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>,
- Valentin Vidic <Valentin.Vidic@CARNet.hr>, linux-arm-msm@vger.kernel.org,
- Philippe Ombredanne <pombredanne@nexb.com>,
- open list <linux-kernel@vger.kernel.org>,
- Hans Verkuil <hans.verkuil@cisco.com>,
- Avraham Shukron <avraham.shukron@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- linux-arm-kernel@lists.infradead.org,
- "open list:MEDIA INPUT INFRASTRUCTURE \(V4L/DVB\)"
- <linux-media@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <BLUPR0201MB150538FDD455F6042803B54FA5560@BLUPR0201MB1505.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
+Hi Bharat,
 
-On 11/22/2017 7:20 AM, Alan Cox wrote:
-> On Wed, 2017-11-22 at 00:31 -0500, Sinan Kaya wrote:
->> pci_get_bus_and_slot() is restrictive such that it assumes domain=0
->> as
->> where a PCI device is present. This restricts the device drivers to
->> be
->> reused for other domain numbers.
+On 11/08/2017 05:50 PM, Bharat Kumar Gogada wrote:
+> Hi Jean,
 > 
-> The ISP v2 will always been in domain 0.
-> 
+> +static struct iommu_process *
+> +iommu_process_alloc(struct iommu_domain *domain, struct task_struct
+> +*task) {
+> +       int err;
+> +       int pasid;
+> +       struct iommu_process *process;
+> +
+> +       if (WARN_ON(!domain->ops->process_alloc ||
+> !domain->ops->process_free))
+> +               return ERR_PTR(-ENODEV);
+> +
+> +       process = domain->ops->process_alloc(task);
+> +       if (IS_ERR(process))
+> +               return process;
+> +       if (!process)
+> +               return ERR_PTR(-ENOMEM);
+> +
+> +       process->pid            = get_task_pid(task, PIDTYPE_PID);
+> +       process->release        = domain->ops->process_free;
+> +       INIT_LIST_HEAD(&process->domains);
+> +       kref_init(&process->kref);
+> +
+> +       if (!process->pid) {
+> +               err = -EINVAL;
+> +               goto err_free_process;
+> +       }
+> +
+> +       idr_preload(GFP_KERNEL);
+> +       spin_lock(&iommu_process_lock);
+> +       pasid = idr_alloc_cyclic(&iommu_process_idr, process,
+> domain->min_pasid,
+> +                                domain->max_pasid + 1, GFP_ATOMIC);
+> If EP supports only one pasid; domain->min_pasid=1 and domain->max_pasid=0.
+> When idr_alloc_cyclic is called it invokes idr_get_free_cmn function
+> where we have following condition. (Based on kernel 4.14-rc6)
+>         if (!radix_tree_tagged(root, IDR_FREE))
+>                 start = max(start, maxindex + 1);
+>               if (start > max)
+>                 return ERR_PTR(-ENOSPC);
+> Here max is being assigned zero by the time this function is invoked,
+> this value is based on domain->max_pasid.
+> This condition fails and ENOSPC is returned.
+>        
+> In this case even though hardware supports PASID, BIND flow fails.
 
-Sorry, I didn't get what you mean. Do you mean that you are OK with the
-change (thus, can I get a reviewed by) or do you mean that I should fix
-the commit message?
+It should fail, since we're reserving PASID 0 for non-PASID transactions
+with S1DSS=0b10. In addition, the SMMUv3 specification does not allow
+using PASID with a single entry. See the description of S1CDMax in 5.2
+Stream Table Entry:
 
-I wrote a generic commit message and applied it to all 30 patches that
-are more or less similar. I can certainly tailor the message a little
-bit for atomisp since you confirmed domain 0.
+"when this field is 0, the substreams of the STE are disabled and one CD
+is available. (The minimum useful number of substreams is 2.) Any
+transaction with a SubstreamID will be terminated with an abort and a
+C_BAD_SUBSTREAMID event recorded."
 
-> Alan
-> 
-> 
+> Any reason why pasid allocation moved to idr allocations rather than
+> bitmap allocations as in v1 patches ?
 
+Yes, idr provides a convenient way to quickly retrieve the context
+associated with a PASID, when handling a fault. v1 had the allocation in a
+bitmap and storing in a rb-tree. By using an idr we combine both and rely
+on a well-tested infrastructure.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Note that in the future we might need to go back to handcrafting the PASID
+allocation, but it will probably still be based on idr.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Jean
