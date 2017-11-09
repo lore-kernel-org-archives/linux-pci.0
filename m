@@ -1,146 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37102 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750891AbdK3XQE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Nov 2017 18:16:04 -0500
-Date: Thu, 30 Nov 2017 17:15:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>
-Subject: Re: [Question] Unsupported Request During PCI Enumeration
-Message-ID: <20171130231558.GD19640@bhelgaas-glaptop.roam.corp.google.com>
-References: <26340670-2744-b2e0-eed7-eb8e0ad2bc84@huawei.com>
- <20171128003208.GB11228@bhelgaas-glaptop.roam.corp.google.com>
- <c1235398-9a80-b4f3-94c9-3686651259fc@huawei.com>
- <20171128145748.GD11228@bhelgaas-glaptop.roam.corp.google.com>
- <12079a9c-9018-b1be-1596-8a2f6746677b@huawei.com>
+Return-Path: <SRS0=YFOV=CH=axis.com=niklas.cassel@kernel.org>
+Return-Path: <SRS0=YFOV=CH=axis.com=niklas.cassel@kernel.org>
+Subject: Re: [PATCH v4 01/17] PCI: dwc: Use the DMA-API to get the MSI address
+To: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>
+CC: Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20171103134722.5532-1-niklas.cassel@axis.com>
+ <20171103134722.5532-2-niklas.cassel@axis.com>
+ <20171108005614.GF22847@bhelgaas-glaptop.roam.corp.google.com>
+ <1c059ad0-aa57-fca4-6d92-e68736ffad5f@synopsys.com>
+ <20171108172745.GD28427@bhelgaas-glaptop.roam.corp.google.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <7b41b35f-b815-d708-08ef-a13b172780c1@axis.com>
+Date: Thu, 9 Nov 2017 10:20:58 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <12079a9c-9018-b1be-1596-8a2f6746677b@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171108172745.GD28427@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 30, 2017 at 08:47:38PM +0800, Dongdong Liu wrote:
+On 11/08/2017 06:27 PM, Bjorn Helgaas wrote:
+> On Wed, Nov 08, 2017 at 12:45:49PM +0000, Joao Pinto wrote:
+>> Hello to all,
+>>
+>> Às 12:56 AM de 11/8/2017, Bjorn Helgaas escreveu:
+>>> On Fri, Nov 03, 2017 at 02:47:05PM +0100, Niklas Cassel wrote:
+>>>> Use the DMA-API to get the MSI address. This address will be written to
+>>>> our PCI config space and to the register which determines which AXI
+>>>> address the DWC IP will spoof for incoming MSI irqs.
+>>>>
+>>>> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+>>>> to write to the MSI address, the proper way to get the MSI address is by
+>>>> using the DMA API, not by using virt_to_phys().
+>>>>
+>>>> Using virt_to_phys() might work on some systems, but using the DMA API
+>>>> should work on all systems.
+>>>>
+>>>> This is essentially the same thing as allocating a buffer in a driver
+>>>> to which the endpoint will write to. To do this, we use the DMA API.
+>>>>
+>>>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+>>>
+>>> I'm expecting Jingoo and/or Joao to chime in and ack the
+>>> DesignWare-related patches.  I think all the others are in
+>>> pretty good shape.
+>>>
+>>>> ---
+>>>>  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
+>>>>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
+>>>>  2 files changed, 14 insertions(+), 4 deletions(-)
+>>>> ...
+>>
+>> Let me test this patch-set in my setup first!
+>> I will give feedback until Friday.
 > 
-> >I do not think drivers should be calling
-> >pci_enable_pcie_error_reporting() directly.  And I don't think we
-> >should depend on _HPX.  _HPX is intended for *platform-specific*
-> >things, and I don't think this is platform-specific.  And of course,
-> >_HPX only works on ACPI systems, and we want this to work everywhere.
-> >
-> >So I think we need a more comprehensive generic solution in Linux.  I
-> >think we need several pieces:
-> >
-> >  - Disable UR reporting during enumeration, similar to how we disable
-> >    Master Abort reporting.
-> >
-> >  - Restore original UR reporting setting after enumeration.
-> >
-> >  - Clear any logged UR errors after enumeration.
+> OK, thanks.  This may push this series out until v4.16 because the
+> v4.15 merge window will probably open Sunday, and I don't like to add
+> code during the window and merge it immediately.
 > 
-> Agree.
-> 
-> >
-> >  - Enable UR reporting as part of configuring every device, e.g., in
-> >    pci_configure_device() or pci_init_capabilities().
-> 
-> Enable UR reporting in pci_configure_device() or pci_init_capabilities() is
-> not ok. It will still report UR as it is still in enumeration.
 
-True.  For bridges, it needs to be after we've enumerated children of
-the bridge.
+I suspected as much. The general rule seems to be that
+a patch has to be in linux-next for at least 2 weeks
+before sending it to Linus.
 
-> >I don't know whether we should enable UR reporting if AER is not
-> >present; we'll have to think about that.  We may also have to
-> >restructure how the AER driver works, because I think it currently
-> >comes into play *after* we call pci_init_capabilities().  There are
-> >probably some ordering issues there.
-> 
-> I write a sample code as below, it can avoid report UR during
-> enumeration. What do you think about the code ?
+No worries, there is not really a rush.
 
-Can you do it the same place we disable and restore Master-Abort Mode,
-in pci_scan_bridge_extend()?  That's done for the same reason, so it
-would be nice to keep it together.
-
-Maybe we could have a "pci_disable_enumeration_errors()" that would
-disable both Master-Abort Mode and UR reporting, and a corresponding
-"pci_restore_enumeration_errors()" that would clear any logged errors
-and restore the original settings?
-
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index bc56cf1..1a46026 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -14,6 +14,7 @@
->  #include <linux/ioport.h>
->  #include <linux/proc_fs.h>
->  #include <linux/slab.h>
-> +#include <linux/aer.h>
-> 
->  #include "pci.h"
-> 
-> @@ -311,6 +312,16 @@ void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
->  void pci_bus_add_device(struct pci_dev *dev)
->  {
->         int retval;
-> +       u16 reg16;
-> +
-> +       /* Clear PCIe Capability's Device Status */
-> +       pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
-> +       pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
-> +       pci_cleanup_aer_error_status_regs(dev);
-> +
-> +       /* Restore UR reporting */
-> +       if (dev->devctl_ur)
-> +               pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_URRE);
-> 
->         /*
->          * Can not put in pci_device_add yet because resources
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 14e0ea1..7b34083 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2119,9 +2119,21 @@ static void pci_set_msi_domain(struct pci_dev *dev)
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
->         int ret;
-> +       u16 reg16;
-> 
->         pci_configure_device(dev);
-> 
-> +       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
-> +       dev->devctl_ur = reg16 & PCI_EXP_DEVCTL_URRE;
-> +       if (dev->devctl_ur) {
-> +               /*
-> +                * Turn off UR reporting, later restore UR reporting
-> +                * after enumeration.
-> +                */
-> +               reg16 = reg16 & (~PCI_EXP_DEVCTL_URRE);
-> +               pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
-> +       }
-> +
->         device_initialize(&dev->dev);
->         dev->dev.release = pci_release_dev;
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index ae8d2b4..c2a90f1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -440,6 +440,7 @@ struct pci_dev {
->         char *driver_override; /* Driver name to force a match */
-> 
->         unsigned long priv_flags; /* Private flags for the pci driver */
-> +       u16 devctl_ur;
->  };
-> 
-> Thanks,
-> Dongdong
-> 
-> >
-> >Bjorn
-> >
-> >.
-> >
-> 
+Regards,
+Niklas
