@@ -1,124 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45960 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752259AbdKVWux (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:50:53 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2 28/29] i7300_idle: remove unused file
-Date: Wed, 22 Nov 2017 17:49:23 -0500
-Message-Id: <1511390964-9979-29-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
+From: dann frazier <dann.frazier@canonical.com>
+Date: Thu, 9 Nov 2017 09:16:03 -0700
+Message-ID: <CALdTtnsCXp9kone=VECSyPOi6kuYML8eU-TKHM+_ekhVoGSTYA@mail.gmail.com>
+Subject: Re: [PATCH v10 0/9] LPC: legacy ISA I/O support
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Corey Minyard <minyard@acm.org>,
+ lorenzo.pieralisi@arm.com, linux-acpi@vger.kernel.org,
+ Arnd Bergmann <arnd@arndb.de>, rafael@kernel.org, linux-pci@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, John Garry <john.garry@huawei.com>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ xuwei5@hisilicon.com, linuxarm@huawei.com, olof@lixom.net,
+ Rob Herring <robh+dt@kernel.org>, benh@kernel.crashing.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Frank Rowand <frowand.list@gmail.com>,
+ Brian Starkey <brian.starkey@arm.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-i7300_idle.h is not being called by any source file and contains calls to
-pci_get_bus_and_slot() that we are trying to deprecate. Remove unused file.
+On Fri, Oct 27, 2017 at 10:11 AM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>
+> This patchset supports the IPMI-bt device attached to the Low-Pin-Count
+> interface implemented on Hisilicon Hip06/Hip07 SoC.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- include/linux/i7300_idle.h | 84 ----------------------------------------------
- 1 file changed, 84 deletions(-)
- delete mode 100644 include/linux/i7300_idle.h
+fwiw, I tested this on one of our D05 boards and verified that the
+IPMI SI worked fine.
 
-diff --git a/include/linux/i7300_idle.h b/include/linux/i7300_idle.h
-deleted file mode 100644
-index 4dbe651..0000000
---- a/include/linux/i7300_idle.h
-+++ /dev/null
-@@ -1,84 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--
--#ifndef I7300_IDLE_H
--#define I7300_IDLE_H
--
--#include <linux/pci.h>
--
--/*
-- * I/O AT controls (PCI bus 0 device 8 function 0)
-- * DIMM controls (PCI bus 0 device 16 function 1)
-- */
--#define IOAT_BUS 0
--#define IOAT_DEVFN PCI_DEVFN(8, 0)
--#define MEMCTL_BUS 0
--#define MEMCTL_DEVFN PCI_DEVFN(16, 1)
--
--struct fbd_ioat {
--	unsigned int vendor;
--	unsigned int ioat_dev;
--	unsigned int enabled;
--};
--
--/*
-- * The i5000 chip-set has the same hooks as the i7300
-- * but it is not enabled by default and must be manually
-- * manually enabled with "forceload=1" because it is
-- * only lightly validated.
-- */
--
--static const struct fbd_ioat fbd_ioat_list[] = {
--	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_CNB, 1},
--	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT, 0},
--	{0, 0}
--};
--
--/* table of devices that work with this driver */
--static const struct pci_device_id pci_tbl[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_FBD_CNB) },
--	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5000_ERR) },
--	{ } /* Terminating entry */
--};
--
--/* Check for known platforms with I/O-AT */
--static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
--						struct pci_dev **ioat_dev,
--						int enable_all)
--{
--	int i;
--	struct pci_dev *memdev, *dmadev;
--
--	memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
--	if (!memdev)
--		return -ENODEV;
--
--	for (i = 0; pci_tbl[i].vendor != 0; i++) {
--		if (memdev->vendor == pci_tbl[i].vendor &&
--		    memdev->device == pci_tbl[i].device) {
--			break;
--		}
--	}
--	if (pci_tbl[i].vendor == 0)
--		return -ENODEV;
--
--	dmadev = pci_get_bus_and_slot(IOAT_BUS, IOAT_DEVFN);
--	if (!dmadev)
--		return -ENODEV;
--
--	for (i = 0; fbd_ioat_list[i].vendor != 0; i++) {
--		if (dmadev->vendor == fbd_ioat_list[i].vendor &&
--		    dmadev->device == fbd_ioat_list[i].ioat_dev) {
--			if (!(fbd_ioat_list[i].enabled || enable_all))
--				continue;
--			if (fbd_dev)
--				*fbd_dev = memdev;
--			if (ioat_dev)
--				*ioat_dev = dmadev;
--
--			return 0;
--		}
--	}
--	return -ENODEV;
--}
--
--#endif
--- 
-1.9.1
+Tested-by: dann frazier <dann.frazier@canonical.com>
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
