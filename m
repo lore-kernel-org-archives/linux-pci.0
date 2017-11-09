@@ -1,81 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:31560 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751777AbdKVJEp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 04:04:45 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Xiaowei Bao <xiaowei.bao@nxp.com>,
-        Niklas Cassel <niklas.cassel@axis.com>
-Subject: [PATCH] PCI: designware-ep: Fix ->get_msi() to check MSI_EN bit
-Date: Wed, 22 Nov 2017 14:34:27 +0530
-Message-ID: <20171122090427.12371-1-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47376 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754858AbdKIOBD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 09:01:03 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id vA9Dxia4142117
+        for <linux-pci@vger.kernel.org>; Thu, 9 Nov 2017 09:01:03 -0500
+Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2e4qehbggr-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 09 Nov 2017 09:00:56 -0500
+Received: from localhost
+        by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Thu, 9 Nov 2017 07:00:53 -0700
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com,
+        eli@mellanox.com, saeedm@mellanox.com,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v5 3/3] PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+Date: Thu,  9 Nov 2017 08:00:35 -0600
+In-Reply-To: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171109140035.64975-4-bryantly@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-->get_msi() now checks MSI_EN bit in the MSI CAPABILITY register to
-find whether the host supports MSI instead of using the
-MSI ADDRESS in the MSI CAPABILITY register.
+Add a pci_vf_drivers_autoprobe() interface.  Setting autoprobe to false
+on the PF prevents drivers from binding to VFs when they are enabled.
 
-This fixes the issue with the following sequence
-  'modprobe pci_endpoint_test' enables MSI
-  'rmmod pci_endpoint_test' disables MSI but MSI address has a valid value
-  'modprobe pci_endpoint_test no_msi=1' - Since MSI address has a valid
-	value (set during the previous insertion of the module), EP
-	thinks host supports MSI.
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/dwc/pcie-designware-ep.c | 12 +++---------
- drivers/pci/dwc/pcie-designware.h    |  1 +
- 2 files changed, 4 insertions(+), 9 deletions(-)
+ arch/powerpc/platforms/pseries/pci.c |  2 ++
+ drivers/pci/iov.c                    | 11 +++++++++++
+ include/linux/pci.h                  |  2 ++
+ 3 files changed, 15 insertions(+)
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index d53d5f168363..7c621877a939 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -197,20 +197,14 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
- static int dw_pcie_ep_get_msi(struct pci_epc *epc)
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index 14a90cf471cc..48d3af026f90 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -63,6 +63,7 @@ int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
  {
- 	int val;
--	u32 lower_addr;
--	u32 upper_addr;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
--	val = dw_pcie_readb_dbi(pci, MSI_MESSAGE_CONTROL);
--	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
--
--	lower_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
--	upper_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
--
--	if (!(lower_addr || upper_addr))
-+	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	if (!(val & MSI_CAP_MSI_EN_MASK))
- 		return -EINVAL;
- 
-+	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
- 	return val;
+ 	/* Allocate PCI data */
+ 	add_dev_pci_data(pdev);
++	pci_vf_drivers_autoprobe(pdev, false);
+ 	return 0;
  }
  
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index e5d9d77b778e..cb493bcae8b4 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -101,6 +101,7 @@
- #define MSI_MESSAGE_CONTROL		0x52
- #define MSI_CAP_MMC_SHIFT		1
- #define MSI_CAP_MME_SHIFT		4
-+#define MSI_CAP_MSI_EN_MASK		0x1
- #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
- #define MSI_MESSAGE_ADDR_L32		0x54
- #define MSI_MESSAGE_ADDR_U32		0x58
+@@ -70,6 +71,7 @@ int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
+ {
+ 	/* Release PCI data */
+ 	remove_dev_pci_data(pdev);
++	pci_vf_drivers_autoprobe(pdev, true);
+ 	return 0;
+ }
+ #endif
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ac41c8be9200..1440e48094f4 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -634,6 +634,17 @@ void pci_restore_iov_state(struct pci_dev *dev)
+ }
+ 
+ /**
++ * pci_vf_drivers_autoprobe - set PF property drivers_autoprobe for VFs
++ * @dev: the PCI device
++ * @auto_probe: set VF drivers auto probe flag
++ */
++void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool auto_probe)
++{
++	if (dev->is_physfn)
++		dev->sriov->drivers_autoprobe = auto_probe;
++}
++
++/**
+  * pci_iov_bus_range - find bus range used by Virtual Function
+  * @bus: the PCI bus
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f4f8ee5a7362..17a08554baa2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1965,6 +1965,7 @@ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+ int pci_sriov_get_totalvfs(struct pci_dev *dev);
+ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno);
++void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe);
+ #else
+ static inline int pci_iov_virtfn_bus(struct pci_dev *dev, int id)
+ {
+@@ -1992,6 +1993,7 @@ static inline int pci_sriov_get_totalvfs(struct pci_dev *dev)
+ { return 0; }
+ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ { return 0; }
++static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
+ #endif
+ 
+ #if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
 -- 
-2.11.0
+2.13.6 (Apple Git-96)
