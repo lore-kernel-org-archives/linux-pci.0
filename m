@@ -1,74 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 04/17] PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
-Date: Fri,  3 Nov 2017 14:47:08 +0100
-Message-Id: <20171103134722.5532-5-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751133AbdKIUrV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 15:47:21 -0500
+From: Pawandeep Oza <poza@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Oza Pawandeep <poza@codeaurora.org>
+Subject: [PATCH 3/4] PCI/portdrv: Implement interface to query the registered service
+Date: Fri, 10 Nov 2017 02:16:38 +0530
+Message-Id: <1510260399-14886-4-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1510260399-14886-1-git-send-email-poza@codeaurora.org>
+References: <1510260399-14886-1-git-send-email-poza@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain SoCs need to map the MSI address in raise_irq.
-To map an address, you first need to call pci_epc_mem_alloc_addr(),
-however, pci_epc_mem_alloc_addr() calls ioremap() (which can sleep).
+From: Oza Pawandeep <poza@codeaurora.org>
 
-Since raise_irq is only called from atomic context, we can't call
-pci_epc_mem_alloc_addr() from raise_irq.
+This patch implements query service interface. So that, any port service
+driver can query to know, if the service is active or not.
 
-Pre-allocate a page in dw_pcie_ep_init(), so that this page can later
-be used to map/unmap the MSI address in raise_irq.
+When multiple service drivers try to take actions, these service drivers
+could race or could have conflict of interest.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-designware-ep.c | 10 ++++++++++
- drivers/pci/dwc/pcie-designware.h    |  2 ++
- 2 files changed, 12 insertions(+)
+For e.g. when DPC is enabled, AER should not attempt recovery.
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 3fb34be99715..2684090b782b 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -286,6 +286,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- 	struct pci_epc *epc = ep->epc;
- 
-+	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
-+			      ep->page_size);
-+
- 	pci_epc_mem_exit(epc);
+The interface walks up the parent till root bridge, and if any of the
+downstream port has DPC service active, it stops there, since DPC will be
+removing all the devices beneath.
+
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 6bfe986..63fa57a 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -490,6 +490,30 @@ static int pcie_port_remove_service(struct device *dev)
  }
  
-@@ -341,6 +344,13 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		return ret;
- 	}
- 
-+	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
-+					     ep->page_size);
-+	if (!ep->msi_mem) {
-+		dev_err(dev, "Failed to reserve memory for MSI\n");
-+		return -ENOMEM;
-+	}
+ /**
++ * pcie_port_service_query - query if particula port service is enabled.
++ * dev: pcie device
++ * @port service: PCI express port service
++ */
++int pcie_port_query_service(struct pci_dev *dev, u32 port_service)
++{
++	struct pcie_device *pdev;
++	struct pci_dev *parent, *this = dev;
 +
- 	ep->epc = epc;
- 	epc_set_drvdata(epc, ep);
- 	dw_pcie_setup(pci);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 9aaf0cd04dd6..5a1da459eda5 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -198,6 +198,8 @@ struct dw_pcie_ep {
- 	unsigned long		ob_window_map;
- 	u32			num_ib_windows;
- 	u32			num_ob_windows;
-+	void __iomem		*msi_mem;
-+	phys_addr_t		msi_mem_phys;
- };
++	do {
++		list_for_each_entry(pdev, &this->service_list, slist) {
++			if (pdev->service == port_service)
++				return 1;
++		}
++		parent = pci_upstream_bridge(this);
++		this = parent;
++	} while (parent && pci_is_pcie(parent));
++
++	return 0;
++}
++EXPORT_SYMBOL(pcie_port_query_service);
++
++
++/**
+  * pcie_port_shutdown_service - shut down given PCI Express port service
+  * @dev: PCI Express port service device to handle
+  *
+diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
+index 9d05621..bb8febb 100644
+--- a/include/linux/pcieport_if.h
++++ b/include/linux/pcieport_if.h
+@@ -68,5 +68,5 @@ struct pcie_port_service_driver {
  
- struct dw_pcie_ops {
+ int pcie_port_service_register(struct pcie_port_service_driver *new);
+ void pcie_port_service_unregister(struct pcie_port_service_driver *new);
+-
++int pcie_port_query_service(struct pci_dev *dev, u32 port_service);
+ #endif /* _PCIEPORT_IF_H_ */
 -- 
-2.14.2
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
