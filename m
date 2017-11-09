@@ -1,48 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:35143 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbdKQJnA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Nov 2017 04:43:00 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: endpoint: use ffz() instead of find_first_zero_bit()
-Date: Fri, 17 Nov 2017 10:42:48 +0100
-Message-Id: <20171117094248.15265-1-niklas.cassel@axis.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33591 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750871AbdKIKZL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 05:25:11 -0500
+Received: by mail-wm0-f66.google.com with SMTP id r68so1635981wmr.0
+        for <linux-pci@vger.kernel.org>; Thu, 09 Nov 2017 02:25:10 -0800 (PST)
+MIME-Version: 1.0
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Thu, 9 Nov 2017 15:55:09 +0530
+Message-ID: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
+Subject: [PATCH 1/2] PCI: Mobiveil: export irq_set_msi_desc symbol
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Peter W Newton <peter.newton@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Raj Raina <rajesh.raina@nxp.com>,
+        Rajan Kapoor <rajan.kapoor@nxp.com>,
+        Prabhjot Singh <prabhjot.singh@nxp.com>, tglx@linutronix.de
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-find_first_zero_bit()'s parameter 'size' is defined in bits,
-not in bytes.
+>From e38b741006856f3a3623109dd5ddf5f99326ce61 Mon Sep 17 00:00:00 2001
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Thu, 9 Nov 2017 04:25:21 -0500
+Subject: [PATCH 1/2] PCI: Mobiveil: export irq_set_msi_desc symbol
 
-Calling find_first_zero_bit() with the wrong size unit
-will lead to insidious bugs.
+This patch exports irq_set_msi_desc symbol which is used by
+few PCIe root port drivers.
+Tested against kernel : 4.9.0-xilinx-v2017.2.
 
-Fix this by using replacing find_first_zero_bit() with ffz(),
-since ffz() only works on a single 'unsigned long' and therefore
-does not need a size argument.
+Cc: bhelgaas@google.com
+Cc: tglx@linutronix.de
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 ---
- drivers/pci/endpoint/pci-ep-cfs.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ kernel/irq/chip.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 4f74386c1ced..96b984685640 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -108,8 +108,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
- 	if (ret)
- 		goto err_add_epf;
- 
--	func_no = find_first_zero_bit(&epc_group->function_num_map,
--				      sizeof(epc_group->function_num_map));
-+	func_no = ffz(epc_group->function_num_map);
- 	set_bit(func_no, &epc_group->function_num_map);
- 	epf->func_no = func_no;
- 
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index be3c34e..c4222c4 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -137,6 +137,7 @@ int irq_set_msi_desc(unsigned int irq, struct
+msi_desc *entry)
+  return irq_set_msi_desc_off(irq, 0, entry);
+ }
+
++EXPORT_SYMBOL(irq_set_msi_desc);
+ /**
+  * irq_set_chip_data - set irq chip data for an irq
+  * @irq: Interrupt number
 -- 
-2.14.2
+1.8.3.1
