@@ -1,112 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:54118 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751623AbdKCJ5O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 05:57:14 -0400
-Subject: Re: [PATCH v3 14/17] PCI: dwc: artpec6: Add support for endpoint mode
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com>
- <20171031223936.27549-15-niklas.cassel@axis.com>
- <CAK8P3a1yGwyZPzd2-usqLe=BiQpdFsyyFOhpP1ZyaCb16rzCSQ@mail.gmail.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <5a8c7aaf-552c-7170-2a36-13b50168a9cc@axis.com>
-Date: Fri, 3 Nov 2017 10:56:55 +0100
+Return-Path: <SRS0=CU1K=CH=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=CU1K=CH=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 9 Nov 2017 10:12:55 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
+ drivers
+Message-ID: <20171109101255.GA18856@red-moon>
+References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
+ <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a1yGwyZPzd2-usqLe=BiQpdFsyyFOhpP1ZyaCb16rzCSQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/02/2017 10:13 AM, Arnd Bergmann wrote:
-> On Tue, Oct 31, 2017 at 11:39 PM, Niklas Cassel <niklas.cassel@axis.com> wrote:
->> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+On Thu, Nov 09, 2017 at 11:28:36AM +0530, Kishon Vijay Abraham I wrote:
+> Hi Bjorn,
 > 
-> It seems like you are missing a changelog text. Please explain what
-> your work is good for
-> in any patch you send.
+> On Thursday 09 November 2017 01:56 AM, Bjorn Helgaas wrote:
+> > On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
+> >> From: Bjorn Helgaas <bhelgaas@google.com>
+> >>
+> >> Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+> >> the endpoint driver framework.
+> >>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > This is on my for-linus branch, and I intend to merge it for v4.14.
+> 
+> There is already an entry for PCI endpoint in MAINTAINERS file. Can Lorenzo be
+> added there?
 
-You are correct, this patch is missing a changelog text.
-I will send a V4 of the patch series for this.
+That would work for me, just let me know what's best for you both.
 
-> 
->> V3:
->> * Removed ifdefs around match table and match table data.
->> * Removed ifdefs in probe, use dummy implementations instead.
-> 
-> I think there is room for more of the same ;-)
-> 
->>
->> +#ifdef CONFIG_PCIE_ARTPEC6_HOST
->>  static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
->>  {
->>         struct dw_pcie *pci = artpec6_pcie->pci;
->> @@ -231,11 +257,92 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
->>
->>         return 0;
->>  }
->> +#else
->> +static inline int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
->> +                                       struct platform_device *pdev)
->> +{
->> +       return -ENODEV;
->> +}
->> +#endif
-> 
-> 
-> Can you try replacing the #ifdef with
-> 
-> 
->         if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_HOST))
->                  return -ENODEV;
-> 
-> at the start of artpec6_pcie_enable_interrupts? I think that would improve
-> readability here.
-> 
+Thanks,
+Lorenzo
 
-artpec6_pcie_enable_interrupts is a void function, so
-I guess that you meant at the start of artpec6_add_pcie_port.
-That would not really help since artpec6_add_pcie_port
-calls artpec6_pcie_msi_handler, and uses artpec6_pcie_host_ops,
-which is still inside the CONFIG_PCIE_ARTPEC6_HOST ifdef block.
-
-Please note that there are several functions, as well as
-artpec6_pcie_host_ops inside the 
-CONFIG_PCIE_ARTPEC6_HOST ifdef block.
-
-The reason for this is because Bjorn was surprised that
-this driver at V1 didn't have any ifdefs, even though
-it supports two different modes: HOST and EP.
-I suspected that his reasoning was that if you compile
-the driver with only one of the modes, it is wasteful
-to compile and include the functions that belong to the
-mode that we are not using in the vmlinux.
-
->> +static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
->> +                              struct platform_device *pdev)
->> +{
->> +       int ret;
->> +       struct dw_pcie_ep *ep;
->> +       struct resource *res;
->> +       struct device *dev = &pdev->dev;
->> +       struct dw_pcie *pci = artpec6_pcie->pci;
+> PCI ENDPOINT SUBSYSTEM
+> M:      Kishon Vijay Abraham I <kishon@ti.com>
+> L:      linux-pci@vger.kernel.org
+> T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
+> S:      Supported
+> F:      drivers/pci/endpoint/
+> F:      drivers/misc/pci_endpoint_test.c
+> F:      tools/pci/
 > 
-> The same trick should work here with the other symbol.
-
-While artpec6_add_pcie_ep doesn't call any other
-function in this file, it does use pcie_ep_ops,
-which does reference other functions in this file
-(which are inside the ifdef block).
-
-
-Regards,
-Niklas
+> Thanks
+> Kishon
+> > 
+> >> ---
+> >>  MAINTAINERS |   10 ++++++++++
+> >>  1 file changed, 10 insertions(+)
+> >>
+> >> diff --git a/MAINTAINERS b/MAINTAINERS
+> >> index db412a627d96..a1f9653234cc 100644
+> >> --- a/MAINTAINERS
+> >> +++ b/MAINTAINERS
+> >> @@ -10429,6 +10429,16 @@ F:	include/linux/pci*
+> >>  F:	arch/x86/pci/
+> >>  F:	arch/x86/kernel/quirks.c
+> >>  
+> >> +PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
+> >> +M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >> +L:	linux-pci@vger.kernel.org
+> >> +Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
+> >> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
+> >> +S:	Supported
+> >> +F:	drivers/pci/host/
+> >> +F:	drivers/pci/dwc/
+> >> +F:	drivers/pci/endpoint
+> >> +
+> >>  PCIE DRIVER FOR AXIS ARTPEC
+> >>  M:	Niklas Cassel <niklas.cassel@axis.com>
+> >>  M:	Jesper Nilsson <jesper.nilsson@axis.com>
+> >>
