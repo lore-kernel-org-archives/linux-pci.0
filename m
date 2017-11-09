@@ -1,65 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12153 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751476AbdKVHw3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 22 Nov 2017 02:52:29 -0500
-Message-ID: <1511337146.4512.6.camel@linux.intel.com>
-Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
-From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        timur@codeaurora.org
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>
-Date: Wed, 22 Nov 2017 09:52:26 +0200
-In-Reply-To: <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-         <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
+Received: from mail-wr0-f170.google.com ([209.85.128.170]:46299 "EHLO
+        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751018AbdKIFMI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 00:12:08 -0500
+Received: by mail-wr0-f170.google.com with SMTP id y42so4459183wrd.3
+        for <linux-pci@vger.kernel.org>; Wed, 08 Nov 2017 21:12:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20171108172424.GA19449@infradead.org>
+References: <CAFZiPx1sgxr8X9mtW11fK1XMPuk+4jUFb5Cc-pVJn06ZztHwng@mail.gmail.com>
+ <20171108172424.GA19449@infradead.org>
+From: subrahmanya l <l.subrahmanya@mobiveil.co.in>
+Date: Thu, 9 Nov 2017 10:42:06 +0530
+Message-ID: <CAFZiPx0wbm=hA0qXMjJihOaeRHhKzgZdSLTwTZdGZ2aoMM-3Rw@mail.gmail.com>
+Subject: Re: [Patch] export irq_set_msi_desc
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
+        jason@lakedaemon.net, marc.zyngier@arm.com
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dropping the extra mailing lists and Dave, this is a rather trivial thing.
+Christoph,
 
-On Wed, 2017-11-22 at 00:30 -0500, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-> extract the domain number. Other places, use the actual domain number from
-> the device.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Xilinx MSI driver uses it.
 
-<SNIP>
+file path: https://github.com/Xilinx/linux-xlnx/blob/master/drivers/pci/host/pcie-xilinx.c#L286
 
-> +++ b/drivers/gpu/drm/i915/i915_drv.c
-> @@ -419,7 +419,9 @@ static int i915_getparam(struct drm_device *dev, void *data,
->  
->  static int i915_get_bridge_dev(struct drm_i915_private *dev_priv)
->  {
-> -	dev_priv->bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-> +	uint16_t devfn = PCI_DEVFN(0, 0)
+I used the same driver as reference to write another Rootport driver
+which needs it too.
 
-The would have to be "unsigned int" according to the function
-signature.
+Thanks,
+~subbu
 
-> +
-> +	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0, devfn);
+On Wed, Nov 8, 2017 at 10:54 PM, Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Wed, Nov 08, 2017 at 09:54:09PM +0530, subrahmanya l wrote:
+> > Few of the PCIe driver compilation fails with undefined symbol
+> > "irq_set_msi_desc".
+> > This patch is to export it.
+>
+> Which ones?  Also please add an explanation of why you thing it should
+> be exported and Cc the irq code maintainers.
 
-But the most straightforward change is to simply convert to:
-
-	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0,
-							   PCI_DEVFN(0, 0));
-
-Can you please resend like that.
-
-Looks like this is a part of abigger series, so others may prefer
-latter form too, to avoid the variable.
-
-Regards, Joonas
 -- 
-Joonas Lahtinen
-Open Source Technology Center
-Intel Corporation
+Mobiveil INC., CONFIDENTIALITY NOTICE: This e-mail message, including any 
+attachments, is for the sole use of the intended recipient(s) and may 
+contain proprietary confidential or privileged information or otherwise be 
+protected by law. Any unauthorized review, use, disclosure or distribution 
+is prohibited. If you are not the intended recipient, please notify the 
+sender and destroy all copies and the original message.
