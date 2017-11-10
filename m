@@ -1,44 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:18711 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750748AbdKYHh5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 02:37:57 -0500
-Date: Fri, 24 Nov 2017 23:37:51 -0800
-From: Neo Jia <cjia@nvidia.com>
-To: Christoph Hellwig <hch@infradead.org>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
-        Kirti Wankhede <kwankhede@nvidia.com>
-Subject: Re: [PATCH 1/1] Change pci_enable_sriov, pci_disable_sriov and
- pci_reset_function to non-GPL symbol.
-Message-ID: <20171125073751.GA28668@nvidia.com>
-References: <1510773058-1482-1-git-send-email-cjia@nvidia.com>
- <20171117145504.GA31760@infradead.org>
- <20171122230335.GA1228@nvidia.com>
- <20171123132300.GA10736@infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bao Xiaowei <xiaowei.bao@nxp.com>
+To: <robh+dt@kernel.org>, <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <bhelgaas@google.com>, <shawnguo@kernel.org>,
+ <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
+ <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>, <leoyang.li@nxp.com>,
+ <kishon@ti.com>, <jingoohan1@gmail.com>, <pbrobinson@gmail.com>,
+ <songxiaowei@hisilicon.com>, <devicetree@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+ <Zhiqiang.Hou@nxp.com>, <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
+Subject: [PATCHv3 1/3] ARMv8: dts: ls1046a: add the property of IB and OB
+Date: Fri, 10 Nov 2017 10:49:24 +0800
+Message-ID: <20171110024926.39700-2-xiaowei.bao@nxp.com>
+In-Reply-To: <20171110024926.39700-1-xiaowei.bao@nxp.com>
+References: <20171110024926.39700-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bao Xiaowei <xiaowei.bao@nxp.com>
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20171123132300.GA10736@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 23, 2017 at 05:23:00AM -0800, Christoph Hellwig wrote:
-> > Just to be clear, here the request is to allow proprietary driver continue
-> > supporting Linux OS when adopting SR-IOV - a PCIE virtualization technology
-> > standardized by PCI SIG.
-> 
-> And the anser in the previous mail was pretty clear: no.  And while
-> we're at it go talk to your lawyers again that you don't have a derived
-> work, because I suspect you do with such intimate entangling.
+Add the property of inbound and outbound windows number for ep
+driver.
 
-Hi Christoph,
+Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
+Acked-by: Minghuan Lian <minghuan.Lian@nxp.com>
+---
+ v2:
+ - no change
+ v3:
+ - modify the commit message
 
-Right now, Linux kernel is providing PCI kernel interfaces to support
-proprietary PCI driver when it follows the standard from PCI SIG spec. 
+ arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-So here we are just following the precedence of such to enable a SR-IOV capable
-device. I treat this no difference to the scenario when a proprietary PCI driver
-is used to only support MSI (pci_enable_msi) and later add MSI-X support
-(pci_enable_msix_range).
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
+index 06b5e12d04d8..f8332669663c 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
+@@ -674,6 +674,8 @@
+ 			device_type = "pci";
+ 			dma-coherent;
+ 			num-lanes = <4>;
++			num-ib-windows = <6>;
++			num-ob-windows = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+@@ -699,6 +701,8 @@
+ 			device_type = "pci";
+ 			dma-coherent;
+ 			num-lanes = <2>;
++			num-ib-windows = <6>;
++			num-ob-windows = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			ranges = <0x81000000 0x0 0x00000000 0x48 0x00010000 0x0 0x00010000   /* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+@@ -724,6 +728,8 @@
+ 			device_type = "pci";
+ 			dma-coherent;
+ 			num-lanes = <2>;
++			num-ib-windows = <6>;
++			num-ob-windows = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			ranges = <0x81000000 0x0 0x00000000 0x50 0x00010000 0x0 0x00010000   /* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x50 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+-- 
+2.14.1
 
-Thanks,
-Neo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
