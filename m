@@ -1,84 +1,209 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFCv2 PATCH 10/36] vfio: Add support for Shared Virtual Memory
-To: Bob Liu <liubo95@huawei.com>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-11-jean-philippe.brucker@arm.com>
- <419afe22-816d-263f-9c85-1a9e28c723b7@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <f297c4a8-559f-bf23-d5c2-219763bba289@arm.com>
-Date: Fri, 24 Nov 2017 10:58:32 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bao Xiaowei <xiaowei.bao@nxp.com>
+To: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <bhelgaas@google.com>, <shawnguo@kernel.org>,
+        <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
+        <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>,
+        <leoyang.li@nxp.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <pbrobinson@gmail.com>, <songxiaowei@hisilicon.com>,
+        <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <Zhiqiang.Hou@nxp.com>,
+        <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
+CC: Bao Xiaowei <xiaowei.bao@nxp.com>
+Subject: [PATCHv3 2/3] ARMv8: layerscape: add the pcie ep function support
+Date: Fri, 10 Nov 2017 10:49:25 +0800
+Message-ID: <20171110024926.39700-3-xiaowei.bao@nxp.com>
+In-Reply-To: <20171110024926.39700-1-xiaowei.bao@nxp.com>
+References: <20171110024926.39700-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <419afe22-816d-263f-9c85-1a9e28c723b7@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24/11/17 08:23, Bob Liu wrote:
-> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
->> Add two new ioctl for VFIO containers. VFIO_DEVICE_BIND_PROCESS creates a
->> bond between a container and a process address space, identified by a
->> device-specific ID named PASID. This allows the device to target DMA
->> transactions at the process virtual addresses without a need for mapping
->> and unmapping buffers explicitly in the IOMMU. The process page tables are
->> shared with the IOMMU, and mechanisms such as PCI ATS/PRI may be used to
->> handle faults. VFIO_DEVICE_UNBIND_PROCESS removed a bond identified by a
->> PASID.
->> 
-> 
-> How about hide bind/unbind into ioctl(VFIO_SET_IOMMU)?
-> e.g always bind to current process in SET_IOMMU.
-> 
-> Not sure about the real use case.
+Add the pcie controller ep function support of layerscape base on
+pcie ep framework.
 
-I guess you could introduce a new VFIO IOMMU type for this. I think this
-would be useful for SVA without PASID: if the device supports I/O page
-faults, use SET_IOMMU with a VFIO_SVA_IOMMU type (for example) and the
-process is bound automatically to the default translation context of the
-device. This requires a new IOMMU type because the MAP/UNMAP ioctl won't
-work anymore.
+Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
+---
+  v2:
+  - fix the ioremap function used but no ioumap issue
+  - optimize the code structure
+  - add code comments
+  v3:
+  - fix the msi outband window request failed issue
 
-I'm not keen on introducing loads of new features in the APIs at the
-moment, because I only have the IOMMU point of view, not many endpoint users.
+ drivers/pci/dwc/pci-layerscape.c | 124 +++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 118 insertions(+), 6 deletions(-)
 
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 87fa486bee2c..d787375528eb 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -34,7 +34,12 @@
+ /* PEX Internal Configuration Registers */
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+ 
++#define PCIE_DBI2_BASE		0x1000	/* DBI2 base address*/
++#define PCIE_MSI_MSG_DATA_OFF	0x5c	/* MSI Data register address*/
++#define PCIE_MSI_OB_SIZE	4096
++#define PCIE_MSI_ADDR_OFFSET	(1024 * 1024)
+ #define PCIE_IATU_NUM		6
++#define PCIE_EP_ADDR_SPACE_SIZE 0x100000000
+ 
+ struct ls_pcie_drvdata {
+ 	u32 lut_offset;
+@@ -44,12 +49,20 @@ struct ls_pcie_drvdata {
+ 	const struct dw_pcie_ops *dw_pcie_ops;
+ };
+ 
++struct ls_pcie_ep {
++	dma_addr_t msi_phys_addr;
++	void __iomem *msi_virt_addr;
++	u64 msi_msg_addr;
++	u16 msi_msg_data;
++};
++
+ struct ls_pcie {
+ 	struct dw_pcie *pci;
+ 	void __iomem *lut;
+ 	struct regmap *scfg;
+ 	const struct ls_pcie_drvdata *drvdata;
+ 	int index;
++	struct ls_pcie_ep *pcie_ep;
+ };
+ 
+ #define to_ls_pcie(x)	dev_get_drvdata((x)->dev)
+@@ -263,6 +276,100 @@ static const struct of_device_id ls_pcie_of_match[] = {
+ 	{ },
+ };
+ 
++static void ls_pcie_raise_msi_irq(struct ls_pcie_ep *pcie_ep)
++{
++	iowrite32(pcie_ep->msi_msg_data, pcie_ep->msi_virt_addr);
++}
++
++static int ls_pcie_raise_irq(struct dw_pcie_ep *ep,
++		enum pci_epc_irq_type type, u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct ls_pcie *pcie = to_ls_pcie(pci);
++	struct ls_pcie_ep *pcie_ep = pcie->pcie_ep;
++	u32 free_win;
++
++	/* get the msi message address and msi message data */
++	pcie_ep->msi_msg_addr = ioread32(pci->dbi_base + MSI_MESSAGE_ADDR_L32) |
++		(((u64)ioread32(pci->dbi_base + MSI_MESSAGE_ADDR_U32)) << 32);
++	pcie_ep->msi_msg_data = ioread16(pci->dbi_base + PCIE_MSI_MSG_DATA_OFF);
++
++	/* request and config the outband window for msi */
++	free_win = find_first_zero_bit(&ep->ob_window_map,
++					sizeof(ep->ob_window_map));
++	if (free_win >= ep->num_ob_windows) {
++		dev_err(pci->dev, "no free outbound window\n");
++		return -ENOMEM;
++	}
++
++	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
++					pcie_ep->msi_phys_addr,
++					pcie_ep->msi_msg_addr,
++					PCIE_MSI_OB_SIZE);
++
++	set_bit(free_win, &ep->ob_window_map);
++
++	/* generate the msi interrupt */
++	ls_pcie_raise_msi_irq(pcie_ep);
++
++	/* release the outband window of msi */
++	dw_pcie_disable_atu(pci, free_win, DW_PCIE_REGION_OUTBOUND);
++	clear_bit(free_win, &ep->ob_window_map);
++
++	return 0;
++}
++
++static struct dw_pcie_ep_ops pcie_ep_ops = {
++	.raise_irq = ls_pcie_raise_irq,
++};
++
++static int __init ls_add_pcie_ep(struct ls_pcie *pcie,
++					struct platform_device *pdev)
++{
++	struct dw_pcie *pci = pcie->pci;
++	struct device *dev = pci->dev;
++	struct dw_pcie_ep *ep;
++	struct ls_pcie_ep *pcie_ep;
++	struct resource *cfg_res;
++	int ret;
++
++	ep = &pci->ep;
++	ep->ops = &pcie_ep_ops;
++
++	pcie_ep = devm_kzalloc(dev, sizeof(*pcie_ep), GFP_KERNEL);
++	if (!pcie_ep)
++		return -ENOMEM;
++
++	pcie->pcie_ep = pcie_ep;
++
++	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
++	if (cfg_res) {
++		ep->phys_base = cfg_res->start;
++		ep->addr_size = PCIE_EP_ADDR_SPACE_SIZE;
++	} else {
++		dev_err(dev, "missing *config* space\n");
++		return -ENODEV;
++	}
++
++	pcie_ep->msi_phys_addr = ep->phys_base + PCIE_MSI_ADDR_OFFSET;
++
++	pcie_ep->msi_virt_addr = ioremap(pcie_ep->msi_phys_addr,
++						PCIE_MSI_OB_SIZE);
++	if (!pcie_ep->msi_virt_addr) {
++		dev_err(dev, "failed to map MSI outbound region\n");
++		return -ENOMEM;
++	}
++
++	ret = dw_pcie_ep_init(ep);
++	if (ret) {
++		dev_err(dev, "failed to initialize endpoint\n");
++		return ret;
++	}
++
++	return 0;
++
++}
++
+ static int __init ls_add_pcie_port(struct ls_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+@@ -309,16 +416,21 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 	if (IS_ERR(pci->dbi_base))
+ 		return PTR_ERR(pci->dbi_base);
+ 
+-	pcie->lut = pci->dbi_base + pcie->drvdata->lut_offset;
++	pci->dbi_base2 = pci->dbi_base + PCIE_DBI2_BASE;
+ 
+-	if (!ls_pcie_is_bridge(pcie))
+-		return -ENODEV;
++	pcie->lut = pci->dbi_base + pcie->drvdata->lut_offset;
+ 
+ 	platform_set_drvdata(pdev, pcie);
+ 
+-	ret = ls_add_pcie_port(pcie);
+-	if (ret < 0)
+-		return ret;
++	if (!ls_pcie_is_bridge(pcie)) {
++		ret = ls_add_pcie_ep(pcie, pdev);
++		if (ret < 0)
++			return ret;
++	} else {
++		ret = ls_add_pcie_port(pcie);
++		if (ret < 0)
++			return ret;
++	}
+ 
+ 	return 0;
+ }
+-- 
+2.14.1
