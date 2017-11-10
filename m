@@ -1,51 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:45369 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755252AbdKJA35 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 19:29:57 -0500
-Received: by mail-wm0-f42.google.com with SMTP id y80so20519643wmd.0
-        for <linux-pci@vger.kernel.org>; Thu, 09 Nov 2017 16:29:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1711091427050.1839@nanos>
-References: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
- <697da40c-7cdd-3d05-5846-37eae31bb729@mobiveil.co.in> <alpine.DEB.2.20.1711091427050.1839@nanos>
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Fri, 10 Nov 2017 05:59:56 +0530
-Message-ID: <CAFZiPx1pJ4WyDkP2dT8eQvZRukTbZA9H+kTD506e19s0SU8rtQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Peter W Newton <peter.newton@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Raj Raina <rajesh.raina@nxp.com>,
-        Rajan Kapoor <rajan.kapoor@nxp.com>,
-        Prabhjot Singh <prabhjot.singh@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mga02.intel.com ([134.134.136.20]:2696 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753054AbdKJRxE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Nov 2017 12:53:04 -0500
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 1/2] powerpc/pci: convert to use for_each_pci_bridge() helper
+Date: Fri, 10 Nov 2017 19:52:29 +0200
+Message-Id: <20171110175230.82522-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-tglx,
+...which makes code slightly cleaner.
 
+Requires: d43f59ce6c50 ("PCI: Add for_each_pci_bridge() helper")
+Acked-by: Michael Ellerman <mpe@ellerman.id.au>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/powerpc/kernel/pci-hotplug.c | 7 ++-----
+ arch/powerpc/kernel/pci_of_scan.c | 7 ++-----
+ 2 files changed, 4 insertions(+), 10 deletions(-)
 
-On Thu, Nov 9, 2017 at 6:57 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> On Thu, 9 Nov 2017, subrahmanya_lingappa wrote:
->
->> From e38b741006856f3a3623109dd5ddf5f99326ce61 Mon Sep 17 00:00:00 2001
->> From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
->> Date: Thu, 9 Nov 2017 04:25:21 -0500
->> Subject: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
->>
->> This patch exports irq_set_msi_desc symbol which is used by
->> few PCIe root port drivers.
->
-> And which one of those is modular?
->
-
-I think this one is, as I see at least 25 other files using it, albeit
-SoC devices.
-Hope I got the question right.
-
-> Thanks,
->
->         tglx
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 2d71269e7dc1..741f47295188 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -134,11 +134,8 @@ void pci_hp_add_devices(struct pci_bus *bus)
+ 		pcibios_setup_bus_devices(bus);
+ 		max = bus->busn_res.start;
+ 		for (pass = 0; pass < 2; pass++) {
+-			list_for_each_entry(dev, &bus->devices, bus_list) {
+-				if (pci_is_bridge(dev))
+-					max = pci_scan_bridge(bus, dev,
+-							      max, pass);
+-			}
++			for_each_pci_bridge(dev, bus)
++				max = pci_scan_bridge(bus, dev, max, pass);
+ 		}
+ 	}
+ 	pcibios_finish_adding_to_bus(bus);
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 0d790f8432d2..8bdaa2a6fa62 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -369,11 +369,8 @@ static void __of_scan_bus(struct device_node *node, struct pci_bus *bus,
+ 	pcibios_setup_bus_devices(bus);
+ 
+ 	/* Now scan child busses */
+-	list_for_each_entry(dev, &bus->devices, bus_list) {
+-		if (pci_is_bridge(dev)) {
+-			of_scan_pci_bridge(dev);
+-		}
+-	}
++	for_each_pci_bridge(dev, bus)
++		of_scan_pci_bridge(dev);
+ }
+ 
+ /**
+-- 
+2.14.2
