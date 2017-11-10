@@ -1,64 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:39611 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751151AbdKTNd1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:33:27 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 09/18] PCI: dwc: dra7xx: Help compiler to remove unused code
-Date: Mon, 20 Nov 2017 14:32:12 +0100
-Message-Id: <20171120133222.27771-10-niklas.cassel@axis.com>
-In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=D/SX=CI=ti.com=j-keerthy@kernel.org>
+Return-Path: <SRS0=D/SX=CI=ti.com=j-keerthy@kernel.org>
+From: Keerthy <j-keerthy@ti.com>
+To: <helgaas@kernel.org>
+CC: <j-keerthy@ti.com>, <nks.gnu@gmail.com>, <kishon@ti.com>,
+        <t-kristo@ti.com>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH v5] pci: dwc: dra7xx: Add shutdown handler to cleanly turn off clocks
+Date: Fri, 10 Nov 2017 13:57:12 +0530
+Message-ID: <1510302432-1556-1-git-send-email-j-keerthy@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-The dra7xx driver supports both host and ep mode.
-When enabling support for only one of the modes, help the compiler
-to remove code for the mode that we have not enabled in the driver.
+Add shutdown handler to cleanly turn off clocks. This will help
+in cases of kexec where in a new kernel can boot abruptly.
 
-By adding if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) return -ENODEV;
-anything after that statement will get silently dropped by the compiler,
-including static functions and structures that are referenced indirectly
-from there.
-
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Keerthy <j-keerthy@ti.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/dwc/pci-dra7xx.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+
+Changes in v5:
+
+  * Declared the dra7xx_pcie_shutdown function static
+
+Changes in v4:
+
+  * Added the missing changes from v2!
+
+Changes in v3:
+
+  * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
+  * Added more details to commit log.
+
+Changes in v2:
+
+  * used a local dev pointer instead of dereferencing dev at multiple places.
+  * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
+
+ drivers/pci/dwc/pci-dra7xx.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
 diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 07c74ae3614e..224ff8affdce 100644
+index 34427a6..d084800 100644
 --- a/drivers/pci/dwc/pci-dra7xx.c
 +++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -694,6 +694,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+@@ -794,6 +794,22 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+ }
+ #endif
  
- 	switch (mode) {
- 	case DW_PCIE_RC_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
-+			ret = -ENODEV;
-+			goto err_gpio;
-+		}
++static void dra7xx_pcie_shutdown(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	int ret;
 +
- 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
- 				   DEVICE_TYPE_RC);
- 		ret = dra7xx_add_pcie_port(dra7xx, pdev);
-@@ -701,6 +706,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 			goto err_gpio;
- 		break;
- 	case DW_PCIE_EP_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_EP)) {
-+			ret = -ENODEV;
-+			goto err_gpio;
-+		}
++	dra7xx_pcie_stop_link(dra7xx->pci);
 +
- 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
- 				   DEVICE_TYPE_EP);
- 
++	ret = pm_runtime_put_sync(dev);
++	if (ret < 0)
++		dev_dbg(dev, "pm_runtime_put_sync failed\n");
++
++	pm_runtime_disable(dev);
++	dra7xx_pcie_disable_phy(dra7xx);
++}
++
+ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
+ 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
+@@ -807,5 +823,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+ 		.suppress_bind_attrs = true,
+ 		.pm	= &dra7xx_pcie_pm_ops,
+ 	},
++	.shutdown = dra7xx_pcie_shutdown,
+ };
+ builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
 -- 
-2.14.2
+1.9.1
