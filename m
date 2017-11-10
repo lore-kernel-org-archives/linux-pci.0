@@ -1,69 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40306 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752982AbdK0SuE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 13:50:04 -0500
-Subject: Re: [PATCH V3 09/29] drm/i915: deprecate pci_get_bus_and_slot()
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        dri-devel@lists.freedesktop.org
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
- <1511801886-6753-10-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <bd6c6365-c265-30f4-029b-3e19af3078f2@codeaurora.org>
-Date: Mon, 27 Nov 2017 13:50:01 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bao Xiaowei <xiaowei.bao@nxp.com>
+To: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <bhelgaas@google.com>, <shawnguo@kernel.org>,
+        <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
+        <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>,
+        <leoyang.li@nxp.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <pbrobinson@gmail.com>, <songxiaowei@hisilicon.com>,
+        <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <Zhiqiang.Hou@nxp.com>,
+        <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
+CC: Bao Xiaowei <xiaowei.bao@nxp.com>
+Subject: [PATCHv4 3/3] ARMv8: pcie: make the DWC EP driver support for layerscape
+Date: Fri, 10 Nov 2017 11:48:47 +0800
+Message-ID: <20171110034847.17891-4-xiaowei.bao@nxp.com>
+In-Reply-To: <20171110034847.17891-1-xiaowei.bao@nxp.com>
+References: <20171110034847.17891-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <1511801886-6753-10-git-send-email-okaya@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+dri-devel@lists.freedesktop.org
+Layerscape pcie controllers support RC or EP mode, Add the EP mode
+support in Kconfig, the driver will support both RC and EP mode, and
+the driver is able to judge the pcie controllers work on RC or EP mode.
 
-On 11/27/2017 11:57 AM, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> pci_get_domain_bus_and_slot().
-> 
-> Extract the domain number from drm_device and pass it into
-> pci_get_domain_bus_and_slot() function.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/gpu/drm/i915/i915_drv.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-> index 9f45cfe..5a8cb79 100644
-> --- a/drivers/gpu/drm/i915/i915_drv.c
-> +++ b/drivers/gpu/drm/i915/i915_drv.c
-> @@ -419,7 +419,10 @@ static int i915_getparam(struct drm_device *dev, void *data,
->  
->  static int i915_get_bridge_dev(struct drm_i915_private *dev_priv)
->  {
-> -	dev_priv->bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-> +	int domain = pci_domain_nr(dev_priv->drm.pdev->bus);
-> +
-> +	dev_priv->bridge_dev =
-> +		pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 0));
->  	if (!dev_priv->bridge_dev) {
->  		DRM_ERROR("bridge device not found\n");
->  		return -1;
-> 
+Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
+Acked-by: Minghuan Lian <minghuan.Lian@nxp.com>
+---
+ v2:
+ no change
+ v3:
+ no change
+ v4:
+ no change
 
+ drivers/pci/dwc/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 22ec82fcdea2..b5f507795779 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -108,6 +108,7 @@ config PCI_LAYERSCAPE
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+ 	select PCIE_DW_HOST
++	select PCIE_DW_EP
+ 	help
+ 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.14.1
