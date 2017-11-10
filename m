@@ -1,73 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:48825 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754051AbdKNJr7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2017 04:47:59 -0500
-Received: by mail-lf0-f65.google.com with SMTP id r135so21540408lfe.5
-        for <linux-pci@vger.kernel.org>; Tue, 14 Nov 2017 01:47:58 -0800 (PST)
-Subject: Re: [PATCH ] dt-bindings: PCI: rcar: Add device tree support for
- r8a7743
-To: Biju Das <biju.das@bp.renesas.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Cc: Simon Horman <horms@verge.net.au>,
-        Chris Paterson <chris.paterson2@renesas.com>,
-        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
-        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-References: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <0d38fedf-c39c-8836-44e6-e23ee0a87668@cogentembedded.com>
-Date: Tue, 14 Nov 2017 12:47:56 +0300
+Return-Path: <SRS0=lxkP=CI=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=lxkP=CI=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 10 Nov 2017 11:22:01 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com,
+	bhelgaas@google.com, linux-tegra@vger.kernel.org,
+	linux-pci@vger.kernel.org, kthota@nvidia.com, swarren@nvidia.com,
+	mmaddireddy@nvidia.com, Michal Simek <michal.simek@xilinx.com>,
+	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+	Simon Horman <horms@verge.net.au>, robin.murphy@arm.com
+Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
+Message-ID: <20171110112201.GA25235@red-moon>
+References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
+ <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
+ <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
+ <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+[+Robin]
 
-On 11/13/2017 7:37 PM, Biju Das wrote:
-
-> Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller
-> is identical to the R-Car Gen2 family.
+On Thu, Nov 09, 2017 at 12:14:35PM -0600, Bjorn Helgaas wrote:
+> [+cc Lorenzo]
 > 
-> No driver change is needed due to the fallback compatible value
-> "renesas,pcie-rcar-gen2".
-> Adding the SoC-specific compatible values here has three purposes:
-> 1. Document which SoCs have this hardware module,
-> 2. Allow checkpatch to validate compatible values.
-> 3. Allow the driver to support SoC specific implementations in future
->     as necessary.
+> On Thu, Nov 09, 2017 at 12:48:14PM +0530, Vidya Sagar wrote:
+> > On Thursday 09 November 2017 02:55 AM, Bjorn Helgaas wrote:
+> > >On Mon, Nov 06, 2017 at 11:33:07PM +0530, Vidya Sagar wrote:
+> > >>limits MSI target address to only 32-bit region to enable
+> > >>some of the PCIe end points where only 32-bit MSIs
+> > >>are supported work properly.
+> > >>One example being Marvel SATA controller
+> > >>
+> > >>Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> > >>---
+> > >>  drivers/pci/host/pci-tegra.c | 2 +-
+> > >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >>
+> > >>diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> > >>index 1987fec1f126..03d3dcdd06c2 100644
+> > >>--- a/drivers/pci/host/pci-tegra.c
+> > >>+++ b/drivers/pci/host/pci-tegra.c
+> > >>@@ -1531,7 +1531,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+> > >>  	}
+> > >>  	/* setup AFI/FPCI range */
+> > >>-	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> > >>+	msi->pages = __get_free_pages(GFP_DMA, 0);
+> > >>  	msi->phys = virt_to_phys((void *)msi->pages);
+> >
+> > >Should this be GFP_DMA32?  See the comment above the GFP_DMA
+> > >definition.
+> >
+> > looking at the comments for both GFP_DMA32 and GFP_DMA, I thought GFP_DMA32
+> > is the correct one to use, but, even with that I got >32-bit addresses.
+> > GFP_DMA always gives addresses in <4GB boundary (i.e. 32-bit).
+> > I didn't dig into it to find out why is this the case.
 > 
-> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
-> Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
-> ---
->   Documentation/devicetree/bindings/pci/rcar-pci.txt | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
+> This sounds worth looking into (but maybe we don't need the
+> __get_free_pages() at all; see below).  Maybe there's some underlying
+> bug.  My laptop shows this, which looks like it might be related:
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> index 76ba3a6..2c43e38 100644
-> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -1,13 +1,15 @@
->   * Renesas R-Car PCIe interface
->   
->   Required properties:
-> -compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
-> +compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
-> +	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
->   	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
->   	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
->   	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
->   	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
->   	    "renesas,pcie-r8a7796" for the R8A7796 SoC;
-> -	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
-> +	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
-> +				     RZ-G1 compatible device.
+>   Zone ranges:
+>     DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+>     DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
+>     Normal   [mem 0x0000000100000000-0x00000004217fffff]
+>     Device   empty
+> 
+> What does your machine show?
+> 
+> > >Should we be using virt_to_phys() here?  Where exactly is the
+> > >result ("msi->phys") used, i.e., what bus will that address appear
+> > >on?  If it appears on the PCI side, this should probably use
+> > >something like pcibios_resource_to_bus().
 
-    It's called RZ/G1.
+I had a quick chat with Robin (CC'ed, who has dealt/is dealing with most
+of the work this thread relates to) and I think that as things stand,
+for MSI physical addresses, an offset between PCI->host address shift is
+not really contemplated (ie 1:1 host<->pci is assumed).
 
-[...]
+> > This address is written to two places.  First, into host's internal
+> > register to let it know that when an incoming memory write comes
+> > with this address, raise an MSI interrupt instead of forwarding it
+> > to memory subsystem.  Second, into 'Message Address' field of
+> > 'Message Address Register for MSI' register in end point's
+> > configuration space (this is done by MSI framework) for end point to
+> > know which address to be used to generate MSI interrupt.
+> 
+> Hmmm, ISTR some past discussion about this.  Here's a little: [1, 2].
+> And this commit [3] sounds like it describes a similar hardware
+> situation with Tegra where the host bridge intercepts the MSI target
+> address, so writes to it never reach system memory.  That means that
+> Tegra doesn't need to allocate system memory at all.
+> 
+> Is your system similar?  Can you just statically allocate a little bus
+> address space, use that for the MSI target address, and skip the
+> __get_free_pages()?
 
-MBR, Sergei
+IIUC, all these host bridges need is a physical address that is routed
+upstream to the host bridge by the PCIe tree (ie it is not part of the
+host bridge windows), as long as the host bridge intercepts it (and
+endpoints do _not_ reuse it for something else) that should be fine, as
+it has been pointed out in this thread, allocating a page is a solution
+- there may be others (which are likely to be platform specific).
+
+> > >Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a
+> > >similar problem?  They both use GFP_KERNEL, then virt_to_phys(),
+> > >then write the result of virt_to_phys() using a 32-bit register
+> > >write.
+> >
+> > Well, if those systems deal with 64-bit addresses and when an end
+> > point is connected which supports only 32-bit MSI addresses, this
+> > problem will surface when __get_free_pages() returns an address that
+> > translates to a >32-bit address after virt_to_phys() call on it.
+> 
+> I'd like to hear from the R-Car and Xilinx folks about (1) whether
+> there's a potential issue with truncating a 64-bit address, and
+> (2) whether that hardware works like Tegra, where the MSI write never
+> reaches memory so we don't actually need to allocate a page.
+> 
+> If all we need is to allocate a little bus address space for the MSI
+> target, I'd like to figure out a better way to do that than
+> __get_free_pages().  The current code seems a little buggy, and
+> it's getting propagated through several drivers.
+
+I will look into this with Robin's help.
+
+Thanks,
+Lorenzo
+
+> > >>  	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+> 
+> [1] https://lkml.kernel.org/r/20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com
+> [2] https://lkml.kernel.org/r/86efs3wesi.fsf@arm.com
+> [3] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d7bd554f27c9
