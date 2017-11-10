@@ -1,48 +1,49 @@
-Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
-From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
-To: linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org,
-	helgaas@kernel.org
-Subject: [PATCH 2/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 10h-1fh) Processors
-Date: Fri,  3 Nov 2017 14:52:42 +0100
-Message-Id: <1509717164-1946-2-git-send-email-christian.koenig@amd.com>
-In-Reply-To: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
-References: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bao Xiaowei <xiaowei.bao@nxp.com>
+To: <robh+dt@kernel.org>, <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <bhelgaas@google.com>, <shawnguo@kernel.org>,
+ <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
+ <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>, <leoyang.li@nxp.com>,
+ <kishon@ti.com>, <jingoohan1@gmail.com>, <pbrobinson@gmail.com>,
+ <songxiaowei@hisilicon.com>, <devicetree@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+ <Zhiqiang.Hou@nxp.com>, <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
+Subject: [PATCHv4 0/3] dts: Add the property of IB and OB
+Date: Fri, 10 Nov 2017 11:48:44 +0800
+Message-ID: <20171110034847.17891-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bao Xiaowei <xiaowei.bao@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just add the extra PCI-ID to the existing fixup.
+Depend on http://patchwork.ozlabs.org/patch/815382/
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- arch/x86/pci/fixup.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Bao Xiaowei (3):
+  ARMv8: dts: ls1046a: add the property of IB and OB
+  ARMv8: layerscape: add the pcie ep function support
+  ARMv8: pcie: make the DWC EP driver support for layerscape
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 1d2238d..aa8b20e 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -639,7 +639,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-  * configuring host bridge windows using the _PRS and _SRS methods.
-  *
-  * But this is rarely implemented, so we manually enable a large 64bit BAR for
-- * PCIe device on AMD Family 15h (Models 00h-0fh, 30h-3fh) Processors here.
-+ * PCIe device on AMD Family 15h (Models 00h-1fh, 30h-3fh) Processors here.
-  */
- static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- {
-@@ -695,6 +695,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- 
- 	pci_bus_add_resource(dev->bus, res, 0);
- }
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1401, pci_amd_enable_64bit_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
- 
+ arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi |   6 ++
+ drivers/pci/dwc/Kconfig                        |   1 +
+ drivers/pci/dwc/pci-layerscape.c               | 121 +++++++++++++++++++++++--
+ 3 files changed, 121 insertions(+), 7 deletions(-)
+
 -- 
-2.7.4
+2.14.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
