@@ -1,133 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0129.outbound.protection.outlook.com ([104.47.41.129]:6273
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755233AbdKAUw7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 Nov 2017 16:52:59 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: Dexuan Cui <decui@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        "Chris Valean (Cloudbase Solutions SRL)" <v-chvale@microsoft.com>,
-        "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        'Eyal Mizrachi' <eyalmi@mellanox.com>,
-        "Jack Morgenstein" <jackm@mellanox.com>,
-        Armen Guezalian <armeng@mellanox.com>,
-        Firas Mahameed <firas@mellanox.com>,
-        Tziporet Koren <tziporet@mellanox.com>,
-        Daniel Jurgens <danielj@mellanox.com>
-Subject: RE: [PATCH] PCI: hv: use effective affinity mask
-Date: Wed, 1 Nov 2017 20:52:56 +0000
-Message-ID: <DM5PR21MB0122B6965EAB3181A37C14FAAB5F0@DM5PR21MB0122.namprd21.prod.outlook.com>
-References: <PS1P15301MB00112EE79DE499E8B2BA338BBF5F0@PS1P15301MB0011.APCP153.PROD.OUTLOOK.COM>
-In-Reply-To: <PS1P15301MB00112EE79DE499E8B2BA338BBF5F0@PS1P15301MB0011.APCP153.PROD.OUTLOOK.COM>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=pIj7=CI=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=pIj7=CI=arm.com=robin.murphy@kernel.org>
+Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com, bhelgaas@google.com,
+ linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org, kthota@nvidia.com,
+ swarren@nvidia.com, mmaddireddy@nvidia.com,
+ Michal Simek <michal.simek@xilinx.com>,
+ =?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+ Simon Horman <horms@verge.net.au>
+References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
+ <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
+ <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
+ <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
+ <20171110112201.GA25235@red-moon>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <3887d62c-98bb-04d5-5b40-96d5b7b43e63@arm.com>
+Date: Fri, 10 Nov 2017 12:04:21 +0000
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171110112201.GA25235@red-moon>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Dexuan Cui
-> Sent: Wednesday, November 1, 2017 1:31 PM
-> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; Jake
-> Oshins <jakeo@microsoft.com>; KY Srinivasan <kys@microsoft.com>;
-> Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; Haiyang
-> Zhang <haiyangz@microsoft.com>; Jork Loeser
-> <Jork.Loeser@microsoft.com>; Chris Valean (Cloudbase Solutions SRL) <v-
-> chvale@microsoft.com>; Adrian Suhov (Cloudbase Solutions SRL) <v-
-> adsuho@microsoft.com>; Simon Xiao <sixiao@microsoft.com>; 'Eyal
-> Mizrachi' <eyalmi@mellanox.com>; Jack Morgenstein
-> <jackm@mellanox.com>; Armen Guezalian <armeng@mellanox.com>; Firas
-> Mahameed <firas@mellanox.com>; Tziporet Koren
-> <tziporet@mellanox.com>; Daniel Jurgens <danielj@mellanox.com>
-> Subject: [PATCH] PCI: hv: use effective affinity mask
->=20
->=20
-> The effective_affinity_mask is always set when an interrupt is assigned i=
-n
-> __assign_irq_vector() -> apic->cpu_mask_to_apicid(), e.g. for struct apic
-> apic_physflat: -> default_cpu_mask_to_apicid() ->
-> irq_data_update_effective_affinity(), but it looks d->common->affinity
-> remains all-1's before the user space or the kernel changes it later.
->=20
-> In the early allocation/initialization phase of an irq, we should use the
-> effective_affinity_mask, otherwise Hyper-V may not deliver the interrupt =
-to
-> the expected cpu. Without the patch, if we assign 7 Mellanox ConnectX-3
-> VFs to a 32-vCPU VM, one of the VFs may fail to receive interrupts.
->=20
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: Jake Oshins <jakeo@microsoft.com>
-> Cc: Jork Loeser <jloeser@microsoft.com>
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: K. Y. Srinivasan <kys@microsoft.com>
-> ---
->=20
-> Please consider this for v4.14, if it's not too late.
->=20
->  drivers/pci/host/pci-hyperv.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 5ccb47d..8b5f66d 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -879,7 +879,7 @@ static void hv_irq_unmask(struct irq_data *data)
->  	int cpu;
->  	u64 res;
->=20
-> -	dest =3D irq_data_get_affinity_mask(data);
-> +	dest =3D irq_data_get_effective_affinity_mask(data);
->  	pdev =3D msi_desc_to_pci_dev(msi_desc);
->  	pbus =3D pdev->bus;
->  	hbus =3D container_of(pbus->sysdata, struct hv_pcibus_device,
-> sysdata); @@ -1042,6 +1042,7 @@ static void hv_compose_msi_msg(struct
-> irq_data *data, struct msi_msg *msg)
->  	struct hv_pci_dev *hpdev;
->  	struct pci_bus *pbus;
->  	struct pci_dev *pdev;
-> +	struct cpumask *dest;
->  	struct compose_comp_ctxt comp;
->  	struct tran_int_desc *int_desc;
->  	struct {
-> @@ -1056,6 +1057,7 @@ static void hv_compose_msi_msg(struct irq_data
-> *data, struct msi_msg *msg)
->  	int ret;
->=20
->  	pdev =3D msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
-> +	dest =3D irq_data_get_effective_affinity_mask(data);
->  	pbus =3D pdev->bus;
->  	hbus =3D container_of(pbus->sysdata, struct hv_pcibus_device,
-> sysdata);
->  	hpdev =3D get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn));
-> @@ -1081,14 +1083,14 @@ static void hv_compose_msi_msg(struct irq_data
-> *data, struct msi_msg *msg)
->  	switch (pci_protocol_version) {
->  	case PCI_PROTOCOL_VERSION_1_1:
->  		size =3D hv_compose_msi_req_v1(&ctxt.int_pkts.v1,
-> -					irq_data_get_affinity_mask(data),
-> +					dest,
->  					hpdev->desc.win_slot.slot,
->  					cfg->vector);
->  		break;
->=20
->  	case PCI_PROTOCOL_VERSION_1_2:
->  		size =3D hv_compose_msi_req_v2(&ctxt.int_pkts.v2,
-> -					irq_data_get_affinity_mask(data),
-> +					dest,
->  					hpdev->desc.win_slot.slot,
->  					cfg->vector);
->  		break;
-> --
-> 2.7.4
+On 10/11/17 11:22, Lorenzo Pieralisi wrote:
+> [+Robin]
+> 
+> On Thu, Nov 09, 2017 at 12:14:35PM -0600, Bjorn Helgaas wrote:
+>> [+cc Lorenzo]
+>>
+>> On Thu, Nov 09, 2017 at 12:48:14PM +0530, Vidya Sagar wrote:
+>>> On Thursday 09 November 2017 02:55 AM, Bjorn Helgaas wrote:
+>>>> On Mon, Nov 06, 2017 at 11:33:07PM +0530, Vidya Sagar wrote:
+>>>>> limits MSI target address to only 32-bit region to enable
+>>>>> some of the PCIe end points where only 32-bit MSIs
+>>>>> are supported work properly.
+>>>>> One example being Marvel SATA controller
+>>>>>
+>>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>>>>> ---
+>>>>>   drivers/pci/host/pci-tegra.c | 2 +-
+>>>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>>>>> index 1987fec1f126..03d3dcdd06c2 100644
+>>>>> --- a/drivers/pci/host/pci-tegra.c
+>>>>> +++ b/drivers/pci/host/pci-tegra.c
+>>>>> @@ -1531,7 +1531,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+>>>>>   	}
+>>>>>   	/* setup AFI/FPCI range */
+>>>>> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+>>>>> +	msi->pages = __get_free_pages(GFP_DMA, 0);
+>>>>>   	msi->phys = virt_to_phys((void *)msi->pages);
+>>>
+>>>> Should this be GFP_DMA32?  See the comment above the GFP_DMA
+>>>> definition.
+>>>
+>>> looking at the comments for both GFP_DMA32 and GFP_DMA, I thought GFP_DMA32
+>>> is the correct one to use, but, even with that I got >32-bit addresses.
+>>> GFP_DMA always gives addresses in <4GB boundary (i.e. 32-bit).
+>>> I didn't dig into it to find out why is this the case.
+>>
+>> This sounds worth looking into (but maybe we don't need the
+>> __get_free_pages() at all; see below).  Maybe there's some underlying
+>> bug.  My laptop shows this, which looks like it might be related:
+>>
+>>    Zone ranges:
+>>      DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+>>      DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
+>>      Normal   [mem 0x0000000100000000-0x00000004217fffff]
+>>      Device   empty
+>>
+>> What does your machine show?
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+The great thing about ZONE_DMA is that it has completely different 
+meanings per platform. ZONE_DMA32 is even worse as it's more or less 
+just an x86 thing, and isn't implemented (thus does nothing) on most 
+other architectures, including ARM/arm64 where Tegra is relevant.
+
+Fun.
+
+>>>> Should we be using virt_to_phys() here?  Where exactly is the
+>>>> result ("msi->phys") used, i.e., what bus will that address appear
+>>>> on?  If it appears on the PCI side, this should probably use
+>>>> something like pcibios_resource_to_bus().
+> 
+> I had a quick chat with Robin (CC'ed, who has dealt/is dealing with most
+> of the work this thread relates to) and I think that as things stand,
+> for MSI physical addresses, an offset between PCI->host address shift is
+> not really contemplated (ie 1:1 host<->pci is assumed).
+
+I think the most correct way to generate an address would actually be 
+via the DMA mapping API (i.e. dma_map_page() with the host bridge's PCI 
+device), which would take any relevant offsets into account. It's a bit 
+funky, but there's some method in the madness.
+
+>>> This address is written to two places.  First, into host's internal
+>>> register to let it know that when an incoming memory write comes
+>>> with this address, raise an MSI interrupt instead of forwarding it
+>>> to memory subsystem.  Second, into 'Message Address' field of
+>>> 'Message Address Register for MSI' register in end point's
+>>> configuration space (this is done by MSI framework) for end point to
+>>> know which address to be used to generate MSI interrupt.
+>>
+>> Hmmm, ISTR some past discussion about this.  Here's a little: [1, 2].
+>> And this commit [3] sounds like it describes a similar hardware
+>> situation with Tegra where the host bridge intercepts the MSI target
+>> address, so writes to it never reach system memory.  That means that
+>> Tegra doesn't need to allocate system memory at all.
+>>
+>> Is your system similar?  Can you just statically allocate a little bus
+>> address space, use that for the MSI target address, and skip the
+>> __get_free_pages()?
+> 
+> IIUC, all these host bridges need is a physical address that is routed
+> upstream to the host bridge by the PCIe tree (ie it is not part of the
+> host bridge windows), as long as the host bridge intercepts it (and
+> endpoints do _not_ reuse it for something else) that should be fine, as
+> it has been pointed out in this thread, allocating a page is a solution
+> - there may be others (which are likely to be platform specific).
+> 
+>>>> Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a
+>>>> similar problem?  They both use GFP_KERNEL, then virt_to_phys(),
+>>>> then write the result of virt_to_phys() using a 32-bit register
+>>>> write.
+>>>
+>>> Well, if those systems deal with 64-bit addresses and when an end
+>>> point is connected which supports only 32-bit MSI addresses, this
+>>> problem will surface when __get_free_pages() returns an address that
+>>> translates to a >32-bit address after virt_to_phys() call on it.
+>>
+>> I'd like to hear from the R-Car and Xilinx folks about (1) whether
+>> there's a potential issue with truncating a 64-bit address, and
+>> (2) whether that hardware works like Tegra, where the MSI write never
+>> reaches memory so we don't actually need to allocate a page.
+>>
+>> If all we need is to allocate a little bus address space for the MSI
+>> target, I'd like to figure out a better way to do that than
+>> __get_free_pages().  The current code seems a little buggy, and
+>> it's getting propagated through several drivers.
+
+The really neat version is to take a known non-memory physical address 
+like the host controller's own MMIO region, which has no legitimate 
+reason to ever be used as a DMA address. pcie-mediatek almost gets this 
+right, but by using virt_to_phys() on an ioremapped address they end up 
+with nonsense rather than the correct address (although realistically 
+you would have to be extremely unlucky for said nonsense to collide with 
+a real DMA address given to a PCI endpoint later). Following on from 
+above, dma_map_resource() would be the foolproof way to get that right.
+
+Robin.
+
+> 
+> I will look into this with Robin's help.
+> 
+> Thanks,
+> Lorenzo
+> 
+>>>>>   	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+>>
+>> [1] https://lkml.kernel.org/r/20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com
+>> [2] https://lkml.kernel.org/r/86efs3wesi.fsf@arm.com
+>> [3] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d7bd554f27c9
