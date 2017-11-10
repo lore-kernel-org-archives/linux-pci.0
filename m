@@ -1,63 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH 07/30] ibft: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:30:52 -0500
-Message-Id: <1511328675-21981-8-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, Konrad Rzeszutek Wilk <konrad@kernel.org>,
- Peter Jones <pjones@redhat.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:48784 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750932AbdKJV67 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2017 16:58:59 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH V2 0/5] PCI: rcar: Add suspend/resume support
+Date: Fri, 10 Nov 2017 22:58:38 +0100
+Message-Id: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+This patchset adds support for suspend/resume on the Renesas RCar PCIe
+controller. First two patches clean the driver up a little, while the
+remaining three add the required suspend/resume functionality.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
+Kazufumi Ikeda (2):
+  PCI: rcar: Add the initialization of PCIe link in resume_noirq
+  PCI: rcar: Add the suspend/resume for pcie-rcar driver
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/firmware/iscsi_ibft.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Marek Vasut (2):
+  PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
+  PCI: rcar: Clean up the macros
 
-diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
-index 14042a6..6bc8e66 100644
---- a/drivers/firmware/iscsi_ibft.c
-+++ b/drivers/firmware/iscsi_ibft.c
-@@ -719,8 +719,9 @@ static int __init ibft_create_kobject(struct acpi_table_ibft *header,
- 		* executes only devices which are in domain 0. Furthermore, the
- 		* iBFT spec doesn't have a domain id field :-(
- 		*/
--		pci_dev = pci_get_bus_and_slot((nic->pci_bdf & 0xff00) >> 8,
--					       (nic->pci_bdf & 0xff));
-+		pci_dev = pci_get_domain_bus_and_slot(0,
-+						(nic->pci_bdf & 0xff00) >> 8,
-+						(nic->pci_bdf & 0xff));
- 		if (pci_dev) {
- 			rc = sysfs_create_link(&boot_kobj->kobj,
- 					       &pci_dev->dev.kobj, "device");
+Phil Edworthy (1):
+  PCI: rcar: Support runtime PM, link state L1 handling
+
+ drivers/pci/host/pcie-rcar.c | 182 ++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 146 insertions(+), 36 deletions(-)
+
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
