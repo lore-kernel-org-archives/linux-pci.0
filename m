@@ -1,74 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFCv2 PATCH 21/36] iommu/arm-smmu-v3: Implement process
- operations
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-22-jean-philippe.brucker@arm.com>
-CC: <joro@8bytes.org>, <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <lorenzo.pieralisi@arm.com>, <hanjun.guo@linaro.org>,
-        <sudeep.holla@arm.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-        <robin.murphy@arm.com>, <bhelgaas@google.com>,
-        <alex.williamson@redhat.com>, <tn@semihalf.com>,
-        <liubo95@huawei.com>, <thunder.leizhen@huawei.com>,
-        <gabriele.paoloni@huawei.com>, <nwatters@codeaurora.org>,
-        <okaya@codeaurora.org>, <rfranz@cavium.com>, <dwmw2@infradead.org>,
-        <jacob.jun.pan@linux.intel.com>, <yi.l.liu@intel.com>,
-        <ashok.raj@intel.com>, <robdclark@gmail.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <084b1848-0939-5e73-3890-3aab8dc4bc70@huawei.com>
-Date: Thu, 9 Nov 2017 11:32:26 +0800
-MIME-Version: 1.0
-In-Reply-To: <20171006133203.22803-22-jean-philippe.brucker@arm.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:32787 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751186AbdKJV7C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2017 16:59:02 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
+        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH V2 3/5] PCI: rcar: Add the initialization of PCIe link in resume_noirq
+Date: Fri, 10 Nov 2017 22:58:41 +0100
+Message-Id: <20171110215843.432-4-marek.vasut+renesas@gmail.com>
+In-Reply-To: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
+From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
 
-On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
-> Hook process operations to support PASID and page table sharing with the
-> SMMUv3:
-> 
-> +
-> +static void arm_smmu_process_exit(struct iommu_domain *domain,
-> +				  struct iommu_process *process)
-> +{
-> +	struct arm_smmu_master_data *master;
-> +	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
-> +
-> +	if (!domain->process_exit)
-> +		return;
+Reestablish the PCIe link very early in the resume process in case it
+went down to prevent PCI accesses from hanging the bus. Such accesses
+can happen early in the PCI resume process, in the resume_noirq, thus
+the link must be reestablished in the resume_noirq callback of the
+driver.
 
-If domain do not set process_exit handler, just return? smmu do not
-need invalid ATC, clear cd entry, etc.? Maybe you should check when
-call domain->process_exit?
+Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
+Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+---
+V2: - Use BIT() macro for (1 << n)
+    - Since polling in rcar_pcie_wait_for_dl() uses udelay(), do not
+      add extra changes to this function anymore
+    - Make resume_noirq return early and clean up parenthesis therein
+---
+ drivers/pci/host/pcie-rcar.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-> +
-> +	spin_lock(&smmu_domain->devices_lock);
-> +	list_for_each_entry(master, &smmu_domain->devices, list) {
-> +		if (!master->processes)
-> +			continue;
-> +
-> +		master->processes--;
-Add
-		if (domain->process_exit)
-here?
-> +		domain->process_exit(domain, master->dev, process->pasid,
-> +				     domain->process_exit_token);
-> +
-> +		/* TODO: inval ATC */
-> +	}
-> +	spin_unlock(&smmu_domain->devices_lock);
-> +
-> +	arm_smmu_write_ctx_desc(smmu_domain, process->pasid, NULL);
-> +
-> +	/* TODO: Invalidate all mappings if not DVM */
-> +}
-> +
-Thanks
-Yisheng Xie
-
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 811e8194ef74..ab61829db389 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -43,6 +43,7 @@
+ 
+ /* Transfer control */
+ #define PCIETCTLR		0x02000
++#define  DL_DOWN		BIT(3)
+ #define  CFINIT			1
+ #define PCIETSTR		0x02004
+ #define  DATA_LINK_ACTIVE	1
+@@ -1107,6 +1108,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	pcie = pci_host_bridge_priv(bridge);
+ 
+ 	pcie->dev = dev;
++	platform_set_drvdata(pdev, pcie);
+ 
+ 	INIT_LIST_HEAD(&pcie->resources);
+ 
+@@ -1167,10 +1169,28 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++static int rcar_pcie_resume_noirq(struct device *dev)
++{
++	struct rcar_pcie *pcie = dev_get_drvdata(dev);
++
++	if (rcar_pci_read_reg(pcie, PMSR) &&
++	    !(rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN))
++		return 0;
++
++	/* Re-establish the PCIe link */
++	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
++	return rcar_pcie_wait_for_dl(pcie);
++}
++
++static const struct dev_pm_ops rcar_pcie_pm_ops = {
++	.resume_noirq = rcar_pcie_resume_noirq,
++};
++
+ static struct platform_driver rcar_pcie_driver = {
+ 	.driver = {
+ 		.name = "rcar-pcie",
+ 		.of_match_table = rcar_pcie_of_match,
++		.pm = &rcar_pcie_pm_ops,
+ 		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = rcar_pcie_probe,
+-- 
+2.11.0
