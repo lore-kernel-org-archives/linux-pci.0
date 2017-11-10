@@ -1,19 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org"
- <linux-acpi@vger.kernel.org>, "devicetree@vger.kernel.org"
- <devicetree@vger.kernel.org>, "iommu@lists.linux-foundation.org"
- <iommu@lists.linux-foundation.org>
-Subject: RE: [RFCv2 PATCH 31/36] iommu/arm-smmu-v3: Add support for PCI ATS
-Date: Thu, 16 Nov 2017 14:19:36 +0000
-Message-ID: <BLUPR0201MB150565029F9260A528739ACBA52E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-32-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-32-jean-philippe.brucker@arm.com>
+From: Bao Xiaowei <xiaowei.bao@nxp.com>
+To: <robh+dt@kernel.org>, <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <bhelgaas@google.com>, <shawnguo@kernel.org>,
+ <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
+ <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>, <leoyang.li@nxp.com>,
+ <kishon@ti.com>, <jingoohan1@gmail.com>, <pbrobinson@gmail.com>,
+ <songxiaowei@hisilicon.com>, <devicetree@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+ <Zhiqiang.Hou@nxp.com>, <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
+Subject: [PATCHv3 0/3]  dts: Add the property of IB and OB
+Date: Fri, 10 Nov 2017 10:49:23 +0800
+Message-ID: <20171110024926.39700-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -22,68 +21,26 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "sudeep.holla@arm.com" <sudeep.holla@arm.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Cc: Bao Xiaowei <xiaowei.bao@nxp.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
+Depend on http://patchwork.ozlabs.org/patch/815382/
 
-+static size_t
-+arm_smmu_atc_inv_domain(struct arm_smmu_domain *smmu_domain, int ssid,
-+			unsigned long iova, size_t size)
-+{
-+	unsigned long flags;
-+	struct arm_smmu_cmdq_ent cmd;
-+	struct arm_smmu_master_data *master;
-+
-+	arm_smmu_atc_inv_to_cmd(ssid, iova, size, &cmd);
-+
-+	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
-+	list_for_each_entry(master, &smmu_domain->devices, list)
-+		arm_smmu_atc_inv_master(master, &cmd);
-+	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
-+
-+	return size;
-+}
-+
- /* IOMMU API */
- static bool arm_smmu_capable(enum iommu_cap cap)  { @@ -2361,6 +2506,8 @@ static void arm_smmu_detach_dev(struct device *dev)
- 		__iommu_process_unbind_dev_all(&smmu_domain->domain, dev);
- 
- 	if (smmu_domain) {
-+		arm_smmu_atc_inv_master_all(master, 0);
-+
-In BIND flow, when VFIO_IOMMU_UNBIND is invoked invalidation is sent on allocated PASID for this application.
-When vfio group fd is closed after UNBIND,  arm_smmu_detach_dev is invoked now invalidation is being sent on ssid zero.
-Why  invalidation needs to be sent on ssid zero ?
+Bao Xiaowei (3):
+  ARMv8: dts: ls1046a: add the property of IB and OB
+  ARMv8: layerscape: add the pcie ep function support
+  ARMv8: pcie: make the DWC EP driver support for layerscape
 
-Regards,
-Bharat
+ arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi |   6 ++
+ drivers/pci/dwc/Kconfig                        |   1 +
+ drivers/pci/dwc/pci-layerscape.c               | 124 +++++++++++++++++++++++--
+ 3 files changed, 125 insertions(+), 6 deletions(-)
+
+-- 
+2.14.1
 
 
 _______________________________________________
