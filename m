@@ -1,119 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:39958 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdKTIBH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 03:01:07 -0500
-Subject: =?UTF-8?Q?Re:_xhci=5fhcd_HC_died;_cleaning_up_with_TUSB7340_and_?=
- =?UTF-8?Q?=c2=b5PD720201?=
-To: Vignesh R <vigneshr@ti.com>
-CC: Chris Welch <Chris.Welch@viavisolutions.com>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, Joao Pinto <jpinto@synopsys.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>
-References: <BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com>
- <3dd7a4fc-da86-03cc-9b01-a0d29dd73230@ti.com>
- <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
-From: Roger Quadros <rogerq@ti.com>
-Message-ID: <124458f9-f824-6acb-becb-12d768b6e501@ti.com>
-Date: Mon, 20 Nov 2017 10:01:02 +0200
+Received: from mail.kernel.org ([198.145.29.99]:55000 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751541AbdKJSOS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Nov 2017 13:14:18 -0500
+Date: Fri, 10 Nov 2017 12:14:14 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>
+Cc: Dexuan Cui <decui@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Jake Oshins <jakeo@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>,
+        "Chris Valean (Cloudbase Solutions SRL)" <v-chvale@microsoft.com>,
+        Simon Xiao <sixiao@microsoft.com>,
+        'Eyal Mizrachi' <eyalmi@mellanox.com>,
+        Jack Morgenstein <jackm@mellanox.com>,
+        Armen Guezalian <armeng@mellanox.com>,
+        Firas Mahameed <firas@mellanox.com>,
+        Tziporet Koren <tziporet@mellanox.com>,
+        Daniel Jurgens <danielj@mellanox.com>
+Subject: Re: [PATCH] PCI: hv: use effective affinity mask
+Message-ID: <20171110181414.GA19895@bhelgaas-glaptop.roam.corp.google.com>
+References: <PS1P15301MB00112EE79DE499E8B2BA338BBF5F0@PS1P15301MB0011.APCP153.PROD.OUTLOOK.COM>
+ <20171108010736.GA28427@bhelgaas-glaptop.roam.corp.google.com>
+ <MWHPR21MB0287EB029BB4FE0B1653AEC69E540@MWHPR21MB0287.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <MWHPR21MB0287EB029BB4FE0B1653AEC69E540@MWHPR21MB0287.namprd21.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Vignesh,
+On Fri, Nov 10, 2017 at 08:55:07AM +0000, Adrian Suhov (Cloudbase Solutions SRL) wrote:
+> Hi,
+> 
+> I've also tested this and it's working good. Kernels tested:
+>  - next-20171109 on top of Ubuntu 16.04
+>  - MSFT kernel - 4.14.0-rc5 with patch applied - on top of RHEL 7.3
+> 
+> Adrian
 
-On 16/11/17 14:26, Vignesh R wrote:
-> +linux-pci
-> 
-> Hi Chris,
-> 
-> On Thursday 16 November 2017 05:20 PM, Quadros, Roger wrote:
->> +Vignesh
->>
->> On 13/09/17 17:26, Chris Welch wrote:
->>> We are developing a product based on the TI AM5728 EVM.  The product utilizes a TUSB7340 PCIe USB host for additional ports.  The TUSB7340 is detected and setup properly and works OK with low data rate devices.  However, hot plugging a Realtek USB network adapter and doing Ethernet transfer bandwidth testing using iperf3 causes the TUSB7340 host to be  locked out.  The TUSB7340 host appears to no longer communicate and the logging indicates xhci_hcd 0000:01:00.0: HC died; cleaning up.  Same issue occurs with another USB Ethernet adapter I tried (Asus).
->>>
->>> We looked at using another host and found a mini PCIe card that utilizes the µPD720201 and can be directly installed on the TI AM5728 EVM.  The card is detected properly and we reran the transfer test.  The uPD720201 gets locks out with the same problem.
->>>
->>> The AM5728 testing was performed using the TI SD card stock am57xx-evm-linux-04.00.00.04.img, kernel am57xx-evm 4.9.28-geed43d1050, and it reports that it is using the TI AM572x EVM Rev A3 device tree.
->>>
->>> It shows the following logging when it fails (this is with the TI EVM and uPD720201).
->>>
->>> [  630.400899] xhci_hcd 0000:01:00.0: xHCI host not responding to stop endpoint command.
->>> [  630.408769] xhci_hcd 0000:01:00.0: Assuming host is dying, halting host.
->>> [  630.420849] r8152 2-4:1.0 enp1s0u4: Tx status -108
->>> [  630.425667] r8152 2-4:1.0 enp1s0u4: Tx status -108
->>> [  630.430483] r8152 2-4:1.0 enp1s0u4: Tx status -108
->>> [  630.435297] r8152 2-4:1.0 enp1s0u4: Tx status -108
->>> [  630.440122] xhci_hcd 0000:01:00.0: HC died; cleaning up
->>> [  630.453961] usb 2-4: USB disconnect, device number 2
->>>
->>> The problem appears to be a general driver issue given we get the same problem with both the  TUSB7340 and the µPD720201.
-> 
-> Seems like PCIe driver is missing MSI IRQs leading to stall. 
-> Reading xHCI registers via PCIe mem space confirms this.
-> 
-> I see two problems wrt MSI handling:
-> Since commit 8c934095fa2f3 ("PCI: dwc: Clear MSI interrupt status after it is handled, not before"),
-> dwc clears MSI status after calling EP's IRQ handler. But, it happens that another MSI interrupt is
-> raised just at the end of EP's IRQ handler and before clearing MSI status.
-> This will result in loss of new MSI IRQ as we clear the MSI IRQ status without handling.
-> 
-> Another problem appears to be wrt dra7xx PCIe wrapper:
-> PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI does not seem to catch MSI IRQs unless,
-> its ensured that PCIE_MSI_INTR0_STATUS register read returns 0.
-> 
-> So, could you try reverting commit 8c934095fa2f3 and 
-> also apply below patch and let me know if that fixes the issue?
-> 
-> -----------
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index e77a4ceed74c..8280abc56f30 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -259,10 +259,17 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->         u32 reg;
->  
->         reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
-> +       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
->  
->         switch (reg) {
->         case MSI:
-> -               dw_handle_msi_irq(pp);
-> +               /*
-> +                * Need to make sure no MSI IRQs are pending before
-> +                * exiting handler, else the wrapper will not catch new
-> +                * IRQs. So loop around till dw_handle_msi_irq() returns
-> +                * IRQ_NONE
-> +                */
-> +               while (dw_handle_msi_irq(pp) != IRQ_NONE);
+Thanks, Adrian.  I added this to the patch:
 
-To avoid this kind of looping, shouldn't we be disabling all IRQ events while
-the interrupt handler is running and enable them just before we return from the hardirq
-handler?
+  Tested-by: Adrian Suhov <v-adsuho@microsoft.com>
 
-
->                 break;
->         case INTA:
->         case INTB:
-> @@ -273,8 +280,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->                 break;
->         }
->  
-> -       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
-> -
->         return IRQ_HANDLED;
->  }
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org] 
+> Sent: Wednesday, November 8, 2017 3:08 AM
+> To: Dexuan Cui <decui@microsoft.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; Jake Oshins <jakeo@microsoft.com>; KY Srinivasan <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>; devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; Haiyang Zhang <haiyangz@microsoft.com>; Jork Loeser <Jork.Loeser@microsoft.com>; Chris Valean (Cloudbase Solutions SRL) <v-chvale@microsoft.com>; Adrian Suhov (Cloudbase Solutions SRL) <v-adsuho@microsoft.com>; Simon Xiao <sixiao@microsoft.com>; 'Eyal Mizrachi' <eyalmi@mellanox.com>; Jack Morgenstein <jackm@mellanox.com>; Armen Guezalian <armeng@mellanox.com>; Firas Mahameed <firas@mellanox.com>; Tziporet Koren <tziporet@mellanox.com>; Daniel Jurgens <danielj@mellanox.com>
+> Subject: Re: [PATCH] PCI: hv: use effective affinity mask
 > 
+> On Wed, Nov 01, 2017 at 08:30:53PM +0000, Dexuan Cui wrote:
+> > 
+> > The effective_affinity_mask is always set when an interrupt is 
+> > assigned in
+> > __assign_irq_vector() -> apic->cpu_mask_to_apicid(), e.g. for struct 
+> > apic
+> > apic_physflat: -> default_cpu_mask_to_apicid() -> 
+> > irq_data_update_effective_affinity(), but it looks d->common->affinity 
+> > remains all-1's before the user space or the kernel changes it later.
+> > 
+> > In the early allocation/initialization phase of an irq, we should use 
+> > the effective_affinity_mask, otherwise Hyper-V may not deliver the 
+> > interrupt to the expected cpu. Without the patch, if we assign 7 
+> > Mellanox ConnectX-3 VFs to a 32-vCPU VM, one of the VFs may fail to receive interrupts.
+> > 
+> > Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> > Cc: Jake Oshins <jakeo@microsoft.com>
+> > Cc: Jork Loeser <jloeser@microsoft.com>
+> > Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> > Cc: K. Y. Srinivasan <kys@microsoft.com>
+> > ---
+> > 
+> > Please consider this for v4.14, if it's not too late.
 > 
+> What would be the rationale for putting it in v4.14?  After the merge window, I usually only merge fixes for problems introduced during the merge window, or for serious regressions.  I can't tell if this fits into that or not.
 > 
-> 
-
--- 
-cheers,
--roger
-
-Texas Instruments Finland Oy, Porkkalankatu 22, 00180 Helsinki. Y-tunnus/Business ID: 0615521-4. Kotipaikka/Domicile: Helsinki
+> >  drivers/pci/host/pci-hyperv.c | 8 +++++---
+> >  1 file changed, 5 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-hyperv.c 
+> > b/drivers/pci/host/pci-hyperv.c index 5ccb47d..8b5f66d 100644
+> > --- a/drivers/pci/host/pci-hyperv.c
+> > +++ b/drivers/pci/host/pci-hyperv.c
+> > @@ -879,7 +879,7 @@ static void hv_irq_unmask(struct irq_data *data)
+> >  	int cpu;
+> >  	u64 res;
+> >  
+> > -	dest = irq_data_get_affinity_mask(data);
+> > +	dest = irq_data_get_effective_affinity_mask(data);
+> >  	pdev = msi_desc_to_pci_dev(msi_desc);
+> >  	pbus = pdev->bus;
+> >  	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, 
+> > sysdata); @@ -1042,6 +1042,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> >  	struct hv_pci_dev *hpdev;
+> >  	struct pci_bus *pbus;
+> >  	struct pci_dev *pdev;
+> > +	struct cpumask *dest;
+> >  	struct compose_comp_ctxt comp;
+> >  	struct tran_int_desc *int_desc;
+> >  	struct {
+> > @@ -1056,6 +1057,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> >  	int ret;
+> >  
+> >  	pdev = msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
+> > +	dest = irq_data_get_effective_affinity_mask(data);
+> >  	pbus = pdev->bus;
+> >  	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
+> >  	hpdev = get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn)); @@ 
+> > -1081,14 +1083,14 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> >  	switch (pci_protocol_version) {
+> >  	case PCI_PROTOCOL_VERSION_1_1:
+> >  		size = hv_compose_msi_req_v1(&ctxt.int_pkts.v1,
+> > -					irq_data_get_affinity_mask(data),
+> > +					dest,
+> >  					hpdev->desc.win_slot.slot,
+> >  					cfg->vector);
+> >  		break;
+> >  
+> >  	case PCI_PROTOCOL_VERSION_1_2:
+> >  		size = hv_compose_msi_req_v2(&ctxt.int_pkts.v2,
+> > -					irq_data_get_affinity_mask(data),
+> > +					dest,
+> >  					hpdev->desc.win_slot.slot,
+> >  					cfg->vector);
+> >  		break;
+> > --
+> > 2.7.4
+> > 
