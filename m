@@ -1,64 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
- Brian Norris <computersforpeace@gmail.com>,
- Russell King <rmk+kernel@armlinux.org.uk>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- Florian Fainelli <f.fainelli@gmail.com>,
- Jonas Gorski <jonas.gorski@gmail.com>
-Subject: [PATCH v3 8/8] MIPS: BMIPS: Enable PCI
-Date: Tue, 14 Nov 2017 17:12:12 -0500
-Message-Id: <1510697532-32828-9-git-send-email-jim2101024@gmail.com>
-In-Reply-To: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
-References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
- Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
- Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
- Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0085.outbound.protection.outlook.com ([104.47.37.85]:47712
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755860AbdKJEHa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Nov 2017 23:07:30 -0500
+From: Bao Xiaowei <xiaowei.bao@nxp.com>
+To: <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <bhelgaas@google.com>, <shawnguo@kernel.org>,
+        <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
+        <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>,
+        <leoyang.li@nxp.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <pbrobinson@gmail.com>, <songxiaowei@hisilicon.com>,
+        <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <Zhiqiang.Hou@nxp.com>,
+        <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
+CC: Bao Xiaowei <xiaowei.bao@nxp.com>
+Subject: [PATCHv4 1/3] ARMv8: dts: ls1046a: add the property of IB and OB
+Date: Fri, 10 Nov 2017 11:48:45 +0800
+Message-ID: <20171110034847.17891-2-xiaowei.bao@nxp.com>
+In-Reply-To: <20171110034847.17891-1-xiaowei.bao@nxp.com>
+References: <20171110034847.17891-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds the Kconfig hooks to enable the Broadcom STB PCIe root complex
-driver for Broadcom MIPS systems.
+Add the property of inbound and outbound windows number for ep
+driver.
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
+Acked-by: Minghuan Lian <minghuan.Lian@nxp.com>
 ---
- arch/mips/Kconfig | 3 +++
- 1 file changed, 3 insertions(+)
+ v2:
+ - no change
+ v3:
+ - modify the commit message
+ v4:
+ - no change
 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index cb7fcc4..83ba54d 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -209,6 +209,9 @@ config BMIPS_GENERIC
- 	select BOOT_RAW
- 	select NO_EXCEPT_FILL
- 	select USE_OF
-+	select HW_HAS_PCI
-+	select PCI_DRIVERS_GENERIC
-+	select PCI
- 	select CEVT_R4K
- 	select CSRC_R4K
- 	select SYNC_R4K
+ arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
+index 06b5e12d04d8..f8332669663c 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
+@@ -674,6 +674,8 @@
+ 			device_type = "pci";
+ 			dma-coherent;
+ 			num-lanes = <4>;
++			num-ib-windows = <6>;
++			num-ob-windows = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+@@ -699,6 +701,8 @@
+ 			device_type = "pci";
+ 			dma-coherent;
+ 			num-lanes = <2>;
++			num-ib-windows = <6>;
++			num-ob-windows = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			ranges = <0x81000000 0x0 0x00000000 0x48 0x00010000 0x0 0x00010000   /* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
+@@ -724,6 +728,8 @@
+ 			device_type = "pci";
+ 			dma-coherent;
+ 			num-lanes = <2>;
++			num-ib-windows = <6>;
++			num-ob-windows = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			ranges = <0x81000000 0x0 0x00000000 0x50 0x00010000 0x0 0x00010000   /* downstream I/O */
+ 				  0x82000000 0x0 0x40000000 0x50 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
 -- 
-1.9.0.138.g2de3478
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.1
