@@ -1,63 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39402 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751740AbdKVFcR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:17 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Tobias Klauser <tklauser@distanz.ch>,
-        Eric Dumazet <edumazet@google.com>,
-        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 16/30] pch_gbe: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:31:01 -0500
-Message-Id: <1511328675-21981-17-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Ba5j=CI=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=Ba5j=CI=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
+ drivers
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
+ <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
+ <20171109150528.GA7629@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>,
+        Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <e1c5d6fe-3709-1931-dbac-010ac7751ba2@ti.com>
+Date: Fri, 10 Nov 2017 11:16:24 +0530
+MIME-Version: 1.0
+In-Reply-To: <20171109150528.GA7629@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Hi,
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
+On Thursday 09 November 2017 08:35 PM, Bjorn Helgaas wrote:
+> On Thu, Nov 09, 2017 at 11:28:36AM +0530, Kishon Vijay Abraham I wrote:
+>> Hi Bjorn,
+>>
+>> On Thursday 09 November 2017 01:56 AM, Bjorn Helgaas wrote:
+>>> On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
+>>>> From: Bjorn Helgaas <bhelgaas@google.com>
+>>>>
+>>>> Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+>>>> the endpoint driver framework.
+>>>>
+>>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>
+>>> This is on my for-linus branch, and I intend to merge it for v4.14.
+>>
+>> There is already an entry for PCI endpoint in MAINTAINERS file. Can Lorenzo be
+>> added there?
+>>
+>> PCI ENDPOINT SUBSYSTEM
+>> M:      Kishon Vijay Abraham I <kishon@ti.com>
+>> L:      linux-pci@vger.kernel.org
+>> T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
+>> S:      Supported
+>> F:      drivers/pci/endpoint/
+>> F:      drivers/misc/pci_endpoint_test.c
+>> F:      tools/pci/
+> 
+> Right, thanks, I forgot all about this separate entry.  I added Lorenzo
+> there, resulting in the patch below.
+> 
+> My practice has been that all the PCI patches (everything in
+> drivers/pci plus some include and x86/pci stuff) have been merged via
+> my tree.
+> 
+> This includes things in drivers/pci/{host,dwc,endpoint,switch}, which
+> are non-core things and usually specific to a chipset.  I try to
+> ensure they have individual maintainers designated, and I ask for
+> their acks for non-trivial changes because I have no specs and no
+> hardware for testing them.  But I think it's still good to have one
+> person look over them all to try to keep some consistency across them
+> because they are all quite similar.
+> 
+> So my hope is that Lorenzo can take over that oversight role from me,
+> not that he would replace any of those designated maintainers.
+> 
+> Ideally, this will be transparent to patch submitters except that they
+> should add Lorenzo to the "To:" line (keeping linux-pci and other
+> interested parties).
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Makes sense.
 
-diff --git a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-index 5ae9681..0df94ac 100644
---- a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-+++ b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-@@ -2560,6 +2560,7 @@ static int pch_gbe_probe(struct pci_dev *pdev,
- {
- 	struct net_device *netdev;
- 	struct pch_gbe_adapter *adapter;
-+	int domainnr, busnr;
- 	int ret;
- 
- 	ret = pcim_enable_device(pdev);
-@@ -2603,8 +2604,10 @@ static int pch_gbe_probe(struct pci_dev *pdev,
- 	if (adapter->pdata && adapter->pdata->platform_init)
- 		adapter->pdata->platform_init(pdev);
- 
--	adapter->ptp_pdev = pci_get_bus_and_slot(adapter->pdev->bus->number,
--					       PCI_DEVFN(12, 4));
-+	domainnr = pci_domain_nr(adapter->pdev->bus);
-+	busnr = adapter->pdev->bus->number
-+	adapter->ptp_pdev = pci_get_domain_bus_and_slot(domainnr, busnr,
-+							PCI_DEVFN(12, 4));
- 
- 	netdev->netdev_ops = &pch_gbe_netdev_ops;
- 	netdev->watchdog_timeo = PCH_GBE_WATCHDOG_PERIOD;
--- 
-1.9.1
+I'm also thinking if we should change the tree in PCI ENDPOINT SUBSYSTEM to
+git git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git or maybe
+git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/?
+
+since most of the endpoint patches also deals with modifying the controller
+drivers.
+
+Thanks
+Kishon
