@@ -1,50 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 21/30] xen: deprecate pci_get_bus_and_slot()
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-22-git-send-email-okaya@codeaurora.org>
-From: Juergen Gross <jgross@suse.com>
-Message-ID: <780202b1-3819-6e0f-10e8-059235845799@suse.com>
-Date: Wed, 22 Nov 2017 13:53:58 +0100
+Return-Path: <SRS0=/Beh=CI=mobiveil.co.in=l.subrahmanya@kernel.org>
+Return-Path: <SRS0=/Beh=CI=mobiveil.co.in=l.subrahmanya@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1511328675-21981-22-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "moderated list:XEN PCI SUBSYSTEM" <xen-devel@lists.xenproject.org>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171110003910.GA18818@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
+ <697da40c-7cdd-3d05-5846-37eae31bb729@mobiveil.co.in> <alpine.DEB.2.20.1711091427050.1839@nanos>
+ <CAFZiPx1pJ4WyDkP2dT8eQvZRukTbZA9H+kTD506e19s0SU8rtQ@mail.gmail.com> <20171110003910.GA18818@bhelgaas-glaptop.roam.corp.google.com>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Fri, 10 Nov 2017 11:20:44 +0530
+Message-ID: <CAFZiPx04sHC2dLwJAR6Ci3zAa+5YaX-82yd38=frkamEE2YwYw@mail.gmail.com>
+Subject: Re: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Peter W Newton <peter.newton@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
+	"M.h. Lian" <minghuan.lian@nxp.com>, Raj Raina <rajesh.raina@nxp.com>,
+	Rajan Kapoor <rajan.kapoor@nxp.com>, Prabhjot Singh <prabhjot.singh@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22/11/17 06:31, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-> extract the domain number. Other places, use the actual domain number from
-> the device.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Bjorn,
 
-Reviewed-by: Juergen Gross <jgross@suse.com>
+On Fri, Nov 10, 2017 at 6:09 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Nov 10, 2017 at 05:59:56AM +0530, Subrahmanya Lingappa wrote:
+>> On Thu, Nov 9, 2017 at 6:57 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>> > On Thu, 9 Nov 2017, subrahmanya_lingappa wrote:
+>> >
+>> >> From e38b741006856f3a3623109dd5ddf5f99326ce61 Mon Sep 17 00:00:00 2001
+>> >> From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+>> >> Date: Thu, 9 Nov 2017 04:25:21 -0500
+>> >> Subject: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
+>> >>
+>> >> This patch exports irq_set_msi_desc symbol which is used by
+>> >> few PCIe root port drivers.
+>> >
+>> > And which one of those is modular?
+>>
+>> I think this one is, as I see at least 25 other files using it, albeit
+>> SoC devices.
+>
+> A modular driver would have "tristate" in its Kconfig.  You mentioned
+> pcie-xilinx.c, which has:
+>
+>   obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+>
+>   config PCIE_XILINX
+>           bool "Xilinx AXI PCIe host bridge support"
+>
+> It's "bool", so not modular, so it shouldn't require the
+> EXPORT_SYMBOL().
+>
+> You saw an undefined symbol error, though.  Was that on an upstream
+> kernel, or possibly some other kernel that has changes to make this
+> driver modular?
+>
+> I don't think your mobiveil driver (as posted) requires this
+> EXPORT_SYMBOL() either.
+>
 
+Agreed, I will drop this patch from my next driver revison.
 
-Juergen
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Bjorn
