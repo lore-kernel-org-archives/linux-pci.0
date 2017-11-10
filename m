@@ -1,108 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50886 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752021AbdKVLh1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 22 Nov 2017 06:37:27 -0500
-Date: Wed, 22 Nov 2017 11:37:49 +0000
+Return-Path: <SRS0=lxkP=CI=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=lxkP=CI=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 10 Nov 2017 10:40:35 +0000
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, nsekhar@ti.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Xiaowei Bao <xiaowei.bao@nxp.com>,
-        Niklas Cassel <niklas.cassel@axis.com>
-Subject: Re: [PATCH] PCI: designware-ep: Fix ->get_msi() to check MSI_EN bit
-Message-ID: <20171122113749.GA26278@red-moon>
-References: <20171122090427.12371-1-kishon@ti.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
+ drivers
+Message-ID: <20171110104035.GA842@red-moon>
+References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
+ <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
+ <20171109150528.GA7629@bhelgaas-glaptop.roam.corp.google.com>
+ <c990c9af-7d7c-27f9-30e5-2ebda49b8b3b@rock-chips.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171122090427.12371-1-kishon@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <c990c9af-7d7c-27f9-30e5-2ebda49b8b3b@rock-chips.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 22, 2017 at 02:34:27PM +0530, Kishon Vijay Abraham I wrote:
-> ->get_msi() now checks MSI_EN bit in the MSI CAPABILITY register to
-> find whether the host supports MSI instead of using the
-> MSI ADDRESS in the MSI CAPABILITY register.
-
-I think that's a sensible thing to do regardless, given that I do not
-understand why 0x0 can't be a valid MSI address in the first place.
-
-> This fixes the issue with the following sequence
->   'modprobe pci_endpoint_test' enables MSI
->   'rmmod pci_endpoint_test' disables MSI but MSI address has a valid value
->   'modprobe pci_endpoint_test no_msi=1' - Since MSI address has a valid
-> 	value (set during the previous insertion of the module), EP
-
-Where is the address set ?
-
-> 	thinks host supports MSI.
-
-Add a Fixes: tag please.
-
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/pcie-designware-ep.c | 12 +++---------
->  drivers/pci/dwc/pcie-designware.h    |  1 +
->  2 files changed, 4 insertions(+), 9 deletions(-)
+On Fri, Nov 10, 2017 at 08:46:29AM +0800, Shawn Lin wrote:
+> Hi Bjorn,
 > 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index d53d5f168363..7c621877a939 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -197,20 +197,14 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
->  static int dw_pcie_ep_get_msi(struct pci_epc *epc)
->  {
->  	int val;
-> -	u32 lower_addr;
-> -	u32 upper_addr;
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->  
-> -	val = dw_pcie_readb_dbi(pci, MSI_MESSAGE_CONTROL);
-> -	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-> -
-> -	lower_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-> -	upper_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+> On 2017/11/9 23:05, Bjorn Helgaas wrote:
+> >On Thu, Nov 09, 2017 at 11:28:36AM +0530, Kishon Vijay Abraham I wrote:
+> >>Hi Bjorn,
+> >>
+> >>On Thursday 09 November 2017 01:56 AM, Bjorn Helgaas wrote:
+> >>>On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
+> >>>>From: Bjorn Helgaas <bhelgaas@google.com>
+> >>>>
+> >>>>Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+> >>>>the endpoint driver framework.
+> >>>>
+> >>>>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >>>
+> >>>This is on my for-linus branch, and I intend to merge it for v4.14.
+> >>
+> >>There is already an entry for PCI endpoint in MAINTAINERS file. Can Lorenzo be
+> >>added there?
+> >>
+> >>PCI ENDPOINT SUBSYSTEM
+> >>M:      Kishon Vijay Abraham I <kishon@ti.com>
+> >>L:      linux-pci@vger.kernel.org
+> >>T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
+> >>S:      Supported
+> >>F:      drivers/pci/endpoint/
+> >>F:      drivers/misc/pci_endpoint_test.c
+> >>F:      tools/pci/
+> >
+> >Right, thanks, I forgot all about this separate entry.  I added Lorenzo
+> >there, resulting in the patch below.
+> >
+> >My practice has been that all the PCI patches (everything in
+> >drivers/pci plus some include and x86/pci stuff) have been merged via
+> >my tree.
+> >
+> >This includes things in drivers/pci/{host,dwc,endpoint,switch}, which
+> >are non-core things and usually specific to a chipset.  I try to
+> >ensure they have individual maintainers designated, and I ask for
+> >their acks for non-trivial changes because I have no specs and no
+> >hardware for testing them.  But I think it's still good to have one
+> >person look over them all to try to keep some consistency across them
+> >because they are all quite similar.
+> >
+> >So my hope is that Lorenzo can take over that oversight role from me,
+> >not that he would replace any of those designated maintainers.
+> >
+> >Ideally, this will be transparent to patch submitters except that they
+> >should add Lorenzo to the "To:" line (keeping linux-pci and other
+> >interested parties).
+> >
+> >
+> >commit 6b7be529634bbfbf6395f23217a66d731fbed0a0
+> >Author: Bjorn Helgaas <bhelgaas@google.com>
+> >Date:   Wed Nov 8 08:49:49 2017 -0600
+> >
+> >     MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge drivers
+> >     Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
+> >     the endpoint driver framework.
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >     Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >
+> >diff --git a/MAINTAINERS b/MAINTAINERS
+> >index db412a627d96..6ce341e86fec 100644
+> >--- a/MAINTAINERS
+> >+++ b/MAINTAINERS
+> >@@ -10378,6 +10378,7 @@ F:	drivers/pci/dwc/*keystone*
+> >  PCI ENDPOINT SUBSYSTEM
+> >  M:	Kishon Vijay Abraham I <kishon@ti.com>
+> >+M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >  L:	linux-pci@vger.kernel.org
+> >  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
+> >  S:	Supported
+> >@@ -10429,6 +10430,15 @@ F:	include/linux/pci*
+> >  F:	arch/x86/pci/
+> >  F:	arch/x86/kernel/quirks.c
+> >+PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
+> >+M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >+L:	linux-pci@vger.kernel.org
+> >+Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
+> >+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
+> 
+> So, does that mean the patch(es) for host drivers shoube be based on
+> this tree instead of yours? If yes, which tree should be preferred if
+> a patchset wanna touch both of pci core and host drivers?
 
-I can't find code that writes these registers, see above for my
-question.
-
-On top of that I think that what's done the EPF test function driver in
-struct pci_epf.bind() should be undone in struct pci_epf.unbind() and I
-do not think that's happening for MSIs.
-
-> -
-> -	if (!(lower_addr || upper_addr))
-> +	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-
-MSI_MESSAGE_CONTROL is written in dw_pcie_ep_set_msi(), I assume a write
-to bit[0] (ie MSI_CAP_MSI_EN_MASK) is ignored - it would be good if you
-can clarify that as well please.
+I think you should always use Bjorn's tree as a reference and we
+will sort out the dependencies.
 
 Thanks,
 Lorenzo
-
-> +	if (!(val & MSI_CAP_MSI_EN_MASK))
->  		return -EINVAL;
->  
-> +	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
->  	return val;
->  }
->  
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index e5d9d77b778e..cb493bcae8b4 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -101,6 +101,7 @@
->  #define MSI_MESSAGE_CONTROL		0x52
->  #define MSI_CAP_MMC_SHIFT		1
->  #define MSI_CAP_MME_SHIFT		4
-> +#define MSI_CAP_MSI_EN_MASK		0x1
->  #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
->  #define MSI_MESSAGE_ADDR_L32		0x54
->  #define MSI_MESSAGE_ADDR_U32		0x58
-> -- 
-> 2.11.0
-> 
