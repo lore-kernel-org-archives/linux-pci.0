@@ -1,47 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 29/30] i7300_idle: deprecate pci_get_bus_and_slot()
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-30-git-send-email-okaya@codeaurora.org>
- <20171122075345.GC26583@kroah.com>
- <81de37c1-26b5-41f7-ab32-b98012890971@codeaurora.org>
- <20171122164546.GB30812@kroah.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <3cca8693-72bf-db72-f698-f111c9ef707c@codeaurora.org>
-Date: Wed, 22 Nov 2017 11:50:53 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20171122164546.GB30812@kroah.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>, linux-arm-msm@vger.kernel.org,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAJZ5v0i4yFGyqAZ6QqG7q1_xNfjMNHkPk3o0WuBvwKFeM2nXeg@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
+ <6330680.LdxjlP4uri@aspire.rjw.lan> <2932219.eEdIVn6WWf@aspire.rjw.lan>
+ <CAPDyKFrbnLjBzY3yE1OyXOpG3--K+C-1BCWQtyL9S6zQ5cmdhw@mail.gmail.com> <CAJZ5v0i4yFGyqAZ6QqG7q1_xNfjMNHkPk3o0WuBvwKFeM2nXeg@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 11 Nov 2017 01:41:51 +0100
+Message-ID: <CAJZ5v0i1LEAdfjDAbLfEKTiYR3MT+69-BR2eR=ie-oioXHWCwg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/22/2017 11:45 AM, Greg Kroah-Hartman wrote:
->> Funny thing is nobody is calling this function. Maybe, I should just kill it
->> instead.
-> Yes, delete it.  Why doesn't the build warn about it not being used?
-> 
+On Sat, Nov 11, 2017 at 12:45 AM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Fri, Nov 10, 2017 at 10:09 AM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+>> On 8 November 2017 at 14:25, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>
+>>> Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
+>>> instruct the PM core and middle-layer (bus type, PM domain, etc.)
+>>> code that it is desirable to leave the device in runtime suspend
+>>> after system-wide transitions to the working state (for example,
+>>> the device may be slow to resume and it may be better to avoid
+>>> resuming it right away).
+>>>
+>>> Generally, the middle-layer code involved in the handling of the
+>>> device is expected to indicate to the PM core whether or not the
+>>> device may be left in suspend with the help of the device's
+>>> power.may_skip_resume status bit.  That has to happen in the "noirq"
+>>> phase of the preceding system suspend (or analogous) transition.
+>>> The middle layer is then responsible for handling the device as
+>>> appropriate in its "noirq" resume callback which is executed
+>>> regardless of whether or not the device may be left suspended, but
+>>> the other resume callbacks (except for ->complete) will be skipped
+>>> automatically by the core if the device really can be left in
+>>> suspend.
+>>
+>> I don't understand the reason to why you need to skip invoking resume
+>> callbacks to achieve this behavior, could you elaborate on that?
+>
+> The reason why it is done this way is because that takes less code and
+> is easier (or at least less error-prone, because it avoids repeating
+> patterns in middle layers).
 
-OK. Because it is in a header file that nobody includes.
+Actually, it also is a matter of correctness, at least to some extent.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Namely, if the parent or any supplier of the device has
+power.must_resume clear in dpm_noirq_resume_devices(), then the device
+should not be touched during the whole system resume transition
+(because the access may very well go through the suspended parent or
+supplier) and the most straightforward way to make that happen is to
+avoid running the code that may touch the device.  [Arguably, if
+middle layers were made responsible for handling that, they would need
+to do pretty much the same thing and so there is no reason for not
+doing it in the core.]
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Allowing the "noirq" callback from middle layers to run in that case
+is a stretch already, but since genpd needs that, well, tough nuggets.
+
+All of that said, if there is a middle layer wanting to set
+power.skip_resume and needing to do something different for the resume
+callbacks, then this piece can be moved from the core to the middle
+layers at any time later.  So far there's none, though.  At least not
+in this patch series.
+
+Thanks,
+Rafael
