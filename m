@@ -1,46 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:58600 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752900AbdKHWc0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 17:32:26 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>
-Subject: Re: [RFC PATCH v10 6/7] PCI / PM: Move acpi wakeup code to pci core
-Date: Wed, 08 Nov 2017 23:32:20 +0100
-Message-ID: <1894178.xtK0vD2N4H@aspire.rjw.lan>
-In-Reply-To: <20171027072612.26565-7-jeffy.chen@rock-chips.com>
-References: <20171027072612.26565-1-jeffy.chen@rock-chips.com> <20171027072612.26565-7-jeffy.chen@rock-chips.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:1868 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbdKLNSA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Nov 2017 08:18:00 -0500
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <swarren@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
+Subject: [PATCH V3 0/3] Add ASPM-L1 Substates support for Tegra
+Date: Sun, 12 Nov 2017 18:47:51 +0530
+Message-ID: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, October 27, 2017 9:26:11 AM CET Jeffy Chen wrote:
-> Move acpi wakeup code to pci core as pci_set_wakeup(), so that other
-> platforms could reuse it.
+Tegra chips T210 and T186 support ASPM-L1 Substates (i.e. L1.1 and L1.2)
+This patch series
+- applies fixups to reflect correct capability values for
+  T_cmrt (Common Mode Restore Time) and
+  T_pwr_on (Power On)
+  and adjusts counter values for 19.2 MHz of clk_m
+- applies fixup specific to T210 to avoid unnecessary wake ups from L1.2 state
+- enables advertisement of ASPM-L1 support in capability register
 
-What exactly do you want to reuse?
+NOTE:- This version of patch series drops a patch (that was present till V2 series)
+that introduces an API for host controller drivers to specify LTR_L1.2_THRESHOLD
+value as more details and better understanding of spec is required to program
+LTR_L1.2_THRESHOLD value.
+It also reorders patches to appropriately have software fixups and advertisement
+of capabilities
 
-It looks like that's just several lines of code in acpi_pci_wakeup()
-and acpi_pci_propagate_wakeup() which invoke ACPI-specific lower-level
-functions, so IMO not worth it at all.
+PCIe - ASPM L1 Sub States spec
+https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
 
-The structure for other platform code may be the same or similar, but
-the details will almost certainly be different and I don't think that
-having more callback pointers in pci_platform_pm_ops is necessarily better.
+Testing Done on T210 and T186
+- ASPM-L1:
+  Verified ASPM-L1 enablement by selecting PCIEASPM_POWERSAVE config
+  With the help of Tegra rootport's internal counter registers, confirmed
+  link entry in and out of ASPM-L1 state using USB3.0 add-on card, NVMe and NIC
+  cards
+- ASPM-L1 SubStates:
+  Verified ASPM-L1 Substates enablement by selecting PCIEASPM_POWER_SUPERSAVE config
+  Confirmed link's entry into L1SS using Westren Digital NVMe card (with Sandisk
+  Controller) using Tegra rootport's internal counter registers
 
-> Also add .setup_dev() / .setup_host_bridge() / .cleanup() platform pm
-> ops's callbacks to setup and cleanup pci devices and host bridge for
-> wakeup.
+Vidya Sagar (3):
+  PCI: tegra: Apply sw fixups to support ASPM-L1 Sub-States
+  PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
+  PCI: tegra: Enable ASPM-L1 capability advertisement
 
-Why are they needed?
+ drivers/pci/host/pci-tegra.c | 93 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 93 insertions(+)
 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-
-Thanks,
-Rafael
+-- 
+2.7.4
