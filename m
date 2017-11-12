@@ -1,81 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.185]:53658 "EHLO
-        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752180AbdKBRrm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 13:47:42 -0400
-Received: from 1eAJad-0002k0-Ut by out4a.electric.net with emc1-ok (Exim 4.87)
-        (envelope-from <David.Laight@ACULAB.COM>)
-        id 1eAJae-0002ms-To
-        for linux-pci@vger.kernel.org; Thu, 02 Nov 2017 10:47:40 -0700
-Received: from [156.67.243.126] (helo=AcuExch.aculab.com)
-        by out4a.electric.net with esmtps (TLSv1:AES128-SHA:128)
-        (Exim 4.87)
-        (envelope-from <David.Laight@ACULAB.COM>)
-        id 1eAJad-0002k0-Ut
-        for linux-pci@vger.kernel.org; Thu, 02 Nov 2017 10:47:39 -0700
-From: David Laight <David.Laight@ACULAB.COM>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: PCIe AER testing
-Date: Thu, 2 Nov 2017 17:47:58 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00ACDDE@AcuExch.aculab.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v3 0/6] PM / sleep: Driver flags for system suspend/resume (part 2)
+Date: Sun, 12 Nov 2017 01:34:12 +0100
+Message-ID: <4184911.zoJM7jZeH4@aspire.rjw.lan>
+In-Reply-To: <6330680.LdxjlP4uri@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm (still) trying to provoke aerdrv to report a PCIe error.
-I've found a system where a 4.13 kernel (ubuntu 17.0) reports
-'_OSC: OS now control [... AER ...]' and aerdrv (and PCIe PME)
-use interrupts 125 and 126.
+Hi All,
 
-One of those host ports is connected to an igb ethernet chip,
-the other to one of our cards.
+The following still applies:
 
-I can generate PCIe read or write cycles that are outside the
-BARs - and the card duly fills in data into own AER registers.
-But I'm not seeing any messages from aerdrv or even the interrupt
-count going up.
+On Wednesday, November 8, 2017 1:41:35 AM CET Rafael J. Wysocki wrote:
+>
+> This is a follow-up for the first part of the PM driver flags series
+> sent previously some time ago with an intro as follows:
+> 
+> On Saturday, October 28, 2017 12:11:55 AM CET Rafael J. Wysocki wrote:
+> > The following part of the original cover letter still applies:
+> > 
+> > On Monday, October 16, 2017 3:12:35 AM CEST Rafael J. Wysocki wrote:
+> > > 
+> > > This work was triggered by attempts to fix and optimize PM in the
+> > > i2c-designware-platdev driver that ended up with adding a couple of
+> > > flags to the driver's internal data structures for the tracking of
+> > > device state (https://marc.info/?l=linux-acpi&m=150629646805636&w=2).
+> > > That approach is sort of suboptimal, though, because other drivers will
+> > > probably want to do similar things and if all of them need to use internal
+> > > flags for that, quite a bit of code duplication may ensue at least.
+> > > 
+> > > That can be avoided in a couple of ways and one of them is to provide a means
+> > > for drivers to tell the core what to do and to make the core take care of it
+> > > if told to do so.  Hence, the idea to use driver flags for system-wide PM
+> > > that was briefly discussed during the LPC in LA last month.
+> > 
+> > [...]
+> > 
+> > > What can work (and this is the only strategy that can work AFAICS) is to
+> > > point different callback pointers *in* *a* *driver* to the same routine
+> > > if the driver wants to reuse that code.  That actually will work for PCI
+> > > and USB drivers today, at least most of the time, but unfortunately there
+> > > are problems with it for, say, platform devices.
+> > > 
+> > > The first problem is the requirement to track the status of the device
+> > > (suspended vs not suspended) in the callbacks, because the system-wide PM
+> > > code in the PM core doesn't do that.  The runtime PM framework does it, so
+> > > this means adding some extra code which isn't necessary for runtime PM to
+> > > the callback routines and that is not particularly nice.
+> > > 
+> > > The second problem is that, if the driver wants to do anything in its
+> > > ->suspend callback, it generally has to prevent runtime suspend of the
+> > > device from taking place in parallel with that, which is quite cumbersome.
+> > > Usually, that is taken care of by resuming the device from runtime suspend
+> > > upfront, but generally doing that is wasteful (there may be no real need to
+> > > resume the device except for the fact that the code is designed this way).
+> > > 
+> > > On top of the above, there are optimizations to be made, like leaving certain
+> > > devices in suspend after system resume to avoid wasting time on waiting for
+> > > them to resume before user space can run again and similar.
+> > > 
+> > > This patch series focuses on addressing those problems so as to make it
+> > > easier to reuse callback routines by pointing different callback pointers
+> > > to them in device drivers.  The flags introduced here are to instruct the
+> > > PM core and middle layers (whatever they are) on how the driver wants the
+> > > device to be handled and then the driver has to provide callbacks to match
+> > > these instructions and the rest should be taken care of by the code above it.
+> > > 
+> > > The flags are introduced one by one to avoid making too many changes in
+> > > one go and to allow things to be explained better (hopefully).  They mostly
+> > > are mutually independent with some clearly documented exceptions.
+> > 
+> > but I had to rework the core patches to address the problem pointed with the
+> > generic power domains (genpd) framework pointed out by Ulf.
+> > 
+> > Namely, genpd expects its "noirq" callbacks to be invoked for devices in
+> > runtime suspend too and it has valid reasons for that, so its "noirq"
+> > callbacks can never be skipped, even for devices with the SMART_SUSPEND
+> > flag set.  For this reason, the logic related to DPM_FLAG_SMART_SUSPEND
+> > had to be moved from the core to the PCI bus type and the ACPI PM domain
+> > which are mostly affected by it anyway.  The code after the changes looks
+> > more straightforward to me, but it generally is more code and some patterns
+> > had to be repeated in a few places.
+> 
+> I promised to send the rest of the series then:
+> 
+> > I will send the core patches for the remaining two flags introduced by the
+> > original series separately and the intel-lpss and i2c-designware ones will
+> > be posted when the core patches have been reviewed and agreed on.
+> 
+> and here it goes.
+> 
+> It actually only adds support for one additional flag, namely for
+> DPM_FLAG_LEAVE_SUSPENDED, to the PM core (basic bits), PCI bus type and the
+> ACPI PM domain.
+> 
+> That part of the series (patches [1-3/6]) is rather straightforward and, as PCI
+> and the ACPI PM domain are concerned, it should be functionally equivalent to
+> the previous version of the set, so I retained the Greg's ACKs on these patches.
+> 
+> The other part (patches [4-6/6]) is sort of new, as it makes the PM core
+> carry out optimizations for devices with DPM_FLAG_LEAVE_SUSPENDED and/or
+> DPM_FLAG_SMART_SUSPEND set where the "noirq", "early" and "late" system-wide
+> PM callbacks provided by the drivers are invoked by the core directly.  That
+> part basically allows platform drivers, for instance, to reuse runtime PM
+> callbacks (by pointing ->suspend_late and ->resume_early to them) without
+> adding extra checks to them, as long as they are called directly by the core
+> (or the ACPI PM domain).
 
-CPU is an i7-7700 (according to /proc/cpuinfo).
+And on top of that, while replying to Ulf's comments I realized that devices
+with nonzero runtime PM usage_count reference counters cannot be left in suspend
+during system resume, because that would confuse the runtime PM framework going
+forward.  Patches [1/6] and [5/6] have to be updated to avoid that, so here
+goes a new revision.
 
-The root port's (Intel Sunrise Point-H) AER registers are:
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt+ RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
-                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 00000000 00000000 00000000 00000000
-                RootCmd: CERptEn+ NFERptEn+ FERptEn+
-                RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-                         FirstFatal- NonFatalMsg- FatalMsg- IntMsg 0
-                ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
+It should apply on top of the current linux-next.
 
-Our card's are:
-        Capabilities: [800 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 14, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
-                        MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                HeaderLog: 40000001 0000000f df202000 00000000
-
-The HeaderLog is that of a write beyond the end of BAR2.
-If I unmask NonFatalErr the HeaderLog contains that of invalid reads.
-(Writing to the status bits clears them.)
-
-I think the endpoint should be sending some kind of TLP to the root that
-would update the status registers and then interrupt the host.
-Unfortunately I can only trace TLP that match the BARs.
-
-I can try taking down the PCIe link - I believe the root port should log
-that itself?
-
-Any ideas?
-Is it worth me trying to get the igb to generate the same errors?
-
-	David
+Thanks,
+Rafael
