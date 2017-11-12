@@ -1,111 +1,335 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jim Quinlan <jim2101024@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
- Brian Norris <computersforpeace@gmail.com>,
- Russell King <rmk+kernel@armlinux.org.uk>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- Florian Fainelli <f.fainelli@gmail.com>,
- Jonas Gorski <jonas.gorski@gmail.com>
-Subject: [PATCH v3 0/8] PCI: brcmstb: Add Broadcom Settopbox PCIe support (V3)
-Date: Tue, 14 Nov 2017 17:12:04 -0500
-Message-Id: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
- Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
- Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
- Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v3 4/6] PM / core: Add helpers for subsystem callback selection
+Date: Sun, 12 Nov 2017 01:42:00 +0100
+Message-ID: <2261600.6h5WdhsrLe@aspire.rjw.lan>
+In-Reply-To: <4184911.zoJM7jZeH4@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan> <4184911.zoJM7jZeH4@aspire.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds support for the Broadcom Settopbox PCIe host
-controller.  It is targeted to Broadcom Settopbox chips running on
-ARM, ARM64, and MIPS platforms.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-V3 Changes:
-  - Fold pcie-brcmstb-msi.c into pcie-brcmstb.c
-  - Use PCI_XXX constants for PCIe capability registers
-  - Removal of any unused constants
-  - Change s/pci/pcie/ for filenames, comment text
-  - Config space access now uses 8/16/32 read/writes
-  - Use proper multi-line comment style
-  - Use function names, structure that are common in other host drivers
-  - DT binding 'brcm,ssc' is now 'brcm,enable-ssc'
-  - Dropped DT binding 'xyz-supply'
-  - Not setting CRS support as Linux does it if it is advertised.
-  - Removed code that was considered "debug code".
-  - Use of_get_pcie_domain_nr()
-  - Variable 'bridge_setup_done' removed.
+Add helper routines to find and return a suitable subsystem callback
+during the "noirq" phases of system suspend/resume (or analogous)
+transitions as well as during the "late" phase of system suspend and
+the "early" phase of system resume (or analogous) transitions.
 
-V2 Changes:
-* Patch brcmstb-add-memory-API:
-  - fix DT_PROP_DATA_TO_U32 macro.
-  - dropped one EXPORT_SYMBOL, changed the other to GPL.
-* Patch DT-docs-for-Brcmstb-PCIe:
-  - change 'brcm,gen' prop to standard 'max-link-speed'.
-  - rewrite bindings commit to omit standard prop defs.
-  - change props "supplies", "supply-names" to "xyz-supply"
-* Patch removed: export-symbol-arch_setup_dma_ops [4/9]
-* Patch brcmstb-add-dma-ranges:
-  - use get_dma_ops(); also use a const dma_map_ops structure.
-  - rewrite map_sg(), unmap_sg(), other calls like syng_sg_*()
-  - omit brcm_mapping_error(), but added code in brcm_dma_supported()
-  - put all of the notifier code in one compilation unit.
+The helpers will be called from additional sites going forward.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+v2 -> v3: No changes.
+
+---
+ drivers/base/power/main.c |  196 +++++++++++++++++++++++++++++++---------------
+ 1 file changed, 136 insertions(+), 60 deletions(-)
+
+Index: linux-pm/drivers/base/power/main.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/main.c
++++ linux-pm/drivers/base/power/main.c
+@@ -525,6 +525,14 @@ static void dpm_watchdog_clear(struct dp
+ #define dpm_watchdog_clear(x)
+ #endif
+ 
++static pm_callback_t dpm_subsys_suspend_noirq_cb(struct device *dev,
++						 pm_message_t state,
++						 const char **info_p);
++
++static pm_callback_t dpm_subsys_suspend_late_cb(struct device *dev,
++						pm_message_t state,
++						const char **info_p);
++
+ /*------------------------- Resume routines -------------------------*/
+ 
+ /**
+@@ -539,6 +547,35 @@ bool dev_pm_may_skip_resume(struct devic
+ 	return !dev->power.must_resume && pm_transition.event != PM_EVENT_RESTORE;
+ }
+ 
++static pm_callback_t dpm_subsys_resume_noirq_cb(struct device *dev,
++						pm_message_t state,
++						const char **info_p)
++{
++	pm_callback_t callback;
++	const char *info;
++
++	if (dev->pm_domain) {
++		info = "noirq power domain ";
++		callback = pm_noirq_op(&dev->pm_domain->ops, state);
++	} else if (dev->type && dev->type->pm) {
++		info = "noirq type ";
++		callback = pm_noirq_op(dev->type->pm, state);
++	} else if (dev->class && dev->class->pm) {
++		info = "noirq class ";
++		callback = pm_noirq_op(dev->class->pm, state);
++	} else if (dev->bus && dev->bus->pm) {
++		info = "noirq bus ";
++		callback = pm_noirq_op(dev->bus->pm, state);
++	} else {
++		return NULL;
++	}
++
++	if (info_p)
++		*info_p = info;
++
++	return callback;
++}
++
+ /**
+  * device_resume_noirq - Execute a "noirq resume" callback for given device.
+  * @dev: Device to handle.
+@@ -550,8 +587,8 @@ bool dev_pm_may_skip_resume(struct devic
+  */
+ static int device_resume_noirq(struct device *dev, pm_message_t state, bool async)
+ {
+-	pm_callback_t callback = NULL;
+-	const char *info = NULL;
++	pm_callback_t callback;
++	const char *info;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -565,19 +602,7 @@ static int device_resume_noirq(struct de
+ 
+ 	dpm_wait_for_superior(dev, async);
+ 
+-	if (dev->pm_domain) {
+-		info = "noirq power domain ";
+-		callback = pm_noirq_op(&dev->pm_domain->ops, state);
+-	} else if (dev->type && dev->type->pm) {
+-		info = "noirq type ";
+-		callback = pm_noirq_op(dev->type->pm, state);
+-	} else if (dev->class && dev->class->pm) {
+-		info = "noirq class ";
+-		callback = pm_noirq_op(dev->class->pm, state);
+-	} else if (dev->bus && dev->bus->pm) {
+-		info = "noirq bus ";
+-		callback = pm_noirq_op(dev->bus->pm, state);
+-	}
++	callback = dpm_subsys_resume_noirq_cb(dev, state, &info);
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+@@ -686,6 +711,35 @@ void dpm_resume_noirq(pm_message_t state
+ 	dpm_noirq_end();
+ }
+ 
++static pm_callback_t dpm_subsys_resume_early_cb(struct device *dev,
++						pm_message_t state,
++						const char **info_p)
++{
++	pm_callback_t callback;
++	const char *info;
++
++	if (dev->pm_domain) {
++		info = "early power domain ";
++		callback = pm_late_early_op(&dev->pm_domain->ops, state);
++	} else if (dev->type && dev->type->pm) {
++		info = "early type ";
++		callback = pm_late_early_op(dev->type->pm, state);
++	} else if (dev->class && dev->class->pm) {
++		info = "early class ";
++		callback = pm_late_early_op(dev->class->pm, state);
++	} else if (dev->bus && dev->bus->pm) {
++		info = "early bus ";
++		callback = pm_late_early_op(dev->bus->pm, state);
++	} else {
++		return NULL;
++	}
++
++	if (info_p)
++		*info_p = info;
++
++	return callback;
++}
++
+ /**
+  * device_resume_early - Execute an "early resume" callback for given device.
+  * @dev: Device to handle.
+@@ -696,8 +750,8 @@ void dpm_resume_noirq(pm_message_t state
+  */
+ static int device_resume_early(struct device *dev, pm_message_t state, bool async)
+ {
+-	pm_callback_t callback = NULL;
+-	const char *info = NULL;
++	pm_callback_t callback;
++	const char *info;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -711,19 +765,7 @@ static int device_resume_early(struct de
+ 
+ 	dpm_wait_for_superior(dev, async);
+ 
+-	if (dev->pm_domain) {
+-		info = "early power domain ";
+-		callback = pm_late_early_op(&dev->pm_domain->ops, state);
+-	} else if (dev->type && dev->type->pm) {
+-		info = "early type ";
+-		callback = pm_late_early_op(dev->type->pm, state);
+-	} else if (dev->class && dev->class->pm) {
+-		info = "early class ";
+-		callback = pm_late_early_op(dev->class->pm, state);
+-	} else if (dev->bus && dev->bus->pm) {
+-		info = "early bus ";
+-		callback = pm_late_early_op(dev->bus->pm, state);
+-	}
++	callback = dpm_subsys_resume_early_cb(dev, state, &info);
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "early driver ";
+@@ -1110,6 +1152,35 @@ static void dpm_superior_set_must_resume
+ 	device_links_read_unlock(idx);
+ }
+ 
++static pm_callback_t dpm_subsys_suspend_noirq_cb(struct device *dev,
++						 pm_message_t state,
++						 const char **info_p)
++{
++	pm_callback_t callback;
++	const char *info;
++
++	if (dev->pm_domain) {
++		info = "noirq power domain ";
++		callback = pm_noirq_op(&dev->pm_domain->ops, state);
++	} else if (dev->type && dev->type->pm) {
++		info = "noirq type ";
++		callback = pm_noirq_op(dev->type->pm, state);
++	} else if (dev->class && dev->class->pm) {
++		info = "noirq class ";
++		callback = pm_noirq_op(dev->class->pm, state);
++	} else if (dev->bus && dev->bus->pm) {
++		info = "noirq bus ";
++		callback = pm_noirq_op(dev->bus->pm, state);
++	} else {
++		return NULL;
++	}
++
++	if (info_p)
++		*info_p = info;
++
++	return callback;
++}
++
+ /**
+  * __device_suspend_noirq - Execute a "noirq suspend" callback for given device.
+  * @dev: Device to handle.
+@@ -1121,8 +1192,8 @@ static void dpm_superior_set_must_resume
+  */
+ static int __device_suspend_noirq(struct device *dev, pm_message_t state, bool async)
+ {
+-	pm_callback_t callback = NULL;
+-	const char *info = NULL;
++	pm_callback_t callback;
++	const char *info;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -1141,19 +1212,7 @@ static int __device_suspend_noirq(struct
+ 	if (dev->power.syscore || dev->power.direct_complete)
+ 		goto Complete;
+ 
+-	if (dev->pm_domain) {
+-		info = "noirq power domain ";
+-		callback = pm_noirq_op(&dev->pm_domain->ops, state);
+-	} else if (dev->type && dev->type->pm) {
+-		info = "noirq type ";
+-		callback = pm_noirq_op(dev->type->pm, state);
+-	} else if (dev->class && dev->class->pm) {
+-		info = "noirq class ";
+-		callback = pm_noirq_op(dev->class->pm, state);
+-	} else if (dev->bus && dev->bus->pm) {
+-		info = "noirq bus ";
+-		callback = pm_noirq_op(dev->bus->pm, state);
+-	}
++	callback = dpm_subsys_suspend_noirq_cb(dev, state, &info);
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+@@ -1288,6 +1347,35 @@ int dpm_suspend_noirq(pm_message_t state
+ 	return ret;
+ }
+ 
++static pm_callback_t dpm_subsys_suspend_late_cb(struct device *dev,
++						pm_message_t state,
++						const char **info_p)
++{
++	pm_callback_t callback;
++	const char *info;
++
++	if (dev->pm_domain) {
++		info = "late power domain ";
++		callback = pm_late_early_op(&dev->pm_domain->ops, state);
++	} else if (dev->type && dev->type->pm) {
++		info = "late type ";
++		callback = pm_late_early_op(dev->type->pm, state);
++	} else if (dev->class && dev->class->pm) {
++		info = "late class ";
++		callback = pm_late_early_op(dev->class->pm, state);
++	} else if (dev->bus && dev->bus->pm) {
++		info = "late bus ";
++		callback = pm_late_early_op(dev->bus->pm, state);
++	} else {
++		return NULL;
++	}
++
++	if (info_p)
++		*info_p = info;
++
++	return callback;
++}
++
+ /**
+  * __device_suspend_late - Execute a "late suspend" callback for given device.
+  * @dev: Device to handle.
+@@ -1298,8 +1386,8 @@ int dpm_suspend_noirq(pm_message_t state
+  */
+ static int __device_suspend_late(struct device *dev, pm_message_t state, bool async)
+ {
+-	pm_callback_t callback = NULL;
+-	const char *info = NULL;
++	pm_callback_t callback;
++	const char *info;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -1320,19 +1408,7 @@ static int __device_suspend_late(struct
+ 	if (dev->power.syscore || dev->power.direct_complete)
+ 		goto Complete;
+ 
+-	if (dev->pm_domain) {
+-		info = "late power domain ";
+-		callback = pm_late_early_op(&dev->pm_domain->ops, state);
+-	} else if (dev->type && dev->type->pm) {
+-		info = "late type ";
+-		callback = pm_late_early_op(dev->type->pm, state);
+-	} else if (dev->class && dev->class->pm) {
+-		info = "late class ";
+-		callback = pm_late_early_op(dev->class->pm, state);
+-	} else if (dev->bus && dev->bus->pm) {
+-		info = "late bus ";
+-		callback = pm_late_early_op(dev->bus->pm, state);
+-	}
++	callback = dpm_subsys_suspend_late_cb(dev, state, &info);
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "late driver ";
 
 
-Florian Fainelli (1):
-  SOC: brcmstb: add memory API
-
-Jim Quinlan (7):
-  dt-bindings: pci: Add DT docs for Brcmstb PCIe device
-  PCI: brcmstb: Add Broadcom STB PCIe host controller driver
-  PCI: brcmstb: Add dma-range mapping for inbound traffic
-  PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for MIPS
-  PCI: brcmstb: Add MSI capability
-  MIPS: BMIPS: Add PCI bindings for 7425, 7435
-  MIPS: BMIPS: Enable PCI
-
- .../devicetree/bindings/pci/brcmstb-pcie.txt       |   59 +
- arch/mips/Kconfig                                  |    3 +
- arch/mips/boot/dts/brcm/bcm7425.dtsi               |   26 +
- arch/mips/boot/dts/brcm/bcm7435.dtsi               |   27 +
- arch/mips/boot/dts/brcm/bcm97425svmb.dts           |    4 +
- arch/mips/boot/dts/brcm/bcm97435svmb.dts           |    4 +
- arch/mips/include/asm/Kbuild                       |    1 +
- drivers/pci/Kconfig                                |    2 +-
- drivers/pci/host/Kconfig                           |    9 +
- drivers/pci/host/Makefile                          |    3 +
- drivers/pci/host/pcie-brcmstb-dma.c                |  319 ++++
- drivers/pci/host/pcie-brcmstb.c                    | 1591 ++++++++++++++++++++
- drivers/pci/host/pcie-brcmstb.h                    |   22 +
- drivers/soc/bcm/brcmstb/Makefile                   |    2 +-
- drivers/soc/bcm/brcmstb/memory.c                   |  172 +++
- include/soc/brcmstb/memory_api.h                   |   25 +
- 16 files changed, 2267 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
- create mode 100644 drivers/pci/host/pcie-brcmstb-dma.c
- create mode 100644 drivers/pci/host/pcie-brcmstb.c
- create mode 100644 drivers/pci/host/pcie-brcmstb.h
- create mode 100644 drivers/soc/bcm/brcmstb/memory.c
- create mode 100644 include/soc/brcmstb/memory_api.h
-
--- 
-1.9.0.138.g2de3478
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
