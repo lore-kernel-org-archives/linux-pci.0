@@ -1,67 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60768 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751133AbdKIUrR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 15:47:17 -0500
-From: Pawandeep Oza <poza@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH 2/4] PCI/portdrv: Add/Remove port services to the list
-Date: Fri, 10 Nov 2017 02:16:37 +0530
-Message-Id: <1510260399-14886-3-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1510260399-14886-1-git-send-email-poza@codeaurora.org>
-References: <1510260399-14886-1-git-send-email-poza@codeaurora.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:1873 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbdKLNSG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Nov 2017 08:18:06 -0500
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <swarren@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
+Subject: [PATCH V3 2/3] PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
+Date: Sun, 12 Nov 2017 18:47:53 +0530
+Message-ID: <1510492674-12786-3-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Oza Pawandeep <poza@codeaurora.org>
+sets CLKREQ asserted delay to a higher value to avoid
+unnecessary wake up from L1.2_ENTRY state for Tegra210
 
-This patch adds and removes the port service to the service list.
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+V2:
+* no change in this patch
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+V3:
+* no change in this patch
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index a592103..6bfe986 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -454,6 +454,8 @@ static int pcie_port_probe_service(struct device *dev)
- 	if (status)
- 		return status;
+ drivers/pci/host/pci-tegra.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 6d68f49f152e..29ee4bb0b7c6 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -204,6 +204,8 @@
+ #define RP_L1_PM_SUBSTATES_1_CTL			0xC04
+ #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
+ #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
++#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK		(0x1FF << 13)
++#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY		(0x27 << 13)
  
-+	list_add_tail(&pciedev->slist, &pciedev->port->service_list);
-+
- 	get_device(dev);
- 	return 0;
- }
-@@ -477,6 +479,9 @@ static int pcie_port_remove_service(struct device *dev)
- 
- 	pciedev = to_pcie_device(dev);
- 	driver = to_service_driver(dev->driver);
-+
-+	list_del(&pciedev->slist);
-+
- 	if (driver && driver->remove) {
- 		driver->remove(pciedev);
- 		put_device(dev);
-diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
-index b69769d..9d05621 100644
---- a/include/linux/pcieport_if.h
-+++ b/include/linux/pcieport_if.h
-@@ -31,6 +31,7 @@ struct pcie_device {
- 	u32		service;    /* Port service this device represents */
- 	void		*priv_data; /* Service Private Data */
- 	struct device	device;     /* Generic Device Interface */
-+	struct list_head slist;     /* List of services */
+ #define RP_L1_PM_SUBSTATES_2_CTL			0xC08
+ #define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
+@@ -350,6 +352,7 @@ struct tegra_pcie_soc {
+ 	bool program_deskew_time;
+ 	bool updateFC_threshold;
+ 	bool has_aspm_l1ss;
++	bool l1ss_rp_wake_fixup;
  };
- #define to_pcie_device(d) container_of(d, struct pcie_device, device)
  
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -2290,6 +2293,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
+ 		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+ 
++		if (soc->l1ss_rp_wake_fixup) {
++			/* Set CLKREQ asserted delay greater than Power_Off
++			 * time (2us) to avoid RP wakeup in L1.2_ENTRY
++			 */
++			value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
++			value &= ~RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK;
++			value |= RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY;
++			writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
++		}
++
+ 		/* Following is based on clk_m being 19.2 MHz */
+ 		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
+ 		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
+@@ -2446,6 +2459,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.program_deskew_time = false,
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2468,6 +2482,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.program_deskew_time = false,
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2489,6 +2504,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.program_deskew_time = false,
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1ss = false,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2518,6 +2534,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.program_deskew_time = true,
+ 	.updateFC_threshold = true,
+ 	.has_aspm_l1ss = true,
++	.l1ss_rp_wake_fixup = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2540,6 +2557,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.program_deskew_time = false,
+ 	.updateFC_threshold = false,
+ 	.has_aspm_l1ss = true,
++	.l1ss_rp_wake_fixup = false,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.7.4
