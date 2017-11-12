@@ -1,215 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39494 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751967AbdKGWuK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Nov 2017 17:50:10 -0500
-Date: Tue, 7 Nov 2017 16:50:07 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com, rajatja@google.com,
-        yinghai@kernel.org, david.daney@cavium.com, Julia.Lawall@lip6.fr,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH V2 3/4] PCI: tegra: Apply sw fixups to support ASPM-L1
- Sub-States
-Message-ID: <20171107225007.GA22847@bhelgaas-glaptop.roam.corp.google.com>
-References: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
- <1509423769-10522-4-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v3 5/6] PM / core: Direct handling of DPM_FLAG_LEAVE_SUSPENDED
+Date: Sun, 12 Nov 2017 01:43:41 +0100
+Message-ID: <12716736.PSbeukme0s@aspire.rjw.lan>
+In-Reply-To: <4184911.zoJM7jZeH4@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan> <4184911.zoJM7jZeH4@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1509423769-10522-4-git-send-email-vidyas@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Vidya,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Tue, Oct 31, 2017 at 09:52:48AM +0530, Vidya Sagar wrote:
-> Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
-> values to get them reflected in ASPM-L1 Sub-States capability registers
-> Also adjusts internal counter values according to 19.2 MHz clk_m value
-> 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
-> 
->  drivers/pci/host/pci-tegra.c | 65 ++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 65 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index e1526cc5d381..08da67a82a2d 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -40,6 +40,7 @@
->  #include <linux/of_pci.h>
->  #include <linux/of_platform.h>
->  #include <linux/pci.h>
-> +#include <linux/pci-aspm.h>
->  #include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
->  #include <linux/reset.h>
-> @@ -191,6 +192,27 @@
->  #define RP_PRIV_XP_DL	0x494
->  #define  RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD	(0x1ff << 1)
->  
-> +#define RP_L1_PM_SUBSTATES_CTL				0xC00
-> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK		(0xFF << 8)
-> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT		8
-> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK		(0x3 << 16)
-> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT		16
-> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK		(0x1F << 19)
-> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT		19
-> +#define RP_L1_PM_SUBSTATES_CTL_HIDE_CAP			(0x1 << 24)
-> +
-> +#define RP_L1_PM_SUBSTATES_1_CTL			0xC04
-> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
-> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
-> +
-> +#define RP_L1_PM_SUBSTATES_2_CTL			0xC08
-> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
-> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY		0x4D
-> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK	(0xFF << 13)
-> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND		(0x13 << 13)
-> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK	(0xF << 21)
-> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP	(0x2 << 21)
-> +
->  #define RP_RX_HDR_LIMIT	0xe00
->  #define  RP_RX_HDR_LIMIT_PW_MASK	(0xff << 8)
->  #define  RP_RX_HDR_LIMIT_PW		(0x0e << 8)
-> @@ -331,6 +353,7 @@ struct tegra_pcie_soc {
->  	bool program_deskew_time;
->  	bool updateFC_threshold;
->  	bool has_aspm_l1;
-> +	bool has_aspm_l1ss;
->  };
->  
->  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-> @@ -423,6 +446,12 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
->  	return readl(pcie->pads + offset);
->  }
->  
-> +u32 pcie_aspm_get_ltr_l_1_2_threshold(void)
-> +{
-> +	/* LTR L1.2 Threshold = 55us for all ports */
-> +	return ((0x37 << 16) | (0x02 << 29));
+Make the PM core handle DPM_FLAG_LEAVE_SUSPENDED directly for
+devices whose "noirq", "late" and "early" driver callbacks are
+invoked directly by it.
 
-I know you've already worked through this, but let me think out loud
-to try to figure this out myself.
+Namely, make it skip all of the system-wide resume callbacks for
+such devices with DPM_FLAG_LEAVE_SUSPENDED set if they are in
+runtime suspend during the "noirq" phase of system-wide suspend
+(or analogous) transitions or the system transition under way is
+a proper suspend (rather than anything related to hibernation) and
+the device's wakeup settings are compatible with runtime PM (that
+is, the device cannot generate wakeup signals at all or it is
+allowed to wake up the system from sleep).
 
-ASPM defines Link power states L0, L0s, and L1.  L1 PM Substates
-extend that by adding L1.1 and L1.2.  L1.2 presumably uses less power
-and has a longer exit delay than L1.1 [sec 5.5].
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-Ports that support L1.2 must support Latency Tolerance Reporting (LTR)
-[sec 6.18].  When LTR is enabled, a device periodically sends LTR
-messages.
+v2 -> v3: Rebase on the v3 of patch [1/6].
 
-When ASPM puts a Link into L1, it chooses either L1.1 or L1.2 based on
-LTR_L1.2_THRESHOLD and recent LTR messages.  If there's no LTR
-information it looks like LTR_L1.2_THRESHOLD doesn't matter and it
-always chooses L1.2 [sec 5.5.1].
+---
+ Documentation/driver-api/pm/devices.rst |    9 ++++++
+ drivers/base/power/main.c               |   47 ++++++++++++++++++++++++++++----
+ 2 files changed, 51 insertions(+), 5 deletions(-)
 
-I don't see anything that writes PCI_EXP_DEVCTL2_LTR_EN, so I don't
-think Linux ever enables LTR.  Some BIOSes apparently enable it
-(Google for "LTR enabled").
-
-1) It seems like the LTR_L1.2_THRESHOLD value should be computed based
-   on the latency requirements of downstream devices.  How did you
-   come up with 55us?
-
-2) The spec requires [sec 5.5.4] that LTR_L1.2_THRESHOLD at both ends
-   of a Link be the same, but as far as I can see, there's no
-   requirement that it be the same across the whole system, so this
-   interface doesn't seem like quite the right approach.
-
-3) We must support kernels with multiple host bridge drivers compiled
-   in, and the weak/strong symbol approach doesn't support using the
-   correct version, e.g., if we merge this patch, every system
-   containing the tegra driver would use this function, even if the
-   hardware had a different host bridge.  Also, if another driver
-   implemented its own version, we'd have duplicate symbols.
-
->  /*
->   * The configuration space mapping on Tegra is somewhat similar to the ECAM
->   * defined by PCIe. However it deviates a bit in how the 4 bits for extended
-> @@ -2262,6 +2291,37 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
->  		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
->  		writel(value, port->base + RP_VEND_XP);
->  	}
-> +
-> +	if (soc->has_aspm_l1ss) {
-> +		/* Set Common Mode Restore Time to 30us */
-> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
-> +		value &= ~RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK;
-> +		value |= (0x1E << RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT);
-> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
-> +
-> +		/* set T_Power_On to 70us */
-> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
-> +		value &= ~(RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK |
-> +			RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK);
-> +		value |= (1 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT) |
-> +			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
-> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
-> +
-> +		/* Following is based on clk_m being 19.2 MHz */
-> +		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
-> +		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
-> +		value |= RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY;
-> +		writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
-> +
-> +		value = readl(port->base + RP_L1_PM_SUBSTATES_2_CTL);
-> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK;
-> +		value |= RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY;
-> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK;
-> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND;
-> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK;
-> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP;
-> +		writel(value, port->base + RP_L1_PM_SUBSTATES_2_CTL);
-> +	}
->  }
->  /*
->   * FIXME: If there are no PCIe cards attached, then calling this function
-> @@ -2403,6 +2463,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
->  	.has_aspm_l1 = false,
-> +	.has_aspm_l1ss = false,
->  };
->  
->  static const struct tegra_pcie_soc tegra30_pcie = {
-> @@ -2425,6 +2486,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
->  	.has_aspm_l1 = true,
-> +	.has_aspm_l1ss = false,
->  };
->  
->  static const struct tegra_pcie_soc tegra124_pcie = {
-> @@ -2446,6 +2508,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
->  	.has_aspm_l1 = true,
-> +	.has_aspm_l1ss = false,
->  };
->  
->  static const struct tegra_pcie_soc tegra210_pcie = {
-> @@ -2475,6 +2538,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
->  	.program_deskew_time = true,
->  	.updateFC_threshold = true,
->  	.has_aspm_l1 = true,
-> +	.has_aspm_l1ss = true,
->  };
->  
->  static const struct tegra_pcie_soc tegra186_pcie = {
-> @@ -2497,6 +2561,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
->  	.has_aspm_l1 = true,
-> +	.has_aspm_l1ss = true,
->  };
->  
->  static const struct of_device_id tegra_pcie_of_match[] = {
-> -- 
-> 2.7.4
-> 
+Index: linux-pm/drivers/base/power/main.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/main.c
++++ linux-pm/drivers/base/power/main.c
+@@ -589,6 +589,7 @@ static int device_resume_noirq(struct de
+ {
+ 	pm_callback_t callback;
+ 	const char *info;
++	bool skip_resume;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -602,23 +603,33 @@ static int device_resume_noirq(struct de
+ 
+ 	dpm_wait_for_superior(dev, async);
+ 
++	skip_resume = dev_pm_may_skip_resume(dev);
++
+ 	callback = dpm_subsys_resume_noirq_cb(dev, state, &info);
++	if (callback)
++		goto Run;
++
++	if (skip_resume)
++		goto Skip;
+ 
+ 	if (!callback && dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+ 		callback = pm_noirq_op(dev->driver->pm, state);
+ 	}
+ 
++Run:
+ 	error = dpm_run_callback(callback, dev, state, info);
++
++Skip:
+ 	dev->power.is_noirq_suspended = false;
+ 
+-	if (dev_pm_may_skip_resume(dev)) {
++	if (skip_resume) {
+ 		pm_runtime_set_suspended(dev);
+ 		dev->power.is_late_suspended = false;
+ 		dev->power.is_suspended = false;
+ 	}
+ 
+- Out:
++Out:
+ 	complete_all(&dev->power.completion);
+ 	TRACE_RESUME(error);
+ 	return error;
+@@ -1194,6 +1205,7 @@ static int __device_suspend_noirq(struct
+ {
+ 	pm_callback_t callback;
+ 	const char *info;
++	bool direct_cb = false;
+ 	int error = 0;
+ 
+ 	TRACE_DEVICE(dev);
+@@ -1213,12 +1225,17 @@ static int __device_suspend_noirq(struct
+ 		goto Complete;
+ 
+ 	callback = dpm_subsys_suspend_noirq_cb(dev, state, &info);
++	if (callback)
++		goto Run;
+ 
+-	if (!callback && dev->driver && dev->driver->pm) {
++	direct_cb = true;
++
++	if (dev->driver && dev->driver->pm) {
+ 		info = "noirq driver ";
+ 		callback = pm_noirq_op(dev->driver->pm, state);
+ 	}
+ 
++Run:
+ 	error = dpm_run_callback(callback, dev, state, info);
+ 	if (error) {
+ 		async_error = error;
+@@ -1228,13 +1245,33 @@ static int __device_suspend_noirq(struct
+ 	dev->power.is_noirq_suspended = true;
+ 
+ 	if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED)) {
++		pm_message_t resume_msg = resume_event(state);
++		bool skip_resume;
++
++		if (direct_cb &&
++		    !dpm_subsys_suspend_late_cb(dev, state, NULL) &&
++		    !dpm_subsys_resume_early_cb(dev, resume_msg, NULL) &&
++		    !dpm_subsys_resume_noirq_cb(dev, resume_msg, NULL)) {
++			/*
++			 * If all of the device driver's "noirq", "late" and
++			 * "early" callbacks are invoked directly by the core,
++			 * the decision to allow the device to stay in suspend
++			 * can be based on its current runtime PM status and its
++			 * wakeup settings.
++			 */
++			skip_resume = pm_runtime_status_suspended(dev) ||
++				(resume_msg.event == PM_EVENT_RESUME &&
++				 (!device_can_wakeup(dev) ||
++				  device_may_wakeup(dev)));
++		} else {
++			skip_resume = dev->power.may_skip_resume;
++		}
+ 		/*
+ 		 * The only safe strategy here is to require that if the device
+ 		 * may not be left in suspend, resume callbacks must be invoked
+ 		 * for it.
+ 		 */
+-		dev->power.must_resume = dev->power.must_resume ||
+-					!dev->power.may_skip_resume ||
++		dev->power.must_resume = dev->power.must_resume || !skip_resume ||
+ 					atomic_read(&dev->power.usage_count);
+ 	} else {
+ 		dev->power.must_resume = true;
+Index: linux-pm/Documentation/driver-api/pm/devices.rst
+===================================================================
+--- linux-pm.orig/Documentation/driver-api/pm/devices.rst
++++ linux-pm/Documentation/driver-api/pm/devices.rst
+@@ -811,3 +811,12 @@ middle layer is then responsible for han
+ device may be left suspended, but the other resume callbacks (except for
+ ``->complete``) will be skipped automatically by the PM core if the device
+ really can be left in suspend.
++
++For devices whose "noirq", "late" and "early" driver callbacks are invoked
++directly by the PM core, all of the system-wide resume callbacks are skipped if
++``DPM_FLAG_LEAVE_SUSPENDED`` is set and the device is in runtime suspend during
++the ``suspend_noirq`` (or analogous) phase or the transition under way is a
++proper system suspend (rather than anything related to hibernation) and the
++device's wakeup settings are suitable for runtime PM (that is, it cannot
++generate wakeup signals at all or it is allowed to wake up the system from
++sleep).
