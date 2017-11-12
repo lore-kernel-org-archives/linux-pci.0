@@ -1,80 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38258 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753076AbdKFX1P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Nov 2017 18:27:15 -0500
-Date: Mon, 6 Nov 2017 16:27:13 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Wang, Liang-min" <liang-min.wang@intel.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>,
-        "O'riordain, Seosamh" <seosamh.oriordain@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
-Message-ID: <20171106162713.0a49ac3f@t450s.home>
-In-Reply-To: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5BB50@FMSMSX110.amr.corp.intel.com>
-References: <20171024200426.62811-1-jeffrey.t.kirsher@intel.com>
-        <20171024234351.0af0ff4a@t450s.home>
-        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB59E36@FMSMSX110.amr.corp.intel.com>
-        <20171025000654.7621b84e@t450s.home>
-        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5ADD3@FMSMSX110.amr.corp.intel.com>
-        <20171028001907.7b8fa60d@t450s.home>
-        <1509146439.11655.60.camel@intel.com>
-        <20171029061646.GA28105@infradead.org>
-        <1509367141.11641.51.camel@infradead.org>
-        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB5BB50@FMSMSX110.amr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:51058 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751186AbdKLM3A (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Nov 2017 07:29:00 -0500
+From: Johan Hovold <johan@kernel.org>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>
+Subject: [PATCH] PCI: keystone: fix interrupt-controller-node lookup
+Date: Sun, 12 Nov 2017 13:28:50 +0100
+Message-Id: <20171112122850.30804-1-johan@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 31 Oct 2017 12:55:20 +0000
-"Wang, Liang-min" <liang-min.wang@intel.com> wrote:
+Fix child-node lookup during initialisation, which ended up searching
+the whole device tree depth-first starting at the parent rather than
+just matching on its children.
 
-> > -----Original Message-----
-> > From: David Woodhouse [mailto:dwmw2@infradead.org]
-> > Sent: Monday, October 30, 2017 8:39 AM
-> > To: Christoph Hellwig <hch@infradead.org>; Duyck, Alexander H
-> > <alexander.h.duyck@intel.com>
-> > Cc: Wang, Liang-min <liang-min.wang@intel.com>;
-> > alex.williamson@redhat.com; linux-kernel@vger.kernel.org; Kirsher, Jeffrey T
-> > <jeffrey.t.kirsher@intel.com>; kvm@vger.kernel.org; bhelgaas@google.com;
-> > linux-pci@vger.kernel.org
-> > Subject: Re: [PATCH] Enable SR-IOV instantiation through /sys file
-> > 
-> > On Sat, 2017-10-28 at 23:16 -0700, Christoph Hellwig wrote:  
-> > > On Fri, Oct 27, 2017 at 11:20:41PM +0000, Duyck, Alexander H wrote:  
-> > > >
-> > > > I don't see this so much as a security problem per-se. It all depends
-> > > > on the hardware setup. If I recall correctly, there are devices where
-> > > > the PF function doesn't really do much other than act as a bit more
-> > > > heavy-weight VF, and the actual logic is handled by a firmware engine
-> > > > on the device.  
-> > >
-> > > Can you cite an example?  While those surely could exist in theory,
-> > > I can't think of a practical example.  
-> > 
-> > I have them, which is why I'm patching the UIO driver to allow num_vfs
-> > to be set. I don't even want to *use* the UIO driver for any purpose
-> > except to make that appear in sysfs. It's all handled in the device.
-> > 
-> > (I think we might be able to just give the PF out to a guest as if it
-> > were just another VF, but I don't think we actually *do* that right
-> > now).  
-> 
-> Under UEFI secure boot environment, kernel puts restrictions on UIO and its derivatives.
-> So, user-space function/driver based upon UIO is no longer working under UEFI secure
-> boot environment. The next viable option is vfio-pci, hence this patch in parallel with
-> UIO work.
+To make things worse, the parent pci node was prematurely freed, while
+the child interrupt-controller node was leaked.
 
-If you want a PF driver that does nothing other than allow SR-IOV to be
-enabled, doesn't that scream pci-stub?  Trying to overlay it onto a
-driver that also allows userspace driver access to that device seems
-like the worst idea.  Thanks,
+Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+Cc: stable <stable@vger.kernel.org>     # 3.18
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/pci/dwc/pci-keystone.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Alex
+diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+index 5bee3af47588..39405598b22d 100644
+--- a/drivers/pci/dwc/pci-keystone.c
++++ b/drivers/pci/dwc/pci-keystone.c
+@@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+ 	}
+ 
+ 	/* interrupt controller is in a child node */
+-	*np_temp = of_find_node_by_name(np_pcie, controller);
++	*np_temp = of_get_child_by_name(np_pcie, controller);
+ 	if (!(*np_temp)) {
+ 		dev_err(dev, "Node for %s is absent\n", controller);
+ 		return -EINVAL;
+@@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+ 	temp = of_irq_count(*np_temp);
+ 	if (!temp) {
+ 		dev_err(dev, "No IRQ entries in %s\n", controller);
++		of_node_put(*np_temp);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+ 			break;
+ 	}
+ 
++	of_node_put(*np_temp);
++
+ 	if (temp) {
+ 		*num_irqs = temp;
+ 		return 0;
+-- 
+2.15.0
