@@ -1,64 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44426 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753053AbdKHV0A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Nov 2017 16:26:00 -0500
-Date: Wed, 8 Nov 2017 15:25:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com,
-        Michal Simek <michal.simek@xilinx.com>,
-        =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-        Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
-Message-ID: <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
-References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v3 3/6] ACPI / PM: Support for LEAVE_SUSPENDED driver flag in ACPI PM domain
+Date: Sun, 12 Nov 2017 01:40:56 +0100
+Message-ID: <15757726.rqMYQ7RnI5@aspire.rjw.lan>
+In-Reply-To: <4184911.zoJM7jZeH4@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan> <4184911.zoJM7jZeH4@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Michal, Sören, Simon]
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Mon, Nov 06, 2017 at 11:33:07PM +0530, Vidya Sagar wrote:
-> limits MSI target address to only 32-bit region to enable
-> some of the PCIe end points where only 32-bit MSIs
-> are supported work properly.
-> One example being Marvel SATA controller
-> 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> ---
->  drivers/pci/host/pci-tegra.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 1987fec1f126..03d3dcdd06c2 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1531,7 +1531,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
->  	}
->  
->  	/* setup AFI/FPCI range */
-> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> +	msi->pages = __get_free_pages(GFP_DMA, 0);
->  	msi->phys = virt_to_phys((void *)msi->pages);
+Add support for DPM_FLAG_LEAVE_SUSPENDED to the ACPI PM domain by
+making it (a) set the power.may_skip_resume status bit for devices
+that, from its perspective, may be left in suspend after system
+wakeup from sleep and (b) return early from acpi_subsys_resume_noirq()
+for devices whose remaining resume callbacks during the transition
+under way are going to be skipped by the PM core.
 
-Should this be GFP_DMA32?  See the comment above the GFP_DMA
-definition.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
 
-Should we be using virt_to_phys() here?  Where exactly is the result
-("msi->phys") used, i.e., what bus will that address appear on?  If it
-appears on the PCI side, this should probably use something like
-pcibios_resource_to_bus().
+v2 -> v3: No changes.
 
-Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a similar
-problem?  They both use GFP_KERNEL, then virt_to_phys(), then write the
-result of virt_to_phys() using a 32-bit register write.
+---
+ drivers/acpi/device_pm.c |   27 ++++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
 
->  	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
-> -- 
-> 2.7.4
-> 
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -987,7 +987,7 @@ void acpi_subsys_complete(struct device
+ 	 * the sleep state it is going out of and it has never been resumed till
+ 	 * now, resume it in case the firmware powered it up.
+ 	 */
+-	if (dev->power.direct_complete && pm_resume_via_firmware())
++	if (pm_runtime_suspended(dev) && pm_resume_via_firmware())
+ 		pm_request_resume(dev);
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_complete);
+@@ -1036,10 +1036,28 @@ EXPORT_SYMBOL_GPL(acpi_subsys_suspend_la
+  */
+ int acpi_subsys_suspend_noirq(struct device *dev)
+ {
+-	if (dev_pm_smart_suspend_and_suspended(dev))
++	int ret;
++
++	if (dev_pm_smart_suspend_and_suspended(dev)) {
++		dev->power.may_skip_resume = true;
+ 		return 0;
++	}
+ 
+-	return pm_generic_suspend_noirq(dev);
++	ret = pm_generic_suspend_noirq(dev);
++	if (ret)
++		return ret;
++
++	/*
++	 * If the target system sleep state is suspend-to-idle, it is sufficient
++	 * to check whether or not the device's wakeup settings are good for
++	 * runtime PM.  Otherwise, the pm_resume_via_firmware() check will cause
++	 * acpi_subsys_complete() to take care of fixing up the device's state
++	 * anyway, if need be.
++	 */
++	dev->power.may_skip_resume = device_may_wakeup(dev) ||
++					!device_can_wakeup(dev);
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(acpi_subsys_suspend_noirq);
+ 
+@@ -1049,6 +1067,9 @@ EXPORT_SYMBOL_GPL(acpi_subsys_suspend_no
+  */
+ int acpi_subsys_resume_noirq(struct device *dev)
+ {
++	if (dev_pm_may_skip_resume(dev))
++		return 0;
++
+ 	/*
+ 	 * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
+ 	 * during system suspend, so update their runtime PM status to "active"
+
+
