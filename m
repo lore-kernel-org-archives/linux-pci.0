@@ -1,128 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0116.outbound.protection.outlook.com ([104.47.40.116]:11293
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751221AbdKUOul (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Nov 2017 09:50:41 -0500
-From: Chris Welch <Chris.Welch@viavisolutions.com>
-To: Vignesh R <vigneshr@ti.com>, Roger Quadros <rogerq@ti.com>
-CC: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Joao Pinto <jpinto@synopsys.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>
-Subject: =?utf-8?B?UkU6IHhoY2lfaGNkIEhDIGRpZWQ7IGNsZWFuaW5nIHVwIHdpdGggVFVTQjcz?=
- =?utf-8?B?NDAgYW5kIMK1UEQ3MjAyMDE=?=
-Date: Tue, 21 Nov 2017 14:50:38 +0000
-Message-ID: <BN6PR18MB1249B64650CF0E38AFF87A9386230@BN6PR18MB1249.namprd18.prod.outlook.com>
-References: <BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com>
- <3dd7a4fc-da86-03cc-9b01-a0d29dd73230@ti.com>
- <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
- <124458f9-f824-6acb-becb-12d768b6e501@ti.com>
- <9dcdbc2a-9296-b260-10ed-08fde0c6f67c@ti.com>
- <d07f7bc9-0064-e84f-6a53-0768d1fe83b7@ti.com>
- <0c095d7f-4bc1-2306-248f-035fd06c1ed8@ti.com>
-In-Reply-To: <0c095d7f-4bc1-2306-248f-035fd06c1ed8@ti.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:43942 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751905AbdKMIFn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 03:05:43 -0500
 MIME-Version: 1.0
+In-Reply-To: <20171113070034.f546eqqbxzab2s2d@verge.net.au>
+References: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
+ <20171108092806.10335-3-marek.vasut+renesas@gmail.com> <20171110090918.jirrnejohfdpcxbo@verge.net.au>
+ <22cec1d9-dc11-e210-d527-0f39f7b2bccd@gmail.com> <20171113070034.f546eqqbxzab2s2d@verge.net.au>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 13 Nov 2017 09:05:41 +0100
+Message-ID: <CAMuHMdV+XhDU60PnROTii1k_1odw4o5QGebzSZqYzxBhV3V6gg@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI: rcar: Add the suspend/resume for pcie-rcar driver
+To: Simon Horman <horms@verge.net.au>
+Cc: Marek Vasut <marek.vasut@gmail.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
+        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogVmlnbmVzaCBSIFttYWls
-dG86dmlnbmVzaHJAdGkuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAyMSwgMjAxNyAx
-Mjo0OCBBTQ0KPiBUbzogUm9nZXIgUXVhZHJvcyA8cm9nZXJxQHRpLmNvbT4NCj4gQ2M6IENocmlz
-IFdlbGNoIDxDaHJpcy5XZWxjaEB2aWF2aXNvbHV0aW9ucy5jb20+OyBsaW51eC11c2JAdmdlci5r
-ZXJuZWwub3JnOw0KPiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBKb2FvIFBpbnRvIDxqcGlu
-dG9Ac3lub3BzeXMuY29tPjsgS0lTSE9OIFZJSkFZDQo+IEFCUkFIQU0gPGtpc2hvbkB0aS5jb20+
-DQo+IFN1YmplY3Q6IFJlOiB4aGNpX2hjZCBIQyBkaWVkOyBjbGVhbmluZyB1cCB3aXRoIFRVU0I3
-MzQwIGFuZCDCtVBENzIwMjAxDQo+IA0KPiANCj4gDQo+IE9uIE1vbmRheSAyMCBOb3ZlbWJlciAy
-MDE3IDA3OjAxIFBNLCBSb2dlciBRdWFkcm9zIHdyb3RlOg0KPiA+IE9uIDIwLzExLzE3IDE1OjE5
-LCBWaWduZXNoIFIgd3JvdGU6DQo+ID4+DQo+ID4+DQo+ID4+IE9uIE1vbmRheSAyMCBOb3ZlbWJl
-ciAyMDE3IDAxOjMxIFBNLCBSb2dlciBRdWFkcm9zIHdyb3RlOg0KPiA+PiBbLi4uXQ0KPiA+Pj4+
-DQo+ID4+Pj4gU28sIGNvdWxkIHlvdSB0cnkgcmV2ZXJ0aW5nIGNvbW1pdCA4YzkzNDA5NWZhMmYz
-IGFuZCBhbHNvIGFwcGx5DQo+ID4+Pj4gYmVsb3cgcGF0Y2ggYW5kIGxldCBtZSBrbm93IGlmIHRo
-YXQgZml4ZXMgdGhlIGlzc3VlPw0KPiA+Pj4+DQo+ID4+Pj4gLS0tLS0tLS0tLS0NCj4gPj4+Pg0K
-PiA+Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpLWRyYTd4eC5jDQo+ID4+Pj4g
-Yi9kcml2ZXJzL3BjaS9kd2MvcGNpLWRyYTd4eC5jIGluZGV4IGU3N2E0Y2VlZDc0Yy4uODI4MGFi
-YzU2ZjMwDQo+ID4+Pj4gMTAwNjQ0DQo+ID4+Pj4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaS1k
-cmE3eHguYw0KPiA+Pj4+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktZHJhN3h4LmMNCj4gPj4+
-PiBAQCAtMjU5LDEwICsyNTksMTcgQEAgc3RhdGljIGlycXJldHVybl90DQo+IGRyYTd4eF9wY2ll
-X21zaV9pcnFfaGFuZGxlcihpbnQgaXJxLCB2b2lkICphcmcpDQo+ID4+Pj4gICAgICAgICB1MzIg
-cmVnOw0KPiA+Pj4+DQo+ID4+Pj4gICAgICAgICByZWcgPSBkcmE3eHhfcGNpZV9yZWFkbChkcmE3
-eHgsDQo+ID4+Pj4gUENJRUNUUkxfRFJBN1hYX0NPTkZfSVJRU1RBVFVTX01TSSk7DQo+ID4+Pj4g
-KyAgICAgICBkcmE3eHhfcGNpZV93cml0ZWwoZHJhN3h4LA0KPiA+Pj4+ICsgUENJRUNUUkxfRFJB
-N1hYX0NPTkZfSVJRU1RBVFVTX01TSSwgcmVnKTsNCj4gPj4+Pg0KPiA+Pj4+ICAgICAgICAgc3dp
-dGNoIChyZWcpIHsNCj4gPj4+PiAgICAgICAgIGNhc2UgTVNJOg0KPiA+Pj4+IC0gICAgICAgICAg
-ICAgICBkd19oYW5kbGVfbXNpX2lycShwcCk7DQo+ID4+Pj4gKyAgICAgICAgICAgICAgIC8qDQo+
-ID4+Pj4gKyAgICAgICAgICAgICAgICAqIE5lZWQgdG8gbWFrZSBzdXJlIG5vIE1TSSBJUlFzIGFy
-ZSBwZW5kaW5nIGJlZm9yZQ0KPiA+Pj4+ICsgICAgICAgICAgICAgICAgKiBleGl0aW5nIGhhbmRs
-ZXIsIGVsc2UgdGhlIHdyYXBwZXIgd2lsbCBub3QgY2F0Y2ggbmV3DQo+ID4+Pj4gKyAgICAgICAg
-ICAgICAgICAqIElSUXMuIFNvIGxvb3AgYXJvdW5kIHRpbGwgZHdfaGFuZGxlX21zaV9pcnEoKSBy
-ZXR1cm5zDQo+ID4+Pj4gKyAgICAgICAgICAgICAgICAqIElSUV9OT05FDQo+ID4+Pj4gKyAgICAg
-ICAgICAgICAgICAqLw0KPiA+Pj4+ICsgICAgICAgICAgICAgICB3aGlsZSAoZHdfaGFuZGxlX21z
-aV9pcnEocHApICE9IElSUV9OT05FKTsNCg0KVGhlIHBhdGNoIGxvb2tzIGdvb2QsIEkgaGF2ZW4n
-dCBoYWQgYSBmYWlsdXJlIGluIGEgZmV3IGRheXMgb2YgdGVzdGluZy4gIA0KDQpZb3Ugc2hvdWxk
-IGFsc28gbG9vayBhdCBpbmNvcnBvcmF0aW5nIHRoZSBmb2xsb3dpbmcgdGhhdCBJIG5lZWRlZCB0
-byBjaGFuZ2UgdG8gZ2V0IG91ciBwcm9kdWN0IHdvcmtpbmcuICBUaGUgZmlyc3QgY2hhbmdlIGZp
-eGVzIGEgbWlzcyBieSBvbmUgZXJyb3Igd2l0aCB0aGUgaW50ZXJydXB0IGxpbmVzLiAgDQoNClRo
-ZSBzZWNvbmQgY2hhbmdlIGV4dGVuZHMgYSBwYXRjaCB5b3UgZGV2ZWxvcGVkIGZvciBlcnJhdGEg
-aTg3MCBidXQgd2UgZm91bmQgaXMgYXBwbGljYWJsZSB0byBSQyBvcGVyYXRpb24gYXMgd2VsbCBh
-cyBFUHMuICBUaGFua3MgdmVyeSBtdWNoIGZvciB5b3VyIGhlbHAhDQoNCmRpZmYgLS1naXQgYS9k
-cml2ZXJzL3BjaS9kd2MvcGNpLWRyYTd4eC5jIGIvZHJpdmVycy9wY2kvZHdjL3BjaS1kcmE3eHgu
-Yw0Kb2xkIG1vZGUgMTAwNjQ0DQpuZXcgbW9kZSAxMDA3NTUNCmluZGV4IGRlZmEyNzIuLjYyNDVk
-ODkNCi0tLSBhL2RyaXZlcnMvcGNpL2R3Yy9wY2ktZHJhN3h4LmMNCisrKyBiL2RyaXZlcnMvcGNp
-L2R3Yy9wY2ktZHJhN3h4LmMNCkBAIC0yMzgsOCArMjM4LDggQEAgc3RhdGljIGludCBkcmE3eHhf
-cGNpZV9pbml0X2lycV9kb21haW4oc3RydWN0IHBjaWVfcG9ydCAqcHApDQogICAgICAgICAgICAg
-ICAgZGV2X2VycihkZXYsICJObyBQQ0llIEludGMgbm9kZSBmb3VuZFxuIik7DQogICAgICAgICAg
-ICAgICAgcmV0dXJuIC1FTk9ERVY7DQogICAgICAgIH0NCi0NCi0gICAgICAgZHJhN3h4LT5pcnFf
-ZG9tYWluID0gaXJxX2RvbWFpbl9hZGRfbGluZWFyKHBjaWVfaW50Y19ub2RlLCA0LA0KKyAgICAg
-ICAgLy8gUENJIGludGVycnVwdCBsaW5lcyBzdGFydCBhdCAxIG5vdCB6ZXJvIHNvIG5lZWQgdG8g
-YWRkIDENCisgICAgICAgZHJhN3h4LT5pcnFfZG9tYWluID0gaXJxX2RvbWFpbl9hZGRfbGluZWFy
-KHBjaWVfaW50Y19ub2RlLCA0ICsgMSwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICZpbnR4X2RvbWFpbl9vcHMsIHBwKTsNCiAgICAgICAgaWYgKCFk
-cmE3eHgtPmlycV9kb21haW4pIHsNCiAgICAgICAgICAgICAgICBkZXZfZXJyKGRldiwgIkZhaWxl
-ZCB0byBnZXQgYSBJTlR4IElSUSBkb21haW5cbiIpOw0KQEAgLTcwNiwxMCArNzA2LDE2IEBAIHN0
-YXRpYyBpbnQgX19pbml0IGRyYTd4eF9wY2llX3Byb2JlKHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2Ug
-KnBkZXYpDQogICAgICAgICAgICAgICAgZHJhN3h4X3BjaWVfd3JpdGVsKGRyYTd4eCwgUENJRUNU
-UkxfVElfQ09ORl9ERVZJQ0VfVFlQRSwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgREVWSUNFX1RZUEVfUkMpOw0KIA0KKyAgICAgICAgICAgICAgIC8vIEVycmF0YSBpODcwIGFw
-cGxpZXMgdG8gUkMgYXMgd2VsbCBhcyBFUA0KKyAgICAgICAgICAgICAgIHJldCA9IGRyYTd4eF9w
-Y2llX2VwX2xlZ2FjeV9tb2RlKGRldik7DQorICAgICAgICAgICAgICAgaWYgKHJldCkNCisgICAg
-ICAgICAgICAgICAgICAgICAgIGdvdG8gZXJyX2dwaW87DQorDQogICAgICAgICAgICAgICAgcmV0
-ID0gZHJhN3h4X2FkZF9wY2llX3BvcnQoZHJhN3h4LCBwZGV2KTsNCiAgICAgICAgICAgICAgICBp
-ZiAocmV0IDwgMCkNCiAgICAgICAgICAgICAgICAgICAgICAgIGdvdG8gZXJyX2dwaW87DQogICAg
-ICAgICAgICAgICAgYnJlYWs7DQoNCg0KPiA+Pj4NCj4gPj4+IFRvIGF2b2lkIHRoaXMga2luZCBv
-ZiBsb29waW5nLCBzaG91bGRuJ3Qgd2UgYmUgZGlzYWJsaW5nIGFsbCBJUlENCj4gPj4+IGV2ZW50
-cyB3aGlsZSB0aGUgaW50ZXJydXB0IGhhbmRsZXIgaXMgcnVubmluZyBhbmQgZW5hYmxlIHRoZW0g
-anVzdA0KPiA+Pj4gYmVmb3JlIHdlIHJldHVybiBmcm9tIHRoZSBoYXJkaXJxIGhhbmRsZXI/DQo+
-ID4+DQo+ID4+IElJVUMsIHlvdSBhcmUgc2F5aW5nIHRvIGRpc2FibGUgYWxsIE1TSXMgYXQgUENJ
-ZSBkZXNpZ253YXJlIGNvcmUNCj4gPj4gbGV2ZWwsIHRoZW4gY2FsbCBkd19oYW5kbGVfbXNpX2ly
-cSgpIGFuZCB0aGVuIGVuYWJsZSBNU0lzIGFmdGVyDQo+ID4+IGhhcmRpcnEgcmV0dXJucy4gQnV0
-LCB0aGUgcHJvYmxlbSBpcyBpZiBQQ0llIEVQIHJhaXNlcyBhbm90aGVyIE1TSQ0KPiA+PiBhZnRl
-ciB0aGUgY2FsbCB0byBFUCdzIGhhbmRsZXIgYnV0IGJlZm9yZSByZS1lbmFibGluZyBNU0lzLCB0
-aGVuIGl0DQo+ID4+IHdpbGwgYmUgaWdub3JlZCBhcyBJUlFzIGFyZSBub3QgeWV0IGVuYWJsZWQu
-DQo+ID4+IElkZWFsbHksIEVQJ3Mgc3VwcG9ydCBQZXIgVmVjdG9yIE1hc2tpbmcoUFZNKSB3aGlj
-aCBhbGxvdyBSQyB0bw0KPiA+PiBwcmV2ZW50IEVQIGZyb20gc2VuZGluZyBNU0kgbWVzc2FnZXMg
-Zm9yIHNvbWV0aW1lLiBCdXQsDQo+ID4+IHVuZm9ydHVuYXRlbHksIHRoZSBjYXJkcyBtZW50aW9u
-ZWQgaGVyZSBkb24ndCBzdXBwb3J0IHRoaXMgZmVhdHVyZS4NCj4gPg0KPiA+IEknbSBub3QgYXdh
-cmUgb2YgTVNJcy4NCj4gPg0KPiA+IEJ1dCBmb3IgYW55IHR5cGljYWwgaGFyZHdhcmUsIHRoZXJl
-IHNob3VsZCBiZSBhbiBpbnRlcnJ1cHQgZXZlbnQNCj4gPiBlbmFibGUgcmVnaXN0ZXIgYW5kIGFu
-IGludGVycnVwdCBtYXNrIHJlZ2lzdGVyLg0KPiA+DQo+ID4gSW4gdGhlIElSUSBoYW5kbGVyLCB3
-ZSBtYXNrIHRoZSBpbnRlcnJ1cHQgYnV0IHN0aWxsIGtlZXAgdGhlIGludGVycnVwdA0KPiA+IGV2
-ZW50cyBlbmFibGVkIHNvIHRoYXQgdGhleSBjYW4gYmUgbGF0Y2hlZCBkdXJpbmcgdGhlIHRpbWUg
-dGhlIGludGVycnVwdCB3YXMNCj4gbWFza2VkLg0KPiA+DQo+ID4gV2hlbiB0aGUgaW50ZXJydXB0
-IGlzIHVubWFza2VkIGF0IGVuZCBvZiB0aGUgSVJRIGhhbmRsZXIsIGl0IHNob3VsZA0KPiA+IHJl
-LXRyaWdnZXIgdGhlIGludGVycnVwdCBpZiBhbnkgZXZlbnRzIHdlcmUgbGF0Y2hlZCBhbmQgcGVu
-ZGluZy4NCj4gPg0KPiA+IFRoaXMgd2F5IHlvdSBkb24ndCBuZWVkIHRvIGtlZXAgY2hlY2tpbmcg
-Zm9yIGFueSBwZW5kaW5nIGV2ZW50cyBpbiB0aGUgSVJRDQo+IGhhbmRsZXIuDQo+ID4NCj4gDQo+
-IFRoYW5rcyBmb3IgdGhlIHN1Z2dlc3Rpb24hIEkgdHJpZWQgdXNpbmcgaW50ZXJydXB0IG1hc2tp
-bmcgYXQgZGVzaWdud2FyZSBsZXZlbC4NCj4gQnV0LCB1bmZvcnR1bmF0ZWx5IHRoYXQgZG9lcyBu
-b3QgaGVscCBhbmQgbXkgdGVzdCBjYXNlcyBzdGlsbCBmYWlsLg0KPiBTZWVtcyBsaWtlIGRlc2ln
-bndhcmUgTVNJIHN0YXR1cyByZWdpc3RlciBpcyBhIG5vbi1tYXNrZWQgc3RhdHVzIGFuZCBkcmE3
-eHgNCj4gc3BlY2lmaWMgd3JhcHBlciBzZWVtcyB0byBiZSByZWx5aW5nIG9uIHRoaXMgbm9uLW1h
-c2tlZCBzdGF0dXMgdG8gcmFpc2UNCj4gSVJRKGluc3RlYWQgb2YgYWN0dWFsIElSUSBzaWduYWwg
-b2YgZGVzaWdud2FyZSkgdG8gQ1BVLiBUaGVyZSBpcyB2ZXJ5IGxpdHRsZQ0KPiBkb2N1bWVudGF0
-aW9uIGluIHRoZSBUUk0gd3J0IGhvdyB3cmFwcGVyIGZvcndhcmRzIGRlc2lnbndhcmUgSVJRIHN0
-YXR1cyB0bw0KPiBDUFUuDQo+IA0KPiBTbywgYXQgYmVzdCwgSSB3aWxsIGFkZCBhIGNoZWNrIGlu
-IHRoZSBhYm92ZSB3aGlsZSgpIGxvb3AgYW5kIGJyZWFrIGFuZCBleGl0IElSUQ0KPiBoYW5kbGVy
-LCBsZXRzIHNheSBhZnRlciAxSyBsb29wcy4NCj4gDQo+IA0KPiAtLQ0KPiBSZWdhcmRzDQo+IFZp
-Z25lc2gNCg==
+Hi Simon,
+
+On Mon, Nov 13, 2017 at 8:00 AM, Simon Horman <horms@verge.net.au> wrote:
+> On Fri, Nov 10, 2017 at 10:53:07PM +0100, Marek Vasut wrote:
+>> On 11/10/2017 10:09 AM, Simon Horman wrote:
+>> > On Wed, Nov 08, 2017 at 10:28:06AM +0100, Marek Vasut wrote:
+>> >> @@ -872,11 +902,25 @@ static const struct irq_domain_ops msi_domain_ops = {
+>> >>    .map = rcar_msi_map,
+>> >>  };
+>> >>
+>> >> +static void rcar_pcie_hw_enable_msi(struct rcar_pcie *pcie)
+>> >> +{
+>> >> +  struct rcar_msi *msi = &pcie->msi;
+>> >> +  unsigned long base;
+>> >> +
+>> >> +  /* setup MSI data target */
+>> >> +  base = virt_to_phys((void *)msi->pages);
+>> >
+>> > Why do you need to cast to void *?
+>> > I expect such casting can be done implicitly.
+>>
+>> Because __get_free_pages() returns unsigned long and that's what's used
+>> to assign msi->pages . And virt_to_phys() expects void * instead, thus
+>> the cast.
+>
+> Right, but I don't think one should ever need to explicitly cast
+> to or from void *. What mean is, can you just remove "(void *)" without
+
+In general, I agree ("casts are evil").
+
+> changing any behaviour?
+
+In this particular case, there's no way around the cast, as __get_free_pages()
+returns unsigned long because of historical reasons (if written today, it
+would return a pointer for sure).
+
+Other exceptions are storing integral types in of_device_id.data (which is
+void *), and storing private data pointers in Scsi_Host.hostdata (which is
+unsigned long).
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
