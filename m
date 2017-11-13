@@ -1,43 +1,66 @@
-Return-Path: <SRS0=KD5Y=CI=ACULAB.COM=David.Laight@kernel.org>
-Return-Path: <SRS0=KD5Y=CI=ACULAB.COM=David.Laight@kernel.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Vidya Sagar' <vidyas@nvidia.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: "treding@nvidia.com" <treding@nvidia.com>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "linux-tegra@vger.kernel.org"
-	<linux-tegra@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "kthota@nvidia.com" <kthota@nvidia.com>,
-	"swarren@nvidia.com" <swarren@nvidia.com>, "mmaddireddy@nvidia.com"
-	<mmaddireddy@nvidia.com>, Michal Simek <michal.simek@xilinx.com>,
-	=?utf-8?B?U8O2cmVuIEJyaW5rbWFubg==?= <soren.brinkmann@xilinx.com>, "Simon
- Horman" <horms@verge.net.au>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: RE: [PATCH] PCI: tegra: limit MSI target address to 32-bit
-Date: Fri, 10 Nov 2017 09:47:37 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DD00B83D3@AcuExch.aculab.com>
-References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
- <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
- <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
- <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
- <7727b9bc-a44b-4cbe-1839-7e4dd7c2c186@nvidia.com>
-In-Reply-To: <7727b9bc-a44b-4cbe-1839-7e4dd7c2c186@nvidia.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:36062 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752944AbdKMWlA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Nov 2017 17:41:00 -0500
+Subject: [PATCH v1 3/3] PCI: xilinx: Rename xilinx_pcie_link_is_up() to
+ xilinx_pcie_link_up()
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        rfi@lists.rocketboards.org,
+        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Tanmay Inamdar <tinamdar@apm.com>
+Date: Mon, 13 Nov 2017 16:40:58 -0600
+Message-ID: <20171113224058.29024.51914.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogVmlkeWEgU2FnYXINCj4gU2VudDogMDkgTm92ZW1iZXIgMjAxNyAxODo0MQ0KLi4uDQo+
-ID4gQW5kIHRoaXMgY29tbWl0IFszXSBzb3VuZHMgbGlrZSBpdCBkZXNjcmliZXMgYSBzaW1pbGFy
-IGhhcmR3YXJlDQo+ID4gc2l0dWF0aW9uIHdpdGggVGVncmEgd2hlcmUgdGhlIGhvc3QgYnJpZGdl
-IGludGVyY2VwdHMgdGhlIE1TSSB0YXJnZXQNCj4gPiBhZGRyZXNzLCBzbyB3cml0ZXMgdG8gaXQg
-bmV2ZXIgcmVhY2ggc3lzdGVtIG1lbW9yeS4gIFRoYXQgbWVhbnMgdGhhdA0KPiA+IFRlZ3JhIGRv
-ZXNuJ3QgbmVlZCB0byBhbGxvY2F0ZSBzeXN0ZW0gbWVtb3J5IGF0IGFsbC4NCj4gPg0KPiA+IElz
-IHlvdXIgc3lzdGVtIHNpbWlsYXI/ICBDYW4geW91IGp1c3Qgc3RhdGljYWxseSBhbGxvY2F0ZSBh
-IGxpdHRsZSBidXMNCj4gPiBhZGRyZXNzIHNwYWNlLCB1c2UgdGhhdCBmb3IgdGhlIE1TSSB0YXJn
-ZXQgYWRkcmVzcywgYW5kIHNraXAgdGhlDQo+ID4gX19nZXRfZnJlZV9wYWdlcygpPw0KPg0KPiBJ
-dCBpcyB0aGUgc2FtZSBzeXN0ZW0gd2hlcmUgTVNJIG1lbW9yeSB3cml0ZXMgZG9uJ3QgcmVhbGx5
-IG1ha2UgaXQgdG8NCj4gc3lzdGVtIG1lbW9yeS4gQnV0LCB0aGUgYWRkcmVzc2VzIG1lbnRpb25l
-ZCBpbiB0aGF0IHBhdGNoIGRvbid0IHdvcmsuDQo+IHdlIGFyZSB3b3JraW5nIHdpdGggaGFyZHdh
-cmUgZm9sa3Mgb24gdW5kZXJzdGFuZGluZyB0aGUgaXNzdWUgYmV0dGVyLg0KLi4uDQoNCllvdSBk
-byBuZWVkIHRvIG1ha2Ugc3VyZSB0aGF0IHRoZSBhZGRyZXNzIHlvdSBwaWNrIHdpbGwgbmV2ZXIN
-CmJlIHVzZWQgZm9yIGEgJ2RtYScgdHJhbnNmZXIuDQpJZiB0aGUgYWRkcmVzcyBuZWVkcyB0byBi
-ZSBpbnNpZGUgdGhlIChwY2llKSBwaHlzaWNhbCBhZGRyZXNzZXMNCmZvciBzeXN0ZW0gbWVtb3J5
-IHRoZW4gYWxsb2NhdGluZyBhIHBoeXNpY2FsIHBhZ2UgbWF5IGJlIHRoZQ0Kc2FmZXN0IHdheSB0
-byBlbnN1cmUgdGhpcyBkb2Vzbid0IGhhcHBlbi4NCg0KCURhdmlkDQoNCg0K
+From: Bjorn Helgaas <bhelgaas@google.com>
+
+Rename xilinx_pcie_link_is_up() to xilinx_pcie_link_up() to follow the
+convention of other drivers.  No functional change intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-xilinx.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 94e13cb8608f..7b5325990f5e 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -129,7 +129,7 @@ static inline void pcie_write(struct xilinx_pcie_port *port, u32 val, u32 reg)
+ 	writel(val, port->reg_base + reg);
+ }
+ 
+-static inline bool xilinx_pcie_link_is_up(struct xilinx_pcie_port *port)
++static inline bool xilinx_pcie_link_up(struct xilinx_pcie_port *port)
+ {
+ 	return (pcie_read(port, XILINX_PCIE_REG_PSCR) &
+ 		XILINX_PCIE_REG_PSCR_LNKUP) ? 1 : 0;
+@@ -165,7 +165,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+ 
+ 	/* Check if link is up when trying to access downstream ports */
+ 	if (bus->number != port->root_busno)
+-		if (!xilinx_pcie_link_is_up(port))
++		if (!xilinx_pcie_link_up(port))
+ 			return false;
+ 
+ 	/* Only one device down on each root port */
+@@ -541,7 +541,7 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
+ {
+ 	struct device *dev = port->dev;
+ 
+-	if (xilinx_pcie_link_is_up(port))
++	if (xilinx_pcie_link_up(port))
+ 		dev_info(dev, "PCIe Link is UP\n");
+ 	else
+ 		dev_info(dev, "PCIe Link is DOWN\n");
