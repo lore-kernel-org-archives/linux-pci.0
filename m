@@ -1,84 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:59149 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752638AbdLAGNf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Dec 2017 01:13:35 -0500
-From: Vignesh R <vigneshr@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Chris Welch <Chris.Welch@viavisolutions.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, Vignesh R <vigneshr@ti.com>
-Subject: [PATCH 4/4] PCI: dwc: pci-dra7xx: Fix legacy IRQ handling
-Date: Fri, 1 Dec 2017 11:43:11 +0530
-Message-ID: <20171201061311.16691-5-vigneshr@ti.com>
-In-Reply-To: <20171201061311.16691-1-vigneshr@ti.com>
-References: <20171201061311.16691-1-vigneshr@ti.com>
+Return-Path: <SRS0=d0NJ=CL=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=d0NJ=CL=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 13 Nov 2017 11:06:14 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
+	treding@nvidia.com, bhelgaas@google.com,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+	Simon Horman <horms@verge.net.au>
+Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
+Message-ID: <20171113110614.GB27700@red-moon>
+References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
+ <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
+ <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
+ <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
+ <20171110112201.GA25235@red-moon>
+ <3887d62c-98bb-04d5-5b40-96d5b7b43e63@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3887d62c-98bb-04d5-5b40-96d5b7b43e63@arm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
-uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
-4 which is numbered 0-3. Therefore when INTD IRQ line is used with
-pci-dra7xx driver following warning is seen:
+On Fri, Nov 10, 2017 at 12:04:21PM +0000, Robin Murphy wrote:
 
-       WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
-       error: hwirq 0x4 is too large for dummy
+[...]
 
-Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
-range into the 0-3 as done in other PCIe drivers.
+> >>>>Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a
+> >>>>similar problem?  They both use GFP_KERNEL, then virt_to_phys(),
+> >>>>then write the result of virt_to_phys() using a 32-bit register
+> >>>>write.
+> >>>
+> >>>Well, if those systems deal with 64-bit addresses and when an end
+> >>>point is connected which supports only 32-bit MSI addresses, this
+> >>>problem will surface when __get_free_pages() returns an address that
+> >>>translates to a >32-bit address after virt_to_phys() call on it.
+> >>
+> >>I'd like to hear from the R-Car and Xilinx folks about (1) whether
+> >>there's a potential issue with truncating a 64-bit address, and
+> >>(2) whether that hardware works like Tegra, where the MSI write never
+> >>reaches memory so we don't actually need to allocate a page.
+> >>
+> >>If all we need is to allocate a little bus address space for the MSI
+> >>target, I'd like to figure out a better way to do that than
+> >>__get_free_pages().  The current code seems a little buggy, and
+> >>it's getting propagated through several drivers.
+> 
+> The really neat version is to take a known non-memory physical
+> address like the host controller's own MMIO region, which has no
+> legitimate reason to ever be used as a DMA address.
 
-Also, iterate over all the INTx bits and call their respective IRQ
-handlers before clearing the status register.
+True - that could be safe enough.
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
-Signed-off-by: Vignesh R <vigneshr@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+What about IOVAs though ? I suspect we should reserve the MSI address
+range - it looks like there is something missing here.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 53f721d1cc40..59e8de34cec6 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -226,6 +226,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 
- static const struct irq_domain_ops intx_domain_ops = {
- 	.map = dra7xx_pcie_intx_map,
-+	.xlate = pci_irqd_intx_xlate,
- };
- 
- static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
-@@ -256,7 +257,8 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 	struct dra7xx_pcie *dra7xx = arg;
- 	struct dw_pcie *pci = dra7xx->pci;
- 	struct pcie_port *pp = &pci->pp;
--	u32 reg;
-+	unsigned long reg;
-+	u32 virq, bit;
- 
- 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
- 
-@@ -268,8 +270,11 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 	case INTB:
- 	case INTC:
- 	case INTD:
--		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
--						    ffs(reg)));
-+		for_each_set_bit(bit, &reg, PCI_NUM_INTX) {
-+			virq = irq_find_mapping(dra7xx->irq_domain, bit);
-+			if (virq)
-+				generic_handle_irq(virq);
-+		}
- 		break;
- 	}
- 
--- 
-2.15.0
+> pcie-mediatek almost gets this right, but by using virt_to_phys() on
+> an ioremapped address they end up with nonsense rather than the
+> correct address
+
+That definitely needs fixing given that it works by chance.
+
+> (although realistically you would have to be extremely unlucky for
+> said nonsense to collide with a real DMA address given to a PCI
+> endpoint later). Following on from above, dma_map_resource() would
+> be the foolproof way to get that right.
+
+That's how it should be done then lest it trickles into other drivers
+requiring a similar set-up.
+
+Thanks,
+Lorenzo
