@@ -1,138 +1,29 @@
-Return-Path: <SRS0=C7vb=CH=nvidia.com=vidyas@kernel.org>
-Return-Path: <SRS0=C7vb=CH=nvidia.com=vidyas@kernel.org>
-Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <treding@nvidia.com>, <bhelgaas@google.com>,
-	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<kthota@nvidia.com>, <swarren@nvidia.com>, <mmaddireddy@nvidia.com>, "Michal
- Simek" <michal.simek@xilinx.com>, =?UTF-8?Q?S=c3=b6ren_Brinkmann?=
-	<soren.brinkmann@xilinx.com>, Simon Horman <horms@verge.net.au>, "Lorenzo
- Pieralisi" <lorenzo.pieralisi@arm.com>
-References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
- <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
- <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
- <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
-From: Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <7727b9bc-a44b-4cbe-1839-7e4dd7c2c186@nvidia.com>
-Date: Fri, 10 Nov 2017 00:11:05 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:55186 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751236AbdKMHDa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 02:03:30 -0500
+Date: Mon, 13 Nov 2017 08:03:26 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH V2 2/5] PCI: rcar: Clean up the macros
+Message-ID: <20171113070326.qteltu72qpniogcf@verge.net.au>
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+ <20171110215843.432-3-marek.vasut+renesas@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171110215843.432-3-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Nov 10, 2017 at 10:58:40PM +0100, Marek Vasut wrote:
+> Just clean up the macros in the RCar PCI driver, no functional change.
 
-
-On Thursday 09 November 2017 11:44 PM, Bjorn Helgaas wrote:
-> [+cc Lorenzo]
->
-> On Thu, Nov 09, 2017 at 12:48:14PM +0530, Vidya Sagar wrote:
->> On Thursday 09 November 2017 02:55 AM, Bjorn Helgaas wrote:
->>> On Mon, Nov 06, 2017 at 11:33:07PM +0530, Vidya Sagar wrote:
->>>> limits MSI target address to only 32-bit region to enable
->>>> some of the PCIe end points where only 32-bit MSIs
->>>> are supported work properly.
->>>> One example being Marvel SATA controller
->>>>
->>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->>>> ---
->>>>   drivers/pci/host/pci-tegra.c | 2 +-
->>>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra=
-.c
->>>> index 1987fec1f126..03d3dcdd06c2 100644
->>>> --- a/drivers/pci/host/pci-tegra.c
->>>> +++ b/drivers/pci/host/pci-tegra.c
->>>> @@ -1531,7 +1531,7 @@ static int tegra_pcie_enable_msi(struct tegra_pc=
-ie *pcie)
->>>>   	}
->>>>   	/* setup AFI/FPCI range */
->>>> -	msi->pages =3D __get_free_pages(GFP_KERNEL, 0);
->>>> +	msi->pages =3D __get_free_pages(GFP_DMA, 0);
->>>>   	msi->phys =3D virt_to_phys((void *)msi->pages);
->>> Should this be GFP_DMA32?  See the comment above the GFP_DMA
->>> definition.
->> looking at the comments for both GFP_DMA32 and GFP_DMA, I thought GFP_DM=
-A32
->> is the correct one to use, but, even with that I got >32-bit addresses.
->> GFP_DMA always gives addresses in <4GB boundary (i.e. 32-bit).
->> I didn't dig into it to find out why is this the case.
-> This sounds worth looking into (but maybe we don't need the
-> __get_free_pages() at all; see below).  Maybe there's some underlying
-> bug.  My laptop shows this, which looks like it might be related:
->
->    Zone ranges:
->      DMA      [mem 0x0000000000001000-0x0000000000ffffff]
->      DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
->      Normal   [mem 0x0000000100000000-0x00000004217fffff]
->      Device   empty
->
-> What does your machine show?
-I see following in my linux box
- =C2=A0Zone ranges:
- =C2=A0=C2=A0 DMA=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 [mem 0x0000000000001000-0x0=
-000000000ffffff]
- =C2=A0=C2=A0 DMA32=C2=A0=C2=A0=C2=A0 [mem 0x0000000001000000-0x00000000fff=
-fffff]
- =C2=A0=C2=A0 Normal=C2=A0=C2=A0 [mem 0x0000000100000000-0x000000106effffff=
-]
- =C2=A0=C2=A0 Device=C2=A0=C2=A0 empty
-
-and following in my T210 Tegra platform
-Zone ranges:
- =C2=A0 DMA=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 [mem 0x0000000080000000-0x0000000=
-0ffffffff]
- =C2=A0 Normal=C2=A0=C2=A0 [mem 0x0000000100000000-0x000000017fffffff]
-
->
->>> Should we be using virt_to_phys() here?  Where exactly is the
->>> result ("msi->phys") used, i.e., what bus will that address appear
->>> on?  If it appears on the PCI side, this should probably use
->>> something like pcibios_resource_to_bus().
->> This address is written to two places.  First, into host's internal
->> register to let it know that when an incoming memory write comes
->> with this address, raise an MSI interrupt instead of forwarding it
->> to memory subsystem.  Second, into 'Message Address' field of
->> 'Message Address Register for MSI' register in end point's
->> configuration space (this is done by MSI framework) for end point to
->> know which address to be used to generate MSI interrupt.
-> Hmmm, ISTR some past discussion about this.  Here's a little: [1, 2].
-> And this commit [3] sounds like it describes a similar hardware
-> situation with Tegra where the host bridge intercepts the MSI target
-> address, so writes to it never reach system memory.  That means that
-> Tegra doesn't need to allocate system memory at all.
->
-> Is your system similar?  Can you just statically allocate a little bus
-> address space, use that for the MSI target address, and skip the
-> __get_free_pages()?
-It is the same system where MSI memory writes don't really make it to
-system memory. But, the addresses mentioned in that patch don't work.
-we are working with hardware folks on understanding the issue better.
-Meanwhile, using GFP_DMA is giving consistent results and thought this
-can be used as a stop gap solution before we figure out a better bus
-address to be used as MSI target address.
->>> Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a
->>> similar problem?  They both use GFP_KERNEL, then virt_to_phys(),
->>> then write the result of virt_to_phys() using a 32-bit register
->>> write.
->> Well, if those systems deal with 64-bit addresses and when an end
->> point is connected which supports only 32-bit MSI addresses, this
->> problem will surface when __get_free_pages() returns an address that
->> translates to a >32-bit address after virt_to_phys() call on it.
-> I'd like to hear from the R-Car and Xilinx folks about (1) whether
-> there's a potential issue with truncating a 64-bit address, and
-> (2) whether that hardware works like Tegra, where the MSI write never
-> reaches memory so we don't actually need to allocate a page.
->
-> If all we need is to allocate a little bus address space for the MSI
-> target, I'd like to figure out a better way to do that than
-> __get_free_pages().  The current code seems a little buggy, and
-> it's getting propagated through several drivers.
->
->>>>   	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR=
-_ST);
-> [1] https://lkml.kernel.org/r/20170824134451.GA31858@bhelgaas-glaptop.roa=
-m.corp.google.com
-> [2] https://lkml.kernel.org/r/86efs3wesi.fsf@arm.com
-> [3] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit=
-/?id=3Dd7bd554f27c9
+Could you describe the cleanup in slightly more detail?
+My reading is 1. Use BIT() macro 2. tidy up whitespace.
