@@ -1,53 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45136 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753522AbdKVWum (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:50:42 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        sparclinux@vger.kernel.org (open list:SPARC + UltraSPARC
-        (sparc/sparc64)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2 21/29] openprom: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 17:49:16 -0500
-Message-Id: <1511390964-9979-22-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 13 Nov 2017 10:43:06 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Johan Hovold <johan@kernel.org>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] PCI: keystone: fix interrupt-controller-node lookup
+Message-ID: <20171113104306.GA27700@red-moon>
+References: <20171112122850.30804-1-johan@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171112122850.30804-1-johan@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Hi Johan,
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+On Sun, Nov 12, 2017 at 01:28:50PM +0100, Johan Hovold wrote:
+> Fix child-node lookup during initialisation, which ended up searching
+> the whole device tree depth-first starting at the parent rather than
+> just matching on its children.
+> 
+> To make things worse, the parent pci node was prematurely freed, while
+> the child interrupt-controller node was leaked.
 
-Hard-coding the domain as 0 since domain information is not available.
+Thanks for fixing this. I would kindly ask you please to split the
+patch in two since there are two bugs you are fixing at once.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/sbus/char/openprom.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Murali: please test/ack accordingly.
 
-diff --git a/drivers/sbus/char/openprom.c b/drivers/sbus/char/openprom.c
-index 2c2e6a3..7b31f19 100644
---- a/drivers/sbus/char/openprom.c
-+++ b/drivers/sbus/char/openprom.c
-@@ -251,8 +251,9 @@ static int oprompci2node(void __user *argp, struct device_node *dp, struct openp
- 		struct pci_dev *pdev;
- 		struct device_node *dp;
- 
--		pdev = pci_get_bus_and_slot (((int *) op->oprom_array)[0],
--				      ((int *) op->oprom_array)[1]);
-+		pdev = pci_get_domain_bus_and_slot(0,
-+						((int *) op->oprom_array)[0],
-+						((int *) op->oprom_array)[1]);
- 
- 		dp = pci_device_to_OF_node(pdev);
- 		data->current_node = dp;
--- 
-1.9.1
+Thanks !
+Lorenzo
+
+> Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+> Cc: stable <stable@vger.kernel.org>     # 3.18
+> Cc: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>  drivers/pci/dwc/pci-keystone.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+> index 5bee3af47588..39405598b22d 100644
+> --- a/drivers/pci/dwc/pci-keystone.c
+> +++ b/drivers/pci/dwc/pci-keystone.c
+> @@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  	}
+>  
+>  	/* interrupt controller is in a child node */
+> -	*np_temp = of_find_node_by_name(np_pcie, controller);
+> +	*np_temp = of_get_child_by_name(np_pcie, controller);
+>  	if (!(*np_temp)) {
+>  		dev_err(dev, "Node for %s is absent\n", controller);
+>  		return -EINVAL;
+> @@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  	temp = of_irq_count(*np_temp);
+>  	if (!temp) {
+>  		dev_err(dev, "No IRQ entries in %s\n", controller);
+> +		of_node_put(*np_temp);
+>  		return -EINVAL;
+>  	}
+>  
+> @@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  			break;
+>  	}
+>  
+> +	of_node_put(*np_temp);
+> +
+>  	if (temp) {
+>  		*num_irqs = temp;
+>  		return 0;
+> -- 
+> 2.15.0
+> 
