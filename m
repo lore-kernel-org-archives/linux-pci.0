@@ -1,56 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46914 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934039AbdKGAd6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Nov 2017 19:33:58 -0500
-Date: Mon, 6 Nov 2017 18:33:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci: fix kernel-doc build warning
-Message-ID: <20171107003355.GE9538@bhelgaas-glaptop.roam.corp.google.com>
-References: <85dcffe7-1e6b-5735-2552-d35d127e392b@infradead.org>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:57282 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752399AbdKMTLM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 14:11:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <85dcffe7-1e6b-5735-2552-d35d127e392b@infradead.org>
+In-Reply-To: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
+References: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 13 Nov 2017 20:11:11 +0100
+Message-ID: <CAMuHMdVDxFCZ=QULonGZ2_pcbO1L1ycxeiYiT=FCTSgJ58kviQ@mail.gmail.com>
+Subject: Re: [PATCH ] dt-bindings: PCI: rcar: Add device tree support for r8a7743
+To: Biju Das <biju.das@bp.renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Simon Horman <horms@verge.net.au>,
+        Chris Paterson <chris.paterson2@renesas.com>,
+        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 29, 2017 at 05:07:11PM -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Fix build error in kernel-doc notation:
-> 
-> ../drivers/pci/pci.c:3479: ERROR: Unexpected indentation.
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Cc:	Bjorn Helgaas <bhelgaas@google.com>
-> Cc:	linux-pci@vger.kernel.org
-> ---
->  drivers/pci/pci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- lnx-414-rc7.orig/drivers/pci/pci.c
-> +++ lnx-414-rc7/drivers/pci/pci.c
-> @@ -3471,7 +3471,7 @@ EXPORT_SYMBOL(devm_pci_remap_cfgspace);
->   * All operations are managed and will be undone on driver detach.
->   *
->   * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
-> - * on failure. Usage example:
-> + * on failure. Usage example::
+Hi Biju,
 
-I don't understand what's going on here.  Apparently there's something
-special about two colons?  I saw plenty of double colons in
-Documentation/, but I couldn't quickly find out what it means.
+On Mon, Nov 13, 2017 at 5:37 PM, Biju Das <biju.das@bp.renesas.com> wrote:
+> Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller
+> is identical to the R-Car Gen2 family.
+>
+> No driver change is needed due to the fallback compatible value
+> "renesas,pcie-rcar-gen2".
+> Adding the SoC-specific compatible values here has three purposes:
+> 1. Document which SoCs have this hardware module,
+> 2. Allow checkpatch to validate compatible values.
+> 3. Allow the driver to support SoC specific implementations in future
+>    as necessary.
+>
+> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+> Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
 
-If kernel-doc thinks "example:" is a mistake, maybe we could recast
-the sentence as "Example usage:"?  Putting a double colon here makes
-the text look like a mistake to this human reader.
+Thanks for your patch!
 
->   *
->   *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->   *	base = devm_pci_remap_cfg_resource(&pdev->dev, res);
-> 
-> 
+With the below fixed:
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -1,13 +1,15 @@
+>  * Renesas R-Car PCIe interface
+>
+>  Required properties:
+> -compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+> +compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
+> +           "renesas,pcie-r8a7779" for the R8A7779 SoC;
+>             "renesas,pcie-r8a7790" for the R8A7790 SoC;
+>             "renesas,pcie-r8a7791" for the R8A7791 SoC;
+>             "renesas,pcie-r8a7793" for the R8A7793 SoC;
+>             "renesas,pcie-r8a7795" for the R8A7795 SoC;
+>             "renesas,pcie-r8a7796" for the R8A7796 SoC;
+> -           "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
+> +           "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
+> +                                    RZ-G1 compatible device.
+
+RZ/G1
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
