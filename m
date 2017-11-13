@@ -1,85 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 27 Nov 2017 17:44:11 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] PCI: endpoint: Fix find_first_zero_bit() usage
-Message-ID: <20171127174411.GA4123@red-moon>
-References: <20171127154955.22214-1-niklas.cassel@axis.com>
- <20171127154955.22214-4-niklas.cassel@axis.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39434 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752574AbdKMXMM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Nov 2017 18:12:12 -0500
+Subject: [PATCH v1 3/4] PCI/ASPM: Reformat ASPM register definitions
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Rajat Jain <rajatja@google.com>, linux-kernel@vger.kernel.org,
+        Vidya Sagar <vidyas@nvidia.com>
+Date: Mon, 13 Nov 2017 17:12:09 -0600
+Message-ID: <20171113231209.4120.53195.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171113230937.4120.68038.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171113230937.4120.68038.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171127154955.22214-4-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 27, 2017 at 04:49:55PM +0100, Niklas Cassel wrote:
-> find_first_zero_bit()'s parameter 'size' is defined in bits,
-> not in bytes.
-> 
-> Calling find_first_zero_bit() with the wrong size unit
-> will lead to insidious bugs.
-> 
-> Fix this by calling find_first_zero_bit() with size BITS_PER_LONG,
-> rather than sizeof().
-> 
-> Also add proper error handling for find_first_zero_bit(), since this
-> was missing.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-"Fix this by calling find_first_zero_bit() with size BITS_PER_LONG,
-rather than sizeof() and add missing find_first_zero_bit() return
-handling"
+Reformat register field definitions in the style used elsewhere and align
+comments with names used in the spec.  No functional change intended.
 
-> Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/endpoint/pci-ep-cfs.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-> index e1f5adc9e113..0a22a7976580 100644
-> --- a/drivers/pci/endpoint/pci-ep-cfs.c
-> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
-> @@ -109,7 +109,12 @@ static int pci_epc_epf_link(struct config_item *epc_item,
->  		return ret;
->  
->  	func_no = find_first_zero_bit(&epc_group->function_num_map,
-> -				      sizeof(epc_group->function_num_map));
-> +				      BITS_PER_LONG);
-> +	if (func_no >= BITS_PER_LONG) {
-> +		ret = -EINVAL;
-> +		dev_err(&epc->dev, "failed to link endpoint function device\n");
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/uapi/linux/pci_regs.h |   28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-I would not log the error for the time being or make it more explicit:
-
-dev_error(&epc->dev, "unsupported number of functions, failed to link
-endpoint function device\n");
-
-Side note: we _do_ know the max number of functions the epc supports
-(epc->max_functions) when this code is called so we do know the
-bitmap size - we can rework this code path based on that (@kishon,
-thoughts ?).
-
-Other than that:
-
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> +		goto err_func_no;
-> +	}
->  	set_bit(func_no, &epc_group->function_num_map);
->  	epf->func_no = func_no;
->  
-> @@ -121,6 +126,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
->  
->  err_epf_bind:
->  	clear_bit(func_no, &epc_group->function_num_map);
-> +err_func_no:
->  	pci_epc_remove_epf(epc, epf);
->  
->  	return ret;
-> -- 
-> 2.14.2
-> 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f8d58045926f..4150acb4cccb 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -995,19 +995,19 @@
+ #define  PCI_PTM_CTRL_ENABLE		0x00000001  /* PTM enable */
+ #define  PCI_PTM_CTRL_ROOT		0x00000002  /* Root select */
+ 
+-/* L1 PM Substates */
+-#define PCI_L1SS_CAP		    4	/* capability register */
+-#define  PCI_L1SS_CAP_PCIPM_L1_2	 1	/* PCI PM L1.2 Support */
+-#define  PCI_L1SS_CAP_PCIPM_L1_1	 2	/* PCI PM L1.1 Support */
+-#define  PCI_L1SS_CAP_ASPM_L1_2		 4	/* ASPM L1.2 Support */
+-#define  PCI_L1SS_CAP_ASPM_L1_1		 8	/* ASPM L1.1 Support */
+-#define  PCI_L1SS_CAP_L1_PM_SS		16	/* L1 PM Substates Support */
+-#define PCI_L1SS_CTL1		    8	/* Control Register 1 */
+-#define  PCI_L1SS_CTL1_PCIPM_L1_2	1	/* PCI PM L1.2 Enable */
+-#define  PCI_L1SS_CTL1_PCIPM_L1_1	2	/* PCI PM L1.1 Support */
+-#define  PCI_L1SS_CTL1_ASPM_L1_2	4	/* ASPM L1.2 Support */
+-#define  PCI_L1SS_CTL1_ASPM_L1_1	8	/* ASPM L1.1 Support */
+-#define  PCI_L1SS_CTL1_L1SS_MASK	0x0000000F
+-#define PCI_L1SS_CTL2		    0xC	/* Control Register 2 */
++/* ASPM L1 PM Substates */
++#define PCI_L1SS_CAP		0x04	/* Capabilities Register */
++#define  PCI_L1SS_CAP_PCIPM_L1_2	0x00000001  /* PCI-PM L1.2 Supported */
++#define  PCI_L1SS_CAP_PCIPM_L1_1	0x00000002  /* PCI-PM L1.1 Supported */
++#define  PCI_L1SS_CAP_ASPM_L1_2		0x00000004  /* ASPM L1.2 Supported */
++#define  PCI_L1SS_CAP_ASPM_L1_1		0x00000008  /* ASPM L1.1 Supported */
++#define  PCI_L1SS_CAP_L1_PM_SS		0x00000010  /* L1 PM Substates Supported */
++#define PCI_L1SS_CTL1		0x08	/* Control 1 Register */
++#define  PCI_L1SS_CTL1_PCIPM_L1_2	0x00000001  /* PCI-PM L1.2 Enable */
++#define  PCI_L1SS_CTL1_PCIPM_L1_1	0x00000002  /* PCI-PM L1.1 Enable */
++#define  PCI_L1SS_CTL1_ASPM_L1_2	0x00000004  /* ASPM L1.2 Enable */
++#define  PCI_L1SS_CTL1_ASPM_L1_1	0x00000008  /* ASPM L1.1 Enable */
++#define  PCI_L1SS_CTL1_L1SS_MASK	0x0000000f
++#define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
+ 
+ #endif /* LINUX_PCI_REGS_H */
