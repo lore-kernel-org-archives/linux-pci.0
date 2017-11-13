@@ -1,46 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org (open list:LINUX FOR POWER MACINTOSH),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 13/29] powerpc/powermac: deprecate pci_get_bus_and_slot()
-Date: Mon, 27 Nov 2017 11:57:50 -0500
-Message-Id: <1511801886-6753-14-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from relmlor4.renesas.com ([210.160.252.174]:34407 "EHLO
+        relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753732AbdKMQjR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 11:39:17 -0500
+From: Biju Das <biju.das@bp.renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        Chris Paterson <chris.paterson2@renesas.com>,
+        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Biju Das <biju.das@bp.renesas.com>
+Subject: [PATCH ] dt-bindings: PCI: rcar: Add device tree support for r8a7743
+Date: Mon, 13 Nov 2017 16:37:54 +0000
+Message-Id: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller
+is identical to the R-Car Gen2 family.
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+No driver change is needed due to the fallback compatible value
+"renesas,pcie-rcar-gen2".
+Adding the SoC-specific compatible values here has three purposes:
+1. Document which SoCs have this hardware module,
+2. Allow checkpatch to validate compatible values.
+3. Allow the driver to support SoC specific implementations in future
+   as necessary.
 
-Hard-code the domain number as 0 to match the previous behavior.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
 ---
- drivers/macintosh/via-pmu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/macintosh/via-pmu.c b/drivers/macintosh/via-pmu.c
-index c4c2b3b..3e8b3b6 100644
---- a/drivers/macintosh/via-pmu.c
-+++ b/drivers/macintosh/via-pmu.c
-@@ -1799,7 +1799,7 @@ static int powerbook_sleep_grackle(void)
- 	struct adb_request req;
- 	struct pci_dev *grackle;
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 76ba3a6..2c43e38 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -1,13 +1,15 @@
+ * Renesas R-Car PCIe interface
  
--	grackle = pci_get_bus_and_slot(0, 0);
-+	grackle = pci_get_domain_bus_and_slot(0, 0, 0);
- 	if (!grackle)
- 		return -ENODEV;
+ Required properties:
+-compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
++compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
++	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
+ 	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
+ 	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
+ 	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+ 	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
+ 	    "renesas,pcie-r8a7796" for the R8A7796 SoC;
+-	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
++	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
++				     RZ-G1 compatible device.
+ 	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
  
+ 	    When compatible with the generic version, nodes must list the
 -- 
 1.9.1
