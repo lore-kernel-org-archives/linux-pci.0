@@ -1,39 +1,44 @@
-Return-Path: <SRS0=ofcB=C3=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Return-Path: <SRS0=ofcB=C3=gmail.com=ckoenig.leichtzumerken@kernel.org>
-From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] x86/PCI: limit the size of the 64bit BAR to 256GB
-Date: Wed, 29 Nov 2017 15:12:29 +0100
-Message-Id: <20171129141229.6107-4-christian.koenig@amd.com>
-In-Reply-To: <20171129141229.6107-1-christian.koenig@amd.com>
-References: <20171129141229.6107-1-christian.koenig@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:3812 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751759AbdKMOaS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Nov 2017 09:30:18 -0500
+Date: Mon, 13 Nov 2017 16:30:13 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] powerpc/pci: Unroll two pass loop when scanning
+ bridges
+Message-ID: <20171113143013.GF18997@lahna.fi.intel.com>
+References: <20171110175230.82522-1-andriy.shevchenko@linux.intel.com>
+ <20171110175230.82522-2-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171110175230.82522-2-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This avoids problems with Xen which hides some memory resources from the
-OS and potentially also allows memory hotplug while this fixup is
-enabled.
+On Fri, Nov 10, 2017 at 07:52:30PM +0200, Andy Shevchenko wrote:
+> The current scanning code is really hard to understand because it calls
+> the same function in a loop where pass value is changed without any
+> comments explaining it:
+> 
+>   for (pass = 0; pass < 2; pass++)
+>     for_each_pci_bridge(dev, bus)
+>       max = pci_scan_bridge(bus, dev, max, pass);
+> 
+> Unfamiliar reader cannot tell easily what is the purpose of this loop
+> without looking at internals of pci_scan_bridge().
+> 
+> In order to make this bit easier to understand, open-code the loop in
+> pci_scan_child_bus() and pci_hp_add_bridge() with added comments.
+> 
+> No functional changes intended.
+> 
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- arch/x86/pci/fixup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index c817ab85dc82..149adbc7f2a3 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -701,7 +701,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- 	res->name = "PCI Bus 0000:00";
- 	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
- 		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
--	res->start = 0x100000000ull;
-+	res->start = 0xbd00000000ull;
- 	res->end = 0xfd00000000ull - 1;
- 
- 	/* Just grab the free area behind system memory for this */
--- 
-2.11.0
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
