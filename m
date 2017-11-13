@@ -1,143 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V2 10/29] drm/nouveau: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 17:49:05 -0500
-Message-Id: <1511390964-9979-11-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, David Airlie <airlied@linux.ie>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS"
- <dri-devel@lists.freedesktop.org>, Sinan Kaya <okaya@codeaurora.org>,
- Ben Skeggs <bskeggs@redhat.com>,
- "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS"
- <nouveau@lists.freedesktop.org>, Ilia Mirkin <imirkin@alum.mit.edu>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:55251 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751236AbdKMHFl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 02:05:41 -0500
+Date: Mon, 13 Nov 2017 08:05:37 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
+ handling
+Message-ID: <20171113070536.nwwrvt5dedu4kch2@verge.net.au>
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+ <20171110215843.432-5-marek.vasut+renesas@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171110215843.432-5-marek.vasut+renesas@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Fri, Nov 10, 2017 at 10:58:42PM +0100, Marek Vasut wrote:
+> From: Phil Edworthy <phil.edworthy@renesas.com>
+> 
+> Most PCIe host controllers support L0s and L1 power states via ASPM.
+> The R-Car hardware only supports L0s, so when the system suspends and
+> resumes we have to manually handle L1.
+> 
+> When the system suspends, cards can put themselves into L1 and send a
+> PM_ENTER_L1 DLLP to the host controller. At this point, we can no longer
+> access the card's config registers.
+> 
+> The R-Car host controller will handle taking cards out of L1 as long as
+> the host controller has also been transitioned to L1 link state.
+> 
+> Ideally, we would detect the PM_ENTER_L1 DLLP using an interrupt and
+> transition the host to L1 immediately. However, this patch just ensures
+> that we can talk to cards after they have gone into L1.
+> When attempting a config access, it checks to see if the card has gone
+> into L1, and if so, does the same for the host controller.
+> 
+> This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
+> 
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
-Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
-and extract the domain number from
-1. struct pci_dev
-2. struct pci_dev through drm_device->pdev
-3. struct pci_dev through fb->subdev->drm_device->pdev
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/gpu/drm/nouveau/dispnv04/arb.c           |  4 +++-
- drivers/gpu/drm/nouveau/dispnv04/hw.c            | 10 +++++++---
- drivers/gpu/drm/nouveau/nouveau_drm.c            |  3 ++-
- drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c | 10 +++++++++-
- 4 files changed, 21 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/gpu/drm/nouveau/dispnv04/arb.c b/drivers/gpu/drm/nouveau/dispnv04/arb.c
-index 90075b6..e7455f7 100644
---- a/drivers/gpu/drm/nouveau/dispnv04/arb.c
-+++ b/drivers/gpu/drm/nouveau/dispnv04/arb.c
-@@ -213,8 +213,10 @@ struct nv_sim_state {
- 	if ((dev->pdev->device & 0xffff) == 0x01a0 /*CHIPSET_NFORCE*/ ||
- 	    (dev->pdev->device & 0xffff) == 0x01f0 /*CHIPSET_NFORCE2*/) {
- 		uint32_t type;
-+		u32 domain = pci_domain_nr(dev->pdev->bus);
- 
--		pci_read_config_dword(pci_get_bus_and_slot(0, 1), 0x7c, &type);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 1),
-+				      0x7c, &type);
- 
- 		sim_data.memory_type = (type >> 12) & 1;
- 		sim_data.memory_width = 64;
-diff --git a/drivers/gpu/drm/nouveau/dispnv04/hw.c b/drivers/gpu/drm/nouveau/dispnv04/hw.c
-index b985990..8806b1b 100644
---- a/drivers/gpu/drm/nouveau/dispnv04/hw.c
-+++ b/drivers/gpu/drm/nouveau/dispnv04/hw.c
-@@ -216,12 +216,15 @@
- {
- 	struct nvkm_pll_vals pllvals;
- 	int ret;
-+	u32 domain;
-+
-+	domain = pci_domain_nr(dev->pdev->bus);
- 
- 	if (plltype == PLL_MEMORY &&
- 	    (dev->pdev->device & 0x0ff0) == CHIPSET_NFORCE) {
- 		uint32_t mpllP;
--
--		pci_read_config_dword(pci_get_bus_and_slot(0, 3), 0x6c, &mpllP);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 3),
-+				      0x6c, &mpllP);
- 		mpllP = (mpllP >> 8) & 0xf;
- 		if (!mpllP)
- 			mpllP = 4;
-@@ -232,7 +235,8 @@
- 	    (dev->pdev->device & 0xff0) == CHIPSET_NFORCE2) {
- 		uint32_t clock;
- 
--		pci_read_config_dword(pci_get_bus_and_slot(0, 5), 0x4c, &clock);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 5),
-+				      0x4c, &clock);
- 		return clock / 1000;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
-index 595630d..0b6c639 100644
---- a/drivers/gpu/drm/nouveau/nouveau_drm.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
-@@ -406,7 +406,8 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
- 	}
- 
- 	/* subfunction one is a hdmi audio device? */
--	drm->hdmi_device = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
-+	drm->hdmi_device = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+						(unsigned int)pdev->bus->number,
- 						PCI_DEVFN(PCI_SLOT(pdev->devfn), 1));
- 
- 	if (!drm->hdmi_device) {
-diff --git a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-index 3c6a871..273a632 100644
---- a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-+++ b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-@@ -28,8 +28,16 @@
- {
- 	struct pci_dev *bridge;
- 	u32 mem, mib;
-+	u32 domain = 0;
-+	struct pci_dev *pdev = NULL;
- 
--	bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 1));
-+	if (dev_is_pci(fb->subdev.device->dev))
-+		pdev = to_pci_dev(fb->subdev.device->dev);
-+
-+	if (pdev)
-+		domain = pci_domain_nr(pdev->bus);
-+
-+	bridge = pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 1));
- 	if (!bridge) {
- 		nvkm_error(&fb->subdev, "no bridge device\n");
- 		return -ENODEV;
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+> V2: - Drop extra parenthesis
+>     - Use GENMASK()
+>     - Fix comment "The HW will handle coming of of L1.", s/of of/out of/
+> ---
+>  drivers/pci/host/pcie-rcar.c | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index ab61829db389..068bf9067ec1 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -92,6 +92,13 @@
+>  #define MACCTLR			0x011058
+>  #define  SPEED_CHANGE		BIT(24)
+>  #define  SCRAMBLE_DISABLE	BIT(27)
+> +#define PMSR			0x01105c
+> +#define  L1FAEG			BIT(31)
+> +#define  PM_ENTER_L1RX		BIT(23)
+> +#define  PMSTATE		GENMASK(18, 16)
+> +#define  PMSTATE_L1		GENMASK(17, 16)
+> +#define PMCTLR			0x011060
+> +#define  L1_INIT		BIT(31)
+>  #define MACS2R			0x011078
+>  #define MACCGSPSETR		0x011084
+>  #define  SPCNGRSN		BIT(31)
+> @@ -191,6 +198,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+>  		unsigned int devfn, int where, u32 *data)
+>  {
+>  	int dev, func, reg, index;
+> +	u32 val;
+>  
+>  	dev = PCI_SLOT(devfn);
+>  	func = PCI_FUNC(devfn);
+> @@ -232,6 +240,22 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+>  	if (pcie->root_bus_nr < 0)
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  
+> +	/*
+> +	 * If we are not in L1 link state and we have received PM_ENTER_L1 DLLP,
+> +	 * transition to L1 link state. The HW will handle coming out of L1.
+> +	 */
+> +	val = rcar_pci_read_reg(pcie, PMSR);
+> +	if (val & PM_ENTER_L1RX && (val & PMSTATE) != PMSTATE_L1) {
+> +		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
+> +
+> +		/* Wait until we are in L1 */
+> +		while (!(val & L1FAEG))
+> +			val = rcar_pci_read_reg(pcie, PMSR);
+> +
+> +		/* Clear flags indicating link has transitioned to L1 */
+> +		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
+> +	}
+> +
+>  	/* Clear errors */
+>  	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
+>  
+> -- 
+> 2.11.0
+> 
