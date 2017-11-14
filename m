@@ -1,16 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: dann frazier <dann.frazier@canonical.com>
-Subject: RE: [PATCH v10 6/9] LPC: Support the LPC host on Hip06/Hip07 with
- DT bindings
-Date: Thu, 9 Nov 2017 10:05:14 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40CC7ED0@FRAEML521-MBX.china.huawei.com>
-References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
- <1509120687-7352-7-git-send-email-gabriele.paoloni@huawei.com>
- <20171109004604.vkrpyrxbogx7r4td@xps13.dannf>
-In-Reply-To: <20171109004604.vkrpyrxbogx7r4td@xps13.dannf>
+Subject: Re: [PATCH v1 3/3] PCI: xilinx: Rename xilinx_pcie_link_is_up() to
+ xilinx_pcie_link_up()
+To: Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+References: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171113224058.29024.51914.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Michal Simek <michal.simek@xilinx.com>
+Message-ID: <d5d907e1-8ee0-763c-63b9-b1f2b30b7a3a@xilinx.com>
+Date: Tue, 14 Nov 2017 08:17:39 +0100
 MIME-Version: 1.0
+In-Reply-To: <20171113224058.29024.51914.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,92 +17,64 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "minyard@acm.org" <minyard@acm.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "arnd@arndb.de" <arnd@arndb.de>, "rafael@kernel.org" <rafael@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- John Garry <john.garry@huawei.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "olof@lixom.net" <olof@lixom.net>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- "brian.starkey@arm.com" <brian.starkey@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>, rfi@lists.rocketboards.org,
+ =?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+ Ley Foon Tan <lftan@altera.com>, linux-arm-kernel@lists.infradead.org,
+ Tanmay Inamdar <tinamdar@apm.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Hi Dann
-
-[...]
-
-> > +
-> > +#define START_WORK		0x01
+On 13.11.2017 23:40, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> Any reason not to put this in the LPC_ namespace as well?
-
-No, not really. We'll make it consistent in the next patchset 
-
+> Rename xilinx_pcie_link_is_up() to xilinx_pcie_link_up() to follow the
+> convention of other drivers.  No functional change intended.
 > 
-> > +/* The minimal nanosecond interval for each query on LPC cycle
-> status. */
-
-[...]
-
-> > + * hisilpc_target_in - trigger a series of lpc cycles to read
-> required data
-> > + *		       from target peripheral.
-> > + * @pdev: pointer to hisi lpc device
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pcie-xilinx.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> It's now lpcdev
-> 
-
-Thanks, we'll change it.
-
-> > + * @para: some parameters used to control the lpc I/O operations
-
-[...]
-
-> > + * @pio: the target I/O port address.
-> 
-> @outval & @pio are in the opposite order of the actual function
-
-Thanks, we'll change it.
-
-> 
-
-[...]
-
-> > +		lpcdev->io_host->devpara = NULL;
-> > +		dev_err(dev, "OF: scan hisilpc children got failed(%d)\n",
-> > +			ret);
-> 
-> nit: Maybe "OF: scanning hisilpc children failed(%d)" ?
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index 94e13cb8608f..7b5325990f5e 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -129,7 +129,7 @@ static inline void pcie_write(struct xilinx_pcie_port *port, u32 val, u32 reg)
+>  	writel(val, port->reg_base + reg);
+>  }
+>  
+> -static inline bool xilinx_pcie_link_is_up(struct xilinx_pcie_port *port)
+> +static inline bool xilinx_pcie_link_up(struct xilinx_pcie_port *port)
+>  {
+>  	return (pcie_read(port, XILINX_PCIE_REG_PSCR) &
+>  		XILINX_PCIE_REG_PSCR_LNKUP) ? 1 : 0;
+> @@ -165,7 +165,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+>  
+>  	/* Check if link is up when trying to access downstream ports */
+>  	if (bus->number != port->root_busno)
+> -		if (!xilinx_pcie_link_is_up(port))
+> +		if (!xilinx_pcie_link_up(port))
+>  			return false;
+>  
+>  	/* Only one device down on each root port */
+> @@ -541,7 +541,7 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
+>  {
+>  	struct device *dev = port->dev;
+>  
+> -	if (xilinx_pcie_link_is_up(port))
+> +	if (xilinx_pcie_link_up(port))
+>  		dev_info(dev, "PCIe Link is UP\n");
+>  	else
+>  		dev_info(dev, "PCIe Link is DOWN\n");
 > 
 
-Yes, thanks we'll change it.
+Acked-by: Michal Simek <michal.simek@xilinx.com>
 
-> > +		return ret;
-> > +	}
-> > +
-> > +	dev_info(dev, "hslpc end probing. range[%pa - sz:%pa]\n",
-> > +		&lpcdev->io_host->io_start,
-> > +		&lpcdev->io_host->size);
-> > +
-> > +	return ret;
-> > +}
-> 
-> 
->  -dann
+Thanks,
+Michal
 
 _______________________________________________
 linux-arm-kernel mailing list
