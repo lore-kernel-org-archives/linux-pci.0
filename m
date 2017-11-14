@@ -1,60 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:59229 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755883AbdKCQj0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 12:39:26 -0400
-Date: Fri, 3 Nov 2017 17:39:24 +0100
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Subject: Re: [PATCH v3] pci/switchtec: Don't use completion's wait queue
-Message-ID: <20171103163924.7rtdkkst3yl7ghcm@linutronix.de>
-References: <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
- <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
- <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
- <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
- <20171102171955.lvnvqnwl4qwhlmdk@linutronix.de>
- <b41e83ae-a687-3118-16cb-5ee92e70fc2b@deltatee.com>
- <20171103082227.zzbeee54pd2bf72u@linutronix.de>
- <83b6c876-6595-5b2c-e82c-2f75f559c20b@deltatee.com>
- <20171103161954.557idpkckag7j7j5@linutronix.de>
- <ceab9bab-3c6d-4800-fa44-386e5fe9e71f@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <ceab9bab-3c6d-4800-fa44-386e5fe9e71f@deltatee.com>
+Received: from relmlor2.renesas.com ([210.160.252.172]:20866 "EHLO
+        relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753869AbdKNKA1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2017 05:00:27 -0500
+From: Biju Das <biju.das@bp.renesas.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Chris Paterson <chris.paterson2@renesas.com>,
+        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Biju Das <biju.das@bp.renesas.com>
+Subject: [PATCH v2] dt-bindings: PCI: rcar: Add device tree support for r8a7743
+Date: Tue, 14 Nov 2017 09:59:03 +0000
+Message-Id: <1510653543-53770-1-git-send-email-biju.das@bp.renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-11-03 10:33:04 [-0600], Logan Gunthorpe wrote:
-> Quoting myself along the way:
-> 
-> v1: "I'm sorry but this seems a bit crazy to me. Driver's can't poll on
-> completions because an out of tree implementation changes them in a weird
-> way??! Just because no one in-tree does it now doesn't make it invalid."
+Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller
+is identical to the R-Car Gen2 family.
 
-You forgot:
-On 2017-10-04 10:13:15 [-0600], Logan Gunthorpe wrote:
-> But at the very least, if we _absolutely_ have to patch this out, you
-> shouldn't make it so convoluted. Just replace the struct completion with a
+No driver change is needed due to the fallback compatible value
+"renesas,pcie-rcar-gen2".
+Adding the SoC-specific compatible values here has three purposes:
+1. Document which SoCs have this hardware module,
+2. Allow checkpatch to validate compatible values.
+3. Allow the driver to support SoC specific implementations in future
+   as necessary.
 
-:)
+Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+v1-->v2
+   Corrected RZ-G1 to RZ/G1.
 
-> v2: "I still don't want this merged as it makes the code less clear, but I
-> tested it and it does not work."
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-and you provided the missing bit that was missing.
-
-> v3: "However, this whole concept still gets a NAK from me. I think it makes
-> the code less clear for no obvious reason."
-> 
-> I feel like I was pretty clear from the beginning. These are the comments
-> that you never addressed. Just because you picked up on the minor issues and
-> fixed them doesn't mean you can ignore the other feedback.
-
-and this piece is needed to get it working on RT. In longer term we
-would want completions based on simple waitqueues upstream, too.
-
-> Logan
-
-Sebastian
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 76ba3a6..1fb614e 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -1,13 +1,15 @@
+ * Renesas R-Car PCIe interface
+ 
+ Required properties:
+-compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
++compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
++	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
+ 	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
+ 	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
+ 	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+ 	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
+ 	    "renesas,pcie-r8a7796" for the R8A7796 SoC;
+-	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
++	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
++				     RZ/G1 compatible device.
+ 	    "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
+ 
+ 	    When compatible with the generic version, nodes must list the
+-- 
+1.9.1
