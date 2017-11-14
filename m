@@ -1,91 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:40203 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751106AbdKTNTS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:19:18 -0500
-Subject: =?UTF-8?Q?Re:_xhci=5fhcd_HC_died;_cleaning_up_with_TUSB7340_and_?=
- =?UTF-8?Q?=c2=b5PD720201?=
-To: Roger Quadros <rogerq@ti.com>
-CC: Chris Welch <Chris.Welch@viavisolutions.com>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, Joao Pinto <jpinto@synopsys.com>,
-        KISHON VIJAY ABRAHAM <kishon@ti.com>
-References: <BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com>
- <3dd7a4fc-da86-03cc-9b01-a0d29dd73230@ti.com>
- <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
- <124458f9-f824-6acb-becb-12d768b6e501@ti.com>
-From: Vignesh R <vigneshr@ti.com>
-Message-ID: <9dcdbc2a-9296-b260-10ed-08fde0c6f67c@ti.com>
-Date: Mon, 20 Nov 2017 18:49:45 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>
+Subject: [PATCH v3 0/8] PCI: brcmstb: Add Broadcom Settopbox PCIe support (V3)
+Date: Tue, 14 Nov 2017 17:12:04 -0500
+Message-Id: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <124458f9-f824-6acb-becb-12d768b6e501@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch series adds support for the Broadcom Settopbox PCIe host
+controller.  It is targeted to Broadcom Settopbox chips running on
+ARM, ARM64, and MIPS platforms.
+
+V3 Changes:
+  - Fold pcie-brcmstb-msi.c into pcie-brcmstb.c
+  - Use PCI_XXX constants for PCIe capability registers
+  - Removal of any unused constants
+  - Change s/pci/pcie/ for filenames, comment text
+  - Config space access now uses 8/16/32 read/writes
+  - Use proper multi-line comment style
+  - Use function names, structure that are common in other host drivers
+  - DT binding 'brcm,ssc' is now 'brcm,enable-ssc'
+  - Dropped DT binding 'xyz-supply'
+  - Not setting CRS support as Linux does it if it is advertised.
+  - Removed code that was considered "debug code".
+  - Use of_get_pcie_domain_nr()
+  - Variable 'bridge_setup_done' removed.
+
+V2 Changes:
+* Patch brcmstb-add-memory-API:
+  - fix DT_PROP_DATA_TO_U32 macro.
+  - dropped one EXPORT_SYMBOL, changed the other to GPL.
+* Patch DT-docs-for-Brcmstb-PCIe:
+  - change 'brcm,gen' prop to standard 'max-link-speed'.
+  - rewrite bindings commit to omit standard prop defs.
+  - change props "supplies", "supply-names" to "xyz-supply"
+* Patch removed: export-symbol-arch_setup_dma_ops [4/9]
+* Patch brcmstb-add-dma-ranges:
+  - use get_dma_ops(); also use a const dma_map_ops structure.
+  - rewrite map_sg(), unmap_sg(), other calls like syng_sg_*()
+  - omit brcm_mapping_error(), but added code in brcm_dma_supported()
+  - put all of the notifier code in one compilation unit.
 
 
-On Monday 20 November 2017 01:31 PM, Roger Quadros wrote:
-[...]
->>
->> So, could you try reverting commit 8c934095fa2f3 and 
->> also apply below patch and let me know if that fixes the issue?
->>
->> -----------
->>
->> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->> index e77a4ceed74c..8280abc56f30 100644
->> --- a/drivers/pci/dwc/pci-dra7xx.c
->> +++ b/drivers/pci/dwc/pci-dra7xx.c
->> @@ -259,10 +259,17 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->>         u32 reg;
->>  
->>         reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
->> +       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
->>  
->>         switch (reg) {
->>         case MSI:
->> -               dw_handle_msi_irq(pp);
->> +               /*
->> +                * Need to make sure no MSI IRQs are pending before
->> +                * exiting handler, else the wrapper will not catch new
->> +                * IRQs. So loop around till dw_handle_msi_irq() returns
->> +                * IRQ_NONE
->> +                */
->> +               while (dw_handle_msi_irq(pp) != IRQ_NONE);
-> 
-> To avoid this kind of looping, shouldn't we be disabling all IRQ events while
-> the interrupt handler is running and enable them just before we return from the hardirq
-> handler?
+Florian Fainelli (1):
+  SOC: brcmstb: add memory API
 
-IIUC, you are saying to disable all MSIs at PCIe designware core level,
-then call dw_handle_msi_irq() and then enable MSIs after hardirq
-returns. But, the problem is if PCIe EP raises another MSI after the
-call to EP's handler but before re-enabling MSIs, then it will be
-ignored as IRQs are not yet enabled.
-Ideally, EP's support Per Vector Masking(PVM) which allow RC to prevent
-EP from sending MSI messages for sometime. But, unfortunately, the cards
-mentioned here don't support this feature.
+Jim Quinlan (7):
+  dt-bindings: pci: Add DT docs for Brcmstb PCIe device
+  PCI: brcmstb: Add Broadcom STB PCIe host controller driver
+  PCI: brcmstb: Add dma-range mapping for inbound traffic
+  PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for MIPS
+  PCI: brcmstb: Add MSI capability
+  MIPS: BMIPS: Add PCI bindings for 7425, 7435
+  MIPS: BMIPS: Enable PCI
 
-> 
-> 
->>                 break;
->>         case INTA:
->>         case INTB:
->> @@ -273,8 +280,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
->>                 break;
->>         }
->>  
->> -       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
->> -
->>         return IRQ_HANDLED;
->>  }
->>
->>
->>
->>
-> 
+ .../devicetree/bindings/pci/brcmstb-pcie.txt       |   59 +
+ arch/mips/Kconfig                                  |    3 +
+ arch/mips/boot/dts/brcm/bcm7425.dtsi               |   26 +
+ arch/mips/boot/dts/brcm/bcm7435.dtsi               |   27 +
+ arch/mips/boot/dts/brcm/bcm97425svmb.dts           |    4 +
+ arch/mips/boot/dts/brcm/bcm97435svmb.dts           |    4 +
+ arch/mips/include/asm/Kbuild                       |    1 +
+ drivers/pci/Kconfig                                |    2 +-
+ drivers/pci/host/Kconfig                           |    9 +
+ drivers/pci/host/Makefile                          |    3 +
+ drivers/pci/host/pcie-brcmstb-dma.c                |  319 ++++
+ drivers/pci/host/pcie-brcmstb.c                    | 1591 ++++++++++++++++++++
+ drivers/pci/host/pcie-brcmstb.h                    |   22 +
+ drivers/soc/bcm/brcmstb/Makefile                   |    2 +-
+ drivers/soc/bcm/brcmstb/memory.c                   |  172 +++
+ include/soc/brcmstb/memory_api.h                   |   25 +
+ 16 files changed, 2267 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-brcmstb-dma.c
+ create mode 100644 drivers/pci/host/pcie-brcmstb.c
+ create mode 100644 drivers/pci/host/pcie-brcmstb.h
+ create mode 100644 drivers/soc/bcm/brcmstb/memory.c
+ create mode 100644 include/soc/brcmstb/memory_api.h
 
 -- 
-Regards
-Vignesh
+1.9.0.138.g2de3478
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
