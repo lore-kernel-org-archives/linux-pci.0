@@ -1,116 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 07/17] PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode
-Date: Fri,  3 Nov 2017 14:47:11 +0100
-Message-Id: <20171103134722.5532-8-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>
+Subject: [PATCH v3 2/8] dt-bindings: pci: Add DT docs for Brcmstb PCIe device
+Date: Tue, 14 Nov 2017 17:12:06 -0500
+Message-Id: <1510697532-32828-3-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Refactor the Kconfig and Makefile handling for host/ep mode, since
-the previous handling was a bit unorthodox and would have been a bit
-bloated once more DWC based controllers added support for ep mode.
+The DT bindings description of the Brcmstb PCIe device is described.  This
+node can be used by almost all Broadcom settop box chips, using
+ARM, ARM64, or MIPS CPU architectures.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
 ---
- drivers/pci/dwc/Kconfig  | 45 ++++++++++++++++++++++-----------------------
- drivers/pci/dwc/Makefile |  4 +---
- 2 files changed, 23 insertions(+), 26 deletions(-)
+ .../devicetree/bindings/pci/brcmstb-pcie.txt       | 59 ++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 113e09440f85..3954353e3e2e 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -15,39 +15,38 @@ config PCIE_DW_EP
- 	select PCIE_DW
- 
- config PCI_DRA7XX
--	bool "TI DRA7xx PCIe controller"
--	depends on SOC_DRA7XX || COMPILE_TEST
--	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
--	depends on OF && HAS_IOMEM && TI_PIPE3
--	help
--	 Enables support for the PCIe controller in the DRA7xx SoC. There
--	 are two instances of PCIe controller in DRA7xx. This controller can
--	 work either as EP or RC. In order to enable host-specific features
--	 PCI_DRA7XX_HOST must be selected and in order to enable device-
--	 specific features PCI_DRA7XX_EP must be selected. This uses
--	 the DesignWare core.
--
--if PCI_DRA7XX
-+	bool
- 
- config PCI_DRA7XX_HOST
--	bool "PCI DRA7xx Host Mode"
--	depends on PCI
--	depends on PCI_MSI_IRQ_DOMAIN
-+	bool "TI DRA7xx PCIe controller Host Mode"
-+	depends on SOC_DRA7XX || COMPILE_TEST
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
-+	depends on OF && HAS_IOMEM && TI_PIPE3
- 	select PCIE_DW_HOST
-+	select PCI_DRA7XX
- 	default y
- 	help
--	 Enables support for the PCIe controller in the DRA7xx SoC to work in
--	 host mode.
-+	  Enables support for the PCIe controller in the DRA7xx SoC to work in
-+	  host mode. There are two instances of PCIe controller in DRA7xx.
-+	  This controller can work either as EP or RC. In order to enable
-+	  host-specific features PCI_DRA7XX_HOST must be selected and in order
-+	  to enable device-specific features PCI_DRA7XX_EP must be selected.
-+	  This uses the DesignWare core.
- 
- config PCI_DRA7XX_EP
--	bool "PCI DRA7xx Endpoint Mode"
-+	bool "TI DRA7xx PCIe controller Endpoint Mode"
-+	depends on SOC_DRA7XX || COMPILE_TEST
- 	depends on PCI_ENDPOINT
-+	depends on OF && HAS_IOMEM && TI_PIPE3
- 	select PCIE_DW_EP
-+	select PCI_DRA7XX
- 	help
--	 Enables support for the PCIe controller in the DRA7xx SoC to work in
--	 endpoint mode.
--
--endif
-+	  Enables support for the PCIe controller in the DRA7xx SoC to work in
-+	  endpoint mode. There are two instances of PCIe controller in DRA7xx.
-+	  This controller can work either as EP or RC. In order to enable
-+	  host-specific features PCI_DRA7XX_HOST must be selected and in order
-+	  to enable device-specific features PCI_DRA7XX_EP must be selected.
-+	  This uses the DesignWare core.
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-index 54f56f6e9236..260589bd4e1d 100644
---- a/drivers/pci/dwc/Makefile
-+++ b/drivers/pci/dwc/Makefile
-@@ -2,9 +2,7 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
- obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
- obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
--ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
--        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
--endif
-+obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
- obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+diff --git a/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+new file mode 100644
+index 0000000..a1a9ad5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/brcmstb-pcie.txt
+@@ -0,0 +1,59 @@
++Brcmstb PCIe Host Controller Device Tree Bindings
++
++Required Properties:
++- compatible
++  "brcm,bcm7425-pcie" -- for 7425 family MIPS-based SOCs.
++  "brcm,bcm7435-pcie" -- for 7435 family MIPS-based SOCs.
++  "brcm,bcm7445-pcie" -- for 7445 and later ARM based SOCs (not including
++      the 7278).
++  "brcm,bcm7278-pcie"  -- for 7278 family ARM-based SOCs.
++
++- reg -- the register start address and length for the PCIe reg block.
++- interrupts -- two interrupts are specified; the first interrupt is for
++     the PCI host controller and the second is for MSI if the built-in
++     MSI controller is to be used.
++- interrupt-names -- names of the interrupts (above): "pcie" and "msi".
++- #address-cells -- set to <3>.
++- #size-cells -- set to <2>.
++- #interrupt-cells: set to <1>.
++- interrupt-map-mask and interrupt-map, standard PCI properties to define the
++     mapping of the PCIe interface to interrupt numbers.
++- ranges: ranges for the PCI memory and I/O regions.
++- linux,pci-domain -- should be unique per host controller.
++
++Optional Properties:
++- clocks -- phandle of pcie clock.
++- clock-names -- set to "sw_pcie" if clocks is used.
++- dma-ranges -- Specifies the inbound memory mapping regions when
++     an "identity map" is not possible.
++- msi-controller -- this property is typically specified to have the
++     PCIe controller use its internal MSI controller.
++- msi-parent -- set to use an external MSI interrupt controller.
++- brcm,enable-ssc -- (boolean) indicates usage of spread-spectrum clocking.
++- max-link-speed --  (integer) indicates desired generation of link:
++     1 => 2.5 Gbps (gen1), 2 => 5.0 Gbps (gen2), 3 => 8.0 Gbps (gen3).
++
++Example Node:
++
++pcie0: pcie@f0460000 {
++		reg = <0x0 0xf0460000 0x0 0x9310>;
++		interrupts = <0x0 0x0 0x4>;
++		compatible = "brcm,bcm7445-pcie";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
++			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &intc 0 47 3
++				 0 0 0 2 &intc 0 48 3
++				 0 0 0 3 &intc 0 49 3
++				 0 0 0 4 &intc 0 50 3>;
++		clocks = <&sw_pcie0>;
++		clock-names = "sw_pcie";
++		msi-parent = <&pcie0>;  /* use PCIe's internal MSI controller */
++		msi-controller;         /* use PCIe's internal MSI controller */
++		brcm,ssc;
++		max-link-speed = <1>;
++		linux,pci-domain = <0>;
++	};
 -- 
-2.14.2
+1.9.0.138.g2de3478
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
