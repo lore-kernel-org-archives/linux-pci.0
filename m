@@ -1,94 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57378 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932201AbdK0Q7F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 11:59:05 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 16/29] PCI: cpqhp: deprecate pci_get_bus_and_slot()
-Date: Mon, 27 Nov 2017 11:57:53 -0500
-Message-Id: <1511801886-6753-17-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 14 Nov 2017 18:34:37 +0100
+From: Johan Hovold <johan@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Johan Hovold <johan@kernel.org>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] PCI: keystone: fix interrupt-controller-node lookup
+Message-ID: <20171114173437.GZ11226@localhost>
+References: <20171112122850.30804-1-johan@kernel.org>
+ <20171113104306.GA27700@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171113104306.GA27700@red-moon>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Mon, Nov 13, 2017 at 10:43:06AM +0000, Lorenzo Pieralisi wrote:
+> Hi Johan,
+> 
+> On Sun, Nov 12, 2017 at 01:28:50PM +0100, Johan Hovold wrote:
+> > Fix child-node lookup during initialisation, which ended up searching
+> > the whole device tree depth-first starting at the parent rather than
+> > just matching on its children.
+> > 
+> > To make things worse, the parent pci node was prematurely freed, while
+> > the child interrupt-controller node was leaked.
+> 
+> Thanks for fixing this. I would kindly ask you please to split the
+> patch in two since there are two bugs you are fixing at once.
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+I guess it depends on how you look at it. I'm fixing the child-node
+lookup which just happens to broken in several ways: tree-wide search,
+parent-node put-imbalance and node leaks in both the error and
+success paths.
 
-Hard-coding the domain number as 0. The code doesn't seem to be ready
-for multiple domains.
+Fixing that in two or even three patches seems a bit excessive,
+especially as the first patch would in a sense be broken as the
+of_get_child_by_name() does indeed (also) return a refcounted node. And
+furthermore, this broken lookup, in all of its aspects, was introduced
+by a single commit.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/hotplug/cpqphp_pci.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+But if you insist, I'll split it up of course.
 
-diff --git a/drivers/pci/hotplug/cpqphp_pci.c b/drivers/pci/hotplug/cpqphp_pci.c
-index e220d49..8897a77 100644
---- a/drivers/pci/hotplug/cpqphp_pci.c
-+++ b/drivers/pci/hotplug/cpqphp_pci.c
-@@ -89,7 +89,9 @@ int cpqhp_configure_device(struct controller *ctrl, struct pci_func *func)
- 	pci_lock_rescan_remove();
- 
- 	if (func->pci_dev == NULL)
--		func->pci_dev = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, func->function));
-+		func->pci_dev = pci_get_domain_bus_and_slot(0, func->bus,
-+							PCI_DEVFN(func->device,
-+							func->function));
- 
- 	/* No pci device, we need to create it then */
- 	if (func->pci_dev == NULL) {
-@@ -99,7 +101,9 @@ int cpqhp_configure_device(struct controller *ctrl, struct pci_func *func)
- 		if (num)
- 			pci_bus_add_devices(ctrl->pci_dev->bus);
- 
--		func->pci_dev = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, func->function));
-+		func->pci_dev = pci_get_domain_bus_and_slot(0, func->bus,
-+							PCI_DEVFN(func->device,
-+							func->function));
- 		if (func->pci_dev == NULL) {
- 			dbg("ERROR: pci_dev still null\n");
- 			goto out;
-@@ -129,7 +133,10 @@ int cpqhp_unconfigure_device(struct pci_func *func)
- 
- 	pci_lock_rescan_remove();
- 	for (j = 0; j < 8 ; j++) {
--		struct pci_dev *temp = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, j));
-+		struct pci_dev *temp = pci_get_domain_bus_and_slot(0,
-+							func->bus,
-+							PCI_DEVFN(func->device,
-+							j));
- 		if (temp) {
- 			pci_dev_put(temp);
- 			pci_stop_and_remove_bus_device(temp);
-@@ -319,6 +326,7 @@ int cpqhp_save_config(struct controller *ctrl, int busnumber, int is_hot_plug)
- 	int cloop = 0;
- 	int stop_it;
- 	int index;
-+	u16 devfn;
- 
- 	/* Decide which slots are supported */
- 
-@@ -416,7 +424,9 @@ int cpqhp_save_config(struct controller *ctrl, int busnumber, int is_hot_plug)
- 			new_slot->switch_save = 0x10;
- 			/* In case of unsupported board */
- 			new_slot->status = DevError;
--			new_slot->pci_dev = pci_get_bus_and_slot(new_slot->bus, (new_slot->device << 3) | new_slot->function);
-+			devfn = (new_slot->device << 3) | new_slot->function;
-+			new_slot->pci_dev = pci_get_domain_bus_and_slot(0,
-+							new_slot->bus, devfn);
- 
- 			for (cloop = 0; cloop < 0x20; cloop++) {
- 				rc = pci_bus_read_config_dword(ctrl->pci_bus, PCI_DEVFN(device, function), cloop << 2, (u32 *) &(new_slot->config_space[cloop]));
--- 
-1.9.1
+Thanks,
+Johan
+
+> > Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+> > Cc: stable <stable@vger.kernel.org>     # 3.18
+> > Cc: Murali Karicheri <m-karicheri2@ti.com>
+> > ---
+> >  drivers/pci/dwc/pci-keystone.c | 5 ++++-
+> >  1 file changed, 4 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+> > index 5bee3af47588..39405598b22d 100644
+> > --- a/drivers/pci/dwc/pci-keystone.c
+> > +++ b/drivers/pci/dwc/pci-keystone.c
+> > @@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+> >  	}
+> >  
+> >  	/* interrupt controller is in a child node */
+> > -	*np_temp = of_find_node_by_name(np_pcie, controller);
+> > +	*np_temp = of_get_child_by_name(np_pcie, controller);
+> >  	if (!(*np_temp)) {
+> >  		dev_err(dev, "Node for %s is absent\n", controller);
+> >  		return -EINVAL;
+> > @@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+> >  	temp = of_irq_count(*np_temp);
+> >  	if (!temp) {
+> >  		dev_err(dev, "No IRQ entries in %s\n", controller);
+> > +		of_node_put(*np_temp);
+> >  		return -EINVAL;
+> >  	}
+> >  
+> > @@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+> >  			break;
+> >  	}
+> >  
+> > +	of_node_put(*np_temp);
+> > +
+> >  	if (temp) {
+> >  		*num_irqs = temp;
+> >  		return 0;
+> > -- 
+> > 2.15.0
+> > 
