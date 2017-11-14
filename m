@@ -1,54 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:6889 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751138AbdK0I5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Nov 2017 03:57:15 -0500
-Message-ID: <1511773014.4627.14.camel@linux.intel.com>
-Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
-From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        timur@codeaurora.org
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>
-Date: Mon, 27 Nov 2017 10:56:54 +0200
-In-Reply-To: <0b12dcfe-1ee1-10ef-4db3-9c9d42dc4703@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-         <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
-         <1511337146.4512.6.camel@linux.intel.com>
-         <4541eaef-745a-e78f-e61d-1c7c207b551e@codeaurora.org>
-         <1511422959.4641.5.camel@linux.intel.com>
-         <0b12dcfe-1ee1-10ef-4db3-9c9d42dc4703@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>
+Subject: [PATCH v3 8/8] MIPS: BMIPS: Enable PCI
+Date: Tue, 14 Nov 2017 17:12:12 -0500
+Message-Id: <1510697532-32828-9-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-11-23 at 13:37 -0500, Sinan Kaya wrote:
-> On 11/23/2017 2:42 AM, Joonas Lahtinen wrote:
-> > It is not longer than 80 characters when you break line before the
-> > PCI_DEVFN like I proposed. Or you can break it after the "=", too,
-> > either way works fine.
-> 
-> I posted V2 with this suggestion. 
-> 
-> https://patchwork.kernel.org/patch/10071759/
-> 
-> Let me know what you think about the domain number call here. 
-> 
-> u32 domain = pci_domain_nr(dev_priv->drm.pdev->bus);
+Adds the Kconfig hooks to enable the Broadcom STB PCIe root complex
+driver for Broadcom MIPS systems.
 
-The function return signature is 'int' as well as the parameter in
-pci_get_domain_bus_and_slot is type 'int', so why fight it and try to
-make the variable 'u32'?
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+---
+ arch/mips/Kconfig | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> I don't have a way to test this change. I traced the drm_device's pdev
-> assignment in the code. It should work fine but I don't have a proof.
-
-Send the patch to intel-gfx@lists.freedesktop.org and it should get
-automatically tested by our CI system.
-
-Regards, Joonas
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index cb7fcc4..83ba54d 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -209,6 +209,9 @@ config BMIPS_GENERIC
+ 	select BOOT_RAW
+ 	select NO_EXCEPT_FILL
+ 	select USE_OF
++	select HW_HAS_PCI
++	select PCI_DRIVERS_GENERIC
++	select PCI
+ 	select CEVT_R4K
+ 	select CSRC_R4K
+ 	select SYNC_R4K
 -- 
-Joonas Lahtinen
-Open Source Technology Center
-Intel Corporation
+1.9.0.138.g2de3478
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
