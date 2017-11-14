@@ -1,106 +1,76 @@
-Return-Path: <SRS0=Q7Os=C3=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=Q7Os=C3=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Wed, 29 Nov 2017 14:14:30 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-	bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
-	adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-	kgopi@cadence.com, eandrews@cadence.com,
-	thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-	nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH 3/5] PCI: cadence: Add host driver for Cadence PCIe
- controller
-Message-ID: <20171129141430.GA30617@red-moon>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <2670f7ddf59e708beb9d32bef1353e15bd4e1ecf.1511439189.git.cyrille.pitchen@free-electrons.com>
- <20171128204114.GE11228@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>
+Subject: [PATCH v3 5/8] PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for MIPS
+Date: Tue, 14 Nov 2017 17:12:09 -0500
+Message-Id: <1510697532-32828-6-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171128204114.GE11228@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 28, 2017 at 02:41:14PM -0600, Bjorn Helgaas wrote:
+Add MIPS as an arch that supports PCI_MSI_IRQ_DOMAIN and add
+generation of msi.h in the MIPS arch.
 
-[...]
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+---
+ arch/mips/include/asm/Kbuild | 1 +
+ drivers/pci/Kconfig          | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-> > +static int cdns_pcie_parse_request_of_pci_ranges(struct device *dev,
-> > +						 struct list_head *resources,
-> > +						 struct resource **bus_range)
-> > +{
-> > +	int err, res_valid = 0;
-> > +	struct device_node *np = dev->of_node;
-> > +	resource_size_t iobase;
-> > +	struct resource_entry *win, *tmp;
-> > +
-> > +	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
-> > +	if (err)
-> > +		return err;
-> > +
-> > +	err = devm_request_pci_bus_resources(dev, resources);
-> > +	if (err)
-> > +		return err;
-> > +
-> > +	resource_list_for_each_entry_safe(win, tmp, resources) {
-> > +		struct resource *res = win->res;
-> > +
-> > +		switch (resource_type(res)) {
-> > +		case IORESOURCE_IO:
-> > +			err = pci_remap_iospace(res, iobase);
-> > +			if (err) {
-> > +				dev_warn(dev, "error %d: failed to map resource %pR\n",
-> > +					 err, res);
-> > +				resource_list_destroy_entry(win);
-> > +			}
-> > +			break;
-> > +		case IORESOURCE_MEM:
-> > +			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-> > +			break;
-> > +		case IORESOURCE_BUS:
-> > +			*bus_range = res;
-> > +			break;
-> > +		}
-> > +	}
-> > +
-> > +	if (res_valid)
-> > +		return 0;
-> > +
-> > +	dev_err(dev, "non-prefetchable memory resource required\n");
-> > +	return -EINVAL;
-> > +}
-> 
-> The code above is starting to look awfully familiar.  I wonder if it's
-> time to think about some PCI-internal interface that can encapsulate
-> this.  In this case, there's really nothing Cadence-specific here.
-> There are other callers where there *is* vendor-specific code, but
-> possibly that could be handled by returning pointers to bus number,
-> I/O port, and MMIO resources so the caller could do the
-> vendor-specific stuff?
+diff --git a/arch/mips/include/asm/Kbuild b/arch/mips/include/asm/Kbuild
+index 7c8aab2..8c78ba7 100644
+--- a/arch/mips/include/asm/Kbuild
++++ b/arch/mips/include/asm/Kbuild
+@@ -9,6 +9,7 @@ generic-y += irq_work.h
+ generic-y += local64.h
+ generic-y += mcs_spinlock.h
+ generic-y += mm-arch-hooks.h
++generic-y += msi.h
+ generic-y += parport.h
+ generic-y += percpu.h
+ generic-y += preempt.h
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index c32a77f..927c335 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -25,7 +25,7 @@ config PCI_MSI
+ 	   If you don't know what to do here, say Y.
+ 
+ config PCI_MSI_IRQ_DOMAIN
+-	def_bool ARC || ARM || ARM64 || X86
++	def_bool ARC || ARM || ARM64 || MIPS || X86
+ 	depends on PCI_MSI
+ 	select GENERIC_MSI_IRQ_DOMAIN
+ 
+-- 
+1.9.0.138.g2de3478
 
-Yes and that's not the only one, pattern below is duplicated
-(with some minor differences across host bridges that I think
-can be managed through function parameters), it is probably worth
-moving them both into a core code helper.
 
-list_splice_init(&resources, &bridge->windows);
-bridge->dev.parent = dev;
-bridge->busnr = bus;
-bridge->ops = &pci_ops;
-bridge->map_irq = of_irq_parse_and_map_pci;
-bridge->swizzle_irq = pci_common_swizzle;
-
-ret = pci_scan_root_bus_bridge(bridge);
-if (ret < 0) {
-	dev_err(dev, "Scanning root bridge failed");
-	goto err_init;
-}
-
-bus = bridge->bus;
-pci_bus_size_bridges(bus);
-pci_bus_assign_resources(bus);
-
-list_for_each_entry(child, &bus->children, node)
-	pcie_bus_configure_settings(child);
-
-pci_bus_add_devices(bus);
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
