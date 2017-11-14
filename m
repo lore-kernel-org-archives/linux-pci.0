@@ -1,77 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:57282 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752399AbdKMTLM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 14:11:12 -0500
-MIME-Version: 1.0
-In-Reply-To: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
-References: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 13 Nov 2017 20:11:11 +0100
-Message-ID: <CAMuHMdVDxFCZ=QULonGZ2_pcbO1L1ycxeiYiT=FCTSgJ58kviQ@mail.gmail.com>
-Subject: Re: [PATCH ] dt-bindings: PCI: rcar: Add device tree support for r8a7743
-To: Biju Das <biju.das@bp.renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from relmlor4.renesas.com ([210.160.252.174]:25659 "EHLO
+        relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754001AbdKNJx1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2017 04:53:27 -0500
+From: Biju Das <biju.das@bp.renesas.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Simon Horman <horms@verge.net.au>,
-        Chris Paterson <chris.paterson2@renesas.com>,
+        "Chris Paterson" <Chris.Paterson2@renesas.com>,
         Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
         linux-pci <linux-pci@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: RE: [PATCH ] dt-bindings: PCI: rcar: Add device tree support for
+ r8a7743
+Date: Tue, 14 Nov 2017 09:53:22 +0000
+Message-ID: <KL1PR06MB17020D3F62985846E6367C4FB8280@KL1PR06MB1702.apcprd06.prod.outlook.com>
+References: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
+ <CAMuHMdVDxFCZ=QULonGZ2_pcbO1L1ycxeiYiT=FCTSgJ58kviQ@mail.gmail.com>
+In-Reply-To: <CAMuHMdVDxFCZ=QULonGZ2_pcbO1L1ycxeiYiT=FCTSgJ58kviQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Biju,
-
-On Mon, Nov 13, 2017 at 5:37 PM, Biju Das <biju.das@bp.renesas.com> wrote:
-> Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller
-> is identical to the R-Car Gen2 family.
->
-> No driver change is needed due to the fallback compatible value
-> "renesas,pcie-rcar-gen2".
-> Adding the SoC-specific compatible values here has three purposes:
-> 1. Document which SoCs have this hardware module,
-> 2. Allow checkpatch to validate compatible values.
-> 3. Allow the driver to support SoC specific implementations in future
->    as necessary.
->
-> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
-> Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
-
-Thanks for your patch!
-
-With the below fixed:
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -1,13 +1,15 @@
->  * Renesas R-Car PCIe interface
->
->  Required properties:
-> -compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
-> +compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
-> +           "renesas,pcie-r8a7779" for the R8A7779 SoC;
->             "renesas,pcie-r8a7790" for the R8A7790 SoC;
->             "renesas,pcie-r8a7791" for the R8A7791 SoC;
->             "renesas,pcie-r8a7793" for the R8A7793 SoC;
->             "renesas,pcie-r8a7795" for the R8A7795 SoC;
->             "renesas,pcie-r8a7796" for the R8A7796 SoC;
-> -           "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
-> +           "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
-> +                                    RZ-G1 compatible device.
-
-RZ/G1
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+VGhhbmtzLiBJIHdpbGwgc2VuZCBhIFYyIGZvciBmaXhpbmcgdGhpcy4NCg0KUmVnYXJkcywNCkJp
+anUNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBnZWVydC51eXR0ZXJo
+b2V2ZW5AZ21haWwuY29tIFttYWlsdG86Z2VlcnQudXl0dGVyaG9ldmVuQGdtYWlsLmNvbV0NCj4g
+T24gQmVoYWxmIE9mIEdlZXJ0IFV5dHRlcmhvZXZlbg0KPiBTZW50OiAxMyBOb3ZlbWJlciAyMDE3
+IDE5OjExDQo+IFRvOiBCaWp1IERhcyA8YmlqdS5kYXNAYnAucmVuZXNhcy5jb20+DQo+IENjOiBC
+am9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgUm9iIEhlcnJpbmcNCj4gPHJvYmgr
+ZHRAa2VybmVsLm9yZz47IE1hcmsgUnV0bGFuZCA8bWFyay5ydXRsYW5kQGFybS5jb20+OyBTaW1v
+bg0KPiBIb3JtYW4gPGhvcm1zQHZlcmdlLm5ldC5hdT47IENocmlzIFBhdGVyc29uDQo+IDxDaHJp
+cy5QYXRlcnNvbjJAcmVuZXNhcy5jb20+OyBGYWJyaXppbyBDYXN0cm8NCj4gPGZhYnJpemlvLmNh
+c3Ryb0BicC5yZW5lc2FzLmNvbT47IGxpbnV4LXBjaSA8bGludXgtcGNpQHZnZXIua2VybmVsLm9y
+Zz47DQo+IExpbnV4LVJlbmVzYXMgPGxpbnV4LXJlbmVzYXMtc29jQHZnZXIua2VybmVsLm9yZz4N
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCBdIGR0LWJpbmRpbmdzOiBQQ0k6IHJjYXI6IEFkZCBkZXZp
+Y2UgdHJlZSBzdXBwb3J0IGZvcg0KPiByOGE3NzQzDQo+DQo+IEhpIEJpanUsDQo+DQo+IE9uIE1v
+biwgTm92IDEzLCAyMDE3IGF0IDU6MzcgUE0sIEJpanUgRGFzIDxiaWp1LmRhc0BicC5yZW5lc2Fz
+LmNvbT4gd3JvdGU6DQo+ID4gQWRkIHN1cHBvcnQgZm9yIHI4YTc3NDMuIFRoZSBSZW5lc2FzIFJa
+L0cxTShSOEE3NzQzKVBDSWUgY29udHJvbGxlciBpcw0KPiA+IGlkZW50aWNhbCB0byB0aGUgUi1D
+YXIgR2VuMiBmYW1pbHkuDQo+ID4NCj4gPiBObyBkcml2ZXIgY2hhbmdlIGlzIG5lZWRlZCBkdWUg
+dG8gdGhlIGZhbGxiYWNrIGNvbXBhdGlibGUgdmFsdWUNCj4gPiAicmVuZXNhcyxwY2llLXJjYXIt
+Z2VuMiIuDQo+ID4gQWRkaW5nIHRoZSBTb0Mtc3BlY2lmaWMgY29tcGF0aWJsZSB2YWx1ZXMgaGVy
+ZSBoYXMgdGhyZWUgcHVycG9zZXM6DQo+ID4gMS4gRG9jdW1lbnQgd2hpY2ggU29DcyBoYXZlIHRo
+aXMgaGFyZHdhcmUgbW9kdWxlLCAyLiBBbGxvdyBjaGVja3BhdGNoDQo+ID4gdG8gdmFsaWRhdGUg
+Y29tcGF0aWJsZSB2YWx1ZXMuDQo+ID4gMy4gQWxsb3cgdGhlIGRyaXZlciB0byBzdXBwb3J0IFNv
+QyBzcGVjaWZpYyBpbXBsZW1lbnRhdGlvbnMgaW4gZnV0dXJlDQo+ID4gICAgYXMgbmVjZXNzYXJ5
+Lg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogQmlqdSBEYXMgPGJpanUuZGFzQGJwLnJlbmVzYXMu
+Y29tPg0KPiA+IFJldmlld2VkLWJ5OiBGYWJyaXppbyBDYXN0cm8gPGZhYnJpemlvLmNhc3Ryb0Bi
+cC5yZW5lc2FzLmNvbT4NCj4NCj4gVGhhbmtzIGZvciB5b3VyIHBhdGNoIQ0KPg0KPiBXaXRoIHRo
+ZSBiZWxvdyBmaXhlZDoNCj4gUmV2aWV3ZWQtYnk6IEdlZXJ0IFV5dHRlcmhvZXZlbiA8Z2VlcnQr
+cmVuZXNhc0BnbGlkZXIuYmU+DQo+DQo+ID4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVl
+L2JpbmRpbmdzL3BjaS9yY2FyLXBjaS50eHQNCj4gPiArKysgYi9Eb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGNpL3JjYXItcGNpLnR4dA0KPiA+IEBAIC0xLDEzICsxLDE1IEBADQo+
+ID4gICogUmVuZXNhcyBSLUNhciBQQ0llIGludGVyZmFjZQ0KPiA+DQo+ID4gIFJlcXVpcmVkIHBy
+b3BlcnRpZXM6DQo+ID4gLWNvbXBhdGlibGU6ICJyZW5lc2FzLHBjaWUtcjhhNzc3OSIgZm9yIHRo
+ZSBSOEE3Nzc5IFNvQzsNCj4gPiArY29tcGF0aWJsZTogInJlbmVzYXMscGNpZS1yOGE3NzQzIiBm
+b3IgdGhlIFI4QTc3NDMgU29DOw0KPiA+ICsgICAgICAgICAgICJyZW5lc2FzLHBjaWUtcjhhNzc3
+OSIgZm9yIHRoZSBSOEE3Nzc5IFNvQzsNCj4gPiAgICAgICAgICAgICAicmVuZXNhcyxwY2llLXI4
+YTc3OTAiIGZvciB0aGUgUjhBNzc5MCBTb0M7DQo+ID4gICAgICAgICAgICAgInJlbmVzYXMscGNp
+ZS1yOGE3NzkxIiBmb3IgdGhlIFI4QTc3OTEgU29DOw0KPiA+ICAgICAgICAgICAgICJyZW5lc2Fz
+LHBjaWUtcjhhNzc5MyIgZm9yIHRoZSBSOEE3NzkzIFNvQzsNCj4gPiAgICAgICAgICAgICAicmVu
+ZXNhcyxwY2llLXI4YTc3OTUiIGZvciB0aGUgUjhBNzc5NSBTb0M7DQo+ID4gICAgICAgICAgICAg
+InJlbmVzYXMscGNpZS1yOGE3Nzk2IiBmb3IgdGhlIFI4QTc3OTYgU29DOw0KPiA+IC0gICAgICAg
+ICAgICJyZW5lc2FzLHBjaWUtcmNhci1nZW4yIiBmb3IgYSBnZW5lcmljIFItQ2FyIEdlbjIgY29t
+cGF0aWJsZSBkZXZpY2UuDQo+ID4gKyAgICAgICAgICAgInJlbmVzYXMscGNpZS1yY2FyLWdlbjIi
+IGZvciBhIGdlbmVyaWMgUi1DYXIgR2VuMiBvcg0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICBSWi1HMSBjb21wYXRpYmxlIGRldmljZS4NCj4NCj4gUlovRzENCj4NCj4g
+R3J7b2V0amUsZWV0aW5nfXMsDQo+DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIEdlZXJ0DQo+
+DQo+IC0tDQo+IEdlZXJ0IFV5dHRlcmhvZXZlbiAtLSBUaGVyZSdzIGxvdHMgb2YgTGludXggYmV5
+b25kIGlhMzIgLS0gZ2VlcnRAbGludXgtDQo+IG02OGsub3JnDQo+DQo+IEluIHBlcnNvbmFsIGNv
+bnZlcnNhdGlvbnMgd2l0aCB0ZWNobmljYWwgcGVvcGxlLCBJIGNhbGwgbXlzZWxmIGEgaGFja2Vy
+LiBCdXQgd2hlbg0KPiBJJ20gdGFsa2luZyB0byBqb3VybmFsaXN0cyBJIGp1c3Qgc2F5ICJwcm9n
+cmFtbWVyIiBvciBzb21ldGhpbmcgbGlrZSB0aGF0Lg0KPiAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIC0tIExpbnVzIFRvcnZhbGRzDQoNCg0KDQpSZW5lc2FzIEVsZWN0cm9uaWNzIEV1
+cm9wZSBMdGQsIER1a2VzIE1lYWRvdywgTWlsbGJvYXJkIFJvYWQsIEJvdXJuZSBFbmQsIEJ1Y2tp
+bmdoYW1zaGlyZSwgU0w4IDVGSCwgVUsuIFJlZ2lzdGVyZWQgaW4gRW5nbGFuZCAmIFdhbGVzIHVu
+ZGVyIFJlZ2lzdGVyZWQgTm8uIDA0NTg2NzA5Lg0K
