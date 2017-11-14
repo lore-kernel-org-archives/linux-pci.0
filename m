@@ -1,114 +1,100 @@
-Return-Path: <SRS0=l2DV=CV=oracle.com=boris.ostrovsky@kernel.org>
-Return-Path: <SRS0=l2DV=CV=oracle.com=boris.ostrovsky@kernel.org>
-Subject: Re: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h
- (Models 30h-3fh) Processors v5
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        helgaas@kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, xen-devel <xen-devel@lists.xen.org>
-References: <20171018135821.3248-1-deathsimple@vodafone.de>
- <20171018135821.3248-5-deathsimple@vodafone.de>
- <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
- <d81d50e6-c267-fe43-214f-278e57903448@gmail.com>
- <26df0a78-8028-e42c-ce50-4cefe612a7e1@oracle.com>
- <3443aad0-8c3b-b97e-685a-96b0866827be@amd.com>
- <b937778c-556e-5587-c557-abba8cefe100@oracle.com>
- <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
- <c2d52d00-8c3c-9944-29b3-3cab2f7c35f7@oracle.com>
- <7936fdd3-1615-ac1f-7b75-330ccb6a1a3f@amd.com>
- <0bb468d9-bc1d-e3c5-e313-1cf9408380f0@oracle.com>
- <275e859a-0ddd-ea7f-a681-67e42a5233fe@amd.com>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <38bc76d9-2ed5-61f3-24b3-085031825181@oracle.com>
-Date: Thu, 23 Nov 2017 09:12:57 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 13 Nov 2017 18:51:11 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, tony@atomide.com,
+        shawn.lin@rock-chips.com, dianders@chromium.org,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        Len Brown <lenb@kernel.org>
+Subject: Re: [RFC PATCH v10 6/7] PCI / PM: Move acpi wakeup code to pci core
+Message-ID: <20171114025109.GA43048@google.com>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+ <20171027072612.26565-7-jeffy.chen@rock-chips.com>
+ <1894178.xtK0vD2N4H@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <275e859a-0ddd-ea7f-a681-67e42a5233fe@amd.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1894178.xtK0vD2N4H@aspire.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Rafael,
 
+I'll answer some of it from my perspective, though Jeffy might have had
+different ideas (and answers) when he implemented this.
 
-On 11/23/2017 03:11 AM, Christian König wrote:
-> Am 22.11.2017 um 18:27 schrieb Boris Ostrovsky:
->> On 11/22/2017 11:54 AM, Christian König wrote:
->>> Am 22.11.2017 um 17:24 schrieb Boris Ostrovsky:
->>>> On 11/22/2017 05:09 AM, Christian König wrote:
->>>>> Am 21.11.2017 um 23:26 schrieb Boris Ostrovsky:
->>>>>> On 11/21/2017 08:34 AM, Christian König wrote:
->>>>>>> Hi Boris,
->>>>>>>
->>>>>>> attached are two patches.
->>>>>>>
->>>>>>> The first one is a trivial fix for the infinite loop issue, it now
->>>>>>> correctly aborts the fixup when it can't find address space for the
->>>>>>> root window.
->>>>>>>
->>>>>>> The second is a workaround for your board. It simply checks if there
->>>>>>> is exactly one Processor Function to apply this fix on.
->>>>>>>
->>>>>>> Both are based on linus current master branch. Please test if they
->>>>>>> fix
->>>>>>> your issue.
->>>>>> Yes, they do fix it but that's because the feature is disabled.
->>>>>>
->>>>>> Do you know what the actual problem was (on Xen)?
->>>>> I still haven't understood what you actually did with Xen.
->>>>>
->>>>> When you used PCI pass through with those devices then you have made a
->>>>> major configuration error.
->>>>>
->>>>> When the problem happened on dom0 then the explanation is most likely
->>>>> that some PCI device ended up in the configured space, but the routing
->>>>> was only setup correctly on one CPU socket.
->>>> The problem is that dom0 can be (and was in my case() booted with less
->>>> than full physical memory and so the "rest" of the host memory is not
->>>> necessarily reflected in iomem. Your patch then tried to configure that
->>>> memory for MMIO and the system hang.
->>>>
->>>> And so my guess is that this patch will break dom0 on a single-socket
->>>> system as well.
->>> Oh, thanks!
->>>
->>> I've thought about that possibility before, but wasn't able to find a
->>> system which actually does that.
->>>
->>> May I ask why the rest of the memory isn't reported to the OS?
->> That memory doesn't belong to the OS (dom0), it is owned by the 
->> hypervisor.
->>
->>> Sounds like I can't trust Linux resource management and probably need
->>> to read the DRAM config to figure things out after all.
->>
->> My question is whether what you are trying to do should ever be done for
->> a guest at all (any guest, not necessarily Xen).
+On Wed, Nov 08, 2017 at 11:32:20PM +0100, Rafael J. Wysocki wrote:
+> On Friday, October 27, 2017 9:26:11 AM CET Jeffy Chen wrote:
+> > Move acpi wakeup code to pci core as pci_set_wakeup(), so that other
+> > platforms could reuse it.
 > 
-> The issue is probably that I don't know enough about Xen: What exactly 
-> is dom0? My understanding was that dom0 is the hypervisor, but that 
-> seems to be incorrect.
+> What exactly do you want to reuse?
 > 
-> The issue is that under no circumstances *EVER* a virtualized guest 
-> should have access to the PCI devices marked as "Processor Function" on 
-> AMD platforms. Otherwise it is trivial to break out of the virtualization.
-> 
-> When dom0 is something like the system domain with all hardware access 
-> then the approach seems legitimate, but then the hypervisor should 
-> report the stolen memory to the OS using the e820 table.
-> 
-> When the hypervisor doesn't do that and the Linux kernel isn't aware 
-> that there is memory at a given location mapping PCI space there will 
-> obviously crash the hypervisor.
-> 
-> Possible solutions as far as I can see are either disabling this feature 
-> when we detect that we are a Xen dom0, scanning the DRAM settings to 
-> update Linux resource handling or fixing Xen to report stolen memory to 
-> the dom0 OS as reserved.
-> 
-> Opinions?
+> It looks like that's just several lines of code in acpi_pci_wakeup()
+> and acpi_pci_propagate_wakeup() which invoke ACPI-specific lower-level
+> functions, so IMO not worth it at all.
 
-You are right, these functions are not exposed to a regular guest.
+The important part he's sharing here is the walking of the tree
+structure, in which it's possible for some parent along the way to
+handle wakeup for its children. I'm not sure how valuable nor how
+reusable that is.
 
-I think for dom0 (which is a special Xen guest, with additional 
-privileges) we may be able to add a reserved e820 region for host memory 
-that is not assigned to dom0. Let me try it on Monday (I am out until then).
+In this case (the Rockchip platforms Jeffy and I are working on), I
+think we really want to just support a single WAKE# pin for the whole
+system, so maybe the complexity isn't needed. The spec does describe
+that there are good reasons for supporting more than 1 WAKE# pin though
+(e.g., 1 per device), so it doesn't seem really wise to shoehorn
+oursleves into a single setup.
 
--boris
+But that can be implemented either via copying the "few" lines of
+tree-walking logic, or by trying to share them.
+
+> The structure for other platform code may be the same or similar, but
+> the details will almost certainly be different and I don't think that
+> having more callback pointers in pci_platform_pm_ops is necessarily better.
+
+I suppose that's reasonable.
+
+> > Also add .setup_dev() / .setup_host_bridge() / .cleanup() platform pm
+> > ops's callbacks to setup and cleanup pci devices and host bridge for
+> > wakeup.
+> 
+> Why are they needed?
+
+The implementation is in patch 7, if you really needed more info about
+why, or provide alternatives.
+
+The current set of hooks assumes that there is no state information or
+initialization needed for tracking actions of these platform PM hooks on
+a device. For ACPI this works, because devices have "companion"
+acpi_dev's to handle everything, and the ACPI framework generally
+prepares GPE's for you, IIUC. For 'pci-mid', the operations happen to be
+trivial (and arguably wrong -- several are no-ops, where we might expect
+the platform to tell us whether the operation was actually supported or
+not).
+
+For device tree, there isn't really a canonical place to store this
+information, nor to initialize something like wakeup interrupts.
+
+Technically, we could shoehorn this into the .set_wakeup() call, but
+we'd probably rather not do things like request_irq() on every attempt
+to suspend/resume the system (among other reasons, we'd lose information
+that we might otherwise track in /proc/ or /sys/).
+
+Or the inverse of the above: where would you suggest initializing or
+tearing down the wakeirq?
+
+An alternative could be to include any necessary state into the
+pci_host_bridge or pci_dev and just inline the setup code into
+pci.c/remove.c (e.g., pci_register_host_bridge()) and pci-driver.c
+(pci_device_{probe,remove}()). But I'm not sure that's much more
+beautiful.
+
+Brian
+
+> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> 
+> Thanks,
+> Rafael
+> 
