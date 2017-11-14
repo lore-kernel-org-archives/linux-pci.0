@@ -1,67 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39434 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752574AbdKMXMM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Nov 2017 18:12:12 -0500
-Subject: [PATCH v1 3/4] PCI/ASPM: Reformat ASPM register definitions
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Rajat Jain <rajatja@google.com>, linux-kernel@vger.kernel.org,
-        Vidya Sagar <vidyas@nvidia.com>
-Date: Mon, 13 Nov 2017 17:12:09 -0600
-Message-ID: <20171113231209.4120.53195.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171113230937.4120.68038.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171113230937.4120.68038.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:48825 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754051AbdKNJr7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2017 04:47:59 -0500
+Received: by mail-lf0-f65.google.com with SMTP id r135so21540408lfe.5
+        for <linux-pci@vger.kernel.org>; Tue, 14 Nov 2017 01:47:58 -0800 (PST)
+Subject: Re: [PATCH ] dt-bindings: PCI: rcar: Add device tree support for
+ r8a7743
+To: Biju Das <biju.das@bp.renesas.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc: Simon Horman <horms@verge.net.au>,
+        Chris Paterson <chris.paterson2@renesas.com>,
+        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+References: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <0d38fedf-c39c-8836-44e6-e23ee0a87668@cogentembedded.com>
+Date: Tue, 14 Nov 2017 12:47:56 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1510591074-59346-1-git-send-email-biju.das@bp.renesas.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hello!
 
-Reformat register field definitions in the style used elsewhere and align
-comments with names used in the spec.  No functional change intended.
+On 11/13/2017 7:37 PM, Biju Das wrote:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/uapi/linux/pci_regs.h |   28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+> Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller
+> is identical to the R-Car Gen2 family.
+> 
+> No driver change is needed due to the fallback compatible value
+> "renesas,pcie-rcar-gen2".
+> Adding the SoC-specific compatible values here has three purposes:
+> 1. Document which SoCs have this hardware module,
+> 2. Allow checkpatch to validate compatible values.
+> 3. Allow the driver to support SoC specific implementations in future
+>     as necessary.
+> 
+> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+> Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+> ---
+>   Documentation/devicetree/bindings/pci/rcar-pci.txt | 6 ++++--
+>   1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> index 76ba3a6..2c43e38 100644
+> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -1,13 +1,15 @@
+>   * Renesas R-Car PCIe interface
+>   
+>   Required properties:
+> -compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
+> +compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
+> +	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
+>   	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
+>   	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
+>   	    "renesas,pcie-r8a7793" for the R8A7793 SoC;
+>   	    "renesas,pcie-r8a7795" for the R8A7795 SoC;
+>   	    "renesas,pcie-r8a7796" for the R8A7796 SoC;
+> -	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
+> +	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
+> +				     RZ-G1 compatible device.
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index f8d58045926f..4150acb4cccb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -995,19 +995,19 @@
- #define  PCI_PTM_CTRL_ENABLE		0x00000001  /* PTM enable */
- #define  PCI_PTM_CTRL_ROOT		0x00000002  /* Root select */
- 
--/* L1 PM Substates */
--#define PCI_L1SS_CAP		    4	/* capability register */
--#define  PCI_L1SS_CAP_PCIPM_L1_2	 1	/* PCI PM L1.2 Support */
--#define  PCI_L1SS_CAP_PCIPM_L1_1	 2	/* PCI PM L1.1 Support */
--#define  PCI_L1SS_CAP_ASPM_L1_2		 4	/* ASPM L1.2 Support */
--#define  PCI_L1SS_CAP_ASPM_L1_1		 8	/* ASPM L1.1 Support */
--#define  PCI_L1SS_CAP_L1_PM_SS		16	/* L1 PM Substates Support */
--#define PCI_L1SS_CTL1		    8	/* Control Register 1 */
--#define  PCI_L1SS_CTL1_PCIPM_L1_2	1	/* PCI PM L1.2 Enable */
--#define  PCI_L1SS_CTL1_PCIPM_L1_1	2	/* PCI PM L1.1 Support */
--#define  PCI_L1SS_CTL1_ASPM_L1_2	4	/* ASPM L1.2 Support */
--#define  PCI_L1SS_CTL1_ASPM_L1_1	8	/* ASPM L1.1 Support */
--#define  PCI_L1SS_CTL1_L1SS_MASK	0x0000000F
--#define PCI_L1SS_CTL2		    0xC	/* Control Register 2 */
-+/* ASPM L1 PM Substates */
-+#define PCI_L1SS_CAP		0x04	/* Capabilities Register */
-+#define  PCI_L1SS_CAP_PCIPM_L1_2	0x00000001  /* PCI-PM L1.2 Supported */
-+#define  PCI_L1SS_CAP_PCIPM_L1_1	0x00000002  /* PCI-PM L1.1 Supported */
-+#define  PCI_L1SS_CAP_ASPM_L1_2		0x00000004  /* ASPM L1.2 Supported */
-+#define  PCI_L1SS_CAP_ASPM_L1_1		0x00000008  /* ASPM L1.1 Supported */
-+#define  PCI_L1SS_CAP_L1_PM_SS		0x00000010  /* L1 PM Substates Supported */
-+#define PCI_L1SS_CTL1		0x08	/* Control 1 Register */
-+#define  PCI_L1SS_CTL1_PCIPM_L1_2	0x00000001  /* PCI-PM L1.2 Enable */
-+#define  PCI_L1SS_CTL1_PCIPM_L1_1	0x00000002  /* PCI-PM L1.1 Enable */
-+#define  PCI_L1SS_CTL1_ASPM_L1_2	0x00000004  /* ASPM L1.2 Enable */
-+#define  PCI_L1SS_CTL1_ASPM_L1_1	0x00000008  /* ASPM L1.1 Enable */
-+#define  PCI_L1SS_CTL1_L1SS_MASK	0x0000000f
-+#define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
- 
- #endif /* LINUX_PCI_REGS_H */
+    It's called RZ/G1.
+
+[...]
+
+MBR, Sergei
