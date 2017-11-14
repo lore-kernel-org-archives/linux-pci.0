@@ -1,14 +1,15 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <2655595.bSA6msl5Qp@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <CAJZ5v0i4yFGyqAZ6QqG7q1_xNfjMNHkPk3o0WuBvwKFeM2nXeg@mail.gmail.com>
- <CAPDyKFr4DgVdKtf=G1vUy=Si0nSTECsrWoqB+z9UCQHS8DuwcQ@mail.gmail.com> <2655595.bSA6msl5Qp@aspire.rjw.lan>
+In-Reply-To: <CAJZ5v0i4yFGyqAZ6QqG7q1_xNfjMNHkPk3o0WuBvwKFeM2nXeg@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
+ <6330680.LdxjlP4uri@aspire.rjw.lan> <2932219.eEdIVn6WWf@aspire.rjw.lan>
+ <CAPDyKFrbnLjBzY3yE1OyXOpG3--K+C-1BCWQtyL9S6zQ5cmdhw@mail.gmail.com> <CAJZ5v0i4yFGyqAZ6QqG7q1_xNfjMNHkPk3o0WuBvwKFeM2nXeg@mail.gmail.com>
 From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Thu, 16 Nov 2017 11:18:21 +0100
-Message-ID: <CAPDyKFrP2V24ROgV0U8qgR-t91rzJ5mnEMkCQpq_tN_bZj1YPg@mail.gmail.com>
+Date: Tue, 14 Nov 2017 17:07:59 +0100
+Message-ID: <CAPDyKFr4DgVdKtf=G1vUy=Si0nSTECsrWoqB+z9UCQHS8DuwcQ@mail.gmail.com>
 Subject: Re: [PATCH v2 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         Linux PM <linux-pm@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Alan Stern <stern@rowland.harvard.edu>,
@@ -24,116 +25,157 @@ Content-Type: text/plain; charset="UTF-8"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 11 November 2017 at 00:45, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Fri, Nov 10, 2017 at 10:09 AM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+>> On 8 November 2017 at 14:25, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>
+>>> Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
+>>> instruct the PM core and middle-layer (bus type, PM domain, etc.)
+>>> code that it is desirable to leave the device in runtime suspend
+>>> after system-wide transitions to the working state (for example,
+>>> the device may be slow to resume and it may be better to avoid
+>>> resuming it right away).
+>>>
+>>> Generally, the middle-layer code involved in the handling of the
+>>> device is expected to indicate to the PM core whether or not the
+>>> device may be left in suspend with the help of the device's
+>>> power.may_skip_resume status bit.  That has to happen in the "noirq"
+>>> phase of the preceding system suspend (or analogous) transition.
+>>> The middle layer is then responsible for handling the device as
+>>> appropriate in its "noirq" resume callback which is executed
+>>> regardless of whether or not the device may be left suspended, but
+>>> the other resume callbacks (except for ->complete) will be skipped
+>>> automatically by the core if the device really can be left in
+>>> suspend.
+>>
+>> I don't understand the reason to why you need to skip invoking resume
+>> callbacks to achieve this behavior, could you elaborate on that?
+>
+> The reason why it is done this way is because that takes less code and
+> is easier (or at least less error-prone, because it avoids repeating
+> patterns in middle layers).
+>
+> Note that the callbacks only may be skipped by the core if the middle
+> layer has set power.skip_resume for the device (or if the core is
+> handling it in patch [5/6], but that's one more step ahead still).
+>
+>> Couldn't the PM domain or the middle-layer instead decide what to do?
+>
+> They still can, the whole thing is a total opt-in.
+>
+> But to be constructive, do you have any specific examples in mind?
+
+See more below.
+
+>
+>> To me it sounds a bit prone to errors by skipping callbacks from the
+>> PM core, and I wonder if the general driver author will be able to
+>> understand how to use this flag properly.
+>
+> This has nothing to do with general driver authors and I'm not sure
+> what you mean here and where you are going with this.
+
+Let me elaborate.
+
+My general goal is that I want to make it easier (or as easy as
+possible) for the general driver author to deploy runtime PM and
+system-wide PM support - in an optimized manner. Therefore, I am
+pondering over the solution you picked in this series, trying to
+understand how it fits into those aspects.
+
+Particular I am a bit worried from a complexity point of view, about
+the part with skipping callbacks from the PM core. We have observed
+some difficulties with the direct_complete path (i2c dw driver), which
+is based on a similar approach as this one.
+
+Additionally, in this case, to trigger skipping of callbacks to
+happen, first, drivers needs to inform the middle-layer, second, the
+middle layer acts on that information and then informs the PM core,
+then in the third step, the PM core can decide what to do. It doesn't
+sound straight-forward.
+
+I guess I need to be convinced that this new approach is going to be
+better than the the direct_complete path, so it somehow can replace it
+along the road. Otherwise, we may end up just having yet another way
+of skipping callbacks in the PM core and I don't like that.
+
+Of course, I also realize this hole thing is opt-in, so nothing will
+break and we are all good. :-)
+
+>
+>> That said, as the series don't include any changes for drivers making
+>> use of the flag, could please fold in such change as it would provide
+>> a more complete picture?
+>
+> I've already done so, see https://patchwork.kernel.org/patch/10007349/
+>
+> IMHO it's not really useful to drag this stuff (which doesn't change
+> BTW) along with every iteration of the core patches.
+
+Well, to me it's useful because it shows how these flags can/will be used.
+
+Anyway, I thought you scraped that patch and was working on a new
+version. I will have a look then.
+
 [...]
 
+>>>   * device_resume_noirq - Execute a "noirq resume" callback for given device.
+>>>   * @dev: Device to handle.
+>>>   * @state: PM transition of the system being carried out.
+>>> @@ -575,6 +587,12 @@ static int device_resume_noirq(struct de
+>>>         error = dpm_run_callback(callback, dev, state, info);
+>>>         dev->power.is_noirq_suspended = false;
+>>>
+>>> +       if (dev_pm_may_skip_resume(dev)) {
+>>> +               pm_runtime_set_suspended(dev);
 >>
->> My general goal is that I want to make it easier (or as easy as
->> possible) for the general driver author to deploy runtime PM and
->> system-wide PM support - in an optimized manner. Therefore, I am
->> pondering over the solution you picked in this series, trying to
->> understand how it fits into those aspects.
+>> According to the doc, the DPM_FLAG_LEAVE_SUSPENDED intends to leave
+>> the device in runtime suspend state during system resume.
+>> However, here you are actually trying to change its runtime PM state to that.
+>
+> So the doc needs to be fixed. :-)
+
+Yep.
+
+>
+> But I'm guessing that this just is a misunderstanding and you mean the
+> phrase "it may be desirable to leave some devices in runtime suspend
+> after [...]".  Yes, it is talking about "runtime suspend", but
+> actually "runtime suspend" is the only kind of "suspend" you can leave
+> a device in after a system transition to the working state.  It never
+> says that the device must have been suspended before the preceding
+> system transition into a sleep state started.
+
+My point is, it's isn't obvious why you need to make sure the device's
+runtime PM status is set to "RPM_SUSPENDED" when leaving the resume
+noirq phase. You did explain that somewhat above, thanks!
+
+Perhaps you could fold in some of that information into the doc as well?
+
+>
+>> Moreover, you should check the return value from
+>> pm_runtime_set_suspended().
+>
+> This is in "noirq", so failures of that are meaningless here.
+>
+>> Then I wonder, what should you do when it fails here?
 >>
->> Particular I am a bit worried from a complexity point of view, about
->> the part with skipping callbacks from the PM core. We have observed
->> some difficulties with the direct_complete path (i2c dw driver), which
->> is based on a similar approach as this one.
+>> Perhaps a better idea is to do this in the noirq suspend phase,
+>> because it allows you to bail out in case pm_runtime_set_suspended()
+>> fails.
 >
-> These are resume callbacks, not suspend callbacks.  Also not all of them
-> are skipped.  That is quite a bit different from skipping *all* callbacks.
->
-> Moreover, at the point the core decides to skip the callbacks, the device
-> *has* *to* be left suspended and there simply is no point in running them
-> no matter what.
->
-> That part of code can be trivially moved to middle layers, but then each
-> of them will have to do exactly the same thing.  I don't see any reason to
-> do that and I'm not finding one in your comments.  Sorry.
+> This doesn't make sense, sorry.
 
-I think my concerns boils done to that I am wondering how useful it
-will be, in general, to enable the core to skip invoking resume
-callbacks.
+What do you mean by "failures of that are meaningless here."?
 
-Although, if you are targeting some specific devices/drivers (ACPI,
-PCI, etc), and not care that much about flexibility, then I am fine
-with it. The approach seems to work.
+I was suggesting, instead of calling pm_runtime_set_suspended() in the
+noirq *resume* phase, why can't you do that in the noirq *suspend*
+phase?
 
-Let me elaborate on that comment a bit.
-
-1)
-Skipping resume callbacks is not going to work for a device that may
-be attached to the generic PM domain.
-
-Well, in principle one could try to re-work genpd to cope with this
-behavior, I guess, but that would also mean genpd becomes limited to
-always use the noirq callbacks to power on/off the PM domain. That
-isn't an acceptable limitation.
-
-2)
-Because of 1) This leads to those cross SoC drivers, dealing with
-devices which sometimes may have a genpd attached and sometimes an
-ACPI PM domain attached. I guess those drivers would need to have a
-different set of system-wide PM callbacks, depending on the PM domain
-the device is attached to, as to achieve a similar optimized behavior
-during system resume. Or some other cleverness to deal with
-system-wide PM.
-
-Perhaps we can ignore both 1) and 2), because the number of cross SoC
-drivers having these issues should be rather limited!?
-
-3)
-There are certainly lots of drivers that can cope with its device
-remaining in runtime suspend, during system resume.
-Although, some of these drivers may have some additional operations to
-carry out during resume, which may not require to resume (activate)
-its device. For example the driver may need to resume a queue,
-re-configure an out-of-band wakeup (GPIO IRQ), re-configure pinctrls,
-etc.
-
-These drivers can't use the method behind LEAVE_SUSPENDED, because
-they need their resume callbacks to be invoked.
+In the noirq *suspend* phase it's not too late to deal with errors!? Or is it?
 
 [...]
-
->
-> Well, this works the other way around this time, I'm afraid.  At this point
-> you need to convince me that the approach has real issues. :-)
-
-I think I have pointed out some issues above. Feel free to ignore
-them, depending on what your target is.
-
-[...]
-
->> >> Perhaps a better idea is to do this in the noirq suspend phase,
->> >> because it allows you to bail out in case pm_runtime_set_suspended()
->> >> fails.
->> >
->> > This doesn't make sense, sorry.
->>
->> What do you mean by "failures of that are meaningless here."?
->
-> If all devices have runtime PM disabled, pm_runtime_set_suspended() should
-> just do what it is asked for unless called with an invalid argument or
-> similar.
-
-Yes.
-
->
->> I was suggesting, instead of calling pm_runtime_set_suspended() in the
->> noirq *resume* phase, why can't you do that in the noirq *suspend*
->> phase?
->>
->> In the noirq *suspend* phase it's not too late to deal with errors!? Or is it?
->
-> At that point it has not been decided whether or not the devices will stay
-> suspended yet.  The status cannot be changed before making that decision,
-> which only happens in the noirq resume phase.
-
-Okay, then it's fine as is (because of your other patch to the runtime
-PM core, which changes the behavior for pm_runtime_set_suspended()).
-
-BTW, I have some additional minor comments to some other parts of the
-code, but I will start over with a new thread proving you with those
-comments.
 
 Kind regards
 Uffe
