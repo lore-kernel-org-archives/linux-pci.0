@@ -1,75 +1,155 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jim Quinlan <jim2101024@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Russell King <rmk+kernel@armlinux.org.uk>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Jonas Gorski <jonas.gorski@gmail.com>
+Subject: [PATCH v3 1/8] SOC: brcmstb: add memory API
+Date: Tue, 14 Nov 2017 17:12:05 -0500
+Message-Id: <1510697532-32828-2-git-send-email-jim2101024@gmail.com>
+In-Reply-To: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0ibqqUZ0M1_GKCkGj_E+2DQQMOLAVTyPd7mSJDAypkHjQ@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <5556673.MXo6XDN1f4@aspire.rjw.lan>
- <CAPDyKFpzSd4zwW_awuxuim0gzyKV5s9dm66X+szsSUKRnBakbA@mail.gmail.com>
- <2654404.6YT5rmSnae@aspire.rjw.lan> <CAPDyKFo4gE6O=xMoS2Phe0kNgNUGBffy1hxT3iPrY71ieGcumQ@mail.gmail.com>
- <CAJZ5v0ibqqUZ0M1_GKCkGj_E+2DQQMOLAVTyPd7mSJDAypkHjQ@mail.gmail.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Fri, 17 Nov 2017 14:49:20 +0100
-Message-ID: <CAPDyKFrsabWL2cVE2SwguRRiEV5sJHLpzpyhahLucdER_RAEpg@mail.gmail.com>
-Subject: Re: [PATCH v3 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-mips@linux-mips.org, linux-pci@vger.kernel.org,
+ Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+ Jim Quinlan <jim2101024@gmail.com>, bcm-kernel-feedback-list@broadcom.com,
+ Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[...]
-
->>
->>>> Second, have you considered setting the default value of
->>>> dev->power.may_skip_resume to true?
->>>
->>> Yes.
->>>
->>>> That would means the subsystem
->>>> instead need to implement an opt-out method. I am thinking that it may
->>>> not be an issue, since we anyway at this point, don't have drivers
->>>> using the LEAVE_SUSPENDED flag.
->>>
->>> Opt-out doesn't work because of the need to invoke the "noirq" callbacks.
->>
->> I am not sure I follow that.
->>
->> Whatever needs to be fixed on the subsystem level, that could be done
->> before the driver starts using the LEAVE_SUSPENDED flag. No?
->
-> That requires a bit of explanation, sorry for being overly concise.
->
-> The core calls ->resume_noirq from the middle layer regardless of
-> whether or not the device will be left suspended, so the
-> ->resume_noirq cannot do arbitrary things to it.  Setting
-> may_skip_resume by the middle layer tells the core that the middle
-> layer is ready for that and is going to cooperate.  If may_skip_resume
-> had been set by default, that piece of information would have been
-> missing.
-
-Huh, I still don't get that. Sorry.
-
-If the "may_skip_resume" is default set to true by the PM core,
-wouldn't that just mean that the middle-layer needs to implement an
-opt-out method, rather than opt-in. In principle to opt-out the
-middle-layer needs to set may_skip_resume to false in suspend_noirq
-phase, no?
-
-Then we only need to make sure drivers don't starts use
-LEAVE_SUSPENDED, before we make sure the middle layers is adopted. But
-that should not be a problem.
-
-The benefit would be that those middle layers that can cope with
-LEAVE_SUSPENDED as of today don't need to change.
-
-Kind regards
-Uffe
+RnJvbTogRmxvcmlhbiBGYWluZWxsaSA8Zi5mYWluZWxsaUBnbWFpbC5jb20+CgpUaGlzIGNvbW1p
+dCBhZGRzIGEgbWVtb3J5IEFQSSBzdWl0YWJsZSBmb3IgYXNjZXJ0YWluaW5nIHRoZSBzaXplcyBv
+ZgplYWNoIG9mIHRoZSBOIG1lbW9yeSBjb250cm9sbGVycyBpbiBhIEJyb2FkY29tIFNUQiBjaGlw
+LiAgSXRzIGZpcnN0CnVzZXIgd2lsbCBiZSB0aGUgQnJvYWRjb20gU1RCIFBDSWUgcm9vdCBjb21w
+bGV4IGRyaXZlciwgd2hpY2ggbmVlZHMKdG8ga25vdyB0aGVzZSBzaXplcyB0byBwcm9wZXJseSBz
+ZXQgdXAgRE1BIG1hcHBpbmdzIGZvciBpbmJvdW5kCnJlZ2lvbnMuCgpXZSBjYW5ub3QgdXNlIG1l
+bWJsb2NrIGhlcmUgb3IgYW55dGhpbmcgbGlrZSB3aGF0IExpbnV4IHByb3ZpZGVzCmJlY2F1c2Ug
+aXQgY29sbGFwc2VzIGFkamFjZW50IHJlZ2lvbnMgd2l0aGluIGEgbGFyZ2VyIGJsb2NrLCBhbmQg
+aGVyZQp3ZSBhY3R1YWxseSBuZWVkIHBlci1tZW1vcnkgY29udHJvbGxlciBhZGRyZXNzZXMgYW5k
+IHNpemVzLCB3aGljaCBpcwp3aHkgd2UgcmVzb3J0IHRvIG1hbnVhbCBEVCBwYXJzaW5nLgoKU2ln
+bmVkLW9mZi1ieTogSmltIFF1aW5sYW4gPGppbTIxMDEwMjRAZ21haWwuY29tPgotLS0KIGRyaXZl
+cnMvc29jL2JjbS9icmNtc3RiL01ha2VmaWxlIHwgICAyICstCiBkcml2ZXJzL3NvYy9iY20vYnJj
+bXN0Yi9tZW1vcnkuYyB8IDE3MiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysKIGluY2x1ZGUvc29jL2JyY21zdGIvbWVtb3J5X2FwaS5oIHwgIDI1ICsrKysrKwogMyBmaWxl
+cyBjaGFuZ2VkLCAxOTggaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQogY3JlYXRlIG1vZGUg
+MTAwNjQ0IGRyaXZlcnMvc29jL2JjbS9icmNtc3RiL21lbW9yeS5jCiBjcmVhdGUgbW9kZSAxMDA2
+NDQgaW5jbHVkZS9zb2MvYnJjbXN0Yi9tZW1vcnlfYXBpLmgKCmRpZmYgLS1naXQgYS9kcml2ZXJz
+L3NvYy9iY20vYnJjbXN0Yi9NYWtlZmlsZSBiL2RyaXZlcnMvc29jL2JjbS9icmNtc3RiL01ha2Vm
+aWxlCmluZGV4IDkxMjBiMjcuLjRjZWE3YjYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc29jL2JjbS9i
+cmNtc3RiL01ha2VmaWxlCisrKyBiL2RyaXZlcnMvc29jL2JjbS9icmNtc3RiL01ha2VmaWxlCkBA
+IC0xICsxIEBACi1vYmoteQkJCQkrPSBjb21tb24ubyBiaXVjdHJsLm8KK29iai15CQkJCSs9IGNv
+bW1vbi5vIGJpdWN0cmwubyBtZW1vcnkubwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zb2MvYmNtL2Jy
+Y21zdGIvbWVtb3J5LmMgYi9kcml2ZXJzL3NvYy9iY20vYnJjbXN0Yi9tZW1vcnkuYwpuZXcgZmls
+ZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwLi5lYjY0N2FkOQotLS0gL2Rldi9udWxsCisrKyBi
+L2RyaXZlcnMvc29jL2JjbS9icmNtc3RiL21lbW9yeS5jCkBAIC0wLDAgKzEsMTcyIEBACisvKgor
+ICogQ29weXJpZ2h0IMKpIDIwMTUtMjAxNyBCcm9hZGNvbQorICoKKyAqIFRoaXMgcHJvZ3JhbSBp
+cyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJpYnV0ZSBpdCBhbmQvb3IgbW9kaWZ5Cisg
+KiBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlIHZl
+cnNpb24gMiBhcworICogcHVibGlzaGVkIGJ5IHRoZSBGcmVlIFNvZnR3YXJlIEZvdW5kYXRpb24u
+CisgKgorICogVGhpcyBwcm9ncmFtIGlzIGRpc3RyaWJ1dGVkIGluIHRoZSBob3BlIHRoYXQgaXQg
+d2lsbCBiZSB1c2VmdWwsCisgKiBidXQgV0lUSE9VVCBBTlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZl
+biB0aGUgaW1wbGllZCB3YXJyYW50eSBvZgorICogTUVSQ0hBTlRBQklMSVRZIG9yIEZJVE5FU1Mg
+Rk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFLiBTZWUgdGhlCisgKiBHTlUgR2VuZXJhbCBQdWJsaWMg
+TGljZW5zZSBmb3IgbW9yZSBkZXRhaWxzLgorICoKKyAqIEEgY29weSBvZiB0aGUgR1BMIGlzIGF2
+YWlsYWJsZSBhdAorICogaHR0cDovL3d3dy5icm9hZGNvbS5jb20vbGljZW5zZXMvR1BMdjIucGhw
+IG9yIGZyb20gdGhlIEZyZWUgU29mdHdhcmUKKyAqIEZvdW5kYXRpb24gYXQgaHR0cHM6Ly93d3cu
+Z251Lm9yZy9saWNlbnNlcy8gLgorICovCisKKyNpbmNsdWRlIDxsaW51eC9kZXZpY2UuaD4KKyNp
+bmNsdWRlIDxsaW51eC9pby5oPgorI2luY2x1ZGUgPGxpbnV4L2xpYmZkdC5oPgorI2luY2x1ZGUg
+PGxpbnV4L29mX2FkZHJlc3MuaD4KKyNpbmNsdWRlIDxsaW51eC9vZl9mZHQuaD4KKyNpbmNsdWRl
+IDxsaW51eC9zaXplcy5oPgorI2luY2x1ZGUgPHNvYy9icmNtc3RiL21lbW9yeV9hcGkuaD4KKwor
+LyogTWFjcm8gdG8gaGVscCBleHRyYWN0IHByb3BlcnR5IGRhdGEgKi8KKyNkZWZpbmUgRFRfUFJP
+UF9EQVRBX1RPX1UzMihiLCBvZmZzKSAoZmR0MzJfdG9fY3B1KCoodTMyKikoYiArIG9mZnMpKSkK
+KworLyogQ29uc3RhbnRzIHVzZWQgd2hlbiByZXRyaWV2aW5nIG1lbWMgaW5mbyAqLworI2RlZmlu
+ZSBOVU1fQlVTX1JBTkdFUyAxMAorI2RlZmluZSBCVVNfUkFOR0VfVUxJTUlUX1NISUZUIDQKKyNk
+ZWZpbmUgQlVTX1JBTkdFX0xMSU1JVF9TSElGVCA0CisjZGVmaW5lIEJVU19SQU5HRV9QQV9TSElG
+VCAxMgorCitlbnVtIHsKKwlCVVNOVU1fTUNQMCA9IDB4NCwKKwlCVVNOVU1fTUNQMSA9IDB4NSwK
+KwlCVVNOVU1fTUNQMiA9IDB4NiwKK307CisKKy8qCisgKiBJZiB0aGUgRFQgbm9kZXMgYXJlIGhh
+bmR5LCBkZXRlcm1pbmUgd2hpY2ggTUVNQyBob2xkcyB0aGUgc3BlY2lmaWVkCisgKiBwaHlzaWNh
+bCBhZGRyZXNzLgorICovCisjaWZkZWYgQ09ORklHX0FSQ0hfQlJDTVNUQgoraW50IF9fYnJjbXN0
+Yl9tZW1vcnlfcGh5c19hZGRyX3RvX21lbWMocGh5c19hZGRyX3QgcGEsIHZvaWQgX19pb21lbSAq
+YmFzZSkKK3sKKwlpbnQgbWVtYyA9IC0xOworCWludCBpOworCisJZm9yIChpID0gMDsgaSA8IE5V
+TV9CVVNfUkFOR0VTOyBpKyssIGJhc2UgKz0gOCkgeworCQljb25zdCB1NjQgdWxpbWl0X3JhdyA9
+IHJlYWRsKGJhc2UpOworCQljb25zdCB1NjQgbGxpbWl0X3JhdyA9IHJlYWRsKGJhc2UgKyA0KTsK
+KwkJY29uc3QgdTY0IHVsaW1pdCA9CisJCQkoKHVsaW1pdF9yYXcgPj4gQlVTX1JBTkdFX1VMSU1J
+VF9TSElGVCkKKwkJCSA8PCBCVVNfUkFOR0VfUEFfU0hJRlQpIHwgMHhmZmY7CisJCWNvbnN0IHU2
+NCBsbGltaXQgPSAobGxpbWl0X3JhdyA+PiBCVVNfUkFOR0VfTExJTUlUX1NISUZUKQorCQkJCSAg
+IDw8IEJVU19SQU5HRV9QQV9TSElGVDsKKwkJY29uc3QgdTMyIGJ1c251bSA9ICh1MzIpKHVsaW1p
+dF9yYXcgJiAweGYpOworCisJCWlmIChwYSA+PSBsbGltaXQgJiYgcGEgPD0gdWxpbWl0KSB7CisJ
+CQlpZiAoYnVzbnVtID49IEJVU05VTV9NQ1AwICYmIGJ1c251bSA8PSBCVVNOVU1fTUNQMikgewor
+CQkJCW1lbWMgPSBidXNudW0gLSBCVVNOVU1fTUNQMDsKKwkJCQlicmVhazsKKwkJCX0KKwkJfQor
+CX0KKworCXJldHVybiBtZW1jOworfQorCitpbnQgYnJjbXN0Yl9tZW1vcnlfcGh5c19hZGRyX3Rv
+X21lbWMocGh5c19hZGRyX3QgcGEpCit7CisJaW50IG1lbWMgPSAtMTsKKwlzdHJ1Y3QgZGV2aWNl
+X25vZGUgKm5wOworCXZvaWQgX19pb21lbSAqY3B1Yml1Y3RybDsKKworCW5wID0gb2ZfZmluZF9j
+b21wYXRpYmxlX25vZGUoTlVMTCwgTlVMTCwgImJyY20sYnJjbXN0Yi1jcHUtYml1LWN0cmwiKTsK
+KwlpZiAoIW5wKQorCQlyZXR1cm4gbWVtYzsKKworCWNwdWJpdWN0cmwgPSBvZl9pb21hcChucCwg
+MCk7CisJaWYgKCFjcHViaXVjdHJsKQorCQlnb3RvIGNsZWFudXA7CisKKwltZW1jID0gX19icmNt
+c3RiX21lbW9yeV9waHlzX2FkZHJfdG9fbWVtYyhwYSwgY3B1Yml1Y3RybCk7CisJaW91bm1hcChj
+cHViaXVjdHJsKTsKKworY2xlYW51cDoKKwlvZl9ub2RlX3B1dChucCk7CisKKwlyZXR1cm4gbWVt
+YzsKK30KKworI2VsaWYgZGVmaW5lZChDT05GSUdfTUlQUykKK2ludCBicmNtc3RiX21lbW9yeV9w
+aHlzX2FkZHJfdG9fbWVtYyhwaHlzX2FkZHJfdCBwYSkKK3sKKwkvKiBUaGUgbG9naWMgaGVyZSBp
+cyBmYWlybHkgc2ltcGxlIGFuZCBoYXJkY29kZWQ6IGlmIHBhIDw9IDB4NTAwMF8wMDAwLAorCSAq
+IHRoZW4gdGhpcyBpcyBNRU1DMCwgZWxzZSBNRU1DMS4KKwkgKgorCSAqIEZvciBzeXN0ZW1zIHdp
+dGggMkdCIG9uIE1FTUMwLCBNRU1DMSBzdGFydHMgYXQgOTAwMF8wMDAwLCB3aXRoIDFHQgorCSAq
+IG9uIE1FTUMwLCBNRU1DMSBzdGFydHMgYXQgNjAwMF8wMDAwLgorCSAqLworCWlmIChwYSA+PSAw
+eDUwMDAwMDAwVUxMKQorCQlyZXR1cm4gMTsKKwllbHNlCisJCXJldHVybiAwOworfQorI2VuZGlm
+CisKK3U2NCBicmNtc3RiX21lbW9yeV9tZW1jX3NpemUoaW50IG1lbWMpCit7CisJY29uc3Qgdm9p
+ZCAqZmR0ID0gaW5pdGlhbF9ib290X3BhcmFtczsKKwljb25zdCBpbnQgbWVtX29mZnNldCA9IGZk
+dF9wYXRoX29mZnNldChmZHQsICIvbWVtb3J5Iik7CisJaW50IGFkZHJfY2VsbHMgPSAxLCBzaXpl
+X2NlbGxzID0gMTsKKwljb25zdCBzdHJ1Y3QgZmR0X3Byb3BlcnR5ICpwcm9wOworCWludCBwcm9w
+bGVuLCBjZWxsc2xlbjsKKwl1NjQgbWVtY19zaXplID0gMDsKKwlpbnQgaTsKKworCS8qIEdldCBy
+b290IHNpemUgYW5kIGFkZHJlc3MgY2VsbHMgaWYgc3BlY2lmaWVkICovCisJcHJvcCA9IGZkdF9n
+ZXRfcHJvcGVydHkoZmR0LCAwLCAiI3NpemUtY2VsbHMiLCAmcHJvcGxlbik7CisJaWYgKHByb3Ap
+CisJCXNpemVfY2VsbHMgPSBEVF9QUk9QX0RBVEFfVE9fVTMyKHByb3AtPmRhdGEsIDApOworCisJ
+cHJvcCA9IGZkdF9nZXRfcHJvcGVydHkoZmR0LCAwLCAiI2FkZHJlc3MtY2VsbHMiLCAmcHJvcGxl
+bik7CisJaWYgKHByb3ApCisJCWFkZHJfY2VsbHMgPSBEVF9QUk9QX0RBVEFfVE9fVTMyKHByb3At
+PmRhdGEsIDApOworCisJaWYgKG1lbV9vZmZzZXQgPCAwKQorCQlyZXR1cm4gLTE7CisKKwlwcm9w
+ID0gZmR0X2dldF9wcm9wZXJ0eShmZHQsIG1lbV9vZmZzZXQsICJyZWciLCAmcHJvcGxlbik7CisJ
+Y2VsbHNsZW4gPSAoaW50KXNpemVvZih1MzIpICogKGFkZHJfY2VsbHMgKyBzaXplX2NlbGxzKTsK
+KwlpZiAoKHByb3BsZW4gJSBjZWxsc2xlbikgIT0gMCkKKwkJcmV0dXJuIC0xOworCisJZm9yIChp
+ID0gMDsgaSA8IHByb3BsZW4gLyBjZWxsc2xlbjsgKytpKSB7CisJCXU2NCBhZGRyID0gMDsKKwkJ
+dTY0IHNpemUgPSAwOworCQlpbnQgbWVtY19pZHg7CisJCWludCBqOworCisJCWZvciAoaiA9IDA7
+IGogPCBhZGRyX2NlbGxzOyArK2opIHsKKwkJCWludCBvZmZzZXQgPSAoY2VsbHNsZW4gKiBpKSAr
+IChzaXplb2YodTMyKSAqIGopOworCisJCQlhZGRyIHw9ICh1NjQpRFRfUFJPUF9EQVRBX1RPX1Uz
+Mihwcm9wLT5kYXRhLCBvZmZzZXQpIDw8CisJCQkJKChhZGRyX2NlbGxzIC0gaiAtIDEpICogMzIp
+OworCQl9CisJCWZvciAoaiA9IDA7IGogPCBzaXplX2NlbGxzOyArK2opIHsKKwkJCWludCBvZmZz
+ZXQgPSAoY2VsbHNsZW4gKiBpKSArCisJCQkJKHNpemVvZih1MzIpICogKGogKyBhZGRyX2NlbGxz
+KSk7CisKKwkJCXNpemUgfD0gKHU2NClEVF9QUk9QX0RBVEFfVE9fVTMyKHByb3AtPmRhdGEsIG9m
+ZnNldCkgPDwKKwkJCQkoKHNpemVfY2VsbHMgLSBqIC0gMSkgKiAzMik7CisJCX0KKworCQlpZiAo
+KHBoeXNfYWRkcl90KWFkZHIgIT0gYWRkcikgeworCQkJcHJfZXJyKCJwaHlzX2FkZHJfdCBpcyBz
+bWFsbGVyIHRoYW4gcHJvdmlkZWQgYWRkcmVzcyAweCVsbHghXG4iLAorCQkJICAgICAgIGFkZHIp
+OworCQkJcmV0dXJuIC0xOworCQl9CisKKwkJbWVtY19pZHggPSBicmNtc3RiX21lbW9yeV9waHlz
+X2FkZHJfdG9fbWVtYygocGh5c19hZGRyX3QpYWRkcik7CisJCWlmIChtZW1jX2lkeCA9PSBtZW1j
+KQorCQkJbWVtY19zaXplICs9IHNpemU7CisJfQorCisJcmV0dXJuIG1lbWNfc2l6ZTsKK30KK0VY
+UE9SVF9TWU1CT0xfR1BMKGJyY21zdGJfbWVtb3J5X21lbWNfc2l6ZSk7CisKZGlmZiAtLWdpdCBh
+L2luY2x1ZGUvc29jL2JyY21zdGIvbWVtb3J5X2FwaS5oIGIvaW5jbHVkZS9zb2MvYnJjbXN0Yi9t
+ZW1vcnlfYXBpLmgKbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMC4uZDkyMjkwNgot
+LS0gL2Rldi9udWxsCisrKyBiL2luY2x1ZGUvc29jL2JyY21zdGIvbWVtb3J5X2FwaS5oCkBAIC0w
+LDAgKzEsMjUgQEAKKyNpZm5kZWYgX19NRU1PUllfQVBJX0gKKyNkZWZpbmUgX19NRU1PUllfQVBJ
+X0gKKworLyoKKyAqIEJ1cyBJbnRlcmZhY2UgVW5pdCBjb250cm9sIHJlZ2lzdGVyIHNldHVwLCBt
+dXN0IGhhcHBlbiBlYXJseSBkdXJpbmcgYm9vdCwKKyAqIGJlZm9yZSBTTVAgaXMgYnJvdWdodCB1
+cCwgY2FsbGVkIGJ5IG1hY2hpbmUgZW50cnkgcG9pbnQuCisgKi8KK3ZvaWQgYnJjbXN0Yl9iaXVj
+dHJsX2luaXQodm9pZCk7CisKKyNpZmRlZiBDT05GSUdfU09DX0JSQ01TVEIKK2ludCBicmNtc3Ri
+X21lbW9yeV9waHlzX2FkZHJfdG9fbWVtYyhwaHlzX2FkZHJfdCBwYSk7Cit1NjQgYnJjbXN0Yl9t
+ZW1vcnlfbWVtY19zaXplKGludCBtZW1jKTsKKyNlbHNlCitzdGF0aWMgaW5saW5lIGludCBicmNt
+c3RiX21lbW9yeV9waHlzX2FkZHJfdG9fbWVtYyhwaHlzX2FkZHJfdCBwYSkKK3sKKwlyZXR1cm4g
+LUVJTlZBTDsKK30KKworc3RhdGljIGlubGluZSB1NjQgYnJjbXN0Yl9tZW1vcnlfbWVtY19zaXpl
+KGludCBtZW1jKQoreworCXJldHVybiAtMTsKK30KKyNlbmRpZgorCisjZW5kaWYgLyogX19NRU1P
+UllfQVBJX0ggKi8KLS0gCjEuOS4wLjEzOC5nMmRlMzQ3OAoKCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0
+CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFk
+ZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
