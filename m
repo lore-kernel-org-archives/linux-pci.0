@@ -1,46 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 22 Nov 2017 17:58:29 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH 29/30] i7300_idle: deprecate pci_get_bus_and_slot()
-Message-ID: <20171122165829.GA2651@kroah.com>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-30-git-send-email-okaya@codeaurora.org>
- <20171122075345.GC26583@kroah.com>
- <81de37c1-26b5-41f7-ab32-b98012890971@codeaurora.org>
- <20171122164546.GB30812@kroah.com>
- <3cca8693-72bf-db72-f698-f111c9ef707c@codeaurora.org>
+Return-Path: <SRS0=m0+l=CN=codeaurora.org=tbaicar@kernel.org>
+Return-Path: <SRS0=m0+l=CN=codeaurora.org=tbaicar@kernel.org>
+Subject: Re: [PATCH] PCI/AER: don't call recovery process for correctable
+ errors
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, jonathan.derrick@intel.com, keith.busch@intel.com,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <1503940184-29423-1-git-send-email-tbaicar@codeaurora.org>
+ <20171002231903.GE5407@bhelgaas-glaptop.roam.corp.google.com>
+From: Tyler Baicar <tbaicar@codeaurora.org>
+Message-ID: <86882a99-ef54-a71b-3e97-8ecc46d8d14b@codeaurora.org>
+Date: Wed, 15 Nov 2017 09:46:42 -0500
 MIME-Version: 1.0
-In-Reply-To: <3cca8693-72bf-db72-f698-f111c9ef707c@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>, linux-arm-msm@vger.kernel.org,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171002231903.GE5407@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 22, 2017 at 11:50:53AM -0500, Sinan Kaya wrote:
-> On 11/22/2017 11:45 AM, Greg Kroah-Hartman wrote:
-> >> Funny thing is nobody is calling this function. Maybe, I should just kill it
-> >> instead.
-> > Yes, delete it.  Why doesn't the build warn about it not being used?
-> > 
-> 
-> OK. Because it is in a header file that nobody includes.
+On 10/2/2017 7:19 PM, Bjorn Helgaas wrote:
+> On Mon, Aug 28, 2017 at 11:09:44AM -0600, Tyler Baicar wrote:
+>> Correctable errors do not need any software intervention, so
+>> avoid calling into the software recovery process for correctable
+>> errors.
+>>
+>> Signed-off-by: Tyler Baicar <tbaicar@codeaurora.org>
+>> ---
+>>   drivers/pci/pcie/aer/aerdrv_core.c | 3 ++-
+>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+>> index b1303b3..4765c11 100644
+>> --- a/drivers/pci/pcie/aer/aerdrv_core.c
+>> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+>> @@ -626,7 +626,8 @@ static void aer_recover_work_func(struct work_struct *work)
+>>   			continue;
+>>   		}
+>>   		cper_print_aer(pdev, entry.severity, entry.regs);
+>> -		do_recovery(pdev, entry.severity);
+>> +		if (entry.severity != AER_CORRECTABLE)
+>> +			do_recovery(pdev, entry.severity);
+> I think this is fine, and it mirrors what is done in
+> handle_error_source().
+>
+Hello,
 
-Even better, just delete the whole file!  :)
+Will this patch be pulled into 4.15?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Tyler
+
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
