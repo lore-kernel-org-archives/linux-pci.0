@@ -1,63 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:45730 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751660AbdKHJ2S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:28:18 -0500
-Received: by mail-lf0-f68.google.com with SMTP id n69so2323455lfn.2
-        for <linux-pci@vger.kernel.org>; Wed, 08 Nov 2017 01:28:18 -0800 (PST)
-Subject: Re: [PATCH] PCI: rcar: Add compatible string for r8a7796
-To: Marek Vasut <marek.vasut@gmail.com>, linux-pci@vger.kernel.org
-Cc: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
+Received: from kirsty.vergenet.net ([202.4.237.240]:56049 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932115AbdKON2e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Nov 2017 08:28:34 -0500
+Date: Wed, 15 Nov 2017 05:28:29 -0800
+From: Simon Horman <horms@verge.net.au>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci@vger.kernel.org,
         Marek Vasut <marek.vasut+renesas@gmail.com>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
         Wolfram Sang <wsa@the-dreams.de>,
         linux-renesas-soc@vger.kernel.org
-References: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <538f7964-0f69-2ed2-35f2-e14244a7e6ba@cogentembedded.com>
-Date: Wed, 8 Nov 2017 12:28:16 +0300
+Subject: Re: [PATCH V2 2/5] PCI: rcar: Clean up the macros
+Message-ID: <20171115132829.6qpfwbs4iseaulob@verge.net.au>
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+ <20171110215843.432-3-marek.vasut+renesas@gmail.com>
+ <20171113070326.qteltu72qpniogcf@verge.net.au>
+ <4e43ddcf-9d97-c8de-8f46-1735f9f1bab6@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4e43ddcf-9d97-c8de-8f46-1735f9f1bab6@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
+On Mon, Nov 13, 2017 at 07:11:54PM +0100, Marek Vasut wrote:
+> On 11/13/2017 08:03 AM, Simon Horman wrote:
+> > On Fri, Nov 10, 2017 at 10:58:40PM +0100, Marek Vasut wrote:
+> >> Just clean up the macros in the RCar PCI driver, no functional change.
+> > 
+> > Could you describe the cleanup in slightly more detail?
+> > My reading is 1. Use BIT() macro 2. tidy up whitespace.
+> > 
+> That's all there is, indeed.
 
-On 11/8/2017 12:15 PM, Marek Vasut wrote:
+Right, but I'd rather that the changelog be expanded to include that
+information. With that fixed feel free to add:
 
-> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-> 
-> Add compatible string for the RCar M3 R8A7796 SoC.
-
-    It's M3-W.
-
-> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
->   drivers/pci/host/pcie-rcar.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 12796eccb2be..8b51208875fc 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1062,6 +1062,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->   	{ .compatible = "renesas,pcie-rcar-gen2",
->   	  .data = rcar_pcie_hw_init_gen2 },
->   	{ .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
-> +	{ .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
-
-    Why, if we already have the line below? And don't you need to update the 
-bindings?
-
->   	{ .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
->   	{},
->   };
-
-MBR, Sergei
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
