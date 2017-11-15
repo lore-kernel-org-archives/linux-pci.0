@@ -1,69 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:51585 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756080AbdKCNsO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 09:48:14 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 08/17] PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than in probe
-Date: Fri,  3 Nov 2017 14:47:12 +0100
-Message-Id: <20171103134722.5532-9-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:5717 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932509AbdKOTLV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Nov 2017 14:11:21 -0500
+From: Neo Jia <cjia@nvidia.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
+        Neo Jia <cjia@nvidia.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>
+Subject: [PATCH 1/1] Change pci_enable_sriov, pci_disable_sriov and pci_reset_function to non-GPL symbol.
+Date: Wed, 15 Nov 2017 11:10:58 -0800
+Message-ID: <1510773058-1482-1-git-send-email-cjia@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Assign pp->ops in *_add_pcie_port() to match how it is done in other
-drivers like exynos, imx7, keystone, armada8k, artpec6, designware-plat,
-hisi, kirin and spear13xx.
+This will allow proprietary linux drivers to adopt SR-IOV spec from
+PCI-SIG, also switch pci_reset_function to non-GPL symbol as it mainly
+does pci config space access per spec.
 
-This is probably a remainder since when dev and ops were assigned as
-members to pp. Since we now assign them as members to struct dw_pcie,
-the pp->ops assignment should definitely be in dra7xx_add_pcie_port().
-
-This is done so that the compiler (in a later commit) can remove more
-code when enabling only one of the two supported modes (host/ep) in
-the dra7xx driver.
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Neo Jia <cjia@nvidia.com>
+Signed-off-by: Kirti Wankhede <kwankhede@nvidia.com>
 ---
- drivers/pci/dwc/pci-dra7xx.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/pci/iov.c | 4 ++--
+ drivers/pci/pci.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index a743545da4d4..009f6aeeee1c 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -460,6 +460,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 	if (!pci->dbi_base)
- 		return -ENOMEM;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 6bacb8995e96..ecc6e7cddc57 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -673,7 +673,7 @@ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
  
-+	pp->ops = &dra7xx_pcie_host_ops;
-+
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "failed to initialize host\n");
-@@ -588,7 +590,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	void __iomem *base;
- 	struct resource *res;
- 	struct dw_pcie *pci;
--	struct pcie_port *pp;
- 	struct dra7xx_pcie *dra7xx;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
-@@ -616,9 +617,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
+ 	return sriov_enable(dev, nr_virtfn);
+ }
+-EXPORT_SYMBOL_GPL(pci_enable_sriov);
++EXPORT_SYMBOL(pci_enable_sriov);
  
--	pp = &pci->pp;
--	pp->ops = &dra7xx_pcie_host_ops;
--
- 	irq = platform_get_irq(pdev, 0);
- 	if (irq < 0) {
- 		dev_err(dev, "missing IRQ resource: %d\n", irq);
+ /**
+  * pci_disable_sriov - disable the SR-IOV capability
+@@ -688,7 +688,7 @@ void pci_disable_sriov(struct pci_dev *dev)
+ 
+ 	sriov_disable(dev);
+ }
+-EXPORT_SYMBOL_GPL(pci_disable_sriov);
++EXPORT_SYMBOL(pci_disable_sriov);
+ 
+ /**
+  * pci_num_vf - return number of VFs associated with a PF device_release_driver
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4a7c6864fdf4..e8318abedc73 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4367,7 +4367,7 @@ int pci_reset_function(struct pci_dev *dev)
+ 
+ 	return rc;
+ }
+-EXPORT_SYMBOL_GPL(pci_reset_function);
++EXPORT_SYMBOL(pci_reset_function);
+ 
+ /**
+  * pci_reset_function_locked - quiesce and reset a PCI device function
 -- 
-2.14.2
+2.7.4
