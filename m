@@ -1,102 +1,145 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Leo Li <leoyang.li@nxp.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>, Xiaowei Bao <xiaowei.bao@nxp.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com"
- <mark.rutland@arm.com>, "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>, "bhelgaas@google.com"
- <bhelgaas@google.com>, "shawnguo@kernel.org" <shawnguo@kernel.org>,
- Madalin-cristian Bucur <madalin.bucur@nxp.com>, Sumit Garg
- <sumit.garg@nxp.com>, "Y.b. Lu" <yangbo.lu@nxp.com>, Andy Tang
- <andy.tang@nxp.com>, "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
- "pbrobinson@gmail.com" <pbrobinson@gmail.com>, "songxiaowei@hisilicon.com"
- <songxiaowei@hisilicon.com>, "devicetree@vger.kernel.org"
- <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org"
- <linuxppc-dev@lists.ozlabs.org>, "Z.q. Hou" <zhiqiang.hou@nxp.com>, "Mingkai
- Hu" <mingkai.hu@nxp.com>, "M.h. Lian" <minghuan.lian@nxp.com>
-Subject: RE: [PATCHv4 1/3] ARMv8: dts: ls1046a: add the property of IB and OB
-Date: Fri, 10 Nov 2017 21:20:31 +0000
-Message-ID: <AM4PR0401MB16999BD34AFBB1362BD32EBD8F540@AM4PR0401MB1699.eurprd04.prod.outlook.com>
-References: <20171110034847.17891-1-xiaowei.bao@nxp.com>
- <20171110034847.17891-2-xiaowei.bao@nxp.com>
- <20b8f1d2-f817-469f-afbf-66f25d6f8c46@ti.com>
-In-Reply-To: <20b8f1d2-f817-469f-afbf-66f25d6f8c46@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+From: Juri Lelli <juri.lelli@redhat.com>
+Date: Wed, 15 Nov 2017 14:34:09 +0100
+Message-ID: <CAFj23Bj4PvHyBKXCzeVOo_O0M4tVydK7B7fv78=yPO3WQ2+WBw@mail.gmail.com>
+Subject: [ANNOUNCE][CFP] Power Management and Scheduling in the Linux Kernel
+ II edition (OSPM-summit 2018)
+To: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-rt-users@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Peter Zijlstra <peterz@infradead.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Morten Rasmussen <morten.rasmussen@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Dietmar Eggemann <dietmar.eggemann@arm.com>,
+        Luca Abeni <luca.abeni@santannapisa.it>,
+        Tommaso Cucinotta <tommaso.cucinotta@sssup.it>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Patrick Bellasi <patrick.bellasi@arm.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Paolo Valente <paolo.valente@unimore.it>,
+        Claudio Scordino <claudio@evidence.eu.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>, fweisbec@gmail.com,
+        Sai Gurrappadi <sgurrappadi@nvidia.com>,
+        Vikram Mulukutla <markivx@codeaurora.org>,
+        Saravana Kannan <skannan@codeaurora.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Daniel Bristot de Oliveira <bristot@redhat.com>,
+        Byungchul Park <byungchul.park@lge.com>,
+        Clark Williams <williams@redhat.com>,
+        "Martuccelli, Peter" <peterm@redhat.com>,
+        Prarit Bhargava <prarit@redhat.com>,
+        Joel Fernandes <joelaf@google.com>,
+        Steve Muckle <smuckle@google.com>,
+        Atish Patra <atish.patra@oracle.com>,
+        Rohit Jain <rohit.k.jain@oracle.com>,
+        Todd Kjos <tkjos@android.com>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        ptitiano@baylibre.com, bobby.batacharia@arm.com,
+        robin.randhawa@arm.com
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Power Management and Scheduling in the Linux Kernel II edition
+(OSPM-summit 2018)
 
+April 16-18, 2018
+Scuola Superiore Sant'Anna
+Pisa, Italy
 
-> -----Original Message-----
-> From: Kishon Vijay Abraham I [mailto:kishon@ti.com]
-> Sent: Friday, November 10, 2017 12:22 AM
-> To: Xiaowei Bao <xiaowei.bao@nxp.com>; robh+dt@kernel.org;
-> mark.rutland@arm.com; catalin.marinas@arm.com; will.deacon@arm.com;
-> bhelgaas@google.com; shawnguo@kernel.org; Madalin-cristian Bucur
-> <madalin.bucur@nxp.com>; Sumit Garg <sumit.garg@nxp.com>; Y.b. Lu
-> <yangbo.lu@nxp.com>; hongtao.jia@nxp.com; Andy Tang
-> <andy.tang@nxp.com>; Leo Li <leoyang.li@nxp.com>; jingoohan1@gmail.com;
-> pbrobinson@gmail.com; songxiaowei@hisilicon.com;
-> devicetree@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> kernel@vger.kernel.org; linux-pci@vger.kernel.org; linuxppc-
-> dev@lists.ozlabs.org; Z.q. Hou <zhiqiang.hou@nxp.com>; Mingkai Hu
-> <mingkai.hu@nxp.com>; M.h. Lian <minghuan.lian@nxp.com>
-> Subject: Re: [PATCHv4 1/3] ARMv8: dts: ls1046a: add the property of IB and OB
-> 
-> Hi Bao,
-> 
-> On Friday 10 November 2017 09:18 AM, Bao Xiaowei wrote:
-> > Add the property of inbound and outbound windows number for ep driver.
-> >
-> > Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
-> > Acked-by: Minghuan Lian <minghuan.Lian@nxp.com>
-> > ---
-> >  v2:
-> >  - no change
-> >  v3:
-> >  - modify the commit message
-> >  v4:
-> >  - no change
-> >
-> >  arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> 
-> $subject should start with something like
-> arm64: dts: ls1046a: **
-> >
-> > diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> > b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> > index 06b5e12d04d8..f8332669663c 100644
-> > --- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> > +++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> > @@ -674,6 +674,8 @@
-> >  			device_type = "pci";
-> >  			dma-coherent;
-> >  			num-lanes = <4>;
-> > +			num-ib-windows = <6>;
-> > +			num-ob-windows = <6>;
-> 
-> EP specific properties shouldn't be added in RC dt node. Ideally you should have
-> a separate dt node for RC and EP.
+http://retis.sssup.it/ospm-summit/
 
-It is a single PCIe controller which can be configured to either RC mode or EP mode.  Wouldn't it conflict with the device tree principles to have two device tree nodes for the same PCIe controller?  And obviously the two modes cannot be used at the same time so we cannot have two drivers both probe on the same hardware.
+---
 
-Regards,
-Leo
+.:: FOCUS
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Power management and scheduling techniques to reduce energy
+consumption while meeting performance and latency requirements are
+still receiving considerable attention from the Linux Kernel
+development community.
+
+After the success of the first edition
+(https://lwn.net/Articles/721573/), II edition of the Power Management
+and Scheduling in the Linux Kernel (OSPM) summit aims at replicating
+such focused discussions, understanding what has been achieved and
+what instead still remains to be addressed.
+
+.:: FORMAT
+
+The summit is organised to cover three days of discussions and talks.
+
+The list of topics of interest includes (but it is not limited to):
+
+* Power management techniques
+* Real-time and non real-time scheduling techniques
+* Energy awareness
+* Mobile/Server power management real-world use cases (successes and failures)
+* Power management and scheduling tooling (configuration, integration,
+testing, etc.)
+* Tracing
+* Recap lightning talks (what has been achieved w.r.t. I edition?)
+
+Presentations can cover recently developed technologies, ongoing work
+and new ideas. Please understand that this workshop is not intended
+for presenting sales and marketing pitches.
+
+.:: ATTENDING
+
+Attending the OSPM-summit is free of charge, but registration to the
+event is mandatory. The event can allow a maximum of 50 people (so, be
+sure to register early!). Registrations open on December 23rd, 2017.
+To register fill in the registration form available at
+https://goo.gl/forms/QHebUBdSWgFeSrKv2. While it is not strictly
+required to submit a topic/presentation (see below), registrations
+with a topic/presentation proposal will take precedence.
+
+.:: VENUE
+
+The workshop will take place at ReTiS Lab*, Scuola Superiore
+Sant'Anna, Pisa, Italy. Pisa is a small town, walking distance from
+the city centre to the venue is 20 minutes, walking distance from the
+airport to the city centre is 30 minutes. More details are available
+from the summit web page: http://retis.sssup.it/ospm-summit/#site
+
+* https://goo.gl/maps/2pPXG2v7Lfp
+
+.:: SUBMIT A TOPIC/PRESENTATION
+
+To submit a topic/presentation add its details to this list:
+https://docs.google.com/spreadsheets/d/1ZPfASW6zVOM3xQvOrcaDEf1c-Pxi1XnFukVYHHwGUq4/edit?usp=sharing
+
+Alternatively, simply reply (only to me :) to this email specifying:
+
+- name/surname
+- affiliation
+- short bio
+- email address
+- title
+- abstract
+- 30min or 50min slot
+
+Deadline for submitting topics/presentations is 9th of December 2017.
+Notifications for accepted topics/presentations will be sent out on
+23rd of December 2017.
+
+.:: ORGANISERS (in alphabetical order)
+
+Luca Abeni (SSSA)
+Patrick Bellasi (Arm)
+Tommaso Cucinotta (SSSA)
+Dietmar Eggemann (Arm)
+Sudeep Holla (Arm)
+Juri Lelli (Red Hat)
+Lorenzo Pieralisi (Arm)
+Morten Rasmussen (Arm)
+Claudio Scordino (Evidence SRL)
