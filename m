@@ -1,22 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bao Xiaowei <xiaowei.bao@nxp.com>
-To: <robh+dt@kernel.org>, <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <bhelgaas@google.com>, <shawnguo@kernel.org>,
- <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
- <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>, <leoyang.li@nxp.com>,
- <kishon@ti.com>, <jingoohan1@gmail.com>, <pbrobinson@gmail.com>,
- <songxiaowei@hisilicon.com>, <devicetree@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
- <Zhiqiang.Hou@nxp.com>, <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
-Subject: [PATCHv3 3/3] ARMv8: pcie: make the DWC EP driver support for
- layerscape
-Date: Fri, 10 Nov 2017 10:49:26 +0800
-Message-ID: <20171110024926.39700-4-xiaowei.bao@nxp.com>
-In-Reply-To: <20171110024926.39700-1-xiaowei.bao@nxp.com>
-References: <20171110024926.39700-1-xiaowei.bao@nxp.com>
-MIME-Version: 1.0
+From: Oza Pawandeep <poza@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	okaya@codeaurora.org,
+	timur@codeaurora.org
+Subject: [PATCH v2 3/4] PCI/portdrv: Implement interface to query the
+ registered service
+Date: Wed, 15 Nov 2017 10:26:47 +0530
+Message-Id: <1510721808-27164-4-git-send-email-poza@codeaurora.org>
+In-Reply-To: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
+References: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -24,41 +17,91 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bao Xiaowei <xiaowei.bao@nxp.com>
+Cc: Oza Pawandeep <poza@codeaurora.org>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Dongdong Liu <liudongdong3@huawei.com>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Layerscape pcie controllers support RC or EP mode, Add the EP mode
-support in Kconfig, the driver will support both RC and EP mode, and
-the driver is able to judge the pcie controllers work on RC or EP mode.
+This patch implements query service interface. So that, any port service
+driver can query to know, if the service is active or not.
 
-Signed-off-by: Bao Xiaowei <xiaowei.bao@nxp.com>
-Acked-by: Minghuan Lian <minghuan.Lian@nxp.com>
----
- v2:
- no change
- v3:
- no change
+When multiple service drivers try to take actions, these service drivers
+could race or could have conflict of interest.
 
- drivers/pci/dwc/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+For e.g. when DPC is enabled, AER should not attempt recovery.
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 22ec82fcdea2..b5f507795779 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -108,6 +108,7 @@ config PCI_LAYERSCAPE
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select MFD_SYSCON
- 	select PCIE_DW_HOST
-+	select PCIE_DW_EP
- 	help
- 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+The other interface walks up the parent till root bridge, so that on each
+pci_dev service can be queried.
+
+Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 6bfe986..c7681d9 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -490,6 +490,40 @@ static int pcie_port_remove_service(struct device *dev)
+ }
  
+ /**
++ * pcie_port_query_service - query the associated port service.
++ * dev: pcie device
++ * @port service: PCI express port service
++ */
++bool pcie_port_query_service(struct pci_dev *dev, u32 port_service)
++{
++	struct pcie_device *pdev;
++
++	list_for_each_entry(pdev, &dev->service_list, slist) {
++		if (pdev->service == port_service)
++			return true;
++	}
++	return false;
++}
++EXPORT_SYMBOL(pcie_port_query_service);
++
++/**
++ * pcie_port_upstream_bridge - returns immediate upstream bridge.
++ * dev: pcie device
++ */
++struct pci_dev *pcie_port_upstream_bridge(struct pci_dev *dev)
++{
++	struct pci_dev *parent;
++
++	parent = pci_upstream_bridge(dev);
++
++	if (parent && pci_is_pcie(parent))
++		return parent;
++
++	return NULL;
++}
++EXPORT_SYMBOL(pcie_port_upstream_bridge);
++
++/**
+  * pcie_port_shutdown_service - shut down given PCI Express port service
+  * @dev: PCI Express port service device to handle
+  *
+diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
+index 9d05621..8322443 100644
+--- a/include/linux/pcieport_if.h
++++ b/include/linux/pcieport_if.h
+@@ -68,5 +68,6 @@ struct pcie_port_service_driver {
+ 
+ int pcie_port_service_register(struct pcie_port_service_driver *new);
+ void pcie_port_service_unregister(struct pcie_port_service_driver *new);
+-
++bool pcie_port_query_service(struct pci_dev *dev, u32 port_service);
++struct pci_dev *pcie_port_upstream_bridge(struct pci_dev *dev);
+ #endif /* _PCIEPORT_IF_H_ */
 -- 
-2.14.1
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
+a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 
 _______________________________________________
