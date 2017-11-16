@@ -1,150 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V2 3/7] PCI: make pci_flr_wait() generic and rename to
- pci_dev_wait()
-Date: Mon, 27 Nov 2017 01:20:24 -0500
-Message-Id: <1511763628-11856-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:33017 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966691AbdKPSeo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Nov 2017 13:34:44 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: designware-ep: use ffz() instead of find_first_zero_bit()
+Date: Thu, 16 Nov 2017 19:34:38 +0100
+Message-Id: <20171116183438.12613-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rev 3.1 Sec 2.3.1 Request Handling Rules:
-Valid reset conditions after which a device is permitted to return CRS
-are:
-* Cold, Warm, and Hot Resets,
-* FLR
-* A reset initiated in response to a D3hot to D0 uninitialized
+find_first_zero_bit()'s parameter 'size' is defined in bits,
+not in bytes.
 
-Try to reuse FLR implementation towards other reset types.
+find_first_zero_bit() was called with bytes rather than bits,
+which thus defined a too low upper limit, causing
+dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
+and bar 5, which made bar 5 overwrite the settings set by bar 4.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+./pcitest.sh
+BAR tests
+BAR0:		OKAY
+BAR1:		OKAY
+BAR2:		OKAY
+BAR3:		OKAY
+BAR4:		NOT OKAY
+BAR5:		OKAY
+
+Fix this by using replacing find_first_zero_bit() with ffz(),
+since ffz() only works on a single 'unsigned long' and therefore
+does not need a size argument.
+
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/pci.c | 47 ++++++++++++++++++++++++++++++-----------------
- 1 file changed, 30 insertions(+), 17 deletions(-)
+ drivers/pci/dwc/pcie-designware-ep.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 27ec45d..ed3c3bc 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -125,6 +125,9 @@ static int __init pcie_port_pm_setup(char *str)
- }
- __setup("pcie_port_pm=", pcie_port_pm_setup);
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index d53d5f168363..ab9a9e160daf 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 	u32 free_win;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
  
-+/* time to wait after a reset for device to become responsive */
-+#define PCIE_RESET_READY_POLL_MS 60000
-+
- /**
-  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
-  * @bus: pointer to PCI bus structure to search
-@@ -3820,20 +3823,13 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+-	free_win = find_first_zero_bit(&ep->ib_window_map,
+-				       sizeof(ep->ib_window_map));
++	free_win = ffz(ep->ib_window_map);
+ 	if (free_win >= ep->num_ib_windows) {
+ 		dev_err(pci->dev, "no free inbound window\n");
+ 		return -EINVAL;
+@@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 	u32 free_win;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
  
--static int pci_flr_wait(struct pci_dev *dev)
-+static int pci_dev_wait(struct pci_dev *dev, char *reset_type, int timeout)
- {
--	int delay = 1, timeout = 60000;
-+	int delay = 1;
- 	u32 id;
- 
- 	/*
--	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
--	 * 100ms, but may silently discard requests while the FLR is in
--	 * progress.  Wait 100ms before trying to access the device.
--	 */
--	msleep(100);
--
--	/*
--	 * After 100ms, the device should not silently discard config
-+	 * After reset, the device should not silently discard config
- 	 * requests, but it may still indicate that it needs more time by
- 	 * responding to them with CRS completions.  The Root Port will
- 	 * generally synthesize ~0 data to complete the read (except when
-@@ -3847,14 +3843,14 @@ static int pci_flr_wait(struct pci_dev *dev)
- 	pci_read_config_dword(dev, PCI_COMMAND, &id);
- 	while (id == ~0) {
- 		if (delay > timeout) {
--			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
--				 100 + delay - 1);
-+			dev_warn(&dev->dev, "not ready %dms after %s; giving up\n",
-+				 delay - 1, reset_type);
- 			return -ENOTTY;
- 		}
- 
- 		if (delay > 1000)
--			dev_info(&dev->dev, "not ready %dms after FLR; waiting\n",
--				 100 + delay - 1);
-+			dev_info(&dev->dev, "not ready %dms after %s; waiting\n",
-+				 delay - 1, reset_type);
- 
- 		msleep(delay);
- 		delay *= 2;
-@@ -3862,7 +3858,8 @@ static int pci_flr_wait(struct pci_dev *dev)
- 	}
- 
- 	if (delay > 1000)
--		dev_info(&dev->dev, "ready %dms after FLR\n", 100 + delay - 1);
-+		dev_info(&dev->dev, "ready %dms after %s\n", delay - 1,
-+			 reset_type);
- 
- 	return 0;
- }
-@@ -3899,7 +3896,15 @@ int pcie_flr(struct pci_dev *dev)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
- 
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
--	return pci_flr_wait(dev);
-+
-+	/*
-+	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
-+	 * 100ms, but may silently discard requests while the FLR is in
-+	 * progress.  Wait 100ms before trying to access the device.
-+	 */
-+	msleep(100);
-+
-+	return pci_dev_wait(dev, "FLR", PCIE_RESET_READY_POLL_MS);
- }
- EXPORT_SYMBOL_GPL(pcie_flr);
- 
-@@ -3932,7 +3937,15 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
- 
- 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
--	return pci_flr_wait(dev);
-+
-+	/*
-+	 * Per PCIe r3.1, sec 6.6.2, a device must complete an FLR within
-+	 * 100ms, but may silently discard requests while the FLR is in
-+	 * progress.  Wait 100ms before trying to access the device.
-+	 */
-+	msleep(100);
-+
-+	return pci_dev_wait(dev, "AF_FLR", PCIE_RESET_READY_POLL_MS);
- }
- 
- /**
+-	free_win = find_first_zero_bit(&ep->ob_window_map,
+-				       sizeof(ep->ob_window_map));
++	free_win = ffz(ep->ob_window_map);
+ 	if (free_win >= ep->num_ob_windows) {
+ 		dev_err(pci->dev, "no free outbound window\n");
+ 		return -EINVAL;
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.2
