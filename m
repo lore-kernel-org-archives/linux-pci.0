@@ -1,64 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50476 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751133AbdK1KAh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Nov 2017 05:00:37 -0500
-Subject: Re: [PATCH 01/10] genirq: Export irq_set_msi_desc()
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc: thierry.reding@gmail.com, jonathanh@nvidia.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com, rjw@rjwysocki.net,
-        vidyas@nvidia.com, kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
- <1511538800-8275-2-git-send-email-mmaddireddy@nvidia.com>
- <alpine.DEB.2.20.1711250050520.2316@nanos>
- <600a7b65-670e-b164-913c-99e18ae593d2@nvidia.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <be79bf6f-b24a-6292-5eb1-3bcf97890421@arm.com>
-Date: Tue, 28 Nov 2017 10:00:32 +0000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bharat Kumar Gogada <bharatku@xilinx.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org"
+ <linux-acpi@vger.kernel.org>, "devicetree@vger.kernel.org"
+ <devicetree@vger.kernel.org>, "iommu@lists.linux-foundation.org"
+ <iommu@lists.linux-foundation.org>
+Subject: RE: [RFCv2 PATCH 31/36] iommu/arm-smmu-v3: Add support for PCI ATS
+Date: Thu, 16 Nov 2017 14:19:36 +0000
+Message-ID: <BLUPR0201MB150565029F9260A528739ACBA52E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-32-jean-philippe.brucker@arm.com>
+In-Reply-To: <20171006133203.22803-32-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <600a7b65-670e-b164-913c-99e18ae593d2@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "sudeep.holla@arm.com" <sudeep.holla@arm.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25/11/17 19:41, Manikanta Maddireddy wrote:
-> 
-> 
-> On 25-Nov-17 5:25 AM, Thomas Gleixner wrote:
->> On Fri, 24 Nov 2017, Manikanta Maddireddy wrote:
->>
->> Please CC the proper mailing list for irq related changes.
->>
->>> PCI bus support MSI interrupts, allow PCI host driver to set MSI descriptor
->>> data for an irq.
->>
->> This is not really an explanation why this export is needed.
->>
->> Thanks,
->>
->> 	tglx
->>
-> Updated the commit log with why Tegra PCIe driver is using this function in V2.
-> Please review.
+Hi Jean,
 
-Well, to review it, I would like to be on Cc.
++static size_t
++arm_smmu_atc_inv_domain(struct arm_smmu_domain *smmu_domain, int ssid,
++			unsigned long iova, size_t size)
++{
++	unsigned long flags;
++	struct arm_smmu_cmdq_ent cmd;
++	struct arm_smmu_master_data *master;
++
++	arm_smmu_atc_inv_to_cmd(ssid, iova, size, &cmd);
++
++	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
++	list_for_each_entry(master, &smmu_domain->devices, list)
++		arm_smmu_atc_inv_master(master, &cmd);
++	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
++
++	return size;
++}
++
+ /* IOMMU API */
+ static bool arm_smmu_capable(enum iommu_cap cap)  { @@ -2361,6 +2506,8 @@ static void arm_smmu_detach_dev(struct device *dev)
+ 		__iommu_process_unbind_dev_all(&smmu_domain->domain, dev);
+ 
+ 	if (smmu_domain) {
++		arm_smmu_atc_inv_master_all(master, 0);
++
+In BIND flow, when VFIO_IOMMU_UNBIND is invoked invalidation is sent on allocated PASID for this application.
+When vfio group fd is closed after UNBIND,  arm_smmu_detach_dev is invoked now invalidation is being sent on ssid zero.
+Why  invalidation needs to be sent on ssid zero ?
 
-My current position on this is that if you need to export this function,
-then you're using a deprecated API, and you should instead consider
-moving to the generic MSI model, which doesn't need any of this.
+Regards,
+Bharat
 
-I've done that a distant past, but never actually published the patch
-(not tested it):
 
-https://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git/commit/?h=irq/kill-msi-controller&id=83b3602fcee7972b9d549ed729b56ec28de16081
-
-But without seeing the patches, I may be barking up the wrong tree...
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
