@@ -1,35 +1,93 @@
-Return-Path: <SRS0=Rvi+=CV=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=Rvi+=CV=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <helgaas@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] powerpc/pci: convert to use for_each_pci_bridge() helper
-In-Reply-To: <20171122201259.GA21158@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171110175230.82522-1-andriy.shevchenko@linux.intel.com> <20171122201259.GA21158@bhelgaas-glaptop.roam.corp.google.com>
-Date: Thu, 23 Nov 2017 23:48:18 +1100
-Message-ID: <87zi7d17ql.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 17 Nov 2017 11:38:35 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: designware-ep: use ffz() instead of
+ find_first_zero_bit()
+Message-ID: <20171117113835.GB21148@red-moon>
+References: <20171116183438.12613-1-niklas.cassel@axis.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171116183438.12613-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+Please follow Bjorn's request for patch formatting:
 
-> On Fri, Nov 10, 2017 at 07:52:29PM +0200, Andy Shevchenko wrote:
->> ...which makes code slightly cleaner.
->> 
->> Requires: d43f59ce6c50 ("PCI: Add for_each_pci_bridge() helper")
->
-> Requires: 24a0c654d7d6 ("PCI: Add for_each_pci_bridge() helper")
->
-> (My fault, I rebased that commit before sending it to Linus.)
->
->> Acked-by: Michael Ellerman <mpe@ellerman.id.au>
->
-> These don't depend on anything in the PCI core, so they could go
-> either via my tree or the powerpc tree.  Since you acked this,
-> Michael, I corrected the SHA1 above and put these both on my pci/misc
-> branch.
+https://marc.info/?l=linux-pci&m=150905742808166&w=2
 
-Thanks. That's aiming for 4.16 I assume?
+I would mention in the commit title that this is a fix.
 
-cheers
+eg "PCI: designware-ep: Fix find_first_zero_bit() usage"
+
+On Thu, Nov 16, 2017 at 07:34:38PM +0100, Niklas Cassel wrote:
+> find_first_zero_bit()'s parameter 'size' is defined in bits,
+> not in bytes.
+> 
+> find_first_zero_bit() was called with bytes rather than bits,
+
+"was called with size in bytes"...
+
+> which thus defined a too low upper limit, causing
+> dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
+> and bar 5, which made bar 5 overwrite the settings set by bar 4.
+> 
+> ./pcitest.sh
+> BAR tests
+> BAR0:		OKAY
+> BAR1:		OKAY
+> BAR2:		OKAY
+> BAR3:		OKAY
+> BAR4:		NOT OKAY
+> BAR5:		OKAY
+
+Sorry but this example is pretty much useless - either you add
+a self-explanatory kernel log or you just remove it.
+
+> Fix this by using replacing find_first_zero_bit() with ffz(),
+> since ffz() only works on a single 'unsigned long' and therefore
+> does not need a size argument.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+
+We need a Fixes: tag at least, see Bjorn's post above.
+
+Thanks,
+Lorenzo
+
+> ---
+>  drivers/pci/dwc/pcie-designware-ep.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index d53d5f168363..ab9a9e160daf 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+>  	u32 free_win;
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> -	free_win = find_first_zero_bit(&ep->ib_window_map,
+> -				       sizeof(ep->ib_window_map));
+> +	free_win = ffz(ep->ib_window_map);
+>  	if (free_win >= ep->num_ib_windows) {
+>  		dev_err(pci->dev, "no free inbound window\n");
+>  		return -EINVAL;
+> @@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+>  	u32 free_win;
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> -	free_win = find_first_zero_bit(&ep->ob_window_map,
+> -				       sizeof(ep->ob_window_map));
+> +	free_win = ffz(ep->ob_window_map);
+>  	if (free_win >= ep->num_ob_windows) {
+>  		dev_err(pci->dev, "no free outbound window\n");
+>  		return -EINVAL;
+> -- 
+> 2.14.2
+> 
