@@ -1,41 +1,31 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 29 Nov 2017 09:38:51 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 5/7] PCI: add a return type for
- pci_reset_bridge_secondary_bus()
-Message-ID: <20171129173851.GF27742@infradead.org>
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
- <1511763628-11856-6-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=5whQ=CP=ucw.cz=mj+f-171117+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=5whQ=CP=ucw.cz=mj+f-171117+helgaas=kernel.org@kernel.org>
+Date: Fri, 17 Nov 2017 13:55:09 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: David Laight <David.Laight@ACULAB.COM>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: lspci reports 'stale' BAR info after a card reset
+Message-ID: <mj+md-20171117.125313.18569.nikam@ucw.cz>
+References: <063D6719AE5E284EB5DD2968C1650D6DD009AD46@AcuExch.aculab.com>
+ <20171018170429.GA6332@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1511763628-11856-6-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171018170429.GA6332@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 27, 2017 at 01:20:26AM -0500, Sinan Kaya wrote:
-> Getting ready to return an error from pci_reset_bridge_secondary_bus() when
-> device is unreachable.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Hello!
 
-Looks ok, but I would just merge it into the next patch.
+> I agree, it does seem odd that the hexdump reflects the hardware but
+> the text does not.  I don't know whether that's intentional; maybe
+> Martin does.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+By default, lspci reports the BAR addresses and IRQs used by the
+kernel. You can use "lspci -b" to get a "bus-centric" view, which
+reads the config space.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Q: Who invented the first airplane that did not fly?  A: The Wrong Brothers.
