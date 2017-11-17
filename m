@@ -1,177 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52866 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752855AbdKTVVx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Nov 2017 16:21:53 -0500
-Date: Mon, 20 Nov 2017 15:21:52 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH V3 1/3] PCI: tegra: Apply sw fixups to support ASPM-L1
- Sub-States
-Message-ID: <20171120212151.GC16362@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
- <1510492674-12786-2-git-send-email-vidyas@nvidia.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:38726 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161094AbdKQRsq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Nov 2017 12:48:46 -0500
+Date: Fri, 17 Nov 2017 17:49:06 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH V2 4/5] PCI: rcar: Support runtime PM, link state L1
+ handling
+Message-ID: <20171117174906.GB22599@red-moon>
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+ <20171110215843.432-5-marek.vasut+renesas@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1510492674-12786-2-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <20171110215843.432-5-marek.vasut+renesas@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Nov 12, 2017 at 06:47:52PM +0530, Vidya Sagar wrote:
-> Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
+Hi Marek,
 
-Please use the exact names used in the spec.  In this case, I think
-that would be "Port Common_Mode_Restore_Time" and "Port T_POWER_ON"
-(from the L1 PM Substates Capabilities Register, sec 7.33.2).
-Searching the spec for "T_cmrt" isn't going to find anything useful.
-
-These look like things that maybe should be in the DT because they
-depend on external component values, so you might need different
-values depending on what board the Tegra is on?  Same for clk_m?
-
-> values to get them reflected in ASPM-L1 Sub-States capability registers
-> Also adjusts internal counter values according to 19.2 MHz clk_m value
+On Fri, Nov 10, 2017 at 10:58:42PM +0100, Marek Vasut wrote:
+> From: Phil Edworthy <phil.edworthy@renesas.com>
 > 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Most PCIe host controllers support L0s and L1 power states via ASPM.
+> The R-Car hardware only supports L0s, so when the system suspends and
+> resumes we have to manually handle L1.
+> When the system suspends, cards can put themselves into L1 and send a
+
+I assumed L1 entry has to be negotiated depending upon the PCIe
+hierarchy capabilities, I would appreciate if you can explain to
+me what's the root cause of the issue please.
+
+> PM_ENTER_L1 DLLP to the host controller. At this point, we can no longer
+> access the card's config registers.
+> 
+> The R-Car host controller will handle taking cards out of L1 as long as
+> the host controller has also been transitioned to L1 link state.
+
+I wonder why this can't be done in a PM restore hook but that's not
+really where my question is.
+
+> Ideally, we would detect the PM_ENTER_L1 DLLP using an interrupt and
+> transition the host to L1 immediately. However, this patch just ensures
+> that we can talk to cards after they have gone into L1.
+
+> When attempting a config access, it checks to see if the card has gone
+> into L1, and if so, does the same for the host controller.
+> 
+> This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
+> 
+> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
 > ---
-> V2:
-> * no change in this patch
+> V2: - Drop extra parenthesis
+>     - Use GENMASK()
+>     - Fix comment "The HW will handle coming of of L1.", s/of of/out of/
+> ---
+>  drivers/pci/host/pcie-rcar.c | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
 > 
-> V3:
-> * no change in this patch
-> 
->  drivers/pci/host/pci-tegra.c | 59 ++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 59 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index adae03d671ab..6d68f49f152e 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -40,6 +40,7 @@
->  #include <linux/of_pci.h>
->  #include <linux/of_platform.h>
->  #include <linux/pci.h>
-> +#include <linux/pci-aspm.h>
->  #include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
->  #include <linux/reset.h>
-> @@ -191,6 +192,27 @@
->  #define RP_PRIV_XP_DL	0x494
->  #define  RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD	(0x1ff << 1)
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index ab61829db389..068bf9067ec1 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -92,6 +92,13 @@
+>  #define MACCTLR			0x011058
+>  #define  SPEED_CHANGE		BIT(24)
+>  #define  SCRAMBLE_DISABLE	BIT(27)
+> +#define PMSR			0x01105c
+> +#define  L1FAEG			BIT(31)
+> +#define  PM_ENTER_L1RX		BIT(23)
+> +#define  PMSTATE		GENMASK(18, 16)
+> +#define  PMSTATE_L1		GENMASK(17, 16)
+> +#define PMCTLR			0x011060
+> +#define  L1_INIT		BIT(31)
+>  #define MACS2R			0x011078
+>  #define MACCGSPSETR		0x011084
+>  #define  SPCNGRSN		BIT(31)
+> @@ -191,6 +198,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+>  		unsigned int devfn, int where, u32 *data)
+>  {
+>  	int dev, func, reg, index;
+> +	u32 val;
 >  
-> +#define RP_L1_PM_SUBSTATES_CTL				0xC00
-> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK		(0xFF << 8)
-> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT		8
-> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK		(0x3 << 16)
-> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT		16
-> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK		(0x1F << 19)
-> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT		19
-> +#define RP_L1_PM_SUBSTATES_CTL_HIDE_CAP			(0x1 << 24)
-> +
-> +#define RP_L1_PM_SUBSTATES_1_CTL			0xC04
-> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
-> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
-> +
-> +#define RP_L1_PM_SUBSTATES_2_CTL			0xC08
-> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
-> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY		0x4D
-> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK	(0xFF << 13)
-> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND		(0x13 << 13)
-> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK	(0xF << 21)
-> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP	(0x2 << 21)
-> +
->  #define RP_RX_HDR_LIMIT	0xe00
->  #define  RP_RX_HDR_LIMIT_PW_MASK	(0xff << 8)
->  #define  RP_RX_HDR_LIMIT_PW		(0x0e << 8)
-> @@ -327,6 +349,7 @@ struct tegra_pcie_soc {
->  	bool RAW_violation_fixup;
->  	bool program_deskew_time;
->  	bool updateFC_threshold;
-> +	bool has_aspm_l1ss;
->  };
+>  	dev = PCI_SLOT(devfn);
+>  	func = PCI_FUNC(devfn);
+> @@ -232,6 +240,22 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+>  	if (pcie->root_bus_nr < 0)
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
 >  
->  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-> @@ -2251,6 +2274,37 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
->  		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
->  		writel(value, port->base + RP_VEND_XP);
->  	}
+> +	/*
+> +	 * If we are not in L1 link state and we have received PM_ENTER_L1 DLLP,
+> +	 * transition to L1 link state. The HW will handle coming out of L1.
+> +	 */
+> +	val = rcar_pci_read_reg(pcie, PMSR);
+> +	if (val & PM_ENTER_L1RX && (val & PMSTATE) != PMSTATE_L1) {
+> +		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
 > +
-> +	if (soc->has_aspm_l1ss) {
-> +		/* Set Common Mode Restore Time to 30us */
-> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
-> +		value &= ~RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK;
-> +		value |= (0x1E << RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT);
-> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+> +		/* Wait until we are in L1 */
+> +		while (!(val & L1FAEG))
+> +			val = rcar_pci_read_reg(pcie, PMSR);
 > +
-> +		/* set T_Power_On to 70us */
-> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
-> +		value &= ~(RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK |
-> +			RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK);
-> +		value |= (1 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT) |
-> +			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
-> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
-> +
-> +		/* Following is based on clk_m being 19.2 MHz */
-> +		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
-> +		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
-> +		value |= RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY;
-> +		writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
-> +
-> +		value = readl(port->base + RP_L1_PM_SUBSTATES_2_CTL);
-> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK;
-> +		value |= RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY;
-> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK;
-> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND;
-> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK;
-> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP;
-> +		writel(value, port->base + RP_L1_PM_SUBSTATES_2_CTL);
+> +		/* Clear flags indicating link has transitioned to L1 */
+> +		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
 > +	}
->  }
->  /*
->   * FIXME: If there are no PCIe cards attached, then calling this function
-> @@ -2391,6 +2445,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
-> +	.has_aspm_l1ss = false,
->  };
+
+I do not get why you need to add the DLLP check for _every_ given config
+access and how/why it is just related to suspend/resume and not eg cold
+boot (I supposed it is because devices can enter L1 upon suspend(?)), I
+would ask you please to provide a thorough explanation so that I can
+actually review this patch (the commit log must be rewritten nonetheless,
+I do not think it is clear, at least it is not for me).
+
+Thanks,
+Lorenzo
+
+> +
+>  	/* Clear errors */
+>  	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
 >  
->  static const struct tegra_pcie_soc tegra30_pcie = {
-> @@ -2412,6 +2467,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
-> +	.has_aspm_l1ss = false,
->  };
->  
->  static const struct tegra_pcie_soc tegra124_pcie = {
-> @@ -2432,6 +2488,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
->  	.RAW_violation_fixup = true,
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
-> +	.has_aspm_l1ss = false,
->  };
->  
->  static const struct tegra_pcie_soc tegra210_pcie = {
-> @@ -2460,6 +2517,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = true,
->  	.updateFC_threshold = true,
-> +	.has_aspm_l1ss = true,
->  };
->  
->  static const struct tegra_pcie_soc tegra186_pcie = {
-> @@ -2481,6 +2539,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
-> +	.has_aspm_l1ss = true,
->  };
->  
->  static const struct of_device_id tegra_pcie_of_match[] = {
 > -- 
-> 2.7.4
+> 2.11.0
 > 
