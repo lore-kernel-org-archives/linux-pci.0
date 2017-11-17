@@ -1,58 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: Performance issues writing to PCIe in a Zynq
-To: Ruben Guerra Marin <ruben.guerra.marin@axon.tv>, "bhelgaas@google.com"
- <bhelgaas@google.com>, "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
- "soren.brinkmann@xilinx.com" <soren.brinkmann@xilinx.com>,
- "bharat.kumar.gogada@xilinx.com" <bharat.kumar.gogada@xilinx.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-References: <1509636637116.27702@axon.tv>
-From: Michal Simek <michal.simek@xilinx.com>
-Message-ID: <eca01e58-3da1-d5c4-00f7-71dd6a926870@xilinx.com>
-Date: Fri, 3 Nov 2017 09:12:04 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f49.google.com ([209.85.215.49]:45167 "EHLO
+        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932731AbdKQM72 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Nov 2017 07:59:28 -0500
+Date: Fri, 17 Nov 2017 13:59:24 +0100
+From: Johan Hovold <johan@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Johan Hovold <johan@kernel.org>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] PCI: keystone: fix interrupt-controller-node lookup
+Message-ID: <20171117125924.GA3339@localhost>
+References: <20171112122850.30804-1-johan@kernel.org>
+ <20171117111910.GA21148@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <1509636637116.27702@axon.tv>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171117111910.GA21148@red-moon>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Fri, Nov 17, 2017 at 11:19:10AM +0000, Lorenzo Pieralisi wrote:
+> Hi Johan,
+> 
+> On Sun, Nov 12, 2017 at 01:28:50PM +0100, Johan Hovold wrote:
+> > Fix child-node lookup during initialisation, which ended up searching
+> > the whole device tree depth-first starting at the parent rather than
+> > just matching on its children.
+> > 
+> > To make things worse, the parent pci node was prematurely freed, while
+> > the child interrupt-controller node was leaked.
+> 
+> I think you should explain that of_find_node_by_name() drops a reference
+> to the from pointer, it is not clear from the log.
 
-On 2.11.2017 16:30, Ruben Guerra Marin wrote:
-> Hi,
-> 
-> 
-> I have the a Zynq board running petalinux, and it is connected through PCIe to a Virtex Ultrascale board. I configured the Ultrascale for Tandem PCIe, which the second stage bitstream is being programmed from the Zynq board (I crossed compiled the mcap application that Xilinx provides).
-> 
-> 
-> 
-> This works perfectly, but takes around ~12 seconds to program the second stage bitstream (compressed is ~12 MB), which is quite slow. We also tried debugging the mcap application and pciutils. We found out the operation that takes long to execute: In pciutils, the instruction to actually call the write to the driver (pwrite) takes approximately 6uS, so if you add up this for 12 MB then you can see why it takes so long. Why is this so slow? Is this maybe a problem with the driver?
-> 
-> 
-> For testing, I added an ILA to the AXI bus in between the Zynq GP1 and the PCIe IP control registers port. I triggered halfway the programming of the bitstream using the mcap program provided by Xilinx. I can see that it is writing to address x358, which according to the *datasheet* (https://www.xilinx.com/Attachment/Xilinx_Answer_64761__UltraScale_Devices.pdf) is the Write Data Register, which is correct (and again, I know the whole bitstream gets programmed correctly).
-> 
-> 
-> 
-> But what I also see is that a "awvalid" being asserted to the next one it takes 245 cycles, and I can imagine this is why it takes 12 seconds to program a 12MB bitstream.
-> 
-> ?
+Sure, I'll amend the log.
 
-Bharat: Can you please take a look at this?
+> More importantly: are you saying that all of_find_node_by_name() usages
+> with a (from* != NULL) are broken unless they bump up the from node (if
+> != NULL) ref count ?
+> 
+> Is there a reason why of_find_node_by_name() behaviour can't be changed ?
 
-Thanks,
-Michal
+The problem here is that this driver is using the wrong helper; 
+of_find_node_by_name() is used for tree-wide searches, and for which its
+semantics makes sense. Here we only want to match on child nodes, and
+then of_get_child_by_name() is what you need to use.
 
+We had some 10-20 drivers that were using the wrong helper and which I've
+now fixed up. I'm gonna see about amending the kernel docs to minimise
+the risk of these bugs from reoccurring further.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+> > Cc: stable <stable@vger.kernel.org>     # 3.18
+> 
+> Do we really want to send this to stable kernels straight away ?
+> 
+> There is not any specific bug report - it should be safe but I
+> wanted to ask.
+
+The unbalanced put can lead to some nasty use-after-free issues (e.g.
+after a couple of probe deferrals). But feel to free to drop the stable
+tags if you deem this to be safe for this particular driver (most of the
+other fixes have gone in with a stable tag).
+
+> > Cc: Murali Karicheri <m-karicheri2@ti.com>
+> > ---
+> >  drivers/pci/dwc/pci-keystone.c | 5 ++++-
+> >  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> With an update log:
+> 
+> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+Thanks for the ack. I'll respin a v2 with an updated commit message.
+
+Johan
