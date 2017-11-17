@@ -1,137 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54244 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:33336 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753073AbdKTVay (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Nov 2017 16:30:54 -0500
-Date: Mon, 20 Nov 2017 15:30:52 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH V3 2/3] PCI: tegra: fixups to avoid unnecessary wakeup
- from ASPM-L1.2
-Message-ID: <20171120213052.GD16362@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
- <1510492674-12786-3-git-send-email-vidyas@nvidia.com>
+        id S1750946AbdKQLSu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Nov 2017 06:18:50 -0500
+Date: Fri, 17 Nov 2017 11:19:10 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Johan Hovold <johan@kernel.org>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] PCI: keystone: fix interrupt-controller-node lookup
+Message-ID: <20171117111910.GA21148@red-moon>
+References: <20171112122850.30804-1-johan@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1510492674-12786-3-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <20171112122850.30804-1-johan@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-s/PCI: tegra: fixups to avoid unnecessary .../
- /PCI: tegra: <Capitalized verb> .../
+Hi Johan,
 
-On Sun, Nov 12, 2017 at 06:47:53PM +0530, Vidya Sagar wrote:
-> sets CLKREQ asserted delay to a higher value to avoid
-> unnecessary wake up from L1.2_ENTRY state for Tegra210
+On Sun, Nov 12, 2017 at 01:28:50PM +0100, Johan Hovold wrote:
+> Fix child-node lookup during initialisation, which ended up searching
+> the whole device tree depth-first starting at the parent rather than
+> just matching on its children.
+> 
+> To make things worse, the parent pci node was prematurely freed, while
+> the child interrupt-controller node was leaked.
 
-"L1.2.Entry" to match the spec sec 5.5.3.1 (at least I assume that's
-what this refers to).
+I think you should explain that of_find_node_by_name() drops a reference
+to the from pointer, it is not clear from the log.
 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+More importantly: are you saying that all of_find_node_by_name() usages
+with a (from* != NULL) are broken unless they bump up the from node (if
+!= NULL) ref count ?
+
+Is there a reason why of_find_node_by_name() behaviour can't be changed ?
+
+> Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+> Cc: stable <stable@vger.kernel.org>     # 3.18
+
+Do we really want to send this to stable kernels straight away ?
+
+There is not any specific bug report - it should be safe but I
+wanted to ask.
+
+> Cc: Murali Karicheri <m-karicheri2@ti.com>
 > ---
-> V2:
-> * no change in this patch
-> 
-> V3:
-> * no change in this patch
-> 
->  drivers/pci/host/pci-tegra.c | 18 ++++++++++++++++++
->  1 file changed, 18 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 6d68f49f152e..29ee4bb0b7c6 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -204,6 +204,8 @@
->  #define RP_L1_PM_SUBSTATES_1_CTL			0xC04
->  #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
->  #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
-> +#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK		(0x1FF << 13)
-> +#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY		(0x27 << 13)
+>  drivers/pci/dwc/pci-keystone.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+
+With an update log:
+
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+> diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+> index 5bee3af47588..39405598b22d 100644
+> --- a/drivers/pci/dwc/pci-keystone.c
+> +++ b/drivers/pci/dwc/pci-keystone.c
+> @@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  	}
 >  
->  #define RP_L1_PM_SUBSTATES_2_CTL			0xC08
->  #define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
-> @@ -350,6 +352,7 @@ struct tegra_pcie_soc {
->  	bool program_deskew_time;
->  	bool updateFC_threshold;
->  	bool has_aspm_l1ss;
-> +	bool l1ss_rp_wake_fixup;
->  };
+>  	/* interrupt controller is in a child node */
+> -	*np_temp = of_find_node_by_name(np_pcie, controller);
+> +	*np_temp = of_get_child_by_name(np_pcie, controller);
+>  	if (!(*np_temp)) {
+>  		dev_err(dev, "Node for %s is absent\n", controller);
+>  		return -EINVAL;
+> @@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  	temp = of_irq_count(*np_temp);
+>  	if (!temp) {
+>  		dev_err(dev, "No IRQ entries in %s\n", controller);
+> +		of_node_put(*np_temp);
+>  		return -EINVAL;
+>  	}
 >  
->  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
-> @@ -2290,6 +2293,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
->  			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
->  		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+> @@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  			break;
+>  	}
 >  
-> +		if (soc->l1ss_rp_wake_fixup) {
-> +			/* Set CLKREQ asserted delay greater than Power_Off
-> +			 * time (2us) to avoid RP wakeup in L1.2_ENTRY
-> +			 */
-
-Use standard multi-line comment formatting (and "L1.2.Entry" as above).
-
-I assume "CLKREQ asserted delay" is a Tegra-internal thing, since it
-doesn't obviously correspond to a timing parameter in the spec.
-
-And I assume it doesn't depend on any of the OS-writable things in the
-L1 PM Substates control registers, since this fixup isn't executed
-during config writes to those registers?
-
-Does this depend on any circuit details outside of Tegra, i.e., should
-it be described via DT?
-
-> +			value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
-> +			value &= ~RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK;
-> +			value |= RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY;
-> +			writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
-> +		}
+> +	of_node_put(*np_temp);
 > +
->  		/* Following is based on clk_m being 19.2 MHz */
->  		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
->  		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
-> @@ -2446,6 +2459,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
->  	.has_aspm_l1ss = false,
-> +	.l1ss_rp_wake_fixup = false,
->  };
->  
->  static const struct tegra_pcie_soc tegra30_pcie = {
-> @@ -2468,6 +2482,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
->  	.has_aspm_l1ss = false,
-> +	.l1ss_rp_wake_fixup = false,
->  };
->  
->  static const struct tegra_pcie_soc tegra124_pcie = {
-> @@ -2489,6 +2504,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
->  	.has_aspm_l1ss = false,
-> +	.l1ss_rp_wake_fixup = false,
->  };
->  
->  static const struct tegra_pcie_soc tegra210_pcie = {
-> @@ -2518,6 +2534,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
->  	.program_deskew_time = true,
->  	.updateFC_threshold = true,
->  	.has_aspm_l1ss = true,
-> +	.l1ss_rp_wake_fixup = true,
->  };
->  
->  static const struct tegra_pcie_soc tegra186_pcie = {
-> @@ -2540,6 +2557,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
->  	.has_aspm_l1ss = true,
-> +	.l1ss_rp_wake_fixup = false,
->  };
->  
->  static const struct of_device_id tegra_pcie_of_match[] = {
+>  	if (temp) {
+>  		*num_irqs = temp;
+>  		return 0;
 > -- 
-> 2.7.4
+> 2.15.0
 > 
