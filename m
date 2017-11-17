@@ -1,112 +1,96 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFCv2 PATCH 21/36] iommu/arm-smmu-v3: Implement process
- operations
-To: Yisheng Xie <xieyisheng1@huawei.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-22-jean-philippe.brucker@arm.com>
- <084b1848-0939-5e73-3890-3aab8dc4bc70@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <812aa54c-1cda-d4a4-640f-4aa2d8eb81fa@arm.com>
-Date: Thu, 9 Nov 2017 12:08:59 +0000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <084b1848-0939-5e73-3890-3aab8dc4bc70@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAJZ5v0iD3uzJr4fdhrWfRhSmr_foU4GQx9LY_9sR=BKYUxZOGw@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <5556673.MXo6XDN1f4@aspire.rjw.lan>
+ <CAPDyKFpzSd4zwW_awuxuim0gzyKV5s9dm66X+szsSUKRnBakbA@mail.gmail.com>
+ <2654404.6YT5rmSnae@aspire.rjw.lan> <CAPDyKFo4gE6O=xMoS2Phe0kNgNUGBffy1hxT3iPrY71ieGcumQ@mail.gmail.com>
+ <CAJZ5v0ibqqUZ0M1_GKCkGj_E+2DQQMOLAVTyPd7mSJDAypkHjQ@mail.gmail.com>
+ <CAPDyKFrsabWL2cVE2SwguRRiEV5sJHLpzpyhahLucdER_RAEpg@mail.gmail.com> <CAJZ5v0iD3uzJr4fdhrWfRhSmr_foU4GQx9LY_9sR=BKYUxZOGw@mail.gmail.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Fri, 17 Nov 2017 16:57:05 +0100
+Message-ID: <CAPDyKFpXh=E8vC9fUXhbDTLcekb74xfd7chTyKKSw1VgPv1rCQ@mail.gmail.com>
+Subject: Re: [PATCH v3 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 09/11/17 03:32, Yisheng Xie wrote:
-> Hi Jean,
-> 
-> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
->> Hook process operations to support PASID and page table sharing with the
->> SMMUv3:
+On 17 November 2017 at 15:31, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Fri, Nov 17, 2017 at 2:49 PM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+>> [...]
 >>
->> +
->> +static void arm_smmu_process_exit(struct iommu_domain *domain,
->> +				  struct iommu_process *process)
->> +{
->> +	struct arm_smmu_master_data *master;
->> +	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
->> +
->> +	if (!domain->process_exit)
->> +		return;
-> 
-> If domain do not set process_exit handler, just return? smmu do not
-> need invalid ATC, clear cd entry, etc.? Maybe you should check when
-> call domain->process_exit?
+>>>>
+>>>>>> Second, have you considered setting the default value of
+>>>>>> dev->power.may_skip_resume to true?
+>>>>>
+>>>>> Yes.
+>>>>>
+>>>>>> That would means the subsystem
+>>>>>> instead need to implement an opt-out method. I am thinking that it may
+>>>>>> not be an issue, since we anyway at this point, don't have drivers
+>>>>>> using the LEAVE_SUSPENDED flag.
+>>>>>
+>>>>> Opt-out doesn't work because of the need to invoke the "noirq" callbacks.
+>>>>
+>>>> I am not sure I follow that.
+>>>>
+>>>> Whatever needs to be fixed on the subsystem level, that could be done
+>>>> before the driver starts using the LEAVE_SUSPENDED flag. No?
+>>>
+>>> That requires a bit of explanation, sorry for being overly concise.
+>>>
+>>> The core calls ->resume_noirq from the middle layer regardless of
+>>> whether or not the device will be left suspended, so the
+>>> ->resume_noirq cannot do arbitrary things to it.  Setting
+>>> may_skip_resume by the middle layer tells the core that the middle
+>>> layer is ready for that and is going to cooperate.  If may_skip_resume
+>>> had been set by default, that piece of information would have been
+>>> missing.
+>>
+>> Huh, I still don't get that. Sorry.
+>>
+>> If the "may_skip_resume" is default set to true by the PM core,
+>> wouldn't that just mean that the middle-layer needs to implement an
+>> opt-out method, rather than opt-in. In principle to opt-out the
+>> middle-layer needs to set may_skip_resume to false in suspend_noirq
+>> phase, no?
+>
+> Yes, but if the middle-layer doesn't clear it, that may mean two
+> things.  First, the middle layer is ready and so on.  Good.  Second,
+> the middle layer is not aware of the whole thing.  Not good.  The core
+> cannot tell.
+>
+> In the opt-in case, however, all is clear. :-)
 
-Indeed, that doesn't make sense. I'll move the check below.
+Okay.
 
-Thanks,
-Jean
+>
+>> Then we only need to make sure drivers don't starts use
+>> LEAVE_SUSPENDED, before we make sure the middle layers is adopted. But
+>> that should not be a problem.
+>>
+>> The benefit would be that those middle layers that can cope with
+>> LEAVE_SUSPENDED as of today don't need to change.
+>
+> I'm not sure if that's the case.
+>
+> The middle layer has to evaluate dev_pm_may_skip_resume() in
+> ->resume_noirq() to check if the device can be left in suspend, as it
+> cannot determine that in ->suspend_noirq() yet.
 
->> +
->> +	spin_lock(&smmu_domain->devices_lock);
->> +	list_for_each_entry(master, &smmu_domain->devices, list) {
->> +		if (!master->processes)
->> +			continue;
->> +
->> +		master->processes--;
-> Add
-> 		if (domain->process_exit)
-> here?
->> +		domain->process_exit(domain, master->dev, process->pasid,
->> +				     domain->process_exit_token);
->> +
->> +		/* TODO: inval ATC */
->> +	}
->> +	spin_unlock(&smmu_domain->devices_lock);
->> +
->> +	arm_smmu_write_ctx_desc(smmu_domain, process->pasid, NULL);
->> +
->> +	/* TODO: Invalidate all mappings if not DVM */
->> +}
->> +
-> Thanks
-> Yisheng Xie
-> 
-> 
+Right. Okay, let's stick with the chosen method.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Kind regards
+Uffe
