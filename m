@@ -1,36 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:44204 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751510AbdKZTdy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 26 Nov 2017 14:33:54 -0500
-Date: Sun, 26 Nov 2017 13:33:50 -0600
-From: Rob Herring <robh@kernel.org>
-To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, adouglas@cadence.com,
-        stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
-        eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
-        sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 4/5] dt-bindings: PCI: cadence: Add DT bindings for
- Cadence PCIe endpoint controller
-Message-ID: <20171126193350.4ortdptrxdibnyot@rob-hp-laptop>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <0a11e9742db04fd5b4bc08568b3ab5a056a0ef9d.1511439189.git.cyrille.pitchen@free-electrons.com>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:47442 "EHLO
+        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756303AbdKQNFD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Nov 2017 08:05:03 -0500
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+        by jabberwock.ucw.cz (Postfix) with ESMTPS id 8B1F51C00B8
+        for <linux-pci@vger.kernel.org>; Fri, 17 Nov 2017 13:55:59 +0100 (CET)
+Date: Fri, 17 Nov 2017 13:55:59 +0100
+From: Martin Mares <mj@ucw.cz>
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] configure: use simpler/more portable echo_n
+Message-ID: <mj+md-20171117.125546.29516.albireo@ucw.cz>
+References: <1466396498-17870-1-git-send-email-vapier@gentoo.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0a11e9742db04fd5b4bc08568b3ab5a056a0ef9d.1511439189.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <1466396498-17870-1-git-send-email-vapier@gentoo.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 23, 2017 at 04:01:49PM +0100, Cyrille Pitchen wrote:
-> This patch documents the DT bindings for the Cadence PCIe controller
-> when configured in endpoint mode.
-> 
-> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-> ---
->  .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt    | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+Hi!
 
-Acked-by: Rob Herring <robh@kernel.org>
+> The `echo -n` behavior is not in POSIX and not all shells support it.
+> Use the portable `printf` func as defined by POSIX.
+
+Thanks, applied. Sorry for the delay.
+
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+"Beware of bugs in the above code; I have only proved it correct, not tried it." -- D.E.K.
