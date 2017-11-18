@@ -1,116 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56120 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751960AbdK3P2M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Nov 2017 10:28:12 -0500
-Date: Thu, 30 Nov 2017 15:28:43 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 01/18] PCI: dwc: Use the DMA-API to get the MSI address
-Message-ID: <20171130152843.GC12096@red-moon>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
- <20171120133222.27771-2-niklas.cassel@axis.com>
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Subject: [PATCH v4 2/6] PCI / PM: Support for LEAVE_SUSPENDED driver flag
+Date: Sat, 18 Nov 2017 15:33:52 +0100
+Message-ID: <3189584.p93WhT6c0L@aspire.rjw.lan>
+In-Reply-To: <1917233.X2U0QN21my@aspire.rjw.lan>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <4184911.zoJM7jZeH4@aspire.rjw.lan> <1917233.X2U0QN21my@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171120133222.27771-2-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Jingoo, Joao,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I am expecting your testing on the series and ACKs on the dwc related
-patches please, according to v4 review - I will mark them as needs
-review/ACK waiting for you to chime in.
+Add support for DPM_FLAG_LEAVE_SUSPENDED to the PCI bus type by
+making it (a) set the power.may_skip_resume status bit for devices
+that, from its perspective, may be left in suspend after system
+wakeup from sleep and (b) return early from pci_pm_resume_noirq()
+for devices whose remaining resume callbacks during the transition
+under way are going to be skipped by the PM core.
 
-v4 thread:
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
 
-https://patchwork.ozlabs.org/patch/833882/
+v3 -> v4: No changes.
 
-Thanks,
-Lorenzo
+v2 -> v3: Add the Acked-by from Bjorn, no changes in the patch.
 
-On Mon, Nov 20, 2017 at 02:32:04PM +0100, Niklas Cassel wrote:
-> Use the DMA-API to get the MSI address. This address will be written to
-> our PCI config space and to the register which determines which AXI
-> address the DWC IP will spoof for incoming MSI irqs.
-> 
-> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
-> to write to the MSI address, the proper way to get the MSI address is by
-> using the DMA API, not by using virt_to_phys().
-> 
-> Using virt_to_phys() might work on some systems, but using the DMA API
-> should work on all systems.
-> 
-> This is essentially the same thing as allocating a buffer in a driver
-> to which the endpoint will write to. To do this, we use the DMA API.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
->  drivers/pci/dwc/pcie-designware.h      |  3 ++-
->  2 files changed, 14 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 81e2157a7cfb..33b52fe98a01 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -83,10 +83,19 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->  
->  void dw_pcie_msi_init(struct pcie_port *pp)
->  {
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct device *dev = pci->dev;
-> +	struct page *page;
->  	u64 msi_target;
->  
-> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
-> -	msi_target = virt_to_phys((void *)pp->msi_data);
-> +	page = alloc_page(GFP_KERNEL | GFP_DMA32);
-> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
-> +	if (dma_mapping_error(dev, pp->msi_data)) {
-> +		dev_err(dev, "failed to map MSI data\n");
-> +		__free_page(page);
-> +		return;
-> +	}
-> +	msi_target = (u64)pp->msi_data;
->  
->  	/* program the msi_data */
->  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> @@ -187,7 +196,7 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
->  	if (pp->ops->get_msi_addr)
->  		msi_target = pp->ops->get_msi_addr(pp);
->  	else
-> -		msi_target = virt_to_phys((void *)pp->msi_data);
-> +		msi_target = (u64)pp->msi_data;
->  
->  	msg.address_lo = (u32)(msi_target & 0xffffffff);
->  	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index e5d9d77b778e..ecdede68522a 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -14,6 +14,7 @@
->  #ifndef _PCIE_DESIGNWARE_H
->  #define _PCIE_DESIGNWARE_H
->  
-> +#include <linux/dma-mapping.h>
->  #include <linux/irq.h>
->  #include <linux/msi.h>
->  #include <linux/pci.h>
-> @@ -168,7 +169,7 @@ struct pcie_port {
->  	const struct dw_pcie_host_ops *ops;
->  	int			msi_irq;
->  	struct irq_domain	*irq_domain;
-> -	unsigned long		msi_data;
-> +	dma_addr_t		msi_data;
->  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  };
->  
-> -- 
-> 2.14.2
-> 
+---
+ Documentation/power/pci.txt |   11 +++++++++++
+ drivers/pci/pci-driver.c    |   19 +++++++++++++++++--
+ 2 files changed, 28 insertions(+), 2 deletions(-)
+
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -699,7 +699,7 @@ static void pci_pm_complete(struct devic
+ 	pm_generic_complete(dev);
+ 
+ 	/* Resume device if platform firmware has put it in reset-power-on */
+-	if (dev->power.direct_complete && pm_resume_via_firmware()) {
++	if (pm_runtime_suspended(dev) && pm_resume_via_firmware()) {
+ 		pci_power_t pre_sleep_state = pci_dev->current_state;
+ 
+ 		pci_update_current_state(pci_dev, pci_dev->current_state);
+@@ -783,8 +783,10 @@ static int pci_pm_suspend_noirq(struct d
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
+-	if (dev_pm_smart_suspend_and_suspended(dev))
++	if (dev_pm_smart_suspend_and_suspended(dev)) {
++		dev->power.may_skip_resume = true;
+ 		return 0;
++	}
+ 
+ 	if (pci_has_legacy_pm_support(pci_dev))
+ 		return pci_legacy_suspend_late(dev, PMSG_SUSPEND);
+@@ -838,6 +840,16 @@ static int pci_pm_suspend_noirq(struct d
+ Fixup:
+ 	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+ 
++	/*
++	 * If the target system sleep state is suspend-to-idle, it is sufficient
++	 * to check whether or not the device's wakeup settings are good for
++	 * runtime PM.  Otherwise, the pm_resume_via_firmware() check will cause
++	 * pci_pm_complete() to take care of fixing up the device's state
++	 * anyway, if need be.
++	 */
++	dev->power.may_skip_resume = device_may_wakeup(dev) ||
++					!device_can_wakeup(dev);
++
+ 	return 0;
+ }
+ 
+@@ -847,6 +859,9 @@ static int pci_pm_resume_noirq(struct de
+ 	struct device_driver *drv = dev->driver;
+ 	int error = 0;
+ 
++	if (dev_pm_may_skip_resume(dev))
++		return 0;
++
+ 	/*
+ 	 * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
+ 	 * during system suspend, so update their runtime PM status to "active"
+Index: linux-pm/Documentation/power/pci.txt
+===================================================================
+--- linux-pm.orig/Documentation/power/pci.txt
++++ linux-pm/Documentation/power/pci.txt
+@@ -994,6 +994,17 @@ into D0 going forward), but if it is in
+ the function will set the power.direct_complete flag for it (to make the PM core
+ skip the subsequent "thaw" callbacks for it) and return.
+ 
++Setting the DPM_FLAG_LEAVE_SUSPENDED flag means that the driver prefers the
++device to be left in suspend after system-wide transitions to the working state.
++This flag is checked by the PM core, but the PCI bus type informs the PM core
++which devices may be left in suspend from its perspective (that happens during
++the "noirq" phase of system-wide suspend and analogous transitions) and next it
++uses the dev_pm_may_skip_resume() helper to decide whether or not to return from
++pci_pm_resume_noirq() early, as the PM core will skip the remaining resume
++callbacks for the device during the transition under way and will set its
++runtime PM status to "suspended" if dev_pm_may_skip_resume() returns "true" for
++it.
++
+ 3.2. Device Runtime Power Management
+ ------------------------------------
+ In addition to providing device power management callbacks PCI device drivers
+
