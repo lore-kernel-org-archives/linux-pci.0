@@ -1,136 +1,177 @@
-Return-Path: <SRS0=lxkP=CI=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=lxkP=CI=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 10 Nov 2017 11:22:01 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com,
-	bhelgaas@google.com, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org, kthota@nvidia.com, swarren@nvidia.com,
-	mmaddireddy@nvidia.com, Michal Simek <michal.simek@xilinx.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	Simon Horman <horms@verge.net.au>, robin.murphy@arm.com
-Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
-Message-ID: <20171110112201.GA25235@red-moon>
-References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
- <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
- <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
- <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52866 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752855AbdKTVVx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Nov 2017 16:21:53 -0500
+Date: Mon, 20 Nov 2017 15:21:52 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: treding@nvidia.com, bhelgaas@google.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com
+Subject: Re: [PATCH V3 1/3] PCI: tegra: Apply sw fixups to support ASPM-L1
+ Sub-States
+Message-ID: <20171120212151.GC16362@bhelgaas-glaptop.roam.corp.google.com>
+References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+ <1510492674-12786-2-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1510492674-12786-2-git-send-email-vidyas@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+Robin]
+On Sun, Nov 12, 2017 at 06:47:52PM +0530, Vidya Sagar wrote:
+> Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
 
-On Thu, Nov 09, 2017 at 12:14:35PM -0600, Bjorn Helgaas wrote:
-> [+cc Lorenzo]
-> 
-> On Thu, Nov 09, 2017 at 12:48:14PM +0530, Vidya Sagar wrote:
-> > On Thursday 09 November 2017 02:55 AM, Bjorn Helgaas wrote:
-> > >On Mon, Nov 06, 2017 at 11:33:07PM +0530, Vidya Sagar wrote:
-> > >>limits MSI target address to only 32-bit region to enable
-> > >>some of the PCIe end points where only 32-bit MSIs
-> > >>are supported work properly.
-> > >>One example being Marvel SATA controller
-> > >>
-> > >>Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> > >>---
-> > >>  drivers/pci/host/pci-tegra.c | 2 +-
-> > >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >>
-> > >>diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> > >>index 1987fec1f126..03d3dcdd06c2 100644
-> > >>--- a/drivers/pci/host/pci-tegra.c
-> > >>+++ b/drivers/pci/host/pci-tegra.c
-> > >>@@ -1531,7 +1531,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
-> > >>  	}
-> > >>  	/* setup AFI/FPCI range */
-> > >>-	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> > >>+	msi->pages = __get_free_pages(GFP_DMA, 0);
-> > >>  	msi->phys = virt_to_phys((void *)msi->pages);
-> >
-> > >Should this be GFP_DMA32?  See the comment above the GFP_DMA
-> > >definition.
-> >
-> > looking at the comments for both GFP_DMA32 and GFP_DMA, I thought GFP_DMA32
-> > is the correct one to use, but, even with that I got >32-bit addresses.
-> > GFP_DMA always gives addresses in <4GB boundary (i.e. 32-bit).
-> > I didn't dig into it to find out why is this the case.
-> 
-> This sounds worth looking into (but maybe we don't need the
-> __get_free_pages() at all; see below).  Maybe there's some underlying
-> bug.  My laptop shows this, which looks like it might be related:
-> 
->   Zone ranges:
->     DMA      [mem 0x0000000000001000-0x0000000000ffffff]
->     DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
->     Normal   [mem 0x0000000100000000-0x00000004217fffff]
->     Device   empty
-> 
-> What does your machine show?
-> 
-> > >Should we be using virt_to_phys() here?  Where exactly is the
-> > >result ("msi->phys") used, i.e., what bus will that address appear
-> > >on?  If it appears on the PCI side, this should probably use
-> > >something like pcibios_resource_to_bus().
+Please use the exact names used in the spec.  In this case, I think
+that would be "Port Common_Mode_Restore_Time" and "Port T_POWER_ON"
+(from the L1 PM Substates Capabilities Register, sec 7.33.2).
+Searching the spec for "T_cmrt" isn't going to find anything useful.
 
-I had a quick chat with Robin (CC'ed, who has dealt/is dealing with most
-of the work this thread relates to) and I think that as things stand,
-for MSI physical addresses, an offset between PCI->host address shift is
-not really contemplated (ie 1:1 host<->pci is assumed).
+These look like things that maybe should be in the DT because they
+depend on external component values, so you might need different
+values depending on what board the Tegra is on?  Same for clk_m?
 
-> > This address is written to two places.  First, into host's internal
-> > register to let it know that when an incoming memory write comes
-> > with this address, raise an MSI interrupt instead of forwarding it
-> > to memory subsystem.  Second, into 'Message Address' field of
-> > 'Message Address Register for MSI' register in end point's
-> > configuration space (this is done by MSI framework) for end point to
-> > know which address to be used to generate MSI interrupt.
+> values to get them reflected in ASPM-L1 Sub-States capability registers
+> Also adjusts internal counter values according to 19.2 MHz clk_m value
 > 
-> Hmmm, ISTR some past discussion about this.  Here's a little: [1, 2].
-> And this commit [3] sounds like it describes a similar hardware
-> situation with Tegra where the host bridge intercepts the MSI target
-> address, so writes to it never reach system memory.  That means that
-> Tegra doesn't need to allocate system memory at all.
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+> V2:
+> * no change in this patch
 > 
-> Is your system similar?  Can you just statically allocate a little bus
-> address space, use that for the MSI target address, and skip the
-> __get_free_pages()?
-
-IIUC, all these host bridges need is a physical address that is routed
-upstream to the host bridge by the PCIe tree (ie it is not part of the
-host bridge windows), as long as the host bridge intercepts it (and
-endpoints do _not_ reuse it for something else) that should be fine, as
-it has been pointed out in this thread, allocating a page is a solution
-- there may be others (which are likely to be platform specific).
-
-> > >Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a
-> > >similar problem?  They both use GFP_KERNEL, then virt_to_phys(),
-> > >then write the result of virt_to_phys() using a 32-bit register
-> > >write.
-> >
-> > Well, if those systems deal with 64-bit addresses and when an end
-> > point is connected which supports only 32-bit MSI addresses, this
-> > problem will surface when __get_free_pages() returns an address that
-> > translates to a >32-bit address after virt_to_phys() call on it.
+> V3:
+> * no change in this patch
 > 
-> I'd like to hear from the R-Car and Xilinx folks about (1) whether
-> there's a potential issue with truncating a 64-bit address, and
-> (2) whether that hardware works like Tegra, where the MSI write never
-> reaches memory so we don't actually need to allocate a page.
+>  drivers/pci/host/pci-tegra.c | 59 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 59 insertions(+)
 > 
-> If all we need is to allocate a little bus address space for the MSI
-> target, I'd like to figure out a better way to do that than
-> __get_free_pages().  The current code seems a little buggy, and
-> it's getting propagated through several drivers.
-
-I will look into this with Robin's help.
-
-Thanks,
-Lorenzo
-
-> > >>  	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index adae03d671ab..6d68f49f152e 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -40,6 +40,7 @@
+>  #include <linux/of_pci.h>
+>  #include <linux/of_platform.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-aspm.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/reset.h>
+> @@ -191,6 +192,27 @@
+>  #define RP_PRIV_XP_DL	0x494
+>  #define  RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD	(0x1ff << 1)
+>  
+> +#define RP_L1_PM_SUBSTATES_CTL				0xC00
+> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK		(0xFF << 8)
+> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT		8
+> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK		(0x3 << 16)
+> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT		16
+> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK		(0x1F << 19)
+> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT		19
+> +#define RP_L1_PM_SUBSTATES_CTL_HIDE_CAP			(0x1 << 24)
+> +
+> +#define RP_L1_PM_SUBSTATES_1_CTL			0xC04
+> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
+> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
+> +
+> +#define RP_L1_PM_SUBSTATES_2_CTL			0xC08
+> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
+> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY		0x4D
+> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK	(0xFF << 13)
+> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND		(0x13 << 13)
+> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK	(0xF << 21)
+> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP	(0x2 << 21)
+> +
+>  #define RP_RX_HDR_LIMIT	0xe00
+>  #define  RP_RX_HDR_LIMIT_PW_MASK	(0xff << 8)
+>  #define  RP_RX_HDR_LIMIT_PW		(0x0e << 8)
+> @@ -327,6 +349,7 @@ struct tegra_pcie_soc {
+>  	bool RAW_violation_fixup;
+>  	bool program_deskew_time;
+>  	bool updateFC_threshold;
+> +	bool has_aspm_l1ss;
+>  };
+>  
+>  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+> @@ -2251,6 +2274,37 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>  		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
+>  		writel(value, port->base + RP_VEND_XP);
+>  	}
+> +
+> +	if (soc->has_aspm_l1ss) {
+> +		/* Set Common Mode Restore Time to 30us */
+> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
+> +		value &= ~RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK;
+> +		value |= (0x1E << RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT);
+> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+> +
+> +		/* set T_Power_On to 70us */
+> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
+> +		value &= ~(RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK |
+> +			RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK);
+> +		value |= (1 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT) |
+> +			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
+> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+> +
+> +		/* Following is based on clk_m being 19.2 MHz */
+> +		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
+> +		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
+> +		value |= RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY;
+> +		writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
+> +
+> +		value = readl(port->base + RP_L1_PM_SUBSTATES_2_CTL);
+> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK;
+> +		value |= RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY;
+> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK;
+> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND;
+> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK;
+> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP;
+> +		writel(value, port->base + RP_L1_PM_SUBSTATES_2_CTL);
+> +	}
+>  }
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+> @@ -2391,6 +2445,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+> +	.has_aspm_l1ss = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra30_pcie = {
+> @@ -2412,6 +2467,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+> +	.has_aspm_l1ss = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra124_pcie = {
+> @@ -2432,6 +2488,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>  	.RAW_violation_fixup = true,
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+> +	.has_aspm_l1ss = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra210_pcie = {
+> @@ -2460,6 +2517,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = true,
+>  	.updateFC_threshold = true,
+> +	.has_aspm_l1ss = true,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra186_pcie = {
+> @@ -2481,6 +2539,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+> +	.has_aspm_l1ss = true,
+>  };
+>  
+>  static const struct of_device_id tegra_pcie_of_match[] = {
+> -- 
+> 2.7.4
 > 
-> [1] https://lkml.kernel.org/r/20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com
-> [2] https://lkml.kernel.org/r/86efs3wesi.fsf@arm.com
-> [3] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d7bd554f27c9
