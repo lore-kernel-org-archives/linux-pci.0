@@ -1,136 +1,57 @@
-Return-Path: <SRS0=u6b1=CH=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=u6b1=CH=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        "Juan J . Alvarez" <jjalvare@us.ibm.com>
-Subject: [PATCH v5 2/3] pseries: Add PSeries SR-IOV Machine dependent calls
-Date: Thu,  9 Nov 2017 08:00:34 -0600
-In-Reply-To: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
-References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20171109140035.64975-3-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 02/18] PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
+Date: Mon, 20 Nov 2017 14:32:05 +0100
+Message-Id: <20171120133222.27771-3-niklas.cassel@axis.com>
+In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add calls for PSeries platform to configure/deconfigure
-SR-IOV.
+Previously, dw_pcie_ep_set_msi() wrote all bits in the Message Control
+register, thus overwriting the PCI_MSI_FLAGS_64BIT bit.
+By clearing the PCI_MSI_FLAGS_64BIT bit, we break MSI
+on systems where the RC has set a 64 bit MSI address.
+Fix dw_pcie_ep_set_msi() so that it only sets MMC bits.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@us.ibm.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- arch/powerpc/platforms/pseries/eeh_pseries.c | 24 +++++++++++++++++++++++
- arch/powerpc/platforms/pseries/pci.c         | 29 ++++++++++++++++++++++++----
- 2 files changed, 49 insertions(+), 4 deletions(-)
+ drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
+ drivers/pci/dwc/pcie-designware.h    | 1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index 6b812ad990e4..2295f117e2d3 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -55,6 +55,27 @@ static int ibm_get_config_addr_info;
- static int ibm_get_config_addr_info2;
- static int ibm_configure_pe;
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index d53d5f168363..c92ab87fd660 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -220,7 +220,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
  
-+void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	pdn->device_id  =  pdev->device;
-+	pdn->vendor_id  =  pdev->vendor;
-+	pdn->class_code =  pdev->class;
-+
-+	/*
-+	 * The following operations will fail if VF's sysfs files
-+	 * aren't created or its resources aren't finalized.
-+	 */
-+	eeh_add_device_early(pdn);
-+	eeh_add_device_late(pdev);
-+	eeh_sysfs_add_device(pdev);
-+
-+}
-+
- /*
-  * Buffer for reporting slot-error-detail rtas calls. Its here
-  * in BSS, and not dynamically alloced, so that it ends up in
-@@ -120,6 +141,9 @@ static int pseries_eeh_init(void)
- 	/* Set EEH probe mode */
- 	eeh_add_flag(EEH_PROBE_MODE_DEVTREE | EEH_ENABLE_IO_FOR_LOG);
+-	val = (encode_int << MSI_CAP_MMC_SHIFT);
++	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	val &= ~MSI_CAP_MMC_MASK;
++	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
+ 	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
  
-+	/* Set EEH machine dependent code */
-+	ppc_md.pcibios_bus_add_device = pseries_pcibios_bus_add_device;
-+
  	return 0;
- }
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index ecdede68522a..9aaf0cd04dd6 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -101,6 +101,7 @@
  
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index 09eba5a9929a..14a90cf471cc 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -3,17 +3,17 @@
-  * Copyright (C) 2003 Anton Blanchard <anton@au.ibm.com>, IBM
-  *
-  * pSeries specific routines for PCI.
-- * 
-+ *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-  * the Free Software Foundation; either version 2 of the License, or
-  * (at your option) any later version.
-- *    
-+ *
-  * This program is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  * GNU General Public License for more details.
-- * 
-+ *
-  * You should have received a copy of the GNU General Public License
-  * along with this program; if not, write to the Free Software
-  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-@@ -54,10 +54,26 @@ void pcibios_name_device(struct pci_dev *dev)
- 			}
- 		}
- 	}
--}   
-+}
- DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
- #endif
- 
-+#ifdef CONFIG_PCI_IOV
-+int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
-+{
-+	/* Allocate PCI data */
-+	add_dev_pci_data(pdev);
-+	return 0;
-+}
-+
-+int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
-+{
-+	/* Release PCI data */
-+	remove_dev_pci_data(pdev);
-+	return 0;
-+}
-+#endif
-+
- static void __init pSeries_request_regions(void)
- {
- 	if (!isa_io_base)
-@@ -76,6 +92,11 @@ void __init pSeries_final_fixup(void)
- 	pSeries_request_regions();
- 
- 	eeh_addr_cache_build();
-+
-+#ifdef CONFIG_PCI_IOV
-+	ppc_md.pcibios_sriov_enable = pseries_pcibios_sriov_enable;
-+	ppc_md.pcibios_sriov_disable = pseries_pcibios_sriov_disable;
-+#endif
- }
- 
- /*
+ #define MSI_MESSAGE_CONTROL		0x52
+ #define MSI_CAP_MMC_SHIFT		1
++#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
+ #define MSI_CAP_MME_SHIFT		4
+ #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+ #define MSI_MESSAGE_ADDR_L32		0x54
 -- 
-2.13.6 (Apple Git-96)
+2.14.2
