@@ -1,53 +1,127 @@
-Return-Path: <SRS0=C26o=C3=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=C26o=C3=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
-To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com
-References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Wed, 29 Nov 2017 10:13:07 -0600
-MIME-Version: 1.0
-In-Reply-To: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <8f9ebacd-5e4e-a6d3-b1c2-dcf9bd0ea811@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 12/18] PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller functions
+Date: Mon, 20 Nov 2017 14:32:15 +0100
+Message-Id: <20171120133222.27771-13-niklas.cassel@axis.com>
+In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Split artpec6_pcie_establish_link() into smaller functions
+to better match other drivers such as dra7xx and imx6.
+This is also done to prepare for endpoint mode support.
 
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 55 ++++++++++++++++++++++--------------------
+ 1 file changed, 29 insertions(+), 26 deletions(-)
 
-On 11/9/17 8:00 AM, Bryant G. Ly wrote:
-
-> v1 - Initial patch
-> v2 - Addressed Bjorn's comment on creating a highly platform
->      dependent global exported symbol.
-> v3 - Based patch off linux-ppc/master
-> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
-> v5 - Fixed comments and commit message
->
-> Bryant G. Ly (3):
->   powerpc/kernel: Separate SR-IOV Calls
->   pseries: Add PSeries SR-IOV Machine dependent calls
->   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
->
->  arch/powerpc/include/asm/machdep.h           |  7 ++++++
->  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
->  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
->  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
->  arch/powerpc/kernel/pci_dn.c                 |  6 -----
->  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
->  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
->  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
->  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
->  drivers/pci/iov.c                            | 11 ++++++++++
->  include/linux/pci.h                          |  2 ++
->  11 files changed, 118 insertions(+), 33 deletions(-)
->
-Hi Mike,
-
-Any updates on when this is going to get pulled? I want to submit the full SR-IOV enablement on PowerVM,
-but I haven't seen this get merged into 4.15 yet.
-
--Bryant
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 18075e0fab80..b2783b475c2a 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -34,8 +34,6 @@ struct artpec6_pcie {
+ 
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET			0x700
+-#define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
+-#define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
+ 
+ /* ARTPEC-6 specific registers */
+ #define PCIECFG				0x18
+@@ -80,18 +78,23 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
+ 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
+ }
+ 
+-static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
++static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ {
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 	u32 val;
+-	unsigned int retries;
+ 
+-	/* Hold DW core in reset */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_CORE_RESET_REQ;
++	val |= PCIECFG_LTSSM_ENABLE;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ 
++	return 0;
++}
++
++static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
++	unsigned int retries;
++
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
+ 		PCIECFG_MODE_TX_DRV_EN |
+@@ -131,30 +134,25 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
+ 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
+ 		retries--;
+ 	} while (retries && !(val & PHY_COSPLLLOCK));
++}
++
++static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
+ 
+-	/* Take DW core out of reset */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val &= ~PCIECFG_CORE_RESET_REQ;
++	val |= PCIECFG_CORE_RESET_REQ;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-	usleep_range(100, 200);
++}
+ 
+-	/* setup root complex */
+-	dw_pcie_setup_rc(pp);
++static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
+ 
+-	/* assert LTSSM enable */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_LTSSM_ENABLE;
++	val &= ~PCIECFG_CORE_RESET_REQ;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-
+-	/* check if the link is up or not */
+-	if (!dw_pcie_wait_for_link(pci))
+-		return 0;
+-
+-	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
+-
+-	return -ETIMEDOUT;
++	usleep_range(100, 200);
+ }
+ 
+ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+@@ -171,7 +169,12 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 
+-	artpec6_pcie_establish_link(artpec6_pcie);
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	dw_pcie_setup_rc(pp);
++	artpec6_pcie_establish_link(pci);
++	dw_pcie_wait_for_link(pci);
+ 	artpec6_pcie_enable_interrupts(artpec6_pcie);
+ 
+ 	return 0;
+-- 
+2.14.2
