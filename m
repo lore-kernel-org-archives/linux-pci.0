@@ -1,128 +1,163 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        David Airlie <airlied@linux.ie>,
-        Ilia Mirkin <imirkin@alum.mit.edu>,
-        dri-devel@lists.freedesktop.org (open list:DRM DRIVER FOR NVIDIA
-        GEFORCE/QUADRO GPUS),
-        nouveau@lists.freedesktop.org (open list:DRM DRIVER FOR NVIDIA
-        GEFORCE/QUADRO GPUS), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 10/29] drm/nouveau: deprecate pci_get_bus_and_slot()
-Date: Mon, 27 Nov 2017 11:57:47 -0500
-Message-Id: <1511801886-6753-11-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=pnR4=CS=oracle.com=boris.ostrovsky@kernel.org>
+Return-Path: <SRS0=pnR4=CS=oracle.com=boris.ostrovsky@kernel.org>
+Subject: Re: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h
+ (Models 30h-3fh) Processors v5
+To: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>,
+        helgaas@kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
+ <20171018135821.3248-5-deathsimple@vodafone.de>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
+Date: Mon, 20 Nov 2017 10:51:02 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171018135821.3248-5-deathsimple@vodafone.de>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On 10/18/2017 09:58 AM, Christian König wrote:
+> From: Christian König <christian.koenig@amd.com>
+>
+> Most BIOS don't enable this because of compatibility reasons.
+>
+> Manually enable a 64bit BAR of 64GB size so that we have
+> enough room for PCI devices.
+>
+> v2: style cleanups, increase size, add resource name, set correct flags,
+>     print message that windows was added
+> v3: add defines for all the magic numbers, style cleanups
+> v4: add some comment that the BIOS should actually allow this using
+>     _PRS and _SRS.
+> v5: only enable this if CONFIG_PHYS_ADDR_T_64BIT is set
+>
+> Signed-off-by: Christian König <christian.koenig@amd.com>
+> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> ---
+>  arch/x86/pci/fixup.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 80 insertions(+)
+>
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 11e407489db0..7b6bd76713c5 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -618,3 +618,83 @@ static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
+>  		dev_info(dev, "can't work around MacBook Pro poweroff issue\n");
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
+> +
+> +#ifdef CONFIG_PHYS_ADDR_T_64BIT
+> +
+> +#define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
+> +#define AMD_141b_MMIO_BASE_RE_MASK		BIT(0)
+> +#define AMD_141b_MMIO_BASE_WE_MASK		BIT(1)
+> +#define AMD_141b_MMIO_BASE_MMIOBASE_MASK	GENMASK(31,8)
+> +
+> +#define AMD_141b_MMIO_LIMIT(x)	(0x84 + (x) * 0x8)
+> +#define AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK	GENMASK(31,8)
+> +
+> +#define AMD_141b_MMIO_HIGH(x)	(0x180 + (x) * 0x4)
+> +#define AMD_141b_MMIO_HIGH_MMIOBASE_MASK	GENMASK(7,0)
+> +#define AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT	16
+> +#define AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK	GENMASK(23,16)
+> +
+> +/*
+> + * The PCI Firmware Spec, rev 3.2 notes that ACPI should optionally allow
+> + * configuring host bridge windows using the _PRS and _SRS methods.
+> + *
+> + * But this is rarely implemented, so we manually enable a large 64bit BAR for
+> + * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
+> + */
+> +static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+> +{
+> +	struct resource *res, *conflict;
+> +	u32 base, limit, high;
+> +	unsigned i;
+> +
+> +	for (i = 0; i < 8; ++i) {
+> +		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
+> +		pci_read_config_dword(dev, AMD_141b_MMIO_HIGH(i), &high);
+> +
+> +		/* Is this slot free? */
+> +		if (!(base & (AMD_141b_MMIO_BASE_RE_MASK |
+> +			      AMD_141b_MMIO_BASE_WE_MASK)))
+> +			break;
+> +
+> +		base >>= 8;
+> +		base |= high << 24;
+> +
+> +		/* Abort if a slot already configures a 64bit BAR. */
+> +		if (base > 0x10000)
+> +			return;
+> +	}
+> +	if (i == 8)
+> +		return;
+> +
+> +	res = kzalloc(sizeof(*res), GFP_KERNEL);
+> +	if (!res)
+> +		return;
+> +
+> +	res->name = "PCI Bus 0000:00";
+> +	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+> +		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+> +	res->start = 0x100000000ull;
+> +	res->end = 0xfd00000000ull - 1;
+> +
+> +	/* Just grab the free area behind system memory for this */
+> +	while ((conflict = request_resource_conflict(&iomem_resource, res)))
+> +		res->start = conflict->end + 1;
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
 
-Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
-and extract the domain number from
-1. struct pci_dev
-2. struct pci_dev through drm_device->pdev
-3. struct pci_dev through fb->subdev->drm_device->pdev
+I get stuck in the infinite loop here.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/gpu/drm/nouveau/dispnv04/arb.c           |  4 +++-
- drivers/gpu/drm/nouveau/dispnv04/hw.c            | 10 +++++++---
- drivers/gpu/drm/nouveau/nouveau_drm.c            |  3 ++-
- drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c | 10 +++++++++-
- 4 files changed, 21 insertions(+), 6 deletions(-)
+Presumably because on a multi-socket system we succeed for the first
+processor (0000:00:18.1) and add 'res' to iomem_resource. For
+0000:00:19.1 we find the slot in the 'for' loop above but then we fail
+to find a place to add 'res'. And with final sibling being [0 - max
+possible addr] we are stuck here.
 
-diff --git a/drivers/gpu/drm/nouveau/dispnv04/arb.c b/drivers/gpu/drm/nouveau/dispnv04/arb.c
-index 90075b6..c79160c 100644
---- a/drivers/gpu/drm/nouveau/dispnv04/arb.c
-+++ b/drivers/gpu/drm/nouveau/dispnv04/arb.c
-@@ -213,8 +213,10 @@ struct nv_sim_state {
- 	if ((dev->pdev->device & 0xffff) == 0x01a0 /*CHIPSET_NFORCE*/ ||
- 	    (dev->pdev->device & 0xffff) == 0x01f0 /*CHIPSET_NFORCE2*/) {
- 		uint32_t type;
-+		int domain = pci_domain_nr(dev->pdev->bus);
- 
--		pci_read_config_dword(pci_get_bus_and_slot(0, 1), 0x7c, &type);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 1),
-+				      0x7c, &type);
- 
- 		sim_data.memory_type = (type >> 12) & 1;
- 		sim_data.memory_width = 64;
-diff --git a/drivers/gpu/drm/nouveau/dispnv04/hw.c b/drivers/gpu/drm/nouveau/dispnv04/hw.c
-index b985990..0c9bdf0 100644
---- a/drivers/gpu/drm/nouveau/dispnv04/hw.c
-+++ b/drivers/gpu/drm/nouveau/dispnv04/hw.c
-@@ -216,12 +216,15 @@
- {
- 	struct nvkm_pll_vals pllvals;
- 	int ret;
-+	int domain;
-+
-+	domain = pci_domain_nr(dev->pdev->bus);
- 
- 	if (plltype == PLL_MEMORY &&
- 	    (dev->pdev->device & 0x0ff0) == CHIPSET_NFORCE) {
- 		uint32_t mpllP;
--
--		pci_read_config_dword(pci_get_bus_and_slot(0, 3), 0x6c, &mpllP);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 3),
-+				      0x6c, &mpllP);
- 		mpllP = (mpllP >> 8) & 0xf;
- 		if (!mpllP)
- 			mpllP = 4;
-@@ -232,7 +235,8 @@
- 	    (dev->pdev->device & 0xff0) == CHIPSET_NFORCE2) {
- 		uint32_t clock;
- 
--		pci_read_config_dword(pci_get_bus_and_slot(0, 5), 0x4c, &clock);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 5),
-+				      0x4c, &clock);
- 		return clock / 1000;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
-index 595630d..0b6c639 100644
---- a/drivers/gpu/drm/nouveau/nouveau_drm.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
-@@ -406,7 +406,8 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
- 	}
- 
- 	/* subfunction one is a hdmi audio device? */
--	drm->hdmi_device = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
-+	drm->hdmi_device = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+						(unsigned int)pdev->bus->number,
- 						PCI_DEVFN(PCI_SLOT(pdev->devfn), 1));
- 
- 	if (!drm->hdmi_device) {
-diff --git a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-index 3c6a871..8849b71 100644
---- a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-+++ b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-@@ -28,8 +28,16 @@
- {
- 	struct pci_dev *bridge;
- 	u32 mem, mib;
-+	int domain = 0;
-+	struct pci_dev *pdev = NULL;
- 
--	bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 1));
-+	if (dev_is_pci(fb->subdev.device->dev))
-+		pdev = to_pci_dev(fb->subdev.device->dev);
-+
-+	if (pdev)
-+		domain = pci_domain_nr(pdev->bus);
-+
-+	bridge = pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 1));
- 	if (!bridge) {
- 		nvkm_error(&fb->subdev, "no bridge device\n");
- 		return -ENODEV;
--- 
-1.9.1
+A possible solution to get out of the loop could be
+    if (conflict->end >= res->end) {
+                            kfree(res);
+                            return;
+   }
+
+
+but I don't know whether this is what we actually want.
+
+This is a 2-socket
+
+vendor_id    : AuthenticAMD
+cpu family    : 21
+model        : 1
+model name    : AMD Opteron(TM) Processor 6272
+stepping    : 2
+
+
+(and then it breaks differently as a Xen guest --- we hung on the last
+pci_read_config_dword(), I haven't looked at this at all yet)
+
+
+
+-boris
+
+
+> +
+> +	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
+> +
+> +	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
+> +		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
+> +	limit = ((res->end + 1) >> 8) & AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK;
+> +	high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
+> +		((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
+> +		 & AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK);
+> +
+> +	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
+> +	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
+> +	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
+> +
+> +	pci_bus_add_resource(dev->bus, res, 0);
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
+> +
+> +#endif
