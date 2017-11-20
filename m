@@ -1,126 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:39688 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751539AbdKTNeA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:34:00 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
+To: Niklas Cassel <niklass@axis.com>,
         Jesper Nilsson <jespern@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
-Subject: [PATCH v5 15/18] PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
-Date: Mon, 20 Nov 2017 14:32:18 +0100
-Message-Id: <20171120133222.27771-16-niklas.cassel@axis.com>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 16/18] PCI: dwc: artpec6: Deassert the core before waiting for PHY
+Date: Mon, 20 Nov 2017 14:32:19 +0100
+Message-Id: <20171120133222.27771-17-niklas.cassel@axis.com>
 In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
 References: <20171120133222.27771-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no need to hard code the cpu to bus address fixup mask.
-The PCIe controller has a global address on the AXI bus, however,
-from the perspective of the PCIe controller, its base starts at 0x0,
-so the local address is 0x0. To get the bus address, simply subtract
-the global address from the cpu address. The global address is taken
-from device tree.
-
-Also for ARTPEC-7, hard coding the cpu to bus address fixup mask is
-not possible, since it uses a High Address Bits Look Up Table, which
-means that it can, at runtime, map the PCIe window to an arbitrary
-address in the 32-bit address space.
-
-This also fixes a bug for ARTPEC-6, where the cpu to bus address
-fixup mask previously was off by one (GENMASK(27, 0), rather than
-GENMASK(28, 0)). This is another reason to calculate the mask by
-using values from device tree.
+Waiting for the PHY while the core was held in reset worked for artpec6,
+but for artpec7, in order to read the required registers, the core has to
+be out of reset.
+Refactor the code so we always wait for the PHY after the core has been
+deasserted, since this works for both artpec6 and artpec7.
 
 Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/dwc/pci-dra7xx.c      |  2 +-
- drivers/pci/dwc/pcie-artpec6.c    | 18 ++++++++++++++----
- drivers/pci/dwc/pcie-designware.c |  2 +-
- drivers/pci/dwc/pcie-designware.h |  2 +-
- 4 files changed, 17 insertions(+), 7 deletions(-)
+ drivers/pci/dwc/pcie-artpec6.c | 45 +++++++++++++++++++++++++++---------------
+ 1 file changed, 29 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 224ff8affdce..89d87844abb3 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -110,7 +110,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
- 
--static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-+static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
- {
- 	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
- }
 diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index e7de4e4649eb..318a2bd0d97e 100644
+index 318a2bd0d97e..064c5a93ea80 100644
 --- a/drivers/pci/dwc/pcie-artpec6.c
 +++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -67,8 +67,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define PHY_STATUS			0x118
- #define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
--
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
- 	u32 val;
-@@ -82,9 +80,21 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
- 	regmap_write(artpec6_pcie->regmap, offset, val);
- }
- 
--static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
-+static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
- {
--	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-+	struct pcie_port *pp = &pci->pp;
-+	struct dw_pcie_ep *ep = &pci->ep;
-+
-+	switch (artpec6_pcie->mode) {
-+	case DW_PCIE_RC_TYPE:
-+		return pci_addr - pp->cfg0_base;
-+	case DW_PCIE_EP_TYPE:
-+		return pci_addr - ep->phys_base;
-+	default:
-+		dev_err(pci->dev, "UNKNOWN device type\n");
-+	}
-+	return pci_addr;
- }
- 
- static int artpec6_pcie_establish_link(struct dw_pcie *pci)
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 88abdddee2ad..800be7a4f087 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 	u32 retries, val;
- 
- 	if (pci->ops->cpu_addr_fixup)
--		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
-+		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
- 
- 	if (pci->iatu_unroll_enabled) {
- 		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 24edac035160..cca5a81c1c74 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -205,7 +205,7 @@ struct dw_pcie_ep {
+@@ -125,11 +125,37 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.stop_link = artpec6_pcie_stop_link,
  };
  
- struct dw_pcie_ops {
--	u64	(*cpu_addr_fixup)(u64 cpu_addr);
-+	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
- 	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
- 			    size_t size);
- 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+-static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
+ {
++	struct dw_pcie *pci = artpec6_pcie->pci;
++	struct device *dev = pci->dev;
+ 	u32 val;
+ 	unsigned int retries;
+ 
++	retries = 50;
++	do {
++		usleep_range(1000, 2000);
++		val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
++		retries--;
++	} while (retries &&
++		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
++	if (!retries)
++		dev_err(dev, "PCIe clock manager did not leave idle state\n");
++
++	retries = 50;
++	do {
++		usleep_range(1000, 2000);
++		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
++		retries--;
++	} while (retries && !(val & PHY_COSPLLLOCK));
++	if (!retries)
++		dev_err(dev, "PHY PLL did not lock\n");
++}
++
++static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
++
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
+ 		PCIECFG_MODE_TX_DRV_EN |
+@@ -154,21 +180,6 @@ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+ 	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
+ 	val &= ~NOCCFG_POWER_PCIE_IDLEREQ;
+ 	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
+-
+-	retries = 50;
+-	do {
+-		usleep_range(1000, 2000);
+-		val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
+-		retries--;
+-	} while (retries &&
+-		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
+-
+-	retries = 50;
+-	do {
+-		usleep_range(1000, 2000);
+-		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
+-		retries--;
+-	} while (retries && !(val & PHY_COSPLLLOCK));
+ }
+ 
+ static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
+@@ -207,6 +218,7 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ 	artpec6_pcie_assert_core_reset(artpec6_pcie);
+ 	artpec6_pcie_init_phy(artpec6_pcie);
+ 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	artpec6_pcie_wait_for_phy(artpec6_pcie);
+ 	dw_pcie_setup_rc(pp);
+ 	artpec6_pcie_establish_link(pci);
+ 	dw_pcie_wait_for_link(pci);
+@@ -274,6 +286,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	artpec6_pcie_assert_core_reset(artpec6_pcie);
+ 	artpec6_pcie_init_phy(artpec6_pcie);
+ 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	artpec6_pcie_wait_for_phy(artpec6_pcie);
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++)
+ 		dw_pcie_ep_reset_bar(pci, bar);
 -- 
 2.14.2
