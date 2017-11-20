@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:39624 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751415AbdKTNd2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:33:28 -0500
 From: Niklas Cassel <niklas.cassel@axis.com>
 To: Niklas Cassel <niklass@axis.com>,
         Jesper Nilsson <jespern@axis.com>,
@@ -6,122 +10,70 @@ To: Niklas Cassel <niklass@axis.com>,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v5 12/18] PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller functions
-Date: Mon, 20 Nov 2017 14:32:15 +0100
-Message-Id: <20171120133222.27771-13-niklas.cassel@axis.com>
+Subject: [PATCH v5 11/18] PCI: dwc: artpec6: Use BIT and GENMASK macros
+Date: Mon, 20 Nov 2017 14:32:14 +0100
+Message-Id: <20171120133222.27771-12-niklas.cassel@axis.com>
 In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
 References: <20171120133222.27771-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split artpec6_pcie_establish_link() into smaller functions
-to better match other drivers such as dra7xx and imx6.
-This is also done to prepare for endpoint mode support.
+Use BIT and GENMASK macros to improve readability.
 
 Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/dwc/pcie-artpec6.c | 55 ++++++++++++++++++++++--------------------
- 1 file changed, 29 insertions(+), 26 deletions(-)
+ drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 18075e0fab80..b2783b475c2a 100644
+index 4b8ef266dc2f..18075e0fab80 100644
 --- a/drivers/pci/dwc/pcie-artpec6.c
 +++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -34,8 +34,6 @@ struct artpec6_pcie {
- 
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET			0x700
--#define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
--#define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
+@@ -39,28 +39,28 @@ struct artpec6_pcie {
  
  /* ARTPEC-6 specific registers */
  #define PCIECFG				0x18
-@@ -80,18 +78,23 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
- 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
- }
+-#define  PCIECFG_DBG_OEN		(1 << 24)
+-#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
+-#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
+-#define  PCIECFG_CLKREQ_B		(1 << 11)
+-#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
+-#define  PCIECFG_PLL_ENABLE		(1 << 9)
+-#define  PCIECFG_PCLK_ENABLE		(1 << 8)
+-#define  PCIECFG_RISRCREN		(1 << 4)
+-#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
+-#define  PCIECFG_CISRREN		(1 << 2)
+-#define  PCIECFG_MACRO_ENABLE		(1 << 0)
++#define  PCIECFG_DBG_OEN		BIT(24)
++#define  PCIECFG_CORE_RESET_REQ		BIT(21)
++#define  PCIECFG_LTSSM_ENABLE		BIT(20)
++#define  PCIECFG_CLKREQ_B		BIT(11)
++#define  PCIECFG_REFCLK_ENABLE		BIT(10)
++#define  PCIECFG_PLL_ENABLE		BIT(9)
++#define  PCIECFG_PCLK_ENABLE		BIT(8)
++#define  PCIECFG_RISRCREN		BIT(4)
++#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
++#define  PCIECFG_CISRREN		BIT(2)
++#define  PCIECFG_MACRO_ENABLE		BIT(0)
  
--static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
-+static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ #define NOCCFG				0x40
+-#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
+-#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
+-#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
+-#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
++#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
++#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
++#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
++#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
+ 
+ #define PHY_STATUS			0x118
+-#define PHY_COSPLLLOCK			(1 << 0)
++#define  PHY_COSPLLLOCK			BIT(0)
+ 
+-#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
++#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
+ 
+ static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
  {
--	struct dw_pcie *pci = artpec6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 	u32 val;
--	unsigned int retries;
- 
--	/* Hold DW core in reset */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_CORE_RESET_REQ;
-+	val |= PCIECFG_LTSSM_ENABLE;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- 
-+	return 0;
-+}
-+
-+static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
-+	unsigned int retries;
-+
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
- 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
- 		PCIECFG_MODE_TX_DRV_EN |
-@@ -131,30 +134,25 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
- 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
- 		retries--;
- 	} while (retries && !(val & PHY_COSPLLLOCK));
-+}
-+
-+static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
- 
--	/* Take DW core out of reset */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val &= ~PCIECFG_CORE_RESET_REQ;
-+	val |= PCIECFG_CORE_RESET_REQ;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--	usleep_range(100, 200);
-+}
- 
--	/* setup root complex */
--	dw_pcie_setup_rc(pp);
-+static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
- 
--	/* assert LTSSM enable */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_LTSSM_ENABLE;
-+	val &= ~PCIECFG_CORE_RESET_REQ;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--
--	/* check if the link is up or not */
--	if (!dw_pcie_wait_for_link(pci))
--		return 0;
--
--	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
--
--	return -ETIMEDOUT;
-+	usleep_range(100, 200);
- }
- 
- static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
-@@ -171,7 +169,12 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 
--	artpec6_pcie_establish_link(artpec6_pcie);
-+	artpec6_pcie_assert_core_reset(artpec6_pcie);
-+	artpec6_pcie_init_phy(artpec6_pcie);
-+	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-+	dw_pcie_setup_rc(pp);
-+	artpec6_pcie_establish_link(pci);
-+	dw_pcie_wait_for_link(pci);
- 	artpec6_pcie_enable_interrupts(artpec6_pcie);
- 
- 	return 0;
 -- 
 2.14.2
