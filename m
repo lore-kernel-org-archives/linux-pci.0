@@ -1,49 +1,170 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bao Xiaowei <xiaowei.bao@nxp.com>
-To: <robh+dt@kernel.org>, <mark.rutland@arm.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <bhelgaas@google.com>, <shawnguo@kernel.org>,
- <madalin.bucur@nxp.com>, <sumit.garg@nxp.com>, <yangbo.lu@nxp.com>,
- <hongtao.jia@nxp.com>, <Yuantian.Tang@nxp.com>, <leoyang.li@nxp.com>,
- <kishon@ti.com>, <jingoohan1@gmail.com>, <pbrobinson@gmail.com>,
- <songxiaowei@hisilicon.com>, <devicetree@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
- <Zhiqiang.Hou@nxp.com>, <mingkai.hu@nxp.com>, <Minghuan.Lian@nxp.com>
-Subject: [PATCHv3 0/3]  dts: Add the property of IB and OB
-Date: Fri, 10 Nov 2017 10:49:23 +0800
-Message-ID: <20171110024926.39700-1-xiaowei.bao@nxp.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bao Xiaowei <xiaowei.bao@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v15 1/5] block: DAC960: Replace PCI pool old API
+Date: Mon, 20 Nov 2017 20:32:43 +0100
+Message-Id: <20171120193247.8187-2-romain.perier@gmail.com>
+In-Reply-To: <20171120193247.8187-1-romain.perier@gmail.com>
+References: <20171120193247.8187-1-romain.perier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Depend on http://patchwork.ozlabs.org/patch/815382/
+From: Romain Perier <romain.perier@collabora.com>
 
-Bao Xiaowei (3):
-  ARMv8: dts: ls1046a: add the property of IB and OB
-  ARMv8: layerscape: add the pcie ep function support
-  ARMv8: pcie: make the DWC EP driver support for layerscape
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
 
- arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi |   6 ++
- drivers/pci/dwc/Kconfig                        |   1 +
- drivers/pci/dwc/pci-layerscape.c               | 124 +++++++++++++++++++++++--
- 3 files changed, 125 insertions(+), 6 deletions(-)
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
+Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+---
+ drivers/block/DAC960.c | 38 ++++++++++++++++++--------------------
+ drivers/block/DAC960.h |  4 ++--
+ 2 files changed, 20 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
+index 255591ab3716..2a8950ee382c 100644
+--- a/drivers/block/DAC960.c
++++ b/drivers/block/DAC960.c
+@@ -268,17 +268,17 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
+   void *AllocationPointer = NULL;
+   void *ScatterGatherCPU = NULL;
+   dma_addr_t ScatterGatherDMA;
+-  struct pci_pool *ScatterGatherPool;
++  struct dma_pool *ScatterGatherPool;
+   void *RequestSenseCPU = NULL;
+   dma_addr_t RequestSenseDMA;
+-  struct pci_pool *RequestSensePool = NULL;
++  struct dma_pool *RequestSensePool = NULL;
+ 
+   if (Controller->FirmwareType == DAC960_V1_Controller)
+     {
+       CommandAllocationLength = offsetof(DAC960_Command_T, V1.EndMarker);
+       CommandAllocationGroupSize = DAC960_V1_CommandAllocationGroupSize;
+-      ScatterGatherPool = pci_pool_create("DAC960_V1_ScatterGather",
+-		Controller->PCIDevice,
++      ScatterGatherPool = dma_pool_create("DAC960_V1_ScatterGather",
++		&Controller->PCIDevice->dev,
+ 	DAC960_V1_ScatterGatherLimit * sizeof(DAC960_V1_ScatterGatherSegment_T),
+ 	sizeof(DAC960_V1_ScatterGatherSegment_T), 0);
+       if (ScatterGatherPool == NULL)
+@@ -290,18 +290,18 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
+     {
+       CommandAllocationLength = offsetof(DAC960_Command_T, V2.EndMarker);
+       CommandAllocationGroupSize = DAC960_V2_CommandAllocationGroupSize;
+-      ScatterGatherPool = pci_pool_create("DAC960_V2_ScatterGather",
+-		Controller->PCIDevice,
++      ScatterGatherPool = dma_pool_create("DAC960_V2_ScatterGather",
++		&Controller->PCIDevice->dev,
+ 	DAC960_V2_ScatterGatherLimit * sizeof(DAC960_V2_ScatterGatherSegment_T),
+ 	sizeof(DAC960_V2_ScatterGatherSegment_T), 0);
+       if (ScatterGatherPool == NULL)
+ 	    return DAC960_Failure(Controller,
+ 			"AUXILIARY STRUCTURE CREATION (SG)");
+-      RequestSensePool = pci_pool_create("DAC960_V2_RequestSense",
+-		Controller->PCIDevice, sizeof(DAC960_SCSI_RequestSense_T),
++      RequestSensePool = dma_pool_create("DAC960_V2_RequestSense",
++		&Controller->PCIDevice->dev, sizeof(DAC960_SCSI_RequestSense_T),
+ 		sizeof(int), 0);
+       if (RequestSensePool == NULL) {
+-	    pci_pool_destroy(ScatterGatherPool);
++	    dma_pool_destroy(ScatterGatherPool);
+ 	    return DAC960_Failure(Controller,
+ 			"AUXILIARY STRUCTURE CREATION (SG)");
+       }
+@@ -335,16 +335,16 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
+       Command->Next = Controller->FreeCommands;
+       Controller->FreeCommands = Command;
+       Controller->Commands[CommandIdentifier-1] = Command;
+-      ScatterGatherCPU = pci_pool_alloc(ScatterGatherPool, GFP_ATOMIC,
++      ScatterGatherCPU = dma_pool_alloc(ScatterGatherPool, GFP_ATOMIC,
+ 							&ScatterGatherDMA);
+       if (ScatterGatherCPU == NULL)
+ 	  return DAC960_Failure(Controller, "AUXILIARY STRUCTURE CREATION");
+ 
+       if (RequestSensePool != NULL) {
+-  	  RequestSenseCPU = pci_pool_alloc(RequestSensePool, GFP_ATOMIC,
++  	  RequestSenseCPU = dma_pool_alloc(RequestSensePool, GFP_ATOMIC,
+ 						&RequestSenseDMA);
+   	  if (RequestSenseCPU == NULL) {
+-                pci_pool_free(ScatterGatherPool, ScatterGatherCPU,
++                dma_pool_free(ScatterGatherPool, ScatterGatherCPU,
+                                 ScatterGatherDMA);
+     		return DAC960_Failure(Controller,
+ 					"AUXILIARY STRUCTURE CREATION");
+@@ -379,8 +379,8 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
+ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
+ {
+   int i;
+-  struct pci_pool *ScatterGatherPool = Controller->ScatterGatherPool;
+-  struct pci_pool *RequestSensePool = NULL;
++  struct dma_pool *ScatterGatherPool = Controller->ScatterGatherPool;
++  struct dma_pool *RequestSensePool = NULL;
+   void *ScatterGatherCPU;
+   dma_addr_t ScatterGatherDMA;
+   void *RequestSenseCPU;
+@@ -411,9 +411,9 @@ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
+ 	  RequestSenseDMA = Command->V2.RequestSenseDMA;
+       }
+       if (ScatterGatherCPU != NULL)
+-          pci_pool_free(ScatterGatherPool, ScatterGatherCPU, ScatterGatherDMA);
++          dma_pool_free(ScatterGatherPool, ScatterGatherCPU, ScatterGatherDMA);
+       if (RequestSenseCPU != NULL)
+-          pci_pool_free(RequestSensePool, RequestSenseCPU, RequestSenseDMA);
++          dma_pool_free(RequestSensePool, RequestSenseCPU, RequestSenseDMA);
+ 
+       if ((Command->CommandIdentifier
+ 	   % Controller->CommandAllocationGroupSize) == 1) {
+@@ -437,13 +437,11 @@ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
+       Controller->CurrentStatusBuffer = NULL;
+     }
+ 
+-  if (ScatterGatherPool != NULL)
+-  	pci_pool_destroy(ScatterGatherPool);
++  dma_pool_destroy(ScatterGatherPool);
+   if (Controller->FirmwareType == DAC960_V1_Controller)
+   	return;
+ 
+-  if (RequestSensePool != NULL)
+-	pci_pool_destroy(RequestSensePool);
++  dma_pool_destroy(RequestSensePool);
+ 
+   for (i = 0; i < DAC960_MaxLogicalDrives; i++) {
+ 	kfree(Controller->V2.LogicalDeviceInformation[i]);
+diff --git a/drivers/block/DAC960.h b/drivers/block/DAC960.h
+index 85fa9bb63759..47d7d698ece2 100644
+--- a/drivers/block/DAC960.h
++++ b/drivers/block/DAC960.h
+@@ -2316,7 +2316,7 @@ typedef struct DAC960_Controller
+   bool SuppressEnclosureMessages;
+   struct timer_list MonitoringTimer;
+   struct gendisk *disks[DAC960_MaxLogicalDrives];
+-  struct pci_pool *ScatterGatherPool;
++  struct dma_pool *ScatterGatherPool;
+   DAC960_Command_T *FreeCommands;
+   unsigned char *CombinedStatusBuffer;
+   unsigned char *CurrentStatusBuffer;
+@@ -2429,7 +2429,7 @@ typedef struct DAC960_Controller
+       bool NeedDeviceSerialNumberInformation;
+       bool StartLogicalDeviceInformationScan;
+       bool StartPhysicalDeviceInformationScan;
+-      struct pci_pool *RequestSensePool;
++      struct dma_pool *RequestSensePool;
+ 
+       dma_addr_t	FirstCommandMailboxDMA;
+       DAC960_V2_CommandMailbox_T *FirstCommandMailbox;
 -- 
 2.14.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
