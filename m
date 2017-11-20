@@ -1,99 +1,110 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Subject: [PATCH v3 3/6] ACPI / PM: Support for LEAVE_SUSPENDED driver flag in ACPI PM domain
-Date: Sun, 12 Nov 2017 01:40:56 +0100
-Message-ID: <15757726.rqMYQ7RnI5@aspire.rjw.lan>
-In-Reply-To: <4184911.zoJM7jZeH4@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan> <4184911.zoJM7jZeH4@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:22206 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751086AbdKTNbG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:31:06 -0500
+Subject: =?UTF-8?Q?Re:_xhci=5fhcd_HC_died;_cleaning_up_with_TUSB7340_and_?=
+ =?UTF-8?Q?=c2=b5PD720201?=
+To: Vignesh R <vigneshr@ti.com>
+CC: Chris Welch <Chris.Welch@viavisolutions.com>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, Joao Pinto <jpinto@synopsys.com>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>
+References: <BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com>
+ <3dd7a4fc-da86-03cc-9b01-a0d29dd73230@ti.com>
+ <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
+ <124458f9-f824-6acb-becb-12d768b6e501@ti.com>
+ <9dcdbc2a-9296-b260-10ed-08fde0c6f67c@ti.com>
+From: Roger Quadros <rogerq@ti.com>
+Message-ID: <d07f7bc9-0064-e84f-6a53-0768d1fe83b7@ti.com>
+Date: Mon, 20 Nov 2017 15:31:00 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <9dcdbc2a-9296-b260-10ed-08fde0c6f67c@ti.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 20/11/17 15:19, Vignesh R wrote:
+> 
+> 
+> On Monday 20 November 2017 01:31 PM, Roger Quadros wrote:
+> [...]
+>>>
+>>> So, could you try reverting commit 8c934095fa2f3 and 
+>>> also apply below patch and let me know if that fixes the issue?
+>>>
+>>> -----------
+>>>
+>>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>>> index e77a4ceed74c..8280abc56f30 100644
+>>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>>> @@ -259,10 +259,17 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>>>         u32 reg;
+>>>  
+>>>         reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+>>> +       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>>>  
+>>>         switch (reg) {
+>>>         case MSI:
+>>> -               dw_handle_msi_irq(pp);
+>>> +               /*
+>>> +                * Need to make sure no MSI IRQs are pending before
+>>> +                * exiting handler, else the wrapper will not catch new
+>>> +                * IRQs. So loop around till dw_handle_msi_irq() returns
+>>> +                * IRQ_NONE
+>>> +                */
+>>> +               while (dw_handle_msi_irq(pp) != IRQ_NONE);
+>>
+>> To avoid this kind of looping, shouldn't we be disabling all IRQ events while
+>> the interrupt handler is running and enable them just before we return from the hardirq
+>> handler?
+> 
+> IIUC, you are saying to disable all MSIs at PCIe designware core level,
+> then call dw_handle_msi_irq() and then enable MSIs after hardirq
+> returns. But, the problem is if PCIe EP raises another MSI after the
+> call to EP's handler but before re-enabling MSIs, then it will be
+> ignored as IRQs are not yet enabled.
+> Ideally, EP's support Per Vector Masking(PVM) which allow RC to prevent
+> EP from sending MSI messages for sometime. But, unfortunately, the cards
+> mentioned here don't support this feature.
 
-Add support for DPM_FLAG_LEAVE_SUSPENDED to the ACPI PM domain by
-making it (a) set the power.may_skip_resume status bit for devices
-that, from its perspective, may be left in suspend after system
-wakeup from sleep and (b) return early from acpi_subsys_resume_noirq()
-for devices whose remaining resume callbacks during the transition
-under way are going to be skipped by the PM core.
+I'm not aware of MSIs.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
+But for any typical hardware, there should be an interrupt event enable register and an
+interrupt mask register.
 
-v2 -> v3: No changes.
+In the IRQ handler, we mask the interrupt but still keep the interrupt events enabled so that
+they can be latched during the time the interrupt was masked.
 
----
- drivers/acpi/device_pm.c |   27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
+When the interrupt is unmasked at end of the IRQ handler, it should re-trigger the interrupt
+if any events were latched and pending.
 
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -987,7 +987,7 @@ void acpi_subsys_complete(struct device
- 	 * the sleep state it is going out of and it has never been resumed till
- 	 * now, resume it in case the firmware powered it up.
- 	 */
--	if (dev->power.direct_complete && pm_resume_via_firmware())
-+	if (pm_runtime_suspended(dev) && pm_resume_via_firmware())
- 		pm_request_resume(dev);
- }
- EXPORT_SYMBOL_GPL(acpi_subsys_complete);
-@@ -1036,10 +1036,28 @@ EXPORT_SYMBOL_GPL(acpi_subsys_suspend_la
-  */
- int acpi_subsys_suspend_noirq(struct device *dev)
- {
--	if (dev_pm_smart_suspend_and_suspended(dev))
-+	int ret;
-+
-+	if (dev_pm_smart_suspend_and_suspended(dev)) {
-+		dev->power.may_skip_resume = true;
- 		return 0;
-+	}
- 
--	return pm_generic_suspend_noirq(dev);
-+	ret = pm_generic_suspend_noirq(dev);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * If the target system sleep state is suspend-to-idle, it is sufficient
-+	 * to check whether or not the device's wakeup settings are good for
-+	 * runtime PM.  Otherwise, the pm_resume_via_firmware() check will cause
-+	 * acpi_subsys_complete() to take care of fixing up the device's state
-+	 * anyway, if need be.
-+	 */
-+	dev->power.may_skip_resume = device_may_wakeup(dev) ||
-+					!device_can_wakeup(dev);
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(acpi_subsys_suspend_noirq);
- 
-@@ -1049,6 +1067,9 @@ EXPORT_SYMBOL_GPL(acpi_subsys_suspend_no
-  */
- int acpi_subsys_resume_noirq(struct device *dev)
- {
-+	if (dev_pm_may_skip_resume(dev))
-+		return 0;
-+
- 	/*
- 	 * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
- 	 * during system suspend, so update their runtime PM status to "active"
+This way you don't need to keep checking for any pending events in the IRQ handler.
 
+> 
+>>
+>>
+>>>                 break;
+>>>         case INTA:
+>>>         case INTB:
+>>> @@ -273,8 +280,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>>>                 break;
+>>>         }
+>>>  
+>>> -       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>>> -
+>>>         return IRQ_HANDLED;
+>>>  }
+>>>
+>>>
+>>>
+>>>
+>>
+> 
 
+-- 
+cheers,
+-roger
+
+Texas Instruments Finland Oy, Porkkalankatu 22, 00180 Helsinki. Y-tunnus/Business ID: 0615521-4. Kotipaikka/Domicile: Helsinki
