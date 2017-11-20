@@ -1,45 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Nov 2017 18:56:14 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 01/17] PCI: dwc: Use the DMA-API to get the MSI address
-Message-ID: <20171108005614.GF22847@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
- <20171103134722.5532-2-niklas.cassel@axis.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171103134722.5532-2-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:44651 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752400AbdKTTdJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 14:33:09 -0500
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v15 2/5] net: e100: Replace PCI pool old API
+Date: Mon, 20 Nov 2017 20:32:44 +0100
+Message-Id: <20171120193247.8187-3-romain.perier@gmail.com>
+In-Reply-To: <20171120193247.8187-1-romain.perier@gmail.com>
+References: <20171120193247.8187-1-romain.perier@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 03, 2017 at 02:47:05PM +0100, Niklas Cassel wrote:
-> Use the DMA-API to get the MSI address. This address will be written to
-> our PCI config space and to the register which determines which AXI
-> address the DWC IP will spoof for incoming MSI irqs.
-> 
-> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
-> to write to the MSI address, the proper way to get the MSI address is by
-> using the DMA API, not by using virt_to_phys().
-> 
-> Using virt_to_phys() might work on some systems, but using the DMA API
-> should work on all systems.
-> 
-> This is essentially the same thing as allocating a buffer in a driver
-> to which the endpoint will write to. To do this, we use the DMA API.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+From: Romain Perier <romain.perier@collabora.com>
 
-I'm expecting Jingoo and/or Joao to chime in and ack the
-DesignWare-related patches.  I think all the others are in
-pretty good shape.
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
 
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
->  drivers/pci/dwc/pcie-designware.h      |  3 ++-
->  2 files changed, 14 insertions(+), 4 deletions(-)
-> ...
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
+Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+---
+ drivers/net/ethernet/intel/e100.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/e100.c b/drivers/net/ethernet/intel/e100.c
+index 44b3937f7e81..29486478836e 100644
+--- a/drivers/net/ethernet/intel/e100.c
++++ b/drivers/net/ethernet/intel/e100.c
+@@ -607,7 +607,7 @@ struct nic {
+ 	struct mem *mem;
+ 	dma_addr_t dma_addr;
+ 
+-	struct pci_pool *cbs_pool;
++	struct dma_pool *cbs_pool;
+ 	dma_addr_t cbs_dma_addr;
+ 	u8 adaptive_ifs;
+ 	u8 tx_threshold;
+@@ -1892,7 +1892,7 @@ static void e100_clean_cbs(struct nic *nic)
+ 			nic->cb_to_clean = nic->cb_to_clean->next;
+ 			nic->cbs_avail++;
+ 		}
+-		pci_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
++		dma_pool_free(nic->cbs_pool, nic->cbs, nic->cbs_dma_addr);
+ 		nic->cbs = NULL;
+ 		nic->cbs_avail = 0;
+ 	}
+@@ -1910,7 +1910,7 @@ static int e100_alloc_cbs(struct nic *nic)
+ 	nic->cb_to_use = nic->cb_to_send = nic->cb_to_clean = NULL;
+ 	nic->cbs_avail = 0;
+ 
+-	nic->cbs = pci_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
++	nic->cbs = dma_pool_zalloc(nic->cbs_pool, GFP_KERNEL,
+ 				   &nic->cbs_dma_addr);
+ 	if (!nic->cbs)
+ 		return -ENOMEM;
+@@ -2960,8 +2960,8 @@ static int e100_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		netif_err(nic, probe, nic->netdev, "Cannot register net device, aborting\n");
+ 		goto err_out_free;
+ 	}
+-	nic->cbs_pool = pci_pool_create(netdev->name,
+-			   nic->pdev,
++	nic->cbs_pool = dma_pool_create(netdev->name,
++			   &nic->pdev->dev,
+ 			   nic->params.cbs.max * sizeof(struct cb),
+ 			   sizeof(u32),
+ 			   0);
+@@ -3001,7 +3001,7 @@ static void e100_remove(struct pci_dev *pdev)
+ 		unregister_netdev(netdev);
+ 		e100_free(nic);
+ 		pci_iounmap(pdev, nic->csr);
+-		pci_pool_destroy(nic->cbs_pool);
++		dma_pool_destroy(nic->cbs_pool);
+ 		free_netdev(netdev);
+ 		pci_release_regions(pdev);
+ 		pci_disable_device(pdev);
+-- 
+2.14.1
