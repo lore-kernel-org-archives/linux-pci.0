@@ -1,71 +1,85 @@
-Return-Path: <SRS0=0FUx=CH=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=0FUx=CH=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
- drivers
-To: Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
-References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
-Date: Thu, 9 Nov 2017 11:28:36 +0530
-MIME-Version: 1.0
-In-Reply-To: <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 05/18] PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+Date: Mon, 20 Nov 2017 14:32:08 +0100
+Message-Id: <20171120133222.27771-6-niklas.cassel@axis.com>
+In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Remove the static keyword from dw_pcie_ep_reset_bar() so that
+pci-dra7xx.c does not need its own copy of dw_pcie_ep_reset_bar().
 
-On Thursday 09 November 2017 01:56 AM, Bjorn Helgaas wrote:
-> On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
->> From: Bjorn Helgaas <bhelgaas@google.com>
->>
->> Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
->> the endpoint driver framework.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> This is on my for-linus branch, and I intend to merge it for v4.14.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c         | 9 ---------
+ drivers/pci/dwc/pcie-designware-ep.c | 2 +-
+ drivers/pci/dwc/pcie-designware.h    | 5 +++++
+ 3 files changed, 6 insertions(+), 10 deletions(-)
 
-There is already an entry for PCI endpoint in MAINTAINERS file. Can Lorenzo be
-added there?
-
-PCI ENDPOINT SUBSYSTEM
-M:      Kishon Vijay Abraham I <kishon@ti.com>
-L:      linux-pci@vger.kernel.org
-T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
-S:      Supported
-F:      drivers/pci/endpoint/
-F:      drivers/misc/pci_endpoint_test.c
-F:      tools/pci/
-
-Thanks
-Kishon
-> 
->> ---
->>  MAINTAINERS |   10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index db412a627d96..a1f9653234cc 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -10429,6 +10429,16 @@ F:	include/linux/pci*
->>  F:	arch/x86/pci/
->>  F:	arch/x86/kernel/quirks.c
->>  
->> +PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
->> +M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> +L:	linux-pci@vger.kernel.org
->> +Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
->> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
->> +S:	Supported
->> +F:	drivers/pci/host/
->> +F:	drivers/pci/dwc/
->> +F:	drivers/pci/endpoint
->> +
->>  PCIE DRIVER FOR AXIS ARTPEC
->>  M:	Niklas Cassel <niklas.cassel@axis.com>
->>  M:	Jesper Nilsson <jesper.nilsson@axis.com>
->>
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index e77a4ceed74c..d330b7d86ce3 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -337,15 +337,6 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+-{
+-	u32 reg;
+-
+-	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+-	dw_pcie_writel_dbi2(pci, reg, 0x0);
+-	dw_pcie_writel_dbi(pci, reg, 0x0);
+-}
+-
+ static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index 8d8019cdff2a..700ed2f4becf 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -30,7 +30,7 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ 	pci_epc_linkup(epc);
+ }
+ 
+-static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ 	u32 reg;
+ 
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 5a1da459eda5..37dfad8d003f 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -338,6 +338,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
+ void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
++void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+ {
+@@ -351,5 +352,9 @@ static inline int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ {
+ }
++
++static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
++{
++}
+ #endif
+ #endif /* _PCIE_DESIGNWARE_H */
+-- 
+2.14.2
