@@ -1,66 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V2 03/29] x86/PCI: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 17:48:58 -0500
-Message-Id: <1511390964-9979-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org,
- "maintainer:X86 ARCHITECTURE 32-BIT AND 64-BIT" <x86@kernel.org>,
- "open list:X86 ARCHITECTURE 32-BIT AND 64-BIT" <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, Ingo Molnar <mingo@redhat.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@gmail.com>
+Subject: [PATCH v15 4/5] scsi: mpt3sas: Replace PCI pool old API
+Date: Mon, 20 Nov 2017 20:32:46 +0100
+Message-Id: <20171120193247.8187-5-romain.perier@gmail.com>
+In-Reply-To: <20171120193247.8187-1-romain.perier@gmail.com>
+References: <20171120193247.8187-1-romain.perier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
-
-Use domain number of 0 as the domain number is not available in struct
-irq_routing_table.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Romain Perier <romain.perier@gmail.com>
 ---
- arch/x86/pci/irq.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 04526291..52e5510 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -839,7 +839,8 @@ static void __init pirq_find_router(struct irq_router *r)
- 	DBG(KERN_DEBUG "PCI: Attempting to find IRQ router for [%04x:%04x]\n",
- 	    rt->rtr_vendor, rt->rtr_device);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 8027de465d47..08237b8659ae 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3790,12 +3790,12 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 	if (ioc->pcie_sgl_dma_pool) {
+ 		for (i = 0; i < ioc->scsiio_depth; i++) {
+ 			if (ioc->scsi_lookup[i].pcie_sg_list.pcie_sgl)
+-				pci_pool_free(ioc->pcie_sgl_dma_pool,
++				dma_pool_free(ioc->pcie_sgl_dma_pool,
+ 				ioc->scsi_lookup[i].pcie_sg_list.pcie_sgl,
+ 				ioc->scsi_lookup[i].pcie_sg_list.pcie_sgl_dma);
+ 		}
+ 		if (ioc->pcie_sgl_dma_pool)
+-			pci_pool_destroy(ioc->pcie_sgl_dma_pool);
++			dma_pool_destroy(ioc->pcie_sgl_dma_pool);
+ 	}
  
--	pirq_router_dev = pci_get_bus_and_slot(rt->rtr_bus, rt->rtr_devfn);
-+	pirq_router_dev = pci_get_domain_bus_and_slot(0, rt->rtr_bus,
-+						      rt->rtr_devfn);
- 	if (!pirq_router_dev) {
- 		DBG(KERN_DEBUG "PCI: Interrupt router not found at "
- 			"%02x:%02x\n", rt->rtr_bus, rt->rtr_devfn);
+ 	if (ioc->config_page) {
+@@ -4204,21 +4204,21 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 
+ 		sz = nvme_blocks_needed * ioc->page_size;
+ 		ioc->pcie_sgl_dma_pool =
+-			pci_pool_create("PCIe SGL pool", ioc->pdev, sz, 16, 0);
++			dma_pool_create("PCIe SGL pool", &ioc->pdev->dev, sz, 16, 0);
+ 		if (!ioc->pcie_sgl_dma_pool) {
+ 			pr_info(MPT3SAS_FMT
+-			    "PCIe SGL pool: pci_pool_create failed\n",
++			    "PCIe SGL pool: dma_pool_create failed\n",
+ 			    ioc->name);
+ 			goto out;
+ 		}
+ 		for (i = 0; i < ioc->scsiio_depth; i++) {
+ 			ioc->scsi_lookup[i].pcie_sg_list.pcie_sgl =
+-					pci_pool_alloc(ioc->pcie_sgl_dma_pool,
++					dma_pool_alloc(ioc->pcie_sgl_dma_pool,
+ 					GFP_KERNEL,
+ 				&ioc->scsi_lookup[i].pcie_sg_list.pcie_sgl_dma);
+ 			if (!ioc->scsi_lookup[i].pcie_sg_list.pcie_sgl) {
+ 				pr_info(MPT3SAS_FMT
+-				    "PCIe SGL pool: pci_pool_alloc failed\n",
++				    "PCIe SGL pool: dma_pool_alloc failed\n",
+ 				    ioc->name);
+ 				goto out;
+ 			}
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.1
