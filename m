@@ -1,61 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 29 Nov 2017 23:08:22 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: linux-pci@vger.kernel.org, Dave Jones <davej@codemonkey.org.uk>,
-        linux-kernel@vger.kernel.org, David Woodhouse <dwmw@amazon.co.uk>
-Subject: Re: [PATCH] PCI: Tone down resource mmap warning
-Message-ID: <20171130050822.GA32384@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171129225708.32271.35467.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171130013801.m4tiq5m47ogw3huk@wfg-t540p.sh.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:40203 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751106AbdKTNTS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:19:18 -0500
+Subject: =?UTF-8?Q?Re:_xhci=5fhcd_HC_died;_cleaning_up_with_TUSB7340_and_?=
+ =?UTF-8?Q?=c2=b5PD720201?=
+To: Roger Quadros <rogerq@ti.com>
+CC: Chris Welch <Chris.Welch@viavisolutions.com>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, Joao Pinto <jpinto@synopsys.com>,
+        KISHON VIJAY ABRAHAM <kishon@ti.com>
+References: <BN6PR18MB124994D85EAC4B5B1AD5EC56866E0@BN6PR18MB1249.namprd18.prod.outlook.com>
+ <3dd7a4fc-da86-03cc-9b01-a0d29dd73230@ti.com>
+ <f57ccfd8-0b99-278c-6c10-474395f96a3c@ti.com>
+ <124458f9-f824-6acb-becb-12d768b6e501@ti.com>
+From: Vignesh R <vigneshr@ti.com>
+Message-ID: <9dcdbc2a-9296-b260-10ed-08fde0c6f67c@ti.com>
+Date: Mon, 20 Nov 2017 18:49:45 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171130013801.m4tiq5m47ogw3huk@wfg-t540p.sh.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <124458f9-f824-6acb-becb-12d768b6e501@ti.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 30, 2017 at 09:38:01AM +0800, Fengguang Wu wrote:
-> This is perhaps the most clean solution. Thank you for the patch!  -fengguang
 
-After thinking about it some more, I think we should just remove the
-printk altogether.  I suspect it was added with the thought that it
-would help debug the e1000e NVRAM corruption problem.  But in general,
-we don't log messages when system calls fail, and I don't know why
-this one should be special.
 
-> On Wed, Nov 29, 2017 at 04:57:08PM -0600, Bjorn Helgaas wrote:
-> >From: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> >When a process tries to mmap more space than is available in a PCI BAR, we
-> >emit a warning and a backtrace.  The mmap fails anyway, so the backtrace is
-> >mainly for debugging.  It seems like overkill now, so reduce this to a
-> >dev_info() and remove the backtrace.
-> >
-> >This was added by b5ff7df3df9e ("Check mapped ranges on sysfs resource
-> >files").
-> >
-> >Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-> >Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >---
-> >drivers/pci/pci-sysfs.c |    6 ++----
-> >1 file changed, 2 insertions(+), 4 deletions(-)
-> >
-> >diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> >index 06c7f0b85cd2..97f071674605 100644
-> >--- a/drivers/pci/pci-sysfs.c
-> >+++ b/drivers/pci/pci-sysfs.c
-> >@@ -1217,11 +1217,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
-> >		return -EINVAL;
-> >
-> >	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS)) {
-> >-		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
-> >+		dev_info(&pdev->dev, "process \"%s\" tried to map 0x%lx bytes at page 0x%lx of BAR %d %pR\n",
-> >			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
-> >-			pci_name(pdev), bar,
-> >-			(u64)pci_resource_start(pdev, bar),
-> >-			(u64)pci_resource_len(pdev, bar));
-> >+			bar, res);
-> >		return -EINVAL;
-> >	}
-> >	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
-> >
+On Monday 20 November 2017 01:31 PM, Roger Quadros wrote:
+[...]
+>>
+>> So, could you try reverting commit 8c934095fa2f3 and 
+>> also apply below patch and let me know if that fixes the issue?
+>>
+>> -----------
+>>
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index e77a4ceed74c..8280abc56f30 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -259,10 +259,17 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>>         u32 reg;
+>>  
+>>         reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+>> +       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>>  
+>>         switch (reg) {
+>>         case MSI:
+>> -               dw_handle_msi_irq(pp);
+>> +               /*
+>> +                * Need to make sure no MSI IRQs are pending before
+>> +                * exiting handler, else the wrapper will not catch new
+>> +                * IRQs. So loop around till dw_handle_msi_irq() returns
+>> +                * IRQ_NONE
+>> +                */
+>> +               while (dw_handle_msi_irq(pp) != IRQ_NONE);
+> 
+> To avoid this kind of looping, shouldn't we be disabling all IRQ events while
+> the interrupt handler is running and enable them just before we return from the hardirq
+> handler?
+
+IIUC, you are saying to disable all MSIs at PCIe designware core level,
+then call dw_handle_msi_irq() and then enable MSIs after hardirq
+returns. But, the problem is if PCIe EP raises another MSI after the
+call to EP's handler but before re-enabling MSIs, then it will be
+ignored as IRQs are not yet enabled.
+Ideally, EP's support Per Vector Masking(PVM) which allow RC to prevent
+EP from sending MSI messages for sometime. But, unfortunately, the cards
+mentioned here don't support this feature.
+
+> 
+> 
+>>                 break;
+>>         case INTA:
+>>         case INTB:
+>> @@ -273,8 +280,6 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+>>                 break;
+>>         }
+>>  
+>> -       dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI, reg);
+>> -
+>>         return IRQ_HANDLED;
+>>  }
+>>
+>>
+>>
+>>
+> 
+
+-- 
+Regards
+Vignesh
