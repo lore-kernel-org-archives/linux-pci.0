@@ -1,61 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48888 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751313AbdK0GUm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 01:20:42 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2 5/7] PCI: add a return type for pci_reset_bridge_secondary_bus()
-Date: Mon, 27 Nov 2017 01:20:26 -0500
-Message-Id: <1511763628-11856-6-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 07/18] PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode
+Date: Mon, 20 Nov 2017 14:32:10 +0100
+Message-Id: <20171120133222.27771-8-niklas.cassel@axis.com>
+In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Getting ready to return an error from pci_reset_bridge_secondary_bus() when
-device is unreachable.
+Refactor the Kconfig and Makefile handling for host/ep mode, since
+the previous handling was a bit unorthodox and would have been a bit
+bloated once more DWC based controllers added support for ep mode.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/pci.c   | 4 +++-
- include/linux/pci.h | 2 +-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/dwc/Kconfig  | 45 ++++++++++++++++++++++-----------------------
+ drivers/pci/dwc/Makefile |  4 +---
+ 2 files changed, 23 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 87e4688..0a9a696 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4031,9 +4031,11 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
-  * Use the bridge control register to assert reset on the secondary bus.
-  * Devices on the secondary bus are left in power-on state.
-  */
--void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
-+int pci_reset_bridge_secondary_bus(struct pci_dev *dev)
- {
- 	pcibios_reset_secondary_bus(dev);
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 113e09440f85..3954353e3e2e 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -15,39 +15,38 @@ config PCIE_DW_EP
+ 	select PCIE_DW
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 354b018..539b3af 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1103,7 +1103,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
- int pci_try_reset_bus(struct pci_bus *bus);
- void pci_reset_secondary_bus(struct pci_dev *dev);
- void pcibios_reset_secondary_bus(struct pci_dev *dev);
--void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
-+int pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+ config PCI_DRA7XX
+-	bool "TI DRA7xx PCIe controller"
+-	depends on SOC_DRA7XX || COMPILE_TEST
+-	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+-	depends on OF && HAS_IOMEM && TI_PIPE3
+-	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC. There
+-	 are two instances of PCIe controller in DRA7xx. This controller can
+-	 work either as EP or RC. In order to enable host-specific features
+-	 PCI_DRA7XX_HOST must be selected and in order to enable device-
+-	 specific features PCI_DRA7XX_EP must be selected. This uses
+-	 the DesignWare core.
+-
+-if PCI_DRA7XX
++	bool
+ 
+ config PCI_DRA7XX_HOST
+-	bool "PCI DRA7xx Host Mode"
+-	depends on PCI
+-	depends on PCI_MSI_IRQ_DOMAIN
++	bool "TI DRA7xx PCIe controller Host Mode"
++	depends on SOC_DRA7XX || COMPILE_TEST
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
++	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	select PCIE_DW_HOST
++	select PCI_DRA7XX
+ 	default y
+ 	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+-	 host mode.
++	  Enables support for the PCIe controller in the DRA7xx SoC to work in
++	  host mode. There are two instances of PCIe controller in DRA7xx.
++	  This controller can work either as EP or RC. In order to enable
++	  host-specific features PCI_DRA7XX_HOST must be selected and in order
++	  to enable device-specific features PCI_DRA7XX_EP must be selected.
++	  This uses the DesignWare core.
+ 
+ config PCI_DRA7XX_EP
+-	bool "PCI DRA7xx Endpoint Mode"
++	bool "TI DRA7xx PCIe controller Endpoint Mode"
++	depends on SOC_DRA7XX || COMPILE_TEST
+ 	depends on PCI_ENDPOINT
++	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	select PCIE_DW_EP
++	select PCI_DRA7XX
+ 	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC to work in
+-	 endpoint mode.
+-
+-endif
++	  Enables support for the PCIe controller in the DRA7xx SoC to work in
++	  endpoint mode. There are two instances of PCIe controller in DRA7xx.
++	  This controller can work either as EP or RC. In order to enable
++	  host-specific features PCI_DRA7XX_HOST must be selected and in order
++	  to enable device-specific features PCI_DRA7XX_EP must be selected.
++	  This uses the DesignWare core.
+ 
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index 41ba499c96ee..a9d8a6fb48e3 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -3,9 +3,7 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+ obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+ obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+-ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+-        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+-endif
++obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
 -- 
-1.9.1
+2.14.2
