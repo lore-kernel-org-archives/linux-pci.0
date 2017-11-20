@@ -1,83 +1,87 @@
-Return-Path: <SRS0=Ba5j=CI=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=Ba5j=CI=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
- drivers
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
- <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
- <20171109150528.GA7629@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>,
-        Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <e1c5d6fe-3709-1931-dbac-010ac7751ba2@ti.com>
-Date: Fri, 10 Nov 2017 11:16:24 +0530
+Return-Path: <SRS0=Wo73=CS=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=Wo73=CS=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 20 Nov 2017 17:07:08 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thierry Reding <treding@nvidia.com>
+Cc: Robin Murphy <robin.murphy@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+	Simon Horman <horms@verge.net.au>, ryder.lee@mediatek.com
+Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
+Message-ID: <20171120170708.GA1941@red-moon>
+References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
+ <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
+ <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
+ <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
+ <20171110112201.GA25235@red-moon>
+ <3887d62c-98bb-04d5-5b40-96d5b7b43e63@arm.com>
+ <20171110130704.GA31316@ulmo>
 MIME-Version: 1.0
-In-Reply-To: <20171109150528.GA7629@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171110130704.GA31316@ulmo>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+[+ryder]
 
-On Thursday 09 November 2017 08:35 PM, Bjorn Helgaas wrote:
-> On Thu, Nov 09, 2017 at 11:28:36AM +0530, Kishon Vijay Abraham I wrote:
->> Hi Bjorn,
->>
->> On Thursday 09 November 2017 01:56 AM, Bjorn Helgaas wrote:
->>> On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
->>>> From: Bjorn Helgaas <bhelgaas@google.com>
->>>>
->>>> Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
->>>> the endpoint driver framework.
->>>>
->>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>>
->>> This is on my for-linus branch, and I intend to merge it for v4.14.
->>
->> There is already an entry for PCI endpoint in MAINTAINERS file. Can Lorenzo be
->> added there?
->>
->> PCI ENDPOINT SUBSYSTEM
->> M:      Kishon Vijay Abraham I <kishon@ti.com>
->> L:      linux-pci@vger.kernel.org
->> T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
->> S:      Supported
->> F:      drivers/pci/endpoint/
->> F:      drivers/misc/pci_endpoint_test.c
->> F:      tools/pci/
-> 
-> Right, thanks, I forgot all about this separate entry.  I added Lorenzo
-> there, resulting in the patch below.
-> 
-> My practice has been that all the PCI patches (everything in
-> drivers/pci plus some include and x86/pci stuff) have been merged via
-> my tree.
-> 
-> This includes things in drivers/pci/{host,dwc,endpoint,switch}, which
-> are non-core things and usually specific to a chipset.  I try to
-> ensure they have individual maintainers designated, and I ask for
-> their acks for non-trivial changes because I have no specs and no
-> hardware for testing them.  But I think it's still good to have one
-> person look over them all to try to keep some consistency across them
-> because they are all quite similar.
-> 
-> So my hope is that Lorenzo can take over that oversight role from me,
-> not that he would replace any of those designated maintainers.
-> 
-> Ideally, this will be transparent to patch submitters except that they
-> should add Lorenzo to the "To:" line (keeping linux-pci and other
-> interested parties).
+On Fri, Nov 10, 2017 at 02:07:05PM +0100, Thierry Reding wrote:
 
-Makes sense.
+[...]
 
-I'm also thinking if we should change the tree in PCI ENDPOINT SUBSYSTEM to
-git git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git or maybe
-git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/?
+> > The really neat version is to take a known non-memory physical address like
+> > the host controller's own MMIO region, which has no legitimate reason to
+> > ever be used as a DMA address. pcie-mediatek almost gets this right, but by
+> > using virt_to_phys() on an ioremapped address they end up with nonsense
+> > rather than the correct address (although realistically you would have to be
+> > extremely unlucky for said nonsense to collide with a real DMA address given
+> > to a PCI endpoint later). Following on from above, dma_map_resource() would
+> > be the foolproof way to get that right.
+> 
+> Yes, that was our intention as well. Our initial plan was to use an
+> address from the PCI aperture within Tegra that wasn't being used for
+> any other purpose.
 
-since most of the endpoint patches also deals with modifying the controller
-drivers.
+Hi Thierry,
 
-Thanks
-Kishon
+to wrap up this thread, why an address from the PCI aperture and
+not a host bridge register ?
+
+I CC'ed Ryder so that he can explain to me please what:
+
+PCIE_MSI_VECTOR and PCIE_IMSI_ADDR offsets in:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/host/pcie-mediatek.c?h=v4.14
+
+register space represent (IIUC the driver uses:
+
+virt_to_phys(port->base + PCIE_MSI_VECTOR);
+
+as MSI doorbell address, which is wrong anyway as Robin explained, just
+want to understand how that register was chosen - it is never written or
+read in the driver so it is hard to figure that out) to understand
+whether the approach can be replicated instead of relying on GFP_DMA
+for pages allocation.
+
+Thanks,
+Lorenzo
+
+> However, we ran into some odd corner cases where this wasn't working
+> as expected. As a temporary solution we wanted to move to GFP_DMA32
+> (or GFP_DMA) in order to support 32-bit only MSI endpoints.
+> 
+> Eventually we'll want to get rid of the allocation altogether, we just
+> need to find a set of values that work reliably. In the meantime, it
+> looks as though GFP_DMA would be the right solution as long as we have
+> to stick with __get_free_pages().
+> 
+> Alternatively, since we've already verified that the MSI writes are
+> never committed to memory, we could choose some random address pointing
+> to system memory as well, but I'm reluctant to do that because it could
+> end up being confusing for users (and developers) to see some random
+> address showing up somewhere. A physical address such as the beginning
+> of system memory should always work and might be unique enough to
+> indicate that it is special.
+> 
+> Thierry
