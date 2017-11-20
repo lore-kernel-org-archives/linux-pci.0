@@ -1,109 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	okaya@codeaurora.org,
-	timur@codeaurora.org
-Subject: [PATCH v2 4/4] PCI/AER: Dont do recovery when DPC is enabled
-Date: Wed, 15 Nov 2017 10:26:48 +0530
-Message-Id: <1510721808-27164-5-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
-References: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dongdong Liu <liudongdong3@huawei.com>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:39611 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751151AbdKTNd1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:33:27 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 09/18] PCI: dwc: dra7xx: Help compiler to remove unused code
+Date: Mon, 20 Nov 2017 14:32:12 +0100
+Message-Id: <20171120133222.27771-10-niklas.cassel@axis.com>
+In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI Express Base Specification, Rev. 4.0 Version 0.9
-6.2.10: Downstream Port Containment (DPC)
+The dra7xx driver supports both host and ep mode.
+When enabling support for only one of the modes, help the compiler
+to remove code for the mode that we have not enabled in the driver.
 
-DPC is an optional normative feature of a Downstream Port. DPC halts PCI
-Express traffic below a Downstream Port after an unmasked uncorrectable
-error is detected at or below the Port, avoiding the potential spread of
-any data corruption, and permitting error recovery if supported by
-software
+By adding if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) return -ENODEV;
+anything after that statement will get silently dropped by the compiler,
+including static functions and structures that are referenced indirectly
+from there.
 
-Triggering DPC disables its Link by directing the LTSSM to the Disabled
-state. Once the LTSSM reaches the Disabled state, it remains in that
-state until the DPC Trigger Status bit is Cleared
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-So when DPC service is active and registered to port driver, AER should
-not attempt to recover, since DPC will be removing downstream devices,
-and do the recovery.
-
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
-
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 7448052..a9108ea 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -482,6 +482,27 @@ static pci_ers_result_t reset_link(struct pci_dev *dev)
- }
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 07c74ae3614e..224ff8affdce 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -694,6 +694,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
  
- /**
-+ * pcie_port_query_uptream_service - query upstream service
-+ * @dev: pointer to a pci_dev data structure of agent detecting an error
-+ * @service: service to be queried
-+ *
-+ * Invoked to know the status of the service for pci device.
-+ */
-+static bool pcie_port_query_uptream_service(struct pci_dev *dev, u32 service)
-+{
-+	struct pci_dev *upstream_dev = dev;
+ 	switch (mode) {
+ 	case DW_PCIE_RC_TYPE:
++		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
++			ret = -ENODEV;
++			goto err_gpio;
++		}
 +
-+	do {
-+		if (pcie_port_query_service(upstream_dev, service))
-+			return true;
-+		upstream_dev = pcie_port_upstream_bridge(upstream_dev);
-+	} while (upstream_dev);
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_RC);
+ 		ret = dra7xx_add_pcie_port(dra7xx, pdev);
+@@ -701,6 +706,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 			goto err_gpio;
+ 		break;
+ 	case DW_PCIE_EP_TYPE:
++		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_EP)) {
++			ret = -ENODEV;
++			goto err_gpio;
++		}
 +
-+	return false;
-+}
-+
-+
-+/**
-  * do_recovery - handle nonfatal/fatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-  * @severity: error severity type
-@@ -495,6 +516,18 @@ static void do_recovery(struct pci_dev *dev, int severity)
- 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
- 	enum pci_channel_state state;
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
  
-+	/*
-+	 * If DPC is enabled, there is no need to attempt recovery.
-+	 * Since DPC disables its Link by directing the LTSSM to
-+	 * the Disabled state.
-+	 * DPC driver will take care of the recovery, there is no need
-+	 * for AER driver to race.
-+	 */
-+	if (pcie_port_query_uptream_service(dev, PCIE_PORT_SERVICE_DPC)) {
-+		dev_info(&dev->dev, "AER: Device recovery to be done by DPC\n");
-+		return;
-+	}
-+
- 	if (severity == AER_FATAL)
- 		state = pci_channel_io_frozen;
- 	else
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.2
