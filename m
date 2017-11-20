@@ -1,225 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:55169 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751236AbdKMHAi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 02:00:38 -0500
-Date: Mon, 13 Nov 2017 08:00:34 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: rcar: Add the suspend/resume for pcie-rcar
- driver
-Message-ID: <20171113070034.f546eqqbxzab2s2d@verge.net.au>
-References: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
- <20171108092806.10335-3-marek.vasut+renesas@gmail.com>
- <20171110090918.jirrnejohfdpcxbo@verge.net.au>
- <22cec1d9-dc11-e210-d527-0f39f7b2bccd@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:54950 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752816AbdKTVhN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Nov 2017 16:37:13 -0500
+Date: Mon, 20 Nov 2017 15:37:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vidya Sagar <vidyas@nvidia.com>
+Cc: treding@nvidia.com, bhelgaas@google.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com
+Subject: Re: [PATCH V3 3/3] PCI: tegra: Enable ASPM-L1 capability
+ advertisement
+Message-ID: <20171120213710.GE16362@bhelgaas-glaptop.roam.corp.google.com>
+References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+ <1510492674-12786-4-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <22cec1d9-dc11-e210-d527-0f39f7b2bccd@gmail.com>
+In-Reply-To: <1510492674-12786-4-git-send-email-vidyas@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 10:53:07PM +0100, Marek Vasut wrote:
-> On 11/10/2017 10:09 AM, Simon Horman wrote:
-> > On Wed, Nov 08, 2017 at 10:28:06AM +0100, Marek Vasut wrote:
-> >> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> >>
-> >> This adds the suspend/resume supports for pcie-rcar. The resume handler
-> >> reprogram the hardware based on the software state kept in specific
-> >> device structures. Also it doesn't need to save any registers.
-> >>
-> >> Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> >> Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
-> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> >> Cc: Simon Horman <horms+renesas@verge.net.au>
-> >> Cc: Wolfram Sang <wsa@the-dreams.de>
-> >> Cc: linux-renesas-soc@vger.kernel.org
-> >> ---
-> >>  drivers/pci/host/pcie-rcar.c | 86 +++++++++++++++++++++++++++++++++++++++-----
-> >>  1 file changed, 78 insertions(+), 8 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> >> index 2b28292de93a..7a9e30185c79 100644
-> >> --- a/drivers/pci/host/pcie-rcar.c
-> >> +++ b/drivers/pci/host/pcie-rcar.c
-> >> @@ -471,6 +471,36 @@ static void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
-> >>  		 (macsr & LINK_SPEED) == LINK_SPEED_5_0GTS ? "5" : "2.5");
-> >>  }
-> >>  
-> >> +static int rcar_pcie_hw_enable(struct rcar_pcie *pcie)
-> > 
-> > This function always returns 0 and the value is not checked by the caller.
-> > Can we change the return type to void?
-> 
-> Yes, done
-> 
-> >> +{
-> >> +	struct resource_entry *win;
-> >> +	LIST_HEAD(res);
-> >> +	int i = 0;
-> >> +
-> >> +	/* Try setting 5 GT/s link speed */
-> > 
-> > What if it fails?
-> 
-> If it fails, we're back at 2.5 GT/s . The rcar_pcie_force_speedup()
-> first checks if the PCIe IP can do 5 GT/s at all. Only if so, tries to
-> initiate transition to 5 GT/s operation , checks whether that succeeded
-> and if it failed, falls back to 2.5 GT/s .
+s/Enable ASPM-L1 capability advertisement/
+ /Advertise ASPM L1 PM Substates support/
 
-Thanks, got it.
+On Sun, Nov 12, 2017 at 06:47:54PM +0530, Vidya Sagar wrote:
+> Enables advertisement of ASPM-L1 support in capability
+> registers of applicable Tegra chips
 
-> >> +	rcar_pcie_force_speedup(pcie);
-> >> +
-> >> +	/* Setup PCI resources */
-> >> +	resource_list_for_each_entry(win, &pcie->resources) {
-> >> +		struct resource *res = win->res;
-> >> +
-> >> +		if (!res->flags)
-> >> +			continue;
-> >> +
-> >> +		switch (resource_type(res)) {
-> >> +		case IORESOURCE_IO:
-> >> +		case IORESOURCE_MEM:
-> >> +			rcar_pcie_setup_window(i, pcie, res);
-> >> +			i++;
-> >> +			break;
-> >> +		default:
-> >> +			continue;
-> > 
-> > Can the default case be omitted?
-> 
-> Sure
-> 
-> >> +		}
-> >> +	}
-> >> +
-> >> +	return 0;
-> >> +}
-> >> +
-> >>  static int rcar_pcie_enable(struct rcar_pcie *pcie)
-> >>  {
-> >>  	struct device *dev = pcie->dev;
-> >> @@ -872,11 +902,25 @@ static const struct irq_domain_ops msi_domain_ops = {
-> >>  	.map = rcar_msi_map,
-> >>  };
-> >>  
-> >> +static void rcar_pcie_hw_enable_msi(struct rcar_pcie *pcie)
-> >> +{
-> >> +	struct rcar_msi *msi = &pcie->msi;
-> >> +	unsigned long base;
-> >> +
-> >> +	/* setup MSI data target */
-> >> +	base = virt_to_phys((void *)msi->pages);
-> > 
-> > Why do you need to cast to void *?
-> > I expect such casting can be done implicitly.
-> 
-> Because __get_free_pages() returns unsigned long and that's what's used
-> to assign msi->pages . And virt_to_phys() expects void * instead, thus
-> the cast.
+Actually, I'm a little confused about whether this has to do with ASPM
+L1 support (which would be advertised in the Link Capabilities
+register) or the ASPM L1 Substates support (which would be advertised
+in the L1 PM Substates Capabilities register)?
 
-Right, but I don't think one should ever need to explicitly cast
-to or from void *. What mean is, can you just remove "(void *)" without
-changing any behaviour?
-
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+> V2:
+> * no change in this patch
 > 
-> >> +
-> >> +	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-> >> +	rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
-> >> +
-> >> +	/* enable all MSI interrupts */
-> >> +	rcar_pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-> >> +}
-> >> +
-> >>  static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
-> >>  {
-> >>  	struct device *dev = pcie->dev;
-> >>  	struct rcar_msi *msi = &pcie->msi;
-> >> -	unsigned long base;
-> >>  	int err, i;
-> >>  
-> >>  	mutex_init(&msi->lock);
-> >> @@ -915,13 +959,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
-> >>  
-> >>  	/* setup MSI data target */
-> >>  	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> >> -	base = virt_to_phys((void *)msi->pages);
-> >> -
-> >> -	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-> >> -	rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
-> >> -
-> >> -	/* enable all MSI interrupts */
-> >> -	rcar_pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-> >> +	rcar_pcie_hw_enable_msi(pcie);
-> >>  
-> >>  	return 0;
-> >>  
-> >> @@ -1202,6 +1240,37 @@ static int rcar_pcie_probe(struct platform_device *pdev)
-> >>  	return err;
-> >>  }
-> >>  
-> >> +static int rcar_pcie_resume(struct device *dev)
-> >> +{
-> >> +	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-> >> +	unsigned int data;
-> >> +	int err;
-> >> +	int (*hw_init_fn)(struct rcar_pcie *);
-> > 
-> > Please sort local variables in reverse xmas tree order.
+> V3:
+> * no change in this patch
 > 
-> OK
+>  drivers/pci/host/pci-tegra.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
-> >> +
-> >> +	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
-> >> +	if (err)
-> >> +		return 0;
-> >> +
-> >> +	/* Failure to get a link might just be that no cards are inserted */
-> >> +	hw_init_fn = of_device_get_match_data(dev);
-> >> +	err = hw_init_fn(pcie);
-> >> +	if (err) {
-> >> +		dev_info(dev, "PCIe link down\n");
-> >> +		return 0;
-> >> +	}
-> >> +
-> >> +	data = rcar_pci_read_reg(pcie, MACSR);
-> >> +	dev_info(dev, "PCIe x%d: link up\n", (data >> 20) & 0x3f);
-> >> +
-> >> +	/* Enable MSI */
-> >> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> >> +		rcar_pcie_hw_enable_msi(pcie);
-> >> +
-> >> +	rcar_pcie_hw_enable(pcie);
-> >> +
-> >> +	return 0;
-> >> +}
-> >> +
-> >>  static int rcar_pcie_resume_noirq(struct device *dev)
-> >>  {
-> >>  	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-> >> @@ -1218,6 +1287,7 @@ static int rcar_pcie_resume_noirq(struct device *dev)
-> >>  }
-> >>  
-> >>  static const struct dev_pm_ops rcar_pcie_pm_ops = {
-> >> +	SET_SYSTEM_SLEEP_PM_OPS(NULL, rcar_pcie_resume)
-> >>  	.resume_noirq = rcar_pcie_resume_noirq,
-> >>  };
-> >>  
-> >> -- 
-> >> 2.11.0
-> >>
-> 
-> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 29ee4bb0b7c6..fb61202ee60f 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -250,6 +250,9 @@
+>  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+>  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
+>  
+> +#define RP_VEND_XP1	0xf04
+> +#define RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT	BIT(21)
+> +
+>  #define RP_VEND_CTL0	0xf44
+>  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+>  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
+> @@ -351,6 +354,7 @@ struct tegra_pcie_soc {
+>  	bool RAW_violation_fixup;
+>  	bool program_deskew_time;
+>  	bool updateFC_threshold;
+> +	bool has_aspm_l1;
+>  	bool has_aspm_l1ss;
+>  	bool l1ss_rp_wake_fixup;
+>  };
+> @@ -2214,6 +2218,13 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+>  	value = readl(port->base + RP_VEND_CTL1);
+>  	value |= RP_VEND_CTL1_ERPT;
+>  	writel(value, port->base + RP_VEND_CTL1);
+> +
+> +	if (port->pcie->soc->has_aspm_l1) {
+> +		/* Advertise ASPM-L1 state capability*/
+> +		value = readl(port->base + RP_VEND_XP1);
+> +		value |= RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT;
+> +		writel(value, port->base + RP_VEND_XP1);
+> +	}
+>  }
+>  
+>  static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+> @@ -2458,6 +2469,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+> +	.has_aspm_l1 = false,
+>  	.has_aspm_l1ss = false,
+>  	.l1ss_rp_wake_fixup = false,
+>  };
+> @@ -2481,6 +2493,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+> +	.has_aspm_l1 = true,
+>  	.has_aspm_l1ss = false,
+>  	.l1ss_rp_wake_fixup = false,
+>  };
+> @@ -2503,6 +2516,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>  	.RAW_violation_fixup = true,
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+> +	.has_aspm_l1 = true,
+>  	.has_aspm_l1ss = false,
+>  	.l1ss_rp_wake_fixup = false,
+>  };
+> @@ -2533,6 +2547,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = true,
+>  	.updateFC_threshold = true,
+> +	.has_aspm_l1 = true,
+>  	.has_aspm_l1ss = true,
+>  	.l1ss_rp_wake_fixup = true,
+>  };
+> @@ -2556,6 +2571,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>  	.RAW_violation_fixup = false,
+>  	.program_deskew_time = false,
+>  	.updateFC_threshold = false,
+> +	.has_aspm_l1 = true,
+>  	.has_aspm_l1ss = true,
+>  	.l1ss_rp_wake_fixup = false,
+>  };
 > -- 
-> Best regards,
-> Marek Vasut
+> 2.7.4
 > 
