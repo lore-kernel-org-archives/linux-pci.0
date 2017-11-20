@@ -1,47 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:50376 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751682AbdKMIO3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 03:14:29 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171110215411.31912-1-marek.vasut+renesas@gmail.com>
-References: <20171110215411.31912-1-marek.vasut+renesas@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 13 Nov 2017 09:14:27 +0100
-Message-ID: <CAMuHMdU-nxv9WAgi2sD9CAwTG3yBD=H_uPtousLYxHScoK=k3g@mail.gmail.com>
-Subject: Re: [PATCH V3] PCI: rcar: Use runtime PM to control controller clock
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:42224 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752406AbdKTTdL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 14:33:11 -0500
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v15 3/5] hinic: Replace PCI pool old API
+Date: Mon, 20 Nov 2017 20:32:45 +0100
+Message-Id: <20171120193247.8187-4-romain.perier@gmail.com>
+In-Reply-To: <20171120193247.8187-1-romain.perier@gmail.com>
+References: <20171120193247.8187-1-romain.perier@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 10:54 PM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
->
-> The controller clock can be switched off during suspend/resume,
-> let runtime PM take care of that.
->
-> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
-> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+From: Romain Perier <romain.perier@collabora.com>
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
 
-Gr{oetje,eeting}s,
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
+---
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++++-----
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
+index 7d95f0866fb0..28a81ac97af5 100644
+--- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
++++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
+@@ -143,7 +143,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ 	struct hinic_hwif *hwif = cmdqs->hwif;
+ 	struct pci_dev *pdev = hwif->pdev;
+ 
+-	cmdq_buf->buf = pci_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
++	cmdq_buf->buf = dma_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
+ 				       &cmdq_buf->dma_addr);
+ 	if (!cmdq_buf->buf) {
+ 		dev_err(&pdev->dev, "Failed to allocate cmd from the pool\n");
+@@ -161,7 +161,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ void hinic_free_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ 			 struct hinic_cmdq_buf *cmdq_buf)
+ {
+-	pci_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
++	dma_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
+ }
+ 
+ static unsigned int cmdq_wqe_size_from_bdlen(enum bufdesc_len len)
+@@ -875,7 +875,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
+ 	int err;
+ 
+ 	cmdqs->hwif = hwif;
+-	cmdqs->cmdq_buf_pool = pci_pool_create("hinic_cmdq", pdev,
++	cmdqs->cmdq_buf_pool = dma_pool_create("hinic_cmdq", &pdev->dev,
+ 					       HINIC_CMDQ_BUF_SIZE,
+ 					       HINIC_CMDQ_BUF_SIZE, 0);
+ 	if (!cmdqs->cmdq_buf_pool)
+@@ -916,7 +916,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
+ 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
+ 
+ err_saved_wqs:
+-	pci_pool_destroy(cmdqs->cmdq_buf_pool);
++	dma_pool_destroy(cmdqs->cmdq_buf_pool);
+ 	return err;
+ }
+ 
+@@ -942,5 +942,5 @@ void hinic_free_cmdqs(struct hinic_cmdqs *cmdqs)
+ 
+ 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
+ 
+-	pci_pool_destroy(cmdqs->cmdq_buf_pool);
++	dma_pool_destroy(cmdqs->cmdq_buf_pool);
+ }
+diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
+index b35583400cb6..23f8d39eab68 100644
+--- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
++++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
+@@ -157,7 +157,7 @@ struct hinic_cmdq {
+ struct hinic_cmdqs {
+ 	struct hinic_hwif       *hwif;
+ 
+-	struct pci_pool         *cmdq_buf_pool;
++	struct dma_pool         *cmdq_buf_pool;
+ 
+ 	struct hinic_wq         *saved_wqs;
+ 
+-- 
+2.14.1
