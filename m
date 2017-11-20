@@ -1,199 +1,290 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:39638 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751123AbdKTNdm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:33:42 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Subject: Re: [PATCH v3 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-Date: Fri, 17 Nov 2017 00:07:59 +0100
-Message-ID: <2654404.6YT5rmSnae@aspire.rjw.lan>
-In-Reply-To: <CAPDyKFpzSd4zwW_awuxuim0gzyKV5s9dm66X+szsSUKRnBakbA@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <5556673.MXo6XDN1f4@aspire.rjw.lan> <CAPDyKFpzSd4zwW_awuxuim0gzyKV5s9dm66X+szsSUKRnBakbA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@axis.com
+Subject: [PATCH v5 14/18] PCI: dwc: artpec6: Add support for endpoint mode
+Date: Mon, 20 Nov 2017 14:32:17 +0100
+Message-Id: <20171120133222.27771-15-niklas.cassel@axis.com>
+In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, November 16, 2017 4:10:16 PM CET Ulf Hansson wrote:
-> On 12 November 2017 at 01:37, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >
-> > Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
-> > instruct the PM core and middle-layer (bus type, PM domain, etc.)
-> > code that it is desirable to leave the device in runtime suspend
-> > after system-wide transitions to the working state (for example,
-> > the device may be slow to resume and it may be better to avoid
-> > resuming it right away).
-> >
-> > Generally, the middle-layer code involved in the handling of the
-> > device is expected to indicate to the PM core whether or not the
-> > device may be left in suspend with the help of the device's
-> > power.may_skip_resume status bit.  That has to happen in the "noirq"
-> > phase of the preceding system suspend (or analogous) transition.
-> > The middle layer is then responsible for handling the device as
-> > appropriate in its "noirq" resume callback which is executed
-> > regardless of whether or not the device may be left suspended, but
-> > the other resume callbacks (except for ->complete) will be skipped
-> > automatically by the core if the device really can be left in
-> > suspend.
-> >
-> > The additional power.must_resume status bit introduced for the
-> > implementation of this mechanisn is used internally by the PM core
-> > to track the requirement to resume the device (which may depend on
-> > its children etc).
-> >
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > ---
-> >
-> > v2 -> v3: Take dev->power.usage_count when updating power.must_resume in
-> >           __device_suspend_noirq().
-> >
-> > ---
-> >  Documentation/driver-api/pm/devices.rst |   24 ++++++++++-
-> >  drivers/base/power/main.c               |   66 +++++++++++++++++++++++++++++---
-> >  drivers/base/power/runtime.c            |    9 ++--
-> >  include/linux/pm.h                      |   14 +++++-
-> >  include/linux/pm_runtime.h              |    9 ++--
-> >  5 files changed, 104 insertions(+), 18 deletions(-)
-> >
-> > Index: linux-pm/include/linux/pm.h
-> > ===================================================================
-> > --- linux-pm.orig/include/linux/pm.h
-> > +++ linux-pm/include/linux/pm.h
-> > @@ -559,6 +559,7 @@ struct pm_subsys_data {
-> >   * NEVER_SKIP: Do not skip system suspend/resume callbacks for the device.
-> >   * SMART_PREPARE: Check the return value of the driver's ->prepare callback.
-> >   * SMART_SUSPEND: No need to resume the device from runtime suspend.
-> > + * LEAVE_SUSPENDED: Avoid resuming the device during system resume if possible.
-> >   *
-> >   * Setting SMART_PREPARE instructs bus types and PM domains which may want
-> >   * system suspend/resume callbacks to be skipped for the device to return 0 from
-> > @@ -572,10 +573,14 @@ struct pm_subsys_data {
-> >   * necessary from the driver's perspective.  It also may cause them to skip
-> >   * invocations of the ->suspend_late and ->suspend_noirq callbacks provided by
-> >   * the driver if they decide to leave the device in runtime suspend.
-> > + *
-> > + * Setting LEAVE_SUSPENDED informs the PM core and middle-layer code that the
-> > + * driver prefers the device to be left in runtime suspend after system resume.
-> >   */
-> 
-> Question: Can LEAVE_SUSPENDED and NEVER_SKIP be valid combination? I
-> guess not!? Should we validate for wrong combinations?
+The PCIe controller integrated in ARTPEC-6 SoCs is capable of operating in
+endpoint mode. Add endpoint mode support to the artpec6 driver.
 
-Why not?  There's no real overlap between them.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/Kconfig        |  23 +++++--
+ drivers/pci/dwc/pcie-artpec6.c | 152 +++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 164 insertions(+), 11 deletions(-)
 
-> 
-> [...]
-> 
-> >  /**
-> >   * __device_suspend_noirq - Execute a "noirq suspend" callback for given device.
-> >   * @dev: Device to handle.
-> > @@ -1127,10 +1161,28 @@ static int __device_suspend_noirq(struct
-> >         }
-> >
-> >         error = dpm_run_callback(callback, dev, state, info);
-> > -       if (!error)
-> > -               dev->power.is_noirq_suspended = true;
-> > -       else
-> > +       if (error) {
-> >                 async_error = error;
-> > +               goto Complete;
-> > +       }
-> > +
-> > +       dev->power.is_noirq_suspended = true;
-> > +
-> > +       if (dev_pm_test_driver_flags(dev, DPM_FLAG_LEAVE_SUSPENDED)) {
-> > +               /*
-> > +                * The only safe strategy here is to require that if the device
-> > +                * may not be left in suspend, resume callbacks must be invoked
-> > +                * for it.
-> > +                */
-> > +               dev->power.must_resume = dev->power.must_resume ||
-> > +                                       !dev->power.may_skip_resume ||
-> > +                                       atomic_read(&dev->power.usage_count);
-> 
-> dev->power.usage_count is always > 0 at this point, meaning that
-> dev->power.must_resume always becomes true. :-)
-> 
-> You should rather use "atomic_read(&dev->power.usage_count) > 1".
-
-Right, thanks.  I tend to forget about that.
-
-> > +       } else {
-> > +               dev->power.must_resume = true;
-> > +       }
-> > +
-> > +       if (dev->power.must_resume)
-> > +               dpm_superior_set_must_resume(dev);
-> >
-> >  Complete:
-> >         complete_all(&dev->power.completion);
-> > @@ -1487,6 +1539,9 @@ static int __device_suspend(struct devic
-> >                 dev->power.direct_complete = false;
-> >         }
-> >
-> > +       dev->power.may_skip_resume = false;
-> > +       dev->power.must_resume = false;
-> > +
-> 
-> First, these assignment could be bypassed if the direct_complete path
-> is used. Perhaps it's more robust to reset these flags already in
-> device_prepare().
-
-In the direct-complete case may_skip_resume doesn't matter.
-
-must_resume should be set to "false", however, so that parents of
-direct-complete devices may be left in suspend (in case they don't
-fall under direct-complete themselves), so good catch.
-
-But it is sufficient to do that before the power.direct_complete check above. :-)
-
-> Second, have you considered setting the default value of
-> dev->power.may_skip_resume to true?
-
-Yes.
-
-> That would means the subsystem
-> instead need to implement an opt-out method. I am thinking that it may
-> not be an issue, since we anyway at this point, don't have drivers
-> using the LEAVE_SUSPENDED flag.
-
-Opt-out doesn't work because of the need to invoke the "noirq" callbacks.
-
-> [...]
-> 
-> > +However, it may be desirable to leave some devices in runtime suspend after
-> > +system transitions to the working state and device drivers can use the
-> > +``DPM_FLAG_LEAVE_SUSPENDED`` flag to indicate to the PM core (and middle-layer
-> > +code) that this is the case.  Whether or not the devices will actually be left
-> > +in suspend may depend on their state before the given system suspend-resume
-> > +cycle and on the type of the system transition under way.  In particular,
-> > +devices are not left suspended if that transition is a restore from hibernation,
-> > +as device states are not guaranteed to be reflected by the information stored in
-> > +the hibernation image in that case.
-> > +
-> > +The middle-layer code involved in the handling of the device has to indicate to
-> > +the PM core if the device may be left in suspend with the help of its
-> > +:c:member:`power.may_skip_resume` status bit.  That has to happen in the "noirq"
-> > +phase of the preceding system-wide suspend (or analogous) transition.  The
-> 
-> Does it have to be managed in the "noirq" phase? Wouldn't be perfectly
-> okay do this in the suspend and suspend_late phases as well?
-
-The wording is slightly misleading I think.
-
-In fact technically may_skip_resume may be set earlier, but the core checks it
-in the "noirq" phase only anyway.
-
-Thanks,
-Rafael
-
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 3954353e3e2e..0fb96c7754de 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -148,15 +148,28 @@ config PCIE_ARMADA_8K
+ 	  DesignWare core functions to implement the driver.
+ 
+ config PCIE_ARTPEC6
+-	bool "Axis ARTPEC-6 PCIe controller"
+-	depends on PCI
++	bool
++
++config PCIE_ARTPEC6_HOST
++	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+ 	depends on MACH_ARTPEC6
+-	depends on PCI_MSI_IRQ_DOMAIN
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
++	select PCIE_ARTPEC6
++	help
++	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
++	  host mode. This uses the DesignWare core.
++
++config PCIE_ARTPEC6_EP
++	bool "Axis ARTPEC-6 PCIe controller Endpoint Mode"
++	depends on MACH_ARTPEC6
++	depends on PCI_ENDPOINT
++	select PCIE_DW_EP
++	select PCIE_ARTPEC6
+ 	help
+-	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+-	  SoCs.  This PCIe controller uses the DesignWare core.
++	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
++	  endpoint mode. This uses the DesignWare core.
+ 
+ config PCIE_KIRIN
+ 	depends on OF && ARM64
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index b2783b475c2a..e7de4e4649eb 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -13,6 +13,7 @@
+ #include <linux/delay.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/of_device.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/resource.h>
+@@ -30,8 +31,15 @@ struct artpec6_pcie {
+ 	struct dw_pcie		*pci;
+ 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
+ 	void __iomem		*phy_base;	/* DT phy */
++	enum dw_pcie_device_mode mode;
+ };
+ 
++struct artpec_pcie_of_data {
++	enum dw_pcie_device_mode mode;
++};
++
++static const struct of_device_id artpec6_pcie_of_match[];
++
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET			0x700
+ 
+@@ -40,6 +48,7 @@ struct artpec6_pcie {
+ #define  PCIECFG_DBG_OEN		BIT(24)
+ #define  PCIECFG_CORE_RESET_REQ		BIT(21)
+ #define  PCIECFG_LTSSM_ENABLE		BIT(20)
++#define  PCIECFG_DEVICE_TYPE_MASK	GENMASK(19, 16)
+ #define  PCIECFG_CLKREQ_B		BIT(11)
+ #define  PCIECFG_REFCLK_ENABLE		BIT(10)
+ #define  PCIECFG_PLL_ENABLE		BIT(9)
+@@ -90,6 +99,22 @@ static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ 	return 0;
+ }
+ 
++static void artpec6_pcie_stop_link(struct dw_pcie *pci)
++{
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	u32 val;
++
++	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++	val &= ~PCIECFG_LTSSM_ENABLE;
++	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++}
++
++static const struct dw_pcie_ops dw_pcie_ops = {
++	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++	.start_link = artpec6_pcie_establish_link,
++	.stop_link = artpec6_pcie_stop_link,
++};
++
+ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+ {
+ 	u32 val;
+@@ -230,10 +255,76 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 	return 0;
+ }
+ 
+-static const struct dw_pcie_ops dw_pcie_ops = {
+-	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	enum pci_barno bar;
++
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++
++	for (bar = BAR_0; bar <= BAR_5; bar++)
++		dw_pcie_ep_reset_bar(pci, bar);
++}
++
++static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep,
++				  enum pci_epc_irq_type type, u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++
++	switch (type) {
++	case PCI_EPC_IRQ_LEGACY:
++		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
++		return -EINVAL;
++	case PCI_EPC_IRQ_MSI:
++		return dw_pcie_ep_raise_msi_irq(ep, interrupt_num);
++	default:
++		dev_err(pci->dev, "UNKNOWN IRQ type\n");
++	}
++
++	return 0;
++}
++
++static struct dw_pcie_ep_ops pcie_ep_ops = {
++	.ep_init = artpec6_pcie_ep_init,
++	.raise_irq = artpec6_pcie_raise_irq,
+ };
+ 
++static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
++			       struct platform_device *pdev)
++{
++	int ret;
++	struct dw_pcie_ep *ep;
++	struct resource *res;
++	struct device *dev = &pdev->dev;
++	struct dw_pcie *pci = artpec6_pcie->pci;
++
++	ep = &pci->ep;
++	ep->ops = &pcie_ep_ops;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
++	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
++	if (IS_ERR(pci->dbi_base2))
++		return PTR_ERR(pci->dbi_base2);
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
++	if (!res)
++		return -EINVAL;
++
++	ep->phys_base = res->start;
++	ep->addr_size = resource_size(res);
++
++	ret = dw_pcie_ep_init(ep);
++	if (ret) {
++		dev_err(dev, "failed to initialize endpoint\n");
++		return ret;
++	}
++
++	return 0;
++}
++
+ static int artpec6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -242,6 +333,16 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	struct resource *dbi_base;
+ 	struct resource *phy_base;
+ 	int ret;
++	const struct of_device_id *match;
++	const struct artpec_pcie_of_data *data;
++	enum dw_pcie_device_mode mode;
++
++	match = of_match_device(artpec6_pcie_of_match, dev);
++	if (!match)
++		return -EINVAL;
++
++	data = (struct artpec_pcie_of_data *)match->data;
++	mode = (enum dw_pcie_device_mode)data->mode;
+ 
+ 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
+ 	if (!artpec6_pcie)
+@@ -255,6 +356,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	pci->ops = &dw_pcie_ops;
+ 
+ 	artpec6_pcie->pci = pci;
++	artpec6_pcie->mode = mode;
+ 
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+ 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
+@@ -274,15 +376,53 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, artpec6_pcie);
+ 
+-	ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
+-	if (ret < 0)
+-		return ret;
++	switch (artpec6_pcie->mode) {
++	case DW_PCIE_RC_TYPE:
++		if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_HOST))
++			return -ENODEV;
++
++		ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
++		if (ret < 0)
++			return ret;
++		break;
++	case DW_PCIE_EP_TYPE: {
++		u32 val;
++
++		if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_EP))
++			return -ENODEV;
++
++		val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++		val &= ~PCIECFG_DEVICE_TYPE_MASK;
++		artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++		ret = artpec6_add_pcie_ep(artpec6_pcie, pdev);
++		if (ret < 0)
++			return ret;
++		break;
++	}
++	default:
++		dev_err(dev, "INVALID device type %d\n", artpec6_pcie->mode);
++	}
+ 
+ 	return 0;
+ }
+ 
++static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
+ static const struct of_device_id artpec6_pcie_of_match[] = {
+-	{ .compatible = "axis,artpec6-pcie", },
++	{
++		.compatible = "axis,artpec6-pcie",
++		.data = &artpec6_pcie_rc_of_data,
++	},
++	{
++		.compatible = "axis,artpec6-pcie-ep",
++		.data = &artpec6_pcie_ep_of_data,
++	},
+ 	{},
+ };
+ 
+-- 
+2.14.2
