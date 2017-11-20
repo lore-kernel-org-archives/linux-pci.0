@@ -1,76 +1,68 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 6 Nov 2017 18:25:01 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 20 Nov 2017 14:34:49 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: Re: [PATCH v10 2/9] PCI: remove unused __weak attribute in
- pci_register_io_range()
-Message-ID: <20171107002501.GD9538@bhelgaas-glaptop.roam.corp.google.com>
-References: <1509120687-7352-1-git-send-email-gabriele.paoloni@huawei.com>
- <1509120687-7352-3-git-send-email-gabriele.paoloni@huawei.com>
+To: Romain Perier <romain.perier@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@collabora.com>
+Subject: Re: [PATCH v15 5/5] PCI: Remove PCI pool macro functions
+Message-ID: <20171120203449.GA16362@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171120193247.8187-1-romain.perier@gmail.com>
+ <20171120193247.8187-6-romain.perier@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1509120687-7352-3-git-send-email-gabriele.paoloni@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, minyard@acm.org, lorenzo.pieralisi@arm.com,
- linux-acpi@vger.kernel.org, arnd@arndb.de, rafael@kernel.org,
- linux-pci@vger.kernel.org, catalin.marinas@arm.com, john.garry@huawei.com,
- will.deacon@arm.com, linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
- linuxarm@huawei.com, olof@lixom.net, robh+dt@kernel.org,
- benh@kernel.crashing.org, bhelgaas@google.com, frowand.list@gmail.com,
- brian.starkey@arm.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171120193247.8187-6-romain.perier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 27, 2017 at 05:11:20PM +0100, Gabriele Paoloni wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Mon, Nov 20, 2017 at 08:32:47PM +0100, Romain Perier wrote:
+> From: Romain Perier <romain.perier@collabora.com>
 > 
-> Currently pci_register_io_range() has only one definition;
-> therefore there is no use of the __weak attribute.
+> Now that all the drivers use dma pool API, we can remove the macro
+> functions for PCI pool.
 > 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Acked-by: Bjorn Helgaas <helgaas@kernel.org>
+> Signed-off-by: Romain Perier <romain.perier@collabora.com>
+> Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
 
-Also, I normally use this (Google address instead of kernel.org):
+I already acked this once on Oct 24.  Please keep that ack and include
+it in any future postings so I don't have to deal with this again.
 
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-(Also affects your other PCI patches.)
-
 > ---
->  drivers/pci/pci.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  include/linux/pci.h | 9 ---------
+>  1 file changed, 9 deletions(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index af0cc34..eee967c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3270,7 +3270,7 @@ static DEFINE_SPINLOCK(io_range_lock);
->   * Record the PCI IO range (expressed as CPU physical address + size).
->   * Return a negative value if an error has occured, zero otherwise
->   */
-> -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> +int pci_register_io_range(phys_addr_t addr, resource_size_t size)
->  {
->  	int err = 0;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 96c94980d1ff..d03b4a20033d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1324,15 +1324,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+>  #include <linux/pci-dma.h>
+>  #include <linux/dmapool.h>
 >  
+> -#define	pci_pool dma_pool
+> -#define pci_pool_create(name, pdev, size, align, allocation) \
+> -		dma_pool_create(name, &pdev->dev, size, align, allocation)
+> -#define	pci_pool_destroy(pool) dma_pool_destroy(pool)
+> -#define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
+> -#define	pci_pool_zalloc(pool, flags, handle) \
+> -		dma_pool_zalloc(pool, flags, handle)
+> -#define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
+> -
+>  struct msix_entry {
+>  	u32	vector;	/* kernel uses to write allocated vector */
+>  	u16	entry;	/* driver uses to specify entry, OS writes */
 > -- 
-> 2.7.4
+> 2.14.1
 > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
