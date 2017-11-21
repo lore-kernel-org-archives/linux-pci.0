@@ -1,58 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:1868 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbdKLNSA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Nov 2017 08:18:00 -0500
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <swarren@nvidia.com>,
-        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH V3 0/3] Add ASPM-L1 Substates support for Tegra
-Date: Sun, 12 Nov 2017 18:47:51 +0530
-Message-ID: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: xgene: Remove leftover pci_scan_child_bus() call
+Date: Tue, 21 Nov 2017 15:49:31 +0000
+Message-Id: <20171121154931.7724-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Tanmay Inamdar <tinamdar@apm.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra chips T210 and T186 support ASPM-L1 Substates (i.e. L1.1 and L1.2)
-This patch series
-- applies fixups to reflect correct capability values for
-  T_cmrt (Common Mode Restore Time) and
-  T_pwr_on (Power On)
-  and adjusts counter values for 19.2 MHz of clk_m
-- applies fixup specific to T210 to avoid unnecessary wake ups from L1.2 state
-- enables advertisement of ASPM-L1 support in capability register
+The changes in commit 9af275be15f7 ("PCI: xgene: Convert PCI scan API to
+pci_scan_root_bus_bridge()") converted the xgene PCI host driver to
+the new pci_scan_root_bus_bridge() bus scanning API but erroneously left
+the existing pci_scan_child_bus() call in place which resulted in duplicate
+PCI bus enumerations.
 
-NOTE:- This version of patch series drops a patch (that was present till V2 series)
-that introduces an API for host controller drivers to specify LTR_L1.2_THRESHOLD
-value as more details and better understanding of spec is required to program
-LTR_L1.2_THRESHOLD value.
-It also reorders patches to appropriately have software fixups and advertisement
-of capabilities
+Remove the leftover pci_scan_child_bus() call to properly complete the API
+conversion.
 
-PCIe - ASPM L1 Sub States spec
-https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
+Fixes: 9af275be15f7 ("PCI: xgene: Convert PCI scan API to pci_scan_root_bus_bridge()")
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>
+---
+ drivers/pci/host/pci-xgene.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Testing Done on T210 and T186
-- ASPM-L1:
-  Verified ASPM-L1 enablement by selecting PCIEASPM_POWERSAVE config
-  With the help of Tegra rootport's internal counter registers, confirmed
-  link entry in and out of ASPM-L1 state using USB3.0 add-on card, NVMe and NIC
-  cards
-- ASPM-L1 SubStates:
-  Verified ASPM-L1 Substates enablement by selecting PCIEASPM_POWER_SUPERSAVE config
-  Confirmed link's entry into L1SS using Westren Digital NVMe card (with Sandisk
-  Controller) using Tegra rootport's internal counter registers
-
-Vidya Sagar (3):
-  PCI: tegra: Apply sw fixups to support ASPM-L1 Sub-States
-  PCI: tegra: fixups to avoid unnecessary wakeup from ASPM-L1.2
-  PCI: tegra: Enable ASPM-L1 capability advertisement
-
- drivers/pci/host/pci-tegra.c | 93 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 93 insertions(+)
-
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 465aa2a..e60c457 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -668,7 +668,6 @@ static int xgene_pcie_probe(struct platform_device *pdev)
+ 
+ 	bus = bridge->bus;
+ 
+-	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
+ 	list_for_each_entry(child, &bus->children, node)
+ 		pcie_bus_configure_settings(child);
 -- 
-2.7.4
+2.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
