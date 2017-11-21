@@ -1,60 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46022 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753518AbdKVWuz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:50:55 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2 29/29] PCI: remove pci_get_bus_and_slot() function
-Date: Wed, 22 Nov 2017 17:49:24 -0500
-Message-Id: <1511390964-9979-30-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+Received: from ale.deltatee.com ([207.54.116.67]:49446 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751306AbdKUXGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Nov 2017 18:06:47 -0500
+To: Colin King <colin.king@canonical.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>, linux-pci@vger.kernel.org,
+        linux-ntb@googlegroups.com
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20171121225945.29377-1-colin.king@canonical.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <dda6fccc-093a-7f1c-87a1-d01a8d8aacb8@deltatee.com>
+Date: Tue, 21 Nov 2017 16:06:41 -0700
+MIME-Version: 1.0
+In-Reply-To: <20171121225945.29377-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH] NTB: switchtec_ntb: fix spelling mistake: "peforming" ->
+ "performing"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Thanks Colin!
 
-Now that all users of pci_get_bus_and_slot() switched to
-pci_get_domain_bus_and_slot(), it is now safe to remove this function.
+Reviewed-By: Logan Gunthorpe <logang@deltatee.com>
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- include/linux/pci.h | 8 --------
- 1 file changed, 8 deletions(-)
-
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d16a7c0..8c1b650 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -957,11 +957,6 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
- struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn);
- struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
- 					    unsigned int devfn);
--static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
--						   unsigned int devfn)
--{
--	return pci_get_domain_bus_and_slot(0, bus, devfn);
--}
- struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
- int pci_dev_present(const struct pci_device_id *ids);
- 
-@@ -1676,9 +1671,6 @@ static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
- static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
- 						unsigned int devfn)
- { return NULL; }
--static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
--						unsigned int devfn)
--{ return NULL; }
- 
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
--- 
-1.9.1
+On 21/11/17 03:59 PM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Trivial fix to spelling mistake in dev_err error message
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>   drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> index afe8ed6f3b23..d46d113210b5 100644
+> --- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> +++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+> @@ -172,7 +172,7 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
+>   
+>   	if (ps == status) {
+>   		dev_err(&sndev->stdev->dev,
+> -			"Timed out while peforming %s (%d). (%08x)",
+> +			"Timed out while performing %s (%d). (%08x)",
+>   			op_text[op], op,
+>   			ioread32(&ctl->partition_status));
+>   
+> 
