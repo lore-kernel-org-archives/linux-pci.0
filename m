@@ -1,43 +1,60 @@
-Return-Path: <SRS0=C84e=CM=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=C84e=CM=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 14 Nov 2017 17:21:45 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Michal Simek <michal.simek@xilinx.com>,
-	rfi@lists.rocketboards.org,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH v1 0/3] PCI: Rename host functions for consistency
-Message-ID: <20171114172144.GA15495@red-moon>
-References: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <CAPDyKFqODyR6rcTitUdvU3dRwmYpOQF+4p0xXMpkpGQfDB_tBQ@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <4184911.zoJM7jZeH4@aspire.rjw.lan>
+ <1917233.X2U0QN21my@aspire.rjw.lan> <13167729.Euq9qh5SXX@aspire.rjw.lan> <CAPDyKFqODyR6rcTitUdvU3dRwmYpOQF+4p0xXMpkpGQfDB_tBQ@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 21 Nov 2017 01:16:51 +0100
+Message-ID: <CAJZ5v0gdSpPQ82Oa+orQyMbANJMgu=mp_3wbrHzhXtkOwCxTrQ@mail.gmail.com>
+Subject: Re: [PATCH v4 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kevin Hilman <khilman@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 13, 2017 at 04:40:36PM -0600, Bjorn Helgaas wrote:
-> All native host bridge driver probe functions are called *_pci_probe() or
-> *_pcie_probe() *except* X-Gene's.  All "is the link up?" functions are
-> called *_pcie_link_up() *except* Altera's and Xilinx's.  Rename them to be
-> consistent.
-> 
-> I plan to include these for v4.15 unless there are objections.
-> 
-> ---
-> 
-> Bjorn Helgaas (3):
->       PCI: xgene: Rename xgene_pcie_probe_bridge() to xgene_pcie_probe()
->       PCI: altera: Rename altera_pcie_link_is_up() to altera_pcie_link_up()
->       PCI: xilinx: Rename xilinx_pcie_link_is_up() to xilinx_pcie_link_up()
-> 
-> 
->  drivers/pci/host/pci-xgene.c   |    4 ++--
->  drivers/pci/host/pcie-altera.c |    8 ++++----
->  drivers/pci/host/pcie-xilinx.c |    6 +++---
->  3 files changed, 9 insertions(+), 9 deletions(-)
+On Mon, Nov 20, 2017 at 1:25 PM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+> On 18 November 2017 at 15:31, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> Define and document a new driver flag, DPM_FLAG_LEAVE_SUSPENDED, to
+>> instruct the PM core and middle-layer (bus type, PM domain, etc.)
+>> code that it is desirable to leave the device in runtime suspend
+>> after system-wide transitions to the working state (for example,
+>> the device may be slow to resume and it may be better to avoid
+>> resuming it right away).
+>>
+>> Generally, the middle-layer code involved in the handling of the
+>> device is expected to indicate to the PM core whether or not the
+>> device may be left in suspend with the help of the device's
+>> power.may_skip_resume status bit.  That has to happen in the "noirq"
+>> phase of the preceding system suspend (or analogous) transition.
+>> The middle layer is then responsible for handling the device as
+>> appropriate in its "noirq" resume callback which is executed
+>> regardless of whether or not the device may be left suspended, but
+>> the other resume callbacks (except for ->complete) will be skipped
+>> automatically by the core if the device really can be left in
+>> suspend.
+>>
+>> The additional power.must_resume status bit introduced for the
+>> implementation of this mechanisn is used internally by the PM core
+>> to track the requirement to resume the device (which may depend on
+>> its children etc).
+>>
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+> Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
 
-On the series:
-
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Thanks!
