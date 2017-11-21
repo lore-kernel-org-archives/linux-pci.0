@@ -1,54 +1,123 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to and
- from devices
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- <linux-acpi@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-6-jean-philippe.brucker@arm.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <9c364147-12c4-5a8a-9cd9-0642a6b92555@huawei.com>
-Date: Wed, 29 Nov 2017 14:08:20 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42940 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751191AbdKUREj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Nov 2017 12:04:39 -0500
+Date: Tue, 21 Nov 2017 17:05:03 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Joe Perches <joe@perches.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: designware-ep: use ffz() instead of
+ find_first_zero_bit()
+Message-ID: <20171121170503.GB15713@red-moon>
+References: <20171116183438.12613-1-niklas.cassel@axis.com>
+ <20171117113835.GB21148@red-moon>
+ <1511280730.6989.30.camel@perches.com>
 MIME-Version: 1.0
-In-Reply-To: <20171006133203.22803-6-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, catalin.marinas@arm.com,
- will.deacon@arm.com, okaya@codeaurora.org, yi.l.liu@intel.com,
- lorenzo.pieralisi@arm.com, ashok.raj@intel.com, tn@semihalf.com,
- joro@8bytes.org, rfranz@cavium.com, lenb@kernel.org,
- jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, robh+dt@kernel.org,
- thunder.leizhen@huawei.com, bhelgaas@google.com, dwmw2@infradead.org,
- liubo95@huawei.com, rjw@rjwysocki.net, robdclark@gmail.com,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com,
- nwatters@codeaurora.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1511280730.6989.30.camel@perches.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Nov 21, 2017 at 08:12:10AM -0800, Joe Perches wrote:
+> On Fri, 2017-11-17 at 11:38 +0000, Lorenzo Pieralisi wrote:
+> > Please follow Bjorn's request for patch formatting:
+> > 
+> > https://marc.info/?l=linux-pci&m=150905742808166&w=2
+> > 
+> > I would mention in the commit title that this is a fix.
+> > 
+> > eg "PCI: designware-ep: Fix find_first_zero_bit() usage"
+> > 
+> > On Thu, Nov 16, 2017 at 07:34:38PM +0100, Niklas Cassel wrote:
+> > > find_first_zero_bit()'s parameter 'size' is defined in bits,
+> > > not in bytes.
+> > > 
+> > > find_first_zero_bit() was called with bytes rather than bits,
+> > 
+> > "was called with size in bytes"...
+> 
+> This code also uses set_bit/clear_bit.
+> 
+> I suggest not intermixing set_bit/clear_bit calls and ffz
+> on the same object.
+> 
+> Use either (&/~/ffz) or (set_bit/clear_bit/find_first_zero_bit)
+> 
+> BITS_PER_LONG would work fine for find_first_zero_bit
 
+That would do as a fix and I agree with you that we should not mix the
+APIs usage (a check for return value < BITS_PER_LONG should be added too
+though).
 
-On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
-> +int iommu_process_bind_device(struct device *dev, struct task_struct *task,
-> +			      int *pasid, int flags)
-> +{
-[..]
-> +			err = iommu_process_attach_locked(context, dev);
-> +			if (err)
-> +				iommu_process_put_locked(process);
-one ref for a context is enough right? so also need call iommu_process_put_locked()
-if attach ok, or will be leak if user call bind twice for the same device and task.
+Actually we can just allocate a bitmap given that we know the bitmap
+required size (num_{ib/ob}_windows) and update the find_first_zero_bit()
+call with the appropriate size in bits parameter but that can be
+a subsequent refactoring patch.
 
+Thanks,
+Lorenzo
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > > which thus defined a too low upper limit, causing
+> > > dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
+> > > and bar 5, which made bar 5 overwrite the settings set by bar 4.
+> > > 
+> > > ./pcitest.sh
+> > > BAR tests
+> > > BAR0:		OKAY
+> > > BAR1:		OKAY
+> > > BAR2:		OKAY
+> > > BAR3:		OKAY
+> > > BAR4:		NOT OKAY
+> > > BAR5:		OKAY
+> > 
+> > Sorry but this example is pretty much useless - either you add
+> > a self-explanatory kernel log or you just remove it.
+> > 
+> > > Fix this by using replacing find_first_zero_bit() with ffz(),
+> > > since ffz() only works on a single 'unsigned long' and therefore
+> > > does not need a size argument.
+> > > 
+> > > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > 
+> > We need a Fixes: tag at least, see Bjorn's post above.
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
+> > > ---
+> > >  drivers/pci/dwc/pcie-designware-ep.c | 6 ++----
+> > >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> > > index d53d5f168363..ab9a9e160daf 100644
+> > > --- a/drivers/pci/dwc/pcie-designware-ep.c
+> > > +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> > > @@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+> > >  	u32 free_win;
+> > >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> > >  
+> > > -	free_win = find_first_zero_bit(&ep->ib_window_map,
+> > > -				       sizeof(ep->ib_window_map));
+> > > +	free_win = ffz(ep->ib_window_map);
+> > >  	if (free_win >= ep->num_ib_windows) {
+> > >  		dev_err(pci->dev, "no free inbound window\n");
+> > >  		return -EINVAL;
+> > > @@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+> > >  	u32 free_win;
+> > >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> > >  
+> > > -	free_win = find_first_zero_bit(&ep->ob_window_map,
+> > > -				       sizeof(ep->ob_window_map));
+> > > +	free_win = ffz(ep->ob_window_map);
+> > >  	if (free_win >= ep->num_ob_windows) {
+> > >  		dev_err(pci->dev, "no free outbound window\n");
+> > >  		return -EINVAL;
+> > > -- 
+> > > 2.14.2
+> > > 
