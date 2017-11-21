@@ -1,103 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH 02/30] powerpc/PCI: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:30:47 -0500
-Message-Id: <1511328675-21981-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, Bhumika Goyal <bhumirks@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>,
- "open list:LINUX FOR POWERPC 32-BIT AND 64-BIT"
- <linuxppc-dev@lists.ozlabs.org>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1511280730.6989.30.camel@perches.com>
+Subject: Re: [PATCH] PCI: designware-ep: use ffz() instead of
+ find_first_zero_bit()
+From: Joe Perches <joe@perches.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Niklas Cassel <niklas.cassel@axis.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Tue, 21 Nov 2017 08:12:10 -0800
+In-Reply-To: <20171117113835.GB21148@red-moon>
+References: <20171116183438.12613-1-niklas.cassel@axis.com>
+         <20171117113835.GB21148@red-moon>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Fri, 2017-11-17 at 11:38 +0000, Lorenzo Pieralisi wrote:
+> Please follow Bjorn's request for patch formatting:
+> 
+> https://marc.info/?l=linux-pci&m=150905742808166&w=2
+> 
+> I would mention in the commit title that this is a fix.
+> 
+> eg "PCI: designware-ep: Fix find_first_zero_bit() usage"
+> 
+> On Thu, Nov 16, 2017 at 07:34:38PM +0100, Niklas Cassel wrote:
+> > find_first_zero_bit()'s parameter 'size' is defined in bits,
+> > not in bytes.
+> > 
+> > find_first_zero_bit() was called with bytes rather than bits,
+> 
+> "was called with size in bytes"...
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
+This code also uses set_bit/clear_bit.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/powerpc/kernel/pci_32.c              | 3 ++-
- arch/powerpc/platforms/powermac/feature.c | 2 +-
- arch/powerpc/sysdev/mv64x60_pci.c         | 4 ++--
- 3 files changed, 5 insertions(+), 4 deletions(-)
+I suggest not intermixing set_bit/clear_bit calls and ffz
+on the same object.
 
-diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
-index 1d817f4..85ad2f7 100644
---- a/arch/powerpc/kernel/pci_32.c
-+++ b/arch/powerpc/kernel/pci_32.c
-@@ -96,7 +96,8 @@
- 		reg = of_get_property(node, "reg", NULL);
- 		if (!reg)
- 			continue;
--		dev = pci_get_bus_and_slot(pci_bus, ((reg[0] >> 8) & 0xff));
-+		dev = pci_get_domain_bus_and_slot(0, pci_bus,
-+						  ((reg[0] >> 8) & 0xff));
- 		if (!dev || !dev->subordinate) {
- 			pci_dev_put(dev);
- 			continue;
-diff --git a/arch/powerpc/platforms/powermac/feature.c b/arch/powerpc/platforms/powermac/feature.c
-index 9e3f39d..ed8b166 100644
---- a/arch/powerpc/platforms/powermac/feature.c
-+++ b/arch/powerpc/platforms/powermac/feature.c
-@@ -829,7 +829,7 @@ static long core99_scc_enable(struct device_node *node, long param, long value)
- 
- 	if (value) {
- 		if (pci_device_from_OF_node(node, &pbus, &pid) == 0)
--			pdev = pci_get_bus_and_slot(pbus, pid);
-+			pdev = pci_get_domain_bus_and_slot(0, pbus, pid);
- 		if (pdev == NULL)
- 			return 0;
- 		rc = pci_enable_device(pdev);
-diff --git a/arch/powerpc/sysdev/mv64x60_pci.c b/arch/powerpc/sysdev/mv64x60_pci.c
-index d52b3b8..6fe9104 100644
---- a/arch/powerpc/sysdev/mv64x60_pci.c
-+++ b/arch/powerpc/sysdev/mv64x60_pci.c
-@@ -37,7 +37,7 @@ static ssize_t mv64x60_hs_reg_read(struct file *filp, struct kobject *kobj,
- 	if (count < MV64X60_VAL_LEN_MAX)
- 		return -EINVAL;
- 
--	phb = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-+	phb = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
- 	if (!phb)
- 		return -ENODEV;
- 	pci_read_config_dword(phb, MV64X60_PCICFG_CPCI_HOTSWAP, &v);
-@@ -61,7 +61,7 @@ static ssize_t mv64x60_hs_reg_write(struct file *filp, struct kobject *kobj,
- 	if (sscanf(buf, "%i", &v) != 1)
- 		return -EINVAL;
- 
--	phb = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-+	phb = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
- 	if (!phb)
- 		return -ENODEV;
- 	pci_write_config_dword(phb, MV64X60_PCICFG_CPCI_HOTSWAP, v);
--- 
-1.9.1
+Use either (&/~/ffz) or (set_bit/clear_bit/find_first_zero_bit)
 
+BITS_PER_LONG would work fine for find_first_zero_bit
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > which thus defined a too low upper limit, causing
+> > dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
+> > and bar 5, which made bar 5 overwrite the settings set by bar 4.
+> > 
+> > ./pcitest.sh
+> > BAR tests
+> > BAR0:		OKAY
+> > BAR1:		OKAY
+> > BAR2:		OKAY
+> > BAR3:		OKAY
+> > BAR4:		NOT OKAY
+> > BAR5:		OKAY
+> 
+> Sorry but this example is pretty much useless - either you add
+> a self-explanatory kernel log or you just remove it.
+> 
+> > Fix this by using replacing find_first_zero_bit() with ffz(),
+> > since ffz() only works on a single 'unsigned long' and therefore
+> > does not need a size argument.
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> 
+> We need a Fixes: tag at least, see Bjorn's post above.
+> 
+> Thanks,
+> Lorenzo
+> 
+> > ---
+> >  drivers/pci/dwc/pcie-designware-ep.c | 6 ++----
+> >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> > index d53d5f168363..ab9a9e160daf 100644
+> > --- a/drivers/pci/dwc/pcie-designware-ep.c
+> > +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> > @@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+> >  	u32 free_win;
+> >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> >  
+> > -	free_win = find_first_zero_bit(&ep->ib_window_map,
+> > -				       sizeof(ep->ib_window_map));
+> > +	free_win = ffz(ep->ib_window_map);
+> >  	if (free_win >= ep->num_ib_windows) {
+> >  		dev_err(pci->dev, "no free inbound window\n");
+> >  		return -EINVAL;
+> > @@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+> >  	u32 free_win;
+> >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> >  
+> > -	free_win = find_first_zero_bit(&ep->ob_window_map,
+> > -				       sizeof(ep->ob_window_map));
+> > +	free_win = ffz(ep->ob_window_map);
+> >  	if (free_win >= ep->num_ob_windows) {
+> >  		dev_err(pci->dev, "no free outbound window\n");
+> >  		return -EINVAL;
+> > -- 
+> > 2.14.2
+> > 
