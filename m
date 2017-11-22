@@ -1,44 +1,124 @@
-Return-Path: <SRS0=8xXJ=C2=oracle.com=boris.ostrovsky@kernel.org>
-Return-Path: <SRS0=8xXJ=C2=oracle.com=boris.ostrovsky@kernel.org>
-Subject: Re: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h
- (Models 30h-3fh) Processors v5
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        helgaas@kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, xen-devel <xen-devel@lists.xen.org>
-References: <20171018135821.3248-1-deathsimple@vodafone.de>
- <20171018135821.3248-5-deathsimple@vodafone.de>
- <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
- <d81d50e6-c267-fe43-214f-278e57903448@gmail.com>
- <26df0a78-8028-e42c-ce50-4cefe612a7e1@oracle.com>
- <3443aad0-8c3b-b97e-685a-96b0866827be@amd.com>
- <b937778c-556e-5587-c557-abba8cefe100@oracle.com>
- <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
- <c2d52d00-8c3c-9944-29b3-3cab2f7c35f7@oracle.com>
- <7936fdd3-1615-ac1f-7b75-330ccb6a1a3f@amd.com>
- <0bb468d9-bc1d-e3c5-e313-1cf9408380f0@oracle.com>
- <275e859a-0ddd-ea7f-a681-67e42a5233fe@amd.com>
- <38bc76d9-2ed5-61f3-24b3-085031825181@oracle.com>
- <65885386-3dde-de23-7e95-7d96dfdf6033@oracle.com>
- <0ab28334-3ccc-2a93-9991-396ee01a3662@amd.com>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <cb0d5830-11dd-57b8-606b-7eca560cfcc7@oracle.com>
-Date: Tue, 28 Nov 2017 13:55:58 -0500
-MIME-Version: 1.0
-In-Reply-To: <0ab28334-3ccc-2a93-9991-396ee01a3662@amd.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45960 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752259AbdKVWux (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:50:53 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2 28/29] i7300_idle: remove unused file
+Date: Wed, 22 Nov 2017 17:49:23 -0500
+Message-Id: <1511390964-9979-29-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/28/2017 04:12 AM, Christian König wrote:
->
->
-> How about the attached patch? It limits the newly added MMIO space to
-> the upper 256GB of the address space. That should still be enough for
-> most devices, but we avoid both issues with Xen dom0 as most likely
-> problems with memory hotplug as well.
+i7300_idle.h is not being called by any source file and contains calls to
+pci_get_bus_and_slot() that we are trying to deprecate. Remove unused file.
 
-It certainly makes the problem to be less likely so I guess we could do
-this for now.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ include/linux/i7300_idle.h | 84 ----------------------------------------------
+ 1 file changed, 84 deletions(-)
+ delete mode 100644 include/linux/i7300_idle.h
 
-Thanks.
--boris
+diff --git a/include/linux/i7300_idle.h b/include/linux/i7300_idle.h
+deleted file mode 100644
+index 4dbe651..0000000
+--- a/include/linux/i7300_idle.h
++++ /dev/null
+@@ -1,84 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-
+-#ifndef I7300_IDLE_H
+-#define I7300_IDLE_H
+-
+-#include <linux/pci.h>
+-
+-/*
+- * I/O AT controls (PCI bus 0 device 8 function 0)
+- * DIMM controls (PCI bus 0 device 16 function 1)
+- */
+-#define IOAT_BUS 0
+-#define IOAT_DEVFN PCI_DEVFN(8, 0)
+-#define MEMCTL_BUS 0
+-#define MEMCTL_DEVFN PCI_DEVFN(16, 1)
+-
+-struct fbd_ioat {
+-	unsigned int vendor;
+-	unsigned int ioat_dev;
+-	unsigned int enabled;
+-};
+-
+-/*
+- * The i5000 chip-set has the same hooks as the i7300
+- * but it is not enabled by default and must be manually
+- * manually enabled with "forceload=1" because it is
+- * only lightly validated.
+- */
+-
+-static const struct fbd_ioat fbd_ioat_list[] = {
+-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_CNB, 1},
+-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT, 0},
+-	{0, 0}
+-};
+-
+-/* table of devices that work with this driver */
+-static const struct pci_device_id pci_tbl[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_FBD_CNB) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5000_ERR) },
+-	{ } /* Terminating entry */
+-};
+-
+-/* Check for known platforms with I/O-AT */
+-static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
+-						struct pci_dev **ioat_dev,
+-						int enable_all)
+-{
+-	int i;
+-	struct pci_dev *memdev, *dmadev;
+-
+-	memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
+-	if (!memdev)
+-		return -ENODEV;
+-
+-	for (i = 0; pci_tbl[i].vendor != 0; i++) {
+-		if (memdev->vendor == pci_tbl[i].vendor &&
+-		    memdev->device == pci_tbl[i].device) {
+-			break;
+-		}
+-	}
+-	if (pci_tbl[i].vendor == 0)
+-		return -ENODEV;
+-
+-	dmadev = pci_get_bus_and_slot(IOAT_BUS, IOAT_DEVFN);
+-	if (!dmadev)
+-		return -ENODEV;
+-
+-	for (i = 0; fbd_ioat_list[i].vendor != 0; i++) {
+-		if (dmadev->vendor == fbd_ioat_list[i].vendor &&
+-		    dmadev->device == fbd_ioat_list[i].ioat_dev) {
+-			if (!(fbd_ioat_list[i].enabled || enable_all))
+-				continue;
+-			if (fbd_dev)
+-				*fbd_dev = memdev;
+-			if (ioat_dev)
+-				*ioat_dev = dmadev;
+-
+-			return 0;
+-		}
+-	}
+-	return -ENODEV;
+-}
+-
+-#endif
+-- 
+1.9.1
