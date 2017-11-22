@@ -1,43 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:5910 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751528AbdKVXDp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 18:03:45 -0500
-Date: Wed, 22 Nov 2017 15:03:35 -0800
-From: Neo Jia <cjia@nvidia.com>
-To: Christoph Hellwig <hch@infradead.org>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
-        Kirti Wankhede <kwankhede@nvidia.com>
-Subject: Re: [PATCH 1/1] Change pci_enable_sriov, pci_disable_sriov and
- pci_reset_function to non-GPL symbol.
-Message-ID: <20171122230335.GA1228@nvidia.com>
-References: <1510773058-1482-1-git-send-email-cjia@nvidia.com>
- <20171117145504.GA31760@infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 30/30] PCI: remove pci_get_bus_and_slot() function
+To: Greg KH <greg@kroah.com>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-31-git-send-email-okaya@codeaurora.org>
+ <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
+ <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
+ <25ec431a-2c1b-d352-f9ef-c663864664b6@codeaurora.org>
+ <20171122075124.GA26583@kroah.com>
+From: Timur Tabi <timur@codeaurora.org>
+Message-ID: <a443e88e-3abd-0dab-2828-9753326e8d5d@codeaurora.org>
+Date: Wed, 22 Nov 2017 08:42:35 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20171117145504.GA31760@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171122075124.GA26583@kroah.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 17, 2017 at 06:55:04AM -0800, Christoph Hellwig wrote:
-> On Wed, Nov 15, 2017 at 11:10:58AM -0800, Neo Jia wrote:
-> > This will allow proprietary linux drivers to adopt SR-IOV spec from
-> > PCI-SIG, also switch pci_reset_function to non-GPL symbol as it mainly
-> > does pci config space access per spec.
+On 11/22/17 1:51 AM, Greg KH wrote:
+> Ick, no, why?  What is wrong with removing this function as is?  Don't
+> mark something as __depreciated if there are no in-kernel users, just
+> delete it and move on.
 > 
-> Clear NAK.  Thos were added intentional, and even if they were changed
-> your driver would still be a derived work and had to be published under
-> a GPLv2-compatible license.
+> If you have out-of-tree drivers, then yes, they can make a wrapper for
+> this function like this if they really feel the need, or they can get
+> their code merged:)
 
-Hi Christoph,
+Sorry, I guess I should have been clearer.  My suggestion was to fix 
+some of the drivers where the domain can be determined, and for the 
+rest, just mark the old function as deprecated.
 
-Just to be clear, here the request is to allow proprietary driver continue
-supporting Linux OS when adopting SR-IOV - a PCIE virtualization technology
-standardized by PCI SIG.
+If that's still a terrible idea, well, okay.  I'm just unsure that 
+simply hard-coding a 0 for the domain for some drivers is really a 
+solution.  Don't we really want all drivers to properly support all domains?
 
-Similar interfaces we have seen inside Linux kernels are pci_enable_msi,
-pci_enable_misx_range, which allows proprietary to work when following a PCI SIG
-standard.
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
+Technologies, Inc.  Qualcomm Technologies, Inc. is a member of the
+Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-Thanks,
-Neo
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
