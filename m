@@ -1,82 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35004 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752822AbdKFTaW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Nov 2017 14:30:22 -0500
-Date: Mon, 6 Nov 2017 13:30:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Pankaj Dubey <pankaj.dubey@samsung.com>
-Cc: David Laight <David.Laight@ACULAB.COM>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH] PCI: dwc: designware: don't sleep in atomic context
-Message-ID: <20171106193021.GE31930@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
- <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
- <063D6719AE5E284EB5DD2968C1650D6DD00924BC@AcuExch.aculab.com>
- <70cd34bd-01db-cd93-ddf7-d82114ccc61a@samsung.com>
- <20171020181917.GL6332@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171020181917.GL6332@bhelgaas-glaptop.roam.corp.google.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:41916 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751936AbdKVFcl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:41 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Antonino Daplas <adaplas@gmail.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        linux-fbdev@vger.kernel.org (open list:NVIDIA (rivafb and nvidiafb)
+        FRAMEBUFFER DRIVER), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 28/30] video: fbdev: riva: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:31:13 -0500
+Message-Id: <1511328675-21981-29-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Oct 20, 2017 at 01:19:17PM -0500, Bjorn Helgaas wrote:
-> On Fri, Oct 13, 2017 at 09:10:38AM +0530, Pankaj Dubey wrote:
-> > 
-> > 
-> > On 10/12/2017 04:09 PM, David Laight wrote:
-> > >From: Pankaj Dubey
-> > >>Sent: 12 October 2017 08:55
-> > >>In pcie-designware.c many places we are calling "usleep_range" which
-> > >>are in atomic context. This patch fixes these potential BUGs and
-> > >>replaces "usleep_range" with mdelay calls.
-> > >>
-> > >>Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> > >>---
-> > >>  drivers/pci/dwc/pcie-designware.c | 8 ++++----
-> > >>  drivers/pci/dwc/pcie-designware.h | 3 +--
-> > >>  2 files changed, 5 insertions(+), 6 deletions(-)
-> > >>
-> > >>diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> > >>index 88abddd..35d19b9 100644
-> > >>--- a/drivers/pci/dwc/pcie-designware.c
-> > >>+++ b/drivers/pci/dwc/pcie-designware.c
-> > >>@@ -138,7 +138,7 @@ static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index,
-> > >>  		if (val & PCIE_ATU_ENABLE)
-> > >>  			return;
-> > >>
-> > >>-		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> > >>+		mdelay(LINK_WAIT_IATU_MIN);
-> > >>  	}
-> > >Spinning for 9ms (possibly 10 times) isn't really a good idea.
-> > 
-> > Yes. It may not be a good idea, however in our experiment it never
-> > hit maximum retry count.  I just converted usleep_range to mdelay
-> > keeping min time limitation as it is, though I am not sure, how do
-> > we arrived on these numbers in original code, may be Joao Pinto from
-> > Synopsys have some idea, I will try to do few experiment and try to
-> > find out what is sufficient minimum time in our hardware for these
-> > mdelay.
-> 
-> Just based on the preceding comment, it looks like the wait is
-> essential because subsequent config and I/O accesses won't work
-> correctly until the ATU enable takes effect.
-> 
-> If we timeout here, I suspect it's because something is seriously
-> wrong in the hardware, so I doubt there's any point in trying to
-> minimize the timeout period.  If something is that broken, it doesn't
-> matter whether we wait 9ms or 900ms.
-> 
-> Maybe the message should be more strident or maybe we should even
-> return failure so the caller can do something, e.g., fail an access,
-> instead of just printing an error and continuing on.
-> 
-> I'm also looking for an ack from Joao and/or Jingoo.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Dropping for lack of ack.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/video/fbdev/riva/nv_driver.c | 4 ++--
+ drivers/video/fbdev/riva/riva_hw.c   | 8 ++++----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/video/fbdev/riva/nv_driver.c b/drivers/video/fbdev/riva/nv_driver.c
+index f3694cf..d31f51b 100644
+--- a/drivers/video/fbdev/riva/nv_driver.c
++++ b/drivers/video/fbdev/riva/nv_driver.c
+@@ -226,12 +226,12 @@ unsigned long riva_get_memlen(struct riva_par *par)
+ 	case NV_ARCH_30:
+ 		if(chipset == NV_CHIP_IGEFORCE2) {
+ 
+-			dev = pci_get_bus_and_slot(0, 1);
++			dev = pci_get_domain_bus_and_slot(0, 0, 1);
+ 			pci_read_config_dword(dev, 0x7C, &amt);
+ 			pci_dev_put(dev);
+ 			memlen = (((amt >> 6) & 31) + 1) * 1024;
+ 		} else if (chipset == NV_CHIP_0x01F0) {
+-			dev = pci_get_bus_and_slot(0, 1);
++			dev = pci_get_domain_bus_and_slot(0, 0, 1);
+ 			pci_read_config_dword(dev, 0x84, &amt);
+ 			pci_dev_put(dev);
+ 			memlen = (((amt >> 4) & 127) + 1) * 1024;
+diff --git a/drivers/video/fbdev/riva/riva_hw.c b/drivers/video/fbdev/riva/riva_hw.c
+index 8bdf37f..29956df 100644
+--- a/drivers/video/fbdev/riva/riva_hw.c
++++ b/drivers/video/fbdev/riva/riva_hw.c
+@@ -1117,7 +1117,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+     unsigned int uMClkPostDiv;
+     struct pci_dev *dev;
+ 
+-    dev = pci_get_bus_and_slot(0, 3);
++    dev = pci_get_domain_bus_and_slot(0, 0, 3);
+     pci_read_config_dword(dev, 0x6C, &uMClkPostDiv);
+     pci_dev_put(dev);
+     uMClkPostDiv = (uMClkPostDiv >> 8) & 0xf;
+@@ -1132,7 +1132,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+     sim_data.enable_video   = 0;
+     sim_data.enable_mp      = 0;
+ 
+-    dev = pci_get_bus_and_slot(0, 1);
++    dev = pci_get_domain_bus_and_slot(0, 0, 1);
+     pci_read_config_dword(dev, 0x7C, &sim_data.memory_type);
+     pci_dev_put(dev);
+     sim_data.memory_type    = (sim_data.memory_type >> 12) & 1;
+@@ -2118,12 +2118,12 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+      * Fill in chip configuration.
+      */
+     if(chipset == NV_CHIP_IGEFORCE2) {
+-        dev = pci_get_bus_and_slot(0, 1);
++        dev = pci_get_domain_bus_and_slot(0, 0, 1);
+         pci_read_config_dword(dev, 0x7C, &amt);
+         pci_dev_put(dev);
+         chip->RamAmountKBytes = (((amt >> 6) & 31) + 1) * 1024;
+     } else if(chipset == NV_CHIP_0x01F0) {
+-        dev = pci_get_bus_and_slot(0, 1);
++        dev = pci_get_domain_bus_and_slot(0, 0, 1);
+         pci_read_config_dword(dev, 0x84, &amt);
+         pci_dev_put(dev);
+         chip->RamAmountKBytes = (((amt >> 4) & 127) + 1) * 1024;
+-- 
+1.9.1
