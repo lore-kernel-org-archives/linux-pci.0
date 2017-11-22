@@ -1,108 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Nov 2017 09:05:28 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge
- drivers
-Message-ID: <20171109150528.GA7629@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171108201510.18601.30578.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20171108202602.GA19676@bhelgaas-glaptop.roam.corp.google.com>
- <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V2 01/29] alpha/PCI: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 17:48:56 -0500
+Message-Id: <1511390964-9979-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-arm-msm@vger.kernel.org,
+ "open list:ALPHA PORT" <linux-alpha@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Masahiro Yamada <yamada.masahiro@socionext.com>,
+ Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Matt Turner <mattst88@gmail.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
+ Richard Henderson <rth@twiddle.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4805cf13-3e33-31fb-ab25-1adb4ed13b9c@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 09, 2017 at 11:28:36AM +0530, Kishon Vijay Abraham I wrote:
-> Hi Bjorn,
-> 
-> On Thursday 09 November 2017 01:56 AM, Bjorn Helgaas wrote:
-> > On Wed, Nov 08, 2017 at 02:15:10PM -0600, Bjorn Helgaas wrote:
-> >> From: Bjorn Helgaas <bhelgaas@google.com>
-> >>
-> >> Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
-> >> the endpoint driver framework.
-> >>
-> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > This is on my for-linus branch, and I intend to merge it for v4.14.
-> 
-> There is already an entry for PCI endpoint in MAINTAINERS file. Can Lorenzo be
-> added there?
-> 
-> PCI ENDPOINT SUBSYSTEM
-> M:      Kishon Vijay Abraham I <kishon@ti.com>
-> L:      linux-pci@vger.kernel.org
-> T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
-> S:      Supported
-> F:      drivers/pci/endpoint/
-> F:      drivers/misc/pci_endpoint_test.c
-> F:      tools/pci/
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Right, thanks, I forgot all about this separate entry.  I added Lorenzo
-there, resulting in the patch below.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-My practice has been that all the PCI patches (everything in
-drivers/pci plus some include and x86/pci stuff) have been merged via
-my tree.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/alpha/kernel/pci.c          | 2 +-
+ arch/alpha/kernel/sys_nautilus.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-This includes things in drivers/pci/{host,dwc,endpoint,switch}, which
-are non-core things and usually specific to a chipset.  I try to
-ensure they have individual maintainers designated, and I ask for
-their acks for non-trivial changes because I have no specs and no
-hardware for testing them.  But I think it's still good to have one
-person look over them all to try to keep some consistency across them
-because they are all quite similar.
-
-So my hope is that Lorenzo can take over that oversight role from me,
-not that he would replace any of those designated maintainers.
-
-Ideally, this will be transparent to patch submitters except that they
-should add Lorenzo to the "To:" line (keeping linux-pci and other
-interested parties).
-
-
-commit 6b7be529634bbfbf6395f23217a66d731fbed0a0
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Wed Nov 8 08:49:49 2017 -0600
-
-    MAINTAINERS: Add Lorenzo Pieralisi for PCI host bridge drivers
-    
-    Add Lorenzo Pieralisi as maintainer for PCI native host bridge drivers and
-    the endpoint driver framework.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index db412a627d96..6ce341e86fec 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10378,6 +10378,7 @@ F:	drivers/pci/dwc/*keystone*
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 08235bb..e866daf 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -416,7 +416,7 @@ struct resource * __init
+ 		if (bus == 0 && dfn == 0) {
+ 			hose = pci_isa_hose;
+ 		} else {
+-			dev = pci_get_bus_and_slot(bus, dfn);
++			dev = pci_get_domain_bus_and_slot(0, bus, dfn);
+ 			if (!dev)
+ 				return -ENODEV;
+ 			hose = dev->sysdata;
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 239dc0e..ff4f54b 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -237,7 +237,7 @@
+ 	bus = hose->bus = bridge->bus;
+ 	pcibios_claim_one_bus(bus);
  
- PCI ENDPOINT SUBSYSTEM
- M:	Kishon Vijay Abraham I <kishon@ti.com>
-+M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
- L:	linux-pci@vger.kernel.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
- S:	Supported
-@@ -10429,6 +10430,15 @@ F:	include/linux/pci*
- F:	arch/x86/pci/
- F:	arch/x86/kernel/quirks.c
- 
-+PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS
-+M:	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-+L:	linux-pci@vger.kernel.org
-+Q:	http://patchwork.ozlabs.org/project/linux-pci/list/
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
-+S:	Supported
-+F:	drivers/pci/host/
-+F:	drivers/pci/dwc/
-+
- PCIE DRIVER FOR AXIS ARTPEC
- M:	Niklas Cassel <niklas.cassel@axis.com>
- M:	Jesper Nilsson <jesper.nilsson@axis.com>
+-	irongate = pci_get_bus_and_slot(0, 0);
++	irongate = pci_get_domain_bus_and_slot(pci_domain_nr(bus), 0, 0);
+ 	bus->self = irongate;
+ 	bus->resource[0] = &irongate_io;
+ 	bus->resource[1] = &irongate_mem;
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
