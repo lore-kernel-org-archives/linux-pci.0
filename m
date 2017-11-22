@@ -1,127 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 8 Nov 2017 14:38:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Subject: Re: [PATCH v2 2/6] PCI / PM: Support for LEAVE_SUSPENDED driver flag
-Message-ID: <20171108203833.GA21597@bhelgaas-glaptop.roam.corp.google.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
- <16592954.7Zo1mAdIIH@aspire.rjw.lan>
- <6330680.LdxjlP4uri@aspire.rjw.lan>
- <125862518.pYVN4SKj76@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 30/30] PCI: remove pci_get_bus_and_slot() function
+To: Timur Tabi <timur@codeaurora.org>, linux-pci@vger.kernel.org
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-31-git-send-email-okaya@codeaurora.org>
+ <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
+Date: Wed, 22 Nov 2017 00:55:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <125862518.pYVN4SKj76@aspire.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 08, 2017 at 02:28:18PM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Add support for DPM_FLAG_LEAVE_SUSPENDED to the PCI bus type by
-> making it (a) set the power.may_skip_resume status bit for devices
-> that, from its perspective, may be left in suspend after system
-> wakeup from sleep and (b) return early from pci_pm_resume_noirq()
-> for devices whose remaining resume callbacks during the transition
-> under way are going to be skipped by the PM core.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  Documentation/power/pci.txt |   11 +++++++++++
->  drivers/pci/pci-driver.c    |   19 +++++++++++++++++--
->  2 files changed, 28 insertions(+), 2 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -699,7 +699,7 @@ static void pci_pm_complete(struct devic
->  	pm_generic_complete(dev);
->  
->  	/* Resume device if platform firmware has put it in reset-power-on */
-> -	if (dev->power.direct_complete && pm_resume_via_firmware()) {
-> +	if (pm_runtime_suspended(dev) && pm_resume_via_firmware()) {
->  		pci_power_t pre_sleep_state = pci_dev->current_state;
->  
->  		pci_update_current_state(pci_dev, pci_dev->current_state);
-> @@ -783,8 +783,10 @@ static int pci_pm_suspend_noirq(struct d
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  
-> -	if (dev_pm_smart_suspend_and_suspended(dev))
-> +	if (dev_pm_smart_suspend_and_suspended(dev)) {
-> +		dev->power.may_skip_resume = true;
->  		return 0;
-> +	}
->  
->  	if (pci_has_legacy_pm_support(pci_dev))
->  		return pci_legacy_suspend_late(dev, PMSG_SUSPEND);
-> @@ -838,6 +840,16 @@ static int pci_pm_suspend_noirq(struct d
->  Fixup:
->  	pci_fixup_device(pci_fixup_suspend_late, pci_dev);
->  
-> +	/*
-> +	 * If the target system sleep state is suspend-to-idle, it is sufficient
-> +	 * to check whether or not the device's wakeup settings are good for
-> +	 * runtime PM.  Otherwise, the pm_resume_via_firmware() check will cause
-> +	 * pci_pm_complete() to take care of fixing up the device's state
-> +	 * anyway, if need be.
-> +	 */
-> +	dev->power.may_skip_resume = device_may_wakeup(dev) ||
-> +					!device_can_wakeup(dev);
-> +
->  	return 0;
->  }
->  
-> @@ -847,6 +859,9 @@ static int pci_pm_resume_noirq(struct de
->  	struct device_driver *drv = dev->driver;
->  	int error = 0;
->  
-> +	if (dev_pm_may_skip_resume(dev))
-> +		return 0;
-> +
->  	/*
->  	 * Devices with DPM_FLAG_SMART_SUSPEND may be left in runtime suspend
->  	 * during system suspend, so update their runtime PM status to "active"
-> Index: linux-pm/Documentation/power/pci.txt
-> ===================================================================
-> --- linux-pm.orig/Documentation/power/pci.txt
-> +++ linux-pm/Documentation/power/pci.txt
-> @@ -994,6 +994,17 @@ into D0 going forward), but if it is in
->  the function will set the power.direct_complete flag for it (to make the PM core
->  skip the subsequent "thaw" callbacks for it) and return.
->  
-> +Setting the DPM_FLAG_LEAVE_SUSPENDED flag means that the driver prefers the
-> +device to be left in suspend after system-wide transitions to the working state.
-> +This flag is checked by the PM core, but the PCI bus type informs the PM core
-> +which devices may be left in suspend from its perspective (that happens during
-> +the "noirq" phase of system-wide suspend and analogous transitions) and next it
-> +uses the dev_pm_may_skip_resume() helper to decide whether or not to return from
-> +pci_pm_resume_noirq() early, as the PM core will skip the remaining resume
-> +callbacks for the device during the transition under way and will set its
-> +runtime PM status to "suspended" if dev_pm_may_skip_resume() returns "true" for
-> +it.
-> +
->  3.2. Device Runtime Power Management
->  ------------------------------------
->  In addition to providing device power management callbacks PCI device drivers
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gMTEvMjIvMjAxNyAxMjo0NSBBTSwgVGltdXIgVGFiaSB3cm90ZToKPiBPbiAxMS8yMS8xNyAx
+MTozMSBQTSwgU2luYW4gS2F5YSB3cm90ZToKPj4gVXNlIHBjaV9nZXRfZG9tYWluX2J1c19hbmRf
+c2xvdCgpIHdpdGggYSBkb21haW4gbnVtYmVyIG9mIDAgd2hlcmUgd2UgY2FuJ3QKPj4gZXh0cmFj
+dCB0aGUgZG9tYWluIG51bWJlci4gT3RoZXIgcGxhY2VzLCB1c2UgdGhlIGFjdHVhbCBkb21haW4g
+bnVtYmVyIGZyb20KPj4gdGhlIGRldmljZS4KPj4KPj4gTm93IHRoYXQgYWxsIHVzZXJzIG9mIHBj
+aV9nZXRfYnVzX2FuZF9zbG90KCkgc3dpdGNoZWQgdG8KPj4gcGNpX2dldF9kb21haW5fYnVzX2Fu
+ZF9zbG90KCksIGl0IGlzIG5vdyBzYWZlIHRvIHJlbW92ZSB0aGlzIGZ1bmN0aW9uLgo+IAo+IFRo
+aXMgZG9lc24ndCByZWFsbHkgZWxpbWluYXRlIHBjaV9nZXRfYnVzX2FuZF9zbG90KCksIGJlY2F1
+c2UgaXQgZG9lc24ndCBmb3JjZSBkZXZlbG9wZXJzIHRvIHN1cHBvcnQgbm9uLXplcm8gZG9tYWlu
+cy7CoCBXaGF0J3MgdG8gc3RvcCBhIGRyaXZlciBkZXZlbG9wZXIgZnJvbSBkb2luZyB0aGlzPwo+
+IAo+ICNkZWZpbmUgcGNpX2dldF9idXNfYW5kX3Nsb3QoYiwgZCkgcGNpX2dldF9kb21haW5fYnVz
+X2FuZF9zbG90KDAsIGIsIGQpCj4gCj4gdGhlcmVieSBjb21wbGV0ZWx5IGlnbm9yaW5nIHdoYXQg
+eW91J3JlIHRyeWluZyB0byBkbz8KPiAKClN1cmVseSwgdGhlIGdvYWwgaXMgbm90IHRvIGVsaW1p
+bmF0ZSBhbGwgZG9tYWluIDAgdXNlcnMvYXNzdW1wdGlvbnMgYnV0IG9wZW4gdGhlCnBhdGggZm9y
+IGZsZXhpYmlsaXR5IG92ZXIgdGltZS4gCgpUaGVyZSBhcmUgcGF0Y2hlcyBpbiB0aGlzIHNlcmll
+cyB3aGVyZSBJIGhhcmQtY29kZWQgYSB2YWx1ZSBvZiAwIGJlY2F1c2UgZG9tYWluCmluZm9ybWF0
+aW9uIHdhcyBub3QgYXZhaWxhYmxlLgoKRm9yIHBsYWNlcyB3aGVyZSBkb21haW4gbnVtYmVyIGlu
+Zm9ybWF0aW9uIGlzIGF2YWlsYWJsZSwgSSBleHRyYWN0ZWQgZG9tYWluIG51bWJlcgphbmQgYWRk
+ZWQgaW50byBwY2lfZ2V0X2RvbWFpbl9idXNfYW5kX3Nsb3QoKSBjYWxsIHN1Y2ggYXMgeGVuIG9y
+IGJuIGRyaXZlcnMuCgpUaGlzIHdpbGwgYWxsb3cgdGhlc2UgZHJpdmVycyB0byBiZSB1c2VkIHdp
+dGggbm9uLXplcm8gc2VnbWVudCBudW1iZXJzLiBUaGVzZQppc3N1ZXMgd2VyZSBtaXNzZWQgdW50
+aWwgdGhpcyByZWZhY3RvcmluZyB0b29rIHBsYWNlLgoKcGNpX2dldF9kb21haW5fYnVzX2FuZF9z
+bG90KCkgZnVuY3Rpb24gbWFrZXMgdGhlIGRldmVsb3BlciB0aGluayBhYm91dCB3aGVyZSB0bwpm
+aW5kIHRoZSBkb21haW4gbnVtYmVyIGFzIGl0IGlzIG1hbmRhdG9yeS4gCgpJIGFsc28gZG91Ymxl
+IGNoZWNrZWQgdGhhdCBhbGwgY3VycmVudCB1c2VycyBvZiBwY2lfZ2V0X2RvbWFpbl9idXNfYW5k
+X3Nsb3QoKQphcmUgYWN0dWFsbHkgZXh0cmFjdGluZyB0aGUgZG9tYWluIG51bWJlciBjb3JyZWN0
+bHkgYWxvbmcgd2l0aCB0aGUgYnVzLCBkZXZpY2UsCmZ1bmN0aW9uLgoKVGhlIGFzc3VtcHRpb24g
+YXQgdGhpcyBwb2ludCBpcyBmb3IgcGNpX2dldF9idXNfYW5kX3Nsb3QoKSB1c2FnZXMgdG8gYmUg
+Y2F1Z2h0CmluIGNvZGUtcmV2aWV3LgoKVGhpcyBpcyBhIGJlc3QtZWZmb3J0IGFwcHJvYWNoIHRv
+d2FyZHMgZmxleGliaWxpdHkuCgotLSAKU2luYW4gS2F5YQpRdWFsY29tbSBEYXRhY2VudGVyIFRl
+Y2hub2xvZ2llcywgSW5jLiBhcyBhbiBhZmZpbGlhdGUgb2YgUXVhbGNvbW0gVGVjaG5vbG9naWVz
+LCBJbmMuClF1YWxjb21tIFRlY2hub2xvZ2llcywgSW5jLiBpcyBhIG1lbWJlciBvZiB0aGUgQ29k
+ZSBBdXJvcmEgRm9ydW0sIGEgTGludXggRm91bmRhdGlvbiBDb2xsYWJvcmF0aXZlIFByb2plY3Qu
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1h
+cm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5v
+cmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0t
+a2VybmVsCg==
