@@ -1,85 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 05/18] PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
-Date: Mon, 20 Nov 2017 14:32:08 +0100
-Message-Id: <20171120133222.27771-6-niklas.cassel@axis.com>
-In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 22 Nov 2017 08:53:02 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH 12/30] Drivers: ide: deprecate pci_get_bus_and_slot()
+Message-ID: <20171122075302.GB26583@kroah.com>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-13-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <1511328675-21981-13-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>,
+ "open list:IDE SUBSYSTEM" <linux-ide@vger.kernel.org>,
+ linux-arm-msm@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the static keyword from dw_pcie_ep_reset_bar() so that
-pci-dra7xx.c does not need its own copy of dw_pcie_ep_reset_bar().
+On Wed, Nov 22, 2017 at 12:30:57AM -0500, Sinan Kaya wrote:
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
+> 
+> Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+> extract the domain number. Other places, use the actual domain number from
+> the device.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c         | 9 ---------
- drivers/pci/dwc/pcie-designware-ep.c | 2 +-
- drivers/pci/dwc/pcie-designware.h    | 5 +++++
- 3 files changed, 6 insertions(+), 10 deletions(-)
+While this is a great generic text, you might want to make it a bit more
+custom to each specific patch.  For example, you don't use a domain of 0
+in this one, so the text is a bit wrong and confusing if you look at it
+stand-alone.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index e77a4ceed74c..d330b7d86ce3 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -337,15 +337,6 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
--{
--	u32 reg;
--
--	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
--	dw_pcie_writel_dbi2(pci, reg, 0x0);
--	dw_pcie_writel_dbi(pci, reg, 0x0);
--}
--
- static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 8d8019cdff2a..700ed2f4becf 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -30,7 +30,7 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
- 	pci_epc_linkup(epc);
- }
- 
--static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- {
- 	u32 reg;
- 
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 5a1da459eda5..37dfad8d003f 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -338,6 +338,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
- #else
- static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
- {
-@@ -351,5 +352,9 @@ static inline int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
-+
-+static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+{
-+}
- #endif
- #endif /* _PCIE_DESIGNWARE_H */
--- 
-2.14.2
+I like the series and the idea, just fix up this text in some of the
+patches and you should be fine.
+
+thanks,
+
+greg k-h
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
