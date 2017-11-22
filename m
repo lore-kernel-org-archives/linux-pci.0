@@ -1,123 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42940 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751191AbdKUREj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Nov 2017 12:04:39 -0500
-Date: Tue, 21 Nov 2017 17:05:03 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Joe Perches <joe@perches.com>
-Cc: Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: designware-ep: use ffz() instead of
- find_first_zero_bit()
-Message-ID: <20171121170503.GB15713@red-moon>
-References: <20171116183438.12613-1-niklas.cassel@axis.com>
- <20171117113835.GB21148@red-moon>
- <1511280730.6989.30.camel@perches.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:47938 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751375AbdKVT6s (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 14:58:48 -0500
+Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
+To: Jani Nikula <jani.nikula@linux.intel.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        linux-pci@vger.kernel.org
+Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
+ <1511337146.4512.6.camel@linux.intel.com>
+ <4541eaef-745a-e78f-e61d-1c7c207b551e@codeaurora.org>
+ <87o9nut7n1.fsf@intel.com>
+From: Timur Tabi <timur@codeaurora.org>
+Message-ID: <2eae0561-5597-9bb8-89a8-8bcac1a2de70@codeaurora.org>
+Date: Wed, 22 Nov 2017 13:58:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1511280730.6989.30.camel@perches.com>
+In-Reply-To: <87o9nut7n1.fsf@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 21, 2017 at 08:12:10AM -0800, Joe Perches wrote:
-> On Fri, 2017-11-17 at 11:38 +0000, Lorenzo Pieralisi wrote:
-> > Please follow Bjorn's request for patch formatting:
-> > 
-> > https://marc.info/?l=linux-pci&m=150905742808166&w=2
-> > 
-> > I would mention in the commit title that this is a fix.
-> > 
-> > eg "PCI: designware-ep: Fix find_first_zero_bit() usage"
-> > 
-> > On Thu, Nov 16, 2017 at 07:34:38PM +0100, Niklas Cassel wrote:
-> > > find_first_zero_bit()'s parameter 'size' is defined in bits,
-> > > not in bytes.
-> > > 
-> > > find_first_zero_bit() was called with bytes rather than bits,
-> > 
-> > "was called with size in bytes"...
-> 
-> This code also uses set_bit/clear_bit.
-> 
-> I suggest not intermixing set_bit/clear_bit calls and ffz
-> on the same object.
-> 
-> Use either (&/~/ffz) or (set_bit/clear_bit/find_first_zero_bit)
-> 
-> BITS_PER_LONG would work fine for find_first_zero_bit
+On 11/22/2017 01:50 PM, Jani Nikula wrote:
+>>> 	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0,
+>>> 							   PCI_DEVFN(0, 0));
+>>>
+>>> Can you please resend like that.
+>> I did this at the beginning and but, I hit a checkpatch problem with
+>> more than 80 characters. That's why, I moved the devfn value assignment
+>> to a different line.
+> Please ignore checkpatch when it makes the code worse. 80 is not a
+> strict limit.
 
-That would do as a fix and I agree with you that we should not mix the
-APIs usage (a check for return value < BITS_PER_LONG should be added too
-though).
+How about this:
 
-Actually we can just allocate a bitmap given that we know the bitmap
-required size (num_{ib/ob}_windows) and update the find_first_zero_bit()
-call with the appropriate size in bits parameter but that can be
-a subsequent refactoring patch.
+	dev_priv->bridge_dev =
+		pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
 
-Thanks,
-Lorenzo
+That should fit, and it's very readable.
 
-> > > which thus defined a too low upper limit, causing
-> > > dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
-> > > and bar 5, which made bar 5 overwrite the settings set by bar 4.
-> > > 
-> > > ./pcitest.sh
-> > > BAR tests
-> > > BAR0:		OKAY
-> > > BAR1:		OKAY
-> > > BAR2:		OKAY
-> > > BAR3:		OKAY
-> > > BAR4:		NOT OKAY
-> > > BAR5:		OKAY
-> > 
-> > Sorry but this example is pretty much useless - either you add
-> > a self-explanatory kernel log or you just remove it.
-> > 
-> > > Fix this by using replacing find_first_zero_bit() with ffz(),
-> > > since ffz() only works on a single 'unsigned long' and therefore
-> > > does not need a size argument.
-> > > 
-> > > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > 
-> > We need a Fixes: tag at least, see Bjorn's post above.
-> > 
-> > Thanks,
-> > Lorenzo
-> > 
-> > > ---
-> > >  drivers/pci/dwc/pcie-designware-ep.c | 6 ++----
-> > >  1 file changed, 2 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> > > index d53d5f168363..ab9a9e160daf 100644
-> > > --- a/drivers/pci/dwc/pcie-designware-ep.c
-> > > +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> > > @@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
-> > >  	u32 free_win;
-> > >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> > >  
-> > > -	free_win = find_first_zero_bit(&ep->ib_window_map,
-> > > -				       sizeof(ep->ib_window_map));
-> > > +	free_win = ffz(ep->ib_window_map);
-> > >  	if (free_win >= ep->num_ib_windows) {
-> > >  		dev_err(pci->dev, "no free inbound window\n");
-> > >  		return -EINVAL;
-> > > @@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
-> > >  	u32 free_win;
-> > >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> > >  
-> > > -	free_win = find_first_zero_bit(&ep->ob_window_map,
-> > > -				       sizeof(ep->ob_window_map));
-> > > +	free_win = ffz(ep->ob_window_map);
-> > >  	if (free_win >= ep->num_ob_windows) {
-> > >  		dev_err(pci->dev, "no free outbound window\n");
-> > >  		return -EINVAL;
-> > > -- 
-> > > 2.14.2
-> > > 
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
+Technologies, Inc.  Qualcomm Technologies, Inc. is a member of the
+Code Aurora Forum, a Linux Foundation Collaborative Project.
