@@ -1,65 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54270 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752239AbdK0OFb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 09:05:31 -0500
-Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
-To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
- <1511337146.4512.6.camel@linux.intel.com>
- <4541eaef-745a-e78f-e61d-1c7c207b551e@codeaurora.org>
- <1511422959.4641.5.camel@linux.intel.com>
- <0b12dcfe-1ee1-10ef-4db3-9c9d42dc4703@codeaurora.org>
- <1511773014.4627.14.camel@linux.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <9ac159ca-c6c7-2ce0-4d15-07bab6484adf@codeaurora.org>
-Date: Mon, 27 Nov 2017 09:05:28 -0500
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH 14/30] powerpc/powermac: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:30:59 -0500
+Message-Id: <1511328675-21981-15-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ "open list:LINUX FOR POWER MACINTOSH" <linuxppc-dev@lists.ozlabs.org>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <1511773014.4627.14.camel@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/27/2017 3:56 AM, Joonas Lahtinen wrote:
-> On Thu, 2017-11-23 at 13:37 -0500, Sinan Kaya wrote:
->> On 11/23/2017 2:42 AM, Joonas Lahtinen wrote:
->>> It is not longer than 80 characters when you break line before the
->>> PCI_DEVFN like I proposed. Or you can break it after the "=", too,
->>> either way works fine.
->>
->> I posted V2 with this suggestion. 
->>
->> https://patchwork.kernel.org/patch/10071759/
->>
->> Let me know what you think about the domain number call here. 
->>
->> u32 domain = pci_domain_nr(dev_priv->drm.pdev->bus);
-> 
-> The function return signature is 'int' as well as the parameter in
-> pci_get_domain_bus_and_slot is type 'int', so why fight it and try to
-> make the variable 'u32'?
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Agreed. I made this change on V3.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-> 
->> I don't have a way to test this change. I traced the drm_device's pdev
->> assignment in the code. It should work fine but I don't have a proof.
-> 
-> Send the patch to intel-gfx@lists.freedesktop.org and it should get
-> automatically tested by our CI system.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/macintosh/via-pmu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks, Let me post V3 and put this address on CC.
-
-> 
-> Regards, Joonas
-> 
-
-
+diff --git a/drivers/macintosh/via-pmu.c b/drivers/macintosh/via-pmu.c
+index c4c2b3b..3e8b3b6 100644
+--- a/drivers/macintosh/via-pmu.c
++++ b/drivers/macintosh/via-pmu.c
+@@ -1799,7 +1799,7 @@ static int powerbook_sleep_grackle(void)
+ 	struct adb_request req;
+ 	struct pci_dev *grackle;
+ 
+-	grackle = pci_get_bus_and_slot(0, 0);
++	grackle = pci_get_domain_bus_and_slot(0, 0, 0);
+ 	if (!grackle)
+ 		return -ENODEV;
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
