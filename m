@@ -1,253 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:14827 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753867AbdKXPzO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 10:55:14 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
-CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 07/10] PCI: tegra: free resources on probe failure
-Date: Fri, 24 Nov 2017 21:23:17 +0530
-Message-ID: <1511538800-8275-8-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:46022 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753518AbdKVWuz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:50:55 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2 29/29] PCI: remove pci_get_bus_and_slot() function
+Date: Wed, 22 Nov 2017 17:49:24 -0500
+Message-Id: <1511390964-9979-30-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-tegra_pcie_probe() can fail in multiple instances, this patch takes care
-of freeing the resources which are allocated before probe fail.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Now that all users of pci_get_bus_and_slot() switched to
+pci_get_domain_bus_and_slot(), it is now safe to remove this function.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/host/pci-tegra.c | 102 ++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 86 insertions(+), 16 deletions(-)
+ include/linux/pci.h | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index b52bdd941249..09f52cd569c6 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -681,14 +681,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- 	pci_add_resource(windows, &pcie->busn);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d16a7c0..8c1b650 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -957,11 +957,6 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn);
+ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
+ 					    unsigned int devfn);
+-static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+-						   unsigned int devfn)
+-{
+-	return pci_get_domain_bus_and_slot(0, bus, devfn);
+-}
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
+ int pci_dev_present(const struct pci_device_id *ids);
  
- 	err = devm_request_pci_bus_resources(dev, windows);
--	if (err < 0)
-+	if (err < 0) {
-+		pci_free_resource_list(windows);
- 		return err;
-+	}
+@@ -1676,9 +1671,6 @@ static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+ static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
+ 						unsigned int devfn)
+ { return NULL; }
+-static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+-						unsigned int devfn)
+-{ return NULL; }
  
- 	pci_remap_iospace(&pcie->pio, pcie->io.start);
- 
- 	return 0;
- }
- 
-+static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
-+{
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
-+
-+	pci_unmap_iospace(&pcie->pio);
-+	pci_free_resource_list(windows);
-+}
-+
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
- 	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
-@@ -1089,29 +1100,40 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
--static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
- 	int err;
- 
--	/* TODO: disable and unprepare clocks? */
--
- 	if (soc->program_uphy) {
- 		err = tegra_pcie_phy_power_off(pcie);
- 		if (err < 0)
- 			dev_err(dev, "failed to power off PHY(s): %d\n", err);
- 	}
-+}
-+
-+static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+{
-+	struct device *dev = pcie->dev;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	int err;
- 
- 	reset_control_assert(pcie->afi_rst);
- 	reset_control_assert(pcie->pex_rst);
- 
--	if (!dev->pm_domain)
--		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-+	clk_disable_unprepare(pcie->pll_e);
-+	if (soc->has_cml_clk)
-+		clk_disable_unprepare(pcie->cml_clk);
-+	clk_disable_unprepare(pcie->afi_clk);
-+	clk_disable_unprepare(pcie->pex_clk);
- 
- 	err = regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
- 	if (err < 0)
- 		dev_warn(dev, "failed to disable regulators: %d\n", err);
-+
-+	if (!dev->pm_domain)
-+		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
- }
- 
- static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-@@ -1242,6 +1264,15 @@ static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_phys_put_legacy(struct tegra_pcie *pcie)
-+{
-+	int err;
-+
-+	err = phy_exit(pcie->phy);
-+	if (err < 0)
-+		dev_err(pcie->dev, "failed to teardown PHY: %d\n", err);
-+}
-+
- static struct phy *devm_of_phy_optional_get_index(struct device *dev,
- 						  struct device_node *np,
- 						  const char *consumer,
-@@ -1295,6 +1326,19 @@ static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
- 	return 0;
- }
- 
-+static void tegra_pcie_port_put_phys(struct tegra_pcie_port *port)
-+{
-+	struct device *dev = port->pcie->dev;
-+	unsigned int i;
-+	int err;
-+
-+	for (i = 0; i < port->lanes; i++) {
-+		err = phy_exit(port->phys[i]);
-+		if (err < 0)
-+			dev_err(dev, "failed to teardown PHY#%u: %d\n", i, err);
-+	}
-+}
-+
- static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- {
- 	const struct tegra_pcie_soc *soc = pcie->soc;
-@@ -1314,6 +1358,19 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
-+{
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	struct device_node *np = pcie->dev->of_node;
-+	struct tegra_pcie_port *port;
-+
-+	if (!soc->has_gen2 || of_find_property(np, "phys", NULL) != NULL)
-+		tegra_pcie_phys_put_legacy(pcie);
-+
-+	list_for_each_entry(port, &pcie->ports, list)
-+		tegra_pcie_port_put_phys(port);
-+}
-+
- static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -1346,7 +1403,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	err = tegra_pcie_power_on(pcie);
- 	if (err) {
- 		dev_err(dev, "failed to power up: %d\n", err);
--		return err;
-+		goto phys_put;
- 	}
- 
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
-@@ -1404,25 +1461,23 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 
- poweroff:
- 	tegra_pcie_power_off(pcie);
-+phys_put:
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- 	return err;
- }
- 
- static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- {
--	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
--	int err;
- 
- 	if (pcie->irq > 0)
- 		free_irq(pcie->irq, pcie);
- 
- 	tegra_pcie_power_off(pcie);
- 
--	if (soc->program_uphy) {
--		err = phy_exit(pcie->phy);
--		if (err < 0)
--			dev_err(dev, "failed to teardown PHY: %d\n", err);
--	}
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- 
- 	return 0;
- }
-@@ -2351,6 +2406,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 	}
- }
- 
-+static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port, *tmp;
-+
-+	reset_control_assert(pcie->pcie_xrst);
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		tegra_pcie_port_disable(port);
-+}
-+
- static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
- 					 struct pci_dev *pci_dev)
- {
-@@ -2671,7 +2736,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	err = tegra_pcie_request_resources(pcie);
- 	if (err)
--		goto put_resources;
-+		goto disable_controller;
- 
- 	/* setup the AFI address translations */
- 	tegra_pcie_setup_translations(pcie);
-@@ -2680,7 +2745,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		err = tegra_pcie_enable_msi(pcie);
- 		if (err < 0) {
- 			dev_err(dev, "failed to enable MSI support: %d\n", err);
--			goto put_resources;
-+			goto free_resources;
- 		}
- 	}
- 
-@@ -2721,6 +2786,11 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- disable_msi:
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
-+	tegra_pcie_disable_ports(pcie);
-+free_resources:
-+	tegra_pcie_free_resources(pcie);
-+disable_controller:
-+	tegra_pcie_disable_controller(pcie);
- put_resources:
- 	tegra_pcie_put_resources(pcie);
- 	return err;
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
 -- 
-2.1.4
+1.9.1
