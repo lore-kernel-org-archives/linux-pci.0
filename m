@@ -1,78 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Nov 2017 18:30:49 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: changbin.du@intel.com
-Cc: bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
-        x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fail pci_map_rom if the PCI ROM is invalid
-Message-ID: <20171108003049.GC22847@bhelgaas-glaptop.roam.corp.google.com>
-References: <1509594522-6841-1-git-send-email-changbin.du@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 22 Nov 2017 17:58:29 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH 29/30] i7300_idle: deprecate pci_get_bus_and_slot()
+Message-ID: <20171122165829.GA2651@kroah.com>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-30-git-send-email-okaya@codeaurora.org>
+ <20171122075345.GC26583@kroah.com>
+ <81de37c1-26b5-41f7-ab32-b98012890971@codeaurora.org>
+ <20171122164546.GB30812@kroah.com>
+ <3cca8693-72bf-db72-f698-f111c9ef707c@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1509594522-6841-1-git-send-email-changbin.du@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <3cca8693-72bf-db72-f698-f111c9ef707c@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>, linux-arm-msm@vger.kernel.org,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 02, 2017 at 11:48:42AM +0800, changbin.du@intel.com wrote:
-> From: Changbin Du <changbin.du@intel.com>
+On Wed, Nov 22, 2017 at 11:50:53AM -0500, Sinan Kaya wrote:
+> On 11/22/2017 11:45 AM, Greg Kroah-Hartman wrote:
+> >> Funny thing is nobody is calling this function. Maybe, I should just kill it
+> >> instead.
+> > Yes, delete it.  Why doesn't the build warn about it not being used?
+> > 
 > 
-> If we detected a invalid PCI ROM (e.g. Invalid PCI ROM header signature),
-> we should unmap it immediately and fail. It doesn't make any sense that
-> return a mapped area with size of 0.
-> 
-> I have seen this case on Intel GVTg vGPU, which have no vbios. It will
-> not cause a real problem, but we should skip it as early as possible.
-> 
-> Signed-off-by: Changbin Du <changbin.du@intel.com>
+> OK. Because it is in a header file that nobody includes.
 
-Applied to pci/resource for v4.15, thanks!
+Even better, just delete the whole file!  :)
 
-I split this into two patches: (1) moving the disable to err_ioremap, and
-(2) the actual "if (!*size)" change which is the interesting part.
-
-> ---
->  drivers/pci/rom.c | 19 +++++++++++++------
->  1 file changed, 13 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-> index b6edb18..1f5e6af 100644
-> --- a/drivers/pci/rom.c
-> +++ b/drivers/pci/rom.c
-> @@ -147,12 +147,8 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
->  		return NULL;
->  
->  	rom = ioremap(start, *size);
-> -	if (!rom) {
-> -		/* restore enable if ioremap fails */
-> -		if (!(res->flags & IORESOURCE_ROM_ENABLE))
-> -			pci_disable_rom(pdev);
-> -		return NULL;
-> -	}
-> +	if (!rom)
-> +		goto err_ioremap;
->  
->  	/*
->  	 * Try to find the true size of the ROM since sometimes the PCI window
-> @@ -160,7 +156,18 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
->  	 * True size is important if the ROM is going to be copied.
->  	 */
->  	*size = pci_get_rom_size(pdev, rom, *size);
-> +	if (!*size)
-> +		goto invalid_rom;
-> +
->  	return rom;
-> +
-> +invalid_rom:
-> +	iounmap(rom);
-> +err_ioremap:
-> +	/* restore enable if ioremap fails */
-> +	if (!(res->flags & IORESOURCE_ROM_ENABLE))
-> +		pci_disable_rom(pdev);
-> +	return NULL;
->  }
->  EXPORT_SYMBOL(pci_map_rom);
->  
-> -- 
-> 2.7.4
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
