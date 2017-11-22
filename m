@@ -1,72 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53978 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932068AbdK0Q6Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 11:58:25 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-alpha@vger.kernel.org (open list:ALPHA PORT),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 01/29] alpha/PCI: deprecate pci_get_bus_and_slot()
-Date: Mon, 27 Nov 2017 11:57:38 -0500
-Message-Id: <1511801886-6753-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+Received: from smtprelay0124.hostedemail.com ([216.40.44.124]:57833 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751249AbdKVTV3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 14:21:29 -0500
+Message-ID: <1511378484.6989.104.camel@perches.com>
+Subject: Re: [PATCH] NTB: switchtec_ntb: fix spelling mistake: "peforming"
+ -> "performing"
+From: Joe Perches <joe@perches.com>
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Colin King <colin.king@canonical.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>, linux-pci@vger.kernel.org,
+        linux-ntb@googlegroups.com
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 22 Nov 2017 11:21:24 -0800
+In-Reply-To: <b499bccf-fbac-cab6-f9d2-2edecfac2330@deltatee.com>
+References: <20171121225945.29377-1-colin.king@canonical.com>
+         <1511320389.6989.44.camel@perches.com>
+         <b499bccf-fbac-cab6-f9d2-2edecfac2330@deltatee.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Wed, 2017-11-22 at 11:53 -0700, Logan Gunthorpe wrote:
+> 
+> On 21/11/17 08:13 PM, Joe Perches wrote:
+> > probably nicer to add the missing newlines too.
+> 
+> Oh, my mistake.
+> 
+> I was never sure what was correct so I think I've been pretty lax about 
+> that. I'll clean that up.
+> 
+> Seems like something that should be added to checkpatch. I may attempt a 
+> patch for that.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/alpha/kernel/pci.c          | 2 +-
- arch/alpha/kernel/sys_nautilus.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 08235bb..e866daf 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -416,7 +416,7 @@ struct resource * __init
- 		if (bus == 0 && dfn == 0) {
- 			hose = pci_isa_hose;
- 		} else {
--			dev = pci_get_bus_and_slot(bus, dfn);
-+			dev = pci_get_domain_bus_and_slot(0, bus, dfn);
- 			if (!dev)
- 				return -ENODEV;
- 			hose = dev->sysdata;
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 239dc0e..ff4f54b 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -237,7 +237,7 @@
- 	bus = hose->bus = bridge->bus;
- 	pcibios_claim_one_bus(bus);
- 
--	irongate = pci_get_bus_and_slot(0, 0);
-+	irongate = pci_get_domain_bus_and_slot(pci_domain_nr(bus), 0, 0);
- 	bus->self = irongate;
- 	bus->resource[0] = &irongate_io;
- 	bus->resource[1] = &irongate_mem;
--- 
-1.9.1
+Good luck but I think that's fairly difficult to do
+well without too high a ratio of false-positives.
