@@ -1,80 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56272 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39922 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752297AbdLACxL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Nov 2017 21:53:11 -0500
+        with ESMTP id S1751784AbdKVFcW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:22 -0500
 From: Sinan Kaya <okaya@codeaurora.org>
 To: linux-pci@vger.kernel.org, timur@codeaurora.org
 Cc: linux-arm-msm@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         Sinan Kaya <okaya@codeaurora.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V4 3/5] device property: Introduce a common API to fetch device match data
-Date: Thu, 30 Nov 2017 21:52:54 -0500
-Message-Id: <1512096776-22883-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
-References: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
+Subject: [PATCH 19/30] PCI/quirks: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:31:04 -0500
+Message-Id: <1511328675-21981-20-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is an OF/ACPI function to obtain the driver data. We want to hide
-OF/ACPI details from the device drivers and abstract following the device
-family of functions.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
+
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
 Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/base/property.c  | 14 ++++++++++++++
- include/linux/property.h |  2 ++
- 2 files changed, 16 insertions(+)
+ drivers/pci/quirks.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/base/property.c b/drivers/base/property.c
-index 7ed99c1..6adec89 100644
---- a/drivers/base/property.c
-+++ b/drivers/base/property.c
-@@ -15,6 +15,7 @@
- #include <linux/kernel.h>
- #include <linux/of.h>
- #include <linux/of_address.h>
-+#include <linux/of_device.h>
- #include <linux/of_graph.h>
- #include <linux/property.h>
- #include <linux/etherdevice.h>
-@@ -1335,3 +1336,16 @@ int fwnode_graph_parse_endpoint(const struct fwnode_handle *fwnode,
- 	return fwnode_call_int_op(fwnode, graph_parse_endpoint, endpoint);
- }
- EXPORT_SYMBOL(fwnode_graph_parse_endpoint);
-+
-+void *device_get_match_data(struct device *dev)
-+{
-+	void *ret;
-+
-+	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
-+		ret = (void *)of_device_get_match_data(dev);
-+	else
-+		ret = acpi_get_match_data(dev);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(device_get_match_data);
-diff --git a/include/linux/property.h b/include/linux/property.h
-index 6bebee1..01fa55b 100644
---- a/include/linux/property.h
-+++ b/include/linux/property.h
-@@ -275,6 +275,8 @@ int device_add_properties(struct device *dev,
- 
- enum dev_dma_attr device_get_dma_attr(struct device *dev);
- 
-+void *device_get_match_data(struct device *dev);
-+
- int device_get_phy_mode(struct device *dev);
- 
- void *device_get_mac_address(struct device *dev, char *addr, int alen);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 911b3b6..85a5308 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2699,7 +2699,7 @@ static void __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
+ 	 * HT MSI mapping should be disabled on devices that are below
+ 	 * a non-Hypertransport host bridge. Locate the host bridge...
+ 	 */
+-	host_bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
++	host_bridge = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
+ 	if (host_bridge == NULL) {
+ 		dev_warn(&dev->dev, "nv_msi_ht_cap_quirk didn't locate host bridge\n");
+ 		return;
 -- 
 1.9.1
