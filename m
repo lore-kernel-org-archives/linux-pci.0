@@ -1,102 +1,91 @@
-Return-Path: <SRS0=4I1z=CE=ti.com=j-keerthy@kernel.org>
-Return-Path: <SRS0=4I1z=CE=ti.com=j-keerthy@kernel.org>
-Subject: Re: [PATCH v4] pci: dwc: dra7xx: Add shutdown handler to cleanly turn
- off clocks
-To: Niklas Cassel <nks.gnu@gmail.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: <kishon@ti.com>, <bhelgaas@google.com>, <t-kristo@ti.com>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-References: <1505885055-30657-1-git-send-email-j-keerthy@ti.com>
- <20171011193207.GO25517@bhelgaas-glaptop.roam.corp.google.com>
- <CAD5ja62_fT+xg6G_ygN+8GScMYa62M7jNEoDxD89n7AUBjwPDw@mail.gmail.com>
-From: Keerthy <j-keerthy@ti.com>
-Message-ID: <4ab0e697-b23b-0cc6-6ffa-8479e07c5aed@ti.com>
-Date: Mon, 6 Nov 2017 10:34:28 +0530
-MIME-Version: 1.0
-In-Reply-To: <CAD5ja62_fT+xg6G_ygN+8GScMYa62M7jNEoDxD89n7AUBjwPDw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Joerg Roedel <joro@8bytes.org>,
+        iommu@lists.linux-foundation.org (open list:AMD IOMMU (AMD-VI)),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 13/30] iommu/amd: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:30:58 -0500
+Message-Id: <1511328675-21981-14-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-On Friday 03 November 2017 08:00 PM, Niklas Cassel wrote:
-> dra7xx_pcie_shutdown should be static.
-> 
-> This patch introduces a new sparse warning.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/iommu/amd_iommu.c      |  3 ++-
+ drivers/iommu/amd_iommu_init.c | 10 ++++++----
+ drivers/iommu/amd_iommu_v2.c   |  3 ++-
+ 3 files changed, 10 insertions(+), 6 deletions(-)
 
-Thanks Niklas for reporting.
-
-Bjorn,
-
-Should i send a next version or just a fix patch on top of this?
-
-Regards,
-Keerthy
-
-> 
-> On Wed, Oct 11, 2017 at 9:32 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Wed, Sep 20, 2017 at 10:54:15AM +0530, Keerthy wrote:
->>> Add shutdown handler to cleanly turn off clocks. This will help
->>> in cases of kexec where in a new kernel can boot abruptly.
->>>
->>> Signed-off-by: Keerthy <j-keerthy@ti.com>
->>> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
->>
->> Applied to pci/host-dra7xx for v4.15, thanks!
->>
->>> ---
->>>
->>> Changes in v4:
->>>
->>>   * Added the missing changes from v2!
->>>
->>> Changes in v3:
->>>
->>>   * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
->>>   * Added more details to commit log.
->>>
->>> Changes in v2:
->>>
->>>   * used a local dev pointer instead of dereferencing dev at multiple places.
->>>   * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
->>>
->>>  drivers/pci/dwc/pci-dra7xx.c | 17 +++++++++++++++++
->>>  1 file changed, 17 insertions(+)
->>>
->>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->>> index 34427a6..d084800 100644
->>> --- a/drivers/pci/dwc/pci-dra7xx.c
->>> +++ b/drivers/pci/dwc/pci-dra7xx.c
->>> @@ -794,6 +794,22 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->>>  }
->>>  #endif
->>>
->>> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
->>> +{
->>> +     struct device *dev = &pdev->dev;
->>> +     struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
->>> +     int ret;
->>> +
->>> +     dra7xx_pcie_stop_link(dra7xx->pci);
->>> +
->>> +     ret = pm_runtime_put_sync(dev);
->>> +     if (ret < 0)
->>> +             dev_dbg(dev, "pm_runtime_put_sync failed\n");
->>> +
->>> +     pm_runtime_disable(dev);
->>> +     dra7xx_pcie_disable_phy(dra7xx);
->>> +}
->>> +
->>>  static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
->>>       SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
->>>       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
->>> @@ -807,5 +823,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->>>               .suppress_bind_attrs = true,
->>>               .pm     = &dra7xx_pcie_pm_ops,
->>>       },
->>> +     .shutdown = dra7xx_pcie_shutdown,
->>>  };
->>>  builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
->>> --
->>> 1.9.1
->>>
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 8e8874d..2c3452f 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -528,7 +528,8 @@ static void amd_iommu_report_page_fault(u16 devid, u16 domain_id,
+ 	struct iommu_dev_data *dev_data = NULL;
+ 	struct pci_dev *pdev;
+ 
+-	pdev = pci_get_bus_and_slot(PCI_BUS_NUM(devid), devid & 0xff);
++	pdev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(devid),
++					   devid & 0xff);
+ 	if (pdev)
+ 		dev_data = get_dev_data(&pdev->dev);
+ 
+diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
+index 6fe2d03..8d159ff 100644
+--- a/drivers/iommu/amd_iommu_init.c
++++ b/drivers/iommu/amd_iommu_init.c
+@@ -1697,8 +1697,8 @@ static int iommu_init_pci(struct amd_iommu *iommu)
+ 	u32 range, misc, low, high;
+ 	int ret;
+ 
+-	iommu->dev = pci_get_bus_and_slot(PCI_BUS_NUM(iommu->devid),
+-					  iommu->devid & 0xff);
++	iommu->dev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(iommu->devid),
++						 iommu->devid & 0xff);
+ 	if (!iommu->dev)
+ 		return -ENODEV;
+ 
+@@ -1763,9 +1763,11 @@ static int iommu_init_pci(struct amd_iommu *iommu)
+ 
+ 	if (is_rd890_iommu(iommu->dev)) {
+ 		int i, j;
++		u16 busnr = iommu->dev->bus->number;
++		u16 devfn = PCI_DEVFN(0, 0);
+ 
+-		iommu->root_pdev = pci_get_bus_and_slot(iommu->dev->bus->number,
+-				PCI_DEVFN(0, 0));
++		iommu->root_pdev = pci_get_domain_bus_and_slot(0, busnr,
++							       devfn);
+ 
+ 		/*
+ 		 * Some rd890 systems may not be fully reconfigured by the
+diff --git a/drivers/iommu/amd_iommu_v2.c b/drivers/iommu/amd_iommu_v2.c
+index 7d94e1d..8696382 100644
+--- a/drivers/iommu/amd_iommu_v2.c
++++ b/drivers/iommu/amd_iommu_v2.c
+@@ -564,7 +564,8 @@ static int ppr_notifier(struct notifier_block *nb, unsigned long e, void *data)
+ 	finish      = (iommu_fault->tag >> 9) & 1;
+ 
+ 	devid = iommu_fault->device_id;
+-	pdev = pci_get_bus_and_slot(PCI_BUS_NUM(devid), devid & 0xff);
++	pdev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(devid),
++					   devid & 0xff);
+ 	if (!pdev)
+ 		return -ENODEV;
+ 	dev_data = get_dev_data(&pdev->dev);
+-- 
+1.9.1
