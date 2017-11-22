@@ -1,93 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57220 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751854AbdKVQ2k (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 11:28:40 -0500
-Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
-To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
- <1511337146.4512.6.camel@linux.intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <4541eaef-745a-e78f-e61d-1c7c207b551e@codeaurora.org>
-Date: Wed, 22 Nov 2017 11:28:37 -0500
+Received: from foss.arm.com ([217.140.101.70]:50886 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752021AbdKVLh1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 22 Nov 2017 06:37:27 -0500
+Date: Wed, 22 Nov 2017 11:37:49 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, nsekhar@ti.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Xiaowei Bao <xiaowei.bao@nxp.com>,
+        Niklas Cassel <niklas.cassel@axis.com>
+Subject: Re: [PATCH] PCI: designware-ep: Fix ->get_msi() to check MSI_EN bit
+Message-ID: <20171122113749.GA26278@red-moon>
+References: <20171122090427.12371-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1511337146.4512.6.camel@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171122090427.12371-1-kishon@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/22/2017 2:52 AM, Joonas Lahtinen wrote:
-> Dropping the extra mailing lists and Dave, this is a rather trivial thing.
-> 
-> On Wed, 2017-11-22 at 00:30 -0500, Sinan Kaya wrote:
->> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
->> where a PCI device is present. This restricts the device drivers to be
->> reused for other domain numbers.
->>
->> Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
->> extract the domain number. Other places, use the actual domain number from
->> the device.
->>
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> 
-> <SNIP>
-> 
->> +++ b/drivers/gpu/drm/i915/i915_drv.c
->> @@ -419,7 +419,9 @@ static int i915_getparam(struct drm_device *dev, void *data,
->>  
->>  static int i915_get_bridge_dev(struct drm_i915_private *dev_priv)
->>  {
->> -	dev_priv->bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
->> +	uint16_t devfn = PCI_DEVFN(0, 0)
-> 
-> The would have to be "unsigned int" according to the function
-> signature.
+On Wed, Nov 22, 2017 at 02:34:27PM +0530, Kishon Vijay Abraham I wrote:
+> ->get_msi() now checks MSI_EN bit in the MSI CAPABILITY register to
+> find whether the host supports MSI instead of using the
+> MSI ADDRESS in the MSI CAPABILITY register.
 
-Even though the return value is unsigned int, PCI_DEVFN cannot be bigger
-than 16 bits. 
+I think that's a sensible thing to do regardless, given that I do not
+understand why 0x0 can't be a valid MSI address in the first place.
 
-http://elixir.free-electrons.com/linux/v4.14.1/source/include/uapi/linux/pci.h#L31
+> This fixes the issue with the following sequence
+>   'modprobe pci_endpoint_test' enables MSI
+>   'rmmod pci_endpoint_test' disables MSI but MSI address has a valid value
+>   'modprobe pci_endpoint_test no_msi=1' - Since MSI address has a valid
+> 	value (set during the previous insertion of the module), EP
 
-/*
- * The PCI interface treats multi-function devices as independent
- * devices.  The slot/function address of each device is encoded
- * in a single byte as follows:
- *
- *	7:3 = slot
- *	2:0 = function
- */
+Where is the address set ?
 
-It is common practice to use u16 for keeping devfn information in the
-kernel.
+> 	thinks host supports MSI.
 
+Add a Fixes: tag please.
+
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/dwc/pcie-designware-ep.c | 12 +++---------
+>  drivers/pci/dwc/pcie-designware.h    |  1 +
+>  2 files changed, 4 insertions(+), 9 deletions(-)
 > 
->> +
->> +	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0, devfn);
-> 
-> But the most straightforward change is to simply convert to:
-> 
-> 	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0,
-> 							   PCI_DEVFN(0, 0));
-> 
-> Can you please resend like that.
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index d53d5f168363..7c621877a939 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -197,20 +197,14 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
+>  static int dw_pcie_ep_get_msi(struct pci_epc *epc)
+>  {
+>  	int val;
+> -	u32 lower_addr;
+> -	u32 upper_addr;
+>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> -	val = dw_pcie_readb_dbi(pci, MSI_MESSAGE_CONTROL);
+> -	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
+> -
+> -	lower_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
+> -	upper_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
 
-I did this at the beginning and but, I hit a checkpatch problem with
-more than 80 characters. That's why, I moved the devfn value assignment
-to a different line.
+I can't find code that writes these registers, see above for my
+question.
 
-> 
-> Looks like this is a part of abigger series, so others may prefer
-> latter form too, to avoid the variable.
-> 
-> Regards, Joonas
-> 
+On top of that I think that what's done the EPF test function driver in
+struct pci_epf.bind() should be undone in struct pci_epf.unbind() and I
+do not think that's happening for MSIs.
 
+> -
+> -	if (!(lower_addr || upper_addr))
+> +	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+MSI_MESSAGE_CONTROL is written in dw_pcie_ep_set_msi(), I assume a write
+to bit[0] (ie MSI_CAP_MSI_EN_MASK) is ignored - it would be good if you
+can clarify that as well please.
+
+Thanks,
+Lorenzo
+
+> +	if (!(val & MSI_CAP_MSI_EN_MASK))
+>  		return -EINVAL;
+>  
+> +	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
+>  	return val;
+>  }
+>  
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index e5d9d77b778e..cb493bcae8b4 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -101,6 +101,7 @@
+>  #define MSI_MESSAGE_CONTROL		0x52
+>  #define MSI_CAP_MMC_SHIFT		1
+>  #define MSI_CAP_MME_SHIFT		4
+> +#define MSI_CAP_MSI_EN_MASK		0x1
+>  #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+>  #define MSI_MESSAGE_ADDR_L32		0x54
+>  #define MSI_MESSAGE_ADDR_U32		0x58
+> -- 
+> 2.11.0
+> 
