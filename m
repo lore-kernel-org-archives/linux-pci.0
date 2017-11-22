@@ -1,75 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36026 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751989AbdKMWkx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Nov 2017 17:40:53 -0500
-Subject: [PATCH v1 2/3] PCI: altera: Rename altera_pcie_link_is_up() to
- altera_pcie_link_up()
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        rfi@lists.rocketboards.org,
-        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Tanmay Inamdar <tinamdar@apm.com>
-Date: Mon, 13 Nov 2017 16:40:51 -0600
-Message-ID: <20171113224051.29024.76516.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:31894 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752128AbdKVLyh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 06:54:37 -0500
+Subject: Re: [PATCH] PCI: designware-ep: Fix ->get_msi() to check MSI_EN bit
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20171122090427.12371-1-kishon@ti.com>
+ <20171122113749.GA26278@red-moon>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, <nsekhar@ti.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>,
+        Niklas Cassel <niklas.cassel@axis.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <1c958730-e50e-06ea-84b5-592e63ddeb87@ti.com>
+Date: Wed, 22 Nov 2017 17:24:21 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20171122113749.GA26278@red-moon>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hi Lorenzo,
 
-Rename altera_pcie_link_is_up() to altera_pcie_link_up() to follow the
-convention of other drivers.  No functional change intended.
+On Wednesday 22 November 2017 05:07 PM, Lorenzo Pieralisi wrote:
+> On Wed, Nov 22, 2017 at 02:34:27PM +0530, Kishon Vijay Abraham I wrote:
+>> ->get_msi() now checks MSI_EN bit in the MSI CAPABILITY register to
+>> find whether the host supports MSI instead of using the
+>> MSI ADDRESS in the MSI CAPABILITY register.
+> 
+> I think that's a sensible thing to do regardless, given that I do not
+> understand why 0x0 can't be a valid MSI address in the first place.
+> 
+>> This fixes the issue with the following sequence
+>>   'modprobe pci_endpoint_test' enables MSI
+>>   'rmmod pci_endpoint_test' disables MSI but MSI address has a valid value
+>>   'modprobe pci_endpoint_test no_msi=1' - Since MSI address has a valid
+>> 	value (set during the previous insertion of the module), EP
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-altera.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+MSI address is written in the MSI capabiltiy register by the host.
+> 
+> Where is the address set ?
+> 
+>> 	thinks host supports MSI.
+> 
+> Add a Fixes: tag please.
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index b468b8cccf8d..5cc4f594d79a 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -105,7 +105,7 @@ static inline u32 cra_readl(struct altera_pcie *pcie, const u32 reg)
- 	return readl_relaxed(pcie->cra_base + reg);
- }
- 
--static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
-+static bool altera_pcie_link_up(struct altera_pcie *pcie)
- {
- 	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
- }
-@@ -142,7 +142,7 @@ static bool altera_pcie_valid_device(struct altera_pcie *pcie,
- {
- 	/* If there is no link, then there is no device */
- 	if (bus->number != pcie->root_bus_nr) {
--		if (!altera_pcie_link_is_up(pcie))
-+		if (!altera_pcie_link_up(pcie))
- 			return false;
- 	}
- 
-@@ -412,7 +412,7 @@ static void altera_wait_link_retrain(struct altera_pcie *pcie)
- 	/* Wait for link is up */
- 	start_jiffies = jiffies;
- 	for (;;) {
--		if (altera_pcie_link_is_up(pcie))
-+		if (altera_pcie_link_up(pcie))
- 			break;
- 
- 		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
-@@ -427,7 +427,7 @@ static void altera_pcie_retrain(struct altera_pcie *pcie)
- {
- 	u16 linkcap, linkstat, linkctl;
- 
--	if (!altera_pcie_link_is_up(pcie))
-+	if (!altera_pcie_link_up(pcie))
- 		return;
- 
- 	/*
+sure.
+> 
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/dwc/pcie-designware-ep.c | 12 +++---------
+>>  drivers/pci/dwc/pcie-designware.h    |  1 +
+>>  2 files changed, 4 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+>> index d53d5f168363..7c621877a939 100644
+>> --- a/drivers/pci/dwc/pcie-designware-ep.c
+>> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+>> @@ -197,20 +197,14 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
+>>  static int dw_pcie_ep_get_msi(struct pci_epc *epc)
+>>  {
+>>  	int val;
+>> -	u32 lower_addr;
+>> -	u32 upper_addr;
+>>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>  
+>> -	val = dw_pcie_readb_dbi(pci, MSI_MESSAGE_CONTROL);
+>> -	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
+>> -
+>> -	lower_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
+>> -	upper_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+> 
+> I can't find code that writes these registers, see above for my
+> question.
+
+IIUC the host will write to these registers in __pci_write_msi_msg using the
+configuration writes.
+> 
+> On top of that I think that what's done the EPF test function driver in
+> struct pci_epf.bind() should be undone in struct pci_epf.unbind() and I
+> do not think that's happening for MSIs.
+> 
+>> -
+>> -	if (!(lower_addr || upper_addr))
+>> +	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+> 
+> MSI_MESSAGE_CONTROL is written in dw_pcie_ep_set_msi(), I assume a write
+> to bit[0] (ie MSI_CAP_MSI_EN_MASK) is ignored - it would be good if you
+> can clarify that as well please.
+
+Do you mean dw_pcie_ep_set_msi can overwrite MSI_CAP_MSI_EN and we should avoid
+that?
+
+Thanks
+Kishon
