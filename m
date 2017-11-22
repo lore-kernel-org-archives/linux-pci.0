@@ -1,51 +1,53 @@
-Return-Path: <SRS0=qDb1=CR=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=qDb1=CR=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH v2 4/4] PCI/AER: Dont do recovery when DPC is enabled
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dongdong Liu <liudongdong3@huawei.com>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org
-References: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
- <1510721808-27164-5-git-send-email-poza@codeaurora.org>
- <20171115211447.GA7266@bhelgaas-glaptop.roam.corp.google.com>
- <16e82fb4-dda8-3790-e831-675f9a6fd388@codeaurora.org>
- <20171116201745.GB7266@bhelgaas-glaptop.roam.corp.google.com>
- <16b9ac67-042d-1010-0c8c-205b2fa40a7f@codeaurora.org>
- <20171118000243.GC16907@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <dddb6c7a-5bf9-8c26-f753-6223b35f4842@codeaurora.org>
-Date: Sun, 19 Nov 2017 11:41:01 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171118000243.GC16907@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1511353247.3539.10.camel@linux.intel.com>
+Subject: Re: [PATCH 23/30] [media] atomisp: deprecate pci_get_bus_and_slot()
+From: Alan Cox <alan@linux.intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org
+Date: Wed, 22 Nov 2017 12:20:47 +0000
+In-Reply-To: <1511328675-21981-24-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-24-git-send-email-okaya@codeaurora.org>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arushi Singhal <arushisinghal19971997@gmail.com>,
+ Kate Stewart <kstewart@linuxfoundation.org>,
+ kbuild test robot <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>,
+ Valentin Vidic <Valentin.Vidic@CARNet.hr>, linux-arm-msm@vger.kernel.org,
+ Philippe Ombredanne <pombredanne@nexb.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ Hans Verkuil <hans.verkuil@cisco.com>,
+ Avraham Shukron <avraham.shukron@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "open list:STAGING
+ SUBSYSTEM" <devel@driverdev.osuosl.org>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ linux-arm-kernel@lists.infradead.org, "open list:MEDIA INPUT
+ INFRASTRUCTURE \(V4L/DVB\)" <linux-media@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/17/2017 7:02 PM, Bjorn Helgaas wrote:
->> What do you think about the rescan following link up? The only entity
->> that does rescan today is hotplug after DPC recovery. There could be
->> a platform with DPC support but no hotplug support. 
->>
->> How should we handle it?
-> Good question.  If your system does support both DPC and hotplug, I
-> assume the link comes back up after you clear DPC Trigger Status.
-> Does pciehp notice that "link up" event and add the device back?
+On Wed, 2017-11-22 at 00:31 -0500, Sinan Kaya wrote:
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0
+> as
+> where a PCI device is present. This restricts the device drivers to
+> be
+> reused for other domain numbers.
 
-that's correct. we see a link up indication from hotplug driver followed
-by a rescan.
+The ISP v2 will always been in domain 0.
 
-> 
-> So I think your question is whether the DPC code should explicitly do
-> a rescan so that if we don't have pciehp, we'll still automatically
-> rediscover the device.  I dunno, maybe.  Seems like a plausible idea
-> anyway.
-
-OK, will add it to DPC driver for completeness.
+Alan
 
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
