@@ -1,110 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44644 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751344AbdKHRsc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Nov 2017 12:48:32 -0500
-Date: Wed, 8 Nov 2017 11:48:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com, rajatja@google.com,
-        yinghai@kernel.org, david.daney@cavium.com, Julia.Lawall@lip6.fr,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH V2 3/4] PCI: tegra: Apply sw fixups to support ASPM-L1
- Sub-States
-Message-ID: <20171108174829.GE28427@bhelgaas-glaptop.roam.corp.google.com>
-References: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
- <1509423769-10522-4-git-send-email-vidyas@nvidia.com>
- <20171107225007.GA22847@bhelgaas-glaptop.roam.corp.google.com>
- <ef7d193c-c114-d0c6-e450-c00ae3ab2d51@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V2 11/29] Drivers: ide: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 17:49:06 -0500
+Message-Id: <1511390964-9979-12-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ "open list:IDE SUBSYSTEM" <linux-ide@vger.kernel.org>,
+ "David S. Miller" <davem@davemloft.net>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ef7d193c-c114-d0c6-e450-c00ae3ab2d51@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 08, 2017 at 02:15:05PM +0530, Vidya Sagar wrote:
-> On Wednesday 08 November 2017 04:20 AM, Bjorn Helgaas wrote:
-> >On Tue, Oct 31, 2017 at 09:52:48AM +0530, Vidya Sagar wrote:
-> >>Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
-> >>values to get them reflected in ASPM-L1 Sub-States capability registers
-> >>Also adjusts internal counter values according to 19.2 MHz clk_m value
-> >>
-> >>Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> ...
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-> >>+u32 pcie_aspm_get_ltr_l_1_2_threshold(void)
-> >>+{
-> >>+	/* LTR L1.2 Threshold = 55us for all ports */
-> >>+	return ((0x37 << 16) | (0x02 << 29));
->
-> >I know you've already worked through this, but let me think out loud
-> >to try to figure this out myself.
-> >
-> >ASPM defines Link power states L0, L0s, and L1.  L1 PM Substates
-> >extend that by adding L1.1 and L1.2.  L1.2 presumably uses less power
-> >and has a longer exit delay than L1.1 [sec 5.5].
-> >
-> >Ports that support L1.2 must support Latency Tolerance Reporting (LTR)
-> >[sec 6.18].  When LTR is enabled, a device periodically sends LTR
-> >messages.
-> >
-> >When ASPM puts a Link into L1, it chooses either L1.1 or L1.2 based on
-> >LTR_L1.2_THRESHOLD and recent LTR messages.  If there's no LTR
-> >information it looks like LTR_L1.2_THRESHOLD doesn't matter and it
-> >always chooses L1.2 [sec 5.5.1].
-> >
-> >I don't see anything that writes PCI_EXP_DEVCTL2_LTR_EN, so I don't
-> >think Linux ever enables LTR.  Some BIOSes apparently enable it
-> >(Google for "LTR enabled").
->
-> I think this needs to be done in aspm.c file. i.e. whenever
-> sub-system enables L1.2, it should enable
-> LTR_EN also.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-That probably makes sense.
+Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
+and extract the domain number from struct pci_dev.
 
-> >1) It seems like the LTR_L1.2_THRESHOLD value should be computed based
-> >    on the latency requirements of downstream devices.  How did you
-> >    come up with 55us?
->
-> This is given by Tegra hardware folks.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/ide/sl82c105.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-I do not understand why this value should be dependent on the host
-bridge.  Can your hardware folks give more insight into this and how
-they derived 55us?
+diff --git a/drivers/ide/sl82c105.c b/drivers/ide/sl82c105.c
+index 8755df3..3300dac 100644
+--- a/drivers/ide/sl82c105.c
++++ b/drivers/ide/sl82c105.c
+@@ -239,8 +239,9 @@ static u8 sl82c105_bridge_revision(struct pci_dev *dev)
+ 	/*
+ 	 * The bridge should be part of the same device, but function 0.
+ 	 */
+-	bridge = pci_get_bus_and_slot(dev->bus->number,
+-			       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
++	bridge = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
++					dev->bus->number,
++					PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+ 	if (!bridge)
+ 		return -1;
+ 
+-- 
+1.9.1
 
-I'm repeating myself, but the threshold (in combination with LTR
-information) affects whether we enter L1.1 or L1.2.  If I understand
-correctly, this is all about the downstream devices and not at all
-about the host bridge.
 
-> ...
-> >3) We must support kernels with multiple host bridge drivers compiled
-> >    in, and the weak/strong symbol approach doesn't support using the
-> >    correct version, e.g., if we merge this patch, every system
-> >    containing the tegra driver would use this function, even if the
-> >    hardware had a different host bridge.  Also, if another driver
-> >    implemented its own version, we'd have duplicate symbols.
->
-> Yes. Agree with this too.
-> How about using quirks framework for this?
-
-If my assumption that "the threshold should be based on (a) the
-latency requirements of downstream devices and (b) perhaps some global
-power vs performance tradeoff" is correct, this doesn't really fit
-into any kind of quirks or static computation, including the current
-LTR_L1_2_THRESHOLD_BITS.
-
-What happens if you keep all the Tegra-specific parts of this series,
-i.e., you program the T_cmrt, T_pwr_on, and CLKREQ values, and enable
-advertising of ASPM L1 capability, but leave out the
-pcie_aspm_get_ltr_l_1_2_threshold() parts?  (BTW, I think you should
-reorder the series so you fix up all the delay values *before* you
-advertise ASPM L1.)
-
-I expect that to be functionally equivalent, but it would change the
-L1.1 vs L1.2 tradeoff, so it might have some performance impact,
-depending on what the downstream devices are.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
