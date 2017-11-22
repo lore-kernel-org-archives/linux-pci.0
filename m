@@ -1,66 +1,68 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 6 Nov 2017 18:11:13 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI: turn off PCIe services during shutdown
-Message-ID: <20171107001113.GA9538@bhelgaas-glaptop.roam.corp.google.com>
-References: <1508958063-6947-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1508958063-6947-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40034 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751799AbdKVFcX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:23 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 18/30] PCI: ibmphp: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:31:03 -0500
+Message-Id: <1511328675-21981-19-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Oct 25, 2017 at 03:01:02PM -0400, Sinan Kaya wrote:
-> Some of the PCIe services such as AER are being left enabled during
-> shutdown. This might cause spurious AER errors while SOC is being
-> powered down.
-> 
-> Let's clean up the PCIe services gracefully during shutdown to clear
-> these false positives.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Applied to pci/portdrv for v4.15, thanks!
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-> ---
->  drivers/pci/pcie/portdrv_pci.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 083276e..b350d12 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -246,6 +246,7 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
->  
->  	.probe		= pcie_portdrv_probe,
->  	.remove		= pcie_portdrv_remove,
-> +	.shutdown	= pcie_portdrv_remove,
->  
->  	.err_handler	= &pcie_portdrv_err_handler,
->  
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/hotplug/ibmphp_core.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 73cf846..92dd882 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -707,7 +707,8 @@ static void ibm_unconfigure_device(struct pci_func *func)
+ 	pci_lock_rescan_remove();
+ 
+ 	for (j = 0; j < 0x08; j++) {
+-		temp = pci_get_bus_and_slot(func->busno, (func->device << 3) | j);
++		temp = pci_get_domain_bus_and_slot(0, func->busno,
++						   (func->device << 3) | j);
+ 		if (temp) {
+ 			pci_stop_and_remove_bus_device(temp);
+ 			pci_dev_put(temp);
+@@ -780,7 +781,7 @@ static int ibm_configure_device(struct pci_func *func)
+ 	if (!(bus_structure_fixup(func->busno)))
+ 		flag = 1;
+ 	if (func->dev == NULL)
+-		func->dev = pci_get_bus_and_slot(func->busno,
++		func->dev = pci_get_domain_bus_and_slot(0, func->busno,
+ 				PCI_DEVFN(func->device, func->function));
+ 
+ 	if (func->dev == NULL) {
+@@ -793,7 +794,7 @@ static int ibm_configure_device(struct pci_func *func)
+ 		if (num)
+ 			pci_bus_add_devices(bus);
+ 
+-		func->dev = pci_get_bus_and_slot(func->busno,
++		func->dev = pci_get_domain_bus_and_slot(0, func->busno,
+ 				PCI_DEVFN(func->device, func->function));
+ 		if (func->dev == NULL) {
+ 			err("ERROR... : pci_dev still NULL\n");
+-- 
+1.9.1
