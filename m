@@ -1,182 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:55145 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751236AbdKMG6a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 01:58:30 -0500
-Date: Mon, 13 Nov 2017 07:58:26 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: rcar: Add the initialization of PCIe link in
- resume_noirq
-Message-ID: <20171113065826.zikx5nhsyrwacfg4@verge.net.au>
-References: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
- <20171110085926.kjieahdrxr2euxoq@verge.net.au>
- <f745e84d-858b-ff64-c5e3-b48993fd9691@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f745e84d-858b-ff64-c5e3-b48993fd9691@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45810 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753293AbdKVWuu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:50:50 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Gaurav Pathak <gauravpathak129@gmail.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2 23/29] staging: rts5208: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 17:49:18 -0500
+Message-Id: <1511390964-9979-24-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 10:14:33PM +0100, Marek Vasut wrote:
-> On 11/10/2017 09:59 AM, Simon Horman wrote:
-> > Hi Marek,
-> 
-> Hi Simon,
-> 
-> > On Wed, Nov 08, 2017 at 10:28:04AM +0100, Marek Vasut wrote:
-> >> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> >>
-> >> Reestablish the PCIe link very early in the resume process in case it
-> >> went down to prevent PCI accesses from hanging the bus. Such accesses
-> >> can happen early in the PCI resume process, in the resume_noirq, thus
-> >> the link must be reestablished in the resume_noirq callback of the
-> >> driver.
-> >>
-> >> Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> >> Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
-> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> >> Cc: Simon Horman <horms+renesas@verge.net.au>
-> >> Cc: Wolfram Sang <wsa@the-dreams.de>
-> >> Cc: linux-renesas-soc@vger.kernel.org
-> > 
-> > For patch-sets (with more than one patch) please provide a cover-letter.
-> > The --cover-letter option to git format-patch can help.
-> > 
-> >> ---
-> >>  drivers/pci/host/pcie-rcar.c | 31 ++++++++++++++++++++++++++++---
-> >>  1 file changed, 28 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> >> index 889603783f01..aa588a7d4811 100644
-> >> --- a/drivers/pci/host/pcie-rcar.c
-> >> +++ b/drivers/pci/host/pcie-rcar.c
-> >> @@ -43,6 +43,7 @@
-> >>  
-> >>  /* Transfer control */
-> >>  #define PCIETCTLR		0x02000
-> >> +#define  DL_DOWN		(1 << 3)
-> > 
-> > Can you use the BIT() macro here?
-> 
-> Yes, I'll also add a patch to the series to convert all the others to
-> the BIT() macro, to keep things consistent.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Great, thanks.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-> >>  #define  CFINIT			1
-> >>  #define PCIETSTR		0x02004
-> >>  #define  DATA_LINK_ACTIVE	1
-> >> @@ -529,7 +530,7 @@ static void phy_write_reg(struct rcar_pcie *pcie,
-> >>  	phy_wait_for_ack(pcie);
-> >>  }
-> >>  
-> >> -static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
-> >> +static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie, int atomic)
-> > 
-> > As Sergei mentioned bool seems like a more appropriate type for atomic.
-> 
-> I can actually get rid of this altogether.
+Remove unused rtsx_read_pci_cfg_byte() function.
 
-Nice :)
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/staging/rts5208/rtsx.c | 17 -----------------
+ drivers/staging/rts5208/rtsx.h |  2 --
+ 2 files changed, 19 deletions(-)
 
-> >>  {
-> >>  	unsigned int timeout = 10;
-> >>  
-> >> @@ -537,7 +538,10 @@ static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
-> >>  		if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
-> >>  			return 0;
-> >>  
-> >> -		msleep(5);
-> >> +		if (atomic)
-> >> +			mdelay(5);
-> >> +		else
-> >> +			msleep(5);
-> > 
-> > If we must delay, then I suppose this is reasonable.
-> 
-> See above
-> 
-> >>  	}
-> >>  
-> >>  	return -ETIMEDOUT;
-> >> @@ -595,7 +599,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
-> >>  	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> >>  
-> >>  	/* This will timeout if we don't have a link. */
-> >> -	err = rcar_pcie_wait_for_dl(pcie);
-> >> +	err = rcar_pcie_wait_for_dl(pcie, 0);
-> >>  	if (err)
-> >>  		return err;
-> >>  
-> >> @@ -1110,6 +1114,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
-> >>  	pcie = pci_host_bridge_priv(bridge);
-> >>  
-> >>  	pcie->dev = dev;
-> >> +	platform_set_drvdata(pdev, pcie);
-> >>  
-> >>  	INIT_LIST_HEAD(&pcie->resources);
-> >>  
-> >> @@ -1173,10 +1178,30 @@ static int rcar_pcie_probe(struct platform_device *pdev)
-> >>  	return err;
-> >>  }
-> >>  
-> >> +static int rcar_pcie_resume_noirq(struct device *dev)
-> >> +{
-> >> +	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-> >> +	u32 val = rcar_pci_read_reg(pcie, PMSR);
-> >> +	int ret = 0;
-> >> +
-> >> +	if ((val == 0) || (rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN)) {
-> > 
-> > Please remove the unnecessary parentheses from the line above.
-> > 
-> > Also, I would prefer if the function returned early.
-> > Something like (completely untested!):
-> 
-> This should work.
-> 
-> > 	if (rcar_pci_read_reg(pcie, PMSR) &&
-> > 	    !(rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN))
-> > 		return 0;
-> > 
-> > 	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> > 	return rcar_pcie_wait_for_dl(pcie, 1);
-> > 
-> >> +		/* Re-establish the PCIe link */
-> >> +		rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> >> +		ret = rcar_pcie_wait_for_dl(pcie, 1);
-> >> +	}
-> >> +
-> >> +	return ret;
-> >> +}
-> >> +
-> >> +static const struct dev_pm_ops rcar_pcie_pm_ops = {
-> >> +	.resume_noirq = rcar_pcie_resume_noirq,
-> >> +};
-> >> +
-> >>  static struct platform_driver rcar_pcie_driver = {
-> >>  	.driver = {
-> >>  		.name = "rcar-pcie",
-> >>  		.of_match_table = rcar_pcie_of_match,
-> >> +		.pm = &rcar_pcie_pm_ops,
-> >>  		.suppress_bind_attrs = true,
-> >>  	},
-> >>  	.probe = rcar_pcie_probe,
-> >> -- 
-> >> 2.11.0
-> >>
-> 
-> 
-> -- 
-> Best regards,
-> Marek Vasut
-> 
+diff --git a/drivers/staging/rts5208/rtsx.c b/drivers/staging/rts5208/rtsx.c
+index 89e2cfe..70e0b86 100644
+--- a/drivers/staging/rts5208/rtsx.c
++++ b/drivers/staging/rts5208/rtsx.c
+@@ -275,23 +275,6 @@ static int rtsx_acquire_irq(struct rtsx_dev *dev)
+ 	return 0;
+ }
+ 
+-int rtsx_read_pci_cfg_byte(u8 bus, u8 dev, u8 func, u8 offset, u8 *val)
+-{
+-	struct pci_dev *pdev;
+-	u8 data;
+-	u8 devfn = (dev << 3) | func;
+-
+-	pdev = pci_get_bus_and_slot(bus, devfn);
+-	if (!pdev)
+-		return -1;
+-
+-	pci_read_config_byte(pdev, offset, &data);
+-	if (val)
+-		*val = data;
+-
+-	return 0;
+-}
+-
+ #ifdef CONFIG_PM
+ /*
+  * power management
+diff --git a/drivers/staging/rts5208/rtsx.h b/drivers/staging/rts5208/rtsx.h
+index 575e573..62e467c 100644
+--- a/drivers/staging/rts5208/rtsx.h
++++ b/drivers/staging/rts5208/rtsx.h
+@@ -174,8 +174,6 @@ static inline void get_current_time(u8 *timeval_buf, int buf_len)
+ /* struct scsi_cmnd transfer buffer access utilities */
+ enum xfer_buf_dir	{TO_XFER_BUF, FROM_XFER_BUF};
+ 
+-int rtsx_read_pci_cfg_byte(u8 bus, u8 dev, u8 func, u8 offset, u8 *val);
+-
+ #define _MSG_TRACE
+ 
+ #include "trace.h"
+-- 
+1.9.1
