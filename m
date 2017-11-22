@@ -1,47 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFCv2 PATCH 09/36] iommu/fault: Allow blocking fault handlers
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-10-jean-philippe.brucker@arm.com>
-CC: <joro@8bytes.org>, <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <lorenzo.pieralisi@arm.com>, <hanjun.guo@linaro.org>,
-        <sudeep.holla@arm.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-        <robin.murphy@arm.com>, <bhelgaas@google.com>,
-        <alex.williamson@redhat.com>, <tn@semihalf.com>,
-        <liubo95@huawei.com>, <thunder.leizhen@huawei.com>,
-        <gabriele.paoloni@huawei.com>, <nwatters@codeaurora.org>,
-        <okaya@codeaurora.org>, <rfranz@cavium.com>, <dwmw2@infradead.org>,
-        <jacob.jun.pan@linux.intel.com>, <yi.l.liu@intel.com>,
-        <ashok.raj@intel.com>, <robdclark@gmail.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <7e1c8ea4-e568-1000-17de-62f8562c7169@huawei.com>
-Date: Wed, 29 Nov 2017 14:15:58 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:38120 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751554AbdKVQpm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 11:45:42 -0500
+Date: Wed, 22 Nov 2017 17:45:46 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 29/30] i7300_idle: deprecate pci_get_bus_and_slot()
+Message-ID: <20171122164546.GB30812@kroah.com>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-30-git-send-email-okaya@codeaurora.org>
+ <20171122075345.GC26583@kroah.com>
+ <81de37c1-26b5-41f7-ab32-b98012890971@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20171006133203.22803-10-jean-philippe.brucker@arm.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <81de37c1-26b5-41f7-ab32-b98012890971@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
+On Wed, Nov 22, 2017 at 11:15:47AM -0500, Sinan Kaya wrote:
+> On 11/22/2017 2:53 AM, Greg Kroah-Hartman wrote:
+> >> +++ b/include/linux/i7300_idle.h
+> >> @@ -48,7 +48,7 @@ static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
+> >>  	int i;
+> >>  	struct pci_dev *memdev, *dmadev;
+> >>  
+> >> -	memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
+> >> +	memdev = pci_get_domain_bus_and_slot(0, MEMCTL_BUS, MEMCTL_DEVFN);
+> > You have a pci_dev, why can't you use it here to get the domain?
+> > 
+> 
+> Both fbd_dev and ioat_dev are output parameters. 
+> 
+> dmadev = pci_get_bus_and_slot(IOAT_BUS, IOAT_DEVFN);
+> memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
+> 
+> 	for (i = 0; fbd_ioat_list[i].vendor != 0; i++) {
+> 		if (dmadev->vendor == fbd_ioat_list[i].vendor &&
+> 		    dmadev->device == fbd_ioat_list[i].ioat_dev) {
+> 			if (!(fbd_ioat_list[i].enabled || enable_all))
+> 				continue;
+> 
+> 			if (fbd_dev)
+> 				*fbd_dev = memdev;
+> 			if (ioat_dev)
+> 				*ioat_dev = dmadev;
+> 
+> Funny thing is nobody is calling this function. Maybe, I should just kill it
+> instead.
 
-On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
-> -	if (domain->ext_handler) {
-> +	if (domain->handler_flags & IOMMU_FAULT_HANDLER_ATOMIC) {
-> +		fault->flags |= IOMMU_FAULT_ATOMIC;
+Yes, delete it.  Why doesn't the build warn about it not being used?
 
-Why remove the condition of domain->ext_handler? should it be much better like:
-  if ((domain->handler_flags & IOMMU_FAULT_HANDLER_ATOMIC) && domain->ext_handler)
+thanks,
 
-If domain->ext_handler is NULL, and (domain->handler_flags & IOMMU_FAULT_HANDLER_ATOMIC)
-is true. It will oops, right?
-
->  		ret = domain->ext_handler(domain, dev, fault,
->  					  domain->handler_token);
-
-Thanks
-Yisheng Xie
-
+greg k-h
