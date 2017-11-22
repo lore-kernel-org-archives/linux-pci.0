@@ -1,83 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:51521 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756320AbdKCNrw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 09:47:52 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 03/17] PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be writable
-Date: Fri,  3 Nov 2017 14:47:07 +0100
-Message-Id: <20171103134722.5532-4-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:5910 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751528AbdKVXDp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 18:03:45 -0500
+Date: Wed, 22 Nov 2017 15:03:35 -0800
+From: Neo Jia <cjia@nvidia.com>
+To: Christoph Hellwig <hch@infradead.org>, <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>
+Subject: Re: [PATCH 1/1] Change pci_enable_sriov, pci_disable_sriov and
+ pci_reset_function to non-GPL symbol.
+Message-ID: <20171122230335.GA1228@nvidia.com>
+References: <1510773058-1482-1-git-send-email-cjia@nvidia.com>
+ <20171117145504.GA31760@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20171117145504.GA31760@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Certain registers that pcie-designware-ep tries to write to are read-only
-registers. However, these registers can become read/write if we first
-enable the DBI_RO_WR_EN bit. Set/unset the DBI_RO_WR_EN bit before/after
-writing these registers.
+On Fri, Nov 17, 2017 at 06:55:04AM -0800, Christoph Hellwig wrote:
+> On Wed, Nov 15, 2017 at 11:10:58AM -0800, Neo Jia wrote:
+> > This will allow proprietary linux drivers to adopt SR-IOV spec from
+> > PCI-SIG, also switch pci_reset_function to non-GPL symbol as it mainly
+> > does pci config space access per spec.
+> 
+> Clear NAK.  Thos were added intentional, and even if they were changed
+> your driver would still be a derived work and had to be published under
+> a GPLv2-compatible license.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-designware-ep.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Hi Christoph,
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index c92ab87fd660..3fb34be99715 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -35,8 +35,10 @@ static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- 	u32 reg;
- 
- 	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writel_dbi2(pci, reg, 0x0);
- 	dw_pcie_writel_dbi(pci, reg, 0x0);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
- static int dw_pcie_ep_write_header(struct pci_epc *epc,
-@@ -45,6 +47,7 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc,
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, hdr->vendorid);
- 	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, hdr->deviceid);
- 	dw_pcie_writeb_dbi(pci, PCI_REVISION_ID, hdr->revid);
-@@ -58,6 +61,7 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc,
- 	dw_pcie_writew_dbi(pci, PCI_SUBSYSTEM_ID, hdr->subsys_id);
- 	dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PIN,
- 			   hdr->interrupt_pin);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
- }
-@@ -142,8 +146,10 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
- 	if (ret)
- 		return ret;
- 
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writel_dbi2(pci, reg, size - 1);
- 	dw_pcie_writel_dbi(pci, reg, flags);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
- }
-@@ -223,7 +229,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
- 	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
- 	val &= ~MSI_CAP_MMC_MASK;
- 	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	return 0;
- }
--- 
-2.14.2
+Just to be clear, here the request is to allow proprietary driver continue
+supporting Linux OS when adopting SR-IOV - a PCIE virtualization technology
+standardized by PCI SIG.
+
+Similar interfaces we have seen inside Linux kernels are pci_enable_msi,
+pci_enable_misx_range, which allows proprietary to work when following a PCI SIG
+standard.
+
+Thanks,
+Neo
