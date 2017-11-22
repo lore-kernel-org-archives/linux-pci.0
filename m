@@ -1,17 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 22 Nov 2017 08:51:24 +0100
-From: Greg KH <greg@kroah.com>
-To: Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH 30/30] PCI: remove pci_get_bus_and_slot() function
-Message-ID: <20171122075124.GA26583@kroah.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH 03/30] x86/PCI: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:30:48 -0500
+Message-Id: <1511328675-21981-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
 References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-31-git-send-email-okaya@codeaurora.org>
- <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
- <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
- <25ec431a-2c1b-d352-f9ef-c663864664b6@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <25ec431a-2c1b-d352-f9ef-c663864664b6@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,45 +15,48 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Cc: linux-arm-msm@vger.kernel.org,
+ "maintainer:X86 ARCHITECTURE 32-BIT AND 64-BIT" <x86@kernel.org>,
+ "open list:X86 ARCHITECTURE 32-BIT AND 64-BIT" <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>, Ingo Molnar <mingo@redhat.com>,
+ "H. Peter Anvin" <hpa@zytor.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 22, 2017 at 12:08:45AM -0600, Timur Tabi wrote:
-> On 11/21/17 11:55 PM, Sinan Kaya wrote:
-> > For places where domain number information is available, I extracted domain number
-> > and added into pci_get_domain_bus_and_slot() call such as xen or bn drivers.
-> 
-> My suggestion is that you restrict your first patch set to only these
-> patches.
-> 
-> > The assumption at this point is for pci_get_bus_and_slot() usages to be caught
-> > in code-review.
-> 
-> How about this:
-> 
-> static inline struct pci_dev * __deprecated pci_get_bus_and_slot(unsigned
-> int bus,
-> 						   unsigned int devfn)
-> {
-> 	return pci_get_domain_bus_and_slot(0, bus, devfn);
-> }
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Ick, no, why?  What is wrong with removing this function as is?  Don't
-mark something as __depreciated if there are no in-kernel users, just
-delete it and move on.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-If you have out-of-tree drivers, then yes, they can make a wrapper for
-this function like this if they really feel the need, or they can get
-their code merged :)
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/pci/irq.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-thanks,
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 04526291..52e5510 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -839,7 +839,8 @@ static void __init pirq_find_router(struct irq_router *r)
+ 	DBG(KERN_DEBUG "PCI: Attempting to find IRQ router for [%04x:%04x]\n",
+ 	    rt->rtr_vendor, rt->rtr_device);
+ 
+-	pirq_router_dev = pci_get_bus_and_slot(rt->rtr_bus, rt->rtr_devfn);
++	pirq_router_dev = pci_get_domain_bus_and_slot(0, rt->rtr_bus,
++						      rt->rtr_devfn);
+ 	if (!pirq_router_dev) {
+ 		DBG(KERN_DEBUG "PCI: Interrupt router not found at "
+ 			"%02x:%02x\n", rt->rtr_bus, rt->rtr_devfn);
+-- 
+1.9.1
 
-greg k-h
 
 _______________________________________________
 linux-arm-kernel mailing list
