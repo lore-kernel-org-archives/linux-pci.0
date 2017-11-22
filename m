@@ -1,78 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 8 Nov 2017 11:08:13 +0000
-From: Lee Jones <lee.jones@linaro.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-i2c <linux-i2c@vger.kernel.org>
-Subject: Re: [PATCH 09/12] PM / mfd: intel-lpss: Use DPM_FLAG_SMART_SUSPEND
-Message-ID: <20171108110813.abqehgxdyvyahrro@dell>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan>
- <5094729.JAaD38WncM@aspire.rjw.lan>
- <20171031150933.oho2ffvuj3iagx4m@dell>
- <CAJZ5v0ipSJv0PWPrD3P-yeyD0JWe6EqSJSuZXgjtnFTrMEvpfQ@mail.gmail.com>
- <20171101092819.thhofiwwjxblef4a@dell>
- <CAJZ5v0gbmPd=rrveH1LyOYhB2Uu8Tz54C1Y+TutYmdRJCv8G4g@mail.gmail.com>
+Return-Path: <SRS0=X+pv=CU=oracle.com=boris.ostrovsky@kernel.org>
+Return-Path: <SRS0=X+pv=CU=oracle.com=boris.ostrovsky@kernel.org>
+Subject: Re: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h
+ (Models 30h-3fh) Processors v5
+To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        helgaas@kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, xen-devel <xen-devel@lists.xen.org>
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
+ <20171018135821.3248-5-deathsimple@vodafone.de>
+ <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
+ <d81d50e6-c267-fe43-214f-278e57903448@gmail.com>
+ <26df0a78-8028-e42c-ce50-4cefe612a7e1@oracle.com>
+ <3443aad0-8c3b-b97e-685a-96b0866827be@amd.com>
+ <b937778c-556e-5587-c557-abba8cefe100@oracle.com>
+ <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
+ <c2d52d00-8c3c-9944-29b3-3cab2f7c35f7@oracle.com>
+ <7936fdd3-1615-ac1f-7b75-330ccb6a1a3f@amd.com>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <0bb468d9-bc1d-e3c5-e313-1cf9408380f0@oracle.com>
+Date: Wed, 22 Nov 2017 12:27:55 -0500
 MIME-Version: 1.0
+In-Reply-To: <7936fdd3-1615-ac1f-7b75-330ccb6a1a3f@amd.com>
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAJZ5v0gbmPd=rrveH1LyOYhB2Uu8Tz54C1Y+TutYmdRJCv8G4g@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 01 Nov 2017, Rafael J. Wysocki wrote:
+On 11/22/2017 11:54 AM, Christian König wrote:
+> Am 22.11.2017 um 17:24 schrieb Boris Ostrovsky:
+>> On 11/22/2017 05:09 AM, Christian König wrote:
+>>> Am 21.11.2017 um 23:26 schrieb Boris Ostrovsky:
+>>>> On 11/21/2017 08:34 AM, Christian König wrote:
+>>>>> Hi Boris,
+>>>>>
+>>>>> attached are two patches.
+>>>>>
+>>>>> The first one is a trivial fix for the infinite loop issue, it now
+>>>>> correctly aborts the fixup when it can't find address space for the
+>>>>> root window.
+>>>>>
+>>>>> The second is a workaround for your board. It simply checks if there
+>>>>> is exactly one Processor Function to apply this fix on.
+>>>>>
+>>>>> Both are based on linus current master branch. Please test if they
+>>>>> fix
+>>>>> your issue.
+>>>> Yes, they do fix it but that's because the feature is disabled.
+>>>>
+>>>> Do you know what the actual problem was (on Xen)?
+>>> I still haven't understood what you actually did with Xen.
+>>>
+>>> When you used PCI pass through with those devices then you have made a
+>>> major configuration error.
+>>>
+>>> When the problem happened on dom0 then the explanation is most likely
+>>> that some PCI device ended up in the configured space, but the routing
+>>> was only setup correctly on one CPU socket.
+>> The problem is that dom0 can be (and was in my case() booted with less
+>> than full physical memory and so the "rest" of the host memory is not
+>> necessarily reflected in iomem. Your patch then tried to configure that
+>> memory for MMIO and the system hang.
+>>
+>> And so my guess is that this patch will break dom0 on a single-socket
+>> system as well.
+>
+> Oh, thanks!
+>
+> I've thought about that possibility before, but wasn't able to find a
+> system which actually does that.
+>
+> May I ask why the rest of the memory isn't reported to the OS?
 
-> On Wed, Nov 1, 2017 at 10:28 AM, Lee Jones <lee.jones@linaro.org> wrote:
-> > On Tue, 31 Oct 2017, Rafael J. Wysocki wrote:
-> >
-> >> On Tue, Oct 31, 2017 at 4:09 PM, Lee Jones <lee.jones@linaro.org> wrote:
-> >> > On Mon, 16 Oct 2017, Rafael J. Wysocki wrote:
-> >> >
-> >> >> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> >>
-> >> >> Make the intel-lpss driver set DPM_FLAG_SMART_SUSPEND for its
-> >> >> devices which will allow them to stay in runtime suspend during
-> >> >> system suspend unless they need to be reconfigured for some reason.
-> >> >>
-> >> >> Also make it avoid resuming its child devices if they have
-> >> >> DPM_FLAG_SMART_SUSPEND set to allow them to remain in runtime
-> >> >> suspend during system suspend.
-> >> >>
-> >> >> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >> >> ---
-> >> >>  drivers/mfd/intel-lpss.c |    6 +++++-
-> >> >>  1 file changed, 5 insertions(+), 1 deletion(-)
-> >> >
-> >> > Is this patch independent?
-> >>
-> >> It depends on the flag definition at least, but functionally it also
-> >> depends on the PCI support for the flag.
-> >
-> > No problem.  Which tree to you propose this goes through?
-> 
-> linux-pm.git if that's not a problem as the patches it depends on will
-> go through it too.
-> 
-> That said I'll resend it when the core patches it depends on are ready.
+That memory doesn't belong to the OS (dom0), it is owned by the hypervisor.
 
-It's fine by me.
+>
+> Sounds like I can't trust Linux resource management and probably need
+> to read the DRAM config to figure things out after all.
 
-Please check to see if there are any clashes with MFD.  If there are,
-I'll need a (small) pull-request from you.
 
--- 
-Lee Jones
-Linaro STMicroelectronics Landing Team Lead
-Linaro.org │ Open source software for ARM SoCs
-Follow Linaro: Facebook | Twitter | Blog
+My question is whether what you are trying to do should ever be done for
+a guest at all (any guest, not necessarily Xen).
+
+-boris
