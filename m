@@ -1,45 +1,53 @@
-Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
-Return-Path: <SRS0=jdO8=CB=gmail.com=ckoenig.leichtzumerken@kernel.org>
-From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
-To: linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org,
-	helgaas@kernel.org
-Subject: [PATCH 1/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 00h-0fh) Processors
-Date: Fri,  3 Nov 2017 14:52:41 +0100
-Message-Id: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45610 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753026AbdKVWuq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:50:46 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Daniel Thompson <daniel.thompson@linaro.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        linux-fbdev@vger.kernel.org (open list:FRAMEBUFFER LAYER),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2 24/29] backlight: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 17:49:19 -0500
+Message-Id: <1511390964-9979-25-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just add the extra PCI-ID to the existing fixup.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
+
+Hard-coding the domain as 0.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- arch/x86/pci/fixup.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/video/backlight/apple_bl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 7b6bd76..1d2238d 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -639,7 +639,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-  * configuring host bridge windows using the _PRS and _SRS methods.
-  *
-  * But this is rarely implemented, so we manually enable a large 64bit BAR for
-- * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
-+ * PCIe device on AMD Family 15h (Models 00h-0fh, 30h-3fh) Processors here.
-  */
- static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- {
-@@ -696,5 +696,6 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
- 	pci_bus_add_resource(dev->bus, res, 0);
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
+diff --git a/drivers/video/backlight/apple_bl.c b/drivers/video/backlight/apple_bl.c
+index d843296..6a34ab9 100644
+--- a/drivers/video/backlight/apple_bl.c
++++ b/drivers/video/backlight/apple_bl.c
+@@ -143,7 +143,7 @@ static int apple_bl_add(struct acpi_device *dev)
+ 	struct pci_dev *host;
+ 	int intensity;
  
- #endif
+-	host = pci_get_bus_and_slot(0, 0);
++	host = pci_get_domain_bus_and_slot(0, 0, 0);
+ 
+ 	if (!host) {
+ 		pr_err("unable to find PCI host\n");
 -- 
-2.7.4
+1.9.1
