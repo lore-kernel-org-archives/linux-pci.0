@@ -1,152 +1,86 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "linux-acpi@vger.kernel.org"
- <linux-acpi@vger.kernel.org>, "devicetree@vger.kernel.org"
- <devicetree@vger.kernel.org>, "iommu@lists.linux-foundation.org"
- <iommu@lists.linux-foundation.org>
-Subject: RE: [RFCv2 PATCH 14/36] iommu/arm-smmu-v3: Add support for
- Substream IDs
-Date: Thu, 2 Nov 2017 12:49:32 +0000
-Message-ID: <5FC3163CFD30C246ABAA99954A238FA838454887@FRAEML521-MBX.china.huawei.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-15-jean-philippe.brucker@arm.com>
-In-Reply-To: <20171006133203.22803-15-jean-philippe.brucker@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45036 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751260AbdKVUNF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 22 Nov 2017 15:13:05 -0500
+Date: Wed, 22 Nov 2017 14:12:59 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] powerpc/pci: convert to use for_each_pci_bridge()
+ helper
+Message-ID: <20171122201259.GA21158@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171110175230.82522-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "xieyisheng \(A\)" <xieyisheng1@huawei.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "Leizhen \(ThunderTown\)" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "liubo \(CU\)" <liubo95@huawei.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "sudeep.holla@arm.com" <sudeep.holla@arm.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171110175230.82522-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
-
-> -----Original Message-----
-> From: linux-arm-kernel [mailto:linux-arm-kernel-bounces@lists.infradead.org]
-> On Behalf Of Jean-Philippe Brucker
-> Sent: Friday, October 06, 2017 2:32 PM
-> To: linux-arm-kernel@lists.infradead.org; linux-pci@vger.kernel.org; linux-
-> acpi@vger.kernel.org; devicetree@vger.kernel.org; iommu@lists.linux-
-> foundation.org
-> Cc: mark.rutland@arm.com; xieyisheng (A) <xieyisheng1@huawei.com>;
-> Gabriele Paoloni <gabriele.paoloni@huawei.com>; catalin.marinas@arm.com;
-> will.deacon@arm.com; okaya@codeaurora.org; yi.l.liu@intel.com;
-> lorenzo.pieralisi@arm.com; ashok.raj@intel.com; tn@semihalf.com;
-> joro@8bytes.org; rfranz@cavium.com; lenb@kernel.org;
-> jacob.jun.pan@linux.intel.com; alex.williamson@redhat.com;
-> robh+dt@kernel.org; Leizhen (ThunderTown) <thunder.leizhen@huawei.com>;
-> bhelgaas@google.com; dwmw2@infradead.org; liubo (CU)
-> <liubo95@huawei.com>; rjw@rjwysocki.net; robdclark@gmail.com;
-> hanjun.guo@linaro.org; sudeep.holla@arm.com; robin.murphy@arm.com;
-> nwatters@codeaurora.org
-> Subject: [RFCv2 PATCH 14/36] iommu/arm-smmu-v3: Add support for
-> Substream IDs
+On Fri, Nov 10, 2017 at 07:52:29PM +0200, Andy Shevchenko wrote:
+> ...which makes code slightly cleaner.
 > 
-> At the moment, the SMMUv3 driver offers only one stage-1 or stage-2
-> address space to each device. SMMUv3 allows to associate multiple address
-> spaces per device. In addition to the Stream ID (SID), that identifies a
-> device, we can now have Substream IDs (SSID) identifying an address space.
-> In PCIe lingo, SID is called Requester ID (RID) and SSID is called Process
-> Address-Space ID (PASID).
+> Requires: d43f59ce6c50 ("PCI: Add for_each_pci_bridge() helper")
 
-We had a go with this series on HiSIlicon D05 platform which doesn't have
-support for ssids/ATS/PRI, to make sure it generally works.
+Requires: 24a0c654d7d6 ("PCI: Add for_each_pci_bridge() helper")
 
-But observed the below crash on boot,
+(My fault, I rebased that commit before sending it to Linus.)
 
-[   16.009084] WARNING: CPU: 59 PID: 391 at mm/page_alloc.c:3883 __alloc_pages_nodemask+0x19c/0xc48
-[   16.026797] Modules linked in:
-[   16.032944] CPU: 59 PID: 391 Comm: kworker/59:1 Not tainted 4.14.0-rc1-159539-ge42aca3 #236
-[...]
-[   16.068206] Workqueue: events deferred_probe_work_func
-[   16.078557] task: ffff8017d38a0000 task.stack: ffff00000b198000
-[   16.090486] PC is at __alloc_pages_nodemask+0x19c/0xc48
-[   16.101013] LR is at __alloc_pages_nodemask+0xe0/0xc48
-[   16.469220] [<ffff000008186b94>] __alloc_pages_nodemask+0x19c/0xc48
-[   16.481854] [<ffff0000081d65b0>] alloc_pages_current+0x80/0xcc
-[   16.493607] [<ffff000008182be8>] __get_free_pages+0xc/0x38
-[   16.504661] [<ffff0000083c4d58>] swiotlb_alloc_coherent+0x64/0x190
-[   16.517117] [<ffff00000809824c>] __dma_alloc+0x110/0x204
-[   16.527820] [<ffff00000858e850>] dmam_alloc_coherent+0x88/0xf0
-[   16.539575] [<ffff000008568884>] arm_smmu_domain_finalise_s1+0x60/0x248
-[   16.552909] [<ffff00000856c104>] arm_smmu_attach_dev+0x264/0x300
-[   16.565013] [<ffff00000855d40c>] __iommu_attach_device+0x48/0x5c
-[   16.577117] [<ffff00000855e698>] iommu_group_add_device+0x144/0x3a4
-[   16.589746] [<ffff00000855ed18>] iommu_group_get_for_dev+0x70/0xf8
-[   16.602201] [<ffff00000856a314>] arm_smmu_add_device+0x1a4/0x418
-[   16.614308] [<ffff00000849dfcc>] iort_iommu_configure+0xf0/0x16c
-[   16.626416] [<ffff000008468c50>] acpi_dma_configure+0x30/0x70
-[   16.637994] [<ffff00000858f00c>] dma_configure+0xa8/0xd4
-[   16.648695] [<ffff00000857706c>] driver_probe_device+0x1a4/0x2dc
-[   16.673081] [<ffff0000085752c8>] bus_for_each_drv+0x54/0x94
-[   16.684307] [<ffff000008576db0>] __device_attach+0xc4/0x12c
-[   16.695533] [<ffff000008577350>] device_initial_probe+0x10/0x18
-[   16.707462] [<ffff0000085762b4>] bus_probe_device+0x90/0x98
+> Acked-by: Michael Ellerman <mpe@ellerman.id.au>
 
-After a bit of debug it looks like on platforms where ssid is not supported,
-s1_cfg.num_contexts is set to zero and it eventually results in this crash 
-in,
-arm_smmu_domain_finalise_s1() -->arm_smmu_alloc_cd_tables()-->
-arm_smmu_alloc_cd_leaf_table() as num_leaf_entries is zero.
+These don't depend on anything in the PCI core, so they could go
+either via my tree or the powerpc tree.  Since you acked this,
+Michael, I corrected the SHA1 above and put these both on my pci/misc
+branch.
 
-With the below fix, it works on D05 now,
+If you pick them up, let me know and I'll drop them from my tree.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 8ad90e2..51f5821 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2433,7 +2433,10 @@ static int arm_smmu_domain_finalise(struct iommu_domain *domain,
-                        domain->min_pasid = 1;
-                        domain->max_pasid = master->num_ssids - 1;
-                        smmu_domain->s1_cfg.num_contexts = master->num_ssids;
-+               } else {
-+                       smmu_domain->s1_cfg.num_contexts = 1;
-                }
-+
-                smmu_domain->s1_cfg.can_stall = master->ste.can_stall;
-                break;
-        case ARM_SMMU_DOMAIN_NESTED:
-
-
-I am not sure this is right place do this. Please take a look.
-
-Thanks,
-Shameer
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  arch/powerpc/kernel/pci-hotplug.c | 7 ++-----
+>  arch/powerpc/kernel/pci_of_scan.c | 7 ++-----
+>  2 files changed, 4 insertions(+), 10 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+> index 2d71269e7dc1..741f47295188 100644
+> --- a/arch/powerpc/kernel/pci-hotplug.c
+> +++ b/arch/powerpc/kernel/pci-hotplug.c
+> @@ -134,11 +134,8 @@ void pci_hp_add_devices(struct pci_bus *bus)
+>  		pcibios_setup_bus_devices(bus);
+>  		max = bus->busn_res.start;
+>  		for (pass = 0; pass < 2; pass++) {
+> -			list_for_each_entry(dev, &bus->devices, bus_list) {
+> -				if (pci_is_bridge(dev))
+> -					max = pci_scan_bridge(bus, dev,
+> -							      max, pass);
+> -			}
+> +			for_each_pci_bridge(dev, bus)
+> +				max = pci_scan_bridge(bus, dev, max, pass);
+>  		}
+>  	}
+>  	pcibios_finish_adding_to_bus(bus);
+> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+> index 0d790f8432d2..8bdaa2a6fa62 100644
+> --- a/arch/powerpc/kernel/pci_of_scan.c
+> +++ b/arch/powerpc/kernel/pci_of_scan.c
+> @@ -369,11 +369,8 @@ static void __of_scan_bus(struct device_node *node, struct pci_bus *bus,
+>  	pcibios_setup_bus_devices(bus);
+>  
+>  	/* Now scan child busses */
+> -	list_for_each_entry(dev, &bus->devices, bus_list) {
+> -		if (pci_is_bridge(dev)) {
+> -			of_scan_pci_bridge(dev);
+> -		}
+> -	}
+> +	for_each_pci_bridge(dev, bus)
+> +		of_scan_pci_bridge(dev);
+>  }
+>  
+>  /**
+> -- 
+> 2.14.2
+> 
