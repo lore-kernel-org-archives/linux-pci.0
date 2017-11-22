@@ -1,98 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:39491 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751116AbdKTNco (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Nov 2017 08:32:44 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 01/18] PCI: dwc: Use the DMA-API to get the MSI address
-Date: Mon, 20 Nov 2017 14:32:04 +0100
-Message-Id: <20171120133222.27771-2-niklas.cassel@axis.com>
-In-Reply-To: <20171120133222.27771-1-niklas.cassel@axis.com>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 29/30] i7300_idle: deprecate pci_get_bus_and_slot()
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-30-git-send-email-okaya@codeaurora.org>
+ <20171122075345.GC26583@kroah.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <81de37c1-26b5-41f7-ab32-b98012890971@codeaurora.org>
+Date: Wed, 22 Nov 2017 11:15:47 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171122075345.GC26583@kroah.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>, linux-arm-msm@vger.kernel.org,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the DMA-API to get the MSI address. This address will be written to
-our PCI config space and to the register which determines which AXI
-address the DWC IP will spoof for incoming MSI irqs.
+On 11/22/2017 2:53 AM, Greg Kroah-Hartman wrote:
+>> +++ b/include/linux/i7300_idle.h
+>> @@ -48,7 +48,7 @@ static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
+>>  	int i;
+>>  	struct pci_dev *memdev, *dmadev;
+>>  
+>> -	memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
+>> +	memdev = pci_get_domain_bus_and_slot(0, MEMCTL_BUS, MEMCTL_DEVFN);
+> You have a pci_dev, why can't you use it here to get the domain?
+> 
 
-Since it is a PCIe endpoint device, rather than the CPU, that is supposed
-to write to the MSI address, the proper way to get the MSI address is by
-using the DMA API, not by using virt_to_phys().
+Both fbd_dev and ioat_dev are output parameters. 
 
-Using virt_to_phys() might work on some systems, but using the DMA API
-should work on all systems.
+dmadev = pci_get_bus_and_slot(IOAT_BUS, IOAT_DEVFN);
+memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
 
-This is essentially the same thing as allocating a buffer in a driver
-to which the endpoint will write to. To do this, we use the DMA API.
+	for (i = 0; fbd_ioat_list[i].vendor != 0; i++) {
+		if (dmadev->vendor == fbd_ioat_list[i].vendor &&
+		    dmadev->device == fbd_ioat_list[i].ioat_dev) {
+			if (!(fbd_ioat_list[i].enabled || enable_all))
+				continue;
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
- drivers/pci/dwc/pcie-designware.h      |  3 ++-
- 2 files changed, 14 insertions(+), 4 deletions(-)
+			if (fbd_dev)
+				*fbd_dev = memdev;
+			if (ioat_dev)
+				*ioat_dev = dmadev;
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 81e2157a7cfb..33b52fe98a01 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -83,10 +83,19 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 
- void dw_pcie_msi_init(struct pcie_port *pp)
- {
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct device *dev = pci->dev;
-+	struct page *page;
- 	u64 msi_target;
- 
--	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
--	msi_target = virt_to_phys((void *)pp->msi_data);
-+	page = alloc_page(GFP_KERNEL | GFP_DMA32);
-+	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
-+	if (dma_mapping_error(dev, pp->msi_data)) {
-+		dev_err(dev, "failed to map MSI data\n");
-+		__free_page(page);
-+		return;
-+	}
-+	msi_target = (u64)pp->msi_data;
- 
- 	/* program the msi_data */
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-@@ -187,7 +196,7 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
- 	if (pp->ops->get_msi_addr)
- 		msi_target = pp->ops->get_msi_addr(pp);
- 	else
--		msi_target = virt_to_phys((void *)pp->msi_data);
-+		msi_target = (u64)pp->msi_data;
- 
- 	msg.address_lo = (u32)(msi_target & 0xffffffff);
- 	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index e5d9d77b778e..ecdede68522a 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -14,6 +14,7 @@
- #ifndef _PCIE_DESIGNWARE_H
- #define _PCIE_DESIGNWARE_H
- 
-+#include <linux/dma-mapping.h>
- #include <linux/irq.h>
- #include <linux/msi.h>
- #include <linux/pci.h>
-@@ -168,7 +169,7 @@ struct pcie_port {
- 	const struct dw_pcie_host_ops *ops;
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
--	unsigned long		msi_data;
-+	dma_addr_t		msi_data;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
- };
- 
+Funny thing is nobody is calling this function. Maybe, I should just kill it
+instead.
+
 -- 
-2.14.2
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
