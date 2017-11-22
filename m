@@ -1,60 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42762 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752011AbdKVFcy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:54 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 29/30] i7300_idle: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:31:14 -0500
-Message-Id: <1511328675-21981-30-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V2 05/29] agp: nvidia: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 17:49:00 -0500
+Message-Id: <1511390964-9979-6-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ David Airlie <airlied@linux.ie>, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
 where a PCI device is present. This restricts the device drivers to be
 reused for other domain numbers.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
+
+Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
+and extract the domain number from struct pci_dev.
 
 Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- include/linux/i7300_idle.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/char/agp/nvidia-agp.c | 12 +++++++++---
+ drivers/char/agp/sworks-agp.c |  3 ++-
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/i7300_idle.h b/include/linux/i7300_idle.h
-index 4dbe651..58cd9c6 100644
---- a/include/linux/i7300_idle.h
-+++ b/include/linux/i7300_idle.h
-@@ -48,7 +48,7 @@ static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
- 	int i;
- 	struct pci_dev *memdev, *dmadev;
+diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
+index 828b344..623205b 100644
+--- a/drivers/char/agp/nvidia-agp.c
++++ b/drivers/char/agp/nvidia-agp.c
+@@ -340,11 +340,17 @@ static int agp_nvidia_probe(struct pci_dev *pdev,
+ 	u8 cap_ptr;
  
--	memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
-+	memdev = pci_get_domain_bus_and_slot(0, MEMCTL_BUS, MEMCTL_DEVFN);
- 	if (!memdev)
- 		return -ENODEV;
+ 	nvidia_private.dev_1 =
+-		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 1));
++		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++					    (unsigned int)pdev->bus->number,
++					    PCI_DEVFN(0, 1));
+ 	nvidia_private.dev_2 =
+-		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 2));
++		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++					    (unsigned int)pdev->bus->number,
++					    PCI_DEVFN(0, 2));
+ 	nvidia_private.dev_3 =
+-		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(30, 0));
++		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++					    (unsigned int)pdev->bus->number,
++					    PCI_DEVFN(30, 0));
  
-@@ -61,7 +61,7 @@ static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
- 	if (pci_tbl[i].vendor == 0)
- 		return -ENODEV;
+ 	if (!nvidia_private.dev_1 || !nvidia_private.dev_2 || !nvidia_private.dev_3) {
+ 		printk(KERN_INFO PFX "Detected an NVIDIA nForce/nForce2 "
+diff --git a/drivers/char/agp/sworks-agp.c b/drivers/char/agp/sworks-agp.c
+index 03be4ac..4dbdd3b 100644
+--- a/drivers/char/agp/sworks-agp.c
++++ b/drivers/char/agp/sworks-agp.c
+@@ -474,7 +474,8 @@ static int agp_serverworks_probe(struct pci_dev *pdev,
+ 	}
  
--	dmadev = pci_get_bus_and_slot(IOAT_BUS, IOAT_DEVFN);
-+	dmadev = pci_get_domain_bus_and_slot(0, IOAT_BUS, IOAT_DEVFN);
- 	if (!dmadev)
- 		return -ENODEV;
- 
+ 	/* Everything is on func 1 here so we are hardcoding function one */
+-	bridge_dev = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
++	bridge_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++			(unsigned int)pdev->bus->number,
+ 			PCI_DEVFN(0, 1));
+ 	if (!bridge_dev) {
+ 		dev_info(&pdev->dev, "can't find secondary device\n");
 -- 
 1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
