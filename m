@@ -1,66 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36062 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752944AbdKMWlA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Nov 2017 17:41:00 -0500
-Subject: [PATCH v1 3/3] PCI: xilinx: Rename xilinx_pcie_link_is_up() to
- xilinx_pcie_link_up()
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        rfi@lists.rocketboards.org,
-        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Tanmay Inamdar <tinamdar@apm.com>
-Date: Mon, 13 Nov 2017 16:40:58 -0600
-Message-ID: <20171113224058.29024.51914.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:31560 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751777AbdKVJEp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 04:04:45 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Xiaowei Bao <xiaowei.bao@nxp.com>,
+        Niklas Cassel <niklas.cassel@axis.com>
+Subject: [PATCH] PCI: designware-ep: Fix ->get_msi() to check MSI_EN bit
+Date: Wed, 22 Nov 2017 14:34:27 +0530
+Message-ID: <20171122090427.12371-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+->get_msi() now checks MSI_EN bit in the MSI CAPABILITY register to
+find whether the host supports MSI instead of using the
+MSI ADDRESS in the MSI CAPABILITY register.
 
-Rename xilinx_pcie_link_is_up() to xilinx_pcie_link_up() to follow the
-convention of other drivers.  No functional change intended.
+This fixes the issue with the following sequence
+  'modprobe pci_endpoint_test' enables MSI
+  'rmmod pci_endpoint_test' disables MSI but MSI address has a valid value
+  'modprobe pci_endpoint_test no_msi=1' - Since MSI address has a valid
+	value (set during the previous insertion of the module), EP
+	thinks host supports MSI.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/host/pcie-xilinx.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/dwc/pcie-designware-ep.c | 12 +++---------
+ drivers/pci/dwc/pcie-designware.h    |  1 +
+ 2 files changed, 4 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 94e13cb8608f..7b5325990f5e 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -129,7 +129,7 @@ static inline void pcie_write(struct xilinx_pcie_port *port, u32 val, u32 reg)
- 	writel(val, port->reg_base + reg);
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index d53d5f168363..7c621877a939 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -197,20 +197,14 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
+ static int dw_pcie_ep_get_msi(struct pci_epc *epc)
+ {
+ 	int val;
+-	u32 lower_addr;
+-	u32 upper_addr;
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	val = dw_pcie_readb_dbi(pci, MSI_MESSAGE_CONTROL);
+-	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
+-
+-	lower_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
+-	upper_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+-
+-	if (!(lower_addr || upper_addr))
++	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
++	if (!(val & MSI_CAP_MSI_EN_MASK))
+ 		return -EINVAL;
+ 
++	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
+ 	return val;
  }
  
--static inline bool xilinx_pcie_link_is_up(struct xilinx_pcie_port *port)
-+static inline bool xilinx_pcie_link_up(struct xilinx_pcie_port *port)
- {
- 	return (pcie_read(port, XILINX_PCIE_REG_PSCR) &
- 		XILINX_PCIE_REG_PSCR_LNKUP) ? 1 : 0;
-@@ -165,7 +165,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
- 
- 	/* Check if link is up when trying to access downstream ports */
- 	if (bus->number != port->root_busno)
--		if (!xilinx_pcie_link_is_up(port))
-+		if (!xilinx_pcie_link_up(port))
- 			return false;
- 
- 	/* Only one device down on each root port */
-@@ -541,7 +541,7 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
- {
- 	struct device *dev = port->dev;
- 
--	if (xilinx_pcie_link_is_up(port))
-+	if (xilinx_pcie_link_up(port))
- 		dev_info(dev, "PCIe Link is UP\n");
- 	else
- 		dev_info(dev, "PCIe Link is DOWN\n");
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index e5d9d77b778e..cb493bcae8b4 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -101,6 +101,7 @@
+ #define MSI_MESSAGE_CONTROL		0x52
+ #define MSI_CAP_MMC_SHIFT		1
+ #define MSI_CAP_MME_SHIFT		4
++#define MSI_CAP_MSI_EN_MASK		0x1
+ #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+ #define MSI_MESSAGE_ADDR_L32		0x54
+ #define MSI_MESSAGE_ADDR_U32		0x58
+-- 
+2.11.0
