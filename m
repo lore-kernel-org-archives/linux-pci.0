@@ -1,164 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47758 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750896AbdKJV3E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Nov 2017 16:29:04 -0500
-Date: Fri, 10 Nov 2017 15:29:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com, rajatja@google.com,
-        yinghai@kernel.org, david.daney@cavium.com, Julia.Lawall@lip6.fr,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH V2 3/4] PCI: tegra: Apply sw fixups to support ASPM-L1
- Sub-States
-Message-ID: <20171110212900.GB19895@bhelgaas-glaptop.roam.corp.google.com>
-References: <1509423769-10522-1-git-send-email-vidyas@nvidia.com>
- <1509423769-10522-4-git-send-email-vidyas@nvidia.com>
- <20171107225007.GA22847@bhelgaas-glaptop.roam.corp.google.com>
- <ef7d193c-c114-d0c6-e450-c00ae3ab2d51@nvidia.com>
- <20171108174829.GE28427@bhelgaas-glaptop.roam.corp.google.com>
- <c387c65f-6e87-639e-0bf5-2324a745ba5a@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFCv2 PATCH 01/36] iommu: Keep track of processes and PASIDs
+To: Bob Liu <liubo95@huawei.com>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-2-jean-philippe.brucker@arm.com>
+ <588ad6f0-e78a-63de-e27a-3da4de4ab2ab@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <42f815ee-2a9a-ac49-2392-5c03c1d4c809@arm.com>
+Date: Wed, 22 Nov 2017 13:04:22 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <c387c65f-6e87-639e-0bf5-2324a745ba5a@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <588ad6f0-e78a-63de-e27a-3da4de4ab2ab@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 03:37:10PM +0530, Vidya Sagar wrote:
+On 22/11/17 03:15, Bob Liu wrote:
+> Hey Jean,
 > 
+> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
+>> IOMMU drivers need a way to bind Linux processes to devices. This is used
+>> for Shared Virtual Memory (SVM), where devices support paging. In that
+>> mode, DMA can directly target virtual addresses of a process.
+>>
+>> Introduce boilerplate code for allocating process structures and binding
+>> them to devices. Four operations are added to IOMMU drivers:
+>>
+>> * process_alloc, process_free: to create an iommu_process structure and
+>>   perform architecture-specific operations required to grab the process
+>>   (for instance on ARM SMMU, pin down the CPU ASID). There is a single
+>>   iommu_process structure per Linux process.
+>>
 > 
-> On Wednesday 08 November 2017 11:18 PM, Bjorn Helgaas wrote:
-> >On Wed, Nov 08, 2017 at 02:15:05PM +0530, Vidya Sagar wrote:
-> >>On Wednesday 08 November 2017 04:20 AM, Bjorn Helgaas wrote:
-> >>>On Tue, Oct 31, 2017 at 09:52:48AM +0530, Vidya Sagar wrote:
-> >>>>Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
-> >>>>values to get them reflected in ASPM-L1 Sub-States capability registers
-> >>>>Also adjusts internal counter values according to 19.2 MHz clk_m value
-> >>>>
-> >>>>Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> >>...
-> >>>>+u32 pcie_aspm_get_ltr_l_1_2_threshold(void)
-> >>>>+{
-> >>>>+	/* LTR L1.2 Threshold = 55us for all ports */
-> >>>>+	return ((0x37 << 16) | (0x02 << 29));
-> >>>I know you've already worked through this, but let me think out loud
-> >>>to try to figure this out myself.
-> >>>
-> >>>ASPM defines Link power states L0, L0s, and L1.  L1 PM Substates
-> >>>extend that by adding L1.1 and L1.2.  L1.2 presumably uses less power
-> >>>and has a longer exit delay than L1.1 [sec 5.5].
-> >>>
-> >>>Ports that support L1.2 must support Latency Tolerance Reporting (LTR)
-> >>>[sec 6.18].  When LTR is enabled, a device periodically sends LTR
-> >>>messages.
-> >>>
-> >>>When ASPM puts a Link into L1, it chooses either L1.1 or L1.2 based on
-> >>>LTR_L1.2_THRESHOLD and recent LTR messages.  If there's no LTR
-> >>>information it looks like LTR_L1.2_THRESHOLD doesn't matter and it
-> >>>always chooses L1.2 [sec 5.5.1].
-> >>>
-> >>>I don't see anything that writes PCI_EXP_DEVCTL2_LTR_EN, so I don't
-> >>>think Linux ever enables LTR.  Some BIOSes apparently enable it
-> >>>(Google for "LTR enabled").
-> >>I think this needs to be done in aspm.c file. i.e. whenever
-> >>sub-system enables L1.2, it should enable
-> >>LTR_EN also.
-> >That probably makes sense.
-> >
-> >>>1) It seems like the LTR_L1.2_THRESHOLD value should be computed based
-> >>>    on the latency requirements of downstream devices.  How did you
-> >>>    come up with 55us?
-> >>This is given by Tegra hardware folks.
-> >I do not understand why this value should be dependent on the host
-> >bridge.  Can your hardware folks give more insight into this and how
-> >they derived 55us?
-> >
-> >I'm repeating myself, but the threshold (in combination with LTR
-> >information) affects whether we enter L1.1 or L1.2.  If I understand
-> >correctly, this is all about the downstream devices and not at all
-> >about the host bridge.
->
-> LTR_L1.2_THRESHOLD time is for the device to enter into and exit
-> from L1.2 state.
+> I'm a bit confused here.
+> The original meaning of iommu_domain is a virtual addrspace defined by a set of io page table.
+> (fix me if I misunderstood).
 
-That doesn't feel right to me.  Device characteristics are normally
-communicated via "capabilities" registers, not programmed by the OS in
-"control" registers.  The OS needs to be able to configure arbitrary
-plug-in devices without having device-specific details built into it.
+iommu_domain can also be seen as a logical partition of devices that share
+the same address spaces (the concept comes from AMD and Intel IOMMU
+domains, I believe). Without PASIDs it was a single address space, with
+PASIDs it can have multiple address spaces.
 
-Sec 7.33.3 says:
+> Then what's the meaning of iommu_domain and iommu_process after introducing iommu_process?
+> Could you consider document these concepts? 
 
-  LTR_L1.2_THRESHOLD_Value – Along with the LTR_L1.2_THRESHOLD_Scale,
-  this field indicates the LTR threshold used to determine if entry
-  into L1 results in L1.1 (if enabled) or L1.2 (if enabled).  The
-  default value for this field is 00 0000 0000b.
+iommu_process is used to keep track of Linux process address spaces. I'll
+rename it to io_mm in next version, to make it clear that it doesn't
+represent a Linux task but an mm_struct instead. However the
+implementation stays pretty much identical. A domain can be associated to
+multiple io_mm, and an io_mm can be associated to multiple domains.
 
-which does not actually say anything about the L1.2 entry/exit time.
+In the IOMMU architectures I know, PASID is implemented like this. You
+have the device tables (stream tables on SMMU), pointing to PASID tables
+(context descriptor tables on SMMU). In the following diagram,
 
-The L0s and L1 exit latencies are read-only fields in the Link
-Capabilities register.  I don't completely understand how they work,
-but I think corresponding L1.2 exit latency information is reported
-via the "Port T(POWER_ON)" and "Port T(COMMON_MODE)" fields in the L1
-PM Substates Capabilities register.  These are HwInit fields and sec
-5.5.4 says they depend on circuit components and AC coupling
-capacitors.
+                    .->+--------+
+                   / 0 |        |------ io_pgtable
+                  /    +--------+
+                 /   1 |        |------ io_mm->mm X
+    +--------+  /      +--------+
+  0 |      A |-'     2 |        |-.
+    +--------+         +--------+  \
+  1 |        |       3 |        |   \
+    +--------+         +--------+    -- io_mm->mm Y
+  2 |      B |--.     PASID tables  /
+    +--------+   \                 |
+  3 |      B |----+--->+--------+  |
+    +--------+   /   0 |        |- | -- io_pgtable
+  4 |      B |--'      +--------+  |
+    +--------+       1 |        |  |
+  Device tables        +--------+  |
+                     2 |        |--'
+                       +--------+
+                     3 |        |------ io_mm->priv io_pgtable
+                       +--------+
+                      PASID tables
 
-> 55us in case of Tegra is calculated based on the circuit design and
-> different latencies involved in putting link through L1.2 entry-exit
-> cycle.
+* Device 0 (e.g. PCI 0000:00:00.0) is in domain A.
+* Devices 2, 3 and 4 are in domain B.
+* Domain A has the top set of PASID tables.
+* Domain B has the bottom set of PASID tables.
 
-What does Tegra report for Port T(POWER_ON) and Port T(COMMON_MODE)?
-It looks like the current lspci should decode everything in the L1 PM
-Substates capability:
-https://git.kernel.org/pub/scm/utils/pciutils/pciutils.git/tree/ls-ecaps.c#n584
-Can you collect that output?
+* Domain A is bound to process address space X.
+  -> Device 0 can access X with PASID 1.
+* Both domains A and B are bound to process address space Y.
+  -> Devices 0, 2, 3 and 4 can access Y with PASID 2
 
-I notice that the L1 PM SS Capabilities register contains "Port
-T(POWER_ON)" and the Control 2 register contains the "T(POWER_ON)".
-The spec says "Port T(POWER_ON)" is what this port requires of the
-opposite end of the link, so apparently we should be configuring
-"T(POWER_ON)".  We don't touch that, which looks like a hole in the
-current code.
+* PASID 0 is special on Arm SMMU (with S1DSS=0b10). It will always be
+  reserved for classic DMA map/unmap. Even for hypothetical devices that
+  don't support non-pasid transactions, I'd like to keep this convention.
+  It should be quite useful for device drivers to have PASID 0 available
+  with DMA map/unmap.
 
-> Spec says in 5.5.4 that, quote "When programming LTR_L1.2_THRESHOLD
-> Value and Scale fields, identical values must be programmed in both
-> Ports" and my understanding behind spec saying it explicitly is that
-> the end point should be made aware of what is the latency
-> requirement for L1.2 from root port, just like the way end point
-> makes root port aware of its L1.2 latency requirement by sending an
-> LTR message upstream.  By this, both root port and end point come to
-> the same page while taking a decision to keep the link in L1.2 (or
-> L1.1).
+* When introducing "private" PASID address spaces (that many are asking
+  for), which are backed by a set of io-pgtable and map/unmap ops, I
+  suppose they would reuse the io_mm structure. In this example PASID 3 is
+  associated to a private address space and not backed by an mm. Since the
+  PASID space is global, PASID 3 won't be available for any other domain.
 
-I don't think the root port itself has a latency requirement.  The
-*endpoints* provide functionality that may be latency sensitive.  The
-OS needs to configure the path between the root port and the endpoint
-in such a way that we can satisfy the endpoint's requirements.
+Does this clarify the current design, or is it just more confusing?
 
-> Otherwise it may so happen that Tx would be in L1.2 and Rx would be
-> in L1.1.  Also, my understanding is that it is bound to be different
-> on different platforms as it comes from the way hardware is
-> designed.
+Thanks,
+Jean
 
-> >What happens if you keep all the Tegra-specific parts of this series,
-> >i.e., you program the T_cmrt, T_pwr_on, and CLKREQ values, and enable
-> >advertising of ASPM L1 capability, but leave out the
-> >pcie_aspm_get_ltr_l_1_2_threshold() parts?  (BTW, I think you should
-> >reorder the series so you fix up all the delay values *before* you
-> >advertise ASPM L1.)
-> >
-> >I expect that to be functionally equivalent, but it would change the
-> >L1.1 vs L1.2 tradeoff, so it might have some performance impact,
-> >depending on what the downstream devices are.
-
-I'm still interested in this part of my question.  I'm willing
-to apply patches 2, 3, 4 (in the order 4, 3, 2 and omitting the
-pcie_aspm_get_ltr_l_1_2_threshold() part of patch 3) even if we
-haven't figured out patch 1.
-
-If we did this much, we should be able to use lspci to manually
-compute what we think *should* happen and use setpci to set the
-LTR_L1.2_THRESHOLD and see if it works as expected.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
