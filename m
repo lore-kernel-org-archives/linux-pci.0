@@ -1,62 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3805 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753510AbdKXPxt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 10:53:49 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
-CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 00/10] Add loadable kernel module and power management support
-Date: Fri, 24 Nov 2017 21:23:10 +0530
-Message-ID: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:45228 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753518AbdKVWum (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:50:42 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Cox <alan@linux.intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        Fabrizio Perria <fabrizio.perria@gmail.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        kbuild test robot <fengguang.wu@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Arushi Singhal <arushisinghal19971997@gmail.com>,
+        Avraham Shukron <avraham.shukron@gmail.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Valentin Vidic <Valentin.Vidic@CARNet.hr>,
+        linux-media@vger.kernel.org (open list:MEDIA INPUT INFRASTRUCTURE
+        (V4L/DVB)),
+        devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2 22/29] [media] atomisp: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 17:49:17 -0500
+Message-Id: <1511390964-9979-23-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series of patches add loadable kernel module and power management
-support to Tegra PCIe host controller driver.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
-are the verification details.
-	- Multiple module insert & remove
-	- PCIe device functionality after module insert
-	- Free clock, resets, regulators, powergate, iomem and interrupt
-	resources after module remove
-	- PCIe device functionality after resume from RAM
+Getting ready to remove pci_get_bus_and_slot() function. Since ISP always
+uses domain 0, hard-code it in the code when calling the replacement
+function pci_get_domain_bus_and_slot().
 
-Tegra PCIe host controller driver is using ioremap_page_range() which is
-not exported. This is switched with devm_ioremap() in the series
-'https://patchwork.ozlabs.org/project/linux-tegra/list/?series=9907'.
-Both these series will complete the loadable module support for Tegra
-PCIe host driver.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c               | 2 +-
+ drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Manikanta Maddireddy (10):
-  genirq: Export irq_set_msi_desc()
-  of: Export of_pci_range_to_resource()
-  PM / QoS: Fix device resume latency for non PM QoS devices
-  ARM: tegra: EXPORT tegra_cpuidle_pcie_irqs_in_use()
-  PCI: Export pci_find_host_bridge()
-  PCI: Export pci_flags
-  PCI: tegra: free resources on probe failure
-  PCI: tegra: Add loadable kernel module support
-  PCI: tegra: Broadcast PME_turn_Off message before link goes to L2
-  PCI: tegra: Add power management support
-
- arch/arm/mach-tegra/cpuidle.c |   1 +
- drivers/of/address.c          |   1 +
- drivers/pci/host-bridge.c     |   1 +
- drivers/pci/host/Kconfig      |   2 +-
- drivers/pci/host/pci-tegra.c  | 359 +++++++++++++++++++++++++++++++++---------
- drivers/pci/setup-bus.c       |   1 +
- include/linux/pm_qos.h        |   3 +-
- kernel/irq/chip.c             |   1 +
- 8 files changed, 294 insertions(+), 75 deletions(-)
-
+diff --git a/drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c b/drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c
+index 663aa91..95b9c7a 100644
+--- a/drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c
++++ b/drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c
+@@ -1233,7 +1233,7 @@ static int atomisp_pci_probe(struct pci_dev *dev,
+ 	isp->pdev = dev;
+ 	isp->dev = &dev->dev;
+ 	isp->sw_contex.power_state = ATOM_ISP_POWER_UP;
+-	isp->pci_root = pci_get_bus_and_slot(0, 0);
++	isp->pci_root = pci_get_domain_bus_and_slot(0, 0, 0);
+ 	if (!isp->pci_root) {
+ 		dev_err(&dev->dev, "Unable to find PCI host\n");
+ 		return -ENODEV;
+diff --git a/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c b/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
+index 4631b1d..51dcef57 100644
+--- a/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
++++ b/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
+@@ -39,7 +39,7 @@ static inline int platform_is(u8 model)
+ 
+ static int intel_mid_msgbus_init(void)
+ {
+-	pci_root = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
++	pci_root = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
+ 	if (!pci_root) {
+ 		pr_err("%s: Error: msgbus PCI handle NULL\n", __func__);
+ 		return -ENODEV;
 -- 
-2.1.4
+1.9.1
