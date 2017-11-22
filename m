@@ -1,57 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:54650 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755757AbdKBPHc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 11:07:32 -0400
-Date: Thu, 2 Nov 2017 16:07:29 +0100
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Subject: Re: [PATCH v2] pci/switchtec: Don't use completion's wait queue
-Message-ID: <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
-References: <20171004095007.19148-1-bigeasy@linutronix.de>
- <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
- <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
- <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V2 02/29] powerpc/PCI: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 17:48:57 -0500
+Message-Id: <1511390964-9979-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>, Bhumika Goyal <bhumirks@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>,
+ "open list:LINUX FOR POWERPC 32-BIT AND 64-BIT"
+ <linuxppc-dev@lists.ozlabs.org>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-10-05 12:46:34 [-0600], Logan Gunthorpe wrote:
-> I still don't want this merged as it makes the code less clear, but I tested
-> it and it does not work.
-> 
-> On 05/10/17 04:51 AM, Sebastian Andrzej Siewior wrote:
-> 
-> > @@ -451,7 +452,7 @@ static void mrpc_complete_cmd(struct switchtec_dev *stdev)
-> >   		      stuser->read_len);
-> >   out:
-> > -	complete_all(&stuser->comp);
-> > +	wake_up_interruptible(&stuser->cmd_comp);
-> 
-> I think you forgot to set cmd_done here. Once I add that, it did start
-> working correctly.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-oh, makes sense.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-> >   	list_del_init(&stuser->list);
-> >   	stuser_put(stuser);
-> >   	stdev->mrpc_busy = 0;
-> > @@ -721,10 +722,11 @@ static ssize_t switchtec_dev_read(struct file *filp, char __user *data,
-> >   	mutex_unlock(&stdev->mrpc_mutex);
-> >   	if (filp->f_flags & O_NONBLOCK) {
-> > -		if (!try_wait_for_completion(&stuser->comp))
-> > +		if (!stuser->cmd_done)
-> >   			return -EAGAIN;
-> 
-> I'd probably also suggest using READ_ONCE when reading cmd_done.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 as the code
+is not ready to consume multiple domains and existing code used domain
+number 0.
 
-Why so? There is no way the compiler could have cached the value
-somehow.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/powerpc/kernel/pci_32.c              | 3 ++-
+ arch/powerpc/platforms/powermac/feature.c | 2 +-
+ arch/powerpc/sysdev/mv64x60_pci.c         | 4 ++--
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-> Logan
+diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
+index 1d817f4..85ad2f7 100644
+--- a/arch/powerpc/kernel/pci_32.c
++++ b/arch/powerpc/kernel/pci_32.c
+@@ -96,7 +96,8 @@
+ 		reg = of_get_property(node, "reg", NULL);
+ 		if (!reg)
+ 			continue;
+-		dev = pci_get_bus_and_slot(pci_bus, ((reg[0] >> 8) & 0xff));
++		dev = pci_get_domain_bus_and_slot(0, pci_bus,
++						  ((reg[0] >> 8) & 0xff));
+ 		if (!dev || !dev->subordinate) {
+ 			pci_dev_put(dev);
+ 			continue;
+diff --git a/arch/powerpc/platforms/powermac/feature.c b/arch/powerpc/platforms/powermac/feature.c
+index 9e3f39d..ed8b166 100644
+--- a/arch/powerpc/platforms/powermac/feature.c
++++ b/arch/powerpc/platforms/powermac/feature.c
+@@ -829,7 +829,7 @@ static long core99_scc_enable(struct device_node *node, long param, long value)
+ 
+ 	if (value) {
+ 		if (pci_device_from_OF_node(node, &pbus, &pid) == 0)
+-			pdev = pci_get_bus_and_slot(pbus, pid);
++			pdev = pci_get_domain_bus_and_slot(0, pbus, pid);
+ 		if (pdev == NULL)
+ 			return 0;
+ 		rc = pci_enable_device(pdev);
+diff --git a/arch/powerpc/sysdev/mv64x60_pci.c b/arch/powerpc/sysdev/mv64x60_pci.c
+index d52b3b8..6fe9104 100644
+--- a/arch/powerpc/sysdev/mv64x60_pci.c
++++ b/arch/powerpc/sysdev/mv64x60_pci.c
+@@ -37,7 +37,7 @@ static ssize_t mv64x60_hs_reg_read(struct file *filp, struct kobject *kobj,
+ 	if (count < MV64X60_VAL_LEN_MAX)
+ 		return -EINVAL;
+ 
+-	phb = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
++	phb = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
+ 	if (!phb)
+ 		return -ENODEV;
+ 	pci_read_config_dword(phb, MV64X60_PCICFG_CPCI_HOTSWAP, &v);
+@@ -61,7 +61,7 @@ static ssize_t mv64x60_hs_reg_write(struct file *filp, struct kobject *kobj,
+ 	if (sscanf(buf, "%i", &v) != 1)
+ 		return -EINVAL;
+ 
+-	phb = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
++	phb = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
+ 	if (!phb)
+ 		return -ENODEV;
+ 	pci_write_config_dword(phb, MV64X60_PCICFG_CPCI_HOTSWAP, v);
+-- 
+1.9.1
 
-Sebastian
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
