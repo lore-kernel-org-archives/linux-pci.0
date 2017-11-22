@@ -1,112 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:1311 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbdKLNSQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Nov 2017 08:18:16 -0500
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <swarren@nvidia.com>,
-        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH V3 3/3] PCI: tegra: Enable ASPM-L1 capability advertisement
-Date: Sun, 12 Nov 2017 18:47:54 +0530
-Message-ID: <1510492674-12786-4-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
-References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:58719 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751259AbdKVOt5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 09:49:57 -0500
+Date: Wed, 22 Nov 2017 15:49:59 +0100
+From: Greg KH <greg@kroah.com>
+To: Timur Tabi <timur@codeaurora.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 30/30] PCI: remove pci_get_bus_and_slot() function
+Message-ID: <20171122144959.GA8081@kroah.com>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-31-git-send-email-okaya@codeaurora.org>
+ <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
+ <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
+ <25ec431a-2c1b-d352-f9ef-c663864664b6@codeaurora.org>
+ <20171122075124.GA26583@kroah.com>
+ <a443e88e-3abd-0dab-2828-9753326e8d5d@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a443e88e-3abd-0dab-2828-9753326e8d5d@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enables advertisement of ASPM-L1 support in capability
-registers of applicable Tegra chips
+On Wed, Nov 22, 2017 at 08:42:35AM -0600, Timur Tabi wrote:
+> On 11/22/17 1:51 AM, Greg KH wrote:
+> > Ick, no, why?  What is wrong with removing this function as is?  Don't
+> > mark something as __depreciated if there are no in-kernel users, just
+> > delete it and move on.
+> > 
+> > If you have out-of-tree drivers, then yes, they can make a wrapper for
+> > this function like this if they really feel the need, or they can get
+> > their code merged:)
+> 
+> Sorry, I guess I should have been clearer.  My suggestion was to fix some of
+> the drivers where the domain can be determined, and for the rest, just mark
+> the old function as deprecated.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V2:
-* no change in this patch
+So the build now gets warnings?  That's annoying, and then someone else
+will have to make the exact same patches that were created here?
 
-V3:
-* no change in this patch
+> If that's still a terrible idea, well, okay.  I'm just unsure that simply
+> hard-coding a 0 for the domain for some drivers is really a solution.  Don't
+> we really want all drivers to properly support all domains?
 
- drivers/pci/host/pci-tegra.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+I bet all of those drivers don't care because they are running only in
+systems with 1 domain, otherwise they would be broken today, right?  But
+really, it shouldn't be that hard to get to the "real" PCI device to
+provide the correct pointer to the domain for most of these, as I
+pointed out in one patch review already.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 29ee4bb0b7c6..fb61202ee60f 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -250,6 +250,9 @@
- #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
- #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
- 
-+#define RP_VEND_XP1	0xf04
-+#define RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT	BIT(21)
-+
- #define RP_VEND_CTL0	0xf44
- #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
- #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
-@@ -351,6 +354,7 @@ struct tegra_pcie_soc {
- 	bool RAW_violation_fixup;
- 	bool program_deskew_time;
- 	bool updateFC_threshold;
-+	bool has_aspm_l1;
- 	bool has_aspm_l1ss;
- 	bool l1ss_rp_wake_fixup;
- };
-@@ -2214,6 +2218,13 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
- 	value = readl(port->base + RP_VEND_CTL1);
- 	value |= RP_VEND_CTL1_ERPT;
- 	writel(value, port->base + RP_VEND_CTL1);
-+
-+	if (port->pcie->soc->has_aspm_l1) {
-+		/* Advertise ASPM-L1 state capability*/
-+		value = readl(port->base + RP_VEND_XP1);
-+		value |= RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT;
-+		writel(value, port->base + RP_VEND_XP1);
-+	}
- }
- 
- static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
-@@ -2458,6 +2469,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = false,
- 	.has_aspm_l1ss = false,
- 	.l1ss_rp_wake_fixup = false,
- };
-@@ -2481,6 +2493,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- 	.has_aspm_l1ss = false,
- 	.l1ss_rp_wake_fixup = false,
- };
-@@ -2503,6 +2516,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
- 	.RAW_violation_fixup = true,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- 	.has_aspm_l1ss = false,
- 	.l1ss_rp_wake_fixup = false,
- };
-@@ -2533,6 +2547,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = true,
- 	.updateFC_threshold = true,
-+	.has_aspm_l1 = true,
- 	.has_aspm_l1ss = true,
- 	.l1ss_rp_wake_fixup = true,
- };
-@@ -2556,6 +2571,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
- 	.RAW_violation_fixup = false,
- 	.program_deskew_time = false,
- 	.updateFC_threshold = false,
-+	.has_aspm_l1 = true,
- 	.has_aspm_l1ss = true,
- 	.l1ss_rp_wake_fixup = false,
- };
--- 
-2.7.4
+thanks,
+
+greg k-h
