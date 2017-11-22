@@ -1,335 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Subject: [PATCH v3 4/6] PM / core: Add helpers for subsystem callback selection
-Date: Sun, 12 Nov 2017 01:42:00 +0100
-Message-ID: <2261600.6h5WdhsrLe@aspire.rjw.lan>
-In-Reply-To: <4184911.zoJM7jZeH4@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan> <4184911.zoJM7jZeH4@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH 06/30] edd: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:30:51 -0500
+Message-Id: <1511328675-21981-7-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Add helper routines to find and return a suitable subsystem callback
-during the "noirq" phases of system suspend/resume (or analogous)
-transitions as well as during the "late" phase of system suspend and
-the "early" phase of system resume (or analogous) transitions.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-The helpers will be called from additional sites going forward.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
+ drivers/firmware/edd.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-v2 -> v3: No changes.
-
----
- drivers/base/power/main.c |  196 +++++++++++++++++++++++++++++++---------------
- 1 file changed, 136 insertions(+), 60 deletions(-)
-
-Index: linux-pm/drivers/base/power/main.c
-===================================================================
---- linux-pm.orig/drivers/base/power/main.c
-+++ linux-pm/drivers/base/power/main.c
-@@ -525,6 +525,14 @@ static void dpm_watchdog_clear(struct dp
- #define dpm_watchdog_clear(x)
- #endif
+diff --git a/drivers/firmware/edd.c b/drivers/firmware/edd.c
+index e229576..60a8f13 100644
+--- a/drivers/firmware/edd.c
++++ b/drivers/firmware/edd.c
+@@ -669,10 +669,10 @@ static void edd_release(struct kobject * kobj)
+ 	struct edd_info *info = edd_dev_get_info(edev);
  
-+static pm_callback_t dpm_subsys_suspend_noirq_cb(struct device *dev,
-+						 pm_message_t state,
-+						 const char **info_p);
-+
-+static pm_callback_t dpm_subsys_suspend_late_cb(struct device *dev,
-+						pm_message_t state,
-+						const char **info_p);
-+
- /*------------------------- Resume routines -------------------------*/
- 
- /**
-@@ -539,6 +547,35 @@ bool dev_pm_may_skip_resume(struct devic
- 	return !dev->power.must_resume && pm_transition.event != PM_EVENT_RESTORE;
+ 	if (edd_dev_is_type(edev, "PCI") || edd_dev_is_type(edev, "XPRS")) {
+-		return pci_get_bus_and_slot(info->params.interface_path.pci.bus,
+-				     PCI_DEVFN(info->params.interface_path.pci.slot,
+-					       info->params.interface_path.pci.
+-					       function));
++		return pci_get_domain_bus_and_slot(0,
++				info->params.interface_path.pci.bus,
++				PCI_DEVFN(info->params.interface_path.pci.slot,
++				info->params.interface_path.pci.function));
+ 	}
+ 	return NULL;
  }
- 
-+static pm_callback_t dpm_subsys_resume_noirq_cb(struct device *dev,
-+						pm_message_t state,
-+						const char **info_p)
-+{
-+	pm_callback_t callback;
-+	const char *info;
-+
-+	if (dev->pm_domain) {
-+		info = "noirq power domain ";
-+		callback = pm_noirq_op(&dev->pm_domain->ops, state);
-+	} else if (dev->type && dev->type->pm) {
-+		info = "noirq type ";
-+		callback = pm_noirq_op(dev->type->pm, state);
-+	} else if (dev->class && dev->class->pm) {
-+		info = "noirq class ";
-+		callback = pm_noirq_op(dev->class->pm, state);
-+	} else if (dev->bus && dev->bus->pm) {
-+		info = "noirq bus ";
-+		callback = pm_noirq_op(dev->bus->pm, state);
-+	} else {
-+		return NULL;
-+	}
-+
-+	if (info_p)
-+		*info_p = info;
-+
-+	return callback;
-+}
-+
- /**
-  * device_resume_noirq - Execute a "noirq resume" callback for given device.
-  * @dev: Device to handle.
-@@ -550,8 +587,8 @@ bool dev_pm_may_skip_resume(struct devic
-  */
- static int device_resume_noirq(struct device *dev, pm_message_t state, bool async)
- {
--	pm_callback_t callback = NULL;
--	const char *info = NULL;
-+	pm_callback_t callback;
-+	const char *info;
- 	int error = 0;
- 
- 	TRACE_DEVICE(dev);
-@@ -565,19 +602,7 @@ static int device_resume_noirq(struct de
- 
- 	dpm_wait_for_superior(dev, async);
- 
--	if (dev->pm_domain) {
--		info = "noirq power domain ";
--		callback = pm_noirq_op(&dev->pm_domain->ops, state);
--	} else if (dev->type && dev->type->pm) {
--		info = "noirq type ";
--		callback = pm_noirq_op(dev->type->pm, state);
--	} else if (dev->class && dev->class->pm) {
--		info = "noirq class ";
--		callback = pm_noirq_op(dev->class->pm, state);
--	} else if (dev->bus && dev->bus->pm) {
--		info = "noirq bus ";
--		callback = pm_noirq_op(dev->bus->pm, state);
--	}
-+	callback = dpm_subsys_resume_noirq_cb(dev, state, &info);
- 
- 	if (!callback && dev->driver && dev->driver->pm) {
- 		info = "noirq driver ";
-@@ -686,6 +711,35 @@ void dpm_resume_noirq(pm_message_t state
- 	dpm_noirq_end();
- }
- 
-+static pm_callback_t dpm_subsys_resume_early_cb(struct device *dev,
-+						pm_message_t state,
-+						const char **info_p)
-+{
-+	pm_callback_t callback;
-+	const char *info;
-+
-+	if (dev->pm_domain) {
-+		info = "early power domain ";
-+		callback = pm_late_early_op(&dev->pm_domain->ops, state);
-+	} else if (dev->type && dev->type->pm) {
-+		info = "early type ";
-+		callback = pm_late_early_op(dev->type->pm, state);
-+	} else if (dev->class && dev->class->pm) {
-+		info = "early class ";
-+		callback = pm_late_early_op(dev->class->pm, state);
-+	} else if (dev->bus && dev->bus->pm) {
-+		info = "early bus ";
-+		callback = pm_late_early_op(dev->bus->pm, state);
-+	} else {
-+		return NULL;
-+	}
-+
-+	if (info_p)
-+		*info_p = info;
-+
-+	return callback;
-+}
-+
- /**
-  * device_resume_early - Execute an "early resume" callback for given device.
-  * @dev: Device to handle.
-@@ -696,8 +750,8 @@ void dpm_resume_noirq(pm_message_t state
-  */
- static int device_resume_early(struct device *dev, pm_message_t state, bool async)
- {
--	pm_callback_t callback = NULL;
--	const char *info = NULL;
-+	pm_callback_t callback;
-+	const char *info;
- 	int error = 0;
- 
- 	TRACE_DEVICE(dev);
-@@ -711,19 +765,7 @@ static int device_resume_early(struct de
- 
- 	dpm_wait_for_superior(dev, async);
- 
--	if (dev->pm_domain) {
--		info = "early power domain ";
--		callback = pm_late_early_op(&dev->pm_domain->ops, state);
--	} else if (dev->type && dev->type->pm) {
--		info = "early type ";
--		callback = pm_late_early_op(dev->type->pm, state);
--	} else if (dev->class && dev->class->pm) {
--		info = "early class ";
--		callback = pm_late_early_op(dev->class->pm, state);
--	} else if (dev->bus && dev->bus->pm) {
--		info = "early bus ";
--		callback = pm_late_early_op(dev->bus->pm, state);
--	}
-+	callback = dpm_subsys_resume_early_cb(dev, state, &info);
- 
- 	if (!callback && dev->driver && dev->driver->pm) {
- 		info = "early driver ";
-@@ -1110,6 +1152,35 @@ static void dpm_superior_set_must_resume
- 	device_links_read_unlock(idx);
- }
- 
-+static pm_callback_t dpm_subsys_suspend_noirq_cb(struct device *dev,
-+						 pm_message_t state,
-+						 const char **info_p)
-+{
-+	pm_callback_t callback;
-+	const char *info;
-+
-+	if (dev->pm_domain) {
-+		info = "noirq power domain ";
-+		callback = pm_noirq_op(&dev->pm_domain->ops, state);
-+	} else if (dev->type && dev->type->pm) {
-+		info = "noirq type ";
-+		callback = pm_noirq_op(dev->type->pm, state);
-+	} else if (dev->class && dev->class->pm) {
-+		info = "noirq class ";
-+		callback = pm_noirq_op(dev->class->pm, state);
-+	} else if (dev->bus && dev->bus->pm) {
-+		info = "noirq bus ";
-+		callback = pm_noirq_op(dev->bus->pm, state);
-+	} else {
-+		return NULL;
-+	}
-+
-+	if (info_p)
-+		*info_p = info;
-+
-+	return callback;
-+}
-+
- /**
-  * __device_suspend_noirq - Execute a "noirq suspend" callback for given device.
-  * @dev: Device to handle.
-@@ -1121,8 +1192,8 @@ static void dpm_superior_set_must_resume
-  */
- static int __device_suspend_noirq(struct device *dev, pm_message_t state, bool async)
- {
--	pm_callback_t callback = NULL;
--	const char *info = NULL;
-+	pm_callback_t callback;
-+	const char *info;
- 	int error = 0;
- 
- 	TRACE_DEVICE(dev);
-@@ -1141,19 +1212,7 @@ static int __device_suspend_noirq(struct
- 	if (dev->power.syscore || dev->power.direct_complete)
- 		goto Complete;
- 
--	if (dev->pm_domain) {
--		info = "noirq power domain ";
--		callback = pm_noirq_op(&dev->pm_domain->ops, state);
--	} else if (dev->type && dev->type->pm) {
--		info = "noirq type ";
--		callback = pm_noirq_op(dev->type->pm, state);
--	} else if (dev->class && dev->class->pm) {
--		info = "noirq class ";
--		callback = pm_noirq_op(dev->class->pm, state);
--	} else if (dev->bus && dev->bus->pm) {
--		info = "noirq bus ";
--		callback = pm_noirq_op(dev->bus->pm, state);
--	}
-+	callback = dpm_subsys_suspend_noirq_cb(dev, state, &info);
- 
- 	if (!callback && dev->driver && dev->driver->pm) {
- 		info = "noirq driver ";
-@@ -1288,6 +1347,35 @@ int dpm_suspend_noirq(pm_message_t state
- 	return ret;
- }
- 
-+static pm_callback_t dpm_subsys_suspend_late_cb(struct device *dev,
-+						pm_message_t state,
-+						const char **info_p)
-+{
-+	pm_callback_t callback;
-+	const char *info;
-+
-+	if (dev->pm_domain) {
-+		info = "late power domain ";
-+		callback = pm_late_early_op(&dev->pm_domain->ops, state);
-+	} else if (dev->type && dev->type->pm) {
-+		info = "late type ";
-+		callback = pm_late_early_op(dev->type->pm, state);
-+	} else if (dev->class && dev->class->pm) {
-+		info = "late class ";
-+		callback = pm_late_early_op(dev->class->pm, state);
-+	} else if (dev->bus && dev->bus->pm) {
-+		info = "late bus ";
-+		callback = pm_late_early_op(dev->bus->pm, state);
-+	} else {
-+		return NULL;
-+	}
-+
-+	if (info_p)
-+		*info_p = info;
-+
-+	return callback;
-+}
-+
- /**
-  * __device_suspend_late - Execute a "late suspend" callback for given device.
-  * @dev: Device to handle.
-@@ -1298,8 +1386,8 @@ int dpm_suspend_noirq(pm_message_t state
-  */
- static int __device_suspend_late(struct device *dev, pm_message_t state, bool async)
- {
--	pm_callback_t callback = NULL;
--	const char *info = NULL;
-+	pm_callback_t callback;
-+	const char *info;
- 	int error = 0;
- 
- 	TRACE_DEVICE(dev);
-@@ -1320,19 +1408,7 @@ static int __device_suspend_late(struct
- 	if (dev->power.syscore || dev->power.direct_complete)
- 		goto Complete;
- 
--	if (dev->pm_domain) {
--		info = "late power domain ";
--		callback = pm_late_early_op(&dev->pm_domain->ops, state);
--	} else if (dev->type && dev->type->pm) {
--		info = "late type ";
--		callback = pm_late_early_op(dev->type->pm, state);
--	} else if (dev->class && dev->class->pm) {
--		info = "late class ";
--		callback = pm_late_early_op(dev->class->pm, state);
--	} else if (dev->bus && dev->bus->pm) {
--		info = "late bus ";
--		callback = pm_late_early_op(dev->bus->pm, state);
--	}
-+	callback = dpm_subsys_suspend_late_cb(dev, state, &info);
- 
- 	if (!callback && dev->driver && dev->driver->pm) {
- 		info = "late driver ";
+-- 
+1.9.1
 
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
