@@ -1,68 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58806 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751497AbdKUXyR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Nov 2017 18:54:17 -0500
-Date: Tue, 21 Nov 2017 17:54:09 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H . Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v2] xen/pci: Use acpi_noirq_set() helper
-Message-ID: <20171121235409.GA2282@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171110180819.83868-1-andriy.shevchenko@linux.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 30/30] PCI: remove pci_get_bus_and_slot() function
+To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-31-git-send-email-okaya@codeaurora.org>
+ <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
+ <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
+From: Timur Tabi <timur@codeaurora.org>
+Message-ID: <25ec431a-2c1b-d352-f9ef-c663864664b6@codeaurora.org>
+Date: Wed, 22 Nov 2017 00:08:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171110180819.83868-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 08:08:19PM +0200, Andy Shevchenko wrote:
-> No need to keep an #ifdef since we have a helper (in x86 world).
-> Use it instead.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
-> - resend as v2 with slightly longer Cc list, i.e. +Rafael and ACPI ML
-> - in v1 Bjorn told he is okay with patch, but assumed it goes not via PCI tree
+On 11/21/17 11:55 PM, Sinan Kaya wrote:
+> For places where domain number information is available, I extracted domain number
+> and added into pci_get_domain_bus_and_slot() call such as xen or bn drivers.
 
-Sorry, I didn't understand your pings on the previous patch correctly,
-and I still assumed a Xen or x86 person would take this.  Since they
-haven't, I put it on pci/virtualization for v4.16.
+My suggestion is that you restrict your first patch set to only these 
+patches.
 
-If anybody else wants it and does pick it up, let me know and I'll
-drop it.
+> The assumption at this point is for pci_get_bus_and_slot() usages to be caught
+> in code-review.
 
-Bjorn
+How about this:
 
->  arch/x86/pci/xen.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index c4b3646bd04c..9542a746dc50 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -409,10 +409,8 @@ int __init pci_xen_init(void)
->  	pcibios_enable_irq = xen_pcifront_enable_irq;
->  	pcibios_disable_irq = NULL;
->  
-> -#ifdef CONFIG_ACPI
->  	/* Keep ACPI out of the picture */
-> -	acpi_noirq = 1;
-> -#endif
-> +	acpi_noirq_set();
->  
->  #ifdef CONFIG_PCI_MSI
->  	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
-> -- 
-> 2.14.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+static inline struct pci_dev * __deprecated 
+pci_get_bus_and_slot(unsigned int bus,
+						   unsigned int devfn)
+{
+	return pci_get_domain_bus_and_slot(0, bus, devfn);
+}
+
+
+-- 
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
+Technologies, Inc.  Qualcomm Technologies, Inc. is a member of the
+Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
