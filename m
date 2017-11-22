@@ -1,117 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 12/17] PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller functions
-Date: Fri,  3 Nov 2017 14:47:16 +0100
-Message-Id: <20171103134722.5532-13-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 29/30] i7300_idle: deprecate pci_get_bus_and_slot()
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+ <1511328675-21981-30-git-send-email-okaya@codeaurora.org>
+ <20171122075345.GC26583@kroah.com>
+ <81de37c1-26b5-41f7-ab32-b98012890971@codeaurora.org>
+ <20171122164546.GB30812@kroah.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <3cca8693-72bf-db72-f698-f111c9ef707c@codeaurora.org>
+Date: Wed, 22 Nov 2017 11:50:53 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171122164546.GB30812@kroah.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>, linux-arm-msm@vger.kernel.org,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Split artpec6_pcie_establish_link() into smaller functions
-to better match other drivers such as dra7xx and imx6.
-This is also done to prepare for endpoint mode support.
+On 11/22/2017 11:45 AM, Greg Kroah-Hartman wrote:
+>> Funny thing is nobody is calling this function. Maybe, I should just kill it
+>> instead.
+> Yes, delete it.  Why doesn't the build warn about it not being used?
+> 
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 53 +++++++++++++++++++++++-------------------
- 1 file changed, 29 insertions(+), 24 deletions(-)
+OK. Because it is in a header file that nobody includes.
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 18075e0fab80..3b635e745d25 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -80,18 +80,23 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
- 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
- }
- 
--static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
-+static int artpec6_pcie_establish_link(struct dw_pcie *pci)
- {
--	struct dw_pcie *pci = artpec6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 	u32 val;
--	unsigned int retries;
- 
--	/* Hold DW core in reset */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_CORE_RESET_REQ;
-+	val |= PCIECFG_LTSSM_ENABLE;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- 
-+	return 0;
-+}
-+
-+static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
-+	unsigned int retries;
-+
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
- 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
- 		PCIECFG_MODE_TX_DRV_EN |
-@@ -131,30 +136,25 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
- 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
- 		retries--;
- 	} while (retries && !(val & PHY_COSPLLLOCK));
-+}
-+
-+static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
- 
--	/* Take DW core out of reset */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val &= ~PCIECFG_CORE_RESET_REQ;
-+	val |= PCIECFG_CORE_RESET_REQ;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--	usleep_range(100, 200);
-+}
- 
--	/* setup root complex */
--	dw_pcie_setup_rc(pp);
-+static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
-+{
-+	u32 val;
- 
--	/* assert LTSSM enable */
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_LTSSM_ENABLE;
-+	val &= ~PCIECFG_CORE_RESET_REQ;
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
--
--	/* check if the link is up or not */
--	if (!dw_pcie_wait_for_link(pci))
--		return 0;
--
--	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
--
--	return -ETIMEDOUT;
-+	usleep_range(100, 200);
- }
- 
- static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
-@@ -171,7 +171,12 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
- 
--	artpec6_pcie_establish_link(artpec6_pcie);
-+	artpec6_pcie_assert_core_reset(artpec6_pcie);
-+	artpec6_pcie_init_phy(artpec6_pcie);
-+	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-+	dw_pcie_setup_rc(pp);
-+	artpec6_pcie_establish_link(pci);
-+	dw_pcie_wait_for_link(pci);
- 	artpec6_pcie_enable_interrupts(artpec6_pcie);
- 
- 	return 0;
 -- 
-2.14.2
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
