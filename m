@@ -1,50 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51930 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751817AbdK3MlT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Nov 2017 07:41:19 -0500
-Date: Thu, 30 Nov 2017 12:41:49 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, jonathanh@nvidia.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com, rjw@rjwysocki.net,
-        tglx@linutronix.de, vidyas@nvidia.com, kthota@nvidia.com,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH 04/10] ARM: tegra: EXPORT tegra_cpuidle_pcie_irqs_in_use()
-Message-ID: <20171130124149.GB12096@red-moon>
-References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
- <1511538800-8275-5-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1511538800-8275-5-git-send-email-mmaddireddy@nvidia.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40014 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751795AbdKVFcX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:23 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        xen-devel@lists.xenproject.org (moderated list:XEN PCI SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 21/30] xen: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:31:06 -0500
+Message-Id: <1511328675-21981-22-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 24, 2017 at 09:23:14PM +0530, Manikanta Maddireddy wrote:
-> EXPORT tegra_cpuidle_pcie_irqs_in_use() to allow Tegra PCIe driver to be
-> compiled as loadable kernel module.
-> 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
->  arch/arm/mach-tegra/cpuidle.c | 1 +
->  1 file changed, 1 insertion(+)
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-You should find a way to remove this call and the corresponding
-drivers->arch dependency, not to export it by spreading it even
-further.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-Lorenzo
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/xen-pcifront.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> diff --git a/arch/arm/mach-tegra/cpuidle.c b/arch/arm/mach-tegra/cpuidle.c
-> index 316563141add..7d7e6d3ce32d 100644
-> --- a/arch/arm/mach-tegra/cpuidle.c
-> +++ b/arch/arm/mach-tegra/cpuidle.c
-> @@ -57,3 +57,4 @@ void tegra_cpuidle_pcie_irqs_in_use(void)
->  		break;
->  	}
->  }
-> +EXPORT_SYMBOL(tegra_cpuidle_pcie_irqs_in_use);
-> -- 
-> 2.1.4
-> 
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 8fc2e95..94b25b5 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -595,6 +595,7 @@ static pci_ers_result_t pcifront_common_process(int cmd,
+ 	struct pci_driver *pdrv;
+ 	int bus = pdev->sh_info->aer_op.bus;
+ 	int devfn = pdev->sh_info->aer_op.devfn;
++	int domain = pdev->sh_info->aer_op.domain;
+ 	struct pci_dev *pcidev;
+ 	int flag = 0;
+ 
+@@ -603,7 +604,7 @@ static pci_ers_result_t pcifront_common_process(int cmd,
+ 		cmd, bus, devfn);
+ 	result = PCI_ERS_RESULT_NONE;
+ 
+-	pcidev = pci_get_bus_and_slot(bus, devfn);
++	pcidev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+ 	if (!pcidev || !pcidev->driver) {
+ 		dev_err(&pdev->xdev->dev, "device or AER driver is NULL\n");
+ 		pci_dev_put(pcidev);
+-- 
+1.9.1
