@@ -1,104 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFCv2 PATCH 31/36] iommu/arm-smmu-v3: Add support for PCI ATS
-To: Bharat Kumar Gogada <bharatku@xilinx.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-32-jean-philippe.brucker@arm.com>
- <BLUPR0201MB150565029F9260A528739ACBA52E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <673fda01-2ae0-87e4-637e-fe27096b6be0@arm.com>
-Date: Thu, 16 Nov 2017 15:03:00 +0000
-MIME-Version: 1.0
-In-Reply-To: <BLUPR0201MB150565029F9260A528739ACBA52E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <Mark.Rutland@arm.com>,
- "xieyisheng1@huawei.com" <xieyisheng1@huawei.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
- "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "dwmw2@infradead.org" <dwmw2@infradead.org>,
- "liubo95@huawei.com" <liubo95@huawei.com>,
- "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
- "robdclark@gmail.com" <robdclark@gmail.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
- "nwatters@codeaurora.org" <nwatters@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40792 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751702AbdKVFcb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 00:32:31 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Cox <alan@linux.intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        kbuild test robot <fengguang.wu@intel.com>,
+        Arushi Singhal <arushisinghal19971997@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Avraham Shukron <avraham.shukron@gmail.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Valentin Vidic <Valentin.Vidic@CARNet.hr>,
+        linux-media@vger.kernel.org (open list:MEDIA INPUT INFRASTRUCTURE
+        (V4L/DVB)),
+        devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 23/30] [media] atomisp: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:31:08 -0500
+Message-Id: <1511328675-21981-24-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bharat,
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-On 16/11/17 14:19, Bharat Kumar Gogada wrote:
-> Hi Jean,
-> 
-> +static size_t
-> +arm_smmu_atc_inv_domain(struct arm_smmu_domain *smmu_domain, int ssid,
-> +			unsigned long iova, size_t size)
-> +{
-> +	unsigned long flags;
-> +	struct arm_smmu_cmdq_ent cmd;
-> +	struct arm_smmu_master_data *master;
-> +
-> +	arm_smmu_atc_inv_to_cmd(ssid, iova, size, &cmd);
-> +
-> +	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
-> +	list_for_each_entry(master, &smmu_domain->devices, list)
-> +		arm_smmu_atc_inv_master(master, &cmd);
-> +	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
-> +
-> +	return size;
-> +}
-> +
->  /* IOMMU API */
->  static bool arm_smmu_capable(enum iommu_cap cap)  { @@ -2361,6 +2506,8 @@ static void arm_smmu_detach_dev(struct device *dev)
->  		__iommu_process_unbind_dev_all(&smmu_domain->domain, dev);
->  
->  	if (smmu_domain) {
-> +		arm_smmu_atc_inv_master_all(master, 0);
-> +
-> In BIND flow, when VFIO_IOMMU_UNBIND is invoked invalidation is sent on allocated PASID for this application.
-> When vfio group fd is closed after UNBIND,  arm_smmu_detach_dev is invoked now invalidation is being sent on ssid zero.
-> Why  invalidation needs to be sent on ssid zero ?
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-It's possible to use bind/unbind and map/unmap APIs at the same time on a
-domain. map/unmap modifies non-ssid mappings as usual, for context
-descriptor 0. Note that SSID 0 is converted to "no SSID" by
-arm_smmu_atc_inv_to_cmd.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c               | 2 +-
+ drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-That said, I think VFIO cleans all DMA mappings when the VFIO group fd is
-closed, which will send individual ATC invalidation for each mapping. But
-VFIO may not be the only user of this API, and future users may be less
-careful. It's safer to send this global invalidation whenever we detach
-the domain, to ensure we're not leaving stale ATC entries for the next user.
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c b/drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c
+index 663aa91..95b9c7a 100644
+--- a/drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c
++++ b/drivers/staging/media/atomisp/pci/atomisp2/atomisp_v4l2.c
+@@ -1233,7 +1233,7 @@ static int atomisp_pci_probe(struct pci_dev *dev,
+ 	isp->pdev = dev;
+ 	isp->dev = &dev->dev;
+ 	isp->sw_contex.power_state = ATOM_ISP_POWER_UP;
+-	isp->pci_root = pci_get_bus_and_slot(0, 0);
++	isp->pci_root = pci_get_domain_bus_and_slot(0, 0, 0);
+ 	if (!isp->pci_root) {
+ 		dev_err(&dev->dev, "Unable to find PCI host\n");
+ 		return -ENODEV;
+diff --git a/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c b/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
+index 4631b1d..51dcef57 100644
+--- a/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
++++ b/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
+@@ -39,7 +39,7 @@ static inline int platform_is(u8 model)
+ 
+ static int intel_mid_msgbus_init(void)
+ {
+-	pci_root = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
++	pci_root = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
+ 	if (!pci_root) {
+ 		pr_err("%s: Error: msgbus PCI handle NULL\n", __func__);
+ 		return -ENODEV;
+-- 
+1.9.1
