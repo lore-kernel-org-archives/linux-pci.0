@@ -1,66 +1,50 @@
-Return-Path: <SRS0=90sa=CO=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=90sa=CO=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH v2 4/4] PCI/AER: Dont do recovery when DPC is enabled
-To: Bjorn Helgaas <helgaas@kernel.org>, Oza Pawandeep <poza@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dongdong Liu <liudongdong3@huawei.com>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org
-References: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
- <1510721808-27164-5-git-send-email-poza@codeaurora.org>
- <20171115211447.GA7266@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <16e82fb4-dda8-3790-e831-675f9a6fd388@codeaurora.org>
-Date: Thu, 16 Nov 2017 09:03:37 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:41693 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751556AbdKVLVE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 06:21:04 -0500
+Subject: Re: [PATCH V2 2/5] PCI: rcar: Clean up the macros
+To: Simon Horman <horms@verge.net.au>
+Cc: linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
+ <20171110215843.432-3-marek.vasut+renesas@gmail.com>
+ <20171113070326.qteltu72qpniogcf@verge.net.au>
+ <4e43ddcf-9d97-c8de-8f46-1735f9f1bab6@gmail.com>
+ <20171115132829.6qpfwbs4iseaulob@verge.net.au>
+From: Marek Vasut <marek.vasut@gmail.com>
+Message-ID: <d6187f22-74f2-2d69-753e-f868e2a4385e@gmail.com>
+Date: Wed, 22 Nov 2017 12:20:33 +0100
 MIME-Version: 1.0
-In-Reply-To: <20171115211447.GA7266@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171115132829.6qpfwbs4iseaulob@verge.net.au>
 Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 11/15/2017 4:14 PM, Bjorn Helgaas wrote:
->> +	if (pcie_port_query_uptream_service(dev, PCIE_PORT_SERVICE_DPC)) {
->> +		dev_info(&dev->dev, "AER: Device recovery to be done by DPC\n");
->> +		return;
->> +	}
-> What happens without this test?
+On 11/15/2017 02:28 PM, Simon Horman wrote:
+> On Mon, Nov 13, 2017 at 07:11:54PM +0100, Marek Vasut wrote:
+>> On 11/13/2017 08:03 AM, Simon Horman wrote:
+>>> On Fri, Nov 10, 2017 at 10:58:40PM +0100, Marek Vasut wrote:
+>>>> Just clean up the macros in the RCar PCI driver, no functional change.
+>>>
+>>> Could you describe the cleanup in slightly more detail?
+>>> My reading is 1. Use BIT() macro 2. tidy up whitespace.
+>>>
+>> That's all there is, indeed.
 > 
-> Does AER read registers from the now-disabled device and get ~0 data?
-> Or is AER reading registers from the port upstream from the disabled
-> device and trying to reset the device?
+> Right, but I'd rather that the changelog be expanded to include that
+> information. With that fixed feel free to add:
+
+Fixed
+
+> Acked-by: Simon Horman <horms+renesas@verge.net.au>
 > 
-> It looks like get_device_error_info() reads registers and doesn't
-> check to see whether it gets ~0 back.  I'm wondering if we *should* be
-> checking there and whether doing that would help mitigate the issue
-> here.
 
-The issue is two independent software entities are trying to recover the PCIe
-link simultaneously. AER and DPC have two different approaches to link recovery.
-
-AER makes a callback into the endpoint drivers for non-fatal errors and hope
-that endpoint driver can recover the link. AER also makes a callback in the 
-fatal error case but resets the link via secondary bus reset.
-
-The DPC on the other hand stops the drivers immediately since HW took care of
-link disable. (Endpoint register reads return ~0 at this point.) DPC driver clears
-the interrupt from the DPC capability and brings the link up at the end. Full
-enumeration/rescan follows this procedure to go back to functioning state. 
-
-If we don't have this AER-DPC coordination, the endpoint driver gets confused since
-it receives a stop command as well as a recover command at about the same time
-depending on the timing.
-
-Whether the AER driver reads ~0 or not really depends on timing. The link may come
-up from the DPC driver by the time AER driver reaches here as an example.
-
-Bad things do happen. We have seen this with e1000e driver.
-
-Sinan
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Best regards,
+Marek Vasut
