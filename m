@@ -1,70 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:48248 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751181AbdKHJ7J (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:59:09 -0500
-Subject: Re: [PATCH] PCI: rcar: Add compatible string for r8a7796
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
- <CAMuHMdV=SHkjpBqCXPzcEnunhWRNLdw+1GwLAS7nbkfQQz3zyA@mail.gmail.com>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <b53e4694-3f5b-57f7-2b9b-45e780c4c65a@gmail.com>
-Date: Wed, 8 Nov 2017 10:31:52 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAMuHMdV=SHkjpBqCXPzcEnunhWRNLdw+1GwLAS7nbkfQQz3zyA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mga11.intel.com ([192.55.52.93]:12153 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751476AbdKVHw3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 22 Nov 2017 02:52:29 -0500
+Message-ID: <1511337146.4512.6.camel@linux.intel.com>
+Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
+From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        timur@codeaurora.org
+Cc: Jani Nikula <jani.nikula@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>
+Date: Wed, 22 Nov 2017 09:52:26 +0200
+In-Reply-To: <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+         <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/08/2017 10:29 AM, Geert Uytterhoeven wrote:
-> Hi Marek,
+Dropping the extra mailing lists and Dave, this is a rather trivial thing.
 
-Hi,
+On Wed, 2017-11-22 at 00:30 -0500, Sinan Kaya wrote:
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
+> 
+> Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+> extract the domain number. Other places, use the actual domain number from
+> the device.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-> On Wed, Nov 8, 2017 at 10:15 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
->> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
->>
->> Add compatible string for the RCar M3 R8A7796 SoC.
->>
->> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> 
-> This patch is not needed, as the DT bindings specify that the DTS should use
-> both "renesas,pcie-r8a7796" and "renesas,pcie-rcar-gen3", and the driver
-> already matches against the latter.
+<SNIP>
 
-OK, then please just drop this one. I'll keep this in mind next time I
-add redundant bindings, thanks :)
+> +++ b/drivers/gpu/drm/i915/i915_drv.c
+> @@ -419,7 +419,9 @@ static int i915_getparam(struct drm_device *dev, void *data,
+>  
+>  static int i915_get_bridge_dev(struct drm_i915_private *dev_priv)
+>  {
+> -	dev_priv->bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
+> +	uint16_t devfn = PCI_DEVFN(0, 0)
 
->> --- a/drivers/pci/host/pcie-rcar.c
->> +++ b/drivers/pci/host/pcie-rcar.c
->> @@ -1062,6 +1062,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->>         { .compatible = "renesas,pcie-rcar-gen2",
->>           .data = rcar_pcie_hw_init_gen2 },
->>         { .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
->> +       { .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
->>         { .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
-> 
+The would have to be "unsigned int" according to the function
+signature.
 
+> +
+> +	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0, devfn);
 
+But the most straightforward change is to simply convert to:
+
+	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0,
+							   PCI_DEVFN(0, 0));
+
+Can you please resend like that.
+
+Looks like this is a part of abigger series, so others may prefer
+latter form too, to avoid the variable.
+
+Regards, Joonas
 -- 
-Best regards,
-Marek Vasut
+Joonas Lahtinen
+Open Source Technology Center
+Intel Corporation
