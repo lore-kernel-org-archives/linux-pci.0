@@ -1,13 +1,6 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <2261600.6h5WdhsrLe@aspire.rjw.lan>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <6330680.LdxjlP4uri@aspire.rjw.lan>
- <4184911.zoJM7jZeH4@aspire.rjw.lan> <2261600.6h5WdhsrLe@aspire.rjw.lan>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Wed, 15 Nov 2017 08:43:06 +0100
-Message-ID: <CAPDyKFpB=wq+66mfrVkMoUwyBqA2QhNQav5cipG1G-VNKO7Sig@mail.gmail.com>
-Subject: Re: [PATCH v3 4/6] PM / core: Add helpers for subsystem callback selection
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Ulf Hansson <ulf.hansson@linaro.org>
 Cc: Linux PM <linux-pm@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Alan Stern <stern@rowland.harvard.edu>,
@@ -19,58 +12,63 @@ Cc: Linux PM <linux-pm@vger.kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Kevin Hilman <khilman@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v4 5/6] PM / core: Direct handling of DPM_FLAG_LEAVE_SUSPENDED
+Date: Wed, 22 Nov 2017 02:10:51 +0100
+Message-ID: <4400947.0Tgl7arJ6a@aspire.rjw.lan>
+In-Reply-To: <CAPDyKFq0HGm7h_OFOwd5sRz+3_ZseNFTC-fi8c2qJVW4ZkOaHA@mail.gmail.com>
+References: <3806130.B2KCK0tvef@aspire.rjw.lan> <5730411.DndCTChqpV@aspire.rjw.lan> <CAPDyKFq0HGm7h_OFOwd5sRz+3_ZseNFTC-fi8c2qJVW4ZkOaHA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 November 2017 at 01:42, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Add helper routines to find and return a suitable subsystem callback
-> during the "noirq" phases of system suspend/resume (or analogous)
-> transitions as well as during the "late" phase of system suspend and
-> the "early" phase of system resume (or analogous) transitions.
->
-> The helpers will be called from additional sites going forward.
->
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Monday, November 20, 2017 2:42:26 PM CET Ulf Hansson wrote:
+> On 18 November 2017 at 15:41, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > Make the PM core handle DPM_FLAG_LEAVE_SUSPENDED directly for
+> > devices whose "noirq", "late" and "early" driver callbacks are
+> > invoked directly by it.
+> 
+> This indicates that your target for this particular change isn't
+> ACPI/PCI, but instead this aims to be a more generic solution to be
+> able to optimize the resume path for devices.
+> 
+> Assuming, this is the case, I don't think this is good enough as I
+> pointed out [1] earlier. Simply because it isn't as flexible as is
+> required - to really be able cover generic cases.
 
-With a minor nitpick, see below, feel free to add:
+I'll go back to that message, but nothing so far has been flexible enough to
+cover everything you can imagine.
 
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+The case this and the next patch cover really is to allow drivers that can be
+used with or without a PM domain to avoid doing any "are we suspended?" type
+of checks in their callbacks.  Actually, the [6/6] is more important from that
+standpoint, but this one also may play the role because of the dependencies
+between devices involved in the handling of LEAVE_SUSPENDED (eg. say a PCI
+parent has a child platform or I2C or similar devices without a PM domain
+and what happens to the child affects the parent).
 
-> ---
->
-> v2 -> v3: No changes.
->
-> ---
->  drivers/base/power/main.c |  196 +++++++++++++++++++++++++++++++---------------
->  1 file changed, 136 insertions(+), 60 deletions(-)
->
-> Index: linux-pm/drivers/base/power/main.c
-> ===================================================================
-> --- linux-pm.orig/drivers/base/power/main.c
-> +++ linux-pm/drivers/base/power/main.c
-> @@ -525,6 +525,14 @@ static void dpm_watchdog_clear(struct dp
->  #define dpm_watchdog_clear(x)
->  #endif
->
-> +static pm_callback_t dpm_subsys_suspend_noirq_cb(struct device *dev,
-> +                                                pm_message_t state,
-> +                                                const char **info_p);
-> +
-> +static pm_callback_t dpm_subsys_suspend_late_cb(struct device *dev,
-> +                                               pm_message_t state,
-> +                                               const char **info_p);
-> +
+> >
+> > Namely, make it skip all of the system-wide resume callbacks for
+> > such devices with DPM_FLAG_LEAVE_SUSPENDED set if they are in
+> > runtime suspend during the "noirq" phase of system-wide suspend
+> > (or analogous) transitions or the system transition under way is
+> > a proper suspend (rather than anything related to hibernation) and
+> > the device's wakeup settings are compatible with runtime PM (that
+> > is, the device cannot generate wakeup signals at all or it is
+> > allowed to wake up the system from sleep).
+> 
+> As I pointed out by submitting another patch [2], device_may_wakeup()
+> doesn't really tell whether the wakeup is configured as "in-band" or
+> "out-of-band". That knowledge is known by the driver and the subsystem
+> layer - and for that reason I don't think the PM core shall base
+> generic decisions like this on it.
 
-There is no need to declare these functions.
+The "or it is allowed to wake up the system from sleep" case may be overly
+optimistic, but the remaining two (runtime-suspended devices and devices
+that can't generate wakeup signals at all) are quite straightforward to me.
 
-Perhaps a following patch in the series need them, but then that
-change should add these or even better (in my opinion) just move the
-implementations and avoid the declarations all together.
+Thanks,
+Rafael
 
-[...]
-
-Kind regards
-Uffe
