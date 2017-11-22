@@ -1,35 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39306 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751188AbdKMXLr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Nov 2017 18:11:47 -0500
-Subject: [PATCH v1 0/4] PCI/ASPM: Fix some L1 substate configuration
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Rajat Jain <rajatja@google.com>, linux-kernel@vger.kernel.org,
-        Vidya Sagar <vidyas@nvidia.com>
-Date: Mon, 13 Nov 2017 17:11:45 -0600
-Message-ID: <20171113230937.4120.68038.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH 11/30] hwmon: (coretemp) deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:30:56 -0500
+Message-Id: <1511328675-21981-12-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:CORETEMP HARDWARE MONITORING DRIVER"
+ <linux-hwmon@vger.kernel.org>, Fenghua Yu <fenghua.yu@intel.com>,
+ Jean Delvare <jdelvare@suse.com>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ linux-arm-kernel@lists.infradead.org, Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The first two patches fix typos that cause incorrect L1 substate
-configuration.  The last two are cosmetic for maintainability.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-These are minor enough that I'd like to squeeze them into v4.15 unless
-anybody objects.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
+ drivers/hwmon/coretemp.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Bjorn Helgaas (4):
-      PCI/ASPM: Account for downstream device's Port Common_Mode_Restore_Time
-      PCI/ASPM: Use correct capability pointer to program LTR_L1.2_THRESHOLD
-      PCI/ASPM: Reformat ASPM register definitions
-      PCI/ASPM: Add L1 Substates definitions
+diff --git a/drivers/hwmon/coretemp.c b/drivers/hwmon/coretemp.c
+index c13a4fd..4bdbf77 100644
+--- a/drivers/hwmon/coretemp.c
++++ b/drivers/hwmon/coretemp.c
+@@ -246,7 +246,8 @@ static int adjust_tjmax(struct cpuinfo_x86 *c, u32 id, struct device *dev)
+ 	int err;
+ 	u32 eax, edx;
+ 	int i;
+-	struct pci_dev *host_bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
++	u16 devfn = PCI_DEVFN(0, 0);
++	struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
+ 
+ 	/*
+ 	 * Explicit tjmax table entries override heuristics.
+-- 
+1.9.1
 
 
- drivers/pci/pcie/aspm.c       |   38 ++++++++++++++++++++++----------------
- include/uapi/linux/pci_regs.h |   34 ++++++++++++++++++++--------------
- 2 files changed, 42 insertions(+), 30 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
