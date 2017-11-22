@@ -1,124 +1,34 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54950 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752816AbdKTVhN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Nov 2017 16:37:13 -0500
-Date: Mon, 20 Nov 2017 15:37:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH V3 3/3] PCI: tegra: Enable ASPM-L1 capability
- advertisement
-Message-ID: <20171120213710.GE16362@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
- <1510492674-12786-4-git-send-email-vidyas@nvidia.com>
+Return-Path: <SRS0=nWNg=CU=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=nWNg=CU=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Subject: [Question] Unsupported Request During PCI Enumeration
+To: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>
+CC: Linuxarm <linuxarm@huawei.com>,
+        liudongdong 00290354
+	<liudongdong3@huawei.com>
+Message-ID: <26340670-2744-b2e0-eed7-eb8e0ad2bc84@huawei.com>
+Date: Wed, 22 Nov 2017 15:38:59 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1510492674-12786-4-git-send-email-vidyas@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="gbk"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-s/Enable ASPM-L1 capability advertisement/
- /Advertise ASPM L1 PM Substates support/
+I found a correctable error when boot linux kernel. The corrected error
+is UR (Unsupported Request). It seems that PCIe device will produce UR
+during PCIe enumeration. We have configured _HPX in firmware to make sure
+UR report is enabled after calling pci_configure_device().
 
-On Sun, Nov 12, 2017 at 06:47:54PM +0530, Vidya Sagar wrote:
-> Enables advertisement of ASPM-L1 support in capability
-> registers of applicable Tegra chips
+If I disable UR report by setting Device Control Register Unsupported
+Request Reporting Enable to 0 ,it will not report the correctable error.
+But disable UR report is not responsible, so my question is
+how to make sure it does not report the correctable error during enumeration
+and after enumeration, PCIe device can report UR correctly ?
 
-Actually, I'm a little confused about whether this has to do with ASPM
-L1 support (which would be advertised in the Link Capabilities
-register) or the ASPM L1 Substates support (which would be advertised
-in the L1 PM Substates Capabilities register)?
+[  127.158876] {1}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 2
+[  127.171734] {1}[Hardware Error]: It has been corrected by h/w and requires no further action
+[  127.181872] {1}[Hardware Error]: event severity: corrected
+[  127.189099] {1}[Hardware Error]:  Error 0, type: corrected
+[  127.195437] {1}[Hardware Error]:   section_type: PCIe error
+[  127.201697] {1}[Hardware Error]:   port_type: 5, upstream switch port
 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> ---
-> V2:
-> * no change in this patch
-> 
-> V3:
-> * no change in this patch
-> 
->  drivers/pci/host/pci-tegra.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 29ee4bb0b7c6..fb61202ee60f 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -250,6 +250,9 @@
->  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
->  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
->  
-> +#define RP_VEND_XP1	0xf04
-> +#define RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT	BIT(21)
-> +
->  #define RP_VEND_CTL0	0xf44
->  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
->  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
-> @@ -351,6 +354,7 @@ struct tegra_pcie_soc {
->  	bool RAW_violation_fixup;
->  	bool program_deskew_time;
->  	bool updateFC_threshold;
-> +	bool has_aspm_l1;
->  	bool has_aspm_l1ss;
->  	bool l1ss_rp_wake_fixup;
->  };
-> @@ -2214,6 +2218,13 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
->  	value = readl(port->base + RP_VEND_CTL1);
->  	value |= RP_VEND_CTL1_ERPT;
->  	writel(value, port->base + RP_VEND_CTL1);
-> +
-> +	if (port->pcie->soc->has_aspm_l1) {
-> +		/* Advertise ASPM-L1 state capability*/
-> +		value = readl(port->base + RP_VEND_XP1);
-> +		value |= RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT;
-> +		writel(value, port->base + RP_VEND_XP1);
-> +	}
->  }
->  
->  static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
-> @@ -2458,6 +2469,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
-> +	.has_aspm_l1 = false,
->  	.has_aspm_l1ss = false,
->  	.l1ss_rp_wake_fixup = false,
->  };
-> @@ -2481,6 +2493,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
-> +	.has_aspm_l1 = true,
->  	.has_aspm_l1ss = false,
->  	.l1ss_rp_wake_fixup = false,
->  };
-> @@ -2503,6 +2516,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
->  	.RAW_violation_fixup = true,
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
-> +	.has_aspm_l1 = true,
->  	.has_aspm_l1ss = false,
->  	.l1ss_rp_wake_fixup = false,
->  };
-> @@ -2533,6 +2547,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = true,
->  	.updateFC_threshold = true,
-> +	.has_aspm_l1 = true,
->  	.has_aspm_l1ss = true,
->  	.l1ss_rp_wake_fixup = true,
->  };
-> @@ -2556,6 +2571,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
->  	.RAW_violation_fixup = false,
->  	.program_deskew_time = false,
->  	.updateFC_threshold = false,
-> +	.has_aspm_l1 = true,
->  	.has_aspm_l1ss = true,
->  	.l1ss_rp_wake_fixup = false,
->  };
-> -- 
-> 2.7.4
-> 
+Thanks,
+Dongdong
