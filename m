@@ -1,295 +1,231 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:51663 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933274AbdKCNsq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2017 09:48:46 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        Jianguo Sun <sunjianguo1@huawei.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@axis.com
-Subject: [PATCH v4 14/17] PCI: dwc: artpec6: Add support for endpoint mode
-Date: Fri,  3 Nov 2017 14:47:18 +0100
-Message-Id: <20171103134722.5532-15-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42166 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753071AbdKVWt5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 17:49:57 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Patrik Jakobsson <patrik.r.jakobsson@gmail.com>,
+        David Airlie <airlied@linux.ie>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2 08/29] drm/gma500: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 17:49:03 -0500
+Message-Id: <1511390964-9979-9-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
+References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe controller integrated in ARTPEC-6 SoCs is capable of operating in
-endpoint mode. Add endpoint mode support to the artpec6 driver.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
+
+Add domain parameter to CDV_MSG_READ32, CDV_MSG_WRITE32, MRST_MSG_READ32,
+MRST_MSG_WRITE32, MDFLD_MSG_READ32, MDFLD_MSG_WRITE32.
+
+Extract pci_dev from struct drm_device and use pdev to find the domain
+number while calling pci_get_domain_bus_and_slot().
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/dwc/Kconfig        |  23 +++++--
- drivers/pci/dwc/pcie-artpec6.c | 152 +++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 164 insertions(+), 11 deletions(-)
+ drivers/gpu/drm/gma500/cdv_device.c | 16 +++++++++-------
+ drivers/gpu/drm/gma500/gma_device.c |  3 ++-
+ drivers/gpu/drm/gma500/mid_bios.c   | 11 ++++++++---
+ drivers/gpu/drm/gma500/psb_drv.c    | 10 ++++++++--
+ drivers/gpu/drm/gma500/psb_drv.h    | 18 ++++++++++--------
+ 5 files changed, 37 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 3954353e3e2e..0fb96c7754de 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -148,15 +148,28 @@ config PCIE_ARMADA_8K
- 	  DesignWare core functions to implement the driver.
+diff --git a/drivers/gpu/drm/gma500/cdv_device.c b/drivers/gpu/drm/gma500/cdv_device.c
+index 8745971..e967924 100644
+--- a/drivers/gpu/drm/gma500/cdv_device.c
++++ b/drivers/gpu/drm/gma500/cdv_device.c
+@@ -185,21 +185,22 @@ static int cdv_backlight_init(struct drm_device *dev)
+  *	for this and the MID devices.
+  */
  
- config PCIE_ARTPEC6
--	bool "Axis ARTPEC-6 PCIe controller"
--	depends on PCI
-+	bool
-+
-+config PCIE_ARTPEC6_HOST
-+	bool "Axis ARTPEC-6 PCIe controller Host Mode"
- 	depends on MACH_ARTPEC6
--	depends on PCI_MSI_IRQ_DOMAIN
-+	depends on PCI && PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
-+	select PCIE_ARTPEC6
-+	help
-+	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
-+	  host mode. This uses the DesignWare core.
-+
-+config PCIE_ARTPEC6_EP
-+	bool "Axis ARTPEC-6 PCIe controller Endpoint Mode"
-+	depends on MACH_ARTPEC6
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW_EP
-+	select PCIE_ARTPEC6
- 	help
--	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
--	  SoCs.  This PCIe controller uses the DesignWare core.
-+	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
-+	  endpoint mode. This uses the DesignWare core.
- 
- config PCIE_KIRIN
- 	depends on OF && ARM64
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 3b635e745d25..840013cdc29d 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -13,6 +13,7 @@
- #include <linux/delay.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/of_device.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/resource.h>
-@@ -30,8 +31,15 @@ struct artpec6_pcie {
- 	struct dw_pcie		*pci;
- 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
- 	void __iomem		*phy_base;	/* DT phy */
-+	enum dw_pcie_device_mode mode;
- };
- 
-+struct artpec_pcie_of_data {
-+	enum dw_pcie_device_mode mode;
-+};
-+
-+static const struct of_device_id artpec6_pcie_of_match[];
-+
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET			0x700
- #define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
-@@ -42,6 +50,7 @@ struct artpec6_pcie {
- #define  PCIECFG_DBG_OEN		BIT(24)
- #define  PCIECFG_CORE_RESET_REQ		BIT(21)
- #define  PCIECFG_LTSSM_ENABLE		BIT(20)
-+#define  PCIECFG_DEVICE_TYPE_MASK	GENMASK(19, 16)
- #define  PCIECFG_CLKREQ_B		BIT(11)
- #define  PCIECFG_REFCLK_ENABLE		BIT(10)
- #define  PCIECFG_PLL_ENABLE		BIT(9)
-@@ -92,6 +101,22 @@ static int artpec6_pcie_establish_link(struct dw_pcie *pci)
- 	return 0;
- }
- 
-+static void artpec6_pcie_stop_link(struct dw_pcie *pci)
-+{
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-+	u32 val;
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
-+	val &= ~PCIECFG_LTSSM_ENABLE;
-+	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
-+}
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
-+	.start_link = artpec6_pcie_establish_link,
-+	.stop_link = artpec6_pcie_stop_link,
-+};
-+
- static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+-static inline u32 CDV_MSG_READ32(uint port, uint offset)
++static inline u32 CDV_MSG_READ32(uint domain, uint port, uint offset)
  {
- 	u32 val;
-@@ -232,10 +257,76 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
- 	return 0;
+ 	int mcr = (0x10<<24) | (port << 16) | (offset << 8);
+ 	uint32_t ret_val = 0;
+-	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
++	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+ 	pci_write_config_dword(pci_root, 0xD0, mcr);
+ 	pci_read_config_dword(pci_root, 0xD4, &ret_val);
+ 	pci_dev_put(pci_root);
+ 	return ret_val;
  }
  
--static const struct dw_pcie_ops dw_pcie_ops = {
--	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
-+static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-+	enum pci_barno bar;
-+
-+	artpec6_pcie_assert_core_reset(artpec6_pcie);
-+	artpec6_pcie_init_phy(artpec6_pcie);
-+	artpec6_pcie_deassert_core_reset(artpec6_pcie);
-+
-+	for (bar = BAR_0; bar <= BAR_5; bar++)
-+		dw_pcie_ep_reset_bar(pci, bar);
-+}
-+
-+static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep,
-+				  enum pci_epc_irq_type type, u8 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	switch (type) {
-+	case PCI_EPC_IRQ_LEGACY:
-+		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
-+		return -EINVAL;
-+	case PCI_EPC_IRQ_MSI:
-+		return dw_pcie_ep_raise_msi_irq(ep, interrupt_num);
-+	default:
-+		dev_err(pci->dev, "UNKNOWN IRQ type\n");
-+	}
-+
-+	return 0;
-+}
-+
-+static struct dw_pcie_ep_ops pcie_ep_ops = {
-+	.ep_init = artpec6_pcie_ep_init,
-+	.raise_irq = artpec6_pcie_raise_irq,
- };
- 
-+static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
-+			       struct platform_device *pdev)
-+{
-+	int ret;
-+	struct dw_pcie_ep *ep;
-+	struct resource *res;
-+	struct device *dev = &pdev->dev;
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+
-+	ep = &pci->ep;
-+	ep->ops = &pcie_ep_ops;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
-+	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
-+	if (IS_ERR(pci->dbi_base2))
-+		return PTR_ERR(pci->dbi_base2);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
-+	if (!res)
-+		return -EINVAL;
-+
-+	ep->phys_base = res->start;
-+	ep->addr_size = resource_size(res);
-+
-+	ret = dw_pcie_ep_init(ep);
-+	if (ret) {
-+		dev_err(dev, "failed to initialize endpoint\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static int artpec6_pcie_probe(struct platform_device *pdev)
+-static inline void CDV_MSG_WRITE32(uint port, uint offset, u32 value)
++static inline void CDV_MSG_WRITE32(uint domain, uint port, uint offset,
++				   u32 value)
  {
- 	struct device *dev = &pdev->dev;
-@@ -244,6 +335,16 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	struct resource *dbi_base;
- 	struct resource *phy_base;
- 	int ret;
-+	const struct of_device_id *match;
-+	const struct artpec_pcie_of_data *data;
-+	enum dw_pcie_device_mode mode;
-+
-+	match = of_match_device(artpec6_pcie_of_match, dev);
-+	if (!match)
-+		return -EINVAL;
-+
-+	data = (struct artpec_pcie_of_data *)match->data;
-+	mode = (enum dw_pcie_device_mode)data->mode;
+ 	int mcr = (0x11<<24) | (port << 16) | (offset << 8) | 0xF0;
+-	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
++	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+ 	pci_write_config_dword(pci_root, 0xD4, value);
+ 	pci_write_config_dword(pci_root, 0xD0, mcr);
+ 	pci_dev_put(pci_root);
+@@ -216,11 +217,12 @@ static void cdv_init_pm(struct drm_device *dev)
+ {
+ 	struct drm_psb_private *dev_priv = dev->dev_private;
+ 	u32 pwr_cnt;
++	u32 domain = pci_domain_nr(dev->pdev->bus);
+ 	int i;
  
- 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
- 	if (!artpec6_pcie)
-@@ -257,6 +358,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &dw_pcie_ops;
+-	dev_priv->apm_base = CDV_MSG_READ32(PSB_PUNIT_PORT,
++	dev_priv->apm_base = CDV_MSG_READ32(domain, PSB_PUNIT_PORT,
+ 							PSB_APMBA) & 0xFFFF;
+-	dev_priv->ospm_base = CDV_MSG_READ32(PSB_PUNIT_PORT,
++	dev_priv->ospm_base = CDV_MSG_READ32(domain, PSB_PUNIT_PORT,
+ 							PSB_OSPMBA) & 0xFFFF;
  
- 	artpec6_pcie->pci = pci;
-+	artpec6_pcie->mode = mode;
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
- 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
-@@ -276,15 +378,53 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, artpec6_pcie);
- 
--	ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
--	if (ret < 0)
--		return ret;
-+	switch (artpec6_pcie->mode) {
-+	case DW_PCIE_RC_TYPE:
-+		if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_HOST))
-+			return -ENODEV;
-+
-+		ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	case DW_PCIE_EP_TYPE: {
-+		u32 val;
-+
-+		if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_EP))
-+			return -ENODEV;
-+
-+		val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
-+		val &= ~PCIECFG_DEVICE_TYPE_MASK;
-+		artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
-+		ret = artpec6_add_pcie_ep(artpec6_pcie, pdev);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	}
-+	default:
-+		dev_err(dev, "INVALID device type %d\n", artpec6_pcie->mode);
-+	}
- 
- 	return 0;
+ 	/* Power status */
+@@ -251,7 +253,7 @@ static void cdv_errata(struct drm_device *dev)
+ 	 *	Bonus Launch to work around the issue, by degrading
+ 	 *	performance.
+ 	 */
+-	 CDV_MSG_WRITE32(3, 0x30, 0x08027108);
++	 CDV_MSG_WRITE32(pci_domain_nr(dev->pdev->bus), 3, 0x30, 0x08027108);
  }
  
-+static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
- static const struct of_device_id artpec6_pcie_of_match[] = {
--	{ .compatible = "axis,artpec6-pcie", },
-+	{
-+		.compatible = "axis,artpec6-pcie",
-+		.data = &artpec6_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "axis,artpec6-pcie-ep",
-+		.data = &artpec6_pcie_ep_of_data,
-+	},
- 	{},
- };
+ /**
+diff --git a/drivers/gpu/drm/gma500/gma_device.c b/drivers/gpu/drm/gma500/gma_device.c
+index 4a295f9..30255b3 100644
+--- a/drivers/gpu/drm/gma500/gma_device.c
++++ b/drivers/gpu/drm/gma500/gma_device.c
+@@ -19,7 +19,8 @@
+ void gma_get_core_freq(struct drm_device *dev)
+ {
+ 	uint32_t clock;
+-	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
++	u32 domain = pci_domain_nr(dev->pdev->bus);
++	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+ 	struct drm_psb_private *dev_priv = dev->dev_private;
  
+ 	/*pci_write_config_dword(pci_root, 0xD4, 0x00C32004);*/
+diff --git a/drivers/gpu/drm/gma500/mid_bios.c b/drivers/gpu/drm/gma500/mid_bios.c
+index d75ecb3..65cdbed 100644
+--- a/drivers/gpu/drm/gma500/mid_bios.c
++++ b/drivers/gpu/drm/gma500/mid_bios.c
+@@ -32,7 +32,8 @@
+ static void mid_get_fuse_settings(struct drm_device *dev)
+ {
+ 	struct drm_psb_private *dev_priv = dev->dev_private;
+-	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
++	u32 domain = pci_domain_nr(dev->pdev->bus);
++	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+ 	uint32_t fuse_value = 0;
+ 	uint32_t fuse_value_tmp = 0;
+ 
+@@ -104,7 +105,9 @@ static void mid_get_fuse_settings(struct drm_device *dev)
+ static void mid_get_pci_revID(struct drm_psb_private *dev_priv)
+ {
+ 	uint32_t platform_rev_id = 0;
+-	struct pci_dev *pci_gfx_root = pci_get_bus_and_slot(0, PCI_DEVFN(2, 0));
++	u32 domain = pci_domain_nr(dev_priv->dev->pdev->bus);
++	struct pci_dev *pci_gfx_root =
++		pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(2, 0));
+ 
+ 	if (pci_gfx_root == NULL) {
+ 		WARN_ON(1);
+@@ -281,7 +284,9 @@ static void mid_get_vbt_data(struct drm_psb_private *dev_priv)
+ 	u32 addr;
+ 	u8 __iomem *vbt_virtual;
+ 	struct mid_vbt_header vbt_header;
+-	struct pci_dev *pci_gfx_root = pci_get_bus_and_slot(0, PCI_DEVFN(2, 0));
++	u32 domain = pci_domain_nr(dev->pdev->bus);
++	struct pci_dev *pci_gfx_root =
++		pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(2, 0));
+ 	int ret = -1;
+ 
+ 	/* Get the address of the platform config vbt */
+diff --git a/drivers/gpu/drm/gma500/psb_drv.c b/drivers/gpu/drm/gma500/psb_drv.c
+index 37a3be7..9d848fd 100644
+--- a/drivers/gpu/drm/gma500/psb_drv.c
++++ b/drivers/gpu/drm/gma500/psb_drv.c
+@@ -261,7 +261,11 @@ static int psb_driver_load(struct drm_device *dev, unsigned long flags)
+ 		goto out_err;
+ 
+ 	if (IS_MRST(dev)) {
+-		dev_priv->aux_pdev = pci_get_bus_and_slot(0, PCI_DEVFN(3, 0));
++		u32 domain = pci_domain_nr(dev->pdev->bus);
++
++		dev_priv->aux_pdev =
++			pci_get_domain_bus_and_slot(domain, 0,
++						    PCI_DEVFN(3, 0));
+ 
+ 		if (dev_priv->aux_pdev) {
+ 			resource_start = pci_resource_start(dev_priv->aux_pdev,
+@@ -281,7 +285,9 @@ static int psb_driver_load(struct drm_device *dev, unsigned long flags)
+ 		}
+ 		dev_priv->gmbus_reg = dev_priv->aux_reg;
+ 
+-		dev_priv->lpc_pdev = pci_get_bus_and_slot(0, PCI_DEVFN(31, 0));
++		dev_priv->lpc_pdev =
++			pci_get_domain_bus_and_slot(domain, 0,
++						    PCI_DEVFN(31, 0));
+ 		if (dev_priv->lpc_pdev) {
+ 			pci_read_config_word(dev_priv->lpc_pdev, PSB_LPC_GBA,
+ 				&dev_priv->lpc_gpio_base);
+diff --git a/drivers/gpu/drm/gma500/psb_drv.h b/drivers/gpu/drm/gma500/psb_drv.h
+index 821497d..fb3ea1d 100644
+--- a/drivers/gpu/drm/gma500/psb_drv.h
++++ b/drivers/gpu/drm/gma500/psb_drv.h
+@@ -781,38 +781,40 @@ extern int psb_gem_dumb_create(struct drm_file *file, struct drm_device *dev,
+ extern int drm_idle_check_interval;
+ 
+ /* Utilities */
+-static inline u32 MRST_MSG_READ32(uint port, uint offset)
++static inline u32 MRST_MSG_READ32(uint domain, uint port, uint offset)
+ {
+ 	int mcr = (0xD0<<24) | (port << 16) | (offset << 8);
+ 	uint32_t ret_val = 0;
+-	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
++	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+ 	pci_write_config_dword(pci_root, 0xD0, mcr);
+ 	pci_read_config_dword(pci_root, 0xD4, &ret_val);
+ 	pci_dev_put(pci_root);
+ 	return ret_val;
+ }
+-static inline void MRST_MSG_WRITE32(uint port, uint offset, u32 value)
++static inline void MRST_MSG_WRITE32(uint domain, uint port, uint offset,
++				    u32 value)
+ {
+ 	int mcr = (0xE0<<24) | (port << 16) | (offset << 8) | 0xF0;
+-	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
++	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+ 	pci_write_config_dword(pci_root, 0xD4, value);
+ 	pci_write_config_dword(pci_root, 0xD0, mcr);
+ 	pci_dev_put(pci_root);
+ }
+-static inline u32 MDFLD_MSG_READ32(uint port, uint offset)
++static inline u32 MDFLD_MSG_READ32(uint domain, uint port, uint offset)
+ {
+ 	int mcr = (0x10<<24) | (port << 16) | (offset << 8);
+ 	uint32_t ret_val = 0;
+-	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
++	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+ 	pci_write_config_dword(pci_root, 0xD0, mcr);
+ 	pci_read_config_dword(pci_root, 0xD4, &ret_val);
+ 	pci_dev_put(pci_root);
+ 	return ret_val;
+ }
+-static inline void MDFLD_MSG_WRITE32(uint port, uint offset, u32 value)
++static inline void MDFLD_MSG_WRITE32(uint domain, uint port, uint offset,
++				     u32 value)
+ {
+ 	int mcr = (0x11<<24) | (port << 16) | (offset << 8) | 0xF0;
+-	struct pci_dev *pci_root = pci_get_bus_and_slot(0, 0);
++	struct pci_dev *pci_root = pci_get_domain_bus_and_slot(domain, 0, 0);
+ 	pci_write_config_dword(pci_root, 0xD4, value);
+ 	pci_write_config_dword(pci_root, 0xD0, mcr);
+ 	pci_dev_put(pci_root);
 -- 
-2.14.2
+1.9.1
