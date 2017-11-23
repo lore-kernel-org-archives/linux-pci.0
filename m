@@ -1,35 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:47442 "EHLO
-        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756303AbdKQNFD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Nov 2017 08:05:03 -0500
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-        by jabberwock.ucw.cz (Postfix) with ESMTPS id 8B1F51C00B8
-        for <linux-pci@vger.kernel.org>; Fri, 17 Nov 2017 13:55:59 +0100 (CET)
-Date: Fri, 17 Nov 2017 13:55:59 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] configure: use simpler/more portable echo_n
-Message-ID: <mj+md-20171117.125546.29516.albireo@ucw.cz>
-References: <1466396498-17870-1-git-send-email-vapier@gentoo.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466396498-17870-1-git-send-email-vapier@gentoo.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH 1/5] PCI: Add vendor ID for Cadence
+Date: Thu, 23 Nov 2017 16:01:46 +0100
+Message-Id: <a93032cbbe02dc9efef8536a4b2a851d1b08ab6f.1511439189.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+This patch adds a new PCI vendor ID for Cadence.
 
-> The `echo -n` behavior is not in POSIX and not all shells support it.
-> Use the portable `printf` func as defined by POSIX.
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks, applied. Sorry for the delay.
-
-				Have a nice fortnight
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ab20dc5db423..eb13e84e1fef 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2381,6 +2381,8 @@
+ 
+ #define PCI_VENDOR_ID_LENOVO		0x17aa
+ 
++#define PCI_VENDOR_ID_CDNS		0x17cd
++
+ #define PCI_VENDOR_ID_ARECA		0x17d3
+ #define PCI_DEVICE_ID_ARECA_1110	0x1110
+ #define PCI_DEVICE_ID_ARECA_1120	0x1120
 -- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-"Beware of bugs in the above code; I have only proved it correct, not tried it." -- D.E.K.
+2.11.0
