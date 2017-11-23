@@ -1,84 +1,113 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 05/17] PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
-Date: Fri,  3 Nov 2017 14:47:09 +0100
-Message-Id: <20171103134722.5532-6-niklas.cassel@axis.com>
-In-Reply-To: <20171103134722.5532-1-niklas.cassel@axis.com>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0075.outbound.protection.outlook.com ([104.47.33.75]:10158
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751658AbdKWILQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Nov 2017 03:11:16 -0500
+Subject: Re: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h
+ (Models 30h-3fh) Processors v5
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>, helgaas@kernel.org,
+        linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        xen-devel <xen-devel@lists.xen.org>
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
+ <20171018135821.3248-5-deathsimple@vodafone.de>
+ <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
+ <d81d50e6-c267-fe43-214f-278e57903448@gmail.com>
+ <26df0a78-8028-e42c-ce50-4cefe612a7e1@oracle.com>
+ <3443aad0-8c3b-b97e-685a-96b0866827be@amd.com>
+ <b937778c-556e-5587-c557-abba8cefe100@oracle.com>
+ <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
+ <c2d52d00-8c3c-9944-29b3-3cab2f7c35f7@oracle.com>
+ <7936fdd3-1615-ac1f-7b75-330ccb6a1a3f@amd.com>
+ <0bb468d9-bc1d-e3c5-e313-1cf9408380f0@oracle.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Message-ID: <275e859a-0ddd-ea7f-a681-67e42a5233fe@amd.com>
+Date: Thu, 23 Nov 2017 09:11:02 +0100
+MIME-Version: 1.0
+In-Reply-To: <0bb468d9-bc1d-e3c5-e313-1cf9408380f0@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the static keyword from dw_pcie_ep_reset_bar() so that
-pci-dra7xx.c does not need its own copy of dw_pcie_ep_reset_bar().
+Am 22.11.2017 um 18:27 schrieb Boris Ostrovsky:
+> On 11/22/2017 11:54 AM, Christian König wrote:
+>> Am 22.11.2017 um 17:24 schrieb Boris Ostrovsky:
+>>> On 11/22/2017 05:09 AM, Christian König wrote:
+>>>> Am 21.11.2017 um 23:26 schrieb Boris Ostrovsky:
+>>>>> On 11/21/2017 08:34 AM, Christian König wrote:
+>>>>>> Hi Boris,
+>>>>>>
+>>>>>> attached are two patches.
+>>>>>>
+>>>>>> The first one is a trivial fix for the infinite loop issue, it now
+>>>>>> correctly aborts the fixup when it can't find address space for the
+>>>>>> root window.
+>>>>>>
+>>>>>> The second is a workaround for your board. It simply checks if there
+>>>>>> is exactly one Processor Function to apply this fix on.
+>>>>>>
+>>>>>> Both are based on linus current master branch. Please test if they
+>>>>>> fix
+>>>>>> your issue.
+>>>>> Yes, they do fix it but that's because the feature is disabled.
+>>>>>
+>>>>> Do you know what the actual problem was (on Xen)?
+>>>> I still haven't understood what you actually did with Xen.
+>>>>
+>>>> When you used PCI pass through with those devices then you have made a
+>>>> major configuration error.
+>>>>
+>>>> When the problem happened on dom0 then the explanation is most likely
+>>>> that some PCI device ended up in the configured space, but the routing
+>>>> was only setup correctly on one CPU socket.
+>>> The problem is that dom0 can be (and was in my case() booted with less
+>>> than full physical memory and so the "rest" of the host memory is not
+>>> necessarily reflected in iomem. Your patch then tried to configure that
+>>> memory for MMIO and the system hang.
+>>>
+>>> And so my guess is that this patch will break dom0 on a single-socket
+>>> system as well.
+>> Oh, thanks!
+>>
+>> I've thought about that possibility before, but wasn't able to find a
+>> system which actually does that.
+>>
+>> May I ask why the rest of the memory isn't reported to the OS?
+> That memory doesn't belong to the OS (dom0), it is owned by the hypervisor.
+>
+>> Sounds like I can't trust Linux resource management and probably need
+>> to read the DRAM config to figure things out after all.
+>
+> My question is whether what you are trying to do should ever be done for
+> a guest at all (any guest, not necessarily Xen).
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c         | 9 ---------
- drivers/pci/dwc/pcie-designware-ep.c | 2 +-
- drivers/pci/dwc/pcie-designware.h    | 5 +++++
- 3 files changed, 6 insertions(+), 10 deletions(-)
+The issue is probably that I don't know enough about Xen: What exactly 
+is dom0? My understanding was that dom0 is the hypervisor, but that 
+seems to be incorrect.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index d0848006945a..a743545da4d4 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -336,15 +336,6 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
--{
--	u32 reg;
--
--	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
--	dw_pcie_writel_dbi2(pci, reg, 0x0);
--	dw_pcie_writel_dbi(pci, reg, 0x0);
--}
--
- static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 2684090b782b..9c3820ca6358 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -30,7 +30,7 @@ void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
- 	pci_epc_linkup(epc);
- }
- 
--static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- {
- 	u32 reg;
- 
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 5a1da459eda5..37dfad8d003f 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -338,6 +338,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
- void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
- #else
- static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
- {
-@@ -351,5 +352,9 @@ static inline int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
-+
-+static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+{
-+}
- #endif
- #endif /* _PCIE_DESIGNWARE_H */
--- 
-2.14.2
+The issue is that under no circumstances *EVER* a virtualized guest 
+should have access to the PCI devices marked as "Processor Function" on 
+AMD platforms. Otherwise it is trivial to break out of the virtualization.
+
+When dom0 is something like the system domain with all hardware access 
+then the approach seems legitimate, but then the hypervisor should 
+report the stolen memory to the OS using the e820 table.
+
+When the hypervisor doesn't do that and the Linux kernel isn't aware 
+that there is memory at a given location mapping PCI space there will 
+obviously crash the hypervisor.
+
+Possible solutions as far as I can see are either disabling this feature 
+when we detect that we are a Xen dom0, scanning the DRAM settings to 
+update Linux resource handling or fixing Xen to report stolen memory to 
+the dom0 OS as reserved.
+
+Opinions?
+
+Thanks,
+Christian.
+
+>
+> -boris
+>
