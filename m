@@ -1,193 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:52925 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752338AbdKJJJX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2017 04:09:23 -0500
-Date: Fri, 10 Nov 2017 10:09:18 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: rcar: Add the suspend/resume for pcie-rcar
- driver
-Message-ID: <20171110090918.jirrnejohfdpcxbo@verge.net.au>
-References: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
- <20171108092806.10335-3-marek.vasut+renesas@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171108092806.10335-3-marek.vasut+renesas@gmail.com>
+Received: from 9.mo7.mail-out.ovh.net ([46.105.60.248]:47119 "EHLO
+        9.mo7.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753029AbdKWPUh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Nov 2017 10:20:37 -0500
+Received: from player762.ha.ovh.net (b6.ovh.net [213.186.33.56])
+        by mo7.mail-out.ovh.net (Postfix) with ESMTP id 5AC4B7D6C4
+        for <linux-pci@vger.kernel.org>; Thu, 23 Nov 2017 16:02:08 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH 0/5] PCI: Add support to the Cadence PCIe controller
+Date: Thu, 23 Nov 2017 16:01:45 +0100
+Message-Id: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 08, 2017 at 10:28:06AM +0100, Marek Vasut wrote:
-> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> 
-> This adds the suspend/resume supports for pcie-rcar. The resume handler
-> reprogram the hardware based on the software state kept in specific
-> device structures. Also it doesn't need to save any registers.
-> 
-> Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
->  drivers/pci/host/pcie-rcar.c | 86 +++++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 78 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 2b28292de93a..7a9e30185c79 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -471,6 +471,36 @@ static void rcar_pcie_force_speedup(struct rcar_pcie *pcie)
->  		 (macsr & LINK_SPEED) == LINK_SPEED_5_0GTS ? "5" : "2.5");
->  }
->  
-> +static int rcar_pcie_hw_enable(struct rcar_pcie *pcie)
+Hi all,
 
-This function always returns 0 and the value is not checked by the caller.
-Can we change the return type to void?
+this series of patches adds support to the Cadence PCIe controller.
+It was tested on a ARM64 platform emulated by a Palladium running both
+linux-next (next-20171123) and pci-next kernels.
 
-> +{
-> +	struct resource_entry *win;
-> +	LIST_HEAD(res);
-> +	int i = 0;
-> +
-> +	/* Try setting 5 GT/s link speed */
+The host mode was tested with some PCIe devices connected to the Palladium
+through a speed-bridge. Some of those devices were a USB host controller
+and a SATA controller. The PCIe host controller was also tested with a
+second controller configured in endpoint mode and connected back to back
+to the first controller.
 
-What if it fails?
+The EndPoint Controller (EPC) driver of this series was tested with the
+pci-epf-test.c EndPoint Function (EPF) driver and the pcitest userspace
+program.
 
-> +	rcar_pcie_force_speedup(pcie);
-> +
-> +	/* Setup PCI resources */
-> +	resource_list_for_each_entry(win, &pcie->resources) {
-> +		struct resource *res = win->res;
-> +
-> +		if (!res->flags)
-> +			continue;
-> +
-> +		switch (resource_type(res)) {
-> +		case IORESOURCE_IO:
-> +		case IORESOURCE_MEM:
-> +			rcar_pcie_setup_window(i, pcie, res);
-> +			i++;
-> +			break;
-> +		default:
-> +			continue;
+For linux-next, I applied this series on top of Kishon's patch
+("PCI: endpoint: Use EPC's device in dma_alloc_coherent/dma_free_coherent")
+otherwise dma_alloc_coherent() fails when called by pci_epf_alloc_space().
 
-Can the default case be omitted?
+Also, I patched drivers/Makefile rather than drivers/pci/Makefile to make
+the drivers/pci/cadence/pcie-cadence-ep.o linked after
+drivers/pci/endpoint/*.o objects, otherwise the built-in pci-cadence-ep
+driver would be probed before the PCI endpoint framework would have been
+initialized, which results in a kernel crash.
+I guess this is the reason why the "pci/dwc" line was also put in
+drivers/Makefile, right after the "pci/endpoint" line.
 
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int rcar_pcie_enable(struct rcar_pcie *pcie)
->  {
->  	struct device *dev = pcie->dev;
-> @@ -872,11 +902,25 @@ static const struct irq_domain_ops msi_domain_ops = {
->  	.map = rcar_msi_map,
->  };
->  
-> +static void rcar_pcie_hw_enable_msi(struct rcar_pcie *pcie)
-> +{
-> +	struct rcar_msi *msi = &pcie->msi;
-> +	unsigned long base;
-> +
-> +	/* setup MSI data target */
-> +	base = virt_to_phys((void *)msi->pages);
+Best regards,
 
-Why do you need to cast to void *?
-I expect such casting can be done implicitly.
+Cyrille
 
-> +
-> +	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-> +	rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
-> +
-> +	/* enable all MSI interrupts */
-> +	rcar_pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-> +}
-> +
->  static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
->  {
->  	struct device *dev = pcie->dev;
->  	struct rcar_msi *msi = &pcie->msi;
-> -	unsigned long base;
->  	int err, i;
->  
->  	mutex_init(&msi->lock);
-> @@ -915,13 +959,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
->  
->  	/* setup MSI data target */
->  	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> -	base = virt_to_phys((void *)msi->pages);
-> -
-> -	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-> -	rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
-> -
-> -	/* enable all MSI interrupts */
-> -	rcar_pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-> +	rcar_pcie_hw_enable_msi(pcie);
->  
->  	return 0;
->  
-> @@ -1202,6 +1240,37 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	return err;
->  }
->  
-> +static int rcar_pcie_resume(struct device *dev)
-> +{
-> +	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-> +	unsigned int data;
-> +	int err;
-> +	int (*hw_init_fn)(struct rcar_pcie *);
+Cyrille Pitchen (4):
+  PCI: Add vendor ID for Cadence
+  PCI: cadence: Add host driver for Cadence PCIe controller
+  dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe endpoint
+    controller
+  PCI: cadence: add EndPoint Controller driver for Cadence PCIe
+    controller
 
-Please sort local variables in reverse xmas tree order.
+Scott Telford (1):
+  dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host
+    controller
 
-> +
-> +	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
-> +	if (err)
-> +		return 0;
-> +
-> +	/* Failure to get a link might just be that no cards are inserted */
-> +	hw_init_fn = of_device_get_match_data(dev);
-> +	err = hw_init_fn(pcie);
-> +	if (err) {
-> +		dev_info(dev, "PCIe link down\n");
-> +		return 0;
-> +	}
-> +
-> +	data = rcar_pci_read_reg(pcie, MACSR);
-> +	dev_info(dev, "PCIe x%d: link up\n", (data >> 20) & 0x3f);
-> +
-> +	/* Enable MSI */
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		rcar_pcie_hw_enable_msi(pcie);
-> +
-> +	rcar_pcie_hw_enable(pcie);
-> +
-> +	return 0;
-> +}
-> +
->  static int rcar_pcie_resume_noirq(struct device *dev)
->  {
->  	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-> @@ -1218,6 +1287,7 @@ static int rcar_pcie_resume_noirq(struct device *dev)
->  }
->  
->  static const struct dev_pm_ops rcar_pcie_pm_ops = {
-> +	SET_SYSTEM_SLEEP_PM_OPS(NULL, rcar_pcie_resume)
->  	.resume_noirq = rcar_pcie_resume_noirq,
->  };
->  
-> -- 
-> 2.11.0
-> 
+ .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  |  20 +
+ .../bindings/pci/cdns,cdns-pcie-host.txt           |  54 ++
+ drivers/Makefile                                   |   1 +
+ drivers/pci/Kconfig                                |   1 +
+ drivers/pci/cadence/Kconfig                        |  33 ++
+ drivers/pci/cadence/Makefile                       |   3 +
+ drivers/pci/cadence/pcie-cadence-ep.c              | 553 +++++++++++++++++++++
+ drivers/pci/cadence/pcie-cadence-host.c            | 425 ++++++++++++++++
+ drivers/pci/cadence/pcie-cadence.c                 | 110 ++++
+ drivers/pci/cadence/pcie-cadence.h                 | 325 ++++++++++++
+ include/linux/pci_ids.h                            |   2 +
+ 11 files changed, 1527 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+ create mode 100644 drivers/pci/cadence/Kconfig
+ create mode 100644 drivers/pci/cadence/Makefile
+ create mode 100644 drivers/pci/cadence/pcie-cadence-ep.c
+ create mode 100644 drivers/pci/cadence/pcie-cadence-host.c
+ create mode 100644 drivers/pci/cadence/pcie-cadence.c
+ create mode 100644 drivers/pci/cadence/pcie-cadence.h
+
+-- 
+2.11.0
