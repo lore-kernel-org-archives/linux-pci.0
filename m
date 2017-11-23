@@ -1,134 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:60468 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751307AbdKFC4Y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Nov 2017 21:56:24 -0500
-Subject: Re: [PATCH v2] dwc: dra7xx: Print link state to console for debug
-From: Faiz Abbas <faiz_abbas@ti.com>
-To: David Laight <David.Laight@ACULAB.COM>,
-        "kishon@ti.com" <kishon@ti.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <1508417009-30869-1-git-send-email-faiz_abbas@ti.com>
- <9378c5c9-381d-4c40-3290-f7e3720792ba@ti.com>
- <063D6719AE5E284EB5DD2968C1650D6DD009C62B@AcuExch.aculab.com>
- <53ed97ab-ed02-23be-0ce9-e79f2aaac979@ti.com>
- <a4832f67-8511-e903-044c-609e0f4a0352@ti.com>
-Message-ID: <b4652eae-0d08-1993-9640-71cebc0077d8@ti.com>
-Date: Mon, 6 Nov 2017 08:26:29 +0530
-MIME-Version: 1.0
-In-Reply-To: <a4832f67-8511-e903-044c-609e0f4a0352@ti.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from 9.mo7.mail-out.ovh.net ([46.105.60.248]:35556 "EHLO
+        9.mo7.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753022AbdKWPUg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Nov 2017 10:20:36 -0500
+Received: from player762.ha.ovh.net (b6.ovh.net [213.186.33.56])
+        by mo7.mail-out.ovh.net (Postfix) with ESMTP id 28A638151E
+        for <linux-pci@vger.kernel.org>; Thu, 23 Nov 2017 16:02:42 +0100 (CET)
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH 2/5] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host controller
+Date: Thu, 23 Nov 2017 16:01:47 +0100
+Message-Id: <895cbb8f862c712b78f780a53e05d5429d24cc35.1511439189.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Scott Telford <stelford@cadence.com>
 
+This patch adds documentation for the DT bindings of the Cadence PCIe
+controller when configured in host (Root Complex) mode.
 
-On Monday 30 October 2017 02:18 PM, Faiz Abbas wrote:
-> 
-> 
-> On Thursday 26 October 2017 01:29 PM, Faiz Abbas wrote:
->> David,
->>
->> On Thursday 19 October 2017 06:56 PM, David Laight wrote:
->>> From: Faiz Abbas
->>>> Sent: 19 October 2017 14:09
->>>> On Thursday 19 October 2017 06:13 PM, Faiz Abbas wrote:
->>>>> Enable support for printing the LTSSM link state for debugging PCI
->>>>> when link is down.
->>>>>
->>>>> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
->>>>> ---
->>>>> v2:
->>>>>  1. Changed dev_err() to dev_dbg()
->>>>>  2. Changed static char array to static const char * const
->>>>>  3. format changes
->>>>>
->>>>>  drivers/pci/dwc/pci-dra7xx.c | 48 ++++++++++++++++++++++++++++++++++++++++++++
->>>>>  1 file changed, 48 insertions(+)
->>>>>
->>>>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->>>>> index 34427a6..0e70e77 100644
->>>>> --- a/drivers/pci/dwc/pci-dra7xx.c
->>>>> +++ b/drivers/pci/dwc/pci-dra7xx.c
->>>>> @@ -98,6 +98,45 @@ struct dra7xx_pcie_of_data {
->>>>>
->>>>>  #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
->>>>>
->>>>> +static const char * const state[] = {
->>>>> +	"DETECT_QUIET",
->>> ...
->>>>> +	"RCVRY_EQ3"
->>>>> +};
->>>>> +
->>>>>  static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
->>>>>  {
->>>>>  	return readl(pcie->base + offset);
->>>>> @@ -118,6 +157,15 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
->>>>>  {
->>>>>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
->>>>>  	u32 reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_PHY_CS);
->>>>> +	u32 cmd_reg;
->>>>> +	u32 ltssm_state;
->>>>> +
->>>>> +	if (!(reg & LINK_UP)) {
->>>>> +		cmd_reg = dra7xx_pcie_readl(dra7xx,
->>>>> +					    PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
->>>>> +		ltssm_state = (cmd_reg & GENMASK(7, 2)) >> 2;
->>>>> +		dev_dbg(pci->dev, "Link state:%s\n", state[ltssm_state]);
->>>
->>> Hmmm... GENMASK leaves by hunting header files...> Why not (cmd_reg >> 2) & 63 and explicitly define state[64]
->>> to guarantee that you never print anything worse than a NULL
->>> pointer.
->>
->> I'm not sure what you mean. Are you worried we might print something
->> outside the array bounds? How is this easier to decipher than GENMASK?
->>
->>>
->>>>> +	}
->>>>>
->>>>>  	return !!(reg & LINK_UP);
->>>>>  }
->>>>>
->>>>
->>>> I missed David's comment in v1. Will submit a new version. Please ignore.
->>>
->>> I've a 'neat' trick for generating strings that match constants.
->>> You can get the compiler to do all the work for you:
->>> (Assuming I've typed it correctly)
->>>
->>> #define LTSSM_DEFS(x) \
->>>   x(DETECT_QUIET) \
->>>   x(DETECT_ACT) \
->>> (continue for all the names)
->>>
->>> Define an enum with the named constants:
->>> #define X(name) LTSSM_STATE_##name,
->>> enum (LTSSM_DEFS(X) LTSSM_STATE_SIZE=64);
->>> #undef X
->>>
->>> Array of strings:
->>> #define X(name) [LTSSM_STATE_##name] = #name
->>> static const char * const state_names[LTSSM_STATE_SIZE] = { LTSSM_DEFS(X) };
->>> #undef X
->>>
->>> 	David
->>>
->>
->> So I implemented your idea and it looks like this:
->> http://pastebin.ubuntu.com/25821834/
->>
->> I don't know how much we gained by adding the trick. I still had to be
->> careful not to be off by 1 when writing the list. Plus we are never
->> saying anything like printk("%s", state[LTSSM_STATE_DETECT_QUIET]. Its a
->> register read which is used to index the list array.
->>
->> Thanks,
->> Faiz
->>
-> 
-> Gentle Ping.
-> 
-Ping Again.
+Signed-off-by: Scott Telford <stelford@cadence.com>
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+
+dt-bindings: PCI: cadence: host fixup
+---
+ .../bindings/pci/cdns,cdns-pcie-host.txt           | 54 ++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+new file mode 100644
+index 000000000000..4b3df8ffd5e1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+@@ -0,0 +1,54 @@
++* Cadence PCIe host controller
++
++This PCIe controller inherits the base properties defined in
++host-generic-pci.txt.
++
++Required properties:
++- compatible: should contain "cdns,cdns-pcie-host" to identify the IP used.
++- reg: Should contain the PCIe configuration window base address, controller
++  register base address, and AXI interface region base address respectively.
++- reg-names: Must be "cfg", "reg" and "mem" respectively.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- ranges: ranges for the PCI memory and I/O regions
++- #interrupt-cells: set to <1>
++- interrupt-map-mask and interrupt-map: standard PCI
++	properties to define the mapping of the PCIe interface to interrupt
++	numbers.
++
++Example:
++
++	pci@fb000000 {
++		compatible = "cdns,cdns-pcie-host";
++		device_type = "pci";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		bus-range = <0x0 0xff>;
++		linux,pci-domain = <0>;
++
++		// CPU_PHYSICAL(2)  SIZE(2)
++		reg = <0x0 0x41000000  0x0 0x00001000>, /* Config space */
++		      <0x0 0xfb000000  0x0 0x01000000>, /* Base Address */
++		      <0x0 0x40000000  0x0 0x04000000>; /* AXI region */
++		reg-names = "cfg", "reg", "mem";
++
++		// BUS_ADDRESS(3)  CPU_PHYSICAL(1)  SIZE(2)
++		ranges =
++			<0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
++			<0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
++
++
++		#interrupt-cells = <0x1>;
++
++		// PCI_DEVICE(3)  INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(5)
++		interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1
++				 0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1
++				 0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1
++				 0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
++
++		// PCI_DEVICE(3)  INT#(1)
++		interrupt-map-mask = <0x0000 0x0 0x0  0x7>;
++
++		msi-parent = <&its_pci>;
++	};
+-- 
+2.11.0
