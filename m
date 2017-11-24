@@ -1,90 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:3845 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753646AbdKXPyJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 10:54:09 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
+CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH 01/10] genirq: Export irq_set_msi_desc()
+Date: Fri, 24 Nov 2017 21:23:11 +0530
+Message-ID: <1511538800-8275-2-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPDyKFrsabWL2cVE2SwguRRiEV5sJHLpzpyhahLucdER_RAEpg@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <5556673.MXo6XDN1f4@aspire.rjw.lan>
- <CAPDyKFpzSd4zwW_awuxuim0gzyKV5s9dm66X+szsSUKRnBakbA@mail.gmail.com>
- <2654404.6YT5rmSnae@aspire.rjw.lan> <CAPDyKFo4gE6O=xMoS2Phe0kNgNUGBffy1hxT3iPrY71ieGcumQ@mail.gmail.com>
- <CAJZ5v0ibqqUZ0M1_GKCkGj_E+2DQQMOLAVTyPd7mSJDAypkHjQ@mail.gmail.com> <CAPDyKFrsabWL2cVE2SwguRRiEV5sJHLpzpyhahLucdER_RAEpg@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 17 Nov 2017 15:31:38 +0100
-Message-ID: <CAJZ5v0iD3uzJr4fdhrWfRhSmr_foU4GQx9LY_9sR=BKYUxZOGw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 17, 2017 at 2:49 PM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
-> [...]
->
->>>
->>>>> Second, have you considered setting the default value of
->>>>> dev->power.may_skip_resume to true?
->>>>
->>>> Yes.
->>>>
->>>>> That would means the subsystem
->>>>> instead need to implement an opt-out method. I am thinking that it may
->>>>> not be an issue, since we anyway at this point, don't have drivers
->>>>> using the LEAVE_SUSPENDED flag.
->>>>
->>>> Opt-out doesn't work because of the need to invoke the "noirq" callbacks.
->>>
->>> I am not sure I follow that.
->>>
->>> Whatever needs to be fixed on the subsystem level, that could be done
->>> before the driver starts using the LEAVE_SUSPENDED flag. No?
->>
->> That requires a bit of explanation, sorry for being overly concise.
->>
->> The core calls ->resume_noirq from the middle layer regardless of
->> whether or not the device will be left suspended, so the
->> ->resume_noirq cannot do arbitrary things to it.  Setting
->> may_skip_resume by the middle layer tells the core that the middle
->> layer is ready for that and is going to cooperate.  If may_skip_resume
->> had been set by default, that piece of information would have been
->> missing.
->
-> Huh, I still don't get that. Sorry.
->
-> If the "may_skip_resume" is default set to true by the PM core,
-> wouldn't that just mean that the middle-layer needs to implement an
-> opt-out method, rather than opt-in. In principle to opt-out the
-> middle-layer needs to set may_skip_resume to false in suspend_noirq
-> phase, no?
+PCI bus support MSI interrupts, allow PCI host driver to set MSI descriptor
+data for an irq.
 
-Yes, but if the middle-layer doesn't clear it, that may mean two
-things.  First, the middle layer is ready and so on.  Good.  Second,
-the middle layer is not aware of the whole thing.  Not good.  The core
-cannot tell.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+ kernel/irq/chip.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-In the opt-in case, however, all is clear. :-)
-
-> Then we only need to make sure drivers don't starts use
-> LEAVE_SUSPENDED, before we make sure the middle layers is adopted. But
-> that should not be a problem.
->
-> The benefit would be that those middle layers that can cope with
-> LEAVE_SUSPENDED as of today don't need to change.
-
-I'm not sure if that's the case.
-
-The middle layer has to evaluate dev_pm_may_skip_resume() in
-->resume_noirq() to check if the device can be left in suspend, as it
-cannot determine that in ->suspend_noirq() yet.
-
-Thanks,
-Rafael
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 5a2ef92c2782..bfbd17386bc4 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -136,6 +136,7 @@ int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
+ {
+ 	return irq_set_msi_desc_off(irq, 0, entry);
+ }
++EXPORT_SYMBOL(irq_set_msi_desc);
+ 
+ /**
+  *	irq_set_chip_data - set irq chip data for an irq
+-- 
+2.1.4
