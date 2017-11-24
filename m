@@ -1,47 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 29 Nov 2017 09:36:21 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 1/7] PCI: protect restore with device lock to be
- consistent
-Message-ID: <20171129173621.GB27742@infradead.org>
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
- <1511763628-11856-2-git-send-email-okaya@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:3805 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753510AbdKXPxt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 10:53:49 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
+CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH 00/10] Add loadable kernel module and power management support
+Date: Fri, 24 Nov 2017 21:23:10 +0530
+Message-ID: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1511763628-11856-2-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 27, 2017 at 01:20:22AM -0500, Sinan Kaya wrote:
-> Commit b014e96d1abb ("PCI: Protect pci_error_handlers->reset_notify() usage
-> with device_lock()") added protection around pci_dev_restore() function so
-> that device specific remove callback does not cause a race condition
-> against hotplug.
-> 
-> pci_dev_lock() usage has been forgotten in two different places in the
-> code. Adding locks for pci_slot_restore() and moving pci_dev_restore()
-> inside the locks for pci_try_reset_function().
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+This series of patches add loadable kernel module and power management
+support to Tegra PCIe host controller driver.
 
-Looks good,
+These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
+are the verification details.
+	- Multiple module insert & remove
+	- PCIe device functionality after module insert
+	- Free clock, resets, regulators, powergate, iomem and interrupt
+	resources after module remove
+	- PCIe device functionality after resume from RAM
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Tegra PCIe host controller driver is using ioremap_page_range() which is
+not exported. This is switched with devm_ioremap() in the series
+'https://patchwork.ozlabs.org/project/linux-tegra/list/?series=9907'.
+Both these series will complete the loadable module support for Tegra
+PCIe host driver.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Manikanta Maddireddy (10):
+  genirq: Export irq_set_msi_desc()
+  of: Export of_pci_range_to_resource()
+  PM / QoS: Fix device resume latency for non PM QoS devices
+  ARM: tegra: EXPORT tegra_cpuidle_pcie_irqs_in_use()
+  PCI: Export pci_find_host_bridge()
+  PCI: Export pci_flags
+  PCI: tegra: free resources on probe failure
+  PCI: tegra: Add loadable kernel module support
+  PCI: tegra: Broadcast PME_turn_Off message before link goes to L2
+  PCI: tegra: Add power management support
+
+ arch/arm/mach-tegra/cpuidle.c |   1 +
+ drivers/of/address.c          |   1 +
+ drivers/pci/host-bridge.c     |   1 +
+ drivers/pci/host/Kconfig      |   2 +-
+ drivers/pci/host/pci-tegra.c  | 359 +++++++++++++++++++++++++++++++++---------
+ drivers/pci/setup-bus.c       |   1 +
+ include/linux/pm_qos.h        |   3 +-
+ kernel/irq/chip.c             |   1 +
+ 8 files changed, 294 insertions(+), 75 deletions(-)
+
+-- 
+2.1.4
