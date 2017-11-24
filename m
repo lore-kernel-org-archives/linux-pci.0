@@ -1,50 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50580 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753016AbdKHX1j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Nov 2017 18:27:39 -0500
-Date: Wed, 8 Nov 2017 17:27:36 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci: fix kernel-doc build warning
-Message-ID: <20171108232736.GE21597@bhelgaas-glaptop.roam.corp.google.com>
-References: <85dcffe7-1e6b-5735-2552-d35d127e392b@infradead.org>
+Received: from mail-ot0-f172.google.com ([74.125.82.172]:33311 "EHLO
+        mail-ot0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753590AbdKXQun (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 11:50:43 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <85dcffe7-1e6b-5735-2552-d35d127e392b@infradead.org>
+In-Reply-To: <1511538800-8275-4-git-send-email-mmaddireddy@nvidia.com>
+References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com> <1511538800-8275-4-git-send-email-mmaddireddy@nvidia.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 24 Nov 2017 17:50:42 +0100
+Message-ID: <CAJZ5v0ghcwSHdrbZd_=XA=tHz7=aTUVd66dHkMYRNyXpnqP84w@mail.gmail.com>
+Subject: Re: [PATCH 03/10] PM / QoS: Fix device resume latency for non PM QoS devices
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+        Jon Hunter <jonathanh@nvidia.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Thomas Gleixner <tglx@linutronix.de>, vidyas@nvidia.com,
+        kthota@nvidia.com, linux-tegra@vger.kernel.org,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Oct 29, 2017 at 05:07:11PM -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Fix build error in kernel-doc notation:
-> 
-> ../drivers/pci/pci.c:3479: ERROR: Unexpected indentation.
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+On Fri, Nov 24, 2017 at 4:53 PM, Manikanta Maddireddy
+<mmaddireddy@nvidia.com> wrote:
+> In 'commit 0cc2b4e5a020 ("PM / QoS: Fix device resume latency PM QoS")'
+> PM QoS resume latency modified 0 as "no latency at all". However
+> dev_pm_qos_raw_read_value() returns 0 for devices which doesn't have
+> PM QoS constraints. This is blocking runtime suspend for these devices
+> in rpm_check_suspend_allowed(). Return PM_QOS_RESUME_LATENCY_NO_CONSTRAINT
+> when PM QoS constraints are not available for a particular device.
+>
+> Fixes: 0cc2b4e5a020 ("PM / QoS: Fix device resume latency PM QoS")
 
-Applied to pci/misc for v4.15, thanks!
+That commit has been reverted, so this patch is not applicable and
+therefore the whole series isn't.
 
-> Cc:	Bjorn Helgaas <bhelgaas@google.com>
-> Cc:	linux-pci@vger.kernel.org
-> ---
->  drivers/pci/pci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- lnx-414-rc7.orig/drivers/pci/pci.c
-> +++ lnx-414-rc7/drivers/pci/pci.c
-> @@ -3471,7 +3471,7 @@ EXPORT_SYMBOL(devm_pci_remap_cfgspace);
->   * All operations are managed and will be undone on driver detach.
->   *
->   * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
-> - * on failure. Usage example:
-> + * on failure. Usage example::
->   *
->   *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->   *	base = devm_pci_remap_cfg_resource(&pdev->dev, res);
-> 
-> 
+What kernel is it based off?
+
+Thanks,
+Rafael
