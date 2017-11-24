@@ -1,123 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:52797 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751426AbdKJJDm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2017 04:03:42 -0500
-Date: Fri, 10 Nov 2017 10:03:38 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: rcar: Support runtime PM, link state L1 handling
-Message-ID: <20171110090338.uxbtmd7pui37m2du@verge.net.au>
-References: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
- <20171108092806.10335-2-marek.vasut+renesas@gmail.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:3853 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753795AbdKXPya (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 10:54:30 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
+CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH 03/10] PM / QoS: Fix device resume latency for non PM QoS devices
+Date: Fri, 24 Nov 2017 21:23:13 +0530
+Message-ID: <1511538800-8275-4-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171108092806.10335-2-marek.vasut+renesas@gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 08, 2017 at 10:28:05AM +0100, Marek Vasut wrote:
-> From: Phil Edworthy <phil.edworthy@renesas.com>
-> 
-> Most PCIe host controllers support L0s and L1 power states via ASPM.
-> The R-Car hardware only supports L0s, so when the system suspends and
-> resumes we have to manually handle L1.
-> 
-> When the system suspends, cards can put themselves into L1 and send a
-> PM_ENTER_L1 DLLP to the host controller. At this point, we can no longer
-> access the card's config registers.
-> 
-> The R-Car host controller will handle taking cards out of L1 as long as
-> the host controller has also been transitioned to L1 link state.
-> 
-> Ideally, we would detect the PM_ENTER_L1 DLLP using an interrupt and
-> transition the host to L1 immediately. However, this patch just ensures
-> that we can talk to cards after they have gone into L1.
-> When attempting a config access, it checks to see if the card has gone
-> into L1, and if so, does the same for the host controller.
-> 
-> This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
-> 
-> Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
+In 'commit 0cc2b4e5a020 ("PM / QoS: Fix device resume latency PM QoS")'
+PM QoS resume latency modified 0 as "no latency at all". However
+dev_pm_qos_raw_read_value() returns 0 for devices which doesn't have
+PM QoS constraints. This is blocking runtime suspend for these devices
+in rpm_check_suspend_allowed(). Return PM_QOS_RESUME_LATENCY_NO_CONSTRAINT
+when PM QoS constraints are not available for a particular device.
 
-Hi Marek,
+Fixes: 0cc2b4e5a020 ("PM / QoS: Fix device resume latency PM QoS")
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+ include/linux/pm_qos.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-With my nit addressed please feel free to add:
-
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-
-> ---
->  drivers/pci/host/pcie-rcar.c | 24 ++++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index aa588a7d4811..2b28292de93a 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -92,6 +92,13 @@
->  #define MACCTLR			0x011058
->  #define  SPEED_CHANGE		(1 << 24)
->  #define  SCRAMBLE_DISABLE	(1 << 27)
-> +#define PMSR			0x01105c
-> +#define  L1FAEG			(1 << 31)
-> +#define  PM_ENTER_L1RX		(1 << 23)
-> +#define  PMSTATE		(7 << 16)
-> +#define  PMSTATE_L1		(3 << 16)
-> +#define PMCTLR			0x011060
-> +#define  L1_INIT		(1 << 31)
-
-The BIT() and GENMASK() macros are nice in my opinion.
-But I see what you have added follows the style of the existing code
-in the driver.
-
->  #define MACS2R			0x011078
->  #define MACCGSPSETR		0x011084
->  #define  SPCNGRSN		(1 << 31)
-> @@ -191,6 +198,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
->  		unsigned int devfn, int where, u32 *data)
->  {
->  	int dev, func, reg, index;
-> +	u32 val;
->  
->  	dev = PCI_SLOT(devfn);
->  	func = PCI_FUNC(devfn);
-> @@ -232,6 +240,22 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
->  	if (pcie->root_bus_nr < 0)
->  		return PCIBIOS_DEVICE_NOT_FOUND;
->  
-> +	/*
-> +	 * If we are not in L1 link state and we have received PM_ENTER_L1 DLLP,
-> +	 * transition to L1 link state. The HW will handle coming of of L1.
-> +	 */
-> +	val = rcar_pci_read_reg(pcie, PMSR);
-> +	if ((val & PM_ENTER_L1RX) && ((val & PMSTATE) != PMSTATE_L1)) {
-
-nit: please remove the unnecessary parentheses from the line above.
-
-> +		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
-> +
-> +		/* Wait until we are in L1 */
-> +		while (!(val & L1FAEG))
-> +			val = rcar_pci_read_reg(pcie, PMSR);
-> +
-> +		/* Clear flags indicating link has transitioned to L1 */
-> +		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
-> +	}
-> +
->  	/* Clear errors */
->  	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
->  
-> -- 
-> 2.11.0
-> 
+diff --git a/include/linux/pm_qos.h b/include/linux/pm_qos.h
+index 6737a8c9e8c6..d68b0569a5eb 100644
+--- a/include/linux/pm_qos.h
++++ b/include/linux/pm_qos.h
+@@ -175,7 +175,8 @@ static inline s32 dev_pm_qos_requested_flags(struct device *dev)
+ static inline s32 dev_pm_qos_raw_read_value(struct device *dev)
+ {
+ 	return IS_ERR_OR_NULL(dev->power.qos) ?
+-		0 : pm_qos_read_value(&dev->power.qos->resume_latency);
++		PM_QOS_RESUME_LATENCY_NO_CONSTRAINT :
++		pm_qos_read_value(&dev->power.qos->resume_latency);
+ }
+ #else
+ static inline enum pm_qos_flags_status __dev_pm_qos_flags(struct device *dev,
+-- 
+2.1.4
