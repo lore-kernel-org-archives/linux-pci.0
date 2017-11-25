@@ -1,106 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V2 02/29] powerpc/PCI: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 17:48:57 -0500
-Message-Id: <1511390964-9979-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, Bhumika Goyal <bhumirks@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>,
- "open list:LINUX FOR POWERPC 32-BIT AND 64-BIT"
- <linuxppc-dev@lists.ozlabs.org>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:18711 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750748AbdKYHh5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 02:37:57 -0500
+Date: Fri, 24 Nov 2017 23:37:51 -0800
+From: Neo Jia <cjia@nvidia.com>
+To: Christoph Hellwig <hch@infradead.org>, <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>
+Subject: Re: [PATCH 1/1] Change pci_enable_sriov, pci_disable_sriov and
+ pci_reset_function to non-GPL symbol.
+Message-ID: <20171125073751.GA28668@nvidia.com>
+References: <1510773058-1482-1-git-send-email-cjia@nvidia.com>
+ <20171117145504.GA31760@infradead.org>
+ <20171122230335.GA1228@nvidia.com>
+ <20171123132300.GA10736@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171123132300.GA10736@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Thu, Nov 23, 2017 at 05:23:00AM -0800, Christoph Hellwig wrote:
+> > Just to be clear, here the request is to allow proprietary driver continue
+> > supporting Linux OS when adopting SR-IOV - a PCIE virtualization technology
+> > standardized by PCI SIG.
+> 
+> And the anser in the previous mail was pretty clear: no.  And while
+> we're at it go talk to your lawyers again that you don't have a derived
+> work, because I suspect you do with such intimate entangling.
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+Hi Christoph,
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 as the code
-is not ready to consume multiple domains and existing code used domain
-number 0.
+Right now, Linux kernel is providing PCI kernel interfaces to support
+proprietary PCI driver when it follows the standard from PCI SIG spec. 
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/powerpc/kernel/pci_32.c              | 3 ++-
- arch/powerpc/platforms/powermac/feature.c | 2 +-
- arch/powerpc/sysdev/mv64x60_pci.c         | 4 ++--
- 3 files changed, 5 insertions(+), 4 deletions(-)
+So here we are just following the precedence of such to enable a SR-IOV capable
+device. I treat this no difference to the scenario when a proprietary PCI driver
+is used to only support MSI (pci_enable_msi) and later add MSI-X support
+(pci_enable_msix_range).
 
-diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
-index 1d817f4..85ad2f7 100644
---- a/arch/powerpc/kernel/pci_32.c
-+++ b/arch/powerpc/kernel/pci_32.c
-@@ -96,7 +96,8 @@
- 		reg = of_get_property(node, "reg", NULL);
- 		if (!reg)
- 			continue;
--		dev = pci_get_bus_and_slot(pci_bus, ((reg[0] >> 8) & 0xff));
-+		dev = pci_get_domain_bus_and_slot(0, pci_bus,
-+						  ((reg[0] >> 8) & 0xff));
- 		if (!dev || !dev->subordinate) {
- 			pci_dev_put(dev);
- 			continue;
-diff --git a/arch/powerpc/platforms/powermac/feature.c b/arch/powerpc/platforms/powermac/feature.c
-index 9e3f39d..ed8b166 100644
---- a/arch/powerpc/platforms/powermac/feature.c
-+++ b/arch/powerpc/platforms/powermac/feature.c
-@@ -829,7 +829,7 @@ static long core99_scc_enable(struct device_node *node, long param, long value)
- 
- 	if (value) {
- 		if (pci_device_from_OF_node(node, &pbus, &pid) == 0)
--			pdev = pci_get_bus_and_slot(pbus, pid);
-+			pdev = pci_get_domain_bus_and_slot(0, pbus, pid);
- 		if (pdev == NULL)
- 			return 0;
- 		rc = pci_enable_device(pdev);
-diff --git a/arch/powerpc/sysdev/mv64x60_pci.c b/arch/powerpc/sysdev/mv64x60_pci.c
-index d52b3b8..6fe9104 100644
---- a/arch/powerpc/sysdev/mv64x60_pci.c
-+++ b/arch/powerpc/sysdev/mv64x60_pci.c
-@@ -37,7 +37,7 @@ static ssize_t mv64x60_hs_reg_read(struct file *filp, struct kobject *kobj,
- 	if (count < MV64X60_VAL_LEN_MAX)
- 		return -EINVAL;
- 
--	phb = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-+	phb = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
- 	if (!phb)
- 		return -ENODEV;
- 	pci_read_config_dword(phb, MV64X60_PCICFG_CPCI_HOTSWAP, &v);
-@@ -61,7 +61,7 @@ static ssize_t mv64x60_hs_reg_write(struct file *filp, struct kobject *kobj,
- 	if (sscanf(buf, "%i", &v) != 1)
- 		return -EINVAL;
- 
--	phb = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-+	phb = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
- 	if (!phb)
- 		return -ENODEV;
- 	pci_write_config_dword(phb, MV64X60_PCICFG_CPCI_HOTSWAP, v);
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Neo
