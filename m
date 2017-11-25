@@ -1,64 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36282 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755333AbdKJAjO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Nov 2017 19:39:14 -0500
-Date: Thu, 9 Nov 2017 18:39:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Peter W Newton <peter.newton@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Raj Raina <rajesh.raina@nxp.com>,
-        Rajan Kapoor <rajan.kapoor@nxp.com>,
-        Prabhjot Singh <prabhjot.singh@nxp.com>
-Subject: Re: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
-Message-ID: <20171110003910.GA18818@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAFZiPx1x9irvXCm7W9t_VjGnw2VLPhptO8WfuRXPd1jpcBU2Sw@mail.gmail.com>
- <697da40c-7cdd-3d05-5846-37eae31bb729@mobiveil.co.in>
- <alpine.DEB.2.20.1711091427050.1839@nanos>
- <CAFZiPx1pJ4WyDkP2dT8eQvZRukTbZA9H+kTD506e19s0SU8rtQ@mail.gmail.com>
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:44023 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753817AbdKYACG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 19:02:06 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFZiPx1pJ4WyDkP2dT8eQvZRukTbZA9H+kTD506e19s0SU8rtQ@mail.gmail.com>
+In-Reply-To: <20171124203940.GA12811@mithrandir>
+References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
+ <1511538800-8275-4-git-send-email-mmaddireddy@nvidia.com> <CAJZ5v0ghcwSHdrbZd_=XA=tHz7=aTUVd66dHkMYRNyXpnqP84w@mail.gmail.com>
+ <20171124203940.GA12811@mithrandir>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 25 Nov 2017 01:02:04 +0100
+Message-ID: <CAJZ5v0h1EdMV5u-5noMv_1_OpS13nH2NW_6Aua9+LMoWH0tL2w@mail.gmail.com>
+Subject: Re: [PATCH 03/10] PM / QoS: Fix device resume latency for non PM QoS devices
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Jon Hunter <jonathanh@nvidia.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Thomas Gleixner <tglx@linutronix.de>, vidyas@nvidia.com,
+        kthota@nvidia.com, linux-tegra@vger.kernel.org,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 05:59:56AM +0530, Subrahmanya Lingappa wrote:
-> On Thu, Nov 9, 2017 at 6:57 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > On Thu, 9 Nov 2017, subrahmanya_lingappa wrote:
-> >
-> >> From e38b741006856f3a3623109dd5ddf5f99326ce61 Mon Sep 17 00:00:00 2001
-> >> From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> >> Date: Thu, 9 Nov 2017 04:25:21 -0500
-> >> Subject: [PATCH 1/2 v2] PCI: Mobiveil: export irq_set_msi_desc symbol
-> >>
-> >> This patch exports irq_set_msi_desc symbol which is used by
-> >> few PCIe root port drivers.
-> >
-> > And which one of those is modular?
-> 
-> I think this one is, as I see at least 25 other files using it, albeit
-> SoC devices.
+On Fri, Nov 24, 2017 at 9:39 PM, Thierry Reding
+<thierry.reding@gmail.com> wrote:
+> On Fri, Nov 24, 2017 at 05:50:42PM +0100, Rafael J. Wysocki wrote:
+>> On Fri, Nov 24, 2017 at 4:53 PM, Manikanta Maddireddy
+>> <mmaddireddy@nvidia.com> wrote:
+>> > In 'commit 0cc2b4e5a020 ("PM / QoS: Fix device resume latency PM QoS")'
+>> > PM QoS resume latency modified 0 as "no latency at all". However
+>> > dev_pm_qos_raw_read_value() returns 0 for devices which doesn't have
+>> > PM QoS constraints. This is blocking runtime suspend for these devices
+>> > in rpm_check_suspend_allowed(). Return PM_QOS_RESUME_LATENCY_NO_CONSTRAINT
+>> > when PM QoS constraints are not available for a particular device.
+>> >
+>> > Fixes: 0cc2b4e5a020 ("PM / QoS: Fix device resume latency PM QoS")
+>>
+>> That commit has been reverted, so this patch is not applicable and
+>> therefore the whole series isn't.
+>>
+>> What kernel is it based off?
+>
+> It looks like this might have crept in via commit 0759e80b84e3 ("PM /
+> QoS: Fix device resume latency framework"). But checking more closely,
+> that commit actually incorporates this change already.
+>
+> According to the git log the correct commit for this showed up in
+> linux-next only today, which is probably why Manikanta missed it.
 
-A modular driver would have "tristate" in its Kconfig.  You mentioned
-pcie-xilinx.c, which has:
+Well, it's been in the Linus' tree for a week, though.
 
-  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
-
-  config PCIE_XILINX
-	  bool "Xilinx AXI PCIe host bridge support"
-
-It's "bool", so not modular, so it shouldn't require the
-EXPORT_SYMBOL().
-
-You saw an undefined symbol error, though.  Was that on an upstream
-kernel, or possibly some other kernel that has changes to make this
-driver modular?
-
-I don't think your mobiveil driver (as posted) requires this
-EXPORT_SYMBOL() either.
-
-Bjorn
+Thanks,
+Rafael
