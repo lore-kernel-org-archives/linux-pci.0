@@ -1,163 +1,64 @@
-Return-Path: <SRS0=pnR4=CS=oracle.com=boris.ostrovsky@kernel.org>
-Return-Path: <SRS0=pnR4=CS=oracle.com=boris.ostrovsky@kernel.org>
-Subject: Re: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h
- (Models 30h-3fh) Processors v5
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>,
-        helgaas@kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org
-References: <20171018135821.3248-1-deathsimple@vodafone.de>
- <20171018135821.3248-5-deathsimple@vodafone.de>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
-Date: Mon, 20 Nov 2017 10:51:02 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:11114 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751395AbdKYTc6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 14:32:58 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
+CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 0/9] Add loadable kernel module and power management support
+Date: Sun, 26 Nov 2017 01:02:04 +0530
+Message-ID: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20171018135821.3248-5-deathsimple@vodafone.de>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/18/2017 09:58 AM, Christian König wrote:
-> From: Christian König <christian.koenig@amd.com>
->
-> Most BIOS don't enable this because of compatibility reasons.
->
-> Manually enable a 64bit BAR of 64GB size so that we have
-> enough room for PCI devices.
->
-> v2: style cleanups, increase size, add resource name, set correct flags,
->     print message that windows was added
-> v3: add defines for all the magic numbers, style cleanups
-> v4: add some comment that the BIOS should actually allow this using
->     _PRS and _SRS.
-> v5: only enable this if CONFIG_PHYS_ADDR_T_64BIT is set
->
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> ---
->  arch/x86/pci/fixup.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 80 insertions(+)
->
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 11e407489db0..7b6bd76713c5 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -618,3 +618,83 @@ static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
->  		dev_info(dev, "can't work around MacBook Pro poweroff issue\n");
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-> +
-> +#ifdef CONFIG_PHYS_ADDR_T_64BIT
-> +
-> +#define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
-> +#define AMD_141b_MMIO_BASE_RE_MASK		BIT(0)
-> +#define AMD_141b_MMIO_BASE_WE_MASK		BIT(1)
-> +#define AMD_141b_MMIO_BASE_MMIOBASE_MASK	GENMASK(31,8)
-> +
-> +#define AMD_141b_MMIO_LIMIT(x)	(0x84 + (x) * 0x8)
-> +#define AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK	GENMASK(31,8)
-> +
-> +#define AMD_141b_MMIO_HIGH(x)	(0x180 + (x) * 0x4)
-> +#define AMD_141b_MMIO_HIGH_MMIOBASE_MASK	GENMASK(7,0)
-> +#define AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT	16
-> +#define AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK	GENMASK(23,16)
-> +
-> +/*
-> + * The PCI Firmware Spec, rev 3.2 notes that ACPI should optionally allow
-> + * configuring host bridge windows using the _PRS and _SRS methods.
-> + *
-> + * But this is rarely implemented, so we manually enable a large 64bit BAR for
-> + * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
-> + */
-> +static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-> +{
-> +	struct resource *res, *conflict;
-> +	u32 base, limit, high;
-> +	unsigned i;
-> +
-> +	for (i = 0; i < 8; ++i) {
-> +		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
-> +		pci_read_config_dword(dev, AMD_141b_MMIO_HIGH(i), &high);
-> +
-> +		/* Is this slot free? */
-> +		if (!(base & (AMD_141b_MMIO_BASE_RE_MASK |
-> +			      AMD_141b_MMIO_BASE_WE_MASK)))
-> +			break;
-> +
-> +		base >>= 8;
-> +		base |= high << 24;
-> +
-> +		/* Abort if a slot already configures a 64bit BAR. */
-> +		if (base > 0x10000)
-> +			return;
-> +	}
-> +	if (i == 8)
-> +		return;
-> +
-> +	res = kzalloc(sizeof(*res), GFP_KERNEL);
-> +	if (!res)
-> +		return;
-> +
-> +	res->name = "PCI Bus 0000:00";
-> +	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
-> +		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-> +	res->start = 0x100000000ull;
-> +	res->end = 0xfd00000000ull - 1;
-> +
-> +	/* Just grab the free area behind system memory for this */
-> +	while ((conflict = request_resource_conflict(&iomem_resource, res)))
-> +		res->start = conflict->end + 1;
+This series of patches add loadable kernel module and power management
+support to Tegra PCIe host controller driver.
 
+These patches are tested on Jetson TK1, TX1 and TX2 platforms, following
+are the verification details.
+	- Multiple module insert & remove
+	- PCIe device functionality after module insert
+	- Free clock, resets, regulators, powergate, iomem and interrupt
+	resources after module remove
+	- PCIe device functionality after resume from RAM
 
-I get stuck in the infinite loop here.
+Tegra PCIe host controller driver is using ioremap_page_range() which is
+not exported. This is switched with devm_ioremap() in the series
+'https://patchwork.ozlabs.org/project/linux-tegra/list/?series=9907'.
+Both these series will complete the loadable module support for Tegra
+PCIe host driver.
 
-Presumably because on a multi-socket system we succeed for the first
-processor (0000:00:18.1) and add 'res' to iomem_resource. For
-0000:00:19.1 we find the slot in the 'for' loop above but then we fail
-to find a place to add 'res'. And with final sibling being [0 - max
-possible addr] we are stuck here.
+PM QoS fix is dropped in V2 from this series because the fix is
+incorporated in latest 'commit 0759e80b84e3 ("PM / QoS: Fix device resume
+latency framework")'. Update commit message of few patches in V2.
 
-A possible solution to get out of the loop could be
-    if (conflict->end >= res->end) {
-                            kfree(res);
-                            return;
-   }
+Manikanta Maddireddy (9):
+  genirq: Export irq_set_msi_desc()
+  of: Export of_pci_range_to_resource()
+  ARM: tegra: Export tegra_cpuidle_pcie_irqs_in_use()
+  PCI: Export pci_find_host_bridge()
+  PCI: Export pci_flags
+  PCI: tegra: free resources on probe failure
+  PCI: tegra: Add loadable kernel module support
+  PCI: tegra: Broadcast PME_turn_Off message before link goes to L2
+  PCI: tegra: Add power management support
 
+ arch/arm/mach-tegra/cpuidle.c |   1 +
+ drivers/of/address.c          |   1 +
+ drivers/pci/host-bridge.c     |   1 +
+ drivers/pci/host/Kconfig      |   2 +-
+ drivers/pci/host/pci-tegra.c  | 359 +++++++++++++++++++++++++++++++++---------
+ drivers/pci/setup-bus.c       |   1 +
+ kernel/irq/chip.c             |   1 +
+ 7 files changed, 292 insertions(+), 74 deletions(-)
 
-but I don't know whether this is what we actually want.
-
-This is a 2-socket
-
-vendor_id    : AuthenticAMD
-cpu family    : 21
-model        : 1
-model name    : AMD Opteron(TM) Processor 6272
-stepping    : 2
-
-
-(and then it breaks differently as a Xen guest --- we hung on the last
-pci_read_config_dword(), I haven't looked at this at all yet)
-
-
-
--boris
-
-
-> +
-> +	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-> +
-> +	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
-> +		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
-> +	limit = ((res->end + 1) >> 8) & AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK;
-> +	high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
-> +		((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
-> +		 & AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK);
-> +
-> +	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
-> +	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
-> +	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
-> +
-> +	pci_bus_add_resource(dev->bus, res, 0);
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
-> +
-> +#endif
+-- 
+2.1.4
