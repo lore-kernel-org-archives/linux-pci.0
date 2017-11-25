@@ -1,39 +1,50 @@
-Return-Path: <SRS0=IMkZ=CG=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=IMkZ=CG=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:13824 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751631AbdKYTcp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 14:32:45 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
+CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 1/9] genirq: Export irq_set_msi_desc()
+Date: Sun, 26 Nov 2017 01:02:05 +0530
+Message-ID: <1511638333-22951-2-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20171108203833.GA21597@bhelgaas-glaptop.roam.corp.google.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <16592954.7Zo1mAdIIH@aspire.rjw.lan>
- <6330680.LdxjlP4uri@aspire.rjw.lan> <125862518.pYVN4SKj76@aspire.rjw.lan> <20171108203833.GA21597@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 8 Nov 2017 22:09:14 +0100
-Message-ID: <CAJZ5v0jFxv0E0FMmZkeQscvBUR3ORbPQXpZhEn2zYDktri8XMQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/6] PCI / PM: Support for LEAVE_SUSPENDED driver flag
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PM <linux-pm@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, LKML <linux-kernel@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Documentation <linux-doc@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>, Ulf Hansson <ulf.hansson@linaro.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Kevin Hilman <khilman@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 8, 2017 at 9:38 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Nov 08, 2017 at 02:28:18PM +0100, Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> Add support for DPM_FLAG_LEAVE_SUSPENDED to the PCI bus type by
->> making it (a) set the power.may_skip_resume status bit for devices
->> that, from its perspective, may be left in suspend after system
->> wakeup from sleep and (b) return early from pci_pm_resume_noirq()
->> for devices whose remaining resume callbacks during the transition
->> under way are going to be skipped by the PM core.
->>
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+PCI MSI driver allocates MSI entry for each pci dev which creates msi_desc,
+host driver maps each msi domain with hwirq and then sets msi_desc for
+that irq number. Need to export irq_set_msi_desc() to allow Tegra PCIe
+driver to be compiled as a loadable kernel module.
 
-Thanks!
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V2:
+* commit message update
+
+ kernel/irq/chip.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 043bfc35b353..0e74b1051267 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -136,6 +136,7 @@ int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
+ {
+ 	return irq_set_msi_desc_off(irq, 0, entry);
+ }
++EXPORT_SYMBOL(irq_set_msi_desc);
+ 
+ /**
+  *	irq_set_chip_data - set irq chip data for an irq
+-- 
+2.1.4
