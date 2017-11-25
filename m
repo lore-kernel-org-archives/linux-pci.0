@@ -1,122 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:55287 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751650AbdKHJ2V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:28:21 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH 1/3] PCI: rcar: Add the initialization of PCIe link in resume_noirq
-Date: Wed,  8 Nov 2017 10:28:04 +0100
-Message-Id: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:13821 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751684AbdKYTcs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 14:32:48 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
+CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V2 5/9] PCI: Export pci_flags
+Date: Sun, 26 Nov 2017 01:02:09 +0530
+Message-ID: <1511638333-22951-6-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
+pci_flags variable is used in inline functions in 'pci.h', Tegra PCIe
+driver use one of these functions pci_add_flags() and includes 'pci.h'.
+Export pci_flags to allow Tegra PCIe host controller driver to be
+compiled as loadable kernel module.
 
-Reestablish the PCIe link very early in the resume process in case it
-went down to prevent PCI accesses from hanging the bus. Such accesses
-can happen early in the PCI resume process, in the resume_noirq, thus
-the link must be reestablished in the resume_noirq callback of the
-driver.
-
-Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
- drivers/pci/host/pcie-rcar.c | 31 ++++++++++++++++++++++++++++---
- 1 file changed, 28 insertions(+), 3 deletions(-)
+V2:
+* commit message update
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 889603783f01..aa588a7d4811 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -43,6 +43,7 @@
+ drivers/pci/setup-bus.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b1ad466199ad..3567e1c4e340 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -29,6 +29,7 @@
+ #include "pci.h"
  
- /* Transfer control */
- #define PCIETCTLR		0x02000
-+#define  DL_DOWN		(1 << 3)
- #define  CFINIT			1
- #define PCIETSTR		0x02004
- #define  DATA_LINK_ACTIVE	1
-@@ -529,7 +530,7 @@ static void phy_write_reg(struct rcar_pcie *pcie,
- 	phy_wait_for_ack(pcie);
- }
+ unsigned int pci_flags;
++EXPORT_SYMBOL(pci_flags);
  
--static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
-+static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie, int atomic)
- {
- 	unsigned int timeout = 10;
- 
-@@ -537,7 +538,10 @@ static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
- 		if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
- 			return 0;
- 
--		msleep(5);
-+		if (atomic)
-+			mdelay(5);
-+		else
-+			msleep(5);
- 	}
- 
- 	return -ETIMEDOUT;
-@@ -595,7 +599,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
- 	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
- 
- 	/* This will timeout if we don't have a link. */
--	err = rcar_pcie_wait_for_dl(pcie);
-+	err = rcar_pcie_wait_for_dl(pcie, 0);
- 	if (err)
- 		return err;
- 
-@@ -1110,6 +1114,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	pcie = pci_host_bridge_priv(bridge);
- 
- 	pcie->dev = dev;
-+	platform_set_drvdata(pdev, pcie);
- 
- 	INIT_LIST_HEAD(&pcie->resources);
- 
-@@ -1173,10 +1178,30 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static int rcar_pcie_resume_noirq(struct device *dev)
-+{
-+	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-+	u32 val = rcar_pci_read_reg(pcie, PMSR);
-+	int ret = 0;
-+
-+	if ((val == 0) || (rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN)) {
-+		/* Re-establish the PCIe link */
-+		rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-+		ret = rcar_pcie_wait_for_dl(pcie, 1);
-+	}
-+
-+	return ret;
-+}
-+
-+static const struct dev_pm_ops rcar_pcie_pm_ops = {
-+	.resume_noirq = rcar_pcie_resume_noirq,
-+};
-+
- static struct platform_driver rcar_pcie_driver = {
- 	.driver = {
- 		.name = "rcar-pcie",
- 		.of_match_table = rcar_pcie_of_match,
-+		.pm = &rcar_pcie_pm_ops,
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = rcar_pcie_probe,
+ struct pci_dev_resource {
+ 	struct list_head list;
 -- 
-2.11.0
+2.1.4
