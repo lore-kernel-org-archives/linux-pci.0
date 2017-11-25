@@ -1,37 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37716 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933921AbdKBQEC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Nov 2017 12:04:02 -0400
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-References: <20171004095007.19148-1-bigeasy@linutronix.de>
- <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
- <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
- <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
- <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
-Date: Thu, 2 Nov 2017 10:03:53 -0600
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:11220 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750819AbdKYTlY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Nov 2017 14:41:24 -0500
+Subject: Re: [PATCH 01/10] genirq: Export irq_set_msi_desc()
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <vidyas@nvidia.com>,
+        <kthota@nvidia.com>, <linux-tegra@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-pm@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>
+References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
+ <1511538800-8275-2-git-send-email-mmaddireddy@nvidia.com>
+ <alpine.DEB.2.20.1711250050520.2316@nanos>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <600a7b65-670e-b164-913c-99e18ae593d2@nvidia.com>
+Date: Sun, 26 Nov 2017 01:11:05 +0530
 MIME-Version: 1.0
-In-Reply-To: <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2] pci/switchtec: Don't use completion's wait queue
+In-Reply-To: <alpine.DEB.2.20.1711250050520.2316@nanos>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/2/2017 9:07 AM, Sebastian Andrzej Siewior wrote:
-> Why so? There is no way the compiler could have cached the value
-> somehow.
-
-Well, I think it would be sufficient to notice that the code you were 
-replacing used a READ_ONCE and you're putting it into a function that's 
-a bit more complicated. But I'd suggest you read [1] which essentially 
-says that all shared variables should be accessed with such a macro even 
-if only to document that it's a part of a thread synchronization protocol.
-
-Logan
 
 
-[1] https://github.com/google/ktsan/wiki/READ_ONCE-and-WRITE_ONCE
+On 25-Nov-17 5:25 AM, Thomas Gleixner wrote:
+> On Fri, 24 Nov 2017, Manikanta Maddireddy wrote:
+> 
+> Please CC the proper mailing list for irq related changes.
+> 
+>> PCI bus support MSI interrupts, allow PCI host driver to set MSI descriptor
+>> data for an irq.
+> 
+> This is not really an explanation why this export is needed.
+> 
+> Thanks,
+> 
+> 	tglx
+> 
+Updated the commit log with why Tegra PCIe driver is using this function in V2.
+Please review.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>  kernel/irq/chip.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+>> index 5a2ef92c2782..bfbd17386bc4 100644
+>> --- a/kernel/irq/chip.c
+>> +++ b/kernel/irq/chip.c
+>> @@ -136,6 +136,7 @@ int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
+>>  {
+>>  	return irq_set_msi_desc_off(irq, 0, entry);
+>>  }
+>> +EXPORT_SYMBOL(irq_set_msi_desc);
+>>  
+>>  /**
+>>   *	irq_set_chip_data - set irq chip data for an irq
+>> -- 
+>> 2.1.4
+>>
+>>
