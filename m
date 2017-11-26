@@ -1,165 +1,125 @@
-Return-Path: <SRS0=JMq2=CG=microsoft.com=jakeo@kernel.org>
-Return-Path: <SRS0=JMq2=CG=microsoft.com=jakeo@kernel.org>
-From: Jake Oshins <jakeo@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Dexuan Cui <decui@microsoft.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, KY Srinivasan
-	<kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Haiyang Zhang
-	<haiyangz@microsoft.com>, Jork Loeser <Jork.Loeser@microsoft.com>, "Chris
- Valean (Cloudbase Solutions SRL)" <v-chvale@microsoft.com>, "Adrian Suhov
- (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>, Simon Xiao
-	<sixiao@microsoft.com>, 'Eyal Mizrachi' <eyalmi@mellanox.com>, "Jack
- Morgenstein" <jackm@mellanox.com>, Armen Guezalian <armeng@mellanox.com>,
-	Firas Mahameed <firas@mellanox.com>, Tziporet Koren <tziporet@mellanox.com>,
-	Daniel Jurgens <danielj@mellanox.com>
-Subject: RE: [PATCH] PCI: hv: use effective affinity mask
-Date: Wed, 8 Nov 2017 00:51:30 +0000
-Message-ID: <DM5PR21MB0122728907FCBCBB4795A347AB560@DM5PR21MB0122.namprd21.prod.outlook.com>
-References: <PS1P15301MB00112EE79DE499E8B2BA338BBF5F0@PS1P15301MB0011.APCP153.PROD.OUTLOOK.COM>
- <DM5PR21MB0122B6965EAB3181A37C14FAAB5F0@DM5PR21MB0122.namprd21.prod.outlook.com>
- <20171108001500.GB22847@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171108001500.GB22847@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34476 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751510AbdKZTca (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 26 Nov 2017 14:32:30 -0500
+Date: Sun, 26 Nov 2017 13:32:26 -0600
+From: Rob Herring <robh@kernel.org>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, adouglas@cadence.com,
+        stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
+        eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
+        sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 2/5] dt-bindings: PCI: cadence: Add DT bindings for
+ Cadence PCIe host controller
+Message-ID: <20171126193226.7574sd3ftlr3j2fq@rob-hp-laptop>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <895cbb8f862c712b78f780a53e05d5429d24cc35.1511439189.git.cyrille.pitchen@free-electrons.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <895cbb8f862c712b78f780a53e05d5429d24cc35.1511439189.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, November 7, 2017 4:15 PM
-> To: Jake Oshins <jakeo@microsoft.com>
-> Cc: Dexuan Cui <decui@microsoft.com>; Bjorn Helgaas
-> <bhelgaas@google.com>; linux-pci@vger.kernel.org; KY Srinivasan
-> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; Haiyang Zhang
-> <haiyangz@microsoft.com>; Jork Loeser <Jork.Loeser@microsoft.com>;
-> Chris Valean (Cloudbase Solutions SRL) <v-chvale@microsoft.com>; Adrian
-> Suhov (Cloudbase Solutions SRL) <v-adsuho@microsoft.com>; Simon Xiao
-> <sixiao@microsoft.com>; 'Eyal Mizrachi' <eyalmi@mellanox.com>; Jack
-> Morgenstein <jackm@mellanox.com>; Armen Guezalian
-> <armeng@mellanox.com>; Firas Mahameed <firas@mellanox.com>;
-> Tziporet Koren <tziporet@mellanox.com>; Daniel Jurgens
-> <danielj@mellanox.com>
-> Subject: Re: [PATCH] PCI: hv: use effective affinity mask
->=20
-> On Wed, Nov 01, 2017 at 08:52:56PM +0000, Jake Oshins wrote:
-> > > -----Original Message-----
-> > > From: Dexuan Cui
-> > > Sent: Wednesday, November 1, 2017 1:31 PM
-> > > To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
-> > > Jake Oshins <jakeo@microsoft.com>; KY Srinivasan
-> > > <kys@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>
-> > > Cc: devel@linuxdriverproject.org; linux-kernel@vger.kernel.org;
-> > > Haiyang Zhang <haiyangz@microsoft.com>; Jork Loeser
-> > > <Jork.Loeser@microsoft.com>; Chris Valean (Cloudbase Solutions SRL)
-> > > <v- chvale@microsoft.com>; Adrian Suhov (Cloudbase Solutions SRL)
-> > > <v- adsuho@microsoft.com>; Simon Xiao <sixiao@microsoft.com>; 'Eyal
-> > > Mizrachi' <eyalmi@mellanox.com>; Jack Morgenstein
-> > > <jackm@mellanox.com>; Armen Guezalian <armeng@mellanox.com>;
-> Firas
-> > > Mahameed <firas@mellanox.com>; Tziporet Koren
-> > > <tziporet@mellanox.com>; Daniel Jurgens <danielj@mellanox.com>
-> > > Subject: [PATCH] PCI: hv: use effective affinity mask
-> > >
-> > >
-> > > The effective_affinity_mask is always set when an interrupt is
-> > > assigned in
-> > > __assign_irq_vector() -> apic->cpu_mask_to_apicid(), e.g. for struct
-> > > apic
-> > > apic_physflat: -> default_cpu_mask_to_apicid() ->
-> > > irq_data_update_effective_affinity(), but it looks
-> > > d->common->affinity remains all-1's before the user space or the kern=
-el
-> changes it later.
-> > >
-> > > In the early allocation/initialization phase of an irq, we should
-> > > use the effective_affinity_mask, otherwise Hyper-V may not deliver
-> > > the interrupt to the expected cpu. Without the patch, if we assign 7
-> > > Mellanox ConnectX-3 VFs to a 32-vCPU VM, one of the VFs may fail to
-> receive interrupts.
-> > >
-> > > Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> > > Cc: Jake Oshins <jakeo@microsoft.com>
-> > > Cc: Jork Loeser <jloeser@microsoft.com>
-> > > Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> > > Cc: K. Y. Srinivasan <kys@microsoft.com>
-> > > ---
-> > >
-> > > Please consider this for v4.14, if it's not too late.
-> > >
-> > >  drivers/pci/host/pci-hyperv.c | 8 +++++---
-> > >  1 file changed, 5 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/host/pci-hyperv.c
-> > > b/drivers/pci/host/pci-hyperv.c index 5ccb47d..8b5f66d 100644
-> > > --- a/drivers/pci/host/pci-hyperv.c
-> > > +++ b/drivers/pci/host/pci-hyperv.c
-> > > @@ -879,7 +879,7 @@ static void hv_irq_unmask(struct irq_data *data)
-> > >  	int cpu;
-> > >  	u64 res;
-> > >
-> > > -	dest =3D irq_data_get_affinity_mask(data);
-> > > +	dest =3D irq_data_get_effective_affinity_mask(data);
-> > >  	pdev =3D msi_desc_to_pci_dev(msi_desc);
-> > >  	pbus =3D pdev->bus;
-> > >  	hbus =3D container_of(pbus->sysdata, struct hv_pcibus_device,
-> > > sysdata); @@ -1042,6 +1042,7 @@ static void
-> > > hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> > >  	struct hv_pci_dev *hpdev;
-> > >  	struct pci_bus *pbus;
-> > >  	struct pci_dev *pdev;
-> > > +	struct cpumask *dest;
-> > >  	struct compose_comp_ctxt comp;
-> > >  	struct tran_int_desc *int_desc;
-> > >  	struct {
-> > > @@ -1056,6 +1057,7 @@ static void hv_compose_msi_msg(struct
-> irq_data
-> > > *data, struct msi_msg *msg)
-> > >  	int ret;
-> > >
-> > >  	pdev =3D msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
-> > > +	dest =3D irq_data_get_effective_affinity_mask(data);
-> > >  	pbus =3D pdev->bus;
-> > >  	hbus =3D container_of(pbus->sysdata, struct hv_pcibus_device,
-> > > sysdata);
-> > >  	hpdev =3D get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn));
-> @@
-> > > -1081,14 +1083,14 @@ static void hv_compose_msi_msg(struct irq_data
-> > > *data, struct msi_msg *msg)
-> > >  	switch (pci_protocol_version) {
-> > >  	case PCI_PROTOCOL_VERSION_1_1:
-> > >  		size =3D hv_compose_msi_req_v1(&ctxt.int_pkts.v1,
-> > > -					irq_data_get_affinity_mask(data),
-> > > +					dest,
-> > >  					hpdev->desc.win_slot.slot,
-> > >  					cfg->vector);
-> > >  		break;
-> > >
-> > >  	case PCI_PROTOCOL_VERSION_1_2:
-> > >  		size =3D hv_compose_msi_req_v2(&ctxt.int_pkts.v2,
-> > > -					irq_data_get_affinity_mask(data),
-> > > +					dest,
-> > >  					hpdev->desc.win_slot.slot,
-> > >  					cfg->vector);
-> > >  		break;
-> > > --
-> > > 2.7.4
-> >
-> > Signed-off-by: Jake Oshins <jakeo@microsoft.com>
->=20
-> I'm not sure what this means.
->=20
-> Per Documentation/process/submitting-patches.rst, "Signed-off-by"
-> means you were "involved in the development of the patch, or that he/she
-> was in the patch's delivery path."  You weren't in the delivery path (I g=
-ot it
-> from Dexuan), and if you were involved in development, your Signed-off-by
-> would normally appear in the original posting.
->=20
-> Should this be a Reviewed-by tag?
+On Thu, Nov 23, 2017 at 04:01:47PM +0100, Cyrille Pitchen wrote:
+> From: Scott Telford <stelford@cadence.com>
+> 
+> This patch adds documentation for the DT bindings of the Cadence PCIe
+> controller when configured in host (Root Complex) mode.
+> 
+> Signed-off-by: Scott Telford <stelford@cadence.com>
+> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+> 
+> dt-bindings: PCI: cadence: host fixup
+> ---
+>  .../bindings/pci/cdns,cdns-pcie-host.txt           | 54 ++++++++++++++++++++++
+>  1 file changed, 54 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
 
-Sorry.  I forgot the protocol.  I'll fix that.
+A few nits, otherwise:
 
-Reviewed-by: Jake Oshins <jakeo@microsoft.com>
+Acked-by: Rob Herring <robh@kernel.org>
+
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> new file mode 100644
+> index 000000000000..4b3df8ffd5e1
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+> @@ -0,0 +1,54 @@
+> +* Cadence PCIe host controller
+> +
+> +This PCIe controller inherits the base properties defined in
+> +host-generic-pci.txt.
+> +
+> +Required properties:
+> +- compatible: should contain "cdns,cdns-pcie-host" to identify the IP used.
+> +- reg: Should contain the PCIe configuration window base address, controller
+> +  register base address, and AXI interface region base address respectively.
+> +- reg-names: Must be "cfg", "reg" and "mem" respectively.
+> +- #address-cells: set to <3>
+> +- #size-cells: set to <2>
+> +- device_type: set to "pci"
+> +- ranges: ranges for the PCI memory and I/O regions
+> +- #interrupt-cells: set to <1>
+> +- interrupt-map-mask and interrupt-map: standard PCI
+> +	properties to define the mapping of the PCIe interface to interrupt
+> +	numbers.
+> +
+> +Example:
+> +
+> +	pci@fb000000 {
+
+pcie@...
+
+Usually the first address is the unit-address, so either change the 
+order in reg or change this.
+
+> +		compatible = "cdns,cdns-pcie-host";
+> +		device_type = "pci";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		bus-range = <0x0 0xff>;
+> +		linux,pci-domain = <0>;
+> +
+> +		// CPU_PHYSICAL(2)  SIZE(2)
+
+Drop the comment. If you know what 'reg' is then it is obvious. Also, 
+don't use C++ style comments.
+
+> +		reg = <0x0 0x41000000  0x0 0x00001000>, /* Config space */
+> +		      <0x0 0xfb000000  0x0 0x01000000>, /* Base Address */
+> +		      <0x0 0x40000000  0x0 0x04000000>; /* AXI region */
+> +		reg-names = "cfg", "reg", "mem";
+> +
+> +		// BUS_ADDRESS(3)  CPU_PHYSICAL(1)  SIZE(2)
+
+ditto
+
+> +		ranges =
+> +			<0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
+> +			<0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
+> +
+> +
+> +		#interrupt-cells = <0x1>;
+> +
+> +		// PCI_DEVICE(3)  INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(5)
+> +		interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1
+> +				 0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1
+> +				 0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1
+> +				 0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
+> +
+> +		// PCI_DEVICE(3)  INT#(1)
+> +		interrupt-map-mask = <0x0000 0x0 0x0  0x7>;
+> +
+> +		msi-parent = <&its_pci>;
+> +	};
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
