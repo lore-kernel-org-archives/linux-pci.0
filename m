@@ -1,96 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0iD3uzJr4fdhrWfRhSmr_foU4GQx9LY_9sR=BKYUxZOGw@mail.gmail.com>
-References: <3806130.B2KCK0tvef@aspire.rjw.lan> <5556673.MXo6XDN1f4@aspire.rjw.lan>
- <CAPDyKFpzSd4zwW_awuxuim0gzyKV5s9dm66X+szsSUKRnBakbA@mail.gmail.com>
- <2654404.6YT5rmSnae@aspire.rjw.lan> <CAPDyKFo4gE6O=xMoS2Phe0kNgNUGBffy1hxT3iPrY71ieGcumQ@mail.gmail.com>
- <CAJZ5v0ibqqUZ0M1_GKCkGj_E+2DQQMOLAVTyPd7mSJDAypkHjQ@mail.gmail.com>
- <CAPDyKFrsabWL2cVE2SwguRRiEV5sJHLpzpyhahLucdER_RAEpg@mail.gmail.com> <CAJZ5v0iD3uzJr4fdhrWfRhSmr_foU4GQx9LY_9sR=BKYUxZOGw@mail.gmail.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Fri, 17 Nov 2017 16:57:05 +0100
-Message-ID: <CAPDyKFpXh=E8vC9fUXhbDTLcekb74xfd7chTyKKSw1VgPv1rCQ@mail.gmail.com>
-Subject: Re: [PATCH v3 1/6] PM / core: Add LEAVE_SUSPENDED driver flag
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Linux PM <linux-pm@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 27 Nov 2017 17:44:11 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kevin Hilman <khilman@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] PCI: endpoint: Fix find_first_zero_bit() usage
+Message-ID: <20171127174411.GA4123@red-moon>
+References: <20171127154955.22214-1-niklas.cassel@axis.com>
+ <20171127154955.22214-4-niklas.cassel@axis.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171127154955.22214-4-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17 November 2017 at 15:31, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> On Fri, Nov 17, 2017 at 2:49 PM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
->> [...]
->>
->>>>
->>>>>> Second, have you considered setting the default value of
->>>>>> dev->power.may_skip_resume to true?
->>>>>
->>>>> Yes.
->>>>>
->>>>>> That would means the subsystem
->>>>>> instead need to implement an opt-out method. I am thinking that it may
->>>>>> not be an issue, since we anyway at this point, don't have drivers
->>>>>> using the LEAVE_SUSPENDED flag.
->>>>>
->>>>> Opt-out doesn't work because of the need to invoke the "noirq" callbacks.
->>>>
->>>> I am not sure I follow that.
->>>>
->>>> Whatever needs to be fixed on the subsystem level, that could be done
->>>> before the driver starts using the LEAVE_SUSPENDED flag. No?
->>>
->>> That requires a bit of explanation, sorry for being overly concise.
->>>
->>> The core calls ->resume_noirq from the middle layer regardless of
->>> whether or not the device will be left suspended, so the
->>> ->resume_noirq cannot do arbitrary things to it.  Setting
->>> may_skip_resume by the middle layer tells the core that the middle
->>> layer is ready for that and is going to cooperate.  If may_skip_resume
->>> had been set by default, that piece of information would have been
->>> missing.
->>
->> Huh, I still don't get that. Sorry.
->>
->> If the "may_skip_resume" is default set to true by the PM core,
->> wouldn't that just mean that the middle-layer needs to implement an
->> opt-out method, rather than opt-in. In principle to opt-out the
->> middle-layer needs to set may_skip_resume to false in suspend_noirq
->> phase, no?
->
-> Yes, but if the middle-layer doesn't clear it, that may mean two
-> things.  First, the middle layer is ready and so on.  Good.  Second,
-> the middle layer is not aware of the whole thing.  Not good.  The core
-> cannot tell.
->
-> In the opt-in case, however, all is clear. :-)
+On Mon, Nov 27, 2017 at 04:49:55PM +0100, Niklas Cassel wrote:
+> find_first_zero_bit()'s parameter 'size' is defined in bits,
+> not in bytes.
+> 
+> Calling find_first_zero_bit() with the wrong size unit
+> will lead to insidious bugs.
+> 
+> Fix this by calling find_first_zero_bit() with size BITS_PER_LONG,
+> rather than sizeof().
+> 
+> Also add proper error handling for find_first_zero_bit(), since this
+> was missing.
 
-Okay.
+"Fix this by calling find_first_zero_bit() with size BITS_PER_LONG,
+rather than sizeof() and add missing find_first_zero_bit() return
+handling"
 
->
->> Then we only need to make sure drivers don't starts use
->> LEAVE_SUSPENDED, before we make sure the middle layers is adopted. But
->> that should not be a problem.
->>
->> The benefit would be that those middle layers that can cope with
->> LEAVE_SUSPENDED as of today don't need to change.
->
-> I'm not sure if that's the case.
->
-> The middle layer has to evaluate dev_pm_may_skip_resume() in
-> ->resume_noirq() to check if the device can be left in suspend, as it
-> cannot determine that in ->suspend_noirq() yet.
+> Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/endpoint/pci-ep-cfs.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> index e1f5adc9e113..0a22a7976580 100644
+> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -109,7 +109,12 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+>  		return ret;
+>  
+>  	func_no = find_first_zero_bit(&epc_group->function_num_map,
+> -				      sizeof(epc_group->function_num_map));
+> +				      BITS_PER_LONG);
+> +	if (func_no >= BITS_PER_LONG) {
+> +		ret = -EINVAL;
+> +		dev_err(&epc->dev, "failed to link endpoint function device\n");
 
-Right. Okay, let's stick with the chosen method.
+I would not log the error for the time being or make it more explicit:
 
-Kind regards
-Uffe
+dev_error(&epc->dev, "unsupported number of functions, failed to link
+endpoint function device\n");
+
+Side note: we _do_ know the max number of functions the epc supports
+(epc->max_functions) when this code is called so we do know the
+bitmap size - we can rework this code path based on that (@kishon,
+thoughts ?).
+
+Other than that:
+
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+> +		goto err_func_no;
+> +	}
+>  	set_bit(func_no, &epc_group->function_num_map);
+>  	epf->func_no = func_no;
+>  
+> @@ -121,6 +126,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+>  
+>  err_epf_bind:
+>  	clear_bit(func_no, &epc_group->function_num_map);
+> +err_func_no:
+>  	pci_epc_remove_epf(epc, epf);
+>  
+>  	return ret;
+> -- 
+> 2.14.2
+> 
