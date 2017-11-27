@@ -1,67 +1,47 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 29/30] i7300_idle: deprecate pci_get_bus_and_slot()
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-30-git-send-email-okaya@codeaurora.org>
- <20171122075345.GC26583@kroah.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <81de37c1-26b5-41f7-ab32-b98012890971@codeaurora.org>
-Date: Wed, 22 Nov 2017 11:15:47 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48166 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753251AbdK0SDe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Nov 2017 13:03:34 -0500
+Date: Mon, 27 Nov 2017 12:03:32 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] powerpc/pci: convert to use for_each_pci_bridge()
+ helper
+Message-ID: <20171127180332.GA11228@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171110175230.82522-1-andriy.shevchenko@linux.intel.com>
+ <20171122201259.GA21158@bhelgaas-glaptop.roam.corp.google.com>
+ <87zi7d17ql.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-In-Reply-To: <20171122075345.GC26583@kroah.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, open list <linux-kernel@vger.kernel.org>,
- Philippe Ombredanne <pombredanne@nexb.com>, linux-arm-msm@vger.kernel.org,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87zi7d17ql.fsf@concordia.ellerman.id.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/22/2017 2:53 AM, Greg Kroah-Hartman wrote:
->> +++ b/include/linux/i7300_idle.h
->> @@ -48,7 +48,7 @@ static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
->>  	int i;
->>  	struct pci_dev *memdev, *dmadev;
->>  
->> -	memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
->> +	memdev = pci_get_domain_bus_and_slot(0, MEMCTL_BUS, MEMCTL_DEVFN);
-> You have a pci_dev, why can't you use it here to get the domain?
+On Thu, Nov 23, 2017 at 11:48:18PM +1100, Michael Ellerman wrote:
+> Bjorn Helgaas <helgaas@kernel.org> writes:
 > 
+> > On Fri, Nov 10, 2017 at 07:52:29PM +0200, Andy Shevchenko wrote:
+> >> ...which makes code slightly cleaner.
+> >> 
+> >> Requires: d43f59ce6c50 ("PCI: Add for_each_pci_bridge() helper")
+> >
+> > Requires: 24a0c654d7d6 ("PCI: Add for_each_pci_bridge() helper")
+> >
+> > (My fault, I rebased that commit before sending it to Linus.)
+> >
+> >> Acked-by: Michael Ellerman <mpe@ellerman.id.au>
+> >
+> > These don't depend on anything in the PCI core, so they could go
+> > either via my tree or the powerpc tree.  Since you acked this,
+> > Michael, I corrected the SHA1 above and put these both on my pci/misc
+> > branch.
+> 
+> Thanks. That's aiming for 4.16 I assume?
 
-Both fbd_dev and ioat_dev are output parameters. 
-
-dmadev = pci_get_bus_and_slot(IOAT_BUS, IOAT_DEVFN);
-memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
-
-	for (i = 0; fbd_ioat_list[i].vendor != 0; i++) {
-		if (dmadev->vendor == fbd_ioat_list[i].vendor &&
-		    dmadev->device == fbd_ioat_list[i].ioat_dev) {
-			if (!(fbd_ioat_list[i].enabled || enable_all))
-				continue;
-
-			if (fbd_dev)
-				*fbd_dev = memdev;
-			if (ioat_dev)
-				*ioat_dev = dmadev;
-
-Funny thing is nobody is calling this function. Maybe, I should just kill it
-instead.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Right.
