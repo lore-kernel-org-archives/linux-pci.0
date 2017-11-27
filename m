@@ -1,42 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3860 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753540AbdKXPyq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Nov 2017 10:54:46 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <tglx@linutronix.de>
-CC: <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 04/10] ARM: tegra: EXPORT tegra_cpuidle_pcie_irqs_in_use()
-Date: Fri, 24 Nov 2017 21:23:14 +0530
-Message-ID: <1511538800-8275-5-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Hannes Reinecke <hare@suse.de>,
+        Colin Ian King <colin.king@canonical.com>,
+        Gaurav Pathak <gauravpathak129@gmail.com>,
+        devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V3 23/29] staging: rts5208: remove rtsx_read_pci_cfg_byte()
+Date: Mon, 27 Nov 2017 11:58:00 -0500
+Message-Id: <1511801886-6753-24-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EXPORT tegra_cpuidle_pcie_irqs_in_use() to allow Tegra PCIe driver to be
-compiled as loadable kernel module.
+Remove unused rtsx_read_pci_cfg_byte() function.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- arch/arm/mach-tegra/cpuidle.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/rts5208/rtsx.c | 17 -----------------
+ drivers/staging/rts5208/rtsx.h |  2 --
+ 2 files changed, 19 deletions(-)
 
-diff --git a/arch/arm/mach-tegra/cpuidle.c b/arch/arm/mach-tegra/cpuidle.c
-index 316563141add..7d7e6d3ce32d 100644
---- a/arch/arm/mach-tegra/cpuidle.c
-+++ b/arch/arm/mach-tegra/cpuidle.c
-@@ -57,3 +57,4 @@ void tegra_cpuidle_pcie_irqs_in_use(void)
- 		break;
- 	}
+diff --git a/drivers/staging/rts5208/rtsx.c b/drivers/staging/rts5208/rtsx.c
+index 89e2cfe..70e0b86 100644
+--- a/drivers/staging/rts5208/rtsx.c
++++ b/drivers/staging/rts5208/rtsx.c
+@@ -275,23 +275,6 @@ static int rtsx_acquire_irq(struct rtsx_dev *dev)
+ 	return 0;
  }
-+EXPORT_SYMBOL(tegra_cpuidle_pcie_irqs_in_use);
+ 
+-int rtsx_read_pci_cfg_byte(u8 bus, u8 dev, u8 func, u8 offset, u8 *val)
+-{
+-	struct pci_dev *pdev;
+-	u8 data;
+-	u8 devfn = (dev << 3) | func;
+-
+-	pdev = pci_get_bus_and_slot(bus, devfn);
+-	if (!pdev)
+-		return -1;
+-
+-	pci_read_config_byte(pdev, offset, &data);
+-	if (val)
+-		*val = data;
+-
+-	return 0;
+-}
+-
+ #ifdef CONFIG_PM
+ /*
+  * power management
+diff --git a/drivers/staging/rts5208/rtsx.h b/drivers/staging/rts5208/rtsx.h
+index 575e573..62e467c 100644
+--- a/drivers/staging/rts5208/rtsx.h
++++ b/drivers/staging/rts5208/rtsx.h
+@@ -174,8 +174,6 @@ static inline void get_current_time(u8 *timeval_buf, int buf_len)
+ /* struct scsi_cmnd transfer buffer access utilities */
+ enum xfer_buf_dir	{TO_XFER_BUF, FROM_XFER_BUF};
+ 
+-int rtsx_read_pci_cfg_byte(u8 bus, u8 dev, u8 func, u8 offset, u8 *val);
+-
+ #define _MSG_TRACE
+ 
+ #include "trace.h"
 -- 
-2.1.4
+1.9.1
