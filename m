@@ -1,53 +1,61 @@
-Return-Path: <SRS0=NTdL=CG=synopsys.com=Joao.Pinto@kernel.org>
-Return-Path: <SRS0=NTdL=CG=synopsys.com=Joao.Pinto@kernel.org>
-Subject: Re: [PATCH v4 01/17] PCI: dwc: Use the DMA-API to get the MSI address
-To: Bjorn Helgaas <helgaas@kernel.org>, Niklas Cassel <niklas.cassel@axis.com>
-CC: Jingoo Han <jingoohan1@gmail.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Niklas Cassel <niklass@axis.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20171103134722.5532-1-niklas.cassel@axis.com>
- <20171103134722.5532-2-niklas.cassel@axis.com>
- <20171108005614.GF22847@bhelgaas-glaptop.roam.corp.google.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <1c059ad0-aa57-fca4-6d92-e68736ffad5f@synopsys.com>
-Date: Wed, 8 Nov 2017 12:45:49 +0000
-MIME-Version: 1.0
-In-Reply-To: <20171108005614.GF22847@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48888 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751313AbdK0GUm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 01:20:42 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2 5/7] PCI: add a return type for pci_reset_bridge_secondary_bus()
+Date: Mon, 27 Nov 2017 01:20:26 -0500
+Message-Id: <1511763628-11856-6-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
+References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello to all,
+Getting ready to return an error from pci_reset_bridge_secondary_bus() when
+device is unreachable.
 
-Às 12:56 AM de 11/8/2017, Bjorn Helgaas escreveu:
-> On Fri, Nov 03, 2017 at 02:47:05PM +0100, Niklas Cassel wrote:
->> Use the DMA-API to get the MSI address. This address will be written to
->> our PCI config space and to the register which determines which AXI
->> address the DWC IP will spoof for incoming MSI irqs.
->>
->> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
->> to write to the MSI address, the proper way to get the MSI address is by
->> using the DMA API, not by using virt_to_phys().
->>
->> Using virt_to_phys() might work on some systems, but using the DMA API
->> should work on all systems.
->>
->> This is essentially the same thing as allocating a buffer in a driver
->> to which the endpoint will write to. To do this, we use the DMA API.
->>
->> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> 
-> I'm expecting Jingoo and/or Joao to chime in and ack the
-> DesignWare-related patches.  I think all the others are in
-> pretty good shape.
-> 
->> ---
->>  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
->>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
->>  2 files changed, 14 insertions(+), 4 deletions(-)
->> ...
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pci.c   | 4 +++-
+ include/linux/pci.h | 2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-Let me test this patch-set in my setup first!
-I will give feedback until Friday.
-
-Thanks,
-Joao
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 87e4688..0a9a696 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4031,9 +4031,11 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+  * Use the bridge control register to assert reset on the secondary bus.
+  * Devices on the secondary bus are left in power-on state.
+  */
+-void pci_reset_bridge_secondary_bus(struct pci_dev *dev)
++int pci_reset_bridge_secondary_bus(struct pci_dev *dev)
+ {
+ 	pcibios_reset_secondary_bus(dev);
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 354b018..539b3af 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1103,7 +1103,7 @@ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ int pci_try_reset_bus(struct pci_bus *bus);
+ void pci_reset_secondary_bus(struct pci_dev *dev);
+ void pcibios_reset_secondary_bus(struct pci_dev *dev);
+-void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
++int pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
+-- 
+1.9.1
