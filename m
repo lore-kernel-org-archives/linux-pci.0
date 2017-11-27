@@ -1,130 +1,151 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 28 Nov 2017 08:20:44 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2 7/7] PCI: make reset poll time adjustable
-Message-ID: <20171128142044.GC11228@bhelgaas-glaptop.roam.corp.google.com>
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
- <1511763628-11856-8-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1511763628-11856-8-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Christoffer Dall <cdall@linaro.org>, Michal Hocko <mhocko@suse.com>,
- Jonathan Corbet <corbet@lwn.net>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci@vger.kernel.org, timur@codeaurora.org,
- Ding Tianhong <dingtianhong@huawei.com>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
- Mimi Zohar <zohar@linux.vnet.ibm.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:40309 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752369AbdK0PuH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 10:50:07 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: kishon@ti.com, Niklas Cassel <niklass@axis.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 1/3] PCI: designware-ep: Fix find_first_zero_bit() usage
+Date: Mon, 27 Nov 2017 16:49:53 +0100
+Message-Id: <20171127154955.22214-2-niklas.cassel@axis.com>
+In-Reply-To: <20171127154955.22214-1-niklas.cassel@axis.com>
+References: <20171127154955.22214-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 27, 2017 at 01:20:28AM -0500, Sinan Kaya wrote:
-> Introduce pci=resetpolltime= argument to override 60 seconds poll time in
-> units of milliseconds.
+find_first_zero_bit()'s parameter 'size' is defined in bits,
+not in bytes.
 
-I resist adding kernel parameters because they really complicate the
-user experience.  Obviously you added this for a reason, but I don't
-know what that is.  If we really need it, is there any way we could
-automatically figure out in the kernel when we need different poll
-times?
+find_first_zero_bit() was called with size in bytes rather than bits,
+which thus defined a too low upper limit, causing
+dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
+and bar 5, which made bar 5 overwrite the settings set by bar 4.
 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  Documentation/admin-guide/kernel-parameters.txt |  2 ++
->  drivers/pci/pci.c                               | 13 ++++++++-----
->  2 files changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index 0549662..a07d4f5 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -3071,6 +3071,8 @@
->  		pcie_scan_all	Scan all possible PCIe devices.  Otherwise we
->  				only look for one device below a PCIe downstream
->  				port.
-> +		resetpolltime=	Adjusts the default poll time following hot reset
-> +				and D3->D0 transition.
->  
->  	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
->  			Management.
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8472c24..a6c3e25 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -127,7 +127,7 @@ static int __init pcie_port_pm_setup(char *str)
->  
->  /* time to wait after a reset for device to become responsive */
->  #define PCIE_RESET_READY_POLL_MS 60000
-> -
-> +static unsigned long pci_reset_polltime = PCIE_RESET_READY_POLL_MS;
->  /**
->   * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
->   * @bus: pointer to PCI bus structure to search
-> @@ -3904,7 +3904,7 @@ int pcie_flr(struct pci_dev *dev)
->  	 */
->  	msleep(100);
->  
-> -	return pci_dev_wait(dev, "FLR", PCIE_RESET_READY_POLL_MS);
-> +	return pci_dev_wait(dev, "FLR", pci_reset_polltime);
->  }
->  EXPORT_SYMBOL_GPL(pcie_flr);
->  
-> @@ -3945,7 +3945,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
->  	 */
->  	msleep(100);
->  
-> -	return pci_dev_wait(dev, "AF_FLR", PCIE_RESET_READY_POLL_MS);
-> +	return pci_dev_wait(dev, "AF_FLR", pci_reset_polltime);
->  }
->  
->  /**
-> @@ -3990,7 +3990,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
->  	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
->  	pci_dev_d3_sleep(dev);
->  
-> -	return pci_dev_wait(dev, "PM D3->D0", PCIE_RESET_READY_POLL_MS);
-> +	return pci_dev_wait(dev, "PM D3->D0", pci_reset_polltime);
->  }
->  
->  void pci_reset_secondary_bus(struct pci_dev *dev)
-> @@ -4035,7 +4035,7 @@ int pci_reset_bridge_secondary_bus(struct pci_dev *dev)
->  {
->  	pcibios_reset_secondary_bus(dev);
->  
-> -	return pci_dev_wait(dev, "bus reset", PCIE_RESET_READY_POLL_MS);
-> +	return pci_dev_wait(dev, "bus reset", pci_reset_polltime);
->  }
->  EXPORT_SYMBOL_GPL(pci_reset_bridge_secondary_bus);
->  
-> @@ -5528,6 +5528,9 @@ static int __init pci_setup(char *str)
->  				pcie_bus_config = PCIE_BUS_PEER2PEER;
->  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
->  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-> +			} else if (!strncmp(str, "resetpolltime=", 14)) {
-> +				pci_reset_polltime =
-> +					simple_strtoul(str + 14, &str, 0);
->  			} else {
->  				printk(KERN_ERR "PCI: Unknown option `%s'\n",
->  						str);
-> -- 
-> 1.9.1
-> 
+Fix this by using bitmaps with a static upper limit (MAX_IATUS).
+256 was chosen since according to the databook, that is the
+maximum number of iATUs supported by the IP.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Additionally, make sure that ep->num_ob_windows and ep->num_ib_windows,
+which are obtained from device tree, are less than the maximum number of
+iATUs (MAX_IATUS).
+
+Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-designware-ep.c | 22 ++++++++++++++--------
+ drivers/pci/dwc/pcie-designware.h    |  7 +++++--
+ 2 files changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index d53d5f168363..8b14e7db5487 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 	u32 free_win;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	free_win = find_first_zero_bit(&ep->ib_window_map,
+-				       sizeof(ep->ib_window_map));
++	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
+ 	if (free_win >= ep->num_ib_windows) {
+ 		dev_err(pci->dev, "no free inbound window\n");
+ 		return -EINVAL;
+@@ -85,7 +84,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 	}
+ 
+ 	ep->bar_to_atu[bar] = free_win;
+-	set_bit(free_win, &ep->ib_window_map);
++	set_bit(free_win, ep->ib_window_map);
+ 
+ 	return 0;
+ }
+@@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 	u32 free_win;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	free_win = find_first_zero_bit(&ep->ob_window_map,
+-				       sizeof(ep->ob_window_map));
++	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
+ 	if (free_win >= ep->num_ob_windows) {
+ 		dev_err(pci->dev, "no free outbound window\n");
+ 		return -EINVAL;
+@@ -106,7 +104,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
+ 				  phys_addr, pci_addr, size);
+ 
+-	set_bit(free_win, &ep->ob_window_map);
++	set_bit(free_win, ep->ob_window_map);
+ 	ep->outbound_addr[free_win] = phys_addr;
+ 
+ 	return 0;
+@@ -121,7 +119,7 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
+ 	dw_pcie_ep_reset_bar(pci, bar);
+ 
+ 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
+-	clear_bit(atu_index, &ep->ib_window_map);
++	clear_bit(atu_index, ep->ib_window_map);
+ }
+ 
+ static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
+@@ -175,7 +173,7 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
+ 		return;
+ 
+ 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
+-	clear_bit(atu_index, &ep->ob_window_map);
++	clear_bit(atu_index, ep->ob_window_map);
+ }
+ 
+ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
+@@ -298,12 +296,20 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		dev_err(dev, "unable to read *num-ib-windows* property\n");
+ 		return ret;
+ 	}
++	if (ep->num_ib_windows > MAX_IATUS) {
++		dev_err(dev, "invalid *num-ib-windows*\n");
++		return -EINVAL;
++	}
+ 
+ 	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
+ 	if (ret < 0) {
+ 		dev_err(dev, "unable to read *num-ob-windows* property\n");
+ 		return ret;
+ 	}
++	if (ep->num_ob_windows > MAX_IATUS) {
++		dev_err(dev, "invalid *num-ob-windows*\n");
++		return -EINVAL;
++	}
+ 
+ 	addr = devm_kzalloc(dev, sizeof(phys_addr_t) * ep->num_ob_windows,
+ 			    GFP_KERNEL);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index e5d9d77b778e..189f45264c2a 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -113,6 +113,9 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
++/* Maximum number of inbound/outbound iATUs */
++#define MAX_IATUS			256
++
+ struct pcie_port;
+ struct dw_pcie;
+ struct dw_pcie_ep;
+@@ -192,8 +195,8 @@ struct dw_pcie_ep {
+ 	size_t			page_size;
+ 	u8			bar_to_atu[6];
+ 	phys_addr_t		*outbound_addr;
+-	unsigned long		ib_window_map;
+-	unsigned long		ob_window_map;
++	DECLARE_BITMAP(ib_window_map, MAX_IATUS);
++	DECLARE_BITMAP(ob_window_map, MAX_IATUS);
+ 	u32			num_ib_windows;
+ 	u32			num_ob_windows;
+ };
+-- 
+2.14.2
