@@ -1,42 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:55606 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751568AbdKMHvD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Nov 2017 02:51:03 -0500
-Date: Mon, 13 Nov 2017 08:50:58 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-        Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V3] PCI: rcar: Use runtime PM to control controller clock
-Message-ID: <20171113075058.ixqqgqxanrpqthjk@verge.net.au>
-References: <20171110215411.31912-1-marek.vasut+renesas@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V2 2/7] PCI: handle FLR failure and allow other reset types
+Date: Mon, 27 Nov 2017 01:20:23 -0500
+Message-Id: <1511763628-11856-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
+References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171110215411.31912-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 10:54:11PM +0100, Marek Vasut wrote:
-> From: Dien Pham <dien.pham.ry@rvc.renesas.com>
-> 
-> The controller clock can be switched off during suspend/resume,
-> let runtime PM take care of that.
-> 
-> Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
-> Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> To: linux-pci@vger.kernel.org
+pci_flr_wait() and pci_af_flr() functions assume graceful return even
+though the device is inaccessible under error conditions.
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+Return -ENOTTY in error cases so that __pci_reset_function_locked() can
+try other reset types if AF_FLR/FLR reset fails.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pci.c   | 18 ++++++++++--------
+ include/linux/pci.h |  2 +-
+ 2 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 23681f4..27ec45d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3820,7 +3820,7 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+ 
+-static void pci_flr_wait(struct pci_dev *dev)
++static int pci_flr_wait(struct pci_dev *dev)
+ {
+ 	int delay = 1, timeout = 60000;
+ 	u32 id;
+@@ -3849,7 +3849,7 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 		if (delay > timeout) {
+ 			dev_warn(&dev->dev, "not ready %dms after FLR; giving up\n",
+ 				 100 + delay - 1);
+-			return;
++			return -ENOTTY;
+ 		}
+ 
+ 		if (delay > 1000)
+@@ -3863,6 +3863,8 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 
+ 	if (delay > 1000)
+ 		dev_info(&dev->dev, "ready %dms after FLR\n", 100 + delay - 1);
++
++	return 0;
+ }
+ 
+ /**
+@@ -3891,13 +3893,13 @@ static bool pcie_has_flr(struct pci_dev *dev)
+  * device supports FLR before calling this function, e.g. by using the
+  * pcie_has_flr() helper.
+  */
+-void pcie_flr(struct pci_dev *dev)
++int pcie_flr(struct pci_dev *dev)
+ {
+ 	if (!pci_wait_for_pending_transaction(dev))
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+ 
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+-	pci_flr_wait(dev);
++	return pci_flr_wait(dev);
+ }
+ EXPORT_SYMBOL_GPL(pcie_flr);
+ 
+@@ -3930,8 +3932,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
+ 
+ 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+-	pci_flr_wait(dev);
+-	return 0;
++	return pci_flr_wait(dev);
+ }
+ 
+ /**
+@@ -4203,8 +4204,9 @@ int __pci_reset_function_locked(struct pci_dev *dev)
+ 	if (rc != -ENOTTY)
+ 		return rc;
+ 	if (pcie_has_flr(dev)) {
+-		pcie_flr(dev);
+-		return 0;
++		rc = pcie_flr(dev);
++		if (rc != -ENOTTY)
++			return rc;
+ 	}
+ 	rc = pci_af_flr(dev, 0);
+ 	if (rc != -ENOTTY)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d16a7c0..354b018 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1089,7 +1089,7 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
+-void pcie_flr(struct pci_dev *dev);
++int pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
