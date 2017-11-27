@@ -1,130 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:55516 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751587AbdKBRT5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 13:19:57 -0400
-Date: Thu, 2 Nov 2017 18:19:56 +0100
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Subject: [PATCH v3] pci/switchtec: Don't use completion's wait queue
-Message-ID: <20171102171955.lvnvqnwl4qwhlmdk@linutronix.de>
-References: <20171004095007.19148-1-bigeasy@linutronix.de>
- <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
- <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
- <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
- <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
- <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Tobias Klauser <tklauser@distanz.ch>,
+        Eric Dumazet <edumazet@google.com>,
+        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V3 15/29] pch_gbe: deprecate pci_get_bus_and_slot()
+Date: Mon, 27 Nov 2017 11:57:52 -0500
+Message-Id: <1511801886-6753-16-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The poll callback is using completion's wait_queue_head_t member and
-puts it in poll_wait() so the poll() caller gets a wakeup after command
-completed. This does not work on RT because we don't have a
-wait_queue_head_t in our completion implementation. Nobody in tree does
-like that in tree so this is the only driver that breaks.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Instead of using the completion here is waitqueue with a status flag as
-suggested by Logan.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-I don't have the HW so I have no idea if it works as expected, so please
-test it.
+Use the domain information from pdev while calling into
+pci_get_domain_bus_and_slot() function.
 
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
-v2…v3: add a READ_ONCE while accessing ->cmd_done
+ drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
- drivers/pci/switch/switchtec.c |   22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -306,10 +306,11 @@ struct switchtec_user {
+diff --git a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
+index 5ae9681..4be7806 100644
+--- a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
++++ b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
+@@ -2603,8 +2603,10 @@ static int pch_gbe_probe(struct pci_dev *pdev,
+ 	if (adapter->pdata && adapter->pdata->platform_init)
+ 		adapter->pdata->platform_init(pdev);
  
- 	enum mrpc_state state;
+-	adapter->ptp_pdev = pci_get_bus_and_slot(adapter->pdev->bus->number,
+-					       PCI_DEVFN(12, 4));
++	adapter->ptp_pdev =
++		pci_get_domain_bus_and_slot(pci_domain_nr(adapter->pdev->bus),
++					    adapter->pdev->bus->number,
++					    PCI_DEVFN(12, 4));
  
--	struct completion comp;
-+	wait_queue_head_t cmd_comp;
- 	struct kref kref;
- 	struct list_head list;
- 
-+	bool cmd_done;
- 	u32 cmd;
- 	u32 status;
- 	u32 return_code;
-@@ -331,7 +332,7 @@ static struct switchtec_user *stuser_cre
- 	stuser->stdev = stdev;
- 	kref_init(&stuser->kref);
- 	INIT_LIST_HEAD(&stuser->list);
--	init_completion(&stuser->comp);
-+	init_waitqueue_head(&stuser->cmd_comp);
- 	stuser->event_cnt = atomic_read(&stdev->event_cnt);
- 
- 	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
-@@ -414,7 +415,7 @@ static int mrpc_queue_cmd(struct switcht
- 	kref_get(&stuser->kref);
- 	stuser->read_len = sizeof(stuser->data);
- 	stuser_set_state(stuser, MRPC_QUEUED);
--	init_completion(&stuser->comp);
-+	stuser->cmd_done = false;
- 	list_add_tail(&stuser->list, &stdev->mrpc_queue);
- 
- 	mrpc_cmd_submit(stdev);
-@@ -451,7 +452,8 @@ static void mrpc_complete_cmd(struct swi
- 		      stuser->read_len);
- 
- out:
--	complete_all(&stuser->comp);
-+	stuser->cmd_done = true;
-+	wake_up_interruptible(&stuser->cmd_comp);
- 	list_del_init(&stuser->list);
- 	stuser_put(stuser);
- 	stdev->mrpc_busy = 0;
-@@ -721,10 +723,11 @@ static ssize_t switchtec_dev_read(struct
- 	mutex_unlock(&stdev->mrpc_mutex);
- 
- 	if (filp->f_flags & O_NONBLOCK) {
--		if (!try_wait_for_completion(&stuser->comp))
-+		if (!READ_ONCE(stuser->cmd_done))
- 			return -EAGAIN;
- 	} else {
--		rc = wait_for_completion_interruptible(&stuser->comp);
-+		rc = wait_event_interruptible(stuser->cmd_comp,
-+					      stuser->cmd_done);
- 		if (rc < 0)
- 			return rc;
- 	}
-@@ -772,7 +775,7 @@ static unsigned int switchtec_dev_poll(s
- 	struct switchtec_dev *stdev = stuser->stdev;
- 	int ret = 0;
- 
--	poll_wait(filp, &stuser->comp.wait, wait);
-+	poll_wait(filp, &stuser->cmd_comp, wait);
- 	poll_wait(filp, &stdev->event_wq, wait);
- 
- 	if (lock_mutex_and_test_alive(stdev))
-@@ -780,7 +783,7 @@ static unsigned int switchtec_dev_poll(s
- 
- 	mutex_unlock(&stdev->mrpc_mutex);
- 
--	if (try_wait_for_completion(&stuser->comp))
-+	if (READ_ONCE(stuser->cmd_done))
- 		ret |= POLLIN | POLLRDNORM;
- 
- 	if (stuser->event_cnt != atomic_read(&stdev->event_cnt))
-@@ -1255,7 +1258,8 @@ static void stdev_kill(struct switchtec_
- 
- 	/* Wake up and kill any users waiting on an MRPC request */
- 	list_for_each_entry_safe(stuser, tmpuser, &stdev->mrpc_queue, list) {
--		complete_all(&stuser->comp);
-+		stuser->cmd_done = true;
-+		wake_up_interruptible(&stuser->cmd_comp);
- 		list_del_init(&stuser->list);
- 		stuser_put(stuser);
- 	}
+ 	netdev->netdev_ops = &pch_gbe_netdev_ops;
+ 	netdev->watchdog_timeo = PCH_GBE_WATCHDOG_PERIOD;
+-- 
+1.9.1
