@@ -1,80 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:46164 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750836AbdKBJN0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2017 05:13:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <20171031223936.27549-15-niklas.cassel@axis.com>
-References: <20171031223936.27549-1-niklas.cassel@axis.com> <20171031223936.27549-15-niklas.cassel@axis.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 2 Nov 2017 10:13:25 +0100
-Message-ID: <CAK8P3a1yGwyZPzd2-usqLe=BiQpdFsyyFOhpP1ZyaCb16rzCSQ@mail.gmail.com>
-Subject: Re: [PATCH v3 14/17] PCI: dwc: artpec6: Add support for endpoint mode
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        Peter Robinson <pbrobinson@gmail.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-arm-kernel@axis.com
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:57064 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932158AbdK0Q67 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 11:58:59 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
+        Ariel Elior <ariel.elior@cavium.com>,
+        everest-linux-l2@cavium.com (supporter:BROADCOM BNX2X 10 GIGABIT
+        ETHERNET DRIVER),
+        netdev@vger.kernel.org (open list:BROADCOM BNX2X 10 GIGABIT ETHERNET
+        DRIVER), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V3 14/29] bnx2x: deprecate pci_get_bus_and_slot()
+Date: Mon, 27 Nov 2017 11:57:51 -0500
+Message-Id: <1511801886-6753-15-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 31, 2017 at 11:39 PM, Niklas Cassel <niklas.cassel@axis.com> wrote:
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-It seems like you are missing a changelog text. Please explain what
-your work is good for
-in any patch you send.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-> V3:
-> * Removed ifdefs around match table and match table data.
-> * Removed ifdefs in probe, use dummy implementations instead.
+Introduce bnx2x_vf_domain() function to extract the domain information
+and save it to VF specific data structure.
 
-I think there is room for more of the same ;-)
+Use the saved domain value while calling pci_get_domain_bus_and_slot().
 
->
-> +#ifdef CONFIG_PCIE_ARTPEC6_HOST
->  static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
->  {
->         struct dw_pcie *pci = artpec6_pcie->pci;
-> @@ -231,11 +257,92 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
->
->         return 0;
->  }
-> +#else
-> +static inline int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
-> +                                       struct platform_device *pdev)
-> +{
-> +       return -ENODEV;
-> +}
-> +#endif
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c | 10 +++++++++-
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.h |  1 +
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-
-Can you try replacing the #ifdef with
-
-
-        if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_HOST))
-                 return -ENODEV;
-
-at the start of artpec6_pcie_enable_interrupts? I think that would improve
-readability here.
-
-> +static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
-> +                              struct platform_device *pdev)
-> +{
-> +       int ret;
-> +       struct dw_pcie_ep *ep;
-> +       struct resource *res;
-> +       struct device *dev = &pdev->dev;
-> +       struct dw_pcie *pci = artpec6_pcie->pci;
-
-The same trick should work here with the other symbol.
-
-        Arnd
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
+index 9ca994d..9f40c23 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
+@@ -812,7 +812,7 @@ static u8 bnx2x_vf_is_pcie_pending(struct bnx2x *bp, u8 abs_vfid)
+ 	if (!vf)
+ 		return false;
+ 
+-	dev = pci_get_bus_and_slot(vf->bus, vf->devfn);
++	dev = pci_get_domain_bus_and_slot(vf->domain, vf->bus, vf->devfn);
+ 	if (dev)
+ 		return bnx2x_is_pcie_pending(dev);
+ 	return false;
+@@ -1041,6 +1041,13 @@ void bnx2x_iov_init_dmae(struct bnx2x *bp)
+ 		REG_WR(bp, DMAE_REG_BACKWARD_COMP_EN, 0);
+ }
+ 
++static int bnx2x_vf_domain(struct bnx2x *bp, int vfid)
++{
++	struct pci_dev *dev = bp->pdev;
++
++	return pci_domain_nr(dev->bus);
++}
++
+ static int bnx2x_vf_bus(struct bnx2x *bp, int vfid)
+ {
+ 	struct pci_dev *dev = bp->pdev;
+@@ -1611,6 +1618,7 @@ int bnx2x_iov_nic_init(struct bnx2x *bp)
+ 		struct bnx2x_virtf *vf = BP_VF(bp, vfid);
+ 
+ 		/* fill in the BDF and bars */
++		vf->domain = bnx2x_vf_domain(bp, vfid);
+ 		vf->bus = bnx2x_vf_bus(bp, vfid);
+ 		vf->devfn = bnx2x_vf_devfn(bp, vfid);
+ 		bnx2x_vf_set_bars(bp, vf);
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.h b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.h
+index 53466f6..eb814c6 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.h
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.h
+@@ -182,6 +182,7 @@ struct bnx2x_virtf {
+ 	u32 error;	/* 0 means all's-well */
+ 
+ 	/* BDF */
++	unsigned int domain;
+ 	unsigned int bus;
+ 	unsigned int devfn;
+ 
+-- 
+1.9.1
