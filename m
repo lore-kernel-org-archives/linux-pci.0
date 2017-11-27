@@ -1,10 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Johan Hovold <johan@kernel.org>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Subject: [PATCH v2] PCI: keystone: fix interrupt-controller-node lookup
-Date: Fri, 17 Nov 2017 14:38:31 +0100
-Message-Id: <20171117133831.1300-1-johan@kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V3 07/29] ibft: deprecate pci_get_bus_and_slot()
+Date: Mon, 27 Nov 2017 11:57:44 -0500
+Message-Id: <1511801886-6753-8-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -12,9 +15,9 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>,
- Johan Hovold <johan@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+Cc: linux-arm-msm@vger.kernel.org, intel-gfx@lists.freedesktop.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Konrad Rzeszutek Wilk <konrad@kernel.org>, Peter Jones <pjones@redhat.com>,
  linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,62 +25,41 @@ Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix child-node lookup during initialisation which was using the wrong
-OF-helper and ended up searching the whole device tree depth-first
-starting at the parent rather than just matching on its children.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-To make things worse, the parent pci node could end up being prematurely
-freed as of_find_node_by_name() drops a reference to its first argument.
-Any matching child interrupt-controller node was also leaked.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
-Cc: stable <stable@vger.kernel.org>     # 3.18
-Acked-by: Murali Karicheri <m-karicheri2@ti.com>
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Johan Hovold <johan@kernel.org>
+We don't search for the device in other domains than zero. This is because
+on x86 platforms the BIOS executes only devices which are in domain 0.
+Furthermore, the iBFT spec doesn't have a domain id field.
+
+Acked-by: Konrad Rzeszutek Wilk <konrad@kernel.org>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
+ drivers/firmware/iscsi_ibft.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-v2
- - amend commit message and mention explicitly that of_find_node_by_name()
-   drops a reference to the start node
- - add Murali's and Lorenzo's acks
-
-
- drivers/pci/dwc/pci-keystone.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-index 5bee3af47588..39405598b22d 100644
---- a/drivers/pci/dwc/pci-keystone.c
-+++ b/drivers/pci/dwc/pci-keystone.c
-@@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
- 	}
- 
- 	/* interrupt controller is in a child node */
--	*np_temp = of_find_node_by_name(np_pcie, controller);
-+	*np_temp = of_get_child_by_name(np_pcie, controller);
- 	if (!(*np_temp)) {
- 		dev_err(dev, "Node for %s is absent\n", controller);
- 		return -EINVAL;
-@@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
- 	temp = of_irq_count(*np_temp);
- 	if (!temp) {
- 		dev_err(dev, "No IRQ entries in %s\n", controller);
-+		of_node_put(*np_temp);
- 		return -EINVAL;
- 	}
- 
-@@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
- 			break;
- 	}
- 
-+	of_node_put(*np_temp);
-+
- 	if (temp) {
- 		*num_irqs = temp;
- 		return 0;
+diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
+index 14042a6..6bc8e66 100644
+--- a/drivers/firmware/iscsi_ibft.c
++++ b/drivers/firmware/iscsi_ibft.c
+@@ -719,8 +719,9 @@ static int __init ibft_create_kobject(struct acpi_table_ibft *header,
+ 		* executes only devices which are in domain 0. Furthermore, the
+ 		* iBFT spec doesn't have a domain id field :-(
+ 		*/
+-		pci_dev = pci_get_bus_and_slot((nic->pci_bdf & 0xff00) >> 8,
+-					       (nic->pci_bdf & 0xff));
++		pci_dev = pci_get_domain_bus_and_slot(0,
++						(nic->pci_bdf & 0xff00) >> 8,
++						(nic->pci_bdf & 0xff));
+ 		if (pci_dev) {
+ 			rc = sysfs_create_link(&boot_kobj->kobj,
+ 					       &pci_dev->dev.kobj, "device");
 -- 
-2.15.0
+1.9.1
 
 
 _______________________________________________
