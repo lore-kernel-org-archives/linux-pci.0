@@ -1,1794 +1,1060 @@
-Return-Path: <SRS0=ilPo=CT=mobiveil.co.in=l.subrahmanya@kernel.org>
-Return-Path: <SRS0=ilPo=CT=mobiveil.co.in=l.subrahmanya@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:34742 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752960AbdK0Tw0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Nov 2017 14:52:26 -0500
+Received: from localhost (173-25-104-53.client.mchsi.com [173.25.104.53])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4045621921
+        for <linux-pci@vger.kernel.org>; Mon, 27 Nov 2017 19:52:23 +0000 (UTC)
+Subject: [PATCH v1] PCI: Clean up whitespace in linux/pci.h, pci/pci.h
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Date: Mon, 27 Nov 2017 13:52:18 -0600
+Message-ID: <20171127195218.21785.62781.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20171109234331.GC7629@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAFZiPx3yvDY-qOkTeakyKuk+G=bXGFxjEvPxeQLy+qW0jwpBiA@mail.gmail.com>
- <0ebbcfea-4186-5987-bdf1-3288a4e1f907@mobiveil.co.in> <20171109234331.GC7629@bhelgaas-glaptop.roam.corp.google.com>
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date: Tue, 21 Nov 2017 17:45:16 +0530
-Message-ID: <CAFZiPx14ABgM8kCxoQVyxS6bbhMpmMmF5+fEg1UEFEgC3RmA2A@mail.gmail.com>
-Subject: Re: [PATCH 1/1 v2 ] PCI: Mobiveil: Add Mobiveil PCIe Host Bridge IP driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Peter W Newton <peter.newton@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
-	"M.h. Lian" <minghuan.lian@nxp.com>, Raj Raina <rajesh.raina@nxp.com>,
-	Rajan Kapoor <rajan.kapoor@nxp.com>, Prabhjot Singh <prabhjot.singh@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-On Fri, Nov 10, 2017 at 5:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Nov 09, 2017 at 05:33:03PM +0530, subrahmanya_lingappa wrote:
->> From f0eef95dec090bd211b398dee52c31c18212be9a Mon Sep 17 00:00:00 2001
->> From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
->> Date: Thu, 9 Nov 2017 01:46:10 -0500
->> Subject: [PATCH 1/1 v2 ] PCI: Mobiveil: Add Mobiveil PCIe Host
->> Bridge IP driver
->>
->> This is the driver for Mobiveil  AXI PCIe Host Bridge Soft IP
->>
->> Cc: bhelgaas@google.com
->>
->> Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
->> ---
->>  .../devicetree/bindings/pci/mobiveil-pcie.txt      |   67 ++
->>  .../devicetree/bindings/vendor-prefixes.txt        |    1 +
->>  MAINTAINERS                                        |    8 +
->>  drivers/pci/host/Kconfig                           |   10 +
->>  drivers/pci/host/Makefile                          |    1 +
->>  drivers/pci/host/pcie-mobiveil.c                   | 1144
->> ++++++++++++++++++++
->>  6 files changed, 1231 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
->>  create mode 100644 drivers/pci/host/pcie-mobiveil.c
->>
->> diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
->> b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
->> new file mode 100644
->> index 0000000..2426cab
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
->> @@ -0,0 +1,67 @@
->> +* mobiveil AXI PCIe Root Port Bridge DT description
->
-> s/mobiveil/Mobiveil/
->
->> +
->> +Required properties:
->> +- #address-cells: Address representation for root ports, set to <3>
->> +- #size-cells: Size representation for root ports, set to <2>
->> +- #interrupt-cells: specifies the number of cells needed to encode an
->> +     interrupt source. The value must be 1.
->> +- compatible: Should contain "mbvl,axi-pcie-host-1.00"
->> +- reg: Should contain AXI PCIe registers location and length
->> +- device_type: must be "pci"
->> +- interrupts: Should contain AXI PCIe interrupt
->> +- interrupt-map-mask,
->> +  interrupt-map: standard PCI properties to define the mapping of the
->> +     PCI interface to interrupt numbers.
->> +- ranges: ranges for the PCI memory regions (I/O space region is not
->> +     supported by hardware)
->> +     Please refer to the standard PCI bus binding document for a more
->> +     detailed explanation
->> +
->> +Optional properties for Zynq/Microblaze:
->
-> I don't think this is specific to Zynq/Microblaze.  I'd remove that
-> text.
->
->> +- bus-range: PCI bus numbers covered
->> +
->> +Interrupt controller child node
->> ++++++++++++++++++++++++++++++++
->> +Required properties:
->> +- interrupt-controller: identifies the node as an interrupt controller
->> +- #address-cells: specifies the number of cells needed to encode an
->> +     address. The value must be 0.
->> +- #interrupt-cells: specifies the number of cells needed to encode an
->> +     interrupt source. The value must be 1.
->> +
->> +NOTE:
->> +The core provides a single interrupt for both INTx/MSI messages. So,
->> +created a interrupt controller node to support 'interrupt-map' DT
->> +functionality.  The driver will create an IRQ domain for this map, decode
->> +the four INTx interrupts in ISR and route them to this domain.
->> +
->> +
->> +Example:
->> +++++++++
->> +     pci_express: axi-pcie@a0000000 {
->> +             #address-cells = <3>;
->> +             #size-cells = <2>;
->> +             #interrupt-cells = <1>;
->> +             compatible = "mbvl,axi-pcie-host-1.00";
->> +             reg =   < 0xa0000000 0x1000
->> +                               0xb0000000 0x00010000
->> +                          0xFF000000 0x200000
->> +                          0xb0010000 0x1000 >;
->
-> It'd be nice to format this as a table to show the natural structure,
-> as you did for interrupt-map below.
->
-> It looks like the conventional style omits the spaces after "<" and
-> before ">".
->
->> +             reg-names = "config_axi_slave",
->> +                            "csr_axi_slave",
->> +                            "gpio_slave",
->> +                            "apb_csr";
->> +
->> +             device_type = "pci";
->> +             interrupt-parent = <&gic>;
->> +             interrupts = < 0 89 4 >;
->> +             interrupt-controller;
->> +             interrupt-map-mask = <0 0 0 7>;
->> +             interrupt-map = <0 0 0 1 &pci_express 1>,
->> +                             <0 0 0 2 &pci_express 2>,
->> +                             <0 0 0 3 &pci_express 3>,
->> +                             <0 0 0 4 &pci_express 4>;
->> +             ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
->> +
->> +     };
->> +
->> diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt
->> b/Documentation/devicetree/bindings/vendor-prefixes.txt
->> index f0a48ea..29172e0 100644
->> --- a/Documentation/devicetree/bindings/vendor-prefixes.txt
->> +++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
->> @@ -179,6 +179,7 @@ msi       Micro-Star International Co. Ltd.
->>  mti  Imagination Technologies Ltd. (formerly MIPS Technologies Inc.)
->>  mundoreader  Mundo Reader S.L.
->>  murata       Murata Manufacturing Co., Ltd.
->> +mbvl Mobiveil Inc.
->
-> Please follow existing indentation style, i.e., looks like there
-> should be a tab after "mbvl".
->
->>  mxicy        Macronix International Co., Ltd.
->>  national     National Semiconductor
->>  nec  NEC LCD Technologies, Ltd.
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index 63cefa6..6f3212e 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -9336,6 +9336,14 @@ F:
->> Documentation/devicetree/bindings/pci/host-generic-pci.txt
->>  F:   drivers/pci/host/pci-host-common.c
->>  F:   drivers/pci/host/pci-host-generic.c
->>
->> +PCI DRIVER FOR ALTERA PCIE IP
->> +M:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
->> +L:   linux-pci@vger.kernel.org
->> +S:   Supported
->> +F:   Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
->> +F:   drivers/pci/host/pcie-mobiveil.c
->
-> Thanks for this; people usually forget to include it.
->
->> +
->> +
->>  PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
->>  M:   Keith Busch <keith.busch@intel.com>
->>  L:   linux-pci@vger.kernel.org
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index 6f1de4f..c6a1209 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -37,6 +37,15 @@ config PCIE_XILINX_NWL
->>        or End Point. The current option selection will only
->>        support root port enabling.
->>
->> +config PCIE_MOBIVEIL
->> +     bool "Mobiveil AXI PCIe host bridge support"
->> +     depends on ARCH_ZYNQMP
->
-> As far as I know; there's nothing in the *code* that requires
-> ARCH_ZYNQMP.  Can you add "|| COMPILE_TEST" here?  That way we can get
-> better compile test coverage.
->
->> +     depends on PCI_MSI_IRQ_DOMAIN
->> +     help
->> +       Say 'Y' here if you want kernel to support the Mobiveil AXI PCIe
->> +       Host Bridge driver.
->> +
->> +
->>  config PCIE_DW_PLAT
->>       bool "Platform bus based DesignWare PCIe Controller"
->>       depends on PCI_MSI_IRQ_DOMAIN
->> @@ -103,6 +112,7 @@ config PCI_HOST_GENERIC
->>         Say Y here if you want to support a simple generic PCI host
->>         controller, such as the one emulated by kvmtool.
->>
->> +
->
-> Spurious blank line addition; remove it.
->
->>  config PCIE_SPEAR13XX
->>       bool "STMicroelectronics SPEAr PCIe controller"
->>       depends on ARCH_SPEAR13XX
->> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
->> index 9b113c2..0f2b5f5 100644
->> --- a/drivers/pci/host/Makefile
->> +++ b/drivers/pci/host/Makefile
->> @@ -16,6 +16,7 @@ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o
->> pci-keystone.o
->>  obj-$(CONFIG_PCIE_XDMA_PL) += pcie-xdma-pl.o
->>  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
->>  obj-$(CONFIG_PCIE_XILINX_NWL) += pcie-xilinx-nwl.o
->> +obj-$(CONFIG_PCIE_MOBIVEIL) += pcie-mobiveil.o
->>  obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
->>  obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
->>  obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
->> diff --git a/drivers/pci/host/pcie-mobiveil.c
->> b/drivers/pci/host/pcie-mobiveil.c
->> new file mode 100644
->> index 0000000..3c1edf6
->> --- /dev/null
->> +++ b/drivers/pci/host/pcie-mobiveil.c
->> @@ -0,0 +1,1144 @@
->> +/*
->> + * PCIe host controller driver for Mobiveil PCIe Host controller
->> + *
->> + * Copyright mobiveil Corporation (C) 2013-2017. All rights reserved
->
-> s/mobiveil/Mobiveil/  (Capitalize it consistently in English text)
->
->> + *
->> + * This program is free software; you can redistribute it and/or modify it
->> + * under the terms and conditions of the GNU General Public License,
->> + * version 2, as published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope it will be useful, but WITHOUT
->> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
->> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
->> License for
->
-> "Patch" complains that this patch is corrupted, I think because this
-> line is wrapped.  Make sure your mailer doesn't wrap any lines.
->
->> + * more details.
->> + *
->> + * You should have received a copy of the GNU General Public
->> License along with
->> + * this program.  If not, see <http://www.gnu.org/licenses/>.
->> + */
->> +
->> +#include <linux/delay.h>
->> +#include <linux/interrupt.h>
->> +#include <linux/irqchip/chained_irq.h>
->> +#include <linux/module.h>
->> +#include <linux/of_address.h>
->> +#include <linux/of_irq.h>
->> +#include <linux/irq.h>
->> +#include <linux/msi.h>
->> +#include <linux/of_pci.h>
->> +#include <linux/pci.h>
->> +#include <linux/platform_device.h>
->> +#include <linux/slab.h>
->> +#include <linux/kernel.h>
->> +#include <linux/irqdomain.h>
->> +#include <linux/init.h>
->> +#include <linux/of_platform.h>
->> +
->> +/*Register Offsets and Bit Positions*/
->
-> Add space after "/*" and before "*/" (also occurs other places).
->
->> +#define BAR_MAP_BASE                0x00000000
->> +#define WIN1_BAR_MAP_DISTANCE       0x8000000
->> +#define WIN2_BAR_MAP_DISTANCE       0x4000000
->> +#define WIN3_BAR_MAP_DISTANCE       0x8000000
->
-> WIN2_BAR_MAP_DISTANCE and WIN3_BAR_MAP_DISTANCE are unused.  In
-> general, omit things that are unused because they add clutter and give
-> the false impression that they *are* used.  If you need them in the
-> future, you can easily add them.
->
->> +#define WIN_NUM_0                   0
->> +#define WIN_NUM_1                   1
->> +#define WIN_NUM_2                   2
->> +#define WIN_NUM_3                   3
->
-> WIN_NUM_2 and WIN_NUM_3 are unused.
->
->> +#define PAB_INTA_POS                 5
->> +#define OP_READ                              0
->> +#define OP_WRITE                     1
->> +
->> +#define WIN_1_SIZE                  (1024 * 1024)
->> +#define WIN_1_BASE                  (0xa0000000)
->> +#define WIN_2_SIZE                  (128 * 1024 * 1024)
->> +#define WIN_2_BASE                  (WIN_1_BASE + WIN_1_SIZE)
->
-> Of the above, only WIN_1_BASE is used.  And it's a single value and
-> doesn't need parentheses around it.
->
->> +#define IB_WIN_SIZE_KB              (1*1024*1024*1024)
->
-> This is a pretty large number of KB.  Is it really accurate?
-> IB_WIN_SIZE_KB = 1G.  1G KB would be 1024GB.
->
->> +#define OB_CFG_WIN_SIZE_KB              (0x0010000/1024)     // 64KB
->> +#define OB_MEM_WIN_SIZE_KB              (0x8000000/1024)     // 128MB
->
-> These are confusing ways to write "64" and "128*1024".
->
->> +/* ltssm_state_status*/
->> +#define LTSSM_STATE_STATUS_REG               0x0404
->> +#define LTSSM_STATUS_CODE_MASK               0x3F
->> +#define LTSSM_STATUS_CODE            0x2D    /* LTSSM Status Code L0 */
->
-> This name (LTSSM_STATUS_CODE) is not very descriptive.  Presumably
-> there are *other* status codes, too, so this should be something like
-> LTSSM_STATUS_L0.
->
->> +#define PAB_CAP_REG                 0x0804
->
-> Unused.
->
->> +#define PAB_CTRL_REG                0x0808
->> +#define AMBA_PIO_ENABLE_BIT          0
->> +#define PEX_PIO_ENABLE_BIT           1
->
-> AMBA_PIO_ENABLE_BIT and PEX_PIO_ENABLE_BIT are unused.
->
-> Looks like you indent the field names below, but not above?  Pick one.
-> I think the indentation is useful.  It's also useful if the field
-> names are related to the register names.  See
-> include/uapi/linux/pci_regs.h for examples.
->
->> +#define PAB_AXI_PIO_CTRL_REG(engine)         (0x0840 + 0x10*engine)
->
-> You only ever use engine 0, so not clear that the "engine" argument is
-> useful.
->
->> +#define  PIO_ENABLE_BIT              0
->
-> Unused.
->
->> +#define  CFG_WINDOW_TYPE             0
->> +#define  IO_WINDOW_TYPE              1
->
-> Unused.
->
->> +#define  MEM_WINDOW_TYPE             2
->> +
->> +#define PAB_PEX_PIO_CTRL_REG         0x08C0
->> +#define PAB_INTP_AMBA_MISC_ENB               0x0B0C
->> +#define PAB_INTP_AMBA_MISC_STAT              0x0B1C
->> +#define  PAB_INTP_INTX_MASK          0x1E0   /* INTx(A-D) */
->> +#define  PAB_INTP_MSI_MASK           0x8
->> +
->> +#define PAB_AXI_AMAP_CTRL_REG(win_num)  (0x0BA0 + 0x10*win_num)
->> +#define PAB_EXT_AXI_AMAP_SIZE(win_num)  (0xBAF0 + 0x4*win_num)
->> +#define  ENABLE_BIT          0
->> +#define  TYPE_BIT            1
->> +#define  AXI_WINDOW_SIZE_BIT         10
->> +
->> +#define PAB_AXI_AMAP_AXI_WIN_REG(win_num)       (0x0BA4 + 0x10*win_num)
->> +#define  AXI_WINDOW_BASE_BIT         2
->> +#define PAB_EXT_AXI_AMAP_AXI_WIN_REG(win_num)   (0x80A0 + 0x4*win_num)
->
-> Unused.
->
->> +#define PAB_AXI_AMAP_PEX_WIN_L_REG(win_num)     (0x0BA8 + 0x10*win_num)
->> +#define  BUS_BIT             24
->> +#define  DEVICE_BIT          19
->> +#define  FUNCTION_BIT                16
->> +#define  REGISTER_BIT                0
->
-> Unused.
->
->> +#define PAB_AXI_AMAP_PEX_WIN_H_REG(win_num) (0x0BAC + 0x10*win_num)
->> +#define PAB_INTP_AXI_PIO_ENB_REG        0xB00
->> +#define PAB_INTP_AXI_PIO_STAT_REG       0xB10
->> +#define PAB_INTP_AXI_PIO_VENID_REG      0x470
->> +#define PAB_INTP_AXI_PIO_DEVID_REG      0x472
->
-> Above four are unused.
->
->> +#define PAB_INTP_AXI_PIO_CLASS_REG      0x474
->> +
->> +#define PAB_PEX_AMAP_CTRL(win_num)      (0x4BA0 + (0x10*win_num))
->> +#define PAB_EXT_PEX_AMAP_SIZEN(win_num) (0xBEF0 + (0x4*win_num))
->> +#define PAB_PEX_AMAP_AXI_WIN(win_num)   (0x4BA4 + (0x10*win_num))
->> +#define PAB_PEX_AMAP_PEX_WIN_L(win_num) (0x4BA8 + (0x10*win_num))
->> +#define PAB_PEX_AMAP_PEX_WIN_H(win_num) (0x4BAC + (0x10*win_num))
->> +
->> +#define INTX_NUM                        4
->
-> Use the existing PCI_NUM_INTX definition instead.
->
->> +#define MOBIVEIL_NUM_MSI_IRQS           16
->> +
->> +#define MSI_BASE_LO_OFFSET           0x04
->> +#define MSI_BASE_HI_OFFSET           0x08
->> +#define MSI_SIZE_OFFSET              0x0c
->> +#define MSI_ENABLE_OFFSET            0x14
->> +#define MSI_ENABLE_BIT_POS           0
->> +#define MSI_STATUS_OFFSET            0x18
->> +#define MSI_STATUS_BIT_POS           0
->> +#define MSI_OCCUPANCY_OFFSET         0x1c
->> +#define MSI_DATA_OFFSET              0x20
->> +#define MSI_ADDR_L_OFFSET            0x24
->> +#define MSI_ADDR_H_OFFSET            0x28
->> +
->> +#define ilog2_u32(num) (__ffs(num)-1)
->> +
->> +/*   local prototypes */
->
-> Don't indent your comments with a tab.  One space is sufficient and
-> typical.  And this prototype isn't needed anyway and should be
-> removed.
->
->> +static irqreturn_t mobiveil_pcie_isr(int irq, void *data);
->> +
->> +/*
->> + *   PCIe port information
->> + */
->> +struct mobiveil_pcie {
->> +     /* platform device pointer */
->> +     struct platform_device *pdev;
->
-> Please put the comments on the same line as the member, e.g.,
->
->   struct platform_device *pdev;    /* platform device pointer */
->
-> Actually, that one was a bad example, because that comment adds no
-> information and should be removed completely.  *Most* of the comments
-> below should be removed.
->
->> +     /* memory  mapped register base for endpoint config access */
->> +     void __iomem *config_axi_slave_base;
->> +     /* memory mapped register  base for root port config access */
->> +     void __iomem *csr_axi_slave_base;
->> +     /* memory mapped GPIO register base for root port config access */
->> +     void __iomem *gpio_slave_base;
->> +     /* memory mapped GPIO register base for root port config access */
->> +     void __iomem *apb_csr_base;
->> +     /* irq domain associated with root port */
->> +     struct irq_domain *irq_domain;
->> +     /* bus range resource */
->> +     struct resource bus_range;
->> +     /* head pointer for all the enumerated resources */
->> +     struct list_head resources;
->> +     /*  Virtual and physical addresses of the MSI data */
->> +     int *msi_pages;
->> +     int *msi_pages_phys;
->> +     /* Root port bus number */
->> +     u8 root_bus_nr;
->> +     /* IRQ number */
->> +     int irq;
->> +};
->> +
->> +/*
->> + *   union pab_pex_amap_ctrl_t - PAB_PEX_AMAP register bitfields
->> + */
->> +__packed union pab_pex_amap_ctrl_t{
->> +     int dw;
->> +
->> +     __packed struct {
->> +
->> +             int enable:1;
->> +             int type:2;
->> +             int no_snoop_ov_en:1;
->> +             int no_snoop:1;
->> +             int rsvd:5;
->> +             int size:22;
->> +     };
->> +};
->
-> Unions are klunky and unconventional.  Just #define some fields like
-> you do above.
->
->> +/*
->> + *   union pab_ctrl_t - PAB_CTRL register bitfields
->> + */
->> +__packed union pab_ctrl_t{
->> +     int dw;
->> +
->> +     __packed struct {
->> +
->> +             int amba_pio:1;
->> +             int pex_pio:1;
->> +             int wdma:1;
->> +             int rdma:1;
->> +             int axi_max_burst_len:2;
->> +             int rsvd:1;
->> +             int dma_pio_arb:1;
->> +             int prefetch_depth:2;
->> +             int mrrs:3;
->> +             int pg_sel:6;
->> +             int func_sel:9;
->> +             int res1:1;
->> +             int msi_sw_ctrl_en:1;
->> +             int res2:2;
->> +     };
->> +};
->> +
->> +/*   global variables  */
->> +
->> +u32 serving_interrupt = 0, max_msi_allocated = 0;
->
-> Making these global is bad style because it means you're limited to a
-> single device instance.
->
->> +u32 msi_ints = 0, msi_msgs = 0;
->
-> Not used at all; remove these.
->
->> +static DECLARE_BITMAP(msi_irq_in_use, MOBIVEIL_NUM_MSI_IRQS);
->
-> This should be a member of struct mobiveil_pcie, not a global.
->
->> +
->> +/*
->> + *   csr_writel - routine to write one DWORD to memory mapper register
->
-> s/mapper/mapped/ (also below)
->
-> Actually, I think these function comments are superfluous, too.  They
-> take up space and don't add any useful information.
->
->> + *
->> + *   @pcie :   pointer to root port
->> + *   @value:   value to be written to register
->> + *   @reg  :   register offset
->> + */
->> +static inline void csr_writel(struct mobiveil_pcie *pcie, const u32 value,
->> +                           const u32 reg)
->> +{
->> +     writel_relaxed(value, pcie->csr_axi_slave_base + reg);
->> +}
->> +
->> +/*
->> + *   csr_readl - routine to read one DWORD from memory mapper register
->> + *
->> + *   @pcie :    pointer to root port
->> + *   @reg  :    register offset
->> + */
->> +
->> +static inline u32 csr_readl(struct mobiveil_pcie *pcie, const u32 reg)
->> +{
->> +     return readl_relaxed(pcie->csr_axi_slave_base + reg);
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_link_is_up - routine to check if PCIe link is up
->> + *
->> + *   @pcie :    pointer to root port
->> + */
->> +
->> +static bool mobiveil_pcie_link_is_up(struct mobiveil_pcie *pcie)
->
-> Rename to mobiveil_pcie_link_up().  The altera and xilinx drivers are
-> the oddballs here and should be renamed.  All the others use
-> .*_pcie_link_up().
->
->> +{
->> +     return (csr_readl(pcie, LTSSM_STATE_STATUS_REG) &
->> +             LTSSM_STATUS_CODE_MASK) == LTSSM_STATUS_CODE;
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_valid_device - routine to check if a valid device/function
->> + *   is present on the bu
->> + *
->> + *   @pcie :    pointer to root por
->> + */
->
-> I'd say this comment is pointless, but if you keep it,
-> s/bu/bus/
-> s/por/port/
->
->> +static bool mobiveil_pcie_valid_device(struct pci_bus *bus, u32 devfn)
->> +{
->> +     struct mobiveil_pcie *pcie = bus->sysdata;
->> +
->> +     /* Check if link is up when trying to access downstream ports */
->> +     if (bus->number != pcie->root_bus_nr)
->> +             if (!mobiveil_pcie_link_is_up(pcie))
->> +                     return false;
->> +
->> +     /* Only one device down on each root port */
->> +     if ((bus->number == pcie->root_bus_nr) && (devfn > 0))
->> +             return false;
->> +
->> +     /* Do not read more than one device on the bus directly
->> +      * attached to RC
->> +      */
->> +     if ((bus->primary == pcie->root_bus_nr) && (devfn > 0))
->> +             return false;
->> +
->> +     return true;
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_map_bus - routine to get the configuration base of either
->> + *   root port or endpoin
->> + *
->> + *   @bus  :   pointer to local bu
->> + *   @devfn:   variable containing the device and function number
->> + *   @where:   register offse
->> + */
->
-> Again the comment is unnecessary, but,
-> s/endpoin/endpoint/
-> s/bu/bus/
-> s/offse/offset/
->
->> +static void __iomem *mobiveil_pcie_map_bus(struct pci_bus *bus,
->> +                                        u32 devfn, int where)
->> +{
->> +     struct mobiveil_pcie *pcie = bus->sysdata;
->> +     void __iomem *addr = NULL;
->> +
->> +     if (!mobiveil_pcie_valid_device(bus, devfn))
->> +             return NULL;
->> +
->> +     if (bus->number == pcie->root_bus_nr) {
->> +             /* RC config access (in CSR space) */
->> +             addr = pcie->csr_axi_slave_base + where;
->
->   if (bus->number == pcie->root_bus_nr)
->     return pcie->csr_axi_slave_base + where;
->
->   /* Relies on pci_lock serialization */
->   value = csr_readl(pcie, PAB_AXI_AMAP_PEX_WIN_L_REG(0));
->   ...
->   return pcie->config_axi_slave_base + where;
->
->> +     } else {
->> +             /* EP config access (in Config/APIO space) */
->> +             u32 value;
->> +
->> +             /* Program PEX Address base (31..16 bits) with appropriate value
->> +              * (BDF) in PAB_AXI_AMAP_PEX_WIN_L0 Register
->> +              */
->> +             value = csr_readl(pcie, PAB_AXI_AMAP_PEX_WIN_L_REG(0));
->> +             csr_writel(pcie,
->> +                        bus->
->> +                        number << BUS_BIT | (devfn >> 3) << DEVICE_BIT |
->> +                        (devfn & 7) << FUNCTION_BIT,
->> +                        PAB_AXI_AMAP_PEX_WIN_L_REG(0));
->> +             addr = pcie->config_axi_slave_base + where;
->> +     }
->> +     return addr;
->> +}
->> +
->> +/*   PCIe operations */
->
-> Unnecessary comment.
->
->> +static struct pci_ops mobiveil_pcie_ops = {
->> +     .map_bus = mobiveil_pcie_map_bus,
->> +     .read = pci_generic_config_read,
->> +     .write = pci_generic_config_write,
->> +};
->> +
->> +/*
->> + *   mobiveil_pcie_isr - interrupt handler for root complex
->> + *
->> + *   @irq    : IRQ numbe
->> + *   @data   : pointer to driver specific data
->> + */
->
-> Unnecessary comment, but
-> s/numbe/number/
->
->> +static irqreturn_t mobiveil_pcie_isr(int irq, void *data)
->> +{
->> +     struct mobiveil_pcie *pcie;
->
->   struct mobiveil_pcie *pcie = data;
->
->> +     u32 status, shifted_status, status2;
->> +     u32 bit1 = 0, virq = 0;
->
-> No need to initialize virq.
->
->> +     u32 val, mask;
->> +
->> +     if (serving_interrupt == 0)
->> +             serving_interrupt = 1;
->> +     else
->> +             return IRQ_NONE;
->
-> Bogus.  I don't know what you're doing here, but you can't use a
-> global variable like this.
->
->> +
->> +     pcie = (struct mobiveil_pcie *)data;
->> +
->> +     val = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
->> +     status2 = readl(pcie->apb_csr_base + MSI_STATUS_OFFSET);
->> +     mask = csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
->> +     status = val & mask;
->> +
->> +     if (status & PAB_INTP_INTX_MASK) {
->> +             while ((shifted_status =
->> +                     (csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT) >>
->> +                      PAB_INTA_POS)) != 0) {
->> +                     for_each_set_bit(bit1, &shifted_status, INTX_NUM) {
->> +                             /* clear interrupts */
->> +                             csr_writel(pcie, shifted_status << PAB_INTA_POS,
->> +                                        PAB_INTP_AMBA_MISC_STAT);
->> +
->> +                             virq =
->> +                                 irq_find_mapping(pcie->irq_domain,
->> +                                                  bit1 + 1);
->> +                             if (virq)
->> +                                     generic_handle_irq(virq);
->> +                             else
->> +                                     dev_err(&pcie->pdev->dev,
->> +                                             "unexpected IRQ, INT%d\n",
->> +                                             bit1);
->> +
->> +                     }
->> +                     shifted_status = 0;
->> +             }
->> +     }
->> +
->> +     if ((status & PAB_INTP_MSI_MASK)
->> +         || (status2 & (1 << MSI_STATUS_BIT_POS))) {
->> +             u32 fifo_occ = 0;
->> +             u32 msi_addr_l = 0, msi_addr_h = 0, msi_data = 0;
->
-> No need to initialize any of these variables.
->
->> +
->> +             do {
->> +                     fifo_occ = readl(pcie->apb_csr_base
->> +                                     + MSI_OCCUPANCY_OFFSET);
->> +                     msi_data = readl(pcie->apb_csr_base
->> +                                     + MSI_DATA_OFFSET);
->> +                     msi_addr_l = readl(pcie->apb_csr_base
->> +                                     + MSI_ADDR_L_OFFSET);
->> +                     msi_addr_h = readl(pcie->apb_csr_base
->> +                                     + MSI_ADDR_H_OFFSET);
->> +                     /* Handle MSI */
->> +                     if (msi_data)
->> +                             generic_handle_irq(msi_data);
->> +                     else
->> +                             dev_err(&pcie->pdev->dev, "MSI data null\n");
->> +
->> +                     status2 = readl(pcie->apb_csr_base + MSI_STATUS_OFFSET);
->> +             } while ((status2 & (1 << MSI_STATUS_BIT_POS)));
->> +     }
->> +
->> +     csr_writel(pcie, status, PAB_INTP_AMBA_MISC_STAT);
->> +     serving_interrupt = 0;
->> +     return IRQ_HANDLED;
->> +}
->> +
->> +/*
->> + *   map_resource_base - routine to parse the device tree memory resource
->> + *   and remap it; returns the remapped address.
->> + *
->> + *   @pcie       : pointer to root port
->> + *   @res_name   : pointer to the device tree resource name
->> + *
->> + */
->> +void __iomem *map_resource_base(struct mobiveil_pcie *pcie, s8 *res_name)
->
-> Must be static.  Actually, I think you should just inline this
-> function at its callers.  The common pattern is:
->
->   res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config_axi_slave");
->   pcie->config_axi_slave_base = devm_ioremap_resource(dev, res);
->   if (IS_ERR(pcie->config_axi_slave_base))
->     return PTR_ERR(pcie->config_axi_slave_base);
->
-> If you do that at the caller, it's shorter and clearer than what you
-> have here.
->
->> +{
->> +     struct platform_device *pdev = pcie->pdev;
->> +     struct resource *res;
->> +     void __iomem *res_base;
->> +
->> +     /* read  resource */
->
-> Unnecessary comments.
->
->> +     res = platform_get_resource_byname(pdev, IORESOURCE_MEM, res_name);
->> +     if (!res) {
->> +             dev_err(&pdev->dev, "no %s memory resource defined\n",
->> +                     res_name);
->> +             return res;
->> +     }
->> +
->> +     /* remap  resource */
->> +     res_base = devm_ioremap_resource(&pdev->dev, res);
->> +     if (IS_ERR(res_base)) {
->> +             dev_err(&pdev->dev, "failed to map %s memory\n", res_name);
->> +             return res_base;
->> +     }
->> +
->> +     return res_base;
->> +}
->> +
->> +/*
->> + *   remap_reg_base - routine to parse the device tree registers base
->> + *   resource and remap it.
->> + *
->> + *   @pcie       : pointer to root port
->> + *   @res_name   : pointer to the device tree resource name
->> + *
->> + *   returns the remapped address
->> + *
->> + */
->> +void __iomem *remap_reg_base(struct mobiveil_pcie *pcie, s8 *res_name)
->> +{
->> +
->> +     struct platform_device *pdev = pcie->pdev;
->> +     struct resource *res;
->> +     void __iomem *res_base;
->> +
->> +     /* read  resource */
->> +     res = platform_get_resource_byname(pdev, IORESOURCE_MEM, res_name);
->> +     if (!res) {
->> +             dev_err(&pdev->dev, "no %s memory resource defined\n",
->> +                     res_name);
->> +             return res;
->> +     }
->> +
->> +     /* remap  resource */
->> +     res_base = ioremap_nocache(res->start, resource_size(res));
->
-> Inline this as above, and use devm_ioremap_nocache(), not
-> ioremap_nocache().
->
->> +     if (IS_ERR(res_base)) {
->> +             dev_err(&pdev->dev, "failed to map %s memory\n", res_name);
->> +             return res_base;
->> +     }
->> +
->> +     return res_base;
->> +}
->> +
->> +/*
->> + *   pcie_request_irq - Routrine to parse the device tree and map the
->> + *   IRQ number.
->> + *
->> + *   @pcie       : pointer to root port
->> + *
->> + *   returns the mapped IRQ number
->> + */
->
-> Remove comment, or at least
-> s/Routrine/routine/
->
->> +int pcie_request_irq(struct mobiveil_pcie *pcie)
->
-> Inline into mobiveil_pcie_parse_dt(), as xilinx_pcie_parse_dt() does.
-> Use the same error checking as xilinx_pcie_parse_dt() does.  Or if
-> that one is buggy, fix them both.
->
->> +{
->> +     struct platform_device *pdev = pcie->pdev;
->> +     struct device *dev = &pcie->pdev->dev;
->> +     struct device_node *node = dev->of_node;
->> +     int ret = 0, irq = 0;
->> +
->> +     /* map IRQ */
->> +     irq = irq_of_parse_and_map(node, 0);
->> +     if (irq <= 0) {
->> +             dev_err(&pdev->dev, "failed to get IRQ: %d\n", irq);
->> +             return -EINVAL;
->> +     }
->> +     ret = devm_request_irq(&pdev->dev, irq, mobiveil_pcie_isr,
->> +                            IRQF_SHARED | IRQF_NO_THREAD,
->> +                            "mobiveil-pcie", pcie);
->> +     if (ret) {
->> +             dev_err(&pdev->dev, "unable to request irq %d\n", irq);
->
-> s/irq/IRQ/ in the error message.
->
->> +             return ret;
->> +
->> +     }
->> +
->> +     return irq;
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_parse_dt - routine to parse the device tree structure and
->> + *   extract the resource info
->> + *
->> + *   @pcie :    pointer to root port
->> + */
->> +
->> +static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
->> +{
->> +     struct device *dev = &pcie->pdev->dev;
->> +     struct device_node *node = dev->of_node;
->> +     const s8 *type;
->> +
->> +     type = of_get_property(node, "device_type", NULL);
->> +     if (!type || strcmp(type, "pci")) {
->> +             dev_err(dev, "invalid \"device_type\" %s\n", type);
->> +             return -EINVAL;
->> +     }
->> +
->> +     /* map config resource */
->> +     pcie->config_axi_slave_base =
->> +             map_resource_base(pcie, "config_axi_slave");
->> +     if (IS_ERR(pcie->config_axi_slave_base))
->> +             return PTR_ERR(pcie->config_axi_slave_base);
->> +
->> +     /* map csr resource */
->> +     pcie->csr_axi_slave_base = map_resource_base(pcie, "csr_axi_slave");
->> +     if (IS_ERR(pcie->csr_axi_slave_base))
->> +             return PTR_ERR(pcie->csr_axi_slave_base);
->> +
->> +     /* map gpio resource */
->> +     pcie->gpio_slave_base = remap_reg_base(pcie, "gpio_slave");
->> +     if (IS_ERR(pcie->gpio_slave_base))
->> +             return PTR_ERR(pcie->gpio_slave_base);
->> +
->> +     /* map gpio resource */
->> +     pcie->apb_csr_base = remap_reg_base(pcie, "apb_csr");
->> +     if (IS_ERR(pcie->apb_csr_base))
->> +             return PTR_ERR(pcie->gpio_slave_base);
->> +
->> +     /* map IRQ resource */
->> +     pcie->irq = pcie_request_irq(pcie);
->> +     if (pcie->irq  < 0)
->> +             return pcie->irq;
->> +
->> +     return 0;
->> +}
->> +
->> +/*
->> + *   access_paged_register - routine to access paged register of root complex
->> + *
->> + *   @pcie   : pointer to rootport
->> + *   @write  : type of operation flag
->> + *   @val    : value to be written to the register
->> + *   @offset : full offset of the register address
->> + *
->> + *   registers of RC are paged, with pg_sel field of the PAB_CTRL_REG
->> + *   register needs to be updated with page of the register, before
->> + *   accessing least significant 10 bits offset
->> + *
->> + *   This routine does the PAB_CTRL_REG updation and split access of the
->> + *   offset
->> + *
->> + *
->
-> Remove the above two unnecessary blank lines.
->
->> + */
->> +u32 access_paged_register(struct mobiveil_pcie *pcie,
->
-> Must be static.
->
->> +                                u32 write, u32 val,
->> +                                u32 offset)
->
-> Fill lines with parameters.  These would fit on two lines instead of
-> three.
->
->> +{
->> +     union pab_ctrl_t pab_ctrl;
->> +     u32 off = (offset & 0x3FF) + 0xC00;
->> +
->> +     pab_ctrl.dw = csr_readl(pcie, PAB_CTRL_REG);
->> +     pab_ctrl.pg_sel = (offset >> 10) & 0x3F;
->> +     csr_writel(pcie, pab_ctrl.dw, PAB_CTRL_REG);
->> +
->> +     if (write == OP_WRITE)
->> +             csr_writel(pcie, val, off);
->> +     else
->> +             return csr_readl(pcie, off);
->> +     return 0;
->
-> This function should be void if there's no possibility of a failure
-> return.
->
->> +}
->> +
->> +/*
->> + *   program_ib_windows - routine to program the inbound windows of
->> + *   Rootport
->> + *
->> + *   @pcie   : pointer to rootpor
->> + */
->> +void program_ib_windows(struct mobiveil_pcie *pcie)
->
-> Must be static.
->
->> +{
->> +     int value;
->> +     int window = WIN_NUM_1;
->> +     union pab_pex_amap_ctrl_t amap_ctrl;
->> +     int ib_start = 0;
->> +     int size_kb = IB_WIN_SIZE_KB;
->> +
->> +     u64 size64 = (-1 << (AXI_WINDOW_SIZE_BIT + ilog2_u32(size_kb)));
->> +
->> +     value = csr_readl(pcie, PAB_PEX_PIO_CTRL_REG);
->> +     csr_writel(pcie, value | 0x01, PAB_PEX_PIO_CTRL_REG);
->> +
->> +     amap_ctrl.dw =
->> +         access_paged_register(pcie, OP_READ, 0, PAB_PEX_AMAP_CTRL(window));
->> +     amap_ctrl.enable = 1;
->> +     amap_ctrl.type = 2;     /* 0: interrupt, 2: prefetchable memory */
->> +     access_paged_register(pcie, OP_WRITE,
->> +                           amap_ctrl.dw | (size64 & 0xFFFFFFFF),
->> +                           PAB_PEX_AMAP_CTRL(window));
->> +     access_paged_register(pcie, OP_WRITE, (size64 >> 32),
->> +                           PAB_EXT_PEX_AMAP_SIZEN(window));
->> +
->> +     access_paged_register(pcie, OP_WRITE, ib_start,
->> +                           PAB_PEX_AMAP_AXI_WIN(window));
->> +     access_paged_register(pcie, OP_WRITE, ib_start,
->> +                           PAB_PEX_AMAP_PEX_WIN_L(window));
->> +     access_paged_register(pcie, OP_WRITE, 0x00000000,
->> +                           PAB_PEX_AMAP_PEX_WIN_H(window));
->> +}
->> +
->> +/*
->> + *   program_ob_windows - routine to program the outbound windows of R
->
-> What's R?
->
->> + *
->> + *   @pcie                 : pointer to rootport
->> + *   @win_num              : window number
->> + *   @pci_axi_window_base  : AXI window base
->> + *   @pex_addr_base_lower  : PCI window base
->> + *   @config_io_bit        : flag bit to indecate memory or IO type
->> + *   @size_kb              : window size requester
->> + */
->> +void program_ob_windows(struct mobiveil_pcie *pcie, int win_num,
->> +                     u64 pci_axi_window_base, u64 pex_addr_base_lower,
->> +                     int config_io_bit, int size_kb)
->> +{
->> +     u32 value, type;
->> +     u64 size64 = (-1 << (AXI_WINDOW_SIZE_BIT + ilog2_u32(size_kb)));
->> +
->> +     /* Program Enable Bit to 1, Type Bit to (00) base 2, AXI Window Size Bit
->> +      * to 4 KB in PAB_AXI_AMAP_CTRL Register
->> +      */
->
-> Multi-line comment formatting style is
->
->   /*
->    * Program Enable Bit ...
->    * to 4 KB ...
->    */
->> +     type = config_io_bit;
->> +     value = csr_readl(pcie, PAB_AXI_AMAP_CTRL_REG(win_num));
->> +     csr_writel(pcie,
->> +                1 << ENABLE_BIT | type << TYPE_BIT | (size64 & 0xFFFFFFFF),
->> +                PAB_AXI_AMAP_CTRL_REG(win_num));
->> +     access_paged_register(pcie, OP_WRITE, (size64 >> 32),
->> +                           PAB_EXT_AXI_AMAP_SIZE(win_num));
->> +
->> +     /* Program AXI window base with appropriate value in
->> +      * PAB_AXI_AMAP_AXI_WIN0
->> +      * Register
->> +      */
->
-> Comment formatting style.
->
->> +     value = csr_readl(pcie, PAB_AXI_AMAP_AXI_WIN_REG(win_num));
->> +     csr_writel(pcie,
->> +                pci_axi_window_base >> AXI_WINDOW_BASE_BIT <<
->> +                AXI_WINDOW_BASE_BIT, PAB_AXI_AMAP_AXI_WIN_REG(win_num));
->> +
->> +     value = csr_readl(pcie, PAB_AXI_AMAP_PEX_WIN_H_REG(win_num));
->> +     csr_writel(pcie, pex_addr_base_lower,
->> +                PAB_AXI_AMAP_PEX_WIN_L_REG(win_num));
->> +     csr_writel(pcie, 0, PAB_AXI_AMAP_PEX_WIN_H_REG(win_num));
->> +
->
-> Remove unnecessary blank line.
->
->> +}
->> +
->> +/*
->> + *   gpio_read -  routine to read a GPIO register
->> + *
->> + *   @pcie - pcie root port
->> + *   @addr - register address
->> + *
->> + */
->
-> Unnecessary function comment.
->
->> +int gpio_read(struct mobiveil_pcie *pcie, int addr)
->
-> Must be static.
->
->> +{
->> +     return ioread32(pcie->gpio_slave_base + addr);
->> +}
->> +
->> +/*
->> + *   gpio_write -  routine to write a GPIO register
->> + *
->> + *   @pcie - pcie root port
->> + *   @addr - register address
->> + *
->> + */
->> +void gpio_write(struct mobiveil_pcie *pcie, int val, int addr)
->
-> Static.
->
->> +{
->> +     iowrite32(val, pcie->gpio_slave_base + addr);
->> +     if (val != gpio_read(pcie, addr)) {
->> +             pr_info("ERROR:gpio_write: expected : %x at: %x, found: %x\n ",
->> +                    val, addr, gpio_read(pcie, addr));
->
-> Must use dev_info() (or dev_err()).
->
->> +     }
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_powerup_slot - routine to prepare the RC for config access
->> + *
->> + *   @pcie                 : pointer to rootport
->> + */
->> +void mobiveil_pcie_powerup_slot(struct mobiveil_pcie *pcie)
->
-> Static.
->
->> +{
->> +
->> +     int secs = 0;
->
-> Unnecessary initialization.
->
->> +
->> +     // sent PRESET to the slot
->> +     gpio_write(pcie, 0x80000000, 0xa0344);
->> +     gpio_write(pcie, 0x80000000, 0xa0348);
->> +     gpio_write(pcie, 0x00000000, 0xa0054);
->> +     gpio_write(pcie, 0x80000000, 0xa0054);
->> +     secs = 4;
->> +     pr_info("mobiveil_pcie_powerup_slot: waitring for %d seconds\n", secs);
->
-> Use dev_info().
-> s/waitring/waiting/
->
->> +     mdelay(secs * 1000);
->
-> Seems excessive.  Is there no way you can check for powerup
-> completion?
->
->> +
->
-> Remove blank line.
->
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_setup_csr_for_config_access - routine to prepare the RC
->> + *   for config access
->> + *
->> + *   @pcie                 : pointer to rootport
->> + *
->> + */
->
-> Unnecessary comment.  It basically says what the function name already
-> tells us.  (Plus it's the same comment as for the previous function.)
->
->> +void mobiveil_pcie_setup_csr_for_config_access(struct mobiveil_pcie *pcie)
->
-> Static.
->
->> +{
->> +     u32 value;
->> +     union pab_ctrl_t pab_ctrl;
->> +
->> +     /* Program Bus Master Enable Bit in Command Register in PAB Config
->> +      * Space
->> +      */
->
-> Comment formatting style.
->
->> +     value = csr_readl(pcie, PCI_COMMAND);
->> +     csr_writel(pcie,
->> +                value | PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
->> +                PCI_COMMAND_MASTER, PCI_COMMAND);
->> +
->> +     /* Program PIO Enable Bit to 1 (and PEX PIO Enable to 1) in PAB_CTRL
->> +      * Register
->> +      */
->
-> Style.
->
->> +     pab_ctrl.dw = csr_readl(pcie, PAB_CTRL_REG);
->> +     pab_ctrl.amba_pio = 1;
->> +     pab_ctrl.pex_pio = 1;
->> +     csr_writel(pcie, pab_ctrl.dw, PAB_CTRL_REG);
->> +
->> +     csr_writel(pcie, (PAB_INTP_INTX_MASK | PAB_INTP_MSI_MASK),
->> +                PAB_INTP_AMBA_MISC_ENB);
->> +
->> +     /* Program PIO Enable Bit to 1 and Config Window Enable Bit to 1 in
->> +      * PAB_AXI_PIO_CTRL Register
->> +      */
->
-> Style.
->
->> +     value = csr_readl(pcie, PAB_AXI_PIO_CTRL_REG(0));
->> +     csr_writel(pcie, value | 0xf, PAB_AXI_PIO_CTRL_REG(0));
->> +
->> +     /* Config outbound translation window */
->> +     program_ob_windows(pcie,
->> +                        WIN_NUM_0, WIN_1_BASE,
->> +                        0, CFG_WINDOW_TYPE, OB_CFG_WIN_SIZE_KB);
->> +
->> +     /* Memory outbound translation window */
->> +     program_ob_windows(pcie,
->> +                        WIN_NUM_1, WIN_1_BASE + WIN1_BAR_MAP_DISTANCE,
->> +                        BAR_MAP_BASE, MEM_WINDOW_TYPE, OB_MEM_WIN_SIZE_KB);
->> +
->> +     /* Memory inbound  translation window */
->
-> s/  / /
->
->> +     program_ib_windows(pcie);
->> +
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_intx_map - routine to setup the INTx related data
->> + *   structures
->> + *
->> + *   @domain   : pointer to IRQ domain
->> + *   @irq      : IRQ number
->> + *   @hwirq    : hardware IRQ number
->> + *
->> + */
->
-> Unnecessary function comment.
->
->> +static int mobiveil_pcie_intx_map(struct irq_domain *domain, u32 irq,
->> +                               irq_hw_number_t hwirq)
->> +{
->> +     irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
->> +     irq_set_chip_data(irq, domain->host_data);
->> +     return 0;
->> +}
->> +
->> +/*   INTx domain opeartions structure */
->
-> Unnecessary comment, or
-> s/opeartions/operations/
->
->> +static const struct irq_domain_ops intx_domain_ops = {
->> +     .map = mobiveil_pcie_intx_map,
->> +};
->> +
->> +/*
->> + *   mobiveil_pcie_destroy_msi - Free MSI number
->> + *   @irq: IRQ to be freed
->> + */
->> +static void mobiveil_pcie_destroy_msi(u32 irq)
->> +{
->> +     struct msi_desc *msi;
->> +     struct mobiveil_pcie *pcie;
->> +
->> +     if (!test_bit(irq, msi_irq_in_use)) {
->> +             msi = irq_get_msi_desc(irq);
->> +             pcie = msi_desc_to_pci_sysdata(msi);
->> +             pr_info("Trying to free unused MSI#%d\n", irq);
->
-> dev_err().
->
->> +     } else {
->> +             clear_bit(irq, msi_irq_in_use);
->> +     }
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_assign_msi - Allocate MSI number
->> + *   @pcie: PCIe port structure
->> + *
->> + *   Return: A valid IRQ on success and error value on failure.
->> + */
->> +static int mobiveil_pcie_assign_msi(struct mobiveil_pcie *pcie)
->> +{
->> +     int pos;
->> +
->> +     pos = find_first_zero_bit(msi_irq_in_use, MOBIVEIL_NUM_MSI_IRQS);
->> +     if (pos < MOBIVEIL_NUM_MSI_IRQS)
->> +             set_bit(pos, msi_irq_in_use);
->> +     else
->> +             return -ENOSPC;
->> +
->> +     return pos;
->> +}
->> +
->> +/*
->> + *   mobiveil_msi_teardown_irq - Destroy the MSI
->> + *
->> + *   @chip: MSI Chip descriptor
->> + *   @irq: MSI IRQ to destroy
->> + */
->> +static void mobiveil_msi_teardown_irq(struct msi_controller *chip,
->> +                                   u32 irq)
->> +{
->> +     mobiveil_pcie_destroy_msi(irq);
->
-> xilinx does irq_dispose_mapping(irq) here.  Why don't you?
-> I don't know what the corresponding setup is; maybe it's because
-> xilinx sets it up but you don't?
->
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_msi_setup_irq - routine to compose MSI message descriptor
->> + *
->> + *   @chip   : pointer to MSI controller structure
->> + *   @pdev   : pointer to PCI device
->> + *   @desc   : MSI descriptor to be setup
->> + */
->> +static int mobiveil_pcie_msi_setup_irq(struct msi_controller *chip,
->> +                                    struct pci_dev *pdev,
->> +                                    struct msi_desc *desc)
->> +{
->> +     int hwirq;
->> +     u32 irq;
->> +     struct msi_msg msg;
->> +     phys_addr_t msg_addr;
->> +     struct mobiveil_pcie *pcie = pdev->bus->sysdata;
->> +
->> +     hwirq = mobiveil_pcie_assign_msi(pcie);
->> +     if (hwirq < 0)
->> +             return -EINVAL;
->> +
->> +     irq = irq_create_mapping(pcie->irq_domain, hwirq);
->> +     if (!irq)
->> +             return -EINVAL;
->> +
->> +     irq_set_msi_desc(irq, desc);
->> +
->> +     msg_addr =
->> +         virt_to_phys((void *)pcie->msi_pages + (hwirq * sizeof(int)));
->> +
->> +     msg.address_hi = 0xFFFFFFFF & (msg_addr >> 32);
->> +     msg.address_lo = 0xFFFFFFFF & msg_addr;
->
-> Use upper_32_bits() and lower_32_bits().
->
->> +     msg.data = irq;
->> +
->> +     pci_write_msi_msg(irq, &msg);
->> +     max_msi_allocated++;
->
-> max_msi_allocated is incremented but never used otherwise, so you can
-> remove it.
->
->> +
->> +     return 0;
->> +}
->> +
->> +/* MSI Chip Descriptor */
->
-> Unnecessary comment.
->
->> +static struct msi_controller mobiveil_pcie_msi_chip = {
->> +     .setup_irq = mobiveil_pcie_msi_setup_irq,
->> +     .teardown_irq = mobiveil_msi_teardown_irq,
->> +};
->> +
->> +/* HW Interrupt Chip Descriptor */
->
-> Unnecessary comment.
->
->> +static struct irq_chip mobiveil_msi_irq_chip = {
->> +     .name = "Mobiveil PCIe MSI",
->> +     .irq_enable = pci_msi_unmask_irq,
->> +     .irq_disable = pci_msi_mask_irq,
->> +     .irq_mask = pci_msi_mask_irq,
->> +     .irq_unmask = pci_msi_unmask_irq,
->> +};
->> +
->> +/*
->> + *   mobiveil_pcie_msi_map - routine to initialize MSI data structures
->> + *
->> + *   @domain :   pointer IRQ domain
->> + *   @irq    :   IRQ number
->> + *   @hwirq  :   hardware IRQ number
->> + */
->
-> Unnecessary comment.
->
->> +static int mobiveil_pcie_msi_map(struct irq_domain *domain, u32 irq,
->> +                              irq_hw_number_t hwirq)
->> +{
->> +     irq_set_chip_and_handler(irq, &mobiveil_msi_irq_chip,
->> +                              handle_simple_irq);
->> +     irq_set_chip_data(irq, domain->host_data);
->> +
->> +     return 0;
->> +}
->> +
->> +/*   MSI IRQ Domain operations */
->
-> Unnecessary comment.
->
->> +static const struct irq_domain_ops msi_domain_ops = {
->> +     .map = mobiveil_pcie_msi_map,
->> +};
->> +
->> +/*
->> + *   mobiveil_pcie_enable_msi - Enable MSI support
->> + *   @pcie: PCIe port information
->> + */
->
-> Unnecessary comment.
->
->> +static void mobiveil_pcie_enable_msi(struct mobiveil_pcie *pcie)
->> +{
->> +     phys_addr_t msg_addr;
->> +
->> +     pcie->msi_pages = (void *)__get_free_pages(GFP_DMA, 0);
->
-> This looks like the common pattern of the PCIe host intercepting MSI
-> writes to this address, so the write never actually gets to system
-> memory, so we don't actually need to allocate a page of system memory;
-> we only need a little bus address space.  See
-> https://lkml.kernel.org/r/20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com
->
-> We don't have a good solution for that yet, so I don't have a
-> suggestion and this is just FYI.
->
->> +     msg_addr = virt_to_phys((void *)pcie->msi_pages);
->> +     pcie->msi_pages_phys = (void *)msg_addr;
->> +
->> +     writel_relaxed(msg_addr & 0xFFFFFFFF,
->> +                    pcie->apb_csr_base + MSI_BASE_LO_OFFSET);
->> +     writel_relaxed(msg_addr >> 32,
->> +                     pcie->apb_csr_base + MSI_BASE_HI_OFFSET);
->
-> Use upper_32_bits() and lower_32_bits().
->
->> +     writel_relaxed(4096,
->> +                     pcie->apb_csr_base + MSI_SIZE_OFFSET);
->> +     writel_relaxed(1 << MSI_ENABLE_BIT_POS,
->> +                     pcie->apb_csr_base + MSI_ENABLE_OFFSET);
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_init_irq_domain - routine to setup IRQ domains for
->> + *   both INTx and MSI interrupts
->> + *
->> + *   @pcie : pointer to pci root port
->> + */
->
-> Unnecessary comment.
->
->> +static int mobiveil_pcie_init_irq_domain(struct mobiveil_pcie *pcie)
->> +{
->> +     struct device *dev = &pcie->pdev->dev;
->> +     struct device_node *node = dev->of_node;
->> +
->> +     /* Setup INTx */
->> +     pcie->irq_domain =
->> +         irq_domain_add_linear(node, INTX_NUM + 1, &intx_domain_ops, pcie);
->> +
->> +     if (!pcie->irq_domain) {
->> +             dev_err(dev, "Failed to get a INTx IRQ domain\n");
->> +             return -ENOMEM;
->> +     }
->> +     /* Setup MSI */
->> +     if (IS_ENABLED(CONFIG_PCI_MSI)) {
->> +             pcie->irq_domain = irq_domain_add_linear(node,
->> +                                              MOBIVEIL_NUM_MSI_IRQS,
->> +                                              &msi_domain_ops,
->> +                                              &mobiveil_pcie_msi_chip);
->> +             if (!pcie->irq_domain) {
->> +                     dev_err(dev, "Failed to get a MSI IRQ domain\n");
->> +                     return PTR_ERR(pcie->irq_domain);
->> +             }
->> +
->> +             mobiveil_pcie_enable_msi(pcie);
->> +     }
->> +     return 0;
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_free_irq_domain - routine to free the IRQ domain of
->> + *   the root port
->> + *
->> + *   @pcie : pointer to pci root port
->> + */
->> +static void mobiveil_pcie_free_irq_domain(struct mobiveil_pcie *pcie)
->> +{
->> +     int i;
->> +     u32 irq;
->> +
->> +     for (i = 0; i < INTX_NUM; i++) {
->> +             irq = irq_find_mapping(pcie->irq_domain, i + 1);
->> +             if (irq > 0)
->> +                     irq_dispose_mapping(irq);
->> +     }
->> +     if (pcie->irq_domain)
->> +             irq_domain_remove(pcie->irq_domain);
->> +
->
-> Unnecessary blank line.
->
-> I can't match this function up with similar code in other drivers.
->
-> irq_dispose_mapping() is called by:
->
->   tegra_msi_teardown_irq()
->   tegra_pcie_disable_msi()
->   iproc_msi_exit()
->   mtk_msi_teardown_irq()
->   xilinx_msi_teardown_irq()
->
-> tegra_pcie_disable_msi() and iproc_msi_exit are the most similar.
-> They're the only ones that call it in a loop, but they loop over MSI
-> IRQs, and you're looping over INTx IRQs.
->
-> So I don't know if other drivers are missing something, or this is
-> something unnecessary in *this* driver.
->
-> irq_domain_remove() is called by:
->
->   advk_pcie_remove_msi_irq_domain()
->   advk_pcie_remove_irq_domain()
->   tegra_pcie_disable_msi()
->   xgene_free_domains()
->   altera_free_domains()
->   iproc_msi_free_domains()
->   rockchip_pcie_remove()
->
-> You call this from mobiveil_pcie_remove(), so I guess you could just
-> call irq_domain_remove() directly from there.  And you shouldn't need
-> to check it for NULL because the probe fails if we can't allocation
-> pcie->irq_domain, so we should never get there if it's NULL.
->
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_probe  - probe routine which will get called by kernel
->> + *   once the RC is discovered
->> + *
->> + *   @pdev :  pointer to platform device
->> + */
->
-> Unnecessary comment.
->
->> +static int mobiveil_pcie_probe(struct platform_device *pdev)
->> +{
->> +     struct mobiveil_pcie *pcie;
->> +     struct pci_bus *bus;
->> +     struct pci_bus *child;
->> +     int ret, reset_cnt = 0;
->> +     struct device_node *np = pdev->dev.of_node;
->> +
->> +     resource_size_t iobase = 0;
->> +     LIST_HEAD(res);
->> +
->> +     /* allocate the PCIe port */
->> +     pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
->> +     if (!pcie)
->> +             return -ENOMEM;
->> +
->> +     pcie->pdev = pdev;
->> +
->> +     /* parse the device tree */
->> +     ret = mobiveil_pcie_parse_dt(pcie);
->> +     if (ret) {
->> +             dev_err(&pdev->dev, "Parsing DT failed, ret: %x\n", ret);
->
-> Use a local "struct device *dev" variable to avoid repeating
-> "&pdev->dev".
->
->> +             return ret;
->> +     }
->> +
->> +     if (!mobiveil_pcie_link_is_up(pcie)) {
->> +             /* if FSBL is not patched, link wont be up so lets bring it
->> +              * up by writng DIRM and OEN registers EMIO 6:0 programing
->> +              * sequence [3:0] = Link Width; [6:4] = link Speed. Current
->> +              * setting width=4, speed = 1
->
-> s/wont/won't/
-> s/lets/let's/
-> s/writng/writing/
-> s/programing/programming/
-> s/link Speed/Link Speed/
->
->> +              */
->
-> Comment style.
->
->> +             gpio_write(pcie, 0x7f, 0xa02c4);
->> +             gpio_write(pcie, 0x7f, 0xa02c8);
->> +             gpio_write(pcie, 0x14, 0xa004c);
->> +
->> +             gpio_write(pcie, 0x0200, 0xa0244);
->> +             gpio_write(pcie, 0x0200, 0xa0248);
->> +             gpio_write(pcie, 0x37f7, 0x180208);
->> +             gpio_write(pcie, 0xfdff, 0xa0044);
->> +
->> +             pr_info("waiting for %d seconds\n", 2);
->
-> dev_info().  If it's a constant, no point in using %d.
->
->> +             mdelay(2 * 1000);
->> +             mobiveil_pcie_powerup_slot(pcie);
->> +
->> +             while (!mobiveil_pcie_link_is_up(pcie)) {
->> +                     pr_info("%s: PRESET retry, reset_cnt : %d\n",
->> +                          __func__, reset_cnt++);
->
-> dev_info().
->
->> +                     mobiveil_pcie_powerup_slot(pcie);
->> +             }
->> +
->> +     }
->
-> This looks a little like tegra_pcie_enable_controller() or the
-> dra7xx_pcie_establish_link(), exynos_pcie_establish_link(), etc.,
-> functions.  Please factor this out.  I think the .*_pcie_host_init()
-> and .*_pcie_establish_link() pattern is a good one to follow.
->
->> +
->> +     pr_info("%s: PCIE link is up , resets: %x, state: %x\n",
->> +             __func__,
->> +             reset_cnt,
->> +             csr_readl(pcie, LTSSM_STATE_STATUS_REG)
->> +                             & LTSSM_STATUS_CODE_MASK);
->
-> dev_info().
->
->> +
->> +     INIT_LIST_HEAD(&pcie->resources);
->> +
->> +     /* configure all inbound and outbound windows and prepare the RC for
->> +      * config access
->> +      */
->> +     mobiveil_pcie_setup_csr_for_config_access(pcie);
->> +
->> +     /* fixup for PCIe config space register data */
->> +     csr_writel(pcie, 0x060402AB, PAB_INTP_AXI_PIO_CLASS_REG);
->> +
->> +     /* parse the host bridge base addresses from the device tree file */
->> +     ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &iobase);
->> +     if (ret) {
->> +             dev_err(&pdev->dev, "Getting bridge resources failed\n");
->> +             return -ENOMEM;
->> +     }
->> +
->> +     /* initialize the IRQ domains */
->> +     ret = mobiveil_pcie_init_irq_domain(pcie);
->> +     if (ret) {
->> +             dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
->> +             return ret;
->> +     }
->> +
->> +     /* create the PCIe root bus */
->> +     bus =
->> +         pci_create_root_bus(&pdev->dev, 0, &mobiveil_pcie_ops, pcie, &res);
->> +     if (!bus)
->> +             return -ENOMEM;
->> +
->> +     /* setup MSI, if enabled */
->> +     if (IS_ENABLED(CONFIG_PCI_MSI)) {
->> +             mobiveil_pcie_msi_chip.dev = &pcie->pdev->dev;
->> +             bus->msi = &mobiveil_pcie_msi_chip;
->> +     }
->> +
->> +     /* setup the kernel resources for the newly added PCIe root bus */
->> +     pci_scan_child_bus(bus);
->
-> Use pci_scan_root_bus_bridge().  For example, see
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=123db533072e
->
->> +     pci_assign_unassigned_bus_resources(bus);
->> +
->> +     list_for_each_entry(child, &bus->children, node)
->> +             pcie_bus_configure_settings(child);
->> +
->> +     pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
->
-> pci_scan_root_bus_bridge() also takes care of this pci_fixup_irqs()
-> (which doesn't exist anymore); see
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=6ab380957838
->
-I am testing this driver on a board whcih supports  Xilinx's latest
-Petalinux build environment has
-Linux-4.9 kernel version with all the patches from Xilinx included in
-it. But these pci_scan_root_bus_bridge()
-and friends we added in recent versions will it be ok keeping
-pci_scan_child_bus() for now ?
+Clean up whitespace, capitalization, etc. in comments.  No functional
+change intended.
 
->> +     pci_bus_add_devices(bus);
->> +     platform_set_drvdata(pdev, pcie);
->> +
->> +     pr_info("%s: platform driver registered\n", __func__);
->
-> Remove.
->
->> +     return ret;
->> +}
->> +
->> +/*
->> + *   mobiveil_pcie_remove  - routine which will cleanup the driver removal
->> + *
->> + *   @pdev :  pointer to platform device
->> + */
->> +
->
-> Unnecessary comment.
->
->> +static int mobiveil_pcie_remove(struct platform_device *pdev)
->> +{
->> +     struct mobiveil_pcie *pcie = platform_get_drvdata(pdev);
->> +
->> +     mobiveil_pcie_free_irq_domain(pcie);
->> +     platform_set_drvdata(pdev, NULL);
->
-> Unnecessary.
->
->> +     pr_info("%s: platform driver unregistered\n", __func__);
->
-> Unnecessary pr_info(); remove.
->
->> +     return 0;
->> +}
->> +
->> +/*   device id structure mentioning the compatible string to search for
->> + *   in the device tree
->> + */
->
-> Unnecessary comment.
->
->> +static const struct of_device_id mobiveil_pcie_of_match[] = {
->> +     {.compatible = "mbvl,axi-pcie-host-1.00",},
->> +     {},
->> +};
->> +
->> +MODULE_DEVICE_TABLE(of, mobiveil_pcie_of_match);
->> +
->> +/*   platform driver structure */
->
-> Unnecessary comment.
->
->> +static struct platform_driver mobiveil_pcie_driver = {
->> +     .probe = mobiveil_pcie_probe,
->> +     .remove = mobiveil_pcie_remove,
->> +     .driver = {
->> +                .name = "mobiveil-pcie",
->> +                .of_match_table = mobiveil_pcie_of_match,
->> +                .suppress_bind_attrs = true,
->> +                },
->> +};
->> +
->> +/*   Declare the platform driver */
->
-> Unnecessary comment.
->
->> +builtin_platform_driver(mobiveil_pcie_driver);
->> +
->> +/*   kernel module descriptions */
->
-> Unnecessary comment.
->
->> +MODULE_LICENSE("GPL");
->
-> The header comment claims "GPL v2", but this says just "GPL".  They
-> should match.
->
->> +MODULE_DESCRIPTION("Mobiveil PCIe host controller driver");
->> +MODULE_AUTHOR("Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>");
->> --
->> 1.8.3.1
->>
->>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.h   |   54 +++----
+ include/linux/pci.h |  411 ++++++++++++++++++++++++---------------------------
+ 2 files changed, 222 insertions(+), 243 deletions(-)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f6b58b32a67c..69fc9c1b4668 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -38,21 +38,21 @@ int pci_probe_reset_function(struct pci_dev *dev);
+  * struct pci_platform_pm_ops - Firmware PM callbacks
+  *
+  * @is_manageable: returns 'true' if given device is power manageable by the
+- *                 platform firmware
++ *		   platform firmware
+  *
+  * @set_state: invokes the platform firmware to set the device's power state
+  *
+  * @get_state: queries the platform firmware for a device's current power state
+  *
+  * @choose_state: returns PCI power state of given device preferred by the
+- *                platform; to be used during system-wide transitions from a
+- *                sleeping state to the working state and vice versa
++ *		  platform; to be used during system-wide transitions from a
++ *		  sleeping state to the working state and vice versa
+  *
+  * @set_wakeup: enables/disables wakeup capability for the device
+  *
+  * @need_resume: returns 'true' if the given device (which is currently
+- *		suspended) needs to be resumed to be configured for system
+- *		wakeup.
++ *		 suspended) needs to be resumed to be configured for system
++ *		 wakeup.
+  *
+  * If given platform is generally capable of power managing PCI devices, all of
+  * these callbacks are mandatory.
+@@ -112,7 +112,7 @@ struct pci_vpd_ops {
+ 
+ struct pci_vpd {
+ 	const struct pci_vpd_ops *ops;
+-	struct bin_attribute *attr; /* descriptor for sysfs VPD entry */
++	struct bin_attribute *attr;	/* Descriptor for sysfs VPD entry */
+ 	struct mutex	lock;
+ 	unsigned int	len;
+ 	u16		flag;
+@@ -199,7 +199,7 @@ extern const struct attribute_group *pci_bus_groups[];
+ 
+ /**
+  * pci_match_one_device - Tell if a PCI device structure has a matching
+- *                        PCI device id structure
++ *			  PCI device id structure
+  * @id: single PCI device id structure to match
+  * @dev: the PCI device structure to match against
+  *
+@@ -231,7 +231,7 @@ struct pci_slot_attribute {
+ 
+ enum pci_bar_type {
+ 	pci_bar_unknown,	/* Standard PCI BAR probe */
+-	pci_bar_io,		/* An io port BAR */
++	pci_bar_io,		/* An I/O port BAR */
+ 	pci_bar_mem32,		/* A 32-bit memory BAR */
+ 	pci_bar_mem64,		/* A 64-bit memory BAR */
+ };
+@@ -255,24 +255,24 @@ void pci_disable_bridge_window(struct pci_dev *dev);
+ 
+ /* Single Root I/O Virtualization */
+ struct pci_sriov {
+-	int pos;		/* capability position */
+-	int nres;		/* number of resources */
+-	u32 cap;		/* SR-IOV Capabilities */
+-	u16 ctrl;		/* SR-IOV Control */
+-	u16 total_VFs;		/* total VFs associated with the PF */
+-	u16 initial_VFs;	/* initial VFs associated with the PF */
+-	u16 num_VFs;		/* number of VFs available */
+-	u16 offset;		/* first VF Routing ID offset */
+-	u16 stride;		/* following VF stride */
+-	u16 vf_device;		/* VF device ID */
+-	u32 pgsz;		/* page size for BAR alignment */
+-	u8 link;		/* Function Dependency Link */
+-	u8 max_VF_buses;	/* max buses consumed by VFs */
+-	u16 driver_max_VFs;	/* max num VFs driver supports */
+-	struct pci_dev *dev;	/* lowest numbered PF */
+-	struct pci_dev *self;	/* this PF */
+-	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+-	bool drivers_autoprobe;	/* auto probing of VFs by driver */
++	int		pos;		/* Capability position */
++	int		nres;		/* Number of resources */
++	u32		cap;		/* SR-IOV Capabilities */
++	u16		ctrl;		/* SR-IOV Control */
++	u16		total_VFs;	/* Total VFs associated with the PF */
++	u16		initial_VFs;	/* Initial VFs associated with the PF */
++	u16		num_VFs;	/* Number of VFs available */
++	u16		offset;		/* First VF Routing ID offset */
++	u16		stride;		/* Following VF stride */
++	u16		vf_device;	/* VF device ID */
++	u32		pgsz;		/* Page size for BAR alignment */
++	u8		link;		/* Function Dependency Link */
++	u8		max_VF_buses;	/* Max buses consumed by VFs */
++	u16		driver_max_VFs;	/* Max num VFs driver supports */
++	struct pci_dev	*dev;		/* Lowest numbered PF */
++	struct pci_dev	*self;		/* This PF */
++	resource_size_t	barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
++	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
+ };
+ 
+ /* pci_dev priv_flags */
+@@ -335,7 +335,7 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ 	if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END)
+ 		return pci_sriov_resource_alignment(dev, resno);
+ #endif
+-	if (dev->class >> 8  == PCI_CLASS_BRIDGE_CARDBUS)
++	if (dev->class >> 8 == PCI_CLASS_BRIDGE_CARDBUS)
+ 		return pci_cardbus_resource_alignment(res);
+ 	return resource_alignment(res);
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0403894147a3..a1589dec7e33 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -48,17 +48,17 @@
+  * In the interest of not exposing interfaces to user-space unnecessarily,
+  * the following kernel-only defines are being added here.
+  */
+-#define PCI_DEVID(bus, devfn)  ((((u16)(bus)) << 8) | (devfn))
++#define PCI_DEVID(bus, devfn)	((((u16)(bus)) << 8) | (devfn))
+ /* return bus from PCI devid = ((u16)bus_number) << 8) | devfn */
+ #define PCI_BUS_NUM(x) (((x) >> 8) & 0xff)
+ 
+ /* pci_slot represents a physical slot */
+ struct pci_slot {
+-	struct pci_bus *bus;		/* The bus this slot is on */
+-	struct list_head list;		/* node in list of slots on this bus */
+-	struct hotplug_slot *hotplug;	/* Hotplug info (migrate over time) */
+-	unsigned char number;		/* PCI_SLOT(pci_dev->devfn) */
+-	struct kobject kobj;
++	struct pci_bus		*bus;		/* Bus this slot is on */
++	struct list_head	list;		/* Node in list of slots */
++	struct hotplug_slot	*hotplug;	/* Hotplug info (move here) */
++	unsigned char		number;		/* PCI_SLOT(pci_dev->devfn) */
++	struct kobject		kobj;
+ };
+ 
+ static inline const char *pci_slot_name(const struct pci_slot *slot)
+@@ -72,9 +72,7 @@ enum pci_mmap_state {
+ 	pci_mmap_mem
+ };
+ 
+-/*
+- *  For PCI devices, the region numbers are assigned this way:
+- */
++/* For PCI devices, the region numbers are assigned this way: */
+ enum {
+ 	/* #0-5: standard PCI resources */
+ 	PCI_STD_RESOURCES,
+@@ -83,23 +81,23 @@ enum {
+ 	/* #6: expansion ROM resource */
+ 	PCI_ROM_RESOURCE,
+ 
+-	/* device specific resources */
++	/* Device-specific resources */
+ #ifdef CONFIG_PCI_IOV
+ 	PCI_IOV_RESOURCES,
+ 	PCI_IOV_RESOURCE_END = PCI_IOV_RESOURCES + PCI_SRIOV_NUM_BARS - 1,
+ #endif
+ 
+-	/* resources assigned to buses behind the bridge */
++	/* Resources assigned to buses behind the bridge */
+ #define PCI_BRIDGE_RESOURCE_NUM 4
+ 
+ 	PCI_BRIDGE_RESOURCES,
+ 	PCI_BRIDGE_RESOURCE_END = PCI_BRIDGE_RESOURCES +
+ 				  PCI_BRIDGE_RESOURCE_NUM - 1,
+ 
+-	/* total resources associated with a PCI device */
++	/* Total resources associated with a PCI device */
+ 	PCI_NUM_RESOURCES,
+ 
+-	/* preserve this for compatibility */
++	/* Preserve this for compatibility */
+ 	DEVICE_COUNT_RESOURCE = PCI_NUM_RESOURCES,
+ };
+ 
+@@ -152,9 +150,10 @@ static inline const char *pci_power_name(pci_power_t state)
+ #define PCI_PM_D3COLD_WAIT	100
+ #define PCI_PM_BUS_WAIT		50
+ 
+-/** The pci_channel state describes connectivity between the CPU and
+- *  the pci device.  If some PCI bus between here and the pci device
+- *  has crashed or locked up, this info is reflected here.
++/**
++ * The pci_channel state describes connectivity between the CPU and
++ * the PCI device.  If some PCI bus between here and the PCI device
++ * has crashed or locked up, this info is reflected here.
+  */
+ typedef unsigned int __bitwise pci_channel_state_t;
+ 
+@@ -184,9 +183,7 @@ enum pcie_reset_state {
+ 
+ typedef unsigned short __bitwise pci_dev_flags_t;
+ enum pci_dev_flags {
+-	/* INTX_DISABLE in PCI_COMMAND register disables MSI
+-	 * generation too.
+-	 */
++	/* INTX_DISABLE in PCI_COMMAND register disables MSI too */
+ 	PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG = (__force pci_dev_flags_t) (1 << 0),
+ 	/* Device configuration is irrevocably lost if disabled into D3 */
+ 	PCI_DEV_FLAGS_NO_D3 = (__force pci_dev_flags_t) (1 << 1),
+@@ -202,7 +199,7 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+ 	/* Get VPD from function 0 VPD */
+ 	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+-	/* a non-root bridge where translation occurs, stop alias search here */
++	/* A non-root bridge where translation occurs, stop alias search here */
+ 	PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT = (__force pci_dev_flags_t) (1 << 9),
+ 	/* Do not use FLR even if device advertises PCI_AF_CAP */
+ 	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
+@@ -222,17 +219,17 @@ enum pci_bus_flags {
+ 	PCI_BUS_FLAGS_NO_AERSID	= (__force pci_bus_flags_t) 4,
+ };
+ 
+-/* These values come from the PCI Express Spec */
++/* Values from Link Status register, PCIe r3.1, sec 7.8.8 */
+ enum pcie_link_width {
+ 	PCIE_LNK_WIDTH_RESRV	= 0x00,
+ 	PCIE_LNK_X1		= 0x01,
+ 	PCIE_LNK_X2		= 0x02,
+ 	PCIE_LNK_X4		= 0x04,
+ 	PCIE_LNK_X8		= 0x08,
+-	PCIE_LNK_X12		= 0x0C,
++	PCIE_LNK_X12		= 0x0c,
+ 	PCIE_LNK_X16		= 0x10,
+ 	PCIE_LNK_X32		= 0x20,
+-	PCIE_LNK_WIDTH_UNKNOWN  = 0xFF,
++	PCIE_LNK_WIDTH_UNKNOWN	= 0xff,
+ };
+ 
+ /* Based on the PCI Hotplug Spec, but some values are made up by us */
+@@ -263,15 +260,15 @@ enum pci_bus_speed {
+ };
+ 
+ struct pci_cap_saved_data {
+-	u16 cap_nr;
+-	bool cap_extended;
+-	unsigned int size;
+-	u32 data[0];
++	u16		cap_nr;
++	bool		cap_extended;
++	unsigned int	size;
++	u32		data[0];
+ };
+ 
+ struct pci_cap_saved_state {
+-	struct hlist_node next;
+-	struct pci_cap_saved_data cap;
++	struct hlist_node		next;
++	struct pci_cap_saved_data	cap;
+ };
+ 
+ struct irq_affinity;
+@@ -280,19 +277,17 @@ struct pci_vpd;
+ struct pci_sriov;
+ struct pci_ats;
+ 
+-/*
+- * The pci_dev structure is used to describe PCI devices.
+- */
++/* The pci_dev structure describes PCI devices */
+ struct pci_dev {
+-	struct list_head bus_list;	/* node in per-bus list */
+-	struct pci_bus	*bus;		/* bus this device is on */
+-	struct pci_bus	*subordinate;	/* bus this device bridges to */
++	struct list_head bus_list;	/* Node in per-bus list */
++	struct pci_bus	*bus;		/* Bus this device is on */
++	struct pci_bus	*subordinate;	/* Bus this device bridges to */
+ 
+-	void		*sysdata;	/* hook for sys-specific extension */
+-	struct proc_dir_entry *procent;	/* device entry in /proc/bus/pci */
++	void		*sysdata;	/* Hook for sys-specific extension */
++	struct proc_dir_entry *procent;	/* Device entry in /proc/bus/pci */
+ 	struct pci_slot	*slot;		/* Physical slot this device is in */
+ 
+-	unsigned int	devfn;		/* encoded device & function index */
++	unsigned int	devfn;		/* Encoded device & function index */
+ 	unsigned short	vendor;
+ 	unsigned short	device;
+ 	unsigned short	subsystem_vendor;
+@@ -307,12 +302,12 @@ struct pci_dev {
+ 	u8		msi_cap;	/* MSI capability offset */
+ 	u8		msix_cap;	/* MSI-X capability offset */
+ 	u8		pcie_mpss:3;	/* PCIe Max Payload Size Supported */
+-	u8		rom_base_reg;	/* which config register controls the ROM */
+-	u8		pin;		/* which interrupt pin this device uses */
+-	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
+-	unsigned long	*dma_alias_mask;/* mask of enabled devfn aliases */
++	u8		rom_base_reg;	/* Config register controlling ROM */
++	u8		pin;		/* Interrupt pin this device uses */
++	u16		pcie_flags_reg;	/* Cached PCIe Capabilities Register */
++	unsigned long	*dma_alias_mask;/* Mask of enabled devfn aliases */
+ 
+-	struct pci_driver *driver;	/* which driver has allocated this device */
++	struct pci_driver *driver;	/* Driver bound to this device */
+ 	u64		dma_mask;	/* Mask of the bits of bus address this
+ 					   device implements.  Normally this is
+ 					   0xffffffff.  You only need to change
+@@ -321,9 +316,9 @@ struct pci_dev {
+ 
+ 	struct device_dma_parameters dma_parms;
+ 
+-	pci_power_t     current_state;  /* Current operating state. In ACPI-speak,
+-					   this is D0-D3, D0 being fully functional,
+-					   and D3 being off. */
++	pci_power_t	current_state;	/* Current operating state. In ACPI,
++					   this is D0-D3, D0 being fully
++					   functional, and D3 being off. */
+ 	u8		pm_cap;		/* PM capability offset */
+ 	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
+ 					   can be generated */
+@@ -334,10 +329,10 @@ struct pci_dev {
+ 	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
+ 	unsigned int	bridge_d3:1;	/* Allow D3 for bridge */
+ 	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
+-	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+-						   decoding during bar sizing */
++	unsigned int	mmio_always_on:1;	/* Disallow turning off io/mem
++						   decoding during BAR sizing */
+ 	unsigned int	wakeup_prepared:1;
+-	unsigned int	runtime_d3cold:1;	/* whether go through runtime
++	unsigned int	runtime_d3cold:1;	/* Whether go through runtime
+ 						   D3cold, not set for devices
+ 						   powered on/off by the
+ 						   corresponding bridge */
+@@ -352,10 +347,10 @@ struct pci_dev {
+ 	struct pcie_link_state	*link_state;	/* ASPM link state */
+ #endif
+ 
+-	pci_channel_state_t error_state;	/* current connectivity state */
+-	struct	device	dev;		/* Generic device interface */
++	pci_channel_state_t error_state;	/* Current connectivity state */
++	struct device	dev;			/* Generic device interface */
+ 
+-	int		cfg_size;	/* Size of configuration space */
++	int		cfg_size;		/* Size of config space */
+ 
+ 	/*
+ 	 * Instead of touching interrupt line and base address registers
+@@ -364,47 +359,47 @@ struct pci_dev {
+ 	unsigned int	irq;
+ 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+ 
+-	bool match_driver;		/* Skip attaching driver */
+-	/* These fields are used by common fixups */
+-	unsigned int	transparent:1;	/* Subtractive decode PCI bridge */
+-	unsigned int	multifunction:1;/* Part of multi-function device */
+-	/* keep track of device state */
++	bool		match_driver;		/* Skip attaching driver */
++
++	unsigned int	transparent:1;		/* Subtractive decode bridge */
++	unsigned int	multifunction:1;	/* Multi-function device */
++
+ 	unsigned int	is_added:1;
+-	unsigned int	is_busmaster:1; /* device is busmaster */
+-	unsigned int	no_msi:1;	/* device may not use msi */
+-	unsigned int	no_64bit_msi:1; /* device may only use 32-bit MSIs */
+-	unsigned int	block_cfg_access:1;	/* config space access is blocked */
+-	unsigned int	broken_parity_status:1;	/* Device generates false positive parity */
+-	unsigned int	irq_reroute_variant:2;	/* device needs IRQ rerouting variant */
++	unsigned int	is_busmaster:1;		/* Is busmaster */
++	unsigned int	no_msi:1;		/* May not use MSI */
++	unsigned int	no_64bit_msi:1; 	/* May only use 32-bit MSIs */
++	unsigned int	block_cfg_access:1;	/* Config space access blocked */
++	unsigned int	broken_parity_status:1;	/* Generates false positive parity */
++	unsigned int	irq_reroute_variant:2;	/* Needs IRQ rerouting variant */
+ 	unsigned int	msi_enabled:1;
+ 	unsigned int	msix_enabled:1;
+-	unsigned int	ari_enabled:1;	/* ARI forwarding */
+-	unsigned int	ats_enabled:1;	/* Address Translation Service */
++	unsigned int	ari_enabled:1;		/* ARI forwarding */
++	unsigned int	ats_enabled:1;		/* Address Translation Svc */
+ 	unsigned int	pasid_enabled:1;	/* Process Address Space ID */
+ 	unsigned int	pri_enabled:1;		/* Page Request Interface */
+ 	unsigned int	is_managed:1;
+-	unsigned int    needs_freset:1; /* Dev requires fundamental reset */
++	unsigned int	needs_freset:1;		/* Requires fundamental reset */
+ 	unsigned int	state_saved:1;
+ 	unsigned int	is_physfn:1;
+ 	unsigned int	is_virtfn:1;
+ 	unsigned int	reset_fn:1;
+-	unsigned int    is_hotplug_bridge:1;
+-	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
+-	unsigned int    __aer_firmware_first_valid:1;
++	unsigned int	is_hotplug_bridge:1;
++	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
++	unsigned int	__aer_firmware_first_valid:1;
+ 	unsigned int	__aer_firmware_first:1;
+-	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
+-	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
++	unsigned int	broken_intx_masking:1;	/* INTx masking can't be used */
++	unsigned int	io_window_1k:1;		/* Intel bridge 1K I/O windows */
+ 	unsigned int	irq_managed:1;
+ 	unsigned int	has_secondary_link:1;
+-	unsigned int	non_compliant_bars:1;	/* broken BARs; ignore them */
+-	unsigned int	is_probed:1;		/* device probing in progress */
++	unsigned int	non_compliant_bars:1;	/* Broken BARs; ignore them */
++	unsigned int	is_probed:1;		/* Device probing in progress */
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
+-	u32		saved_config_space[16]; /* config space saved at suspend time */
++	u32		saved_config_space[16]; /* Config space saved at suspend time */
+ 	struct hlist_head saved_cap_space;
+-	struct bin_attribute *rom_attr; /* attribute descriptor for sysfs ROM entry */
+-	int rom_attr_enabled;		/* has display of the rom attribute been enabled? */
++	struct bin_attribute *rom_attr;		/* Attribute descriptor for sysfs ROM entry */
++	int		rom_attr_enabled;	/* Display of ROM attribute enabled? */
+ 	struct bin_attribute *res_attr[DEVICE_COUNT_RESOURCE]; /* sysfs file for resources */
+ 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
+ 
+@@ -419,12 +414,12 @@ struct pci_dev {
+ 	struct pci_vpd *vpd;
+ #ifdef CONFIG_PCI_ATS
+ 	union {
+-		struct pci_sriov *sriov;	/* SR-IOV capability related */
+-		struct pci_dev *physfn;	/* the PF this VF is associated with */
++		struct pci_sriov	*sriov;		/* PF: SR-IOV info */
++		struct pci_dev		*physfn;	/* VF: related PF */
+ 	};
+ 	u16		ats_cap;	/* ATS Capability offset */
+ 	u8		ats_stu;	/* ATS Smallest Translation Unit */
+-	atomic_t	ats_ref_cnt;	/* number of VFs with ATS enabled */
++	atomic_t	ats_ref_cnt;	/* Number of VFs with ATS enabled */
+ #endif
+ #ifdef CONFIG_PCI_PRI
+ 	u32		pri_reqs_alloc; /* Number of PRI requests allocated */
+@@ -432,11 +427,11 @@ struct pci_dev {
+ #ifdef CONFIG_PCI_PASID
+ 	u16		pasid_features;
+ #endif
+-	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+-	size_t romlen; /* Length of ROM if it's not from the BAR */
+-	char *driver_override; /* Driver name to force a match */
++	phys_addr_t	rom;		/* Physical address if not from BAR */
++	size_t		romlen;		/* Length if not from BAR */
++	char		*driver_override; /* Driver name to force a match */
+ 
+-	unsigned long priv_flags; /* Private flags for the pci driver */
++	unsigned long	priv_flags;	/* Private flags for the PCI driver */
+ };
+ 
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+@@ -459,26 +454,26 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+ }
+ 
+ struct pci_host_bridge {
+-	struct device dev;
+-	struct pci_bus *bus;		/* root bus */
+-	struct pci_ops *ops;
+-	void *sysdata;
+-	int busnr;
++	struct device	dev;
++	struct pci_bus	*bus;		/* Root bus */
++	struct pci_ops	*ops;
++	void		*sysdata;
++	int		busnr;
+ 	struct list_head windows;	/* resource_entry */
+-	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* platform IRQ swizzler */
++	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* Platform IRQ swizzler */
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
+ 	void (*release_fn)(struct pci_host_bridge *);
+-	void *release_data;
++	void		*release_data;
+ 	struct msi_controller *msi;
+-	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+-	unsigned int no_ext_tags:1;		/* no Extended Tags */
++	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
++	unsigned int	no_ext_tags:1;		/* No Extended Tags */
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
+ 			resource_size_t start,
+ 			resource_size_t size,
+ 			resource_size_t align);
+-	unsigned long private[0] ____cacheline_aligned;
++	unsigned long	private[0] ____cacheline_aligned;
+ };
+ 
+ #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+@@ -500,8 +495,8 @@ void pci_free_host_bridge(struct pci_host_bridge *bridge);
+ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+ 
+ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+-		     void (*release_fn)(struct pci_host_bridge *),
+-		     void *release_data);
++				 void (*release_fn)(struct pci_host_bridge *),
++				 void *release_data);
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+ 
+@@ -521,32 +516,32 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+ #define PCI_SUBTRACTIVE_DECODE	0x1
+ 
+ struct pci_bus_resource {
+-	struct list_head list;
+-	struct resource *res;
+-	unsigned int flags;
++	struct list_head	list;
++	struct resource		*res;
++	unsigned int		flags;
+ };
+ 
+ #define PCI_REGION_FLAG_MASK	0x0fU	/* These bits of resource flags tell us the PCI region flags */
+ 
+ struct pci_bus {
+-	struct list_head node;		/* node in list of buses */
+-	struct pci_bus	*parent;	/* parent bus this bridge is on */
+-	struct list_head children;	/* list of child buses */
+-	struct list_head devices;	/* list of devices on this bus */
+-	struct pci_dev	*self;		/* bridge device as seen by parent */
+-	struct list_head slots;		/* list of slots on this bus;
++	struct list_head node;		/* Node in list of buses */
++	struct pci_bus	*parent;	/* Parent bus this bridge is on */
++	struct list_head children;	/* List of child buses */
++	struct list_head devices;	/* List of devices on this bus */
++	struct pci_dev	*self;		/* Bridge device as seen by parent */
++	struct list_head slots;		/* List of slots on this bus;
+ 					   protected by pci_slot_mutex */
+ 	struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
+-	struct list_head resources;	/* address space routed to this bus */
+-	struct resource busn_res;	/* bus numbers routed to this bus */
++	struct list_head resources;	/* Address space routed to this bus */
++	struct resource busn_res;	/* Bus numbers routed to this bus */
+ 
+-	struct pci_ops	*ops;		/* configuration access functions */
++	struct pci_ops	*ops;		/* Configuration access functions */
+ 	struct msi_controller *msi;	/* MSI controller */
+-	void		*sysdata;	/* hook for sys-specific extension */
+-	struct proc_dir_entry *procdir;	/* directory entry in /proc/bus/pci */
++	void		*sysdata;	/* Hook for sys-specific extension */
++	struct proc_dir_entry *procdir;	/* Directory entry in /proc/bus/pci */
+ 
+-	unsigned char	number;		/* bus number */
+-	unsigned char	primary;	/* number of primary bridge */
++	unsigned char	number;		/* Bus number */
++	unsigned char	primary;	/* Number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+@@ -555,12 +550,12 @@ struct pci_bus {
+ 
+ 	char		name[48];
+ 
+-	unsigned short  bridge_ctl;	/* manage NO_ISA/FBB/et al behaviors */
+-	pci_bus_flags_t bus_flags;	/* inherited by child buses */
++	unsigned short	bridge_ctl;	/* Manage NO_ISA/FBB/et al behaviors */
++	pci_bus_flags_t bus_flags;	/* Inherited by child buses */
+ 	struct device		*bridge;
+ 	struct device		dev;
+-	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
+-	struct bin_attribute	*legacy_mem; /* legacy mem */
++	struct bin_attribute	*legacy_io;	/* Legacy I/O for this bus */
++	struct bin_attribute	*legacy_mem;	/* Legacy mem */
+ 	unsigned int		is_added:1;
+ };
+ 
+@@ -617,9 +612,7 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev)
+ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false; }
+ #endif
+ 
+-/*
+- * Error values that may be returned by PCI functions.
+- */
++/* Error values that may be returned by PCI functions */
+ #define PCIBIOS_SUCCESSFUL		0x00
+ #define PCIBIOS_FUNC_NOT_SUPPORTED	0x81
+ #define PCIBIOS_BAD_VENDOR_ID		0x83
+@@ -628,9 +621,7 @@ static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev) { return false;
+ #define PCIBIOS_SET_FAILED		0x88
+ #define PCIBIOS_BUFFER_TOO_SMALL	0x89
+ 
+-/*
+- * Translate above to generic errno for passing back through non-PCI code.
+- */
++/* Translate above to generic errno for passing back through non-PCI code */
+ static inline int pcibios_err_to_errno(int err)
+ {
+ 	if (err <= PCIBIOS_SUCCESSFUL)
+@@ -680,13 +671,13 @@ typedef u32 pci_bus_addr_t;
+ #endif
+ 
+ struct pci_bus_region {
+-	pci_bus_addr_t start;
+-	pci_bus_addr_t end;
++	pci_bus_addr_t	start;
++	pci_bus_addr_t	end;
+ };
+ 
+ struct pci_dynids {
+-	spinlock_t lock;            /* protects list, index */
+-	struct list_head list;      /* for IDs added at runtime */
++	spinlock_t		lock;	/* Protects list, index */
++	struct list_head	list;	/* For IDs added at runtime */
+ };
+ 
+ 
+@@ -700,13 +691,13 @@ struct pci_dynids {
+ typedef unsigned int __bitwise pci_ers_result_t;
+ 
+ enum pci_ers_result {
+-	/* no result/none/not supported in device driver */
++	/* No result/none/not supported in device driver */
+ 	PCI_ERS_RESULT_NONE = (__force pci_ers_result_t) 1,
+ 
+ 	/* Device driver can recover without slot reset */
+ 	PCI_ERS_RESULT_CAN_RECOVER = (__force pci_ers_result_t) 2,
+ 
+-	/* Device driver wants slot to be reset. */
++	/* Device driver wants slot to be reset */
+ 	PCI_ERS_RESULT_NEED_RESET = (__force pci_ers_result_t) 3,
+ 
+ 	/* Device has completely failed, is unrecoverable */
+@@ -742,27 +733,27 @@ struct pci_error_handlers {
+ 
+ struct module;
+ struct pci_driver {
+-	struct list_head node;
+-	const char *name;
+-	const struct pci_device_id *id_table;	/* must be non-NULL for probe to be called */
+-	int  (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);	/* New device inserted */
+-	void (*remove) (struct pci_dev *dev);	/* Device removed (NULL if not a hot-plug capable driver) */
+-	int  (*suspend) (struct pci_dev *dev, pm_message_t state);	/* Device suspended */
+-	int  (*suspend_late) (struct pci_dev *dev, pm_message_t state);
+-	int  (*resume_early) (struct pci_dev *dev);
+-	int  (*resume) (struct pci_dev *dev);	                /* Device woken up */
++	struct list_head	node;
++	const char		*name;
++	const struct pci_device_id *id_table;	/* Must be non-NULL for probe to be called */
++	int  (*probe)(struct pci_dev *dev, const struct pci_device_id *id);	/* New device inserted */
++	void (*remove)(struct pci_dev *dev);	/* Device removed (NULL if not a hot-plug capable driver) */
++	int  (*suspend)(struct pci_dev *dev, pm_message_t state);	/* Device suspended */
++	int  (*suspend_late)(struct pci_dev *dev, pm_message_t state);
++	int  (*resume_early)(struct pci_dev *dev);
++	int  (*resume) (struct pci_dev *dev);	/* Device woken up */
+ 	void (*shutdown) (struct pci_dev *dev);
+-	int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
++	int  (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* On PF */
+ 	const struct pci_error_handlers *err_handler;
+ 	const struct attribute_group **groups;
+ 	struct device_driver	driver;
+-	struct pci_dynids dynids;
++	struct pci_dynids	dynids;
+ };
+ 
+ #define	to_pci_driver(drv) container_of(drv, struct pci_driver, driver)
+ 
+ /**
+- * PCI_DEVICE - macro used to describe a specific pci device
++ * PCI_DEVICE - macro used to describe a specific PCI device
+  * @vend: the 16 bit PCI Vendor ID
+  * @dev: the 16 bit PCI Device ID
+  *
+@@ -775,7 +766,7 @@ struct pci_driver {
+ 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
+ 
+ /**
+- * PCI_DEVICE_SUB - macro used to describe a specific pci device with subsystem
++ * PCI_DEVICE_SUB - macro used to describe a specific PCI device with subsystem
+  * @vend: the 16 bit PCI Vendor ID
+  * @dev: the 16 bit PCI Device ID
+  * @subvend: the 16 bit PCI Subvendor ID
+@@ -789,7 +780,7 @@ struct pci_driver {
+ 	.subvendor = (subvend), .subdevice = (subdev)
+ 
+ /**
+- * PCI_DEVICE_CLASS - macro used to describe a specific pci device class
++ * PCI_DEVICE_CLASS - macro used to describe a specific PCI device class
+  * @dev_class: the class, subclass, prog-if triple for this device
+  * @dev_class_mask: the class mask for this device
+  *
+@@ -803,7 +794,7 @@ struct pci_driver {
+ 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID
+ 
+ /**
+- * PCI_VDEVICE - macro used to describe a specific pci device in short form
++ * PCI_VDEVICE - macro used to describe a specific PCI device in short form
+  * @vend: the vendor name
+  * @dev: the 16 bit PCI Device ID
+  *
+@@ -812,22 +803,21 @@ struct pci_driver {
+  * to PCI_ANY_ID. The macro allows the next field to follow as the device
+  * private data.
+  */
+-
+ #define PCI_VDEVICE(vend, dev) \
+ 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+ 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+ 
+ enum {
+-	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* ignore firmware setup */
+-	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* reassign all bus numbers */
+-	PCI_PROBE_ONLY		= 0x00000004,	/* use existing setup */
+-	PCI_CAN_SKIP_ISA_ALIGN	= 0x00000008,	/* don't do ISA alignment */
+-	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* enable domains in /proc */
++	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* Ignore firmware setup */
++	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* Reassign all bus numbers */
++	PCI_PROBE_ONLY		= 0x00000004,	/* Use existing setup */
++	PCI_CAN_SKIP_ISA_ALIGN	= 0x00000008,	/* Don't do ISA alignment */
++	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* Enable domains in /proc */
+ 	PCI_COMPAT_DOMAIN_0	= 0x00000020,	/* ... except domain 0 */
+-	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* scan all, not just dev 0 */
++	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
+ };
+ 
+-/* these external functions are only available when PCI support is enabled */
++/* These external functions are only available when PCI support is enabled */
+ #ifdef CONFIG_PCI
+ 
+ extern unsigned int pci_flags;
+@@ -840,11 +830,11 @@ static inline int pci_has_flag(int flag) { return pci_flags & flag; }
+ void pcie_bus_configure_settings(struct pci_bus *bus);
+ 
+ enum pcie_bus_config_types {
+-	PCIE_BUS_TUNE_OFF,	/* don't touch MPS at all */
+-	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
+-	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
+-	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
+-	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
++	PCIE_BUS_TUNE_OFF,	/* Don't touch MPS at all */
++	PCIE_BUS_DEFAULT,	/* Ensure MPS matches upstream bridge */
++	PCIE_BUS_SAFE,		/* Use largest MPS boot-time devices support */
++	PCIE_BUS_PERFORMANCE,	/* Use MPS and MRRS for best performance */
++	PCIE_BUS_PEER2PEER,	/* Set MPS = 128 for all devices */
+ };
+ 
+ extern enum pcie_bus_config_types pcie_bus_config;
+@@ -853,7 +843,7 @@ extern struct bus_type pci_bus_type;
+ 
+ /* Do NOT directly access these two variables, unless you are arch-specific PCI
+  * code, or PCI core code. */
+-extern struct list_head pci_root_buses;	/* list of all known PCI buses */
++extern struct list_head pci_root_buses;	/* List of all known PCI buses */
+ /* Some device drivers need know if PCI is initiated */
+ int no_pci_devices(void);
+ 
+@@ -891,8 +881,8 @@ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+-					     struct pci_ops *ops, void *sysdata,
+-					     struct list_head *resources);
++				  struct pci_ops *ops, void *sysdata,
++				  struct list_head *resources);
+ int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ 				int busnr);
+@@ -949,10 +939,10 @@ int pci_find_next_ht_capability(struct pci_dev *dev, int pos, int ht_cap);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ 
+ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+-				struct pci_dev *from);
++			       struct pci_dev *from);
+ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+-				unsigned int ss_vendor, unsigned int ss_device,
+-				struct pci_dev *from);
++			       unsigned int ss_vendor, unsigned int ss_device,
++			       struct pci_dev *from);
+ struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn);
+ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
+ 					    unsigned int devfn);
+@@ -1028,7 +1018,7 @@ static inline int pcie_capability_clear_dword(struct pci_dev *dev, int pos,
+ 	return pcie_capability_clear_and_set_dword(dev, pos, clear, 0);
+ }
+ 
+-/* user-space driven config access */
++/* User-space driven config access */
+ int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
+ int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
+ int pci_user_read_config_dword(struct pci_dev *dev, int where, u32 *val);
+@@ -1170,7 +1160,7 @@ unsigned int pci_rescan_bus(struct pci_bus *bus);
+ void pci_lock_rescan_remove(void);
+ void pci_unlock_rescan_remove(void);
+ 
+-/* Vital product data routines */
++/* Vital Product Data routines */
+ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+ int pci_set_vpd_size(struct pci_dev *dev, size_t len);
+@@ -1255,9 +1245,7 @@ static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+ int __must_check __pci_register_driver(struct pci_driver *, struct module *,
+ 				       const char *mod_name);
+ 
+-/*
+- * pci_register_driver must be a macro so that KBUILD_MODNAME can be expanded
+- */
++/* pci_register_driver() must be a macro so KBUILD_MODNAME can be expanded */
+ #define pci_register_driver(driver)		\
+ 	__pci_register_driver(driver, THIS_MODULE, KBUILD_MODNAME)
+ 
+@@ -1272,8 +1260,7 @@ void pci_unregister_driver(struct pci_driver *dev);
+  * use this macro once, and calling it replaces module_init() and module_exit()
+  */
+ #define module_pci_driver(__pci_driver) \
+-	module_driver(__pci_driver, pci_register_driver, \
+-		       pci_unregister_driver)
++	module_driver(__pci_driver, pci_register_driver, pci_unregister_driver)
+ 
+ /**
+  * builtin_pci_driver() - Helper macro for registering a PCI driver
+@@ -1312,10 +1299,10 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
+ 
+-#define PCI_IRQ_LEGACY		(1 << 0) /* allow legacy interrupts */
+-#define PCI_IRQ_MSI		(1 << 1) /* allow MSI interrupts */
+-#define PCI_IRQ_MSIX		(1 << 2) /* allow MSI-X interrupts */
+-#define PCI_IRQ_AFFINITY	(1 << 3) /* auto-assign affinity */
++#define PCI_IRQ_LEGACY		(1 << 0) /* Allow legacy interrupts */
++#define PCI_IRQ_MSI		(1 << 1) /* Allow MSI interrupts */
++#define PCI_IRQ_MSIX		(1 << 2) /* Allow MSI-X interrupts */
++#define PCI_IRQ_AFFINITY	(1 << 3) /* Auto-assign affinity */
+ #define PCI_IRQ_ALL_TYPES \
+ 	(PCI_IRQ_LEGACY | PCI_IRQ_MSI | PCI_IRQ_MSIX)
+ 
+@@ -1334,8 +1321,8 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ #define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
+ 
+ struct msix_entry {
+-	u32	vector;	/* kernel uses to write allocated vector */
+-	u16	entry;	/* driver uses to specify entry, OS writes */
++	u32	vector;	/* Kernel uses to write allocated vector */
++	u16	entry;	/* Driver uses to specify entry, OS writes */
+ };
+ 
+ #ifdef CONFIG_PCI_MSI
+@@ -1375,10 +1362,10 @@ static inline int pci_msi_enabled(void) { return 0; }
+ static inline int pci_enable_msi(struct pci_dev *dev)
+ { return -ENOSYS; }
+ static inline int pci_enable_msix_range(struct pci_dev *dev,
+-		      struct msix_entry *entries, int minvec, int maxvec)
++			struct msix_entry *entries, int minvec, int maxvec)
+ { return -ENOSYS; }
+ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+-		      struct msix_entry *entries, int nvec)
++			struct msix_entry *entries, int nvec)
+ { return -ENOSYS; }
+ 
+ static inline int
+@@ -1543,9 +1530,9 @@ static inline int acpi_pci_bus_find_domain_nr(struct pci_bus *bus)
+ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent);
+ #endif
+ 
+-/* some architectures require additional setup to direct VGA traffic */
++/* Some architectures require additional setup to direct VGA traffic */
+ typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
+-		      unsigned int command_bits, u32 flags);
++				    unsigned int command_bits, u32 flags);
+ void pci_register_set_vga_state(arch_set_vga_state_t func);
+ 
+ static inline int
+@@ -1584,10 +1571,9 @@ static inline void pci_clear_flags(int flags) { }
+ static inline int pci_has_flag(int flag) { return 0; }
+ 
+ /*
+- *  If the system does not have PCI, clearly these return errors.  Define
+- *  these as simple inline functions to avoid hair in drivers.
++ * If the system does not have PCI, clearly these return errors.  Define
++ * these as simple inline functions to avoid hair in drivers.
+  */
+-
+ #define _PCI_NOP(o, s, t) \
+ 	static inline int pci_##o##_config_##s(struct pci_dev *dev, \
+ 						int where, t val) \
+@@ -1723,8 +1709,10 @@ int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma);
+ #define pci_root_bus_fwnode(bus)	NULL
+ #endif
+ 
+-/* these helpers provide future and backwards compatibility
+- * for accessing popular PCI BAR info */
++/*
++ * These helpers provide future and backwards compatibility
++ * for accessing popular PCI BAR info
++ */
+ #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+ #define pci_resource_end(dev, bar)	((dev)->resource[(bar)].end)
+ #define pci_resource_flags(dev, bar)	((dev)->resource[(bar)].flags)
+@@ -1736,7 +1724,8 @@ int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma);
+ 	 (pci_resource_end((dev), (bar)) -		\
+ 	  pci_resource_start((dev), (bar)) + 1))
+ 
+-/* Similar to the helpers above, these manipulate per-pci_dev
++/*
++ * Similar to the helpers above, these manipulate per-pci_dev
+  * driver-specific data.  They are really just a wrapper around
+  * the generic device structure functions of these calls.
+  */
+@@ -1750,16 +1739,14 @@ static inline void pci_set_drvdata(struct pci_dev *pdev, void *data)
+ 	dev_set_drvdata(&pdev->dev, data);
+ }
+ 
+-/* If you want to know what to call your pci_dev, ask this function.
+- * Again, it's a wrapper around the generic device.
+- */
+ static inline const char *pci_name(const struct pci_dev *pdev)
+ {
+ 	return dev_name(&pdev->dev);
+ }
+ 
+ 
+-/* Some archs don't want to expose struct resource to userland as-is
++/*
++ * Some archs don't want to expose struct resource to userland as-is
+  * in sysfs and /proc
+  */
+ #ifdef HAVE_ARCH_PCI_RESOURCE_TO_USER
+@@ -1778,16 +1765,16 @@ static inline void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 
+ 
+ /*
+- *  The world is not perfect and supplies us with broken PCI devices.
+- *  For at least a part of these bugs we need a work-around, so both
+- *  generic (drivers/pci/quirks.c) and per-architecture code can define
+- *  fixup hooks to be called for particular buggy devices.
++ * The world is not perfect and supplies us with broken PCI devices.
++ * For at least a part of these bugs we need a work-around, so both
++ * generic (drivers/pci/quirks.c) and per-architecture code can define
++ * fixup hooks to be called for particular buggy devices.
+  */
+ 
+ struct pci_fixup {
+-	u16 vendor;		/* You can use PCI_ANY_ID here of course */
+-	u16 device;		/* You can use PCI_ANY_ID here of course */
+-	u32 class;		/* You can use PCI_ANY_ID here too */
++	u16 vendor;			/* Or PCI_ANY_ID */
++	u16 device;			/* Or PCI_ANY_ID */
++	u32 class;			/* Or PCI_ANY_ID */
+ 	unsigned int class_shift;	/* should be 0, 8, 16 */
+ 	void (*hook)(struct pci_dev *dev);
+ };
+@@ -1829,23 +1816,19 @@ enum pci_fixup_pass {
+ #define DECLARE_PCI_FIXUP_CLASS_RESUME(vendor, device, class,		\
+ 					 class_shift, hook)		\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
+-		resume##hook, vendor, device, class,	\
+-		class_shift, hook)
++		resume##hook, vendor, device, class, class_shift, hook)
+ #define DECLARE_PCI_FIXUP_CLASS_RESUME_EARLY(vendor, device, class,	\
+ 					 class_shift, hook)		\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
+-		resume_early##hook, vendor, device,	\
+-		class, class_shift, hook)
++		resume_early##hook, vendor, device, class, class_shift, hook)
+ #define DECLARE_PCI_FIXUP_CLASS_SUSPEND(vendor, device, class,		\
+ 					 class_shift, hook)		\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+-		suspend##hook, vendor, device, class,	\
+-		class_shift, hook)
++		suspend##hook, vendor, device, class, class_shift, hook)
+ #define DECLARE_PCI_FIXUP_CLASS_SUSPEND_LATE(vendor, device, class,	\
+ 					 class_shift, hook)		\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
+-		suspend_late##hook, vendor, device,	\
+-		class, class_shift, hook)
++		suspend_late##hook, vendor, device, class, class_shift, hook)
+ 
+ #define DECLARE_PCI_FIXUP_EARLY(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_early,			\
+@@ -1861,20 +1844,16 @@ enum pci_fixup_pass {
+ 		hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_RESUME(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume,			\
+-		resume##hook, vendor, device,		\
+-		PCI_ANY_ID, 0, hook)
++		resume##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_RESUME_EARLY(vendor, device, hook)		\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_resume_early,		\
+-		resume_early##hook, vendor, device,	\
+-		PCI_ANY_ID, 0, hook)
++		resume_early##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_SUSPEND(vendor, device, hook)			\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend,			\
+-		suspend##hook, vendor, device,		\
+-		PCI_ANY_ID, 0, hook)
++		suspend##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ #define DECLARE_PCI_FIXUP_SUSPEND_LATE(vendor, device, hook)		\
+ 	DECLARE_PCI_FIXUP_SECTION(.pci_fixup_suspend_late,		\
+-		suspend_late##hook, vendor, device,	\
+-		PCI_ANY_ID, 0, hook)
++		suspend_late##hook, vendor, device, PCI_ANY_ID, 0, hook)
+ 
+ #ifdef CONFIG_PCI_QUIRKS
+ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev);
+@@ -2109,7 +2088,7 @@ static inline u16 pci_vpd_lrdt_size(const u8 *lrdt)
+  */
+ static inline u16 pci_vpd_lrdt_tag(const u8 *lrdt)
+ {
+-    return (u16)(lrdt[0] & PCI_VPD_LRDT_TIN_MASK);
++	return (u16)(lrdt[0] & PCI_VPD_LRDT_TIN_MASK);
+ }
+ 
+ /**
+@@ -2194,7 +2173,7 @@ static inline struct device_node *pci_bus_to_OF_node(struct pci_bus *bus)
+ 	return bus ? bus->dev.of_node : NULL;
+ }
+ 
+-#else /* CONFIG_OF */
++#else	/* CONFIG_OF */
+ static inline void pci_set_of_node(struct pci_dev *dev) { }
+ static inline void pci_release_of_node(struct pci_dev *dev) { }
+ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+@@ -2203,7 +2182,7 @@ static inline struct device_node *
+ pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
+ static inline struct irq_domain *
+ pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
+-#endif  /* CONFIG_OF */
++#endif	/* CONFIG_OF */
+ 
+ #ifdef CONFIG_ACPI
+ struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus);
+@@ -2228,7 +2207,7 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 			   int (*fn)(struct pci_dev *pdev,
+ 				     u16 alias, void *data), void *data);
+ 
+-/* helper functions for operation of device flag */
++/* Helper functions for operation of device flag */
+ static inline void pci_set_dev_assigned(struct pci_dev *pdev)
+ {
+ 	pdev->dev_flags |= PCI_DEV_FLAGS_ASSIGNED;
+@@ -2275,7 +2254,7 @@ static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
+ 	return false;
+ }
+ 
+-/* provide the legacy pci_dma_* API */
++/* Provide the legacy pci_dma_* API */
+ #include <linux/pci-dma-compat.h>
+ 
+ #endif /* LINUX_PCI_H */
