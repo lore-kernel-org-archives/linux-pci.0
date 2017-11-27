@@ -1,69 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	okaya@codeaurora.org,
-	timur@codeaurora.org
-Subject: [PATCH v2 1/4] PCI: Add port service list node for pci_dev.
-Date: Wed, 15 Nov 2017 10:26:45 +0530
-Message-Id: <1510721808-27164-2-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
-References: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dongdong Liu <liudongdong3@huawei.com>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 2/3] PCI: endpoint: Fix error handling in pci_epc_epf_link()
+Date: Mon, 27 Nov 2017 16:49:54 +0100
+Message-Id: <20171127154955.22214-3-niklas.cassel@axis.com>
+In-Reply-To: <20171127154955.22214-1-niklas.cassel@axis.com>
+References: <20171127154955.22214-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the list node to keep track of services registered to
-pci port driver.
+The error handling in pci_epc_epf_link() was broken,
+since the clean up code for pci_epc_add_epf() did clear_bit(),
+even though the matching set_bit() is done after pci_epc_add_epf().
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Also, clear_bit() should be done before pci_epc_remove_epf(),
+since clean up code should normally do things in the reverse order.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 14e0ea1..f772979 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1931,6 +1931,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- 		return NULL;
+Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/endpoint/pci-ep-cfs.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 4f74386c1ced..e1f5adc9e113 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -106,7 +106,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+ 	epf = epf_group->epf;
+ 	ret = pci_epc_add_epf(epc, epf);
+ 	if (ret)
+-		goto err_add_epf;
++		return ret;
  
- 	INIT_LIST_HEAD(&dev->bus_list);
-+	INIT_LIST_HEAD(&dev->service_list);
- 	dev->dev.type = &pci_dev_type;
- 	dev->bus = pci_bus_get(bus);
+ 	func_no = find_first_zero_bit(&epc_group->function_num_map,
+ 				      sizeof(epc_group->function_num_map));
+@@ -120,10 +120,8 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+ 	return 0;
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 96c9498..eb86a4b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -408,6 +408,8 @@ struct pci_dev {
- 	struct bin_attribute *res_attr[DEVICE_COUNT_RESOURCE]; /* sysfs file for resources */
- 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
+ err_epf_bind:
+-	pci_epc_remove_epf(epc, epf);
+-
+-err_add_epf:
+ 	clear_bit(func_no, &epc_group->function_num_map);
++	pci_epc_remove_epf(epc, epf);
  
-+	struct list_head service_list;	/* node in per-service list */
-+
- #ifdef CONFIG_PCIE_PTM
- 	unsigned int	ptm_root:1;
- 	unsigned int	ptm_enabled:1;
+ 	return ret;
+ }
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.2
