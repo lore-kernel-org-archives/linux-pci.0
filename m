@@ -1,159 +1,94 @@
-Return-Path: <SRS0=X+pv=CU=oracle.com=boris.ostrovsky@kernel.org>
-Return-Path: <SRS0=X+pv=CU=oracle.com=boris.ostrovsky@kernel.org>
-Subject: Re: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h
- (Models 30h-3fh) Processors v5
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        helgaas@kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org, xen-devel <xen-devel@lists.xen.org>
-References: <20171018135821.3248-1-deathsimple@vodafone.de>
- <20171018135821.3248-5-deathsimple@vodafone.de>
- <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
- <d81d50e6-c267-fe43-214f-278e57903448@gmail.com>
- <26df0a78-8028-e42c-ce50-4cefe612a7e1@oracle.com>
- <3443aad0-8c3b-b97e-685a-96b0866827be@amd.com>
- <b937778c-556e-5587-c557-abba8cefe100@oracle.com>
- <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <c2d52d00-8c3c-9944-29b3-3cab2f7c35f7@oracle.com>
-Date: Wed, 22 Nov 2017 11:24:51 -0500
-MIME-Version: 1.0
-In-Reply-To: <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57378 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932201AbdK0Q7F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 11:59:05 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V3 16/29] PCI: cpqhp: deprecate pci_get_bus_and_slot()
+Date: Mon, 27 Nov 2017 11:57:53 -0500
+Message-Id: <1511801886-6753-17-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/22/2017 05:09 AM, Christian König wrote:
-> Am 21.11.2017 um 23:26 schrieb Boris Ostrovsky:
->> On 11/21/2017 08:34 AM, Christian König wrote:
->>> Hi Boris,
->>>
->>> attached are two patches.
->>>
->>> The first one is a trivial fix for the infinite loop issue, it now
->>> correctly aborts the fixup when it can't find address space for the
->>> root window.
->>>
->>> The second is a workaround for your board. It simply checks if there
->>> is exactly one Processor Function to apply this fix on.
->>>
->>> Both are based on linus current master branch. Please test if they fix
->>> your issue.
->>
->> Yes, they do fix it but that's because the feature is disabled.
->>
->> Do you know what the actual problem was (on Xen)?
->
-> I still haven't understood what you actually did with Xen.
->
-> When you used PCI pass through with those devices then you have made a
-> major configuration error.
->
-> When the problem happened on dom0 then the explanation is most likely
-> that some PCI device ended up in the configured space, but the routing
-> was only setup correctly on one CPU socket.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-The problem is that dom0 can be (and was in my case() booted with less
-than full physical memory and so the "rest" of the host memory is not
-necessarily reflected in iomem. Your patch then tried to configure that
-memory for MMIO and the system hang.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-And so my guess is that this patch will break dom0 on a single-socket
-system as well.
+Hard-coding the domain number as 0. The code doesn't seem to be ready
+for multiple domains.
 
--boris
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/hotplug/cpqphp_pci.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
->
-> Regards,
-> Christian.
->
->>
->> Thanks.
->> -boris
->>
->>> Thanks for the help,
->>> Christian.
->>>
->>> Am 20.11.2017 um 17:33 schrieb Boris Ostrovsky:
->>>> On 11/20/2017 11:07 AM, Christian König wrote:
->>>>> Am 20.11.2017 um 16:51 schrieb Boris Ostrovsky:
->>>>>> (and then it breaks differently as a Xen guest --- we hung on the
->>>>>> last
->>>>>> pci_read_config_dword(), I haven't looked at this at all yet)
->>>>> Hui? How does this fix applies to a Xen guest in the first place?
->>>>>
->>>>> Please provide the output of "lspci -nn" and explain further what is
->>>>> your config with Xen.
->>>>>
->>>>>
->>>> This is dom0.
->>>>
->>>> -bash-4.1# lspci -nn
->>>> 00:00.0 Host bridge [0600]: ATI Technologies Inc RD890 Northbridge
->>>> only
->>>> dual slot (2x16) PCI-e GFX Hydra part [1002:5a10] (rev 02)
->>>> 00:00.2 Generic system peripheral [0806]: ATI Technologies Inc Device
->>>> [1002:5a23]
->>>> 00:0d.0 PCI bridge [0604]: ATI Technologies Inc RD890 PCI to PCI
->>>> bridge
->>>> (external gfx1 port B) [1002:5a1e]
->>>> 00:11.0 SATA controller [0106]: ATI Technologies Inc SB700/SB800 SATA
->>>> Controller [AHCI mode] [1002:4391]
->>>> 00:12.0 USB Controller [0c03]: ATI Technologies Inc SB700/SB800 USB
->>>> OHCI0 Controller [1002:4397]
->>>> 00:12.1 USB Controller [0c03]: ATI Technologies Inc SB700 USB OHCI1
->>>> Controller [1002:4398]
->>>> 00:12.2 USB Controller [0c03]: ATI Technologies Inc SB700/SB800 USB
->>>> EHCI
->>>> Controller [1002:4396]
->>>> 00:13.0 USB Controller [0c03]: ATI Technologies Inc SB700/SB800 USB
->>>> OHCI0 Controller [1002:4397]
->>>> 00:13.1 USB Controller [0c03]: ATI Technologies Inc SB700 USB OHCI1
->>>> Controller [1002:4398]
->>>> 00:13.2 USB Controller [0c03]: ATI Technologies Inc SB700/SB800 USB
->>>> EHCI
->>>> Controller [1002:4396]
->>>> 00:14.0 SMBus [0c05]: ATI Technologies Inc SBx00 SMBus Controller
->>>> [1002:4385] (rev 3d)
->>>> 00:14.3 ISA bridge [0601]: ATI Technologies Inc SB700/SB800 LPC host
->>>> controller [1002:439d]
->>>> 00:14.4 PCI bridge [0604]: ATI Technologies Inc SBx00 PCI to PCI
->>>> Bridge
->>>> [1002:4384]
->>>> 00:14.5 USB Controller [0c03]: ATI Technologies Inc SB700/SB800 USB
->>>> OHCI2 Controller [1002:4399]
->>>> 00:18.0 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1600]
->>>> 00:18.1 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1601]
->>>> 00:18.2 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1602]
->>>> 00:18.3 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1603]
->>>> 00:18.4 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1604]
->>>> 00:18.5 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1605]
->>>> 00:19.0 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1600]
->>>> 00:19.1 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1601]
->>>> 00:19.2 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1602]
->>>> 00:19.3 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1603]
->>>> 00:19.4 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1604]
->>>> 00:19.5 Host bridge [0600]: Advanced Micro Devices [AMD] Device
->>>> [1022:1605]
->>>> 01:04.0 VGA compatible controller [0300]: Matrox Graphics, Inc. MGA
->>>> G200eW WPCM450 [102b:0532] (rev 0a)
->>>> 02:00.0 Ethernet controller [0200]: Intel Corporation 82576 Gigabit
->>>> Network Connection [8086:10c9] (rev 01)
->>>> 02:00.1 Ethernet controller [0200]: Intel Corporation 82576 Gigabit
->>>> Network Connection [8086:10c9] (rev 01)
->>>> -bash-4.1#
->>>>
->>>>
->>>> -boris
->>>
->
+diff --git a/drivers/pci/hotplug/cpqphp_pci.c b/drivers/pci/hotplug/cpqphp_pci.c
+index e220d49..8897a77 100644
+--- a/drivers/pci/hotplug/cpqphp_pci.c
++++ b/drivers/pci/hotplug/cpqphp_pci.c
+@@ -89,7 +89,9 @@ int cpqhp_configure_device(struct controller *ctrl, struct pci_func *func)
+ 	pci_lock_rescan_remove();
+ 
+ 	if (func->pci_dev == NULL)
+-		func->pci_dev = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, func->function));
++		func->pci_dev = pci_get_domain_bus_and_slot(0, func->bus,
++							PCI_DEVFN(func->device,
++							func->function));
+ 
+ 	/* No pci device, we need to create it then */
+ 	if (func->pci_dev == NULL) {
+@@ -99,7 +101,9 @@ int cpqhp_configure_device(struct controller *ctrl, struct pci_func *func)
+ 		if (num)
+ 			pci_bus_add_devices(ctrl->pci_dev->bus);
+ 
+-		func->pci_dev = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, func->function));
++		func->pci_dev = pci_get_domain_bus_and_slot(0, func->bus,
++							PCI_DEVFN(func->device,
++							func->function));
+ 		if (func->pci_dev == NULL) {
+ 			dbg("ERROR: pci_dev still null\n");
+ 			goto out;
+@@ -129,7 +133,10 @@ int cpqhp_unconfigure_device(struct pci_func *func)
+ 
+ 	pci_lock_rescan_remove();
+ 	for (j = 0; j < 8 ; j++) {
+-		struct pci_dev *temp = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, j));
++		struct pci_dev *temp = pci_get_domain_bus_and_slot(0,
++							func->bus,
++							PCI_DEVFN(func->device,
++							j));
+ 		if (temp) {
+ 			pci_dev_put(temp);
+ 			pci_stop_and_remove_bus_device(temp);
+@@ -319,6 +326,7 @@ int cpqhp_save_config(struct controller *ctrl, int busnumber, int is_hot_plug)
+ 	int cloop = 0;
+ 	int stop_it;
+ 	int index;
++	u16 devfn;
+ 
+ 	/* Decide which slots are supported */
+ 
+@@ -416,7 +424,9 @@ int cpqhp_save_config(struct controller *ctrl, int busnumber, int is_hot_plug)
+ 			new_slot->switch_save = 0x10;
+ 			/* In case of unsupported board */
+ 			new_slot->status = DevError;
+-			new_slot->pci_dev = pci_get_bus_and_slot(new_slot->bus, (new_slot->device << 3) | new_slot->function);
++			devfn = (new_slot->device << 3) | new_slot->function;
++			new_slot->pci_dev = pci_get_domain_bus_and_slot(0,
++							new_slot->bus, devfn);
+ 
+ 			for (cloop = 0; cloop < 0x20; cloop++) {
+ 				rc = pci_bus_read_config_dword(ctrl->pci_bus, PCI_DEVFN(device, function), cloop << 2, (u32 *) &(new_slot->config_space[cloop]));
+-- 
+1.9.1
