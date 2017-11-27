@@ -1,63 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFCv2 PATCH 10/36] vfio: Add support for Shared Virtual Memory
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- <linux-acpi@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <iommu@lists.linux-foundation.org>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-11-jean-philippe.brucker@arm.com>
-From: Bob Liu <liubo95@huawei.com>
-Message-ID: <419afe22-816d-263f-9c85-1a9e28c723b7@huawei.com>
-Date: Fri, 24 Nov 2017 16:23:26 +0800
-MIME-Version: 1.0
-In-Reply-To: <20171006133203.22803-11-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, xieyisheng1@huawei.com, gabriele.paoloni@huawei.com,
- catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- yi.l.liu@intel.com, lorenzo.pieralisi@arm.com, ashok.raj@intel.com,
- tn@semihalf.com, joro@8bytes.org, rfranz@cavium.com, lenb@kernel.org,
- jacob.jun.pan@linux.intel.com, alex.williamson@redhat.com, robh+dt@kernel.org,
- thunder.leizhen@huawei.com, bhelgaas@google.com, dwmw2@infradead.org,
- rjw@rjwysocki.net, robdclark@gmail.com, hanjun.guo@linaro.org,
- sudeep.holla@arm.com, robin.murphy@arm.com, nwatters@codeaurora.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:6889 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751138AbdK0I5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Nov 2017 03:57:15 -0500
+Message-ID: <1511773014.4627.14.camel@linux.intel.com>
+Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
+From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+        timur@codeaurora.org
+Cc: Jani Nikula <jani.nikula@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>
+Date: Mon, 27 Nov 2017 10:56:54 +0200
+In-Reply-To: <0b12dcfe-1ee1-10ef-4db3-9c9d42dc4703@codeaurora.org>
+References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
+         <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
+         <1511337146.4512.6.camel@linux.intel.com>
+         <4541eaef-745a-e78f-e61d-1c7c207b551e@codeaurora.org>
+         <1511422959.4641.5.camel@linux.intel.com>
+         <0b12dcfe-1ee1-10ef-4db3-9c9d42dc4703@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
-> Add two new ioctl for VFIO containers. VFIO_DEVICE_BIND_PROCESS creates a
-> bond between a container and a process address space, identified by a
-> device-specific ID named PASID. This allows the device to target DMA
-> transactions at the process virtual addresses without a need for mapping
-> and unmapping buffers explicitly in the IOMMU. The process page tables are
-> shared with the IOMMU, and mechanisms such as PCI ATS/PRI may be used to
-> handle faults. VFIO_DEVICE_UNBIND_PROCESS removed a bond identified by a
-> PASID.
+On Thu, 2017-11-23 at 13:37 -0500, Sinan Kaya wrote:
+> On 11/23/2017 2:42 AM, Joonas Lahtinen wrote:
+> > It is not longer than 80 characters when you break line before the
+> > PCI_DEVFN like I proposed. Or you can break it after the "=", too,
+> > either way works fine.
 > 
-
-How about hide bind/unbind into ioctl(VFIO_SET_IOMMU)? 
-e.g always bind to current process in SET_IOMMU.
-
-Not sure about the real use case.
-
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> ---
->  drivers/vfio/vfio_iommu_type1.c | 243 +++++++++++++++++++++++++++++++++++++++-
->  include/uapi/linux/vfio.h       |  69 ++++++++++++
->  2 files changed, 311 insertions(+), 1 deletion(-)
+> I posted V2 with this suggestion. 
 > 
+> https://patchwork.kernel.org/patch/10071759/
+> 
+> Let me know what you think about the domain number call here. 
+> 
+> u32 domain = pci_domain_nr(dev_priv->drm.pdev->bus);
 
+The function return signature is 'int' as well as the parameter in
+pci_get_domain_bus_and_slot is type 'int', so why fight it and try to
+make the variable 'u32'?
 
+> I don't have a way to test this change. I traced the drm_device's pdev
+> assignment in the code. It should work fine but I don't have a proof.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Send the patch to intel-gfx@lists.freedesktop.org and it should get
+automatically tested by our CI system.
+
+Regards, Joonas
+-- 
+Joonas Lahtinen
+Open Source Technology Center
+Intel Corporation
