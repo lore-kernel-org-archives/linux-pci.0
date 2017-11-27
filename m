@@ -1,103 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 9.mo7.mail-out.ovh.net ([46.105.60.248]:35556 "EHLO
-        9.mo7.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753022AbdKWPUg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Nov 2017 10:20:36 -0500
-Received: from player762.ha.ovh.net (b6.ovh.net [213.186.33.56])
-        by mo7.mail-out.ovh.net (Postfix) with ESMTP id 28A638151E
-        for <linux-pci@vger.kernel.org>; Thu, 23 Nov 2017 16:02:42 +0100 (CET)
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH 2/5] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host controller
-Date: Thu, 23 Nov 2017 16:01:47 +0100
-Message-Id: <895cbb8f862c712b78f780a53e05d5429d24cc35.1511439189.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V3 18/29] PCI/quirks: deprecate pci_get_bus_and_slot()
+Date: Mon, 27 Nov 2017 11:57:55 -0500
+Message-Id: <1511801886-6753-19-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, intel-gfx@lists.freedesktop.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Scott Telford <stelford@cadence.com>
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-This patch adds documentation for the DT bindings of the Cadence PCIe
-controller when configured in host (Root Complex) mode.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-Signed-off-by: Scott Telford <stelford@cadence.com>
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Extract the domain number from pdev while calling into
+pci_get_domain_bus_and_slot() function.
 
-dt-bindings: PCI: cadence: host fixup
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- .../bindings/pci/cdns,cdns-pcie-host.txt           | 54 ++++++++++++++++++++++
- 1 file changed, 54 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+ drivers/pci/quirks.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-new file mode 100644
-index 000000000000..4b3df8ffd5e1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
-@@ -0,0 +1,54 @@
-+* Cadence PCIe host controller
-+
-+This PCIe controller inherits the base properties defined in
-+host-generic-pci.txt.
-+
-+Required properties:
-+- compatible: should contain "cdns,cdns-pcie-host" to identify the IP used.
-+- reg: Should contain the PCIe configuration window base address, controller
-+  register base address, and AXI interface region base address respectively.
-+- reg-names: Must be "cfg", "reg" and "mem" respectively.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions
-+- #interrupt-cells: set to <1>
-+- interrupt-map-mask and interrupt-map: standard PCI
-+	properties to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+
-+Example:
-+
-+	pci@fb000000 {
-+		compatible = "cdns,cdns-pcie-host";
-+		device_type = "pci";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		bus-range = <0x0 0xff>;
-+		linux,pci-domain = <0>;
-+
-+		// CPU_PHYSICAL(2)  SIZE(2)
-+		reg = <0x0 0x41000000  0x0 0x00001000>, /* Config space */
-+		      <0x0 0xfb000000  0x0 0x01000000>, /* Base Address */
-+		      <0x0 0x40000000  0x0 0x04000000>; /* AXI region */
-+		reg-names = "cfg", "reg", "mem";
-+
-+		// BUS_ADDRESS(3)  CPU_PHYSICAL(1)  SIZE(2)
-+		ranges =
-+			<0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
-+			<0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
-+
-+
-+		#interrupt-cells = <0x1>;
-+
-+		// PCI_DEVICE(3)  INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(5)
-+		interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1
-+				 0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1
-+				 0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1
-+				 0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
-+
-+		// PCI_DEVICE(3)  INT#(1)
-+		interrupt-map-mask = <0x0000 0x0 0x0  0x7>;
-+
-+		msi-parent = <&its_pci>;
-+	};
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 911b3b6..4c46cc5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2699,7 +2699,8 @@ static void __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
+ 	 * HT MSI mapping should be disabled on devices that are below
+ 	 * a non-Hypertransport host bridge. Locate the host bridge...
+ 	 */
+-	host_bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
++	host_bridge = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus), 0,
++						  PCI_DEVFN(0, 0));
+ 	if (host_bridge == NULL) {
+ 		dev_warn(&dev->dev, "nv_msi_ht_cap_quirk didn't locate host bridge\n");
+ 		return;
 -- 
-2.11.0
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
