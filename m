@@ -1,87 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH 05/30] agp: nvidia: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:30:50 -0500
-Message-Id: <1511328675-21981-6-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- David Airlie <airlied@linux.ie>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=2J/1=CZ=gmail.com=alexdeucher@kernel.org>
+Return-Path: <SRS0=2J/1=CZ=gmail.com=alexdeucher@kernel.org>
+From: Alex Deucher <alexdeucher@gmail.com>
+To: dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org,
+	helgaas@kernel.org
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Subject: [PATCH] PCI: use dev_info rather than dev_err for rom validation
+Date: Mon, 27 Nov 2017 12:21:10 -0500
+Message-Id: <20171127172110.16699-1-alexander.deucher@amd.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On AMD GPUs, we use several mechanisms to fetch the vbios
+rom depending on the platform.  We try to read the rom
+back via the rom BAR and fall back to other methods in
+some cases.  This leads to spurious error messages
+from the pci rom code which are harmless in our case.
+This leads to bugs being files, etc.  Change these to
+dev_info rather than dev_err to avoid that.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
 ---
- drivers/char/agp/nvidia-agp.c | 12 +++++++++---
- drivers/char/agp/sworks-agp.c |  3 ++-
- 2 files changed, 11 insertions(+), 4 deletions(-)
+ drivers/pci/rom.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
-index 828b344..623205b 100644
---- a/drivers/char/agp/nvidia-agp.c
-+++ b/drivers/char/agp/nvidia-agp.c
-@@ -340,11 +340,17 @@ static int agp_nvidia_probe(struct pci_dev *pdev,
- 	u8 cap_ptr;
- 
- 	nvidia_private.dev_1 =
--		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 1));
-+		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+					    (unsigned int)pdev->bus->number,
-+					    PCI_DEVFN(0, 1));
- 	nvidia_private.dev_2 =
--		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 2));
-+		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+					    (unsigned int)pdev->bus->number,
-+					    PCI_DEVFN(0, 2));
- 	nvidia_private.dev_3 =
--		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(30, 0));
-+		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+					    (unsigned int)pdev->bus->number,
-+					    PCI_DEVFN(30, 0));
- 
- 	if (!nvidia_private.dev_1 || !nvidia_private.dev_2 || !nvidia_private.dev_3) {
- 		printk(KERN_INFO PFX "Detected an NVIDIA nForce/nForce2 "
-diff --git a/drivers/char/agp/sworks-agp.c b/drivers/char/agp/sworks-agp.c
-index 03be4ac..4dbdd3b 100644
---- a/drivers/char/agp/sworks-agp.c
-+++ b/drivers/char/agp/sworks-agp.c
-@@ -474,7 +474,8 @@ static int agp_serverworks_probe(struct pci_dev *pdev,
- 	}
- 
- 	/* Everything is on func 1 here so we are hardcoding function one */
--	bridge_dev = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
-+	bridge_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+			(unsigned int)pdev->bus->number,
- 			PCI_DEVFN(0, 1));
- 	if (!bridge_dev) {
- 		dev_info(&pdev->dev, "can't find secondary device\n");
+diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+index b6edb187d160..7ab7c6bb17c6 100644
+--- a/drivers/pci/rom.c
++++ b/drivers/pci/rom.c
+@@ -92,14 +92,14 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size)
+ 		void __iomem *pds;
+ 		/* Standard PCI ROMs start out with these bytes 55 AA */
+ 		if (readw(image) != 0xAA55) {
+-			dev_err(&pdev->dev, "Invalid PCI ROM header signature: expecting 0xaa55, got %#06x\n",
++			dev_info(&pdev->dev, "Invalid PCI ROM header signature: expecting 0xaa55, got %#06x\n",
+ 				readw(image));
+ 			break;
+ 		}
+ 		/* get the PCI data structure and check its "PCIR" signature */
+ 		pds = image + readw(image + 24);
+ 		if (readl(pds) != 0x52494350) {
+-			dev_err(&pdev->dev, "Invalid PCI ROM data signature: expecting 0x52494350, got %#010x\n",
++			dev_info(&pdev->dev, "Invalid PCI ROM data signature: expecting 0x52494350, got %#010x\n",
+ 				readl(pds));
+ 			break;
+ 		}
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.13.6
