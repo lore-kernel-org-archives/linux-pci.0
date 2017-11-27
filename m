@@ -1,53 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:46442 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932201AbdKBVzG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Nov 2017 17:55:06 -0400
-Date: Thu, 2 Nov 2017 14:55:01 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [RFC PATCH v10 1/7] dt-bindings: PCI: Add definition of PCIe
- WAKE# irq and PCI irq
-Message-ID: <20171102215501.GD28152@atomide.com>
-References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
- <20171027072612.26565-2-jeffy.chen@rock-chips.com>
- <20171027204513.GA105121@google.com>
- <20171101210541.vacfufnn2ms65xrw@rob-hp-laptop>
+Received: from mail-ua0-f177.google.com ([209.85.217.177]:36610 "EHLO
+        mail-ua0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753098AbdK0QHW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 11:07:22 -0500
+Received: by mail-ua0-f177.google.com with SMTP id w47so19346255uah.3
+        for <linux-pci@vger.kernel.org>; Mon, 27 Nov 2017 08:07:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171101210541.vacfufnn2ms65xrw@rob-hp-laptop>
+In-Reply-To: <dda6fccc-093a-7f1c-87a1-d01a8d8aacb8@deltatee.com>
+References: <20171121225945.29377-1-colin.king@canonical.com> <dda6fccc-093a-7f1c-87a1-d01a8d8aacb8@deltatee.com>
+From: Jon Mason <jdmason@kudzu.us>
+Date: Mon, 27 Nov 2017 11:07:20 -0500
+Message-ID: <CAPoiz9wKGv9+Y9PF2mBqFYuUzvb1bnKodHvONUpa5OCM0TSiHg@mail.gmail.com>
+Subject: Re: [PATCH] NTB: switchtec_ntb: fix spelling mistake: "peforming" -> "performing"
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Colin King <colin.king@canonical.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        linux-ntb@googlegroups.com, kernel-janitors@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Rob Herring <robh@kernel.org> [171101 21:07]:
-> On Fri, Oct 27, 2017 at 01:45:17PM -0700, Brian Norris wrote:
-> > IMO, since you're trying to augment a standardized binding, you need to
-> > be a lot clearer here. I expect you should mention the existing standard
-> > (that devices may optionally include an 'interrupts' property that
-> > represents the legacy PCI interrupt) and how you're augmenting it (that
-> > additional interrupts can be supported optionally, but they require a
-> > corresponding 'interrupt-names' property).
-> 
-> There's an additional complication that I'd guess the wakeup is 
-> typically a GPIO line and hence a different parent. We have 2 options 
-> there. The first is interrupts-extended which is generally implicitly 
-> supported (i.e. we only document interrupts). The second is we already 
-> have interrupt-map if we have legacy interrupts and can map to different 
-> parents. For this to work, we'd have to use a number >4 for the wakeup 
-> interrupts.
+On Tue, Nov 21, 2017 at 6:06 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+> Thanks Colin!
+>
+> Reviewed-By: Logan Gunthorpe <logang@deltatee.com>
+>
+> On 21/11/17 03:59 PM, Colin King wrote:
+>>
+>> From: Colin Ian King <colin.king@canonical.com>
+>>
+>> Trivial fix to spelling mistake in dev_err error message
+>>
+>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-The wakeup interrupt can also be a separate always on interrupt
-controller in addition to GPIOs. Anyways, the interrupts-extended
-binding works well for these. And the interrupt-names we seem
-to have standardized on are "irq" and "wakeup".
+Applied to my ntb-next branch
 
-Regards,
-
-Tony
+>> ---
+>>   drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+>> b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+>> index afe8ed6f3b23..d46d113210b5 100644
+>> --- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+>> +++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+>> @@ -172,7 +172,7 @@ static int switchtec_ntb_part_op(struct switchtec_ntb
+>> *sndev,
+>>         if (ps == status) {
+>>                 dev_err(&sndev->stdev->dev,
+>> -                       "Timed out while peforming %s (%d). (%08x)",
+>> +                       "Timed out while performing %s (%d). (%08x)",
+>>                         op_text[op], op,
+>>                         ioread32(&ctl->partition_status));
+>>
+>
+>
+> --
+> You received this message because you are subscribed to the Google Groups
+> "linux-ntb" group.
+> To unsubscribe from this group and stop receiving emails from it, send an
+> email to linux-ntb+unsubscribe@googlegroups.com.
+> To post to this group, send email to linux-ntb@googlegroups.com.
+> To view this discussion on the web visit
+> https://groups.google.com/d/msgid/linux-ntb/dda6fccc-093a-7f1c-87a1-d01a8d8aacb8%40deltatee.com.
+> For more options, visit https://groups.google.com/d/optout.
