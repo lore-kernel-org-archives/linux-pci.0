@@ -1,47 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48166 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753251AbdK0SDe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Nov 2017 13:03:34 -0500
-Date: Mon, 27 Nov 2017 12:03:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] powerpc/pci: convert to use for_each_pci_bridge()
- helper
-Message-ID: <20171127180332.GA11228@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171110175230.82522-1-andriy.shevchenko@linux.intel.com>
- <20171122201259.GA21158@bhelgaas-glaptop.roam.corp.google.com>
- <87zi7d17ql.fsf@concordia.ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87zi7d17ql.fsf@concordia.ellerman.id.au>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        David Airlie <airlied@linux.ie>,
+        Ilia Mirkin <imirkin@alum.mit.edu>,
+        dri-devel@lists.freedesktop.org (open list:DRM DRIVER FOR NVIDIA
+        GEFORCE/QUADRO GPUS),
+        nouveau@lists.freedesktop.org (open list:DRM DRIVER FOR NVIDIA
+        GEFORCE/QUADRO GPUS), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V3 10/29] drm/nouveau: deprecate pci_get_bus_and_slot()
+Date: Mon, 27 Nov 2017 11:57:47 -0500
+Message-Id: <1511801886-6753-11-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 23, 2017 at 11:48:18PM +1100, Michael Ellerman wrote:
-> Bjorn Helgaas <helgaas@kernel.org> writes:
-> 
-> > On Fri, Nov 10, 2017 at 07:52:29PM +0200, Andy Shevchenko wrote:
-> >> ...which makes code slightly cleaner.
-> >> 
-> >> Requires: d43f59ce6c50 ("PCI: Add for_each_pci_bridge() helper")
-> >
-> > Requires: 24a0c654d7d6 ("PCI: Add for_each_pci_bridge() helper")
-> >
-> > (My fault, I rebased that commit before sending it to Linus.)
-> >
-> >> Acked-by: Michael Ellerman <mpe@ellerman.id.au>
-> >
-> > These don't depend on anything in the PCI core, so they could go
-> > either via my tree or the powerpc tree.  Since you acked this,
-> > Michael, I corrected the SHA1 above and put these both on my pci/misc
-> > branch.
-> 
-> Thanks. That's aiming for 4.16 I assume?
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Right.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
+
+Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
+and extract the domain number from
+1. struct pci_dev
+2. struct pci_dev through drm_device->pdev
+3. struct pci_dev through fb->subdev->drm_device->pdev
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/gpu/drm/nouveau/dispnv04/arb.c           |  4 +++-
+ drivers/gpu/drm/nouveau/dispnv04/hw.c            | 10 +++++++---
+ drivers/gpu/drm/nouveau/nouveau_drm.c            |  3 ++-
+ drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c | 10 +++++++++-
+ 4 files changed, 21 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/nouveau/dispnv04/arb.c b/drivers/gpu/drm/nouveau/dispnv04/arb.c
+index 90075b6..c79160c 100644
+--- a/drivers/gpu/drm/nouveau/dispnv04/arb.c
++++ b/drivers/gpu/drm/nouveau/dispnv04/arb.c
+@@ -213,8 +213,10 @@ struct nv_sim_state {
+ 	if ((dev->pdev->device & 0xffff) == 0x01a0 /*CHIPSET_NFORCE*/ ||
+ 	    (dev->pdev->device & 0xffff) == 0x01f0 /*CHIPSET_NFORCE2*/) {
+ 		uint32_t type;
++		int domain = pci_domain_nr(dev->pdev->bus);
+ 
+-		pci_read_config_dword(pci_get_bus_and_slot(0, 1), 0x7c, &type);
++		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 1),
++				      0x7c, &type);
+ 
+ 		sim_data.memory_type = (type >> 12) & 1;
+ 		sim_data.memory_width = 64;
+diff --git a/drivers/gpu/drm/nouveau/dispnv04/hw.c b/drivers/gpu/drm/nouveau/dispnv04/hw.c
+index b985990..0c9bdf0 100644
+--- a/drivers/gpu/drm/nouveau/dispnv04/hw.c
++++ b/drivers/gpu/drm/nouveau/dispnv04/hw.c
+@@ -216,12 +216,15 @@
+ {
+ 	struct nvkm_pll_vals pllvals;
+ 	int ret;
++	int domain;
++
++	domain = pci_domain_nr(dev->pdev->bus);
+ 
+ 	if (plltype == PLL_MEMORY &&
+ 	    (dev->pdev->device & 0x0ff0) == CHIPSET_NFORCE) {
+ 		uint32_t mpllP;
+-
+-		pci_read_config_dword(pci_get_bus_and_slot(0, 3), 0x6c, &mpllP);
++		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 3),
++				      0x6c, &mpllP);
+ 		mpllP = (mpllP >> 8) & 0xf;
+ 		if (!mpllP)
+ 			mpllP = 4;
+@@ -232,7 +235,8 @@
+ 	    (dev->pdev->device & 0xff0) == CHIPSET_NFORCE2) {
+ 		uint32_t clock;
+ 
+-		pci_read_config_dword(pci_get_bus_and_slot(0, 5), 0x4c, &clock);
++		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 5),
++				      0x4c, &clock);
+ 		return clock / 1000;
+ 	}
+ 
+diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
+index 595630d..0b6c639 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_drm.c
++++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
+@@ -406,7 +406,8 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* subfunction one is a hdmi audio device? */
+-	drm->hdmi_device = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
++	drm->hdmi_device = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++						(unsigned int)pdev->bus->number,
+ 						PCI_DEVFN(PCI_SLOT(pdev->devfn), 1));
+ 
+ 	if (!drm->hdmi_device) {
+diff --git a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
+index 3c6a871..8849b71 100644
+--- a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
++++ b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
+@@ -28,8 +28,16 @@
+ {
+ 	struct pci_dev *bridge;
+ 	u32 mem, mib;
++	int domain = 0;
++	struct pci_dev *pdev = NULL;
+ 
+-	bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 1));
++	if (dev_is_pci(fb->subdev.device->dev))
++		pdev = to_pci_dev(fb->subdev.device->dev);
++
++	if (pdev)
++		domain = pci_domain_nr(pdev->bus);
++
++	bridge = pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 1));
+ 	if (!bridge) {
+ 		nvkm_error(&fb->subdev, "no bridge device\n");
+ 		return -ENODEV;
+-- 
+1.9.1
