@@ -1,65 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 29 Nov 2017 10:36:39 +0200
-From: Sakari Ailus <sakari.ailus@iki.fi>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V3 22/29] [media] atomisp: deprecate pci_get_bus_and_slot()
-Message-ID: <20171129083639.meuue7eooybr5u7o@valkosipuli.retiisi.org.uk>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
- <1511801886-6753-23-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1511801886-6753-23-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arushi Singhal <arushisinghal19971997@gmail.com>,
- "open list:STAGING SUBSYSTEM" <devel@driverdev.osuosl.org>,
- kbuild test robot <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, Philippe Ombredanne <pombredanne@nexb.com>,
- "open list:MEDIA INPUT INFRASTRUCTURE \(V4L/DVB\)"
- <linux-media@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
- Avraham Shukron <avraham.shukron@gmail.com>,
- Hans Verkuil <hans.verkuil@cisco.com>,
- Dan Carpenter <dan.carpenter@oracle.com>, linux-arm-msm@vger.kernel.org,
- Valentin Vidic <Valentin.Vidic@CARNet.hr>,
- Mauro Carvalho Chehab <mchehab@kernel.org>, intel-gfx@lists.freedesktop.org,
- linux-arm-kernel@lists.infradead.org, Alan Cox <alan@linux.intel.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53644 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753494AbdK0Q6V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 11:58:21 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>
+Subject: [PATCH V3 00/29] PCI: deprecate pci_get_bus_and_slot()
+Date: Mon, 27 Nov 2017 11:57:37 -0500
+Message-Id: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+Deprecate pci_get_bus_and_slot() in favor of pci_get_domain_bus_and_slot()
+in order to remove domain 0 assumptions in the kernel.
 
-On Mon, Nov 27, 2017 at 11:57:59AM -0500, Sinan Kaya wrote:
-> diff --git a/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c b/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
-> index 4631b1d..51dcef57 100644
-> --- a/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
-> +++ b/drivers/staging/media/atomisp/platform/intel-mid/intel_mid_pcihelpers.c
-> @@ -39,7 +39,7 @@ static inline int platform_is(u8 model)
->  
->  static int intel_mid_msgbus_init(void)
->  {
-> -	pci_root = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-> +	pci_root = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
->  	if (!pci_root) {
->  		pr_err("%s: Error: msgbus PCI handle NULL\n", __func__);
->  		return -ENODEV;
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-This file has been removed, I'm applying the rest of the patch.
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-Please use the media tree as the base in the future. Thanks.
+Changes from v2:
+* commit text cleanups
+* remove implicit busfn assignments and use PCI_DEVFN call in place.
+* change storage type for local copy of pci_domain_nr() value to int
+
+Sinan Kaya (29):
+  alpha/PCI: deprecate pci_get_bus_and_slot()
+  powerpc/PCI: deprecate pci_get_bus_and_slot()
+  x86/PCI: deprecate pci_get_bus_and_slot()
+  ata: deprecate pci_get_bus_and_slot()
+  agp: nvidia: deprecate pci_get_bus_and_slot()
+  edd: deprecate pci_get_bus_and_slot()
+  ibft: deprecate pci_get_bus_and_slot()
+  drm/gma500: deprecate pci_get_bus_and_slot()
+  drm/i915: deprecate pci_get_bus_and_slot()
+  drm/nouveau: deprecate pci_get_bus_and_slot()
+  Drivers: ide: deprecate pci_get_bus_and_slot()
+  iommu/amd: deprecate pci_get_bus_and_slot()
+  powerpc/powermac: deprecate pci_get_bus_and_slot()
+  bnx2x: deprecate pci_get_bus_and_slot()
+  pch_gbe: deprecate pci_get_bus_and_slot()
+  PCI: cpqhp: deprecate pci_get_bus_and_slot()
+  PCI: ibmphp: deprecate pci_get_bus_and_slot()
+  PCI/quirks: deprecate pci_get_bus_and_slot()
+  PCI/syscall: deprecate pci_get_bus_and_slot()
+  xen: deprecate pci_get_bus_and_slot()
+  openprom: deprecate pci_get_bus_and_slot()
+  [media] atomisp: deprecate pci_get_bus_and_slot()
+  staging: rts5208: remove rtsx_read_pci_cfg_byte()
+  backlight: deprecate pci_get_bus_and_slot()
+  video: fbdev: intelfb: deprecate pci_get_bus_and_slot()
+  video: fbdev: nvidia: deprecate pci_get_bus_and_slot()
+  video: fbdev: riva: deprecate pci_get_bus_and_slot()
+  i7300_idle: remove unused file
+  PCI: remove pci_get_bus_and_slot() function
+
+ arch/alpha/kernel/pci.c                            |  2 +-
+ arch/alpha/kernel/sys_nautilus.c                   |  2 +-
+ arch/powerpc/kernel/pci_32.c                       |  3 +-
+ arch/powerpc/platforms/powermac/feature.c          |  2 +-
+ arch/powerpc/sysdev/mv64x60_pci.c                  |  4 +-
+ arch/x86/pci/irq.c                                 |  3 +-
+ drivers/ata/pata_ali.c                             |  3 +-
+ drivers/char/agp/nvidia-agp.c                      | 12 +++-
+ drivers/char/agp/sworks-agp.c                      |  3 +-
+ drivers/firmware/edd.c                             |  8 +--
+ drivers/firmware/iscsi_ibft.c                      |  5 +-
+ drivers/gpu/drm/gma500/cdv_device.c                | 16 +++--
+ drivers/gpu/drm/gma500/gma_device.c                |  4 +-
+ drivers/gpu/drm/gma500/mid_bios.c                  | 12 +++-
+ drivers/gpu/drm/gma500/psb_drv.c                   | 10 ++-
+ drivers/gpu/drm/gma500/psb_drv.h                   | 18 ++---
+ drivers/gpu/drm/i915/i915_drv.c                    |  5 +-
+ drivers/gpu/drm/nouveau/dispnv04/arb.c             |  4 +-
+ drivers/gpu/drm/nouveau/dispnv04/hw.c              | 10 ++-
+ drivers/gpu/drm/nouveau/nouveau_drm.c              |  3 +-
+ drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c   | 10 ++-
+ drivers/ide/sl82c105.c                             |  5 +-
+ drivers/iommu/amd_iommu.c                          |  3 +-
+ drivers/iommu/amd_iommu_init.c                     |  9 +--
+ drivers/iommu/amd_iommu_v2.c                       |  3 +-
+ drivers/macintosh/via-pmu.c                        |  2 +-
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  | 10 ++-
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.h  |  1 +
+ .../net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c   |  6 +-
+ drivers/pci/hotplug/cpqphp_pci.c                   | 18 +++--
+ drivers/pci/hotplug/ibmphp_core.c                  |  7 +-
+ drivers/pci/quirks.c                               |  3 +-
+ drivers/pci/syscall.c                              |  4 +-
+ drivers/pci/xen-pcifront.c                         |  3 +-
+ drivers/sbus/char/openprom.c                       |  5 +-
+ .../media/atomisp/pci/atomisp2/atomisp_v4l2.c      |  2 +-
+ .../platform/intel-mid/intel_mid_pcihelpers.c      |  2 +-
+ drivers/staging/rts5208/rtsx.c                     | 17 -----
+ drivers/staging/rts5208/rtsx.h                     |  2 -
+ drivers/video/backlight/apple_bl.c                 |  2 +-
+ drivers/video/fbdev/intelfb/intelfbhw.c            |  4 +-
+ drivers/video/fbdev/nvidia/nv_hw.c                 | 11 +--
+ drivers/video/fbdev/nvidia/nv_setup.c              |  3 +-
+ drivers/video/fbdev/riva/fbdev.c                   |  2 +-
+ drivers/video/fbdev/riva/nv_driver.c               |  7 +-
+ drivers/video/fbdev/riva/riva_hw.c                 | 20 ++++--
+ drivers/video/fbdev/riva/riva_hw.h                 |  3 +-
+ include/linux/i7300_idle.h                         | 84 ----------------------
+ include/linux/pci.h                                |  8 ---
+ 49 files changed, 181 insertions(+), 204 deletions(-)
+ delete mode 100644 include/linux/i7300_idle.h
 
 -- 
-Sakari Ailus
-e-mail: sakari.ailus@iki.fi
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
