@@ -1,155 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:46423 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751303AbdLABKQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Nov 2017 20:10:16 -0500
-Date: Thu, 30 Nov 2017 19:10:14 -0600
-From: Rob Herring <robh@kernel.org>
-To: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, devicetree@vger.kernel.org,
-        mingkai.hu@nxp.com, peter.newton@nxp.com, minghuan.lian@nxp.com,
-        rajesh.raina@nxp.com, rajan.kapoor@nxp.com, prabhjot.singh@nxp.com
-Subject: Re: [PATCH v4 1/2] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
- driver DT bindings
-Message-ID: <20171201011014.3wuzt5oyprbstkff@rob-hp-laptop>
-References: <1511878648-8188-1-git-send-email-l.subrahmanya@mobiveil.co.in>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1511878648-8188-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53978 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932068AbdK0Q6Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 11:58:25 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Kate Stewart <kstewart@linuxfoundation.org>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Philippe Ombredanne <pombredanne@nexb.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-alpha@vger.kernel.org (open list:ALPHA PORT),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V3 01/29] alpha/PCI: deprecate pci_get_bus_and_slot()
+Date: Mon, 27 Nov 2017 11:57:38 -0500
+Message-Id: <1511801886-6753-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Nov 28, 2017 at 09:17:28AM -0500, Subrahmanya Lingappa wrote:
-> This patch adds the DT bindings for Mobiveil PCIe Host Bridge
-> IP driver and updates the vendor prefixes file.
-> 
-> Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> Cc: bhelgaas@google.com
-> Cc: lorenzo.pieralisi@arm.com
-> Cc: linux-pci@vger.kernel.org
-> Cc: devicetree@vger.kernel.org
-> 
-> ---
-> Fixes:
-> - used git mailer, as tabs were converted to spaces by thunderbird before
-> - moved the entry to corrrect alphabetical order in vendor-prefixes.txt
-> - DT binding file was modified to take care of v3 review comments
-> 
->  .../devicetree/bindings/pci/mobiveil-pcie.txt      | 73 ++++++++++++++++++++++
->  .../devicetree/bindings/vendor-prefixes.txt        |  1 +
->  2 files changed, 74 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-A few typos, otherwise:
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/alpha/kernel/pci.c          | 2 +-
+ arch/alpha/kernel/sys_nautilus.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> new file mode 100644
-> index 0000000..9f3160d
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-> @@ -0,0 +1,73 @@
-> +* Mobiveil AXI PCIe Root Port Bridge DT description
-> +
-> +Mobiveil's GPEX 4.0 is PCIe gen4 a root port bridge IP. This configurable IP
-
-...is a PCIe Gen4 root port...
-
-> +has upto 8 outbound and inbound windows for the address translation.
-
-s/upto/up to/
-
-> +
-> +Required properties:
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- compatible: Should contain "mbvl,gpex40-pcie"
-> +- reg: Should contain PCIe registers location and length
-> +	"config_axi_slave": PCIe controller registers
-> +	"csr_axi_slave"	  : Bridge config registers
-> +	"gpio_slave"	  : GPIO registers to control slot power
-> +	"apb_csr"	  : MSI registers
-> +
-> +- device_type: must be "pci"
-> +- apio-wins : number of requested apio outbound windows
-> +		default 2 outbound windows are configured -
-> +		1. Config window
-> +		2. Memory window
-> +- ppio-wins : number of requested ppio inbound windows
-> +		default 1 inbound memory window is configured.
-> +- bus-range: PCI bus numbers covered
-> +- interrupt-controller: identifies the node as an interrupt controller
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +	interrupt source. The value must be 1.
-> +- interrupt-parent : phandle to the interrupt controller that
-> +		it is attached to, it should be set to gic to point to
-> +		ARM's Generic Interrupt Controller node in system DT.
-> +- interrupts: The interrupt line of the PCIe controller
-> +		last cell of this fild is set to 4 to
-
-s/fild/field/
-
-> +		denote it as IRQ_TYPE_LEVEL_HIGH type interrupt.
-> +- interrupt-map-mask,
-> +	interrupt-map: standard PCI properties to define the mapping of the
-> +	PCI interface to interrupt numbers.
-> +- ranges: ranges for the PCI memory regions (I/O space region is not
-> +	supported by hardware)
-> +	Please refer to the standard PCI bus binding document for a more
-> +	detailed explanation
-> +
-> +
-> +Example:
-> +++++++++
-> +	pcie0: pcie@a0000000 {
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		compatible = "mbvl,gpex40-pcie";
-> +		reg =	<0xa0000000 0x00001000>,
-> +			<0xb0000000 0x00010000>,
-> +			<0xff000000 0x00200000>,
-> +			<0xb0010000 0x00001000>;
-> +		reg-names =	"config_axi_slave",
-> +				"csr_axi_slave",
-> +				"gpio_slave",
-> +				"apb_csr";
-> +		device_type = "pci";
-> +		apio-wins = <2>;
-> +		ppio-wins = <1>;
-> +		bus-range = <0x00000000 0x000000ff>;
-> +		interrupt-controller;
-> +		interrupt-parent = <&gic>;
-> +		#interrupt-cells = <1>;
-> +		interrupts = < 0 89 4 >;
-> +		interrupt-map-mask = <0 0 0 7>;
-> +		interrupt-map = <0 0 0 1 &pci_express 1>,
-> +				<0 0 0 2 &pci_express 2>,
-> +				<0 0 0 3 &pci_express 3>,
-> +				<0 0 0 4 &pci_express 4>;
-> +		ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
-> +
-> +	};
-> diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
-> index 0994bdd..8263cc7 100644
-> --- a/Documentation/devicetree/bindings/vendor-prefixes.txt
-> +++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
-> @@ -197,6 +197,7 @@ lwn	Liebherr-Werk Nenzing GmbH
->  macnica	Macnica Americas
->  marvell	Marvell Technology Group Ltd.
->  maxim	Maxim Integrated Products
-> +mbvl	Mobiveil Inc.
->  mcube	mCube
->  meas	Measurement Specialties
->  mediatek	MediaTek Inc.
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 08235bb..e866daf 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -416,7 +416,7 @@ struct resource * __init
+ 		if (bus == 0 && dfn == 0) {
+ 			hose = pci_isa_hose;
+ 		} else {
+-			dev = pci_get_bus_and_slot(bus, dfn);
++			dev = pci_get_domain_bus_and_slot(0, bus, dfn);
+ 			if (!dev)
+ 				return -ENODEV;
+ 			hose = dev->sysdata;
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 239dc0e..ff4f54b 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -237,7 +237,7 @@
+ 	bus = hose->bus = bridge->bus;
+ 	pcibios_claim_one_bus(bus);
+ 
+-	irongate = pci_get_bus_and_slot(0, 0);
++	irongate = pci_get_domain_bus_and_slot(pci_domain_nr(bus), 0, 0);
+ 	bus->self = irongate;
+ 	bus->resource[0] = &irongate_io;
+ 	bus->resource[1] = &irongate_mem;
+-- 
+1.9.1
