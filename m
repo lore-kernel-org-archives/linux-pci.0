@@ -1,86 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:64772 "EHLO mout.web.de"
+Received: from mail.kernel.org ([198.145.29.99]:42342 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750858AbdKBNAX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Nov 2017 09:00:23 -0400
-Subject: [PATCH v2] PCI: rcar: Use common error handling code in
- rcar_pcie_enable_msi()
-To: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Simon Horman <horms@verge.net.au>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-References: <c598933b-b14f-91a1-c7a3-f4a46ec98e77@users.sourceforge.net>
- <20171101081831.ssnuqp5b75lbfu5p@verge.net.au>
- <7047eb7a-cf93-6a56-08db-a5e8bedbfc57@users.sourceforge.net>
- <20171102081239.bzaunax3uotejqja@verge.net.au>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <a55409b0-9839-d9b5-5c90-606c22d0c58b@users.sourceforge.net>
-Date: Thu, 2 Nov 2017 14:00:10 +0100
+        id S1753255AbdK1AcO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Nov 2017 19:32:14 -0500
+Date: Mon, 27 Nov 2017 18:32:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>
+Subject: Re: [Question] Unsupported Request During PCI Enumeration
+Message-ID: <20171128003208.GB11228@bhelgaas-glaptop.roam.corp.google.com>
+References: <26340670-2744-b2e0-eed7-eb8e0ad2bc84@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20171102081239.bzaunax3uotejqja@verge.net.au>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <26340670-2744-b2e0-eed7-eb8e0ad2bc84@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Thu, 2 Nov 2017 13:35:17 +0100
+On Wed, Nov 22, 2017 at 03:38:59PM +0800, Dongdong Liu wrote:
+> I found a correctable error when boot linux kernel. The corrected
+> error is UR (Unsupported Request). It seems that PCIe device will
+> produce UR during PCIe enumeration. 
 
-* Adjust a jump target so that a specific error message is stored only once
-  at the end of this function implementation.
+It seems normal to me that UR would be reported during enumeration.
+During enumeration we don't know what devices are present, so we
+attempt to read the Vendor ID of each possible device.  If the device
+doesn't exist, I would expect the upstream switch port to generate a
+UR completion.  See the implementation notes in PCIe r3.1, sec 2.3.1
+and sec 2.3.2.
 
-* Replace two calls of the function "dev_err" by goto statements.
+Is this what you're seeing?  Do you think this is wrong?
 
-This issue was detected by using the Coccinelle software.
+> We have configured _HPX in firmware to make sure UR report is
+> enabled after calling pci_configure_device().
 
-Link: https://lkml.org/lkml/2017/11/2/140
-Link: https://lkml.kernel.org/r/<20171102081239.bzaunax3uotejqja@verge.net.au>
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
+> If I disable UR report by setting Device Control Register
+> Unsupported Request Reporting Enable to 0 ,it will not report the
+> correctable error.  But disable UR report is not responsible, so my
+> question is how to make sure it does not report the correctable
+> error during enumeration and after enumeration, PCIe device can
+> report UR correctly ?
 
-v2:
-An other jump label was requested by Simon Horman.
+Per spec, the hardware power-on default is that Unsupported Request
+Reporting Enable is 0, i.e., UR reporting is disabled.
 
- drivers/pci/host/pcie-rcar.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+Firmware may enable UR reporting.  It looks like the PCI core enables
+UR reporting in pci_enable_pcie_error_reporting() when we enable AER
+(and a few drivers call pci_enable_pcie_error_reporting() directly).
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 12796eccb2be..f3c1ffdf8072 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -873,18 +873,14 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- 	err = devm_request_irq(dev, msi->irq1, rcar_pcie_msi_irq,
- 			       IRQF_SHARED | IRQF_NO_THREAD,
- 			       rcar_msi_irq_chip.name, pcie);
--	if (err < 0) {
--		dev_err(dev, "failed to request IRQ: %d\n", err);
--		goto err;
--	}
-+	if (err < 0)
-+		goto err_remove_domain;
- 
- 	err = devm_request_irq(dev, msi->irq2, rcar_pcie_msi_irq,
- 			       IRQF_SHARED | IRQF_NO_THREAD,
- 			       rcar_msi_irq_chip.name, pcie);
--	if (err < 0) {
--		dev_err(dev, "failed to request IRQ: %d\n", err);
--		goto err;
--	}
-+	if (err < 0)
-+		goto err_remove_domain;
- 
- 	/* setup MSI data target */
- 	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-@@ -898,7 +894,8 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
- 
- 	return 0;
- 
--err:
-+err_remove_domain:
-+	dev_err(dev, "failed to request IRQ: %d\n", err);
- 	irq_domain_remove(msi->domain);
- 	return err;
- }
--- 
-2.15.0
+We do turn off Master Abort reporting in pci_scan_bridge_extend() when
+scanning below a bridge.  UR reporting during enumeration seems
+analogous to that, but we don't currently turn it off.
+
+Maybe we should turn off UR reporting and restore it afterwards, as we
+do for PCI_BRIDGE_CTL_MASTER_ABORT?
+
+> [  127.158876] {1}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 2
+> [  127.171734] {1}[Hardware Error]: It has been corrected by h/w and requires no further action
+> [  127.181872] {1}[Hardware Error]: event severity: corrected
+> [  127.189099] {1}[Hardware Error]:  Error 0, type: corrected
+> [  127.195437] {1}[Hardware Error]:   section_type: PCIe error
+> [  127.201697] {1}[Hardware Error]:   port_type: 5, upstream switch port
