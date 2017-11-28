@@ -1,46 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47744 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753278AbdKWShR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Nov 2017 13:37:17 -0500
-Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
-To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
- <1511337146.4512.6.camel@linux.intel.com>
- <4541eaef-745a-e78f-e61d-1c7c207b551e@codeaurora.org>
- <1511422959.4641.5.camel@linux.intel.com>
+Return-Path: <SRS0=09l/=C2=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=09l/=C2=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V2 7/7] PCI: make reset poll time adjustable
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ Jonathan Corbet <corbet@lwn.net>, Bjorn Helgaas <bhelgaas@google.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@kernel.org>,
+ Christoffer Dall <cdall@linaro.org>, Mimi Zohar <zohar@linux.vnet.ibm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, Ding Tianhong
+ <dingtianhong@huawei.com>, Michal Hocko <mhocko@suse.com>,
+ "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
+ <1511763628-11856-8-git-send-email-okaya@codeaurora.org>
+ <20171128142044.GC11228@bhelgaas-glaptop.roam.corp.google.com>
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <0b12dcfe-1ee1-10ef-4db3-9c9d42dc4703@codeaurora.org>
-Date: Thu, 23 Nov 2017 13:37:15 -0500
+Message-ID: <837be7ee-13c7-8e8a-1a6b-87fd5e42b166@codeaurora.org>
+Date: Tue, 28 Nov 2017 09:26:30 -0500
 MIME-Version: 1.0
-In-Reply-To: <1511422959.4641.5.camel@linux.intel.com>
+In-Reply-To: <20171128142044.GC11228@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/23/2017 2:42 AM, Joonas Lahtinen wrote:
-> It is not longer than 80 characters when you break line before the
-> PCI_DEVFN like I proposed. Or you can break it after the "=", too,
-> either way works fine.
+On 11/28/2017 9:20 AM, Bjorn Helgaas wrote:
+>> Introduce pci=resetpolltime= argument to override 60 seconds poll time in
+>> units of milliseconds.
+> I resist adding kernel parameters because they really complicate the
+> user experience.  Obviously you added this for a reason, but I don't
+> know what that is.  If we really need it, is there any way we could
+> automatically figure out in the kernel when we need different poll
+> times?
+> 
 
-I posted V2 with this suggestion. 
+No, we can drop this patch if we want to . This was mostly a
+scalability concern. 
 
-https://patchwork.kernel.org/patch/10071759/
-
-Let me know what you think about the domain number call here. 
-
-u32 domain = pci_domain_nr(dev_priv->drm.pdev->bus);
-
-I don't have a way to test this change. I traced the drm_device's pdev
-assignment in the code. It should work fine but I don't have a proof.
-
-If you tell me for sure that this driver will never use a non-zero domain
-or this driver will never run on another architecture, I can hard-code it
-as 0 as well.
+I worried adding 60 seconds would be too much for some use case. We can
+hold onto this change until that use case happens if you want.
 
 -- 
 Sinan Kaya
