@@ -1,56 +1,76 @@
-Return-Path: <SRS0=NdyI=CS=nvidia.com=vidyas@kernel.org>
-Return-Path: <SRS0=NdyI=CS=nvidia.com=vidyas@kernel.org>
-Subject: Re: [PATCH V3 0/2] Tegra PCIe end point config space map code
- refactoring
-To: <treding@nvidia.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <bhelgaas@google.com>,
-	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <robh+dt@kernel.org>,
-	<devicetree@vger.kernel.org>
-References: <1508827489-10842-1-git-send-email-vidyas@nvidia.com>
- <20171024201512.GG21840@bhelgaas-glaptop.roam.corp.google.com>
- <20171106195123.GG31930@bhelgaas-glaptop.roam.corp.google.com>
-From: Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <2d2ec183-c14c-1eb8-0cd5-fd62d8b36779@nvidia.com>
-Date: Mon, 20 Nov 2017 15:57:18 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:12564 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751689AbdK1RUN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Nov 2017 12:20:13 -0500
+Subject: Re: [PATCH 01/10] genirq: Export irq_set_msi_desc()
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>
+CC: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rjw@rjwysocki.net>, <vidyas@nvidia.com>,
+        <kthota@nvidia.com>, <linux-tegra@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-pm@vger.kernel.org>
+References: <1511538800-8275-1-git-send-email-mmaddireddy@nvidia.com>
+ <1511538800-8275-2-git-send-email-mmaddireddy@nvidia.com>
+ <alpine.DEB.2.20.1711250050520.2316@nanos>
+ <600a7b65-670e-b164-913c-99e18ae593d2@nvidia.com>
+ <be79bf6f-b24a-6292-5eb1-3bcf97890421@arm.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <7b877547-873f-dcb9-e110-5a4435736d23@nvidia.com>
+Date: Tue, 28 Nov 2017 22:49:51 +0530
 MIME-Version: 1.0
-In-Reply-To: <20171106195123.GG31930@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <be79bf6f-b24a-6292-5eb1-3bcf97890421@arm.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thierry, Can you please Ack it so that we can target it for next release?
 
-On Tuesday 07 November 2017 01:21 AM, Bjorn Helgaas wrote:
-> On Tue, Oct 24, 2017 at 03:15:12PM -0500, Bjorn Helgaas wrote:
->> On Tue, Oct 24, 2017 at 12:14:47PM +0530, Vidya Sagar wrote:
->>> PCIe host controller in Tegra SoCs has 1GB of aperture available
->>> for mapping end points config space, IO and BARs. In that, currently
->>> 256MB is being reserved for mapping end points configuration space
->>> which leaves less memory space available for mapping end points BARs
->>> on some of the platforms.
->>> This patch series attempts to map only 4K space from 1GB aperture to
->>> access end points configuration space.
+
+On 28-Nov-17 3:30 PM, Marc Zyngier wrote:
+> On 25/11/17 19:41, Manikanta Maddireddy wrote:
+>>
+>>
+>> On 25-Nov-17 5:25 AM, Thomas Gleixner wrote:
+>>> On Fri, 24 Nov 2017, Manikanta Maddireddy wrote:
 >>>
->>> Currently, this change can benefit T20 and T186 in saving (i.e. repurposed
->>> to use for BAR mapping) physical space as well as kernel virtual mapping space,
->>> it saves only kernel virtual address space in T30, T124, T132 and T210.
+>>> Please CC the proper mailing list for irq related changes.
 >>>
->>> NOTE: Since T186 PCIe DT entry is not yet present in main line (it is currently
->>> merged to 'for-4.15/arm64/dt' branch), nothing gets broken with this change for T186.
->>> For older platforms (T20, T30, T124, T132, T210), this change works fine without any
->>> DT modifications
+>>>> PCI bus support MSI interrupts, allow PCI host driver to set MSI descriptor
+>>>> data for an irq.
 >>>
->>> Testing Done on T124, T210 & T186:
->>>   Enumeration and basic functionality of immediate devices
->>>   Enumeration of devices behind a PCIe switch
->>>   Complete 4K configuration space access
+>>> This is not really an explanation why this export is needed.
 >>>
->>> Vidya Sagar (2):
->>>    PCI: tegra: refactor config space mapping code
->>>    ARM64: tegra: limit PCIe config space mapping to 4K for T186
+>>> Thanks,
 >>>
->>>   arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +-
->>>   drivers/pci/host/pci-tegra.c             | 125 ++++++++++---------------------
->>>   2 files changed, 44 insertions(+), 89 deletions(-)
->> Seems OK to me; waiting for Thierry's ack.
-> Dropping for lack of an ack.  Please repost if/when Thierry acks it.
+>>> 	tglx
+>>>
+>> Updated the commit log with why Tegra PCIe driver is using this function in V2.
+>> Please review.
+> 
+> Well, to review it, I would like to be on Cc.
+> 
+> My current position on this is that if you need to export this function,
+> then you're using a deprecated API, and you should instead consider
+> moving to the generic MSI model, which doesn't need any of this.
+> 
+> I've done that a distant past, but never actually published the patch
+> (not tested it):
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git/commit/?h=irq/kill-msi-controller&id=83b3602fcee7972b9d549ed729b56ec28de16081
+> 
+> But without seeing the patches, I may be barking up the wrong tree...
+> 
+> Thanks,
+> 
+> 	M.
+> 
+Hi Mark,
+
+I will drop this change from this series and will take up generic MSI work in the next series of changes for pci-tegra driver.
+Even without this change, pci-tegra driver will work fine as a builtin module. So other changes can still be reviewed and
+can be considered as initial step for adding LKM support for pci-tegra.
+
+Thanks,
+Manikanta
