@@ -1,87 +1,60 @@
-Return-Path: <SRS0=VtSK=CB=gmail.com=nks.gnu@kernel.org>
-Return-Path: <SRS0=VtSK=CB=gmail.com=nks.gnu@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out6.electric.net ([192.162.217.192]:62347 "EHLO
+        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751596AbdK1Jwz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Nov 2017 04:52:55 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Niklas Cassel' <niklas.cassel@axis.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: Niklas Cassel <niklass@axis.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3 3/3] PCI: endpoint: Fix find_first_zero_bit() usage
+Date: Tue, 28 Nov 2017 09:53:12 +0000
+Message-ID: <227791f09ccd4aa8972ba334fd948f4e@AcuMS.aculab.com>
+References: <20171127154955.22214-1-niklas.cassel@axis.com>
+ <20171127154955.22214-4-niklas.cassel@axis.com>
+In-Reply-To: <20171127154955.22214-4-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <20171011193207.GO25517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1505885055-30657-1-git-send-email-j-keerthy@ti.com> <20171011193207.GO25517@bhelgaas-glaptop.roam.corp.google.com>
-From: Niklas Cassel <nks.gnu@gmail.com>
-Date: Fri, 3 Nov 2017 15:30:42 +0100
-Message-ID: <CAD5ja62_fT+xg6G_ygN+8GScMYa62M7jNEoDxD89n7AUBjwPDw@mail.gmail.com>
-Subject: Re: [PATCH v4] pci: dwc: dra7xx: Add shutdown handler to cleanly turn
- off clocks
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keerthy <j-keerthy@ti.com>, kishon@ti.com, bhelgaas@google.com, t-kristo@ti.com,
-	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-dra7xx_pcie_shutdown should be static.
+From: Niklas Cassel
+> Sent: 27 November 2017 15:50
+> find_first_zero_bit()'s parameter 'size' is defined in bits,
+> not in bytes.
+> 
+> Calling find_first_zero_bit() with the wrong size unit
+> will lead to insidious bugs.
+> 
+> Fix this by calling find_first_zero_bit() with size
+> BITS_PER_LONG, rather than sizeof().
+> 
+> Also add proper error handling for find_first_zero_bit(),
+> since this was missing.
+> 
+> Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/endpoint/pci-ep-cfs.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> index e1f5adc9e113..0a22a7976580 100644
+> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -109,7 +109,12 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+>  		return ret;
+> 
+>  	func_no = find_first_zero_bit(&epc_group->function_num_map,
+> -				      sizeof(epc_group->function_num_map));
+> +				      BITS_PER_LONG);
 
-This patch introduces a new sparse warning.
+Surely this should be either 8 * sizeof() or you should use ffz()
+that takes a numeric argument rather than the function designed
+for arbitrary size bitmaps.
 
-On Wed, Oct 11, 2017 at 9:32 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Sep 20, 2017 at 10:54:15AM +0530, Keerthy wrote:
->> Add shutdown handler to cleanly turn off clocks. This will help
->> in cases of kexec where in a new kernel can boot abruptly.
->>
->> Signed-off-by: Keerthy <j-keerthy@ti.com>
->> Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
->
-> Applied to pci/host-dra7xx for v4.15, thanks!
->
->> ---
->>
->> Changes in v4:
->>
->>   * Added the missing changes from v2!
->>
->> Changes in v3:
->>
->>   * Pushed the function outside #ifdef CONFIG_PM_SLEEP.
->>   * Added more details to commit log.
->>
->> Changes in v2:
->>
->>   * used a local dev pointer instead of dereferencing dev at multiple places.
->>   * dra7xx_pcie_stop_link before disabling clks in the shutdown path.
->>
->>  drivers/pci/dwc/pci-dra7xx.c | 17 +++++++++++++++++
->>  1 file changed, 17 insertions(+)
->>
->> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->> index 34427a6..d084800 100644
->> --- a/drivers/pci/dwc/pci-dra7xx.c
->> +++ b/drivers/pci/dwc/pci-dra7xx.c
->> @@ -794,6 +794,22 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->>  }
->>  #endif
->>
->> +void dra7xx_pcie_shutdown(struct platform_device *pdev)
->> +{
->> +     struct device *dev = &pdev->dev;
->> +     struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
->> +     int ret;
->> +
->> +     dra7xx_pcie_stop_link(dra7xx->pci);
->> +
->> +     ret = pm_runtime_put_sync(dev);
->> +     if (ret < 0)
->> +             dev_dbg(dev, "pm_runtime_put_sync failed\n");
->> +
->> +     pm_runtime_disable(dev);
->> +     dra7xx_pcie_disable_phy(dra7xx);
->> +}
->> +
->>  static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
->>       SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
->>       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
->> @@ -807,5 +823,6 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->>               .suppress_bind_attrs = true,
->>               .pm     = &dra7xx_pcie_pm_ops,
->>       },
->> +     .shutdown = dra7xx_pcie_shutdown,
->>  };
->>  builtin_platform_driver_probe(dra7xx_pcie_driver, dra7xx_pcie_probe);
->> --
->> 1.9.1
->>
+	David
