@@ -1,44 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55366 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752133AbdK2Axg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Nov 2017 19:53:36 -0500
-From: Stephen Boyd <sboyd@codeaurora.org>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: dwc: Use {upper,lower}_32_bits() macros for clarity
-Date: Tue, 28 Nov 2017 16:53:34 -0800
-Message-Id: <20171129005334.16425-1-sboyd@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 28 Nov 2017 14:45:55 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V3 03/29] x86/PCI: deprecate pci_get_bus_and_slot()
+In-Reply-To: <1511801886-6753-4-git-send-email-okaya@codeaurora.org>
+Message-ID: <alpine.DEB.2.20.1711281445440.1723@nanos>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+ <1511801886-6753-4-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "maintainer:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)" <x86@kernel.org>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org,
+ "H. Peter Anvin" <hpa@zytor.com>,
+ "open list:X86 ARCHITECTURE \(32-BIT AND 64-BIT\)"
+ <linux-kernel@vger.kernel.org>, Ingo Molnar <mingo@redhat.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ intel-gfx@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have macros for getting the upper or lower 32 bits of a
-number. Use them here to shave a couple lines off the code.
 
-Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
----
- drivers/pci/dwc/pcie-designware-host.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+On Mon, 27 Nov 2017, Sinan Kaya wrote:
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 157621175147..ae5abfddf8de 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -89,10 +89,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	msi_target = virt_to_phys((void *)pp->msi_data);
- 
- 	/* program the msi_data */
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
--			    (u32)(msi_target & 0xffffffff));
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
--			    (u32)(msi_target >> 32 & 0xffffffff));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4, lower_32_bits(msi_target));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, upper_32_bits(msi_target));
- }
- 
- static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
+> 
+> Getting ready to remove pci_get_bus_and_slot() function in favor of
+> pci_get_domain_bus_and_slot().
+> 
+> Use domain number of 0 as the domain number is not available in struct
+> irq_routing_table.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
+
+> ---
+>  arch/x86/pci/irq.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+> index 04526291..52e5510 100644
+> --- a/arch/x86/pci/irq.c
+> +++ b/arch/x86/pci/irq.c
+> @@ -839,7 +839,8 @@ static void __init pirq_find_router(struct irq_router *r)
+>  	DBG(KERN_DEBUG "PCI: Attempting to find IRQ router for [%04x:%04x]\n",
+>  	    rt->rtr_vendor, rt->rtr_device);
+>  
+> -	pirq_router_dev = pci_get_bus_and_slot(rt->rtr_bus, rt->rtr_devfn);
+> +	pirq_router_dev = pci_get_domain_bus_and_slot(0, rt->rtr_bus,
+> +						      rt->rtr_devfn);
+>  	if (!pirq_router_dev) {
+>  		DBG(KERN_DEBUG "PCI: Interrupt router not found at "
+>  			"%02x:%02x\n", rt->rtr_bus, rt->rtr_devfn);
+> -- 
+> 1.9.1
+> 
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
