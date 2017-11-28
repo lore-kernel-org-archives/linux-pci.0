@@ -1,66 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 30 Nov 2017 18:18:19 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 0/5] PCI: Add support to the Cadence PCIe controller
-Message-ID: <20171130181819.GD12096@red-moon>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <20171128155039.GA17154@red-moon>
- <8c6c50fc-47a9-7b93-d826-1dba9c4d09c2@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:15070 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753640AbdK1MVW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Nov 2017 07:21:22 -0500
+Date: Tue, 28 Nov 2017 20:21:17 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Dave Jones <davej@codemonkey.org.uk>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Wong Vee Khee <vee.khee.wong@ni.com>,
+        Bodong Wang <bodong@mellanox.com>,
+        Emil Tantilov <emil.s.tantilov@intel.com>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        linux-kernel@vger.kernel.org, lkp@01.org
+Cc: Philip Li <philip.li@intel.com>
+Subject: Re: [trinity] WARNING: CPU: 0 PID: 515 at
+ drivers/pci/pci-sysfs.c:1224 pci_mmap_resource+0xd6/0x10e
+Message-ID: <20171128122117.3kqzbjzewadakj67@wfg-t540p.sh.intel.com>
+References: <20171124001139.bmuq6dkj63wuqzls@wfg-t540p.sh.intel.com>
+ <20171127213001.GA12537@codemonkey.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8c6c50fc-47a9-7b93-d826-1dba9c4d09c2@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <20171127213001.GA12537@codemonkey.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 30, 2017 at 12:43:20PM +0530, Kishon Vijay Abraham I wrote:
+Hi Dave,
 
-[...]
+On Mon, Nov 27, 2017 at 04:30:01PM -0500, Dave Jones wrote:
+>On Fri, Nov 24, 2017 at 08:11:39AM +0800, Fengguang Wu wrote:
+> > Hello,
+> >
+> > FYI this happens in mainline kernel 4.14.0-12995-g0c86a6b.
+> > It at least dates back to v4.9 .
+> >
+> > I wonder where can we avoid this warning, by improving trinity (or how
+> > we use it), or the pci subsystem?
+> >
+> > [main] Added 42 filenames from /dev
+> > [main] Added 13651 filenames from /proc
+> > [main] Added 11163 filenames from /sys
+> > [   19.452176] ------------[ cut here ]------------
+> > [   19.452938] process "trinity-main" tried to map 0x00004000 bytes at page 0x00000001 on 0000:00:06.0 BAR 4 (start 0x        fe008000, size 0x            4000)
+> > [   19.454804] WARNING: CPU: 0 PID: 515 at drivers/pci/pci-sysfs.c:1224 pci_mmap_resource+0xd6/0x10e
+>
+>That's a root-only operation, where we allow the user to shoot
+>themselves in the foot afaik.   What you could do now that you're
+>running an up to date trinity in 0day, is pass the --dropprivs flag
+>to setuid to nobody in the child processes.
 
-> >> For linux-next, I applied this series on top of Kishon's patch
-> >> ("PCI: endpoint: Use EPC's device in dma_alloc_coherent/dma_free_coherent")
-> >> otherwise dma_alloc_coherent() fails when called by pci_epf_alloc_space().
-> >>
-> >> Also, I patched drivers/Makefile rather than drivers/pci/Makefile to make
-> >> the drivers/pci/cadence/pcie-cadence-ep.o linked after
-> 
-> The reason to patch drivers/Makefile should be because pcie-cadence-ep has to
-> be compiled even when CONFIG_PCI is not enabled. CONFIG_PCI enables host
-> specific features and ENDPOINT shouldn't depend on CONFIG_PCI.
-> >> drivers/pci/endpoint/*.o objects, otherwise the built-in pci-cadence-ep
-> >> driver would be probed before the PCI endpoint framework would have been
-> >> initialized, which results in a kernel crash.
-> > 
-> > Nice :( - isn't there a way to improve this (ie probe deferral or
-> > registering the EPF bus earlier) ?
-> > 
-> >> I guess this is the reason why the "pci/dwc" line was also put in
-> >> drivers/Makefile, right after the "pci/endpoint" line.
-> > 
-> > Or probably the other way around - see commit 5e8cb4033807
-> > 
-> > @Kishon, thoughts ?
-> 
-> Lorenzo, ordering Makefile is one way to initialize EP core before
-
-Makefile ordering is fragile, I do not like relying on it.
-
-> other drivers. the other way is to have PCI EP core have a different
-> initcall level..  subsys_initcall??
-
-Yes, registering the bus at eg postcore_initcall() as PCI does should do
-(if that's the problem this is solving) but still, the code must not
-crash if the ordering is not correct, we have to fix this regardless.
-
-I would appreciate if Cyrille can debug the cause of the kernel crash
-so that we can fix it in the longer term.
+Got it. I wonder if running trinity in root mode (in QEMU, of course)
+will help catch more bugs. If so, I'd like to keep the current state,
+but ignore the known trinity specific oops (like this one and OOM). We
+already have the code to ignore trinity triggered OOM, so it'd be
+trivial to add one more oops pattern to ignore.
 
 Thanks,
-Lorenzo
+Fengguang
