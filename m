@@ -1,57 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:49606 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750818AbdKHJ3E (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Nov 2017 04:29:04 -0500
+Return-Path: <SRS0=8xXJ=C2=oracle.com=boris.ostrovsky@kernel.org>
+Return-Path: <SRS0=8xXJ=C2=oracle.com=boris.ostrovsky@kernel.org>
+Subject: Re: [PATCH v9 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h
+ (Models 30h-3fh) Processors v5
+To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        helgaas@kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, xen-devel <xen-devel@lists.xen.org>
+References: <20171018135821.3248-1-deathsimple@vodafone.de>
+ <20171018135821.3248-5-deathsimple@vodafone.de>
+ <c5ca14bc-3812-ff15-7dd0-e862ce85a348@oracle.com>
+ <d81d50e6-c267-fe43-214f-278e57903448@gmail.com>
+ <26df0a78-8028-e42c-ce50-4cefe612a7e1@oracle.com>
+ <3443aad0-8c3b-b97e-685a-96b0866827be@amd.com>
+ <b937778c-556e-5587-c557-abba8cefe100@oracle.com>
+ <bee2c953-0ab6-a086-9150-ae51e099655c@amd.com>
+ <c2d52d00-8c3c-9944-29b3-3cab2f7c35f7@oracle.com>
+ <7936fdd3-1615-ac1f-7b75-330ccb6a1a3f@amd.com>
+ <0bb468d9-bc1d-e3c5-e313-1cf9408380f0@oracle.com>
+ <275e859a-0ddd-ea7f-a681-67e42a5233fe@amd.com>
+ <38bc76d9-2ed5-61f3-24b3-085031825181@oracle.com>
+ <65885386-3dde-de23-7e95-7d96dfdf6033@oracle.com>
+ <0ab28334-3ccc-2a93-9991-396ee01a3662@amd.com>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <cb0d5830-11dd-57b8-606b-7eca560cfcc7@oracle.com>
+Date: Tue, 28 Nov 2017 13:55:58 -0500
 MIME-Version: 1.0
-In-Reply-To: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
-References: <20171108091521.8423-1-marek.vasut+renesas@gmail.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 8 Nov 2017 10:29:02 +0100
-Message-ID: <CAMuHMdV=SHkjpBqCXPzcEnunhWRNLdw+1GwLAS7nbkfQQz3zyA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar: Add compatible string for r8a7796
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <0ab28334-3ccc-2a93-9991-396ee01a3662@amd.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marek,
-
-On Wed, Nov 8, 2017 at 10:15 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> From: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
+On 11/28/2017 04:12 AM, Christian König wrote:
 >
-> Add compatible string for the RCar M3 R8A7796 SoC.
 >
-> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> How about the attached patch? It limits the newly added MMIO space to
+> the upper 256GB of the address space. That should still be enough for
+> most devices, but we avoid both issues with Xen dom0 as most likely
+> problems with memory hotplug as well.
 
-This patch is not needed, as the DT bindings specify that the DTS should use
-both "renesas,pcie-r8a7796" and "renesas,pcie-rcar-gen3", and the driver
-already matches against the latter.
+It certainly makes the problem to be less likely so I guess we could do
+this for now.
 
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1062,6 +1062,7 @@ static const struct of_device_id rcar_pcie_of_match[] = {
->         { .compatible = "renesas,pcie-rcar-gen2",
->           .data = rcar_pcie_hw_init_gen2 },
->         { .compatible = "renesas,pcie-r8a7795", .data = rcar_pcie_hw_init },
-> +       { .compatible = "renesas,pcie-r8a7796", .data = rcar_pcie_hw_init },
->         { .compatible = "renesas,pcie-rcar-gen3", .data = rcar_pcie_hw_init },
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Thanks.
+-boris
