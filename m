@@ -1,51 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f170.google.com ([209.85.128.170]:46299 "EHLO
-        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751018AbdKIFMI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Nov 2017 00:12:08 -0500
-Received: by mail-wr0-f170.google.com with SMTP id y42so4459183wrd.3
-        for <linux-pci@vger.kernel.org>; Wed, 08 Nov 2017 21:12:08 -0800 (PST)
+Return-Path: <SRS0=ofcB=C3=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=ofcB=C3=gmail.com=ckoenig.leichtzumerken@kernel.org>
+From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] x86/PCI: limit the size of the 64bit BAR to 256GB
+Date: Wed, 29 Nov 2017 15:12:29 +0100
+Message-Id: <20171129141229.6107-4-christian.koenig@amd.com>
+In-Reply-To: <20171129141229.6107-1-christian.koenig@amd.com>
+References: <20171129141229.6107-1-christian.koenig@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20171108172424.GA19449@infradead.org>
-References: <CAFZiPx1sgxr8X9mtW11fK1XMPuk+4jUFb5Cc-pVJn06ZztHwng@mail.gmail.com>
- <20171108172424.GA19449@infradead.org>
-From: subrahmanya l <l.subrahmanya@mobiveil.co.in>
-Date: Thu, 9 Nov 2017 10:42:06 +0530
-Message-ID: <CAFZiPx0wbm=hA0qXMjJihOaeRHhKzgZdSLTwTZdGZ2aoMM-3Rw@mail.gmail.com>
-Subject: Re: [Patch] export irq_set_msi_desc
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
-        jason@lakedaemon.net, marc.zyngier@arm.com
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Christoph,
+This avoids problems with Xen which hides some memory resources from the
+OS and potentially also allows memory hotplug while this fixup is
+enabled.
 
-Xilinx MSI driver uses it.
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ arch/x86/pci/fixup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-file path: https://github.com/Xilinx/linux-xlnx/blob/master/drivers/pci/host/pcie-xilinx.c#L286
-
-I used the same driver as reference to write another Rootport driver
-which needs it too.
-
-Thanks,
-~subbu
-
-On Wed, Nov 8, 2017 at 10:54 PM, Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Wed, Nov 08, 2017 at 09:54:09PM +0530, subrahmanya l wrote:
-> > Few of the PCIe driver compilation fails with undefined symbol
-> > "irq_set_msi_desc".
-> > This patch is to export it.
->
-> Which ones?  Also please add an explanation of why you thing it should
-> be exported and Cc the irq code maintainers.
-
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index c817ab85dc82..149adbc7f2a3 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -701,7 +701,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ 	res->name = "PCI Bus 0000:00";
+ 	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+ 		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+-	res->start = 0x100000000ull;
++	res->start = 0xbd00000000ull;
+ 	res->end = 0xfd00000000ull - 1;
+ 
+ 	/* Just grab the free area behind system memory for this */
 -- 
-Mobiveil INC., CONFIDENTIALITY NOTICE: This e-mail message, including any 
-attachments, is for the sole use of the intended recipient(s) and may 
-contain proprietary confidential or privileged information or otherwise be 
-protected by law. Any unauthorized review, use, disclosure or distribution 
-is prohibited. If you are not the intended recipient, please notify the 
-sender and destroy all copies and the original message.
+2.11.0
