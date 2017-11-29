@@ -1,98 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:21376 "EHLO mga01.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:49172 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751326AbdKWHmm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Nov 2017 02:42:42 -0500
-Message-ID: <1511422959.4641.5.camel@linux.intel.com>
-Subject: Re: [PATCH 09/30] drm/i915: deprecate pci_get_bus_and_slot()
-From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        timur@codeaurora.org
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>
-Date: Thu, 23 Nov 2017 09:42:39 +0200
-In-Reply-To: <4541eaef-745a-e78f-e61d-1c7c207b551e@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-         <1511328675-21981-10-git-send-email-okaya@codeaurora.org>
-         <1511337146.4512.6.camel@linux.intel.com>
-         <4541eaef-745a-e78f-e61d-1c7c207b551e@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751977AbdK2W5L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 29 Nov 2017 17:57:11 -0500
+Subject: [PATCH] PCI: Tone down resource mmap warning
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Dave Jones <davej@codemonkey.org.uk>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        linux-kernel@vger.kernel.org, David Woodhouse <dwmw@amazon.co.uk>
+Date: Wed, 29 Nov 2017 16:57:08 -0600
+Message-ID: <20171129225708.32271.35467.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-11-22 at 11:28 -0500, Sinan Kaya wrote:
-> On 11/22/2017 2:52 AM, Joonas Lahtinen wrote:
-> > Dropping the extra mailing lists and Dave, this is a rather trivial thing.
-> > 
-> > On Wed, 2017-11-22 at 00:30 -0500, Sinan Kaya wrote:
-> > > pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> > > where a PCI device is present. This restricts the device drivers to be
-> > > reused for other domain numbers.
-> > > 
-> > > Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-> > > extract the domain number. Other places, use the actual domain number from
-> > > the device.
-> > > 
-> > > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > 
-> > <SNIP>
-> > 
-> > > +++ b/drivers/gpu/drm/i915/i915_drv.c
-> > > @@ -419,7 +419,9 @@ static int i915_getparam(struct drm_device *dev, void *data,
-> > >  
-> > >  static int i915_get_bridge_dev(struct drm_i915_private *dev_priv)
-> > >  {
-> > > -	dev_priv->bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-> > > +	uint16_t devfn = PCI_DEVFN(0, 0)
-> > 
-> > The would have to be "unsigned int" according to the function
-> > signature.
-> 
-> Even though the return value is unsigned int, PCI_DEVFN cannot be bigger
-> than 16 bits. 
-> 
-> http://elixir.free-electrons.com/linux/v4.14.1/source/include/uapi/linux/pci.h#L31
-> 
-> /*
->  * The PCI interface treats multi-function devices as independent
->  * devices.  The slot/function address of each device is encoded
->  * in a single byte as follows:
->  *
->  *	7:3 = slot
->  *	2:0 = function
->  */
-> 
-> It is common practice to use u16 for keeping devfn information in the
-> kernel.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-A quick run of 'git grep "PCI_DEVFN" | egrep "(uint|u)(16|32)"' vs.
-'git grep "PCI_DEVFN" | grep "unsigned"' didn't indicate that. And
-following the function signature would be the thing to do, unless there
-is some compelling reason not to.
+When a process tries to mmap more space than is available in a PCI BAR, we
+emit a warning and a backtrace.  The mmap fails anyway, so the backtrace is
+mainly for debugging.  It seems like overkill now, so reduce this to a
+dev_info() and remove the backtrace.
 
-But it's not really relevant as a variable is not needed.
+This was added by b5ff7df3df9e ("Check mapped ranges on sysfs resource
+files").
 
-> > > +
-> > > +	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0, devfn);
-> > 
-> > But the most straightforward change is to simply convert to:
-> > 
-> > 	dev_priv->bridge_dev = pci_get_domain_bus_and_slot(0, 0,
-> > 							   PCI_DEVFN(0, 0));
-> > 
-> > Can you please resend like that.
-> 
-> I did this at the beginning and but, I hit a checkpatch problem with
-> more than 80 characters. That's why, I moved the devfn value assignment
-> to a different line.
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-sysfs.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-It is not longer than 80 characters when you break line before the
-PCI_DEVFN like I proposed. Or you can break it after the "=", too,
-either way works fine.
-
-Regards, Joonas
--- 
-Joonas Lahtinen
-Open Source Technology Center
-Intel Corporation
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 06c7f0b85cd2..97f071674605 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1217,11 +1217,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 		return -EINVAL;
+ 
+ 	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS)) {
+-		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
++		dev_info(&pdev->dev, "process \"%s\" tried to map 0x%lx bytes at page 0x%lx of BAR %d %pR\n",
+ 			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
+-			pci_name(pdev), bar,
+-			(u64)pci_resource_start(pdev, bar),
+-			(u64)pci_resource_len(pdev, bar));
++			bar, res);
+ 		return -EINVAL;
+ 	}
+ 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
