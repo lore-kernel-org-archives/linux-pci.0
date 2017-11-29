@@ -1,175 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:56866 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751347AbdKJV5x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2017 16:57:53 -0500
-Subject: Re: [PATCH 1/3] PCI: rcar: Add the initialization of PCIe link in
- resume_noirq
-To: Simon Horman <horms@verge.net.au>
-Cc: linux-pci@vger.kernel.org,
-        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-References: <20171108092806.10335-1-marek.vasut+renesas@gmail.com>
- <20171110085926.kjieahdrxr2euxoq@verge.net.au>
-From: Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <f745e84d-858b-ff64-c5e3-b48993fd9691@gmail.com>
-Date: Fri, 10 Nov 2017 22:14:33 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 29 Nov 2017 11:09:48 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V3 00/29] PCI: deprecate pci_get_bus_and_slot()
+Message-ID: <20171129170947.GE6469@bhelgaas-glaptop.roam.corp.google.com>
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20171110085926.kjieahdrxr2euxoq@verge.net.au>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ intel-gfx@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/10/2017 09:59 AM, Simon Horman wrote:
-> Hi Marek,
+Hi Sinan,
 
-Hi Simon,
-
-> On Wed, Nov 08, 2017 at 10:28:04AM +0100, Marek Vasut wrote:
->> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
->>
->> Reestablish the PCIe link very early in the resume process in case it
->> went down to prevent PCI accesses from hanging the bus. Such accesses
->> can happen early in the PCI resume process, in the resume_noirq, thus
->> the link must be reestablished in the resume_noirq callback of the
->> driver.
->>
->> Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
->> Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Simon Horman <horms+renesas@verge.net.au>
->> Cc: Wolfram Sang <wsa@the-dreams.de>
->> Cc: linux-renesas-soc@vger.kernel.org
+On Mon, Nov 27, 2017 at 11:57:37AM -0500, Sinan Kaya wrote:
+> Deprecate pci_get_bus_and_slot() in favor of pci_get_domain_bus_and_slot()
+> in order to remove domain 0 assumptions in the kernel.
 > 
-> For patch-sets (with more than one patch) please provide a cover-letter.
-> The --cover-letter option to git format-patch can help.
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
 > 
->> ---
->>  drivers/pci/host/pcie-rcar.c | 31 ++++++++++++++++++++++++++++---
->>  1 file changed, 28 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
->> index 889603783f01..aa588a7d4811 100644
->> --- a/drivers/pci/host/pcie-rcar.c
->> +++ b/drivers/pci/host/pcie-rcar.c
->> @@ -43,6 +43,7 @@
->>  
->>  /* Transfer control */
->>  #define PCIETCTLR		0x02000
->> +#define  DL_DOWN		(1 << 3)
+> Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+> extract the domain number. Other places, use the actual domain number from
+> the device.
 > 
-> Can you use the BIT() macro here?
-
-Yes, I'll also add a patch to the series to convert all the others to
-the BIT() macro, to keep things consistent.
-
->>  #define  CFINIT			1
->>  #define PCIETSTR		0x02004
->>  #define  DATA_LINK_ACTIVE	1
->> @@ -529,7 +530,7 @@ static void phy_write_reg(struct rcar_pcie *pcie,
->>  	phy_wait_for_ack(pcie);
->>  }
->>  
->> -static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
->> +static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie, int atomic)
+> Changes from v2:
+> * commit text cleanups
+> * remove implicit busfn assignments and use PCI_DEVFN call in place.
+> * change storage type for local copy of pci_domain_nr() value to int
 > 
-> As Sergei mentioned bool seems like a more appropriate type for atomic.
+> Sinan Kaya (29):
+>   alpha/PCI: deprecate pci_get_bus_and_slot()
+>   powerpc/PCI: deprecate pci_get_bus_and_slot()
+>   x86/PCI: deprecate pci_get_bus_and_slot()
+>   ata: deprecate pci_get_bus_and_slot()
+>   agp: nvidia: deprecate pci_get_bus_and_slot()
+>   edd: deprecate pci_get_bus_and_slot()
+>   ibft: deprecate pci_get_bus_and_slot()
+>   drm/gma500: deprecate pci_get_bus_and_slot()
+>   drm/i915: deprecate pci_get_bus_and_slot()
+>   drm/nouveau: deprecate pci_get_bus_and_slot()
+>   Drivers: ide: deprecate pci_get_bus_and_slot()
+>   iommu/amd: deprecate pci_get_bus_and_slot()
+>   powerpc/powermac: deprecate pci_get_bus_and_slot()
+>   bnx2x: deprecate pci_get_bus_and_slot()
+>   pch_gbe: deprecate pci_get_bus_and_slot()
+>   PCI: cpqhp: deprecate pci_get_bus_and_slot()
+>   PCI: ibmphp: deprecate pci_get_bus_and_slot()
+>   PCI/quirks: deprecate pci_get_bus_and_slot()
+>   PCI/syscall: deprecate pci_get_bus_and_slot()
+>   xen: deprecate pci_get_bus_and_slot()
+>   openprom: deprecate pci_get_bus_and_slot()
+>   [media] atomisp: deprecate pci_get_bus_and_slot()
+>   staging: rts5208: remove rtsx_read_pci_cfg_byte()
+>   backlight: deprecate pci_get_bus_and_slot()
+>   video: fbdev: intelfb: deprecate pci_get_bus_and_slot()
+>   video: fbdev: nvidia: deprecate pci_get_bus_and_slot()
+>   video: fbdev: riva: deprecate pci_get_bus_and_slot()
+>   i7300_idle: remove unused file
+>   PCI: remove pci_get_bus_and_slot() function
 
-I can actually get rid of this altogether.
+Thanks for doing this work!
 
->>  {
->>  	unsigned int timeout = 10;
->>  
->> @@ -537,7 +538,10 @@ static int rcar_pcie_wait_for_dl(struct rcar_pcie *pcie)
->>  		if ((rcar_pci_read_reg(pcie, PCIETSTR) & DATA_LINK_ACTIVE))
->>  			return 0;
->>  
->> -		msleep(5);
->> +		if (atomic)
->> +			mdelay(5);
->> +		else
->> +			msleep(5);
-> 
-> If we must delay, then I suppose this is reasonable.
+I see other maintainers are picking up some of these.  I'll wait until
+later in the cycle and pick up any remaining ones and the PCI core
+parts.
 
-See above
+If you repost the series for any reason, please capitalize the first
+word of the changelog summary to match the drivers/pci convention (for
+non PCI patches, follow *their* convention, of course) and put the
+acks/reviewed-by tags after your signed-off-by.  I use this order:
 
->>  	}
->>  
->>  	return -ETIMEDOUT;
->> @@ -595,7 +599,7 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
->>  	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
->>  
->>  	/* This will timeout if we don't have a link. */
->> -	err = rcar_pcie_wait_for_dl(pcie);
->> +	err = rcar_pcie_wait_for_dl(pcie, 0);
->>  	if (err)
->>  		return err;
->>  
->> @@ -1110,6 +1114,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>  	pcie = pci_host_bridge_priv(bridge);
->>  
->>  	pcie->dev = dev;
->> +	platform_set_drvdata(pdev, pcie);
->>  
->>  	INIT_LIST_HEAD(&pcie->resources);
->>  
->> @@ -1173,10 +1178,30 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>  	return err;
->>  }
->>  
->> +static int rcar_pcie_resume_noirq(struct device *dev)
->> +{
->> +	struct rcar_pcie *pcie = dev_get_drvdata(dev);
->> +	u32 val = rcar_pci_read_reg(pcie, PMSR);
->> +	int ret = 0;
->> +
->> +	if ((val == 0) || (rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN)) {
-> 
-> Please remove the unnecessary parentheses from the line above.
-> 
-> Also, I would prefer if the function returned early.
-> Something like (completely untested!):
+  Reported-by:
+  Tested-by:
+  Signed-off-by: (author)
+  Signed-off-by: (chain)
+  Reviewed-by:
+  Acked-by:
+  Cc: stable@vger.kernel.org        # 3.4+
+  Cc: (other)
 
-This should work.
+But don't bother reposting the series just for this reason; I can fix
+these up myself.
 
-> 	if (rcar_pci_read_reg(pcie, PMSR) &&
-> 	    !(rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN))
-> 		return 0;
-> 
-> 	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> 	return rcar_pcie_wait_for_dl(pcie, 1);
-> 
->> +		/* Re-establish the PCIe link */
->> +		rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
->> +		ret = rcar_pcie_wait_for_dl(pcie, 1);
->> +	}
->> +
->> +	return ret;
->> +}
->> +
->> +static const struct dev_pm_ops rcar_pcie_pm_ops = {
->> +	.resume_noirq = rcar_pcie_resume_noirq,
->> +};
->> +
->>  static struct platform_driver rcar_pcie_driver = {
->>  	.driver = {
->>  		.name = "rcar-pcie",
->>  		.of_match_table = rcar_pcie_of_match,
->> +		.pm = &rcar_pcie_pm_ops,
->>  		.suppress_bind_attrs = true,
->>  	},
->>  	.probe = rcar_pcie_probe,
->> -- 
->> 2.11.0
->>
+Bjorn
 
-
--- 
-Best regards,
-Marek Vasut
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
