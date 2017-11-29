@@ -1,138 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Nov 2017 18:15:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jake Oshins <jakeo@microsoft.com>
-Cc: Dexuan Cui <decui@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        "Chris Valean (Cloudbase Solutions SRL)" <v-chvale@microsoft.com>,
-        "Adrian Suhov (Cloudbase Solutions SRL)" <v-adsuho@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        'Eyal Mizrachi' <eyalmi@mellanox.com>,
-        Jack Morgenstein <jackm@mellanox.com>,
-        Armen Guezalian <armeng@mellanox.com>,
-        Firas Mahameed <firas@mellanox.com>,
-        Tziporet Koren <tziporet@mellanox.com>,
-        Daniel Jurgens <danielj@mellanox.com>
-Subject: Re: [PATCH] PCI: hv: use effective affinity mask
-Message-ID: <20171108001500.GB22847@bhelgaas-glaptop.roam.corp.google.com>
-References: <PS1P15301MB00112EE79DE499E8B2BA338BBF5F0@PS1P15301MB0011.APCP153.PROD.OUTLOOK.COM>
- <DM5PR21MB0122B6965EAB3181A37C14FAAB5F0@DM5PR21MB0122.namprd21.prod.outlook.com>
+Return-Path: <SRS0=Q7Os=C3=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=Q7Os=C3=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Wed, 29 Nov 2017 14:14:30 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+	bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
+	adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+	kgopi@cadence.com, eandrews@cadence.com,
+	thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+	nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 3/5] PCI: cadence: Add host driver for Cadence PCIe
+ controller
+Message-ID: <20171129141430.GA30617@red-moon>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <2670f7ddf59e708beb9d32bef1353e15bd4e1ecf.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <20171128204114.GE11228@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <DM5PR21MB0122B6965EAB3181A37C14FAAB5F0@DM5PR21MB0122.namprd21.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171128204114.GE11228@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 01, 2017 at 08:52:56PM +0000, Jake Oshins wrote:
-> > -----Original Message-----
-> > From: Dexuan Cui
-> > Sent: Wednesday, November 1, 2017 1:31 PM
-> > To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; Jake
-> > Oshins <jakeo@microsoft.com>; KY Srinivasan <kys@microsoft.com>;
-> > Stephen Hemminger <sthemmin@microsoft.com>
-> > Cc: devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; Haiyang
-> > Zhang <haiyangz@microsoft.com>; Jork Loeser
-> > <Jork.Loeser@microsoft.com>; Chris Valean (Cloudbase Solutions SRL) <v-
-> > chvale@microsoft.com>; Adrian Suhov (Cloudbase Solutions SRL) <v-
-> > adsuho@microsoft.com>; Simon Xiao <sixiao@microsoft.com>; 'Eyal
-> > Mizrachi' <eyalmi@mellanox.com>; Jack Morgenstein
-> > <jackm@mellanox.com>; Armen Guezalian <armeng@mellanox.com>; Firas
-> > Mahameed <firas@mellanox.com>; Tziporet Koren
-> > <tziporet@mellanox.com>; Daniel Jurgens <danielj@mellanox.com>
-> > Subject: [PATCH] PCI: hv: use effective affinity mask
-> > 
-> > 
-> > The effective_affinity_mask is always set when an interrupt is assigned in
-> > __assign_irq_vector() -> apic->cpu_mask_to_apicid(), e.g. for struct apic
-> > apic_physflat: -> default_cpu_mask_to_apicid() ->
-> > irq_data_update_effective_affinity(), but it looks d->common->affinity
-> > remains all-1's before the user space or the kernel changes it later.
-> > 
-> > In the early allocation/initialization phase of an irq, we should use the
-> > effective_affinity_mask, otherwise Hyper-V may not deliver the interrupt to
-> > the expected cpu. Without the patch, if we assign 7 Mellanox ConnectX-3
-> > VFs to a 32-vCPU VM, one of the VFs may fail to receive interrupts.
-> > 
-> > Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> > Cc: Jake Oshins <jakeo@microsoft.com>
-> > Cc: Jork Loeser <jloeser@microsoft.com>
-> > Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> > Cc: K. Y. Srinivasan <kys@microsoft.com>
-> > ---
-> > 
-> > Please consider this for v4.14, if it's not too late.
-> > 
-> >  drivers/pci/host/pci-hyperv.c | 8 +++++---
-> >  1 file changed, 5 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> > index 5ccb47d..8b5f66d 100644
-> > --- a/drivers/pci/host/pci-hyperv.c
-> > +++ b/drivers/pci/host/pci-hyperv.c
-> > @@ -879,7 +879,7 @@ static void hv_irq_unmask(struct irq_data *data)
-> >  	int cpu;
-> >  	u64 res;
-> > 
-> > -	dest = irq_data_get_affinity_mask(data);
-> > +	dest = irq_data_get_effective_affinity_mask(data);
-> >  	pdev = msi_desc_to_pci_dev(msi_desc);
-> >  	pbus = pdev->bus;
-> >  	hbus = container_of(pbus->sysdata, struct hv_pcibus_device,
-> > sysdata); @@ -1042,6 +1042,7 @@ static void hv_compose_msi_msg(struct
-> > irq_data *data, struct msi_msg *msg)
-> >  	struct hv_pci_dev *hpdev;
-> >  	struct pci_bus *pbus;
-> >  	struct pci_dev *pdev;
-> > +	struct cpumask *dest;
-> >  	struct compose_comp_ctxt comp;
-> >  	struct tran_int_desc *int_desc;
-> >  	struct {
-> > @@ -1056,6 +1057,7 @@ static void hv_compose_msi_msg(struct irq_data
-> > *data, struct msi_msg *msg)
-> >  	int ret;
-> > 
-> >  	pdev = msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
-> > +	dest = irq_data_get_effective_affinity_mask(data);
-> >  	pbus = pdev->bus;
-> >  	hbus = container_of(pbus->sysdata, struct hv_pcibus_device,
-> > sysdata);
-> >  	hpdev = get_pcichild_wslot(hbus, devfn_to_wslot(pdev->devfn));
-> > @@ -1081,14 +1083,14 @@ static void hv_compose_msi_msg(struct irq_data
-> > *data, struct msi_msg *msg)
-> >  	switch (pci_protocol_version) {
-> >  	case PCI_PROTOCOL_VERSION_1_1:
-> >  		size = hv_compose_msi_req_v1(&ctxt.int_pkts.v1,
-> > -					irq_data_get_affinity_mask(data),
-> > +					dest,
-> >  					hpdev->desc.win_slot.slot,
-> >  					cfg->vector);
-> >  		break;
-> > 
-> >  	case PCI_PROTOCOL_VERSION_1_2:
-> >  		size = hv_compose_msi_req_v2(&ctxt.int_pkts.v2,
-> > -					irq_data_get_affinity_mask(data),
-> > +					dest,
-> >  					hpdev->desc.win_slot.slot,
-> >  					cfg->vector);
-> >  		break;
-> > --
-> > 2.7.4
+On Tue, Nov 28, 2017 at 02:41:14PM -0600, Bjorn Helgaas wrote:
+
+[...]
+
+> > +static int cdns_pcie_parse_request_of_pci_ranges(struct device *dev,
+> > +						 struct list_head *resources,
+> > +						 struct resource **bus_range)
+> > +{
+> > +	int err, res_valid = 0;
+> > +	struct device_node *np = dev->of_node;
+> > +	resource_size_t iobase;
+> > +	struct resource_entry *win, *tmp;
+> > +
+> > +	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
+> > +	if (err)
+> > +		return err;
+> > +
+> > +	err = devm_request_pci_bus_resources(dev, resources);
+> > +	if (err)
+> > +		return err;
+> > +
+> > +	resource_list_for_each_entry_safe(win, tmp, resources) {
+> > +		struct resource *res = win->res;
+> > +
+> > +		switch (resource_type(res)) {
+> > +		case IORESOURCE_IO:
+> > +			err = pci_remap_iospace(res, iobase);
+> > +			if (err) {
+> > +				dev_warn(dev, "error %d: failed to map resource %pR\n",
+> > +					 err, res);
+> > +				resource_list_destroy_entry(win);
+> > +			}
+> > +			break;
+> > +		case IORESOURCE_MEM:
+> > +			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+> > +			break;
+> > +		case IORESOURCE_BUS:
+> > +			*bus_range = res;
+> > +			break;
+> > +		}
+> > +	}
+> > +
+> > +	if (res_valid)
+> > +		return 0;
+> > +
+> > +	dev_err(dev, "non-prefetchable memory resource required\n");
+> > +	return -EINVAL;
+> > +}
 > 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> The code above is starting to look awfully familiar.  I wonder if it's
+> time to think about some PCI-internal interface that can encapsulate
+> this.  In this case, there's really nothing Cadence-specific here.
+> There are other callers where there *is* vendor-specific code, but
+> possibly that could be handled by returning pointers to bus number,
+> I/O port, and MMIO resources so the caller could do the
+> vendor-specific stuff?
 
-I'm not sure what this means.
+Yes and that's not the only one, pattern below is duplicated
+(with some minor differences across host bridges that I think
+can be managed through function parameters), it is probably worth
+moving them both into a core code helper.
 
-Per Documentation/process/submitting-patches.rst, "Signed-off-by"
-means you were "involved in the development of the patch, or that
-he/she was in the patch's delivery path."  You weren't in the delivery
-path (I got it from Dexuan), and if you were involved in development,
-your Signed-off-by would normally appear in the original posting.
+list_splice_init(&resources, &bridge->windows);
+bridge->dev.parent = dev;
+bridge->busnr = bus;
+bridge->ops = &pci_ops;
+bridge->map_irq = of_irq_parse_and_map_pci;
+bridge->swizzle_irq = pci_common_swizzle;
 
-Should this be a Reviewed-by tag?
+ret = pci_scan_root_bus_bridge(bridge);
+if (ret < 0) {
+	dev_err(dev, "Scanning root bridge failed");
+	goto err_init;
+}
+
+bus = bridge->bus;
+pci_bus_size_bridges(bus);
+pci_bus_assign_resources(bus);
+
+list_for_each_entry(child, &bus->children, node)
+	pcie_bus_configure_settings(child);
+
+pci_bus_add_devices(bus);
