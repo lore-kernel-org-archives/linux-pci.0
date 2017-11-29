@@ -1,42 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:39478 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934407AbdKBUzO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Nov 2017 16:55:14 -0400
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-pci@vger.kernel.org, tglx@linutronix.de,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-References: <20171004095007.19148-1-bigeasy@linutronix.de>
- <dfd717ac-a775-f30c-4d41-2da68e08ff54@deltatee.com>
- <20171005105100.2nf4ih2fgq6dax5g@linutronix.de>
- <0ae3975a-b1b1-fb8b-2f90-ff103da9d178@deltatee.com>
- <20171102150729.5hylh6yjpqyqurnk@linutronix.de>
- <7f4a4474-bea2-f6b0-037e-2f487cc3d6cd@deltatee.com>
- <20171102171736.rpdlemzw5jueuq5w@linutronix.de>
- <31ed36b3-2328-8cc4-3aea-8c13a39e63bf@deltatee.com>
- <20171102180548.f6sc2edxbvw7qeu7@linutronix.de>
- <2b025b79-b625-dab0-5b68-c77ca0c2bd74@deltatee.com>
- <20171102205306.bk6ykgmdn7gh37mq@linutronix.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <0f0c55dc-591b-e32f-b366-057f254edc11@deltatee.com>
-Date: Thu, 2 Nov 2017 14:55:12 -0600
+Return-Path: <SRS0=ofcB=C3=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=ofcB=C3=gmail.com=ckoenig.leichtzumerken@kernel.org>
+From: "=?UTF-8?q?Christian=20K=C3=B6nig?=" <ckoenig.leichtzumerken@gmail.com>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] x86/PCI: only enable a 64bit BAR on single socket AMD Family 15h systems
+Date: Wed, 29 Nov 2017 15:12:28 +0100
+Message-Id: <20171129141229.6107-3-christian.koenig@amd.com>
+In-Reply-To: <20171129141229.6107-1-christian.koenig@amd.com>
+References: <20171129141229.6107-1-christian.koenig@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20171102205306.bk6ykgmdn7gh37mq@linutronix.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH v2] pci/switchtec: Don't use completion's wait queue
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
+When we have a multi socket system each CPU core needs the same setup. Since
+this is tricky to do in the fixup code disable enabling a 64bit BAR on multi
+socket systems for now.
 
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ arch/x86/pci/fixup.c | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
-On 02/11/17 02:53 PM, Sebastian Andrzej Siewior wrote:
-> It would have made sense if that function would be used also within the
-> file where it was declared but it is not the case.
-> So you see the questionable way the READ_ONCE got in there and now you
-> may understand that I did not see much of big loss if it wasn't there
-> after the rewrite/change.
-
-Yes, but I feel like it still makes sense for it to be there (per the 
-article I linked), despite the incorrect justification.
-
-Logan
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index e857b3ac5755..c817ab85dc82 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -664,6 +664,16 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ 	unsigned i;
+ 	u32 base, limit, high;
+ 	struct resource *res, *conflict;
++	struct pci_dev *other;
++
++	/* Check that we are the only device of that type */
++	other = pci_get_device(dev->vendor, dev->device, NULL);
++	if (other != dev ||
++	    (other = pci_get_device(dev->vendor, dev->device, other))) {
++		/* This is a multi socket system, don't touch it for now */
++		pci_dev_put(other);
++		return;
++	}
+ 
+ 	for (i = 0; i < 8; i++) {
+ 		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
+@@ -718,10 +728,10 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ 
+ 	pci_bus_add_resource(dev->bus, res, 0);
+ }
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1401, pci_amd_enable_64bit_bar);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1571, pci_amd_enable_64bit_bar);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x15b1, pci_amd_enable_64bit_bar);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1401, pci_amd_enable_64bit_bar);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1571, pci_amd_enable_64bit_bar);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15b1, pci_amd_enable_64bit_bar);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
+ 
+ #endif
+-- 
+2.11.0
