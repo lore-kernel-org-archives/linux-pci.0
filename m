@@ -1,74 +1,47 @@
-Return-Path: <SRS0=d0NJ=CL=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=d0NJ=CL=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Mon, 13 Nov 2017 11:06:14 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
-	treding@nvidia.com, bhelgaas@google.com,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
-Message-ID: <20171113110614.GB27700@red-moon>
-References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
- <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
- <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com>
- <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
- <20171110112201.GA25235@red-moon>
- <3887d62c-98bb-04d5-5b40-96d5b7b43e63@arm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 29 Nov 2017 09:36:21 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2 1/7] PCI: protect restore with device lock to be
+ consistent
+Message-ID: <20171129173621.GB27742@infradead.org>
+References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
+ <1511763628-11856-2-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3887d62c-98bb-04d5-5b40-96d5b7b43e63@arm.com>
+In-Reply-To: <1511763628-11856-2-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 12:04:21PM +0000, Robin Murphy wrote:
-
-[...]
-
-> >>>>Do rcar_pcie_enable_msi() and xilinx_pcie_enable_msi() have a
-> >>>>similar problem?  They both use GFP_KERNEL, then virt_to_phys(),
-> >>>>then write the result of virt_to_phys() using a 32-bit register
-> >>>>write.
-> >>>
-> >>>Well, if those systems deal with 64-bit addresses and when an end
-> >>>point is connected which supports only 32-bit MSI addresses, this
-> >>>problem will surface when __get_free_pages() returns an address that
-> >>>translates to a >32-bit address after virt_to_phys() call on it.
-> >>
-> >>I'd like to hear from the R-Car and Xilinx folks about (1) whether
-> >>there's a potential issue with truncating a 64-bit address, and
-> >>(2) whether that hardware works like Tegra, where the MSI write never
-> >>reaches memory so we don't actually need to allocate a page.
-> >>
-> >>If all we need is to allocate a little bus address space for the MSI
-> >>target, I'd like to figure out a better way to do that than
-> >>__get_free_pages().  The current code seems a little buggy, and
-> >>it's getting propagated through several drivers.
+On Mon, Nov 27, 2017 at 01:20:22AM -0500, Sinan Kaya wrote:
+> Commit b014e96d1abb ("PCI: Protect pci_error_handlers->reset_notify() usage
+> with device_lock()") added protection around pci_dev_restore() function so
+> that device specific remove callback does not cause a race condition
+> against hotplug.
 > 
-> The really neat version is to take a known non-memory physical
-> address like the host controller's own MMIO region, which has no
-> legitimate reason to ever be used as a DMA address.
+> pci_dev_lock() usage has been forgotten in two different places in the
+> code. Adding locks for pci_slot_restore() and moving pci_dev_restore()
+> inside the locks for pci_try_reset_function().
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-True - that could be safe enough.
+Looks good,
 
-What about IOVAs though ? I suspect we should reserve the MSI address
-range - it looks like there is something missing here.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-> pcie-mediatek almost gets this right, but by using virt_to_phys() on
-> an ioremapped address they end up with nonsense rather than the
-> correct address
-
-That definitely needs fixing given that it works by chance.
-
-> (although realistically you would have to be extremely unlucky for
-> said nonsense to collide with a real DMA address given to a PCI
-> endpoint later). Following on from above, dma_map_resource() would
-> be the foolproof way to get that right.
-
-That's how it should be done then lest it trickles into other drivers
-requiring a similar set-up.
-
-Thanks,
-Lorenzo
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
