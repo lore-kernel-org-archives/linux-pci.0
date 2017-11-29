@@ -1,31 +1,53 @@
-Return-Path: <SRS0=HXDS=CZ=daenzer.net=michel@kernel.org>
-Return-Path: <SRS0=HXDS=CZ=daenzer.net=michel@kernel.org>
-Subject: Re: [PATCH] PCI: use dev_info rather than dev_err for rom validation
-To: Alex Deucher <alexdeucher@gmail.com>, helgaas@kernel.org
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
- Alex Deucher <alexander.deucher@amd.com>
-References: <20171127172110.16699-1-alexander.deucher@amd.com>
-From: =?UTF-8?Q?Michel_D=c3=a4nzer?= <michel@daenzer.net>
-Message-ID: <02e87fb8-8b77-281b-eac7-d592802da054@daenzer.net>
-Date: Mon, 27 Nov 2017 19:00:43 +0100
+Return-Path: <SRS0=C26o=C3=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=C26o=C3=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
+To: helgaas@kernel.org, bhelgaas@google.com, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com
+References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Wed, 29 Nov 2017 10:13:07 -0600
 MIME-Version: 1.0
-In-Reply-To: <20171127172110.16699-1-alexander.deucher@amd.com>
+In-Reply-To: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=utf-8
+Message-Id: <8f9ebacd-5e4e-a6d3-b1c2-dcf9bd0ea811@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-11-27 06:21 PM, Alex Deucher wrote:
-> On AMD GPUs, we use several mechanisms to fetch the vbios
-> rom depending on the platform.  We try to read the rom
-> back via the rom BAR and fall back to other methods in
-> some cases.  This leads to spurious error messages
-> from the pci rom code which are harmless in our case.
-> This leads to bugs being files, etc.  Change these to
-> dev_info rather than dev_err to avoid that.
-
-Does dev_info still print the message by default though? If so, I wonder
-if this will change anything in practice...
 
 
--- 
-Earthling Michel Dänzer               |               http://www.amd.com
-Libre software enthusiast             |             Mesa and X developer
+On 11/9/17 8:00 AM, Bryant G. Ly wrote:
+
+> v1 - Initial patch
+> v2 - Addressed Bjorn's comment on creating a highly platform
+>      dependent global exported symbol.
+> v3 - Based patch off linux-ppc/master
+> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
+> v5 - Fixed comments and commit message
+>
+> Bryant G. Ly (3):
+>   powerpc/kernel: Separate SR-IOV Calls
+>   pseries: Add PSeries SR-IOV Machine dependent calls
+>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+>
+>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
+>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
+>  drivers/pci/iov.c                            | 11 ++++++++++
+>  include/linux/pci.h                          |  2 ++
+>  11 files changed, 118 insertions(+), 33 deletions(-)
+>
+Hi Mike,
+
+Any updates on when this is going to get pulled? I want to submit the full SR-IOV enablement on PowerVM,
+but I haven't seen this get merged into 4.15 yet.
+
+-Bryant
