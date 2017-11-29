@@ -1,63 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH 11/30] hwmon: (coretemp) deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:30:56 -0500
-Message-Id: <1511328675-21981-12-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:CORETEMP HARDWARE MONITORING DRIVER"
- <linux-hwmon@vger.kernel.org>, Fenghua Yu <fenghua.yu@intel.com>,
- Jean Delvare <jdelvare@suse.com>, linux-arm-msm@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- linux-arm-kernel@lists.infradead.org, Guenter Roeck <linux@roeck-us.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:55366 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752133AbdK2Axg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Nov 2017 19:53:36 -0500
+From: Stephen Boyd <sboyd@codeaurora.org>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: dwc: Use {upper,lower}_32_bits() macros for clarity
+Date: Tue, 28 Nov 2017 16:53:34 -0800
+Message-Id: <20171129005334.16425-1-sboyd@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+We have macros for getting the upper or lower 32 bits of a
+number. Use them here to shave a couple lines off the code.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
 ---
- drivers/hwmon/coretemp.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/dwc/pcie-designware-host.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/hwmon/coretemp.c b/drivers/hwmon/coretemp.c
-index c13a4fd..4bdbf77 100644
---- a/drivers/hwmon/coretemp.c
-+++ b/drivers/hwmon/coretemp.c
-@@ -246,7 +246,8 @@ static int adjust_tjmax(struct cpuinfo_x86 *c, u32 id, struct device *dev)
- 	int err;
- 	u32 eax, edx;
- 	int i;
--	struct pci_dev *host_bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-+	u16 devfn = PCI_DEVFN(0, 0);
-+	struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 157621175147..ae5abfddf8de 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -89,10 +89,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 	msi_target = virt_to_phys((void *)pp->msi_data);
  
- 	/*
- 	 * Explicit tjmax table entries override heuristics.
+ 	/* program the msi_data */
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+-			    (u32)(msi_target & 0xffffffff));
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+-			    (u32)(msi_target >> 32 & 0xffffffff));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4, lower_32_bits(msi_target));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, upper_32_bits(msi_target));
+ }
+ 
+ static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
