@@ -1,62 +1,40 @@
-Return-Path: <SRS0=WWTA=CM=intel.com=ley.foon.tan@kernel.org>
-Return-Path: <SRS0=WWTA=CM=intel.com=ley.foon.tan@kernel.org>
-Message-ID: <1510678720.2460.2.camel@intel.com>
-Subject: Re: [PATCH v1 2/3] PCI: altera: Rename altera_pcie_link_is_up() to
- altera_pcie_link_up()
-From: Ley Foon Tan <ley.foon.tan@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Michal Simek
-	 <michal.simek@xilinx.com>, rfi@lists.rocketboards.org,
-	=?ISO-8859-1?Q?S=F6ren?= Brinkmann
-	 <soren.brinkmann@xilinx.com>, Ley Foon Tan <lftan@altera.com>,
-	linux-arm-kernel@lists.infradead.org, Tanmay Inamdar <tinamdar@apm.com>
-Date: Wed, 15 Nov 2017 00:58:40 +0800
-In-Reply-To: <20171113224051.29024.76516.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: 
-	<20171113224001.29024.87126.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <20171113224051.29024.76516.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 29 Nov 2017 09:39:05 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V2 6/7] PCI: add device wait after slot and bus reset
+Message-ID: <20171129173905.GG27742@infradead.org>
+References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
+ <1511763628-11856-7-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <1511763628-11856-7-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gTW9uLCAyMDE3LTExLTEzIGF0IDE2OjQwIC0wNjAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOgo+
-IEZyb206IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+Cj4gCj4gUmVuYW1lIGFs
-dGVyYV9wY2llX2xpbmtfaXNfdXAoKSB0byBhbHRlcmFfcGNpZV9saW5rX3VwKCkgdG8gZm9sbG93
-Cj4gdGhlCj4gY29udmVudGlvbiBvZiBvdGhlciBkcml2ZXJzLsKgwqBObyBmdW5jdGlvbmFsIGNo
-YW5nZSBpbnRlbmRlZC4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fh
-c0Bnb29nbGUuY29tPgo+IC0tLQo+IMKgZHJpdmVycy9wY2kvaG9zdC9wY2llLWFsdGVyYS5jIHzC
-oMKgwqDCoDggKysrKy0tLS0KPiDCoDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDQg
-ZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1hbHRl
-cmEuYyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS0KPiBhbHRlcmEuYwo+IGluZGV4IGI0NjhiOGNj
-Y2Y4ZC4uNWNjNGY1OTRkNzlhIDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1h
-bHRlcmEuYwo+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1hbHRlcmEuYwo+IEBAIC0xMDUs
-NyArMTA1LDcgQEAgc3RhdGljIGlubGluZSB1MzIgY3JhX3JlYWRsKHN0cnVjdCBhbHRlcmFfcGNp
-ZQo+ICpwY2llLCBjb25zdCB1MzIgcmVnKQo+IMKgwqDCoMKgwqDCoMKgwqByZXR1cm4gcmVhZGxf
-cmVsYXhlZChwY2llLT5jcmFfYmFzZSArIHJlZyk7Cj4gwqB9Cj4gCj4gLXN0YXRpYyBib29sIGFs
-dGVyYV9wY2llX2xpbmtfaXNfdXAoc3RydWN0IGFsdGVyYV9wY2llICpwY2llKQo+ICtzdGF0aWMg
-Ym9vbCBhbHRlcmFfcGNpZV9saW5rX3VwKHN0cnVjdCBhbHRlcmFfcGNpZSAqcGNpZSkKPiDCoHsK
-PiDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuICEhKChjcmFfcmVhZGwocGNpZSwgUlBfTFRTU00pICYg
-UlBfTFRTU01fTUFTSykgPT0KPiBMVFNTTV9MMCk7Cj4gwqB9Cj4gQEAgLTE0Miw3ICsxNDIsNyBA
-QCBzdGF0aWMgYm9vbCBhbHRlcmFfcGNpZV92YWxpZF9kZXZpY2Uoc3RydWN0Cj4gYWx0ZXJhX3Bj
-aWUgKnBjaWUsCj4gwqB7Cj4gwqDCoMKgwqDCoMKgwqDCoC8qIElmIHRoZXJlIGlzIG5vIGxpbmss
-IHRoZW4gdGhlcmUgaXMgbm8gZGV2aWNlICovCj4gwqDCoMKgwqDCoMKgwqDCoGlmIChidXMtPm51
-bWJlciAhPSBwY2llLT5yb290X2J1c19ucikgewo+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqBpZiAoIWFsdGVyYV9wY2llX2xpbmtfaXNfdXAocGNpZSkpCj4gK8KgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoGlmICghYWx0ZXJhX3BjaWVfbGlua191cChwY2llKSkKPiDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXR1cm4gZmFsc2U7Cj4g
-wqDCoMKgwqDCoMKgwqDCoH0KPiAKPiBAQCAtNDEyLDcgKzQxMiw3IEBAIHN0YXRpYyB2b2lkIGFs
-dGVyYV93YWl0X2xpbmtfcmV0cmFpbihzdHJ1Y3QKPiBhbHRlcmFfcGNpZSAqcGNpZSkKPiDCoMKg
-wqDCoMKgwqDCoMKgLyogV2FpdCBmb3IgbGluayBpcyB1cCAqLwo+IMKgwqDCoMKgwqDCoMKgwqBz
-dGFydF9qaWZmaWVzID0gamlmZmllczsKPiDCoMKgwqDCoMKgwqDCoMKgZm9yICg7Oykgewo+IC3C
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBpZiAoYWx0ZXJhX3BjaWVfbGlua19pc191cChw
-Y2llKSkKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgaWYgKGFsdGVyYV9wY2llX2xp
-bmtfdXAocGNpZSkpCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgYnJlYWs7Cj4gCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBpZiAodGlt
-ZV9hZnRlcihqaWZmaWVzLCBzdGFydF9qaWZmaWVzICsKPiBMSU5LX1VQX1RJTUVPVVQpKSB7Cj4g
-QEAgLTQyNyw3ICs0MjcsNyBAQCBzdGF0aWMgdm9pZCBhbHRlcmFfcGNpZV9yZXRyYWluKHN0cnVj
-dAo+IGFsdGVyYV9wY2llICpwY2llKQo+IMKgewo+IMKgwqDCoMKgwqDCoMKgwqB1MTYgbGlua2Nh
-cCwgbGlua3N0YXQsIGxpbmtjdGw7Cj4gCj4gLcKgwqDCoMKgwqDCoMKgaWYgKCFhbHRlcmFfcGNp
-ZV9saW5rX2lzX3VwKHBjaWUpKQo+ICvCoMKgwqDCoMKgwqDCoGlmICghYWx0ZXJhX3BjaWVfbGlu
-a191cChwY2llKSkKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJldHVybjsKPiAK
-PiDCoMKgwqDCoMKgwqDCoMKgLyoKPiAKQWNrZWQtYnk6IExleSBGb29uIFRhbiA8bGV5LmZvb24u
-dGFuQGludGVsLmNvbT4=
+On Mon, Nov 27, 2017 at 01:20:27AM -0500, Sinan Kaya wrote:
+> Rev 3.1 Sec 2.3.1 Request Handling Rules indicates that a device can issue
+> CRS following secondary bus reset. Handle device presence gracefully.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
