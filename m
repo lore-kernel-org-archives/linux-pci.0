@@ -1,100 +1,81 @@
-Return-Path: <SRS0=tt2F=CI=gmail.com=arndbergmann@kernel.org>
-Return-Path: <SRS0=tt2F=CI=gmail.com=arndbergmann@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFCv2 PATCH 05/36] iommu/process: Bind and unbind process to and
+ from devices
+To: Yisheng Xie <xieyisheng1@huawei.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-6-jean-philippe.brucker@arm.com>
+ <9c364147-12c4-5a8a-9cd9-0642a6b92555@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <3338635f-f2ba-4b78-a72b-2568645f7df3@arm.com>
+Date: Wed, 29 Nov 2017 15:01:04 +0000
 MIME-Version: 1.0
-Sender: arndbergmann@gmail.com
-In-Reply-To: <20171110093737.GA25067@ulmo>
-References: <1509991387-15951-1-git-send-email-vidyas@nvidia.com>
- <20171108212558.GC21597@bhelgaas-glaptop.roam.corp.google.com>
- <e993e1f8-b6b3-de07-759c-a56012e06a2a@nvidia.com> <20171109181435.GB7629@bhelgaas-glaptop.roam.corp.google.com>
- <7727b9bc-a44b-4cbe-1839-7e4dd7c2c186@nvidia.com> <20171110093737.GA25067@ulmo>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 10 Nov 2017 12:57:34 +0100
-Message-ID: <CAK8P3a1uDqLzEZ9eF9V-e3Uo-frkmVbNw-OXv9dapPGPMP-Ocw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: tegra: limit MSI target address to 32-bit
-To: Thierry Reding <treding@nvidia.com>
-Cc: Vidya Sagar <vidyas@nvidia.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"open list:TEGRA ARCHITECTURE SUPPORT" <linux-tegra@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com,
-	Michal Simek <michal.simek@xilinx.com>, =?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Simon Horman <horms@verge.net.au>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <9c364147-12c4-5a8a-9cd9-0642a6b92555@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 10, 2017 at 10:37 AM, Thierry Reding <treding@nvidia.com> wrote:
-> On Fri, Nov 10, 2017 at 12:11:05AM +0530, Vidya Sagar wrote:
->> On Thursday 09 November 2017 11:44 PM, Bjorn Helgaas wrote:
->> > [+cc Lorenzo]
->> > On Thu, Nov 09, 2017 at 12:48:14PM +0530, Vidya Sagar wrote:
->> > > On Thursday 09 November 2017 02:55 AM, Bjorn Helgaas wrote:
->> > > > On Mon, Nov 06, 2017 at 11:33:07PM +0530, Vidya Sagar wrote:
->> > > > > limits MSI target address to only 32-bit region to enable
->> > > > > some of the PCIe end points where only 32-bit MSIs
->> > > > > are supported work properly.
->> > > > > One example being Marvel SATA controller
->> > > > >
->> > > > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> > > > > ---
->> > > > >   drivers/pci/host/pci-tegra.c | 2 +-
->> > > > >   1 file changed, 1 insertion(+), 1 deletion(-)
->> > > > >
->> > > > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->> > > > > index 1987fec1f126..03d3dcdd06c2 100644
->> > > > > --- a/drivers/pci/host/pci-tegra.c
->> > > > > +++ b/drivers/pci/host/pci-tegra.c
->> > > > > @@ -1531,7 +1531,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
->> > > > >       }
->> > > > >       /* setup AFI/FPCI range */
->> > > > > -     msi->pages = __get_free_pages(GFP_KERNEL, 0);
->> > > > > +     msi->pages = __get_free_pages(GFP_DMA, 0);
->> > > > >       msi->phys = virt_to_phys((void *)msi->pages);
->> > > > Should this be GFP_DMA32?  See the comment above the GFP_DMA
->> > > > definition.
->> > > looking at the comments for both GFP_DMA32 and GFP_DMA, I thought GFP_DMA32
->> > > is the correct one to use, but, even with that I got >32-bit addresses.
->> > > GFP_DMA always gives addresses in <4GB boundary (i.e. 32-bit).
->> > > I didn't dig into it to find out why is this the case.
->> > This sounds worth looking into (but maybe we don't need the
->> > __get_free_pages() at all; see below).  Maybe there's some underlying
->> > bug.  My laptop shows this, which looks like it might be related:
->> >
->> >    Zone ranges:
->> >      DMA      [mem 0x0000000000001000-0x0000000000ffffff]
->> >      DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
->> >      Normal   [mem 0x0000000100000000-0x00000004217fffff]
->> >      Device   empty
->> >
->> > What does your machine show?
->> I see following in my linux box
->>  Zone ranges:
->>    DMA      [mem 0x0000000000001000-0x0000000000ffffff]
->>    DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
->>    Normal   [mem 0x0000000100000000-0x000000106effffff]
->>    Device   empty
->>
->> and following in my T210 Tegra platform
->> Zone ranges:
->>   DMA      [mem 0x0000000080000000-0x00000000ffffffff]
->>   Normal   [mem 0x0000000100000000-0x000000017fffffff]
->
-> This seems to be happening because 64-bit ARM doesn't have the
-> ZONE_DMA32 Kconfig option, which seems to cause the DMA32 zone
-> to default to the normal zone (see include/linux/gfp.h).
->
-> That's very confusing in conjunction with the kerneldoc comment
-> for GFP_DMA32 because it isn't actually guaranteed to give you
-> 32-bit addresses for !ZONE_DMA32.
->
-> Cc'ing Arnd who knows about these things.
+On 29/11/17 06:08, Yisheng Xie wrote:
+> 
+> 
+> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
+>> +int iommu_process_bind_device(struct device *dev, struct task_struct *task,
+>> +			      int *pasid, int flags)
+>> +{
+> [..]
+>> +			err = iommu_process_attach_locked(context, dev);
+>> +			if (err)
+>> +				iommu_process_put_locked(process);
+> one ref for a context is enough right? so also need call iommu_process_put_locked()
+> if attach ok, or will be leak if user call bind twice for the same device and task.
 
-I don't have a good answer unfortunately, but I agree there is clearly
-something wrong with the behavior, AFAICT, ZONE_DMA32 should
-really do what the name says.
+I wasn't sure, I think I prefer taking one ref for each bind. If user
+calls bind twice, it should call unbind twice as well (in case of leak we
+free the context on process exit).
 
-When you look at the commit that introduced ZONE_DMA32, you
-see that it used to be different, see commit a2f1b4249007
-("[PATCH] x86_64: Add 4GB DMA32 zone"). ZONE_DMA32 used
-to fall back to ZONE_DMA, but this got changed shortly after,
-still in 2006.
+Also with this implementation, user can call bind for two devices in the
+same domain, which will share the same context structure. So we have to
+take as many refs as bind() calls.
 
-      Arnd
+Thanks,
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
