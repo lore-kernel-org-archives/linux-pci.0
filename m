@@ -1,44 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:48784 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750932AbdKJV67 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2017 16:58:59 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH V2 0/5] PCI: rcar: Add suspend/resume support
-Date: Fri, 10 Nov 2017 22:58:38 +0100
-Message-Id: <20171110215843.432-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFCv2 PATCH 09/36] iommu/fault: Allow blocking fault handlers
+To: Yisheng Xie <xieyisheng1@huawei.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-10-jean-philippe.brucker@arm.com>
+ <7e1c8ea4-e568-1000-17de-62f8562c7169@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <74891e35-17d8-5831-1ebd-18e00ce00d74@arm.com>
+Date: Wed, 29 Nov 2017 15:01:00 +0000
+MIME-Version: 1.0
+In-Reply-To: <7e1c8ea4-e568-1000-17de-62f8562c7169@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <Mark.Rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <Catalin.Marinas@arm.com>, Will Deacon <Will.Deacon@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "rfranz@cavium.com" <rfranz@cavium.com>, "lenb@kernel.org" <lenb@kernel.org>,
+ "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "dwmw2@infradead.org" <dwmw2@infradead.org>,
+ "liubo95@huawei.com" <liubo95@huawei.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "robdclark@gmail.com" <robdclark@gmail.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ Sudeep Holla <Sudeep.Holla@arm.com>, Robin Murphy <Robin.Murphy@arm.com>,
+ "nwatters@codeaurora.org" <nwatters@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset adds support for suspend/resume on the Renesas RCar PCIe
-controller. First two patches clean the driver up a little, while the
-remaining three add the required suspend/resume functionality.
+Hello,
 
-Kazufumi Ikeda (2):
-  PCI: rcar: Add the initialization of PCIe link in resume_noirq
-  PCI: rcar: Add the suspend/resume for pcie-rcar driver
+On 29/11/17 06:15, Yisheng Xie wrote:
+> Hi Jean,
+> 
+> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
+>> -	if (domain->ext_handler) {
+>> +	if (domain->handler_flags & IOMMU_FAULT_HANDLER_ATOMIC) {
+>> +		fault->flags |= IOMMU_FAULT_ATOMIC;
+> 
+> Why remove the condition of domain->ext_handler? should it be much better like:
+>   if ((domain->handler_flags & IOMMU_FAULT_HANDLER_ATOMIC) && domain->ext_handler)
+> 
+> If domain->ext_handler is NULL, and (domain->handler_flags & IOMMU_FAULT_HANDLER_ATOMIC)
+> is true. It will oops, right?
 
-Marek Vasut (2):
-  PCI: rcar: Poll more often in rcar_pcie_wait_for_dl()
-  PCI: rcar: Clean up the macros
+I removed the check because ext_handler shouldn't be NULL if handler_flags
+has a bit set (as per iommu_set_ext_fault_handler). But you're right that
+this is fragile, and I overlooked the case where users could call
+set_ext_fault_handler to clear the fault handler.
 
-Phil Edworthy (1):
-  PCI: rcar: Support runtime PM, link state L1 handling
+(Note that this ext_handler will most likely be replaced by the fault
+infrastructure that Jacob is working on:
+https://patchwork.kernel.org/patch/10063385/ to which we should add the
+atomic/blocking flags)
 
- drivers/pci/host/pcie-rcar.c | 182 ++++++++++++++++++++++++++++++++++---------
- 1 file changed, 146 insertions(+), 36 deletions(-)
+Thanks,
+Jean
 
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
--- 
-2.11.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
