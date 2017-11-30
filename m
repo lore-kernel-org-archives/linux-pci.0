@@ -1,110 +1,58 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	okaya@codeaurora.org,
-	timur@codeaurora.org
-Subject: [PATCH v2 3/4] PCI/portdrv: Implement interface to query the
- registered service
-Date: Wed, 15 Nov 2017 10:26:47 +0530
-Message-Id: <1510721808-27164-4-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
-References: <1510721808-27164-1-git-send-email-poza@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Oza Pawandeep <poza@codeaurora.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dongdong Liu <liudongdong3@huawei.com>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=caaC=C4=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=caaC=C4=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 30 Nov 2017 10:24:37 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, thierry.reding@gmail.com,
+	jonathanh@nvidia.com, robh+dt@kernel.org, frowand.list@gmail.com,
+	bhelgaas@google.com, rjw@rjwysocki.net, tglx@linutronix.de,
+	vidyas@nvidia.com, kthota@nvidia.com, linux-tegra@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH V2 5/9] PCI: Export pci_flags
+Message-ID: <20171130102436.GB10349@red-moon>
+References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
+ <1511638333-22951-6-git-send-email-mmaddireddy@nvidia.com>
+ <20171129170133.GC6469@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171129170133.GC6469@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch implements query service interface. So that, any port service
-driver can query to know, if the service is active or not.
+On Wed, Nov 29, 2017 at 11:01:33AM -0600, Bjorn Helgaas wrote:
+> [+cc Lorenzo]
+> 
+> On Sun, Nov 26, 2017 at 01:02:09AM +0530, Manikanta Maddireddy wrote:
+> > pci_flags variable is used in inline functions in 'pci.h', Tegra PCIe
+> > driver use one of these functions pci_add_flags() and includes 'pci.h'.
+> > Export pci_flags to allow Tegra PCIe host controller driver to be
+> > compiled as loadable kernel module.
+> 
+> Here's the usage in tegra_pcie_probe():
+> 
+>   pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+> 
+> We've probably had this discussion before, but  I don't know why Tegra
+> needs PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS.
+> 
+> I would prefer to drop this usage of pci_add_flags() if possible.  It
+> seems to be just an arm/powerpc thing and I'm not convinced it's
+> really necessary.
 
-When multiple service drivers try to take actions, these service drivers
-could race or could have conflict of interest.
+It is hard to say if it is really necessary (because it depends
+on firmware configuration - ie pci_scan_bridge()), that's the
+problem.
 
-For e.g. when DPC is enabled, AER should not attempt recovery.
+I suspect it can trigger regressions if we do not set it (since
+it affects what pcibios_assign_all_busses() returns on eg arm/arm64).
 
-The other interface walks up the parent till root bridge, so that on each
-pci_dev service can be queried.
+There are two things we can do:
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+1) Set it unconditionally in arch code (in a hook to be defined)
+2) We remove it on a per-host bridge basis and ask for testing
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 6bfe986..c7681d9 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -490,6 +490,40 @@ static int pcie_port_remove_service(struct device *dev)
- }
- 
- /**
-+ * pcie_port_query_service - query the associated port service.
-+ * dev: pcie device
-+ * @port service: PCI express port service
-+ */
-+bool pcie_port_query_service(struct pci_dev *dev, u32 port_service)
-+{
-+	struct pcie_device *pdev;
-+
-+	list_for_each_entry(pdev, &dev->service_list, slist) {
-+		if (pdev->service == port_service)
-+			return true;
-+	}
-+	return false;
-+}
-+EXPORT_SYMBOL(pcie_port_query_service);
-+
-+/**
-+ * pcie_port_upstream_bridge - returns immediate upstream bridge.
-+ * dev: pcie device
-+ */
-+struct pci_dev *pcie_port_upstream_bridge(struct pci_dev *dev)
-+{
-+	struct pci_dev *parent;
-+
-+	parent = pci_upstream_bridge(dev);
-+
-+	if (parent && pci_is_pcie(parent))
-+		return parent;
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(pcie_port_upstream_bridge);
-+
-+/**
-  * pcie_port_shutdown_service - shut down given PCI Express port service
-  * @dev: PCI Express port service device to handle
-  *
-diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
-index 9d05621..8322443 100644
---- a/include/linux/pcieport_if.h
-+++ b/include/linux/pcieport_if.h
-@@ -68,5 +68,6 @@ struct pcie_port_service_driver {
- 
- int pcie_port_service_register(struct pcie_port_service_driver *new);
- void pcie_port_service_unregister(struct pcie_port_service_driver *new);
--
-+bool pcie_port_query_service(struct pci_dev *dev, u32 port_service);
-+struct pci_dev *pcie_port_upstream_bridge(struct pci_dev *dev);
- #endif /* _PCIEPORT_IF_H_ */
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+I agree this may have trickled from host bridge to host bridge through
+copy'n'paste and it is not based on any firmware assumtpion but I can't
+say if it is really needed.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Lorenzo
