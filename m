@@ -1,115 +1,176 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 30 Nov 2017 10:06:22 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
-        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 3/5] PCI: cadence: Add host driver for Cadence PCIe
- controller
-Message-ID: <20171130100622.GA10349@red-moon>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <2670f7ddf59e708beb9d32bef1353e15bd4e1ecf.1511439189.git.cyrille.pitchen@free-electrons.com>
- <20171129182514.GA1087@red-moon>
+Return-Path: <SRS0=GAvn=C4=nvidia.com=mmaddireddy@kernel.org>
+Return-Path: <SRS0=GAvn=C4=nvidia.com=mmaddireddy@kernel.org>
+Subject: Re: [PATCH V2 8/9] PCI: tegra: Broadcast PME_turn_Off message before
+ link goes to L2
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <thierry.reding@gmail.com>, <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+	<frowand.list@gmail.com>, <bhelgaas@google.com>, <rjw@rjwysocki.net>,
+	<tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+	<linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>
+References: <1511638333-22951-1-git-send-email-mmaddireddy@nvidia.com>
+ <1511638333-22951-9-git-send-email-mmaddireddy@nvidia.com>
+ <20171129165147.GB6469@bhelgaas-glaptop.roam.corp.google.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <78df1d5f-6e5d-46f2-e3a9-2c820b4d3be8@nvidia.com>
+Date: Fri, 1 Dec 2017 00:13:05 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171129182514.GA1087@red-moon>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171129165147.GB6469@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 29, 2017 at 06:25:15PM +0000, Lorenzo Pieralisi wrote:
 
-[...]
 
-> static void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
-> 				      int where)
+On 29-Nov-17 10:21 PM, Bjorn Helgaas wrote:
+> On Sun, Nov 26, 2017 at 01:02:12AM +0530, Manikanta Maddireddy wrote:
+>> Per PCIe r3.0, sec 5.3.3.2.1, PCIe root port shoould broadcast PME_turn_Off
+>> message before PCIe link goes to L2. PME_turn_Off broadcast mechanism is
+>> implemented in AFI module. Each Tegra PCIe root port has its own
+>> PME_turn_Off and PME_TO_Ack bitmap in AFI_PME register, program this
+>> register to broadcast PME_turn_Off message.
 > 
-> > +cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn, int where)
-> > +{
-> > +	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
-> > +	struct cdns_pcie_rc *rc = pci_host_bridge_priv(bridge);
-> > +	struct cdns_pcie *pcie = &rc->pcie;
-> > +	unsigned int busn = bus->number;
-> > +	u32 addr0, desc0;
-> > +
-> > +	if (busn < rc->bus_range->start || busn > rc->bus_range->end)
-> > +		return NULL;
+> s/PME_turn_Off/PME_Turn_Off/ above to match spec.
 > 
-> It does not hurt but I wonder whether you really need this check.
+> I thought PME_TO_Ack was also mis-capitalized, but it's not.  Guess
+> that "TO" stands for "Turn Off".
 > 
-> > +	if (busn == rc->bus_range->start) {
-> > +		if (devfn)
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>> V2:
+>> * no change in this patch
+>>
+>>  drivers/pci/host/pci-tegra.c | 76 ++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 76 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index bbc2807bcd4a..b380958a3deb 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -155,6 +155,8 @@
+>>  #define  AFI_INTR_EN_FPCI_TIMEOUT	(1 << 7)
+>>  #define  AFI_INTR_EN_PRSNT_SENSE	(1 << 8)
+>>  
+>> +#define AFI_PCIE_PME		0xf0
+>> +
+>>  #define AFI_PCIE_CONFIG					0x0f8
+>>  #define  AFI_PCIE_CONFIG_PCIE_DISABLE(x)		(1 << ((x) + 1))
+>>  #define  AFI_PCIE_CONFIG_PCIE_DISABLE_ALL		0xe
+>> @@ -315,6 +317,7 @@
+>>  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
+>>  
+>>  #define LINK_RETRAIN_TIMEOUT 100000
+>> +#define PME_ACK_TIMEOUT 10000
+>>  
+>>  struct tegra_msi {
+>>  	struct msi_controller chip;
+>> @@ -1503,6 +1506,76 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
+>>  	return 0;
+>>  }
+>>  
+>> +static inline u32 get_pme_turnoff_bitmap(struct tegra_pcie_port *port)
+>> +{
+>> +	struct device *dev = port->pcie->dev;
+>> +	struct device_node *np = dev->of_node;
+>> +	int ret = 0;
 > 
-> I suspect I know why you need this check but I ask you to explain it
-> anyway if you do not mind please.
+> Unnecessary initialization.  In fact, the variable is unnecessary; you
+> can just return the value directly as soon as you know it.
+>
+I can get rid of this function with Mikko's suggestion to use soc data
+ 
+>> +
+>> +	switch (port->index) {
+>> +	case 0:
+>> +		ret = 0;
+>> +	case 1:
+>> +		ret = 8;
+>> +	case 2:
+>> +		if (of_device_is_compatible(np, "nvidia,tegra30-pcie"))
+>> +			ret = 16;
+>> +		else
+>> +			ret = 12;
+>> +	}
+>> +	return ret;
+>> +}
+>> +
+>> +static inline u32 get_pme_ack_bitmap(struct tegra_pcie_port *port)
+>> +{
+>> +	struct device *dev = port->pcie->dev;
+>> +	struct device_node *np = dev->of_node;
+>> +	int ret = 0;
 > 
-> > +			return NULL;
-> > +
-> > +		return pcie->reg_base + (where & 0xfff);
-> > +	}
-> > +
-> > +	/* Update Output registers for AXI region 0. */
-> > +	addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
+> Similar.
+>
+Similar
+ 
+>> +
+>> +	switch (port->index) {
+>> +	case 0:
+>> +		ret = 5;
+>> +	case 1:
+>> +		ret = 10;
+>> +	case 2:
+>> +		if (of_device_is_compatible(np, "nvidia,tegra30-pcie"))
+>> +			ret = 18;
+>> +		else
+>> +			ret = 14;
+>> +	}
+>> +	return ret;
+>> +}
+>> +
+>> +static void tegra_pcie_pme_turnoff(struct tegra_pcie_port *port)
+>> +{
+>> +	struct tegra_pcie *pcie = port->pcie;
+>> +	ktime_t deadline;
+>> +	unsigned int data;
+>> +
+>> +	data = afi_readl(pcie, AFI_PCIE_PME);
+>> +	data |= (0x1 << get_pme_turnoff_bitmap(port));
+>> +	afi_writel(pcie, data, AFI_PCIE_PME);
+>> +
+>> +	deadline = ktime_add_us(ktime_get(), PME_ACK_TIMEOUT);
+>> +	do {
+>> +		data = afi_readl(pcie, AFI_PCIE_PME);
+>> +		data &= (0x1 << get_pme_ack_bitmap(port));
+>> +		udelay(1);
+>> +		if (ktime_after(ktime_get(), deadline))
+>> +			break;
+>> +	} while (!data);
+>> +
+>> +	if (data)
+>> +		dev_err(pcie->dev, "PME Ack is not receieved on port: %d\n",
 > 
-> Ok, so for every config access you reprogram addr0 to reflect the
-> correct bus|devfn ID in the PCI bus TLP corresponding to an ECAM address
-> in CPU physical address space, is my understanding correct ?
-
-By re-reading it, it looks like this mechanism is there to just
-associate a different RID TLP on the PCI bus to a fixed window
-in CPU virtual address space.
-
-> > +		CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) |
-> > +		CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS(busn);
-> > +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(0), addr0);
-> > +
-> > +	/* Configuration Type 0 or Type 1 access. */
-> > +	desc0 = CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID |
-> > +		CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(0);
-> > +	/*
-> > +	 * The bus number was already set once for all in desc1 by
-> > +	 * cdns_pcie_host_init_address_translation().
-> > +	 */
-> > +	if (busn == rc->bus_range->start + 1)
-> > +		desc0 |= CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0;
-> > +	else
-> > +		desc0 |= CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1;
+> s/receieved/received/
 > 
-> I would like to ask you why you have to do it here and the root port
-> does not figure it out by itself, I do not have the datasheet so I am
-> just asking for my own information.
-> 
-> > +	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC0(0), desc0);
-> > +
-> > +	return rc->cfg_base + (where & 0xfff);
-> > +}
-
-[...]
-
-> > +static int cdns_pcie_host_init(struct device *dev,
-> > +			       struct list_head *resources,
-> > +			       struct cdns_pcie_rc *rc)
-> > +{
-> > +	struct resource *bus_range = NULL;
-> > +	int err;
-> > +
-> > +	/* Parse our PCI ranges and request their resources */
-> > +	err = cdns_pcie_parse_request_of_pci_ranges(dev, resources, &bus_range);
-> > +	if (err)
-> > +		goto err_out;
-> 
-> I think that the err_out path should be part of:
-> 
-> cdns_pcie_parse_request_of_pci_ranges()
-> 
-> implementation and here you would just return.
-
-I take it back, what you are doing is cleaner and allows you to
-have code freeing the resource list in one single place so you
-can leave this as-is.
-
-Thanks,
-Lorenzo
+>> +			port->index);
+>> +
+>> +	usleep_range(10000, 11000);
+>> +
+>> +	data = afi_readl(pcie, AFI_PCIE_PME);
+>> +	data &= ~(0x1 << get_pme_turnoff_bitmap(port));
+>> +	afi_writel(pcie, data, AFI_PCIE_PME);
+>> +}
+>> +
+>>  static int tegra_msi_alloc(struct tegra_msi *chip)
+>>  {
+>>  	int msi;
+>> @@ -2828,6 +2901,7 @@ static int tegra_pcie_remove(struct platform_device *pdev)
+>>  {
+>>  	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
+>>  	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+>> +	struct tegra_pcie_port *port, *tmp;
+>>  
+>>  	if (IS_ENABLED(CONFIG_DEBUG_FS))
+>>  		tegra_pcie_debugfs_exit(pcie);
+>> @@ -2835,6 +2909,8 @@ static int tegra_pcie_remove(struct platform_device *pdev)
+>>  	pci_remove_root_bus(host->bus);
+>>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>>  		tegra_pcie_disable_msi(pcie);
+>> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+>> +		tegra_pcie_pme_turnoff(port);
+>>  	tegra_pcie_disable_ports(pcie);
+>>  	tegra_pcie_free_resources(pcie);
+>>  	tegra_pcie_disable_controller(pcie);
+>> -- 
+>> 2.1.4
+>>
