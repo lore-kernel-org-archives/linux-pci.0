@@ -1,58 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:58719 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751259AbdKVOt5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Nov 2017 09:49:57 -0500
-Date: Wed, 22 Nov 2017 15:49:59 +0100
-From: Greg KH <greg@kroah.com>
-To: Timur Tabi <timur@codeaurora.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 30/30] PCI: remove pci_get_bus_and_slot() function
-Message-ID: <20171122144959.GA8081@kroah.com>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-31-git-send-email-okaya@codeaurora.org>
- <c0df99c9-9170-be3a-3789-6b25be30936f@codeaurora.org>
- <6a78596e-720a-80a2-9d96-dcc79a32f677@codeaurora.org>
- <25ec431a-2c1b-d352-f9ef-c663864664b6@codeaurora.org>
- <20171122075124.GA26583@kroah.com>
- <a443e88e-3abd-0dab-2828-9753326e8d5d@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 30 Nov 2017 18:18:19 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 0/5] PCI: Add support to the Cadence PCIe controller
+Message-ID: <20171130181819.GD12096@red-moon>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <20171128155039.GA17154@red-moon>
+ <8c6c50fc-47a9-7b93-d826-1dba9c4d09c2@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a443e88e-3abd-0dab-2828-9753326e8d5d@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8c6c50fc-47a9-7b93-d826-1dba9c4d09c2@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 22, 2017 at 08:42:35AM -0600, Timur Tabi wrote:
-> On 11/22/17 1:51 AM, Greg KH wrote:
-> > Ick, no, why?  What is wrong with removing this function as is?  Don't
-> > mark something as __depreciated if there are no in-kernel users, just
-> > delete it and move on.
-> > 
-> > If you have out-of-tree drivers, then yes, they can make a wrapper for
-> > this function like this if they really feel the need, or they can get
-> > their code merged:)
+On Thu, Nov 30, 2017 at 12:43:20PM +0530, Kishon Vijay Abraham I wrote:
+
+[...]
+
+> >> For linux-next, I applied this series on top of Kishon's patch
+> >> ("PCI: endpoint: Use EPC's device in dma_alloc_coherent/dma_free_coherent")
+> >> otherwise dma_alloc_coherent() fails when called by pci_epf_alloc_space().
+> >>
+> >> Also, I patched drivers/Makefile rather than drivers/pci/Makefile to make
+> >> the drivers/pci/cadence/pcie-cadence-ep.o linked after
 > 
-> Sorry, I guess I should have been clearer.  My suggestion was to fix some of
-> the drivers where the domain can be determined, and for the rest, just mark
-> the old function as deprecated.
+> The reason to patch drivers/Makefile should be because pcie-cadence-ep has to
+> be compiled even when CONFIG_PCI is not enabled. CONFIG_PCI enables host
+> specific features and ENDPOINT shouldn't depend on CONFIG_PCI.
+> >> drivers/pci/endpoint/*.o objects, otherwise the built-in pci-cadence-ep
+> >> driver would be probed before the PCI endpoint framework would have been
+> >> initialized, which results in a kernel crash.
+> > 
+> > Nice :( - isn't there a way to improve this (ie probe deferral or
+> > registering the EPF bus earlier) ?
+> > 
+> >> I guess this is the reason why the "pci/dwc" line was also put in
+> >> drivers/Makefile, right after the "pci/endpoint" line.
+> > 
+> > Or probably the other way around - see commit 5e8cb4033807
+> > 
+> > @Kishon, thoughts ?
+> 
+> Lorenzo, ordering Makefile is one way to initialize EP core before
 
-So the build now gets warnings?  That's annoying, and then someone else
-will have to make the exact same patches that were created here?
+Makefile ordering is fragile, I do not like relying on it.
 
-> If that's still a terrible idea, well, okay.  I'm just unsure that simply
-> hard-coding a 0 for the domain for some drivers is really a solution.  Don't
-> we really want all drivers to properly support all domains?
+> other drivers. the other way is to have PCI EP core have a different
+> initcall level..  subsys_initcall??
 
-I bet all of those drivers don't care because they are running only in
-systems with 1 domain, otherwise they would be broken today, right?  But
-really, it shouldn't be that hard to get to the "real" PCI device to
-provide the correct pointer to the domain for most of these, as I
-pointed out in one patch review already.
+Yes, registering the bus at eg postcore_initcall() as PCI does should do
+(if that's the problem this is solving) but still, the code must not
+crash if the ordering is not correct, we have to fix this regardless.
 
-thanks,
+I would appreciate if Cyrille can debug the cause of the kernel crash
+so that we can fix it in the longer term.
 
-greg k-h
+Thanks,
+Lorenzo
