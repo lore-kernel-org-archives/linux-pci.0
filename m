@@ -1,134 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 6 Nov 2017 13:31:18 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Pankaj Dubey <pankaj.dubey@samsung.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Re: [PATCH] PCI: designware: move dw_pcie_iatu_unroll_enabled to
- pcie-designware.c
-Message-ID: <20171106193118.GF31930@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20171012044055epcas1p44b2e6b7cc21d42319529a518197aca9f@epcas1p4.samsung.com>
- <1507783268-9022-1-git-send-email-pankaj.dubey@samsung.com>
- <20171020174108.GK6332@bhelgaas-glaptop.roam.corp.google.com>
- <CAGcde9GiL2U45xRyFnKo=u8RbiMNYNyNJsv3dEkbVum38t1dRg@mail.gmail.com>
+Return-Path: <SRS0=L+/R=C4=intel.com=fengguang.wu@kernel.org>
+Return-Path: <SRS0=L+/R=C4=intel.com=fengguang.wu@kernel.org>
+Date: Thu, 30 Nov 2017 09:38:01 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Dave Jones <davej@codemonkey.org.uk>,
+	linux-kernel@vger.kernel.org, David Woodhouse <dwmw@amazon.co.uk>
+Subject: Re: [PATCH] PCI: Tone down resource mmap warning
+Message-ID: <20171130013801.m4tiq5m47ogw3huk@wfg-t540p.sh.intel.com>
+References: <20171129225708.32271.35467.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGcde9GiL2U45xRyFnKo=u8RbiMNYNyNJsv3dEkbVum38t1dRg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <20171129225708.32271.35467.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Oct 24, 2017 at 07:10:55PM +0530, Pankaj Dubey wrote:
-> On 20 October 2017 at 23:11, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > On Thu, Oct 12, 2017 at 10:11:08AM +0530, Pankaj Dubey wrote:
-> > > IATU unroll feature can be enabled in EP mode as well, so we need to
-> > > have this check in pcie-designware-ep.c, so instead of making this
-> > > function as static in pcie-desigware-host.c, let's move this in
-> > > pcie-designware.c so that both pcie-designware-host.c and
-> > > pcie-designware-ep.c can use it.
-> > >
-> > > Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> >
-> > This is fine with me but I'm looking for an ack from Jingoo and/or Joao.
-> 
-> Jingoo / Joao any comments on this?
+This is perhaps the most clean solution. Thank you for the patch!  -fengguang
 
-Dropping for lack of ack.  Please repost if/when we have an ack.
-
-> > > ---
-> > >  drivers/pci/dwc/pcie-designware-ep.c   |  4 ++++
-> > >  drivers/pci/dwc/pcie-designware-host.c | 11 -----------
-> > >  drivers/pci/dwc/pcie-designware.c      | 11 +++++++++++
-> > >  drivers/pci/dwc/pcie-designware.h      |  1 +
-> > >  4 files changed, 16 insertions(+), 11 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> > > index d53d5f1..64803a9 100644
-> > > --- a/drivers/pci/dwc/pcie-designware-ep.c
-> > > +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> > > @@ -314,6 +314,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
-> > >       if (ep->ops->ep_init)
-> > >               ep->ops->ep_init(ep);
-> > >
-> > > +     pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
-> > > +     dev_dbg(dev, "iATU unroll: %s\n",
-> > > +             pci->iatu_unroll_enabled ? "enabled" : "disabled");
-> > > +
-> > >       epc = devm_pci_epc_create(dev, &epc_ops);
-> > >       if (IS_ERR(epc)) {
-> > >               dev_err(dev, "failed to create epc device\n");
-> > > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> > > index 81e2157..d3f579e 100644
-> > > --- a/drivers/pci/dwc/pcie-designware-host.c
-> > > +++ b/drivers/pci/dwc/pcie-designware-host.c
-> > > @@ -574,17 +574,6 @@ static struct pci_ops dw_pcie_ops = {
-> > >       .write = dw_pcie_wr_conf,
-> > >  };
-> > >
-> > > -static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
-> > > -{
-> > > -     u32 val;
-> > > -
-> > > -     val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
-> > > -     if (val == 0xffffffff)
-> > > -             return 1;
-> > > -
-> > > -     return 0;
-> > > -}
-> > > -
-> > >  void dw_pcie_setup_rc(struct pcie_port *pp)
-> > >  {
-> > >       u32 val;
-> > > diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> > > index 88abddd..f15da90 100644
-> > > --- a/drivers/pci/dwc/pcie-designware.c
-> > > +++ b/drivers/pci/dwc/pcie-designware.c
-> > > @@ -92,6 +92,17 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
-> > >               dev_err(pci->dev, "write DBI address failed\n");
-> > >  }
-> > >
-> > > +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
-> >
-> > I know this is just moved verbatim, but it's more conventional to simply
-> > return an int (or possibly bool) for a predicate like this.  There's really
-> > no point in going out of your way to specify "u8" for the return type.
-> >
-> 
-> Ok, it can be done, will wait for comments from Jingoo and or Joao and
-> then update.
-> 
-> Thanks,
-> Pankaj
-> 
-> 
-> > > +{
-> > > +     u32 val;
-> > > +
-> > > +     val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
-> > > +     if (val == 0xffffffff)
-> > > +             return 1;
-> > > +
-> > > +     return 0;
-> > > +}
-> > > +
-> > >  static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
-> > >  {
-> > >       u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
-> > > diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> > > index e5d9d77..8d6829c 100644
-> > > --- a/drivers/pci/dwc/pcie-designware.h
-> > > +++ b/drivers/pci/dwc/pcie-designware.h
-> > > @@ -242,6 +242,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
-> > >  void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
-> > >                        enum dw_pcie_region_type type);
-> > >  void dw_pcie_setup(struct dw_pcie *pci);
-> > > +u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci);
-> > >
-> > >  static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
-> > >  {
-> > > --
-> > > 2.7.4
-> > >
+On Wed, Nov 29, 2017 at 04:57:08PM -0600, Bjorn Helgaas wrote:
+>From: Bjorn Helgaas <bhelgaas@google.com>
+>
+>When a process tries to mmap more space than is available in a PCI BAR, we
+>emit a warning and a backtrace.  The mmap fails anyway, so the backtrace is
+>mainly for debugging.  It seems like overkill now, so reduce this to a
+>dev_info() and remove the backtrace.
+>
+>This was added by b5ff7df3df9e ("Check mapped ranges on sysfs resource
+>files").
+>
+>Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>---
+> drivers/pci/pci-sysfs.c |    6 ++----
+> 1 file changed, 2 insertions(+), 4 deletions(-)
+>
+>diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>index 06c7f0b85cd2..97f071674605 100644
+>--- a/drivers/pci/pci-sysfs.c
+>+++ b/drivers/pci/pci-sysfs.c
+>@@ -1217,11 +1217,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+> 		return -EINVAL;
+>
+> 	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS)) {
+>-		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
+>+		dev_info(&pdev->dev, "process \"%s\" tried to map 0x%lx bytes at page 0x%lx of BAR %d %pR\n",
+> 			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
+>-			pci_name(pdev), bar,
+>-			(u64)pci_resource_start(pdev, bar),
+>-			(u64)pci_resource_len(pdev, bar));
+>+			bar, res);
+> 		return -EINVAL;
+> 	}
+> 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
+>
