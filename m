@@ -1,81 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:47030 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751279AbdLWP5q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 10:57:46 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: Greg KH <gregkh@linuxfoundation.org>,
-        Yisheng Xie <xieyisheng1@huawei.com>
-Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
-        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
-        boris.brezillon@free-electrons.com, richard@nod.at,
-        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
-        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
-        wim@iguana.be, linux-watchdog@vger.kernel.org,
-        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
-        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
-        ralf@linux-mips.org, linux-mips@linux-mips.org,
-        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
-        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
-        andriy.shevchenko@linux.intel.com,
-        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
-        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
-        linux-media@vger.kernel.org, a.zummo@towertech.it,
-        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie,
-        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
-        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
-        dvhart@infradead.org, andy@infradead.org,
-        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
-        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
-        netdev@vger.kernel.org, vinod.koul@intel.com,
-        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
-        jslaby@suse.com
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
-From: Guenter Roeck <linux@roeck-us.net>
-Message-ID: <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
-Date: Sat, 23 Dec 2017 07:57:40 -0800
+Received: from mail.kernel.org ([198.145.29.99]:51920 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752771AbdLAO5T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Dec 2017 09:57:19 -0500
+Date: Fri, 1 Dec 2017 08:57:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>
+Subject: Re: [Question] Unsupported Request During PCI Enumeration
+Message-ID: <20171201145717.GF19640@bhelgaas-glaptop.roam.corp.google.com>
+References: <26340670-2744-b2e0-eed7-eb8e0ad2bc84@huawei.com>
+ <20171128003208.GB11228@bhelgaas-glaptop.roam.corp.google.com>
+ <c1235398-9a80-b4f3-94c9-3686651259fc@huawei.com>
+ <20171128145748.GD11228@bhelgaas-glaptop.roam.corp.google.com>
+ <12079a9c-9018-b1be-1596-8a2f6746677b@huawei.com>
+ <20171130231558.GD19640@bhelgaas-glaptop.roam.corp.google.com>
+ <b6b7e255-b7c1-d4dc-ba76-fd6ae494befb@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20171223134831.GB10103@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <b6b7e255-b7c1-d4dc-ba76-fd6ae494befb@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/23/2017 05:48 AM, Greg KH wrote:
-> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->> Hi all,
->>
->> When I tried to use devm_ioremap function and review related code, I found
->> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->> except one use ioremap while the other use ioremap_nocache.
+On Fri, Dec 01, 2017 at 05:30:48PM +0800, Dongdong Liu wrote:
 > 
-> For all arches?  Really?  Look at MIPS, and x86, they have different
-> functions.
+> 在 2017/12/1 7:15, Bjorn Helgaas 写道:
+> >On Thu, Nov 30, 2017 at 08:47:38PM +0800, Dongdong Liu wrote:
+> >>
+> >>>I do not think drivers should be calling
+> >>>pci_enable_pcie_error_reporting() directly.  And I don't think we
+> >>>should depend on _HPX.  _HPX is intended for *platform-specific*
+> >>>things, and I don't think this is platform-specific.  And of course,
+> >>>_HPX only works on ACPI systems, and we want this to work everywhere.
+> >>>
+> >>>So I think we need a more comprehensive generic solution in Linux.  I
+> >>>think we need several pieces:
+> >>>
+> >>> - Disable UR reporting during enumeration, similar to how we disable
+> >>>   Master Abort reporting.
+> >>>
+> >>> - Restore original UR reporting setting after enumeration.
+> >>>
+> >>> - Clear any logged UR errors after enumeration.
+> >>
+> >>Agree.
+> >>
+> >>>
+> >>> - Enable UR reporting as part of configuring every device, e.g., in
+> >>>   pci_configure_device() or pci_init_capabilities().
+> >>
+> >>Enable UR reporting in pci_configure_device() or pci_init_capabilities() is
+> >>not ok. It will still report UR as it is still in enumeration.
+> >
+> >True.  For bridges, it needs to be after we've enumerated children of
+> >the bridge.
+> >
+> >>>I don't know whether we should enable UR reporting if AER is not
+> >>>present; we'll have to think about that.  We may also have to
+> >>>restructure how the AER driver works, because I think it currently
+> >>>comes into play *after* we call pci_init_capabilities().  There are
+> >>>probably some ordering issues there.
+> >>
+> >>I write a sample code as below, it can avoid report UR during
+> >>enumeration. What do you think about the code ?
+> >
+> >Can you do it the same place we disable and restore Master-Abort Mode,
+> >in pci_scan_bridge_extend()?  That's done for the same reason, so it
+> >would be nice to keep it together.
+> >
+> >Maybe we could have a "pci_disable_enumeration_errors()" that would
+> >disable both Master-Abort Mode and UR reporting, and a corresponding
+> >"pci_restore_enumeration_errors()" that would clear any logged errors
+> >and restore the original settings?
 > 
+> Set devctl to disable UR in pci_scan_bridge_extend() can resolve
+> bridge devices UR reporting issue. But for EP devices may still
+> reprot UR, like non-ARI EP devices. So it's better to disable UR
+> reporting in pci_device_add() after calling
+> pci_configure_device(dev) and restore in pci_bus_add_device().  As
+> in pci_configure_device() may parse _HPX to enable UR, disable UR
+> reporting should call after pci_configure_device().
 
-Both mips and x86 end up mapping the same function, but other arches don't.
-mn10300 is one where ioremap and ioremap_nocache are definitely different.
+Help me understand this issue with Endpoints and how ARI is involved.
 
-Guenter
+Is this an issue with multi-function devices, where function 0 exists
+and then we try to read the Vendor ID of function 1, 2, ..., until one
+fails to respond?  And when one fails to respond, the Endpoint logs a
+UR error?
 
->> While ioremap's
->> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->> same function with devm_ioremap, which can just be killed to reduce the size
->> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>
->> I have posted two versions, which use macro instead of function for
->> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->> thing. So here comes v3 and please help to review.
-> 
-> I don't think this can be done, what am I missing?  These functions are
-> not identical, sorry for missing that before.
-> 
-> thanks,
-> 
-> greg k-h
-> 
+And I guess the ARI connection is that with ARI, we use the ARI
+Capability to find the next function, so we should never try to read
+the Vendor ID of a non-existent function?
+
+pci_device_add() and pci_bus_add_device() don't have any obvious
+connection to enumeration, so I don't really like those places.  If
+I'm understanding the issue correctly, I'd rather do the error
+disable/restore in pci_scan_slot(), where it's right next to the
+enumeration of additional functions.
+
+> >>diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> >>index bc56cf1..1a46026 100644
+> >>--- a/drivers/pci/bus.c
+> >>+++ b/drivers/pci/bus.c
+> >>@@ -14,6 +14,7 @@
+> >> #include <linux/ioport.h>
+> >> #include <linux/proc_fs.h>
+> >> #include <linux/slab.h>
+> >>+#include <linux/aer.h>
+> >>
+> >> #include "pci.h"
+> >>
+> >>@@ -311,6 +312,16 @@ void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
+> >> void pci_bus_add_device(struct pci_dev *dev)
+> >> {
+> >>        int retval;
+> >>+       u16 reg16;
+> >>+
+> >>+       /* Clear PCIe Capability's Device Status */
+> >>+       pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
+> >>+       pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+> >>+       pci_cleanup_aer_error_status_regs(dev);
+> >>+
+> >>+       /* Restore UR reporting */
+> >>+       if (dev->devctl_ur)
+> >>+               pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_URRE);
+> >>
+> >>        /*
+> >>         * Can not put in pci_device_add yet because resources
+> >>diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> >>index 14e0ea1..7b34083 100644
+> >>--- a/drivers/pci/probe.c
+> >>+++ b/drivers/pci/probe.c
+> >>@@ -2119,9 +2119,21 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+> >> void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+> >> {
+> >>        int ret;
+> >>+       u16 reg16;
+> >>
+> >>        pci_configure_device(dev);
+> >>
+> >>+       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+> >>+       dev->devctl_ur = reg16 & PCI_EXP_DEVCTL_URRE;
+> >>+       if (dev->devctl_ur) {
+> >>+               /*
+> >>+                * Turn off UR reporting, later restore UR reporting
+> >>+                * after enumeration.
+> >>+                */
+> >>+               reg16 = reg16 & (~PCI_EXP_DEVCTL_URRE);
+> >>+               pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
+> >>+       }
+> >>+
+> >>        device_initialize(&dev->dev);
+> >>        dev->dev.release = pci_release_dev;
+> >>
+> >>diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >>index ae8d2b4..c2a90f1 100644
+> >>--- a/include/linux/pci.h
+> >>+++ b/include/linux/pci.h
+> >>@@ -440,6 +440,7 @@ struct pci_dev {
+> >>        char *driver_override; /* Driver name to force a match */
+> >>
+> >>        unsigned long priv_flags; /* Private flags for the pci driver */
+> >>+       u16 devctl_ur;
+> >> };
