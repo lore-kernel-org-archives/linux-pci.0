@@ -1,279 +1,369 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Govinda Tatti <Govinda.Tatti@Oracle.COM>
-To: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        boris.ostrovsky@Oracle.COM, jgross@suse.com, JBeulich@suse.com,
-        roger.pau@citrix.com
-Cc: konrad.wilk@Oracle.COM
-Subject: [PATCH V3 2/2] Xen/PCIback: Implement PCI flr/slot/bus reset with 'reset' SysFS attribute
-Date: Thu,  7 Dec 2017 17:21:45 -0500
-Message-Id: <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
-In-Reply-To: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=waQa=C5=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=waQa=C5=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 1 Dec 2017 16:20:26 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com, kishon@ti.com,
+	linux-pci@vger.kernel.org, adouglas@cadence.com,
+	stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
+	eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
+	sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+	robh@kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 3/5] PCI: cadence: Add host driver for Cadence PCIe
+ controller
+Message-ID: <20171201162026.GA26640@red-moon>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <2670f7ddf59e708beb9d32bef1353e15bd4e1ecf.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <20171128204114.GE11228@bhelgaas-glaptop.roam.corp.google.com>
+ <c6a0d70d-d584-2db8-f862-0c3ddbf6939d@free-electrons.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <c6a0d70d-d584-2db8-f862-0c3ddbf6939d@free-electrons.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The life-cycle of a PCI device in Xen pciback is complex and is constrained
-by the generic PCI locking mechanism.
+On Fri, Dec 01, 2017 at 11:37:49AM +0100, Cyrille Pitchen wrote:
+> Hi Bjorn,
+> 
+> Le 28/11/2017 à 21:41, Bjorn Helgaas a écrit :
+> > On Thu, Nov 23, 2017 at 04:01:48PM +0100, Cyrille Pitchen wrote:
+> >> This patch adds support to the Cadence PCIe controller in host mode.
+> >>
+> >> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+> >> ---
+> >>  drivers/Makefile                        |   1 +
+> >>  drivers/pci/Kconfig                     |   1 +
+> >>  drivers/pci/cadence/Kconfig             |  24 ++
+> >>  drivers/pci/cadence/Makefile            |   2 +
+> >>  drivers/pci/cadence/pcie-cadence-host.c | 425 ++++++++++++++++++++++++++++++++
+> >>  drivers/pci/cadence/pcie-cadence.c      | 110 +++++++++
+> >>  drivers/pci/cadence/pcie-cadence.h      | 325 ++++++++++++++++++++++++
+> >>  7 files changed, 888 insertions(+)
+> >>  create mode 100644 drivers/pci/cadence/Kconfig
+> >>  create mode 100644 drivers/pci/cadence/Makefile
+> >>  create mode 100644 drivers/pci/cadence/pcie-cadence-host.c
+> >>  create mode 100644 drivers/pci/cadence/pcie-cadence.c
+> >>  create mode 100644 drivers/pci/cadence/pcie-cadence.h
+> > 
+> > I prefer a single file per driver.  I assume you're anticipating
+> > something like dwc, where the DesignWare core is incorporated into
+> > several devices in slightly different ways.  But it doesn't look like
+> > that's here yet, and personally, I'd rather split out the required
+> > things when they actually become required, not ahead of time.
+> >
+> 
+> The source code in pcie-cadence.c is shared between pcie-cadence-host.c
+> (Root Complex mode) and pcie-cadence-ep.c (Endpoint mode), the second
+> driver of this series.
+> 
+> Taking other comments into accounts, I will move endpoint only related
+> stuff in the pcie-cadence.{c,h} files from this patch to the endpoint
+> patch.
+> 
+> Otherwise your right, I expect this Cadence PCIe core to be embedded inside
+> several vendor SoCs but I thought I could handle this as much as possible
+> using mainly DT properties and/or the 'struct cdns_pcie_*_data' associated
+> to the DT 'compatible' strings. We will have to wait for those SoCs to be
+> released to know whether these two solutions are  enough or if we will need
+> dedicated files anyway.
+>  
+> >> diff --git a/drivers/Makefile b/drivers/Makefile
+> >> index 1d034b680431..27bdd98784d9 100644
+> >> --- a/drivers/Makefile
+> >> +++ b/drivers/Makefile
+> >> @@ -18,6 +18,7 @@ obj-y				+= pwm/
+> >>  
+> >>  obj-$(CONFIG_PCI)		+= pci/
+> >>  obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
+> >> +obj-$(CONFIG_PCI_CADENCE)	+= pci/cadence/
+> > 
+> > I can't remember why we added CONFIG_PCI_ENDPOINT here instead of in
+> > drivers/pci/Makefile.  Is there any way to move both CONFIG_PCI_ENDPOINT
+> > and CONFIG_PCI_CADENCE into drivers/pci/Makefile so this is better
+> > encapsulated?
+> >
+> 
+> I will work on the solution I have proposed in another reply since it seems
+> to be OK for you :)
+> 
+> >>  # PCI dwc controller drivers
+> >>  obj-y				+= pci/dwc/
+> >> ...
+> > 
+> >> + * struct cdns_pcie_rc_data - hardware specific data
+> > 
+> > "cdns" is a weird abbreviation for "Cadence", since "Cadence" doesn't
+> > contain an "s".
+> > 
+> >> ...
+> >> +static int cdns_pcie_parse_request_of_pci_ranges(struct device *dev,
+> >> +						 struct list_head *resources,
+> >> +						 struct resource **bus_range)
+> >> +{
+> >> +	int err, res_valid = 0;
+> >> +	struct device_node *np = dev->of_node;
+> >> +	resource_size_t iobase;
+> >> +	struct resource_entry *win, *tmp;
+> >> +
+> >> +	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
+> >> +	if (err)
+> >> +		return err;
+> >> +
+> >> +	err = devm_request_pci_bus_resources(dev, resources);
+> >> +	if (err)
+> >> +		return err;
+> >> +
+> >> +	resource_list_for_each_entry_safe(win, tmp, resources) {
+> >> +		struct resource *res = win->res;
+> >> +
+> >> +		switch (resource_type(res)) {
+> >> +		case IORESOURCE_IO:
+> >> +			err = pci_remap_iospace(res, iobase);
+> >> +			if (err) {
+> >> +				dev_warn(dev, "error %d: failed to map resource %pR\n",
+> >> +					 err, res);
+> >> +				resource_list_destroy_entry(win);
+> >> +			}
+> >> +			break;
+> >> +		case IORESOURCE_MEM:
+> >> +			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+> >> +			break;
+> >> +		case IORESOURCE_BUS:
+> >> +			*bus_range = res;
+> >> +			break;
+> >> +		}
+> >> +	}
+> >> +
+> >> +	if (res_valid)
+> >> +		return 0;
+> >> +
+> >> +	dev_err(dev, "non-prefetchable memory resource required\n");
+> >> +	return -EINVAL;
+> >> +}
+> > 
+> > The code above is starting to look awfully familiar.  I wonder if it's
+> > time to think about some PCI-internal interface that can encapsulate
+> > this.  In this case, there's really nothing Cadence-specific here.
+> > There are other callers where there *is* vendor-specific code, but
+> > possibly that could be handled by returning pointers to bus number,
+> > I/O port, and MMIO resources so the caller could do the
+> > vendor-specific stuff?
+> > 
+> > Bjorn
+> > 
+> 
+> I am listing:
+> - gen_pci_parse_request_of_pci_ranges() [1]
+> - cdns_pcie_parse_request_of_pci_ranges() - same as [1]
+> - advk_pcie_parse_request_of_pci_ranges()
+> - altera_pcie_parse_request_of_pci_ranges()
+> - versatile_pci_parse_request_of_pci_ranges()
+> - rcar_pcie_parse_request_of_pci_ranges()
+> 
+> Then what about doing something like that:
+> 
+> ---8<--------------------------------------------------------------------------
+> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+> index 44a47d4f0b8f..2413c5d83cbd 100644
+> --- a/drivers/pci/host/pci-host-common.c
+> +++ b/drivers/pci/host/pci-host-common.c
+> @@ -24,10 +24,19 @@
+>  #include <linux/pci-ecam.h>
+>  #include <linux/platform_device.h>
+>  
+> -static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
+> -		       struct list_head *resources, struct resource **bus_range)
+> +struct pci_host_resource_parser {
+> +	int	(*get_resource)(void *userdata, struct resource_entry *win,
+> +				resource_size_t iobase);
+> +	int	(*finalize)(void *userdata);
+> +	void	(*abort)(void *userdata);
+> +};
+> +
+> +int pci_host_parse_request_of_pci_ranges(struct device *dev,
+> +				 struct list_head *resources,
+> +				 const struct pci_host_resource_parser *parser,
+> +				 void *userdata)
+>  {
+> -	int err, res_valid = 0;
+> +	int err;
+>  	struct device_node *np = dev->of_node;
+>  	resource_size_t iobase;
+>  	struct resource_entry *win, *tmp;
+> @@ -40,34 +49,94 @@ static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
+>  	if (err)
+>  		return err;
+>  
+> -	resource_list_for_each_entry_safe(win, tmp, resources) {
+> -		struct resource *res = win->res;
+> -
+> -		switch (resource_type(res)) {
+> -		case IORESOURCE_IO:
+> -			err = pci_remap_iospace(res, iobase);
+> -			if (err) {
+> -				dev_warn(dev, "error %d: failed to map resource %pR\n",
+> -					 err, res);
+> -				resource_list_destroy_entry(win);
+> -			}
+> -			break;
+> -		case IORESOURCE_MEM:
+> -			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+> -			break;
+> -		case IORESOURCE_BUS:
+> -			*bus_range = res;
+> -			break;
+> +	if (parser && parser->get_resource) {
+> +		resource_list_for_each_entry_safe(win, tmp, resources) {
+> +			err = parser->get_resource(userdata, win, iobase);
+> +			if (err)
+> +				goto do_abort;
+> +		}
+> +	}
+> +
+> +	if (parser && parser->finalize)
+> +		return parser->finalize(userdata);
+> +
+> +	return 0;
+> +
+> + do_abort:
+> +	if (parser && parser->abort)
+> +		parser->abort(userdata);
+> +
+> +	return err;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_host_parse_request_of_pci_ranges);
+> +
+> +
+> +struct gen_pci_parser_context {
+> +	struct device	*dev;
+> +	struct resource	**bus_range;
+> +	int		res_valid;
+> +};
+> +
+> +static int gen_pci_resource_parser_get_resource(void *userdata,
+> +						struct resource_entry *win,
+> +						resource_size_t iobase)
+> +{
+> +	struct gen_pci_parser_context *ctx = userdata;
+> +	struct device *dev = ctx->dev;
+> +	struct resource *res = win->res;
+> +	int err;
+> +
+> +	switch (resource_type(res)) {
+> +	case IORESOURCE_IO:
+> +		err = pci_remap_iospace(res, iobase);
+> +		if (err) {
+> +			dev_warn(dev, "error %d: failed to map resource %pR\n",
+> +				 err, res);
+> +			resource_list_destroy_entry(win);
+>  		}
+> +		break;
+> +	case IORESOURCE_MEM:
+> +		ctx->res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+> +		break;
+> +	case IORESOURCE_BUS:
+> +		*ctx->bus_range = res;
+> +		break;
+>  	}
+>  
+> -	if (res_valid)
+> +	return 0;
+> +}
+> +
+> +static int gen_pci_resource_parser_finalize(void *userdata)
+> +{
+> +	struct gen_pci_parser_context *ctx = userdata;
+> +	struct device *dev = ctx->dev;
+> +
+> +	if (ctx->res_valid)
+>  		return 0;
+>  
+>  	dev_err(dev, "non-prefetchable memory resource required\n");
+>  	return -EINVAL;
+>  }
+>  
+> +static const struct pci_host_resource_parser gen_pci_resource_parser = {
+> +	.get_resource	= gen_pci_resource_parser_get_resource,
+> +	.finalize	= gen_pci_resource_parser_finalize,
+> +};
+> +
+> +static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
+> +		       struct list_head *resources, struct resource **bus_range)
+> +{
+> +	struct gen_pci_parser_context ctx;
+> +
+> +	ctx.dev = dev;
+> +	ctx.bus_range = bus_range;
+> +	ctx.res_valid = 0;
+> +
+> +	return pci_host_parse_request_of_pci_ranges(dev, resources,
+> +						    &gen_pci_resource_parser,
+> +						    &ctx);
+> +}
 
-- It starts with the device being bound to us, for which we do a function
-  reset (done via SysFS so the PCI lock is held).
-- If the device is unbound from us, we also do a function reset
-  (done via SysFS so the PCI lock is held).
-- If the device is un-assigned from a guest - we do a function reset
-  (no PCI lock is held).
+I think that what you are doing is something along the lines:
 
-All reset operations are done on the individual PCI function level
-(so bus:device:function).
+acpi_dev_get_resources()
 
-The reset for an individual PCI function means device must support FLR
-(PCIe or AF), PM reset on D3hot->D0 device specific reset, or a secondary
-bus reset for a singleton device on a bus but FLR does not have widespread
-support or it is not reliable in some cases. So, we need to provide an
-alternate mechanism to users to perform a slot or bus level reset.
+and the struct res_proc_context but maybe we can do something
+simpler to start with.
 
-Currently, a slot or bus reset is not exposed in SysFS as there is no good
-way of exposing a bus topology there. This is due to the complexity -
-we MUST know that the different functions of a PCIe device are not in use
-by other drivers, or if they are in use (say one of them is assigned to a
-guest and the other is  idle) - it is still OK to reset the slot (assuming
-both of them are owned by Xen pciback).
+We can go through the resource list twice in every driver, once through
+the generic function that we are creating - that embeds code common
+across bridges - to be clear something like:
 
-This patch does that providing an option to perform a flr/slot/bus reset
-when a PCI device is owned by Xen PCI backend. It will try to execute one
-of these reset method, starting with FLR if it is supported. Otherwise,
-it tries slot or bus reset method. For slot or bus reset method, it also
-checks to make sure that all of the devices under the bridge are owned by
-Xen PCI backend before applying those resets.
+static int of_pci_parse_request_pci_resources(struct device *dev,
+					      struct list_head *res)
+{
+	int err, res_valid;
+	resource_size_t iobase;
+	struct device_node *np = dev->of_node;
+	struct resource_entry *win, *tmp;
 
-Due to the complexity with the PCI lock we cannot do the reset when a
-device is bound ('echo $BDF > bind') or when unbound ('echo $BDF > unbind')
-as the pci_[slot|bus]_reset also takes the same lock resulting in a
-dead-lock.
+	err = of_pci_get_host_bridge_resources(np, 0, 0xff, res, &iobase);
+	if (err)
+		return err;
 
-Putting the reset function in a work-queue or thread won't work either -
-as we have to do the reset function outside the 'unbind' context (it holds
-the PCI lock). But once you 'unbind' a device the device is no longer under
-the ownership of Xen pciback and the pci_set_drvdata has been reset, so
-we cannot use a thread for this.
+	err = devm_request_pci_bus_resources(dev, res);
+	if (err)
+		goto out_release_res;
 
-Instead of doing all this complex dance, we depend on the tool-stack doing
-the right thing. As such, we implement 'reset' SysFS attribute which 'xl'
-uses when a device is detached or attached from/to a guest. It bypasses
-the need to worry about the PCI lock. BTW, previously defined "do_flr"
-attribute has been renamed to "reset" since "do_flr" name doesn't represent
-all PCI reset methods and plus, currently it is not being used. So, there
-is no impact in renaming this sysfs attribute.
+	resource_list_for_each_entry_safe(win, tmp, res) {
+		struct resource *res = win->res;
 
-To not inadvertently do a bus reset that would affect devices that are in
-use by other drivers (other than Xen pciback) prior to the reset, we check
-that all of the devices under the bridge are owned by Xen pciback. If they
-are not, we refrain from executing the bus (or slot) reset.
+		switch (resource_type(res)) {
+		case IORESOURCE_IO:
+			err = pci_remap_iospace(res, iobase);
+			if (err) {
+				dev_warn(dev, "error %d: failed to map resource %pR\n",
+					 err, res);
+				resource_list_destroy_entry(win);
+			}
+			break;
+		case IORESOURCE_MEM:
+			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+			break;
+		}
+	}
 
-Signed-off-by: Govinda Tatti <Govinda.Tatti@Oracle.COM>
-Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
----
-v1: - First posting
-v2: - struct pcistub_args: Changed docunt field as unsigned int
-    - pcistub_reset_dev: initialization of "struct pcistub_args"
-    - pcistub_reset_dev: combined multiple if-statements
-    - pcistub_do_flr: removed goto statement
-v3: - Resynced with linux kernel 4.14.4 and latest pci_stub.c changes.
-    - Renamed "do_flr" SysFS attribute to "reset". Plus, modified
-      "reset" SysFS attribute code as per the latest changes in 4.14.4.
-    - struct pcistub_args: added "const" to "struct pci_dev *dev" field
-    - pcistub_device_search: Renamed found_dev to found
-    - pcistub_device_search: Modified comments and return statements
-    - pcistub_device_reset: introduced FLR reset code
-    - pcistub_device_reset: Modified all dev_dbg messages
+	if (res_valid)
+		return 0;
 
- Documentation/ABI/testing/sysfs-driver-pciback |  15 +++
- drivers/xen/xen-pciback/pci_stub.c             | 128 +++++++++++++++++++++++++
- 2 files changed, 143 insertions(+)
+	dev_err(dev, "non-prefetchable memory resource required\n");
+	err = -EINVAL;
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-pciback b/Documentation/ABI/testing/sysfs-driver-pciback
-index 6a733bf..d295b42 100644
---- a/Documentation/ABI/testing/sysfs-driver-pciback
-+++ b/Documentation/ABI/testing/sysfs-driver-pciback
-@@ -11,3 +11,18 @@ Description:
-                 #echo 00:19.0-E0:2:FF > /sys/bus/pci/drivers/pciback/quirks
-                 will allow the guest to read and write to the configuration
-                 register 0x0E.
-+
-+What:           /sys/bus/pci/drivers/pciback/reset
-+Date:           Dec 2017
-+KernelVersion:  4.15
-+Contact:        xen-devel@lists.xenproject.org
-+Description:
-+                An option to perform a flr/slot/bus reset when a PCI device
-+		is owned by Xen PCI backend. Writing a string of DDDD:BB:DD.F
-+		will cause the pciback driver to perform a flr or slot or bus
-+		reset if the device supports it. It will try to execute one
-+		of these reset method, starting with FLR if it is supported.
-+		Otherwise, it tries slot or bus reset methods. For slot or
-+		bus reset method, it also checks to make sure that all of the
-+		devices under the bridge are owned by Xen PCI backend before
-+		performing those resets.
-diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback/pci_stub.c
-index 9e480fd..cad704e 100644
---- a/drivers/xen/xen-pciback/pci_stub.c
-+++ b/drivers/xen/xen-pciback/pci_stub.c
-@@ -313,6 +313,102 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
- 	up_write(&pcistub_sem);
- }
- 
-+struct pcistub_args {
-+	const struct pci_dev *dev;
-+	unsigned int dcount;
-+};
-+
-+static int pcistub_device_search(struct pci_dev *dev, void *data)
-+{
-+	struct pcistub_device *psdev;
-+	struct pcistub_args *arg = data;
-+	bool found = false;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&pcistub_devices_lock, flags);
-+
-+	list_for_each_entry(psdev, &pcistub_devices, dev_list) {
-+		if (psdev->dev == dev) {
-+			found = true;
-+			arg->dcount++;
-+			break;
-+		}
-+	}
-+
-+	spin_unlock_irqrestore(&pcistub_devices_lock, flags);
-+
-+	/* Device not owned by pcistub. Abort the walk */
-+	if (!found) {
-+		arg->dev = dev;
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pcistub_device_reset(struct pci_dev *dev)
-+{
-+	struct xen_pcibk_dev_data *dev_data;
-+	bool slot = false, bus = false;
-+	struct pcistub_args arg = {};
-+
-+	if (!dev)
-+		return -EINVAL;
-+
-+	dev_dbg(&dev->dev, "[%s]\n", __func__);
-+
-+	/* First check and try FLR */
-+	if (pcie_has_flr(dev)) {
-+		dev_dbg(&dev->dev, "resetting %s device using FLR\n",
-+			pci_name(dev));
-+		pcie_flr(dev);
-+		return 0;
-+	}
-+
-+	if (!pci_probe_reset_slot(dev->slot))
-+		slot = true;
-+	else if ((!pci_probe_reset_bus(dev->bus)) &&
-+		 (!pci_is_root_bus(dev->bus)))
-+		bus = true;
-+
-+	if (!bus && !slot)
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * Make sure all devices on this bus are owned by the
-+	 * PCI backend so that we can safely reset the whole bus.
-+	 */
-+	pci_walk_bus(dev->bus, pcistub_device_search, &arg);
-+
-+	/* All devices under the bus should be part of pcistub! */
-+	if (arg.dev) {
-+		dev_err(&dev->dev,
-+			"%s on the same bus as %s and is not owned by "
-+			DRV_NAME "\n", pci_name(arg.dev), pci_name(dev));
-+
-+		return -EBUSY;
-+	}
-+
-+	dev_dbg(&dev->dev, "pcistub owns %d devices on PCI Bus %04x:%02x",
-+		arg.dcount, pci_domain_nr(dev->bus), dev->bus->number);
-+
-+	dev_data = pci_get_drvdata(dev);
-+	if (!pci_load_saved_state(dev, dev_data->pci_saved_state))
-+		pci_restore_state(dev);
-+
-+	/* This disables the device. */
-+	xen_pcibk_reset_device(dev);
-+
-+	/* Cleanup up any emulated fields */
-+	xen_pcibk_config_reset_dev(dev);
-+
-+	dev_dbg(&dev->dev, "resetting %s device using %s reset\n",
-+		pci_name(dev), slot ? "slot" : "bus");
-+
-+	return slot ? pci_try_reset_slot(dev->slot) :
-+			pci_try_reset_bus(dev->bus);
-+}
-+
- static int pcistub_match_one(struct pci_dev *dev,
- 			     struct pcistub_device_id *pdev_id)
- {
-@@ -1430,6 +1526,32 @@ static ssize_t permissive_show(struct device_driver *drv, char *buf)
- }
- static DRIVER_ATTR_RW(permissive);
- 
-+static ssize_t reset_store(struct device_driver *drv, const char *buf,
-+			   size_t count)
-+{
-+	struct pcistub_device *psdev;
-+	int domain, bus, slot, func;
-+	int err;
-+
-+	err = str_to_slot(buf, &domain, &bus, &slot, &func);
-+	if (err)
-+		return err;
-+
-+	psdev = pcistub_device_find(domain, bus, slot, func);
-+	if (psdev) {
-+		err = pcistub_device_reset(psdev->dev);
-+		pcistub_device_put(psdev);
-+	} else {
-+		err = -ENODEV;
-+	}
-+
-+	if (!err)
-+		err = count;
-+
-+	return err;
-+}
-+static DRIVER_ATTR_WO(reset);
-+
- static void pcistub_exit(void)
- {
- 	driver_remove_file(&xen_pcibk_pci_driver.driver, &driver_attr_new_slot);
-@@ -1443,6 +1565,8 @@ static void pcistub_exit(void)
- 			   &driver_attr_irq_handlers);
- 	driver_remove_file(&xen_pcibk_pci_driver.driver,
- 			   &driver_attr_irq_handler_state);
-+	driver_remove_file(&xen_pcibk_pci_driver.driver,
-+			   &driver_attr_reset);
- 	pci_unregister_driver(&xen_pcibk_pci_driver);
- }
- 
-@@ -1536,6 +1660,10 @@ static int __init pcistub_init(void)
- 	if (!err)
- 		err = driver_create_file(&xen_pcibk_pci_driver.driver,
- 					&driver_attr_irq_handler_state);
-+	if (!err)
-+		err = driver_create_file(&xen_pcibk_pci_driver.driver,
-+					 &driver_attr_reset);
-+
- 	if (err)
- 		pcistub_exit();
- 
--- 
-2.9.5
+out_release_res:
+	pci_free_resource_list(res);
+	return err;
+}
+
+and then in a PCI host bridge specific loop that just carries
+out the host bridge specific actions for every resource returned
+in the res list.
+
+Lorenzo
+
+> +
+>  static void gen_pci_unmap_cfg(void *ptr)
+>  {
+>  	pci_ecam_free((struct pci_config_window *)ptr);
+> ---8<--------------------------------------------------------------------------
