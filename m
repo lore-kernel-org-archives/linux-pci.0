@@ -1,70 +1,108 @@
-Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
-Date: Thu, 14 Dec 2017 13:30:37 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-cc: Linus Torvalds <torvalds@linux-foundation.org>,
-    Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
-    Michal Hocko <mhocko@kernel.org>, Andy Lutomirski <luto@kernel.org>,
-    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-    the arch/x86 maintainers <x86@kernel.org>,
-    Daniel Vetter <daniel.vetter@intel.com>,
-    Bjorn Helgaas <bhelgaas@google.com>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-In-Reply-To: <3265333.8krWOQvcRi@aspire.rjw.lan>
-Message-ID: <alpine.DEB.2.20.1712141329040.4998@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos> <3265333.8krWOQvcRi@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 1 Dec 2017 11:13:25 +0200
+From: Sakari Ailus <sakari.ailus@linux.intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V4 3/5] device property: Introduce a common API to fetch
+ device match data
+Message-ID: <20171201091325.weepl5rtxg4zqqyd@paasikivi.fi.intel.com>
+References: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
+ <1512096776-22883-4-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1512096776-22883-4-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, Rob Herring <robh@kernel.org>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 14 Dec 2017, Rafael J. Wysocki wrote:
-> On Thursday, December 14, 2017 12:54:05 PM CET Thomas Gleixner wrote:
-> > Now the graphics issue is a different story. That only happens on
-> > hibernation after doing the snapshot. There all non boot cpus are onlined
-> > again and after that the devices are 'thawed'. The following reenable of
-> > interrupts fails because i915 is not in PCI_D0 state.
-> > 
-> > Suspend:
-> > 
-> >    irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
-> >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-> >    __pci_write_msi_msg: Not written <- Device not in PCI_D0
-> >    ....
-> >    device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [resume]
-> >    pci_pm_resume_noirq <-dpm_run_callback
-> >    pci_pm_resume_noirq <-dpm_run_callback
-> >    pci_pm_default_resume_early <-pci_pm_resume_noirq
-> >    pci_pm_default_resume_early <-pci_pm_resume_noirq
-> >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a  <-- Set the new affinity
-> >    device_pm_callback_end: i915 0000:00:02.0, err=0
-> 
-> So this works, because we power up the device during resume even if it
-> had been suspended (via runtime PM) before the suspend started.
-> 
-> > Hibernate:
-> > 
-> >    irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
-> >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-> >    __pci_write_msi_msg: Not written <- Device not in PCI_D0
-> >    ....
-> >    device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [thaw]
-> >    pci_pm_thaw_noirq <-dpm_run_callback
-> >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-> >    __pci_write_msi_msg: Not written  <--- Device is not in PCI_D0
-> >    device_pm_callback_end: i915 0000:00:02.0, err=0
-> 
-> And here we try to leave the device alone which is OK for devices in D0,
-> but not for suspended ones.
-> 
-> It looks like we need to power up them at the "thaw" time too or at least
-> I don't see how to address that differently.
+Hi Sinan,
 
-The question is whether the code which brings the device out of D0 should
-write the message unconditionally. That would be sufficient I think.
+Thanks for the patch.
 
-Thanks,
+On Thu, Nov 30, 2017 at 09:52:54PM -0500, Sinan Kaya wrote:
+> There is an OF/ACPI function to obtain the driver data. We want to hide
+> OF/ACPI details from the device drivers and abstract following the device
+> family of functions.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/base/property.c  | 14 ++++++++++++++
+>  include/linux/property.h |  2 ++
+>  2 files changed, 16 insertions(+)
+> 
+> diff --git a/drivers/base/property.c b/drivers/base/property.c
+> index 7ed99c1..6adec89 100644
+> --- a/drivers/base/property.c
+> +++ b/drivers/base/property.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/of.h>
+>  #include <linux/of_address.h>
+> +#include <linux/of_device.h>
+>  #include <linux/of_graph.h>
+>  #include <linux/property.h>
+>  #include <linux/etherdevice.h>
+> @@ -1335,3 +1336,16 @@ int fwnode_graph_parse_endpoint(const struct fwnode_handle *fwnode,
+>  	return fwnode_call_int_op(fwnode, graph_parse_endpoint, endpoint);
+>  }
+>  EXPORT_SYMBOL(fwnode_graph_parse_endpoint);
+> +
+> +void *device_get_match_data(struct device *dev)
+> +{
+> +	void *ret;
+> +
+> +	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
 
-	tglx
+Most of the dev->of_node checks have been removed from property.c and
+replaced by calls to the firmware specific fwnode operations. What remains
+should probably be moved there, too (apart from dev_fwnode).
+
+How about adding a new op for this one to struct fwnode_operations in
+include/linux/fwnode.h?
+
+> +		ret = (void *)of_device_get_match_data(dev);
+> +	else
+> +		ret = acpi_get_match_data(dev);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(device_get_match_data);
+> diff --git a/include/linux/property.h b/include/linux/property.h
+> index 6bebee1..01fa55b 100644
+> --- a/include/linux/property.h
+> +++ b/include/linux/property.h
+> @@ -275,6 +275,8 @@ int device_add_properties(struct device *dev,
+>  
+>  enum dev_dma_attr device_get_dma_attr(struct device *dev);
+>  
+> +void *device_get_match_data(struct device *dev);
+> +
+>  int device_get_phy_mode(struct device *dev);
+>  
+>  void *device_get_mac_address(struct device *dev, char *addr, int alen);
+
+-- 
+Kind regards,
+
+Sakari Ailus
+sakari.ailus@linux.intel.com
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
