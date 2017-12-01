@@ -1,34 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:60844 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751202AbdLAFHD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Dec 2017 00:07:03 -0500
+From: Vignesh R <vigneshr@ti.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kelvin Cao <kelvin.cao@microsemi.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 29 Nov 2017 10:28:42 -0700
-Message-Id: <20171129172844.21468-1-logang@deltatee.com>
-Subject: [PATCH 0/2] Switchtec Updates
-Sender: linux-kernel-owner@vger.kernel.org
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH] pci: dwc: pci-dra7xx: Make shutdown handler static
+Date: Fri, 1 Dec 2017 10:36:52 +0530
+Message-ID: <20171201050652.13998-1-vigneshr@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Declare dra7xx_pcie_shutdown() as a static function as its not used
+elsewhere.
 
-Blease accept the following two patches. The first adds a couple more
-device IDs for the Switchtec driver. The second adds a new event type
-for it to report.
+Signed-off-by: Vignesh R <vigneshr@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
-Logan
-
-Kelvin Cao (1):
-  switchtec: Add device IDs for PSX 24xG3 and PSX 48xG3
-
-Logan Gunthorpe (1):
-  switchtec: Added Global Fabric Manager Server (GFMS) event
-
- drivers/pci/switch/switchtec.c       | 3 +++
- include/linux/switchtec.h            | 3 +++
- include/uapi/linux/switchtec_ioctl.h | 3 ++-
- 3 files changed, 8 insertions(+), 1 deletion(-)
-
---
-2.11.0
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 59e8de34cec6..b9db442af793 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -815,7 +815,7 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+ }
+ #endif
+ 
+-void dra7xx_pcie_shutdown(struct platform_device *pdev)
++static void dra7xx_pcie_shutdown(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+-- 
+2.15.0
