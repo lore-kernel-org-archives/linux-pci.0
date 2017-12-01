@@ -1,62 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:44511 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756323AbdLOTbm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Dec 2017 14:31:42 -0500
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v16 4/4] PCI: Remove PCI pool macro functions
-Date: Fri, 15 Dec 2017 20:31:23 +0100
-Message-Id: <20171215193123.13395-5-romain.perier@gmail.com>
-In-Reply-To: <20171215193123.13395-1-romain.perier@gmail.com>
-References: <20171215193123.13395-1-romain.perier@gmail.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:4062 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751201AbdLAJUl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Dec 2017 04:20:41 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V3 1/7] of: Export of_pci_range_to_resource()
+Date: Fri, 1 Dec 2017 14:50:01 +0530
+Message-ID: <1512120007-28088-2-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1512120007-28088-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1512120007-28088-1-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
+Tegra PCIe host driver parses of_pci_range from device tree and converts
+to resource. Export of_pci_range_to_resource() to allow Tegra PCIe host
+driver to be compiled as loadable kernel module.
 
-Now that all the drivers use dma pool API, we can remove the macro
-functions for PCI pool.
-
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
-Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- include/linux/pci.h | 9 ---------
- 1 file changed, 9 deletions(-)
+V2:
+* commit message update
+V3:
+* no change in this patch
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 66cca1c6f742..c5dd05021b14 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1314,15 +1314,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- #include <linux/pci-dma.h>
- #include <linux/dmapool.h>
+ drivers/of/address.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index fa6cabfc3cb9..8d9b93f8701a 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -361,6 +361,7 @@ int of_pci_range_to_resource(struct of_pci_range *range,
+ 	res->end = (resource_size_t)OF_BAD_ADDR;
+ 	return err;
+ }
++EXPORT_SYMBOL(of_pci_range_to_resource);
+ #endif /* CONFIG_PCI */
  
--#define	pci_pool dma_pool
--#define pci_pool_create(name, pdev, size, align, allocation) \
--		dma_pool_create(name, &pdev->dev, size, align, allocation)
--#define	pci_pool_destroy(pool) dma_pool_destroy(pool)
--#define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
--#define	pci_pool_zalloc(pool, flags, handle) \
--		dma_pool_zalloc(pool, flags, handle)
--#define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
--
- struct msix_entry {
- 	u32	vector;	/* Kernel uses to write allocated vector */
- 	u16	entry;	/* Driver uses to specify entry, OS writes */
+ /*
 -- 
-2.14.1
+2.1.4
