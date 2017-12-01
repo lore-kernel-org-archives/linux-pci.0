@@ -1,55 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 8 Nov 2017 14:48:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?=
-        <ckoenig.leichtzumerken@gmail.com>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH 1/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h
- (Models 00h-0fh) Processors
-Message-ID: <20171108204827.GB21597@bhelgaas-glaptop.roam.corp.google.com>
-References: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1509717164-1946-1-git-send-email-christian.koenig@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:56272 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752297AbdLACxL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Nov 2017 21:53:11 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V4 3/5] device property: Introduce a common API to fetch device match data
+Date: Thu, 30 Nov 2017 21:52:54 -0500
+Message-Id: <1512096776-22883-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
+References: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Andy]
+There is an OF/ACPI function to obtain the driver data. We want to hide
+OF/ACPI details from the device drivers and abstract following the device
+family of functions.
 
-On Fri, Nov 03, 2017 at 02:52:41PM +0100, Christian König wrote:
-> Just add the extra PCI-ID to the existing fixup.
-> 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/base/property.c  | 14 ++++++++++++++
+ include/linux/property.h |  2 ++
+ 2 files changed, 16 insertions(+)
 
-I folded all these additional devices into the original quirk.
-
-> ---
->  arch/x86/pci/fixup.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 7b6bd76..1d2238d 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -639,7 +639,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
->   * configuring host bridge windows using the _PRS and _SRS methods.
->   *
->   * But this is rarely implemented, so we manually enable a large 64bit BAR for
-> - * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
-> + * PCIe device on AMD Family 15h (Models 00h-0fh, 30h-3fh) Processors here.
->   */
->  static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
->  {
-> @@ -696,5 +696,6 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
->  	pci_bus_add_resource(dev->bus, res, 0);
->  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x1601, pci_amd_enable_64bit_bar);
->  
->  #endif
-> -- 
-> 2.7.4
-> 
+diff --git a/drivers/base/property.c b/drivers/base/property.c
+index 7ed99c1..6adec89 100644
+--- a/drivers/base/property.c
++++ b/drivers/base/property.c
+@@ -15,6 +15,7 @@
+ #include <linux/kernel.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
++#include <linux/of_device.h>
+ #include <linux/of_graph.h>
+ #include <linux/property.h>
+ #include <linux/etherdevice.h>
+@@ -1335,3 +1336,16 @@ int fwnode_graph_parse_endpoint(const struct fwnode_handle *fwnode,
+ 	return fwnode_call_int_op(fwnode, graph_parse_endpoint, endpoint);
+ }
+ EXPORT_SYMBOL(fwnode_graph_parse_endpoint);
++
++void *device_get_match_data(struct device *dev)
++{
++	void *ret;
++
++	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
++		ret = (void *)of_device_get_match_data(dev);
++	else
++		ret = acpi_get_match_data(dev);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(device_get_match_data);
+diff --git a/include/linux/property.h b/include/linux/property.h
+index 6bebee1..01fa55b 100644
+--- a/include/linux/property.h
++++ b/include/linux/property.h
+@@ -275,6 +275,8 @@ int device_add_properties(struct device *dev,
+ 
+ enum dev_dma_attr device_get_dma_attr(struct device *dev);
+ 
++void *device_get_match_data(struct device *dev);
++
+ int device_get_phy_mode(struct device *dev);
+ 
+ void *device_get_mac_address(struct device *dev, char *addr, int alen);
+-- 
+1.9.1
