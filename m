@@ -1,141 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:52568 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751138AbdKJVyQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2017 16:54:16 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Dien Pham <dien.pham.ry@rvc.renesas.com>,
-        Hien Dang <hien.dang.eb@renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH V3] PCI: rcar: Use runtime PM to control controller clock
-Date: Fri, 10 Nov 2017 22:54:11 +0100
-Message-Id: <20171110215411.31912-1-marek.vasut+renesas@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        linux-acpi@vger.kernel.org (open list:ACPI),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V4 2/5] ACPI / bus: Introduce acpi_get_match_data() function
+Date: Thu, 30 Nov 2017 21:52:53 -0500
+Message-Id: <1512096776-22883-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
+References: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dien Pham <dien.pham.ry@rvc.renesas.com>
+OF has of_device_get_match_data() function to extract driver specific data
+structure. Add a similar function for ACPI.
 
-The controller clock can be switched off during suspend/resume,
-let runtime PM take care of that.
-
-Signed-off-by: Dien Pham <dien.pham.ry@rvc.renesas.com>
-Signed-off-by: Hien Dang <hien.dang.eb@renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
-To: linux-pci@vger.kernel.org
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
-V2: - Reorder the fail path in rcar_pcie_probe() to cater for the
-      reordering of function calls in probe
-    - Dispose of fail_clk in rcar_pcie_get_resources()
-V3: - Fix up the failpath in probe function
----
- drivers/pci/host/pcie-rcar.c | 40 ++++++++++++----------------------------
- 1 file changed, 12 insertions(+), 28 deletions(-)
+ drivers/acpi/bus.c   | 12 ++++++++++++
+ include/linux/acpi.h |  6 ++++++
+ 2 files changed, 18 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 12796eccb2be..e00f865952d5 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -145,7 +145,6 @@ struct rcar_pcie {
- 	void __iomem		*base;
- 	struct list_head	resources;
- 	int			root_bus_nr;
--	struct clk		*clk;
- 	struct clk		*bus_clk;
- 	struct			rcar_msi msi;
- };
-@@ -917,24 +916,14 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
- 	if (IS_ERR(pcie->base))
- 		return PTR_ERR(pcie->base);
- 
--	pcie->clk = devm_clk_get(dev, "pcie");
--	if (IS_ERR(pcie->clk)) {
--		dev_err(dev, "cannot get platform clock\n");
--		return PTR_ERR(pcie->clk);
--	}
--	err = clk_prepare_enable(pcie->clk);
--	if (err)
--		return err;
--
- 	pcie->bus_clk = devm_clk_get(dev, "pcie_bus");
- 	if (IS_ERR(pcie->bus_clk)) {
- 		dev_err(dev, "cannot get pcie bus clock\n");
--		err = PTR_ERR(pcie->bus_clk);
--		goto fail_clk;
-+		return PTR_ERR(pcie->bus_clk);
- 	}
- 	err = clk_prepare_enable(pcie->bus_clk);
- 	if (err)
--		goto fail_clk;
-+		return err;
- 
- 	i = irq_of_parse_and_map(dev->of_node, 0);
- 	if (!i) {
-@@ -956,8 +945,6 @@ static int rcar_pcie_get_resources(struct rcar_pcie *pcie)
- 
- err_map_reg:
- 	clk_disable_unprepare(pcie->bus_clk);
--fail_clk:
--	clk_disable_unprepare(pcie->clk);
- 
- 	return err;
+diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+index 4d0979e..b271eb1 100644
+--- a/drivers/acpi/bus.c
++++ b/drivers/acpi/bus.c
+@@ -785,6 +785,18 @@ const struct acpi_device_id *acpi_match_device(const struct acpi_device_id *ids,
  }
-@@ -1125,22 +1112,22 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+ EXPORT_SYMBOL_GPL(acpi_match_device);
  
- 	rcar_pcie_parse_request_of_pci_ranges(pcie);
- 
-+	pm_runtime_enable(pcie->dev);
-+	err = pm_runtime_get_sync(pcie->dev);
-+	if (err < 0) {
-+		dev_err(pcie->dev, "pm_runtime_get_sync failed\n");
-+		goto err_pm_disable;
-+	}
++void *acpi_get_match_data(const struct device *dev)
++{
++	const struct acpi_device_id *match;
 +
- 	err = rcar_pcie_get_resources(pcie);
- 	if (err < 0) {
- 		dev_err(dev, "failed to request resources: %d\n", err);
--		goto err_free_bridge;
-+		goto err_pm_put;
- 	}
++	match = acpi_match_device(dev->driver->acpi_match_table, dev);
++	if (!match)
++		return NULL;
++
++	return (void *)match->driver_data;
++}
++EXPORT_SYMBOL_GPL(acpi_get_match_data);
++
+ int acpi_match_device_ids(struct acpi_device *device,
+ 			  const struct acpi_device_id *ids)
+ {
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 502af53..a927260 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -584,6 +584,7 @@ extern int acpi_nvs_for_each_region(int (*func)(__u64, __u64, void *),
+ const struct acpi_device_id *acpi_match_device(const struct acpi_device_id *ids,
+ 					       const struct device *dev);
  
- 	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
- 	if (err)
--		goto err_free_bridge;
--
--	pm_runtime_enable(dev);
--	err = pm_runtime_get_sync(dev);
--	if (err < 0) {
--		dev_err(dev, "pm_runtime_get_sync failed\n");
--		goto err_pm_disable;
--	}
-+		goto err_pm_put;
- 
- 	/* Failure to get a link might just be that no cards are inserted */
- 	hw_init_fn = of_device_get_match_data(dev);
-@@ -1172,13 +1159,10 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 
- err_pm_put:
- 	pm_runtime_put(dev);
--
- err_pm_disable:
- 	pm_runtime_disable(dev);
--
--err_free_bridge:
--	pci_free_host_bridge(bridge);
- 	pci_free_resource_list(&pcie->resources);
-+	pci_free_host_bridge(bridge);
- 
- 	return err;
++void *acpi_get_match_data(const struct device *dev);
+ extern bool acpi_driver_match_device(struct device *dev,
+ 				     const struct device_driver *drv);
+ int acpi_device_uevent_modalias(struct device *, struct kobj_uevent_env *);
+@@ -755,6 +756,11 @@ static inline const struct acpi_device_id *acpi_match_device(
+ 	return NULL;
  }
+ 
++static inline void *acpi_get_match_data(const struct device *dev)
++{
++	return NULL;
++}
++
+ static inline bool acpi_driver_match_device(struct device *dev,
+ 					    const struct device_driver *drv)
+ {
 -- 
-2.11.0
+1.9.1
