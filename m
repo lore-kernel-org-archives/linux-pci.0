@@ -1,60 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org
-Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: [PATCH v2 8/9] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe endpoint controller
-Date: Mon, 18 Dec 2017 19:16:08 +0100
-Message-Id: <e3cba0ecfa9189153e7dd7589dd63814315b3d87.1513620412.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
-In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
-References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V4 3/5] device property: Introduce a common API to fetch
+ device match data
+To: Sakari Ailus <sakari.ailus@linux.intel.com>
+References: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
+ <1512096776-22883-4-git-send-email-okaya@codeaurora.org>
+ <20171201091325.weepl5rtxg4zqqyd@paasikivi.fi.intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <472bc344-009c-6163-e71f-d97ba856827d@codeaurora.org>
+Date: Fri, 1 Dec 2017 10:51:44 -0500
+MIME-Version: 1.0
+In-Reply-To: <20171201091325.weepl5rtxg4zqqyd@paasikivi.fi.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, Rob Herring <robh@kernel.org>,
+ Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch documents the DT bindings for the Cadence PCIe controller
-when configured in endpoint mode.
+On 12/1/2017 4:13 AM, Sakari Ailus wrote:
+> Most of the dev->of_node checks have been removed from property.c and
+> replaced by calls to the firmware specific fwnode operations. What remains
+> should probably be moved there, too (apart from dev_fwnode).
+> 
+> How about adding a new op for this one to struct fwnode_operations in
+> include/linux/fwnode.h?
 
-Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
----
- .../devicetree/bindings/pci/cdns,cdns-pcie-ep.txt  | 23 ++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
+Sure, let me look. I was following the get_dma function. Bad example I guess.
 
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
-new file mode 100644
-index 000000000000..fc41fee25e26
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.txt
-@@ -0,0 +1,23 @@
-+* Cadence PCIe endpoint controller
-+
-+Required properties:
-+- compatible: Should contain "cdns,cdns-pcie-ep" to identify the IP used.
-+- reg: Should contain the controller register base address and AXI interface
-+  region base address respectively.
-+- reg-names: Must be "reg" and "mem" respectively.
-+
-+Optional properties:
-+- cdns,max-outbound-regions: Set to maximum number of outbound regions
-+  (default 32).
-+- max-functions: Maximum number of functions that can be configured (default 1).
-+
-+Example:
-+
-+pcie@fc000000 {
-+	compatible = "cdns,cdns-pcie-ep";
-+	reg = <0x0 0xfc000000 0x0 0x01000000>,
-+	      <0x0 0x80000000 0x0 0x40000000>;
-+	reg-names = "reg", "mem";
-+	cdns,max-outbound-regions = <16>;
-+	max-functions = /bits/ 8 <8>;
-+};
 -- 
-2.11.0
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
