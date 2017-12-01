@@ -1,87 +1,161 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1513087456.3809.17.camel@linux.intel.com>
-Subject: Re: [PATCH V3 09/29] drm/i915: deprecate pci_get_bus_and_slot()
-From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org
-Date: Tue, 12 Dec 2017 16:04:16 +0200
-In-Reply-To: <bd6c6365-c265-30f4-029b-3e19af3078f2@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
- <1511801886-6753-10-git-send-email-okaya@codeaurora.org>
- <bd6c6365-c265-30f4-029b-3e19af3078f2@codeaurora.org>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: David Airlie <airlied@linux.ie>, linux-arm-msm@vger.kernel.org,
- intel-gfx@lists.freedesktop.org, open list <linux-kernel@vger.kernel.org>,
- Jani Nikula <jani.nikula@linux.intel.com>,
- "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
- Rodrigo Vivi <rodrigo.vivi@intel.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=59Vf=C5=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=59Vf=C5=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [Question] Unsupported Request During PCI Enumeration
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <26340670-2744-b2e0-eed7-eb8e0ad2bc84@huawei.com>
+ <20171128003208.GB11228@bhelgaas-glaptop.roam.corp.google.com>
+ <c1235398-9a80-b4f3-94c9-3686651259fc@huawei.com>
+ <20171128145748.GD11228@bhelgaas-glaptop.roam.corp.google.com>
+ <12079a9c-9018-b1be-1596-8a2f6746677b@huawei.com>
+ <20171130231558.GD19640@bhelgaas-glaptop.roam.corp.google.com>
+CC: Linux PCI <linux-pci@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <b6b7e255-b7c1-d4dc-ba76-fd6ae494befb@huawei.com>
+Date: Fri, 1 Dec 2017 17:30:48 +0800
+MIME-Version: 1.0
+In-Reply-To: <20171130231558.GD19640@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-I sent this individual i915 patch to our CI, and it is passing on all platforms:
+在 2017/12/1 7:15, Bjorn Helgaas 写道:
+> On Thu, Nov 30, 2017 at 08:47:38PM +0800, Dongdong Liu wrote:
+>>
+>>> I do not think drivers should be calling
+>>> pci_enable_pcie_error_reporting() directly.  And I don't think we
+>>> should depend on _HPX.  _HPX is intended for *platform-specific*
+>>> things, and I don't think this is platform-specific.  And of course,
+>>> _HPX only works on ACPI systems, and we want this to work everywhere.
+>>>
+>>> So I think we need a more comprehensive generic solution in Linux.  I
+>>> think we need several pieces:
+>>>
+>>>  - Disable UR reporting during enumeration, similar to how we disable
+>>>    Master Abort reporting.
+>>>
+>>>  - Restore original UR reporting setting after enumeration.
+>>>
+>>>  - Clear any logged UR errors after enumeration.
+>>
+>> Agree.
+>>
+>>>
+>>>  - Enable UR reporting as part of configuring every device, e.g., in
+>>>    pci_configure_device() or pci_init_capabilities().
+>>
+>> Enable UR reporting in pci_configure_device() or pci_init_capabilities() is
+>> not ok. It will still report UR as it is still in enumeration.
+>
+> True.  For bridges, it needs to be after we've enumerated children of
+> the bridge.
+>
+>>> I don't know whether we should enable UR reporting if AER is not
+>>> present; we'll have to think about that.  We may also have to
+>>> restructure how the AER driver works, because I think it currently
+>>> comes into play *after* we call pci_init_capabilities().  There are
+>>> probably some ordering issues there.
+>>
+>> I write a sample code as below, it can avoid report UR during
+>> enumeration. What do you think about the code ?
+>
+> Can you do it the same place we disable and restore Master-Abort Mode,
+> in pci_scan_bridge_extend()?  That's done for the same reason, so it
+> would be nice to keep it together.
+>
+> Maybe we could have a "pci_disable_enumeration_errors()" that would
+> disable both Master-Abort Mode and UR reporting, and a corresponding
+> "pci_restore_enumeration_errors()" that would clear any logged errors
+> and restore the original settings?
 
-https://patchwork.freedesktop.org/series/34822/
+Set devctl to disable UR in pci_scan_bridge_extend() can resolve bridge devices
+UR reporting issue. But for EP devices may still reprot UR, like non-ARI EP
+devices. So it's better to disable UR reporting in pci_device_add()
+after calling pci_configure_device(dev) and restore in pci_bus_add_device().
+As in pci_configure_device() may parse _HPX to enable UR, disable UR reporting
+should call after pci_configure_device().
 
-Is it ok if I merge this to drm-tip already?
+Sure, it looks good to me to use the function "pci_disable_enumeration_errors()"
+and  "pci_restore_enumeration_errors()" .
 
-Regards, Joonas
+Thanks,
+Dongdong
 
-On Mon, 2017-11-27 at 13:50 -0500, Sinan Kaya wrote:
-> +dri-devel@lists.freedesktop.org
-> 
-> On 11/27/2017 11:57 AM, Sinan Kaya wrote:
-> > pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> > where a PCI device is present. This restricts the device drivers to be
-> > reused for other domain numbers.
-> > 
-> > Getting ready to remove pci_get_bus_and_slot() function in favor of
-> > pci_get_domain_bus_and_slot().
-> > 
-> > Extract the domain number from drm_device and pass it into
-> > pci_get_domain_bus_and_slot() function.
-> > 
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > ---
-> >  drivers/gpu/drm/i915/i915_drv.c | 5 ++++-
-> >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-> > index 9f45cfe..5a8cb79 100644
-> > --- a/drivers/gpu/drm/i915/i915_drv.c
-> > +++ b/drivers/gpu/drm/i915/i915_drv.c
-> > @@ -419,7 +419,10 @@ static int i915_getparam(struct drm_device *dev, void *data,
-> >  
-> >  static int i915_get_bridge_dev(struct drm_i915_private *dev_priv)
-> >  {
-> > -	dev_priv->bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-> > +	int domain = pci_domain_nr(dev_priv->drm.pdev->bus);
-> > +
-> > +	dev_priv->bridge_dev =
-> > +		pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 0));
-> >  	if (!dev_priv->bridge_dev) {
-> >  		DRM_ERROR("bridge device not found\n");
-> >  		return -1;
-> > 
-> 
-> 
--- 
-Joonas Lahtinen
-Open Source Technology Center
-Intel Corporation
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index bc56cf1..1a46026 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -14,6 +14,7 @@
+>>  #include <linux/ioport.h>
+>>  #include <linux/proc_fs.h>
+>>  #include <linux/slab.h>
+>> +#include <linux/aer.h>
+>>
+>>  #include "pci.h"
+>>
+>> @@ -311,6 +312,16 @@ void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
+>>  void pci_bus_add_device(struct pci_dev *dev)
+>>  {
+>>         int retval;
+>> +       u16 reg16;
+>> +
+>> +       /* Clear PCIe Capability's Device Status */
+>> +       pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
+>> +       pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+>> +       pci_cleanup_aer_error_status_regs(dev);
+>> +
+>> +       /* Restore UR reporting */
+>> +       if (dev->devctl_ur)
+>> +               pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_URRE);
+>>
+>>         /*
+>>          * Can not put in pci_device_add yet because resources
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 14e0ea1..7b34083 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -2119,9 +2119,21 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+>>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>>  {
+>>         int ret;
+>> +       u16 reg16;
+>>
+>>         pci_configure_device(dev);
+>>
+>> +       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+>> +       dev->devctl_ur = reg16 & PCI_EXP_DEVCTL_URRE;
+>> +       if (dev->devctl_ur) {
+>> +               /*
+>> +                * Turn off UR reporting, later restore UR reporting
+>> +                * after enumeration.
+>> +                */
+>> +               reg16 = reg16 & (~PCI_EXP_DEVCTL_URRE);
+>> +               pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
+>> +       }
+>> +
+>>         device_initialize(&dev->dev);
+>>         dev->dev.release = pci_release_dev;
+>>
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index ae8d2b4..c2a90f1 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -440,6 +440,7 @@ struct pci_dev {
+>>         char *driver_override; /* Driver name to force a match */
+>>
+>>         unsigned long priv_flags; /* Private flags for the pci driver */
+>> +       u16 devctl_ur;
+>>  };
+>>
+>> Thanks,
+>> Dongdong
+>>
+>>>
+>>> Bjorn
+>>>
+>>> .
+>>>
+>>
+>
+> .
+>
