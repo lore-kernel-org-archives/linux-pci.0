@@ -1,40 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 15 Dec 2017 13:25:06 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: linux-pci@vger.kernel.org, kishon@ti.com,
-        Niklas Cassel <niklass@axis.com>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 0/3] Fix find_first_zero_bit() usage
-Message-ID: <20171215132506.GB30737@red-moon>
-References: <20171214130147.1790-1-niklas.cassel@axis.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:2896 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751108AbdLAJUu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Dec 2017 04:20:50 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V3 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
+Date: Fri, 1 Dec 2017 14:50:03 +0530
+Message-ID: <1512120007-28088-4-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1512120007-28088-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1512120007-28088-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171214130147.1790-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 14, 2017 at 02:01:43PM +0100, Niklas Cassel wrote:
-> find_first_zero_bit()'s parameter 'size' is defined in bits,
-> not in bytes.
-> 
-> Calling find_first_zero_bit() with the wrong size unit
-> will lead to insidious bugs.
-> 
-> Fix all uses of find_first_zero_bit() called with
-> sizeof() as size argument in drivers/pci.
-> 
-> Niklas Cassel (3):
->   PCI: designware-ep: Fix find_first_zero_bit() usage
->   PCI: endpoint: Populate func_no before calling pci_epc_add_epf()
->   PCI: endpoint: Fix find_first_zero_bit() usage
-> 
->  drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
->  drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
->  drivers/pci/endpoint/pci-ep-cfs.c    | 19 ++++++++++---------
->  3 files changed, 42 insertions(+), 19 deletions(-)
+Primary, secondary and subordinate default bus numbers are 0 in Tegra and
+it is expecting SW to program these numbers in configration space.
 
-Applied to pci/endpoint for v4.16 (updated some commit logs)
-with Kishon's ACKs.
+pci_scan_bridge_extend() function programs these numbers in configuration
+space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
+flag is set. Since secondary & subordinate default bus numbers are 0,
+PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
 
-Thanks,
-Lorenzo
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V3:
+* new patch in V3
+
+ drivers/pci/host/pci-tegra.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 72a316940723..2a108c798846 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -2706,7 +2706,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	tegra_pcie_enable_ports(pcie);
+ 
+-	pci_add_flags(PCI_REASSIGN_ALL_BUS);
+ 	host->busnr = pcie->busn.start;
+ 	host->dev.parent = &pdev->dev;
+ 	host->ops = &tegra_pcie_ops;
+-- 
+2.1.4
