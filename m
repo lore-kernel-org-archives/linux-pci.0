@@ -1,51 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:42442 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934305AbdKQPAv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Nov 2017 10:00:51 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:59149 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752638AbdLAGNf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Dec 2017 01:13:35 -0500
+From: Vignesh R <vigneshr@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Chris Welch <Chris.Welch@viavisolutions.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/2] PCI: endpoint: Fix find_first_zero_bit() usage
-Date: Fri, 17 Nov 2017 16:00:41 +0100
-Message-Id: <20171117150041.30509-3-niklas.cassel@axis.com>
-In-Reply-To: <20171117150041.30509-1-niklas.cassel@axis.com>
-References: <20171117150041.30509-1-niklas.cassel@axis.com>
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH 4/4] PCI: dwc: pci-dra7xx: Fix legacy IRQ handling
+Date: Fri, 1 Dec 2017 11:43:11 +0530
+Message-ID: <20171201061311.16691-5-vigneshr@ti.com>
+In-Reply-To: <20171201061311.16691-1-vigneshr@ti.com>
+References: <20171201061311.16691-1-vigneshr@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-find_first_zero_bit()'s parameter 'size' is defined in bits,
-not in bytes.
+Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
+uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
+4 which is numbered 0-3. Therefore when INTD IRQ line is used with
+pci-dra7xx driver following warning is seen:
 
-Calling find_first_zero_bit() with the wrong size unit
-will lead to insidious bugs.
+       WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
+       error: hwirq 0x4 is too large for dummy
 
-Fix this by using replacing find_first_zero_bit() with ffz(),
-since ffz() only works on a single 'unsigned long' and therefore
-does not need a size argument.
+Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
+range into the 0-3 as done in other PCIe drivers.
 
-Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Also, iterate over all the INTx bits and call their respective IRQ
+handlers before clearing the status register.
+
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+Signed-off-by: Vignesh R <vigneshr@ti.com>
 ---
- drivers/pci/endpoint/pci-ep-cfs.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/pci/dwc/pci-dra7xx.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 4f74386c1ced..96b984685640 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -108,8 +108,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
- 	if (ret)
- 		goto err_add_epf;
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 53f721d1cc40..59e8de34cec6 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -226,6 +226,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
  
--	func_no = find_first_zero_bit(&epc_group->function_num_map,
--				      sizeof(epc_group->function_num_map));
-+	func_no = ffz(epc_group->function_num_map);
- 	set_bit(func_no, &epc_group->function_num_map);
- 	epf->func_no = func_no;
+ static const struct irq_domain_ops intx_domain_ops = {
+ 	.map = dra7xx_pcie_intx_map,
++	.xlate = pci_irqd_intx_xlate,
+ };
+ 
+ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+@@ -256,7 +257,8 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 	struct dra7xx_pcie *dra7xx = arg;
+ 	struct dw_pcie *pci = dra7xx->pci;
+ 	struct pcie_port *pp = &pci->pp;
+-	u32 reg;
++	unsigned long reg;
++	u32 virq, bit;
+ 
+ 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
+ 
+@@ -268,8 +270,11 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
+ 	case INTB:
+ 	case INTC:
+ 	case INTD:
+-		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
+-						    ffs(reg)));
++		for_each_set_bit(bit, &reg, PCI_NUM_INTX) {
++			virq = irq_find_mapping(dra7xx->irq_domain, bit);
++			if (virq)
++				generic_handle_irq(virq);
++		}
+ 		break;
+ 	}
  
 -- 
-2.14.2
+2.15.0
