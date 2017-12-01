@@ -1,94 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56810 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932157AbdK0Q64 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Nov 2017 11:58:56 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, Sinan Kaya <okaya@codeaurora.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        iommu@lists.linux-foundation.org (open list:AMD IOMMU (AMD-VI)),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V3 12/29] iommu/amd: deprecate pci_get_bus_and_slot()
-Date: Mon, 27 Nov 2017 11:57:49 -0500
-Message-Id: <1511801886-6753-13-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vignesh R <vigneshr@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Chris Welch <Chris.Welch@viavisolutions.com>
+CC: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, Vignesh R <vigneshr@ti.com>
+Subject: [PATCH 1/4] pci: dwc: pci-dra7xx: Enable errata i870 for both EP and RC mode
+Date: Fri, 1 Dec 2017 11:43:08 +0530
+Message-ID: <20171201061311.16691-2-vigneshr@ti.com>
+In-Reply-To: <20171201061311.16691-1-vigneshr@ti.com>
+References: <20171201061311.16691-1-vigneshr@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Errata i870 is applicable in both EP and RC mode. Therefore rename
+function dra7xx_pcie_ep_unaligned_memaccess(), that implements errata
+workaround, to dra7xx_pcie_unaligned_memaccess() and call it from a
+common place. So, that errata workaround is applied for both modes of
+operation.
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
-
-Hard-code the domain number as 0 for the AMD IOMMU driver.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
+Signed-off-by: Vignesh R <vigneshr@ti.com>
 ---
- drivers/iommu/amd_iommu.c      | 3 ++-
- drivers/iommu/amd_iommu_init.c | 9 +++++----
- drivers/iommu/amd_iommu_v2.c   | 3 ++-
- 3 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/pci/dwc/pci-dra7xx.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 8e8874d..2c3452f 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -528,7 +528,8 @@ static void amd_iommu_report_page_fault(u16 devid, u16 domain_id,
- 	struct iommu_dev_data *dev_data = NULL;
- 	struct pci_dev *pdev;
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index e77a4ceed74c..53f721d1cc40 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -546,7 +546,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ };
  
--	pdev = pci_get_bus_and_slot(PCI_BUS_NUM(devid), devid & 0xff);
-+	pdev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(devid),
-+					   devid & 0xff);
- 	if (pdev)
- 		dev_data = get_dev_data(&pdev->dev);
- 
-diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
-index 6fe2d03..4e4a615 100644
---- a/drivers/iommu/amd_iommu_init.c
-+++ b/drivers/iommu/amd_iommu_init.c
-@@ -1697,8 +1697,8 @@ static int iommu_init_pci(struct amd_iommu *iommu)
- 	u32 range, misc, low, high;
+ /*
+- * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
++ * dra7xx_pcie_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+  * @dra7xx: the dra7xx device where the workaround should be applied
+  *
+  * Access to the PCIe slave port that are not 32-bit aligned will result
+@@ -556,7 +556,7 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+  *
+  * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+  */
+-static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
++static int dra7xx_pcie_unaligned_memaccess(struct device *dev)
+ {
  	int ret;
+ 	struct device_node *np = dev->of_node;
+@@ -703,6 +703,10 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
+ 		dra7xx->link_gen = 2;
  
--	iommu->dev = pci_get_bus_and_slot(PCI_BUS_NUM(iommu->devid),
--					  iommu->devid & 0xff);
-+	iommu->dev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(iommu->devid),
-+						 iommu->devid & 0xff);
- 	if (!iommu->dev)
- 		return -ENODEV;
++	ret = dra7xx_pcie_unaligned_memaccess(dev);
++	if (ret)
++		goto err_gpio;
++
+ 	switch (mode) {
+ 	case DW_PCIE_RC_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+@@ -715,10 +719,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
  
-@@ -1764,8 +1764,9 @@ static int iommu_init_pci(struct amd_iommu *iommu)
- 	if (is_rd890_iommu(iommu->dev)) {
- 		int i, j;
- 
--		iommu->root_pdev = pci_get_bus_and_slot(iommu->dev->bus->number,
--				PCI_DEVFN(0, 0));
-+		iommu->root_pdev =
-+			pci_get_domain_bus_and_slot(0, iommu->dev->bus->number,
-+						    PCI_DEVFN(0, 0));
- 
- 		/*
- 		 * Some rd890 systems may not be fully reconfigured by the
-diff --git a/drivers/iommu/amd_iommu_v2.c b/drivers/iommu/amd_iommu_v2.c
-index 7d94e1d..8696382 100644
---- a/drivers/iommu/amd_iommu_v2.c
-+++ b/drivers/iommu/amd_iommu_v2.c
-@@ -564,7 +564,8 @@ static int ppr_notifier(struct notifier_block *nb, unsigned long e, void *data)
- 	finish      = (iommu_fault->tag >> 9) & 1;
- 
- 	devid = iommu_fault->device_id;
--	pdev = pci_get_bus_and_slot(PCI_BUS_NUM(devid), devid & 0xff);
-+	pdev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(devid),
-+					   devid & 0xff);
- 	if (!pdev)
- 		return -ENODEV;
- 	dev_data = get_dev_data(&pdev->dev);
+-		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
+-		if (ret)
+-			goto err_gpio;
+-
+ 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
 -- 
-1.9.1
+2.15.0
