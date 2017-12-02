@@ -1,149 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:56484 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754066AbdLDPJo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 10:09:44 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 6/8] arch/sh: pcie-sh7786: adjust PCI MEM and IO regions
-Date: Mon,  4 Dec 2017 16:09:05 +0100
-Message-Id: <20171204150907.24345-7-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=a0HY=C6=lixom.net=olof@kernel.org>
+Return-Path: <SRS0=a0HY=C6=lixom.net=olof@kernel.org>
+Date: Sat, 2 Dec 2017 15:00:52 -0800
+From: Olof Johansson <olof@lixom.net>
+To: Christian Zigotzky <chzigotzky@xenosoft.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Darren Stevens <darren@stevens-zone.net>
+Subject: Re: [PATCH] SB600 for the Nemo board has non-zero devices on
+ non-root bus
+Message-ID: <20171202230052.34y2ivxgpgr3osct@localhost>
+References: <87tvxl15qx.fsf@concordia.ellerman.id.au>
+ <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
+ <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
+ <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
+ <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
+ <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
+ <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
+ <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
+ <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
+ <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-The current definition of the PCIe IO and MEM resources for SH7786
-doesn't match what the datasheet says. For example, for PCIe0
-0xfe100000 is advertised by the datasheet as a PCI IO region, while
-0xfd000000 is advertised as a PCI MEM region. The code currently
-inverts the two.
+On Sat, Dec 02, 2017 at 01:54:41PM +0100, Christian Zigotzky wrote:
+> On 02 December 2017 at 00:27AM, Bjorn Helgaas wrote:
+> > 
+> > Thanks for testing that.  I'll merge a similar patch for v4.16.
+> > 
+> > I don't think using "pci=pcie_scan_all" is really an acceptable
+> > long-term answer for you, though.  Is there some way we can identify
+> > at run-time whether we're on a Nemo system?  If so, we can make this
+> > happen automatically.
+> > 
+> > Bjorn
+> > 
+> Hi Bjorn,
+> 
+> Many thanks for your effort! I appreciate it very much. :-)
+> 
+> We can identify the Nemo board at the boot time. See dmesg output: [   
+> 0.061592] NEMO SB600 IOB base e0000000
+> 
+> @linuxppc-dev
+> Any other ideas? Maybe the same as we can identify the other P.A. Semi
+> boards (Electra, Chitra, and Athena).
+> 
+> @Olof
+> Maybe you know how we can identify the P.A. Semi Nemo board at the run-time.
+> 
+> @Darren
+> Do you have an idea?
 
-The SH4A_PCIEPARL and SH4A_PCIEPTCTLR registers allow to define the
-base address and role of the different regions (including whether it's
-a MEM or IO region). However, practical experience on a SH7786 shows
-that if 0xfe100000 is used for LEL and 0xfd000000 for IO, a PCIe
-device using two MEM BARs cannot be accessed at all. Simply using
-0xfe100000 for IO and 0xfd000000 for MEM makes the PCIe device
-accessible.
 
-It is very likely that this was never seen because there are two other
-PCI MEM region listed in the resources. However, for different
-reasons, none of the two other MEM regions are usable on the specific
-SH7786 platform the problem was encountered. Therefore, the last MEM
-region at 0xfe100000 was used to place the BARs, making the device
-non-functional.
+The below patch, together with Bjorn's, should do it. Christian, can you test
+and report back?
 
-This commit therefore adjusts those PCI MEM and IO resources
-definitions so that they match what the datasheet says. They have only
-been tested with PCIe 0.
+I'm guessing it won't do any harm to set this on non-X1000 platforms. My
+test system is currently powered down so I can't check.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+
+>From a3b390277627b0342c8ccfc16e58679e0d8abdde Mon Sep 17 00:00:00 2001
+From: Olof Johansson <olof@lixom.net>
+Date: Sat, 2 Dec 2017 14:56:36 -0800
+Subject: [PATCH] powerpc/pasemi: set PCI_SCAN_ALL_PCI_DEVS
+
+Needed on Amiga X1000 with SB600.
+
+Reported-by: Christian Zigotzky <chzigotzky@xenosoft.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Olof Johansson <olof@lixom.net>
 ---
- arch/sh/drivers/pci/pcie-sh7786.c | 36 ++++++++++++++++++------------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+ arch/powerpc/platforms/pasemi/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/arch/sh/drivers/pci/pcie-sh7786.c b/arch/sh/drivers/pci/pcie-sh7786.c
-index 8d7c328b1899..69da026682ba 100644
---- a/arch/sh/drivers/pci/pcie-sh7786.c
-+++ b/arch/sh/drivers/pci/pcie-sh7786.c
-@@ -41,73 +41,73 @@ static struct sh7786_pcie_hwops {
+diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+index 5ff6108..ea54ed2 100644
+--- a/arch/powerpc/platforms/pasemi/pci.c
++++ b/arch/powerpc/platforms/pasemi/pci.c
+@@ -224,6 +224,8 @@ void __init pas_pci_init(void)
+ 		return;
+ 	}
  
- static struct resource sh7786_pci0_resources[] = {
- 	{
--		.name	= "PCIe0 IO",
-+		.name	= "PCIe0 MEM 0",
- 		.start	= 0xfd000000,
- 		.end	= 0xfd000000 + SZ_8M - 1,
--		.flags	= IORESOURCE_IO,
-+		.flags	= IORESOURCE_MEM,
- 	}, {
--		.name	= "PCIe0 MEM 0",
-+		.name	= "PCIe0 MEM 1",
- 		.start	= 0xc0000000,
- 		.end	= 0xc0000000 + SZ_512M - 1,
- 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
- 	}, {
--		.name	= "PCIe0 MEM 1",
-+		.name	= "PCIe0 MEM 2",
- 		.start	= 0x10000000,
- 		.end	= 0x10000000 + SZ_64M - 1,
- 		.flags	= IORESOURCE_MEM,
- 	}, {
--		.name	= "PCIe0 MEM 2",
-+		.name	= "PCIe0 IO",
- 		.start	= 0xfe100000,
- 		.end	= 0xfe100000 + SZ_1M - 1,
--		.flags	= IORESOURCE_MEM,
-+		.flags	= IORESOURCE_IO,
- 	},
- };
- 
- static struct resource sh7786_pci1_resources[] = {
- 	{
--		.name	= "PCIe1 IO",
-+		.name	= "PCIe1 MEM 0",
- 		.start	= 0xfd800000,
- 		.end	= 0xfd800000 + SZ_8M - 1,
--		.flags	= IORESOURCE_IO,
-+		.flags	= IORESOURCE_MEM,
- 	}, {
--		.name	= "PCIe1 MEM 0",
-+		.name	= "PCIe1 MEM 1",
- 		.start	= 0xa0000000,
- 		.end	= 0xa0000000 + SZ_512M - 1,
- 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
- 	}, {
--		.name	= "PCIe1 MEM 1",
-+		.name	= "PCIe1 MEM 2",
- 		.start	= 0x30000000,
- 		.end	= 0x30000000 + SZ_256M - 1,
- 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
- 	}, {
--		.name	= "PCIe1 MEM 2",
-+		.name	= "PCIe1 IO",
- 		.start	= 0xfe300000,
- 		.end	= 0xfe300000 + SZ_1M - 1,
--		.flags	= IORESOURCE_MEM,
-+		.flags	= IORESOURCE_IO,
- 	},
- };
- 
- static struct resource sh7786_pci2_resources[] = {
- 	{
--		.name	= "PCIe2 IO",
-+		.name	= "PCIe2 MEM 0",
- 		.start	= 0xfc800000,
- 		.end	= 0xfc800000 + SZ_4M - 1,
--		.flags	= IORESOURCE_IO,
-+		.flags	= IORESOURCE_MEM,
- 	}, {
--		.name	= "PCIe2 MEM 0",
-+		.name	= "PCIe2 MEM 1",
- 		.start	= 0x80000000,
- 		.end	= 0x80000000 + SZ_512M - 1,
- 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
- 	}, {
--		.name	= "PCIe2 MEM 1",
-+		.name	= "PCIe2 MEM 2",
- 		.start	= 0x20000000,
- 		.end	= 0x20000000 + SZ_256M - 1,
- 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
- 	}, {
--		.name	= "PCIe2 MEM 2",
-+		.name	= "PCIe2 IO",
- 		.start	= 0xfcd00000,
- 		.end	= 0xfcd00000 + SZ_1M - 1,
--		.flags	= IORESOURCE_MEM,
-+		.flags	= IORESOURCE_IO,
- 	},
- };
- 
++	pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS):
++
+ 	for (np = NULL; (np = of_get_next_child(root, np)) != NULL;)
+ 		if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
+ 			of_node_get(np);
 -- 
-2.13.6
+2.8.6
