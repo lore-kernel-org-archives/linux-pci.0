@@ -1,69 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35084 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751908AbdLBTSd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 2 Dec 2017 14:18:33 -0500
+Date: Sat, 2 Dec 2017 13:18:27 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        Christian Zigotzky <chzigotzky@xenosoft.de>
+Subject: Re: [PATCH v1] PCI: Make PCI_SCAN_ALL_PCIE_DEVS work for Root as
+ well as Downstream Ports
+Message-ID: <20171202191827.GB18780@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171202002710.17686.21340.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqJssPABjoRM-XAnuN_Xd2-sHoFifJNrRDdk_ruQ0DRw6A@mail.gmail.com>
-References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
- <20171226023646.17722-5-jeffy.chen@rock-chips.com> <20171226235607.4rgp4ebrrktt6d56@rob-hp-laptop>
- <5A42F847.5060305@rock-chips.com> <CAL_JsqJssPABjoRM-XAnuN_Xd2-sHoFifJNrRDdk_ruQ0DRw6A@mail.gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Thu, 28 Dec 2017 01:32:25 +0100
-Message-ID: <CAJZ5v0gVW12=10JfcQeOD+s6S1GqkF7KFz3k1rp3Up3dJDgaBg@mail.gmail.com>
-Subject: Re: [RFC PATCH v12 4/5] PCI / PM: Add support for the PCIe WAKE#
- signal for OF
-To: Rob Herring <robh@kernel.org>
-Cc: JeffyChen <jeffy.chen@rock-chips.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Doug Anderson <dianders@chromium.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
-        <devicetree@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171202002710.17686.21340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 27, 2017 at 4:30 PM, Rob Herring <robh@kernel.org> wrote:
-> On Tue, Dec 26, 2017 at 7:32 PM, JeffyChen <jeffy.chen@rock-chips.com> wrote:
->> Hi Rob,
->>
->> Thanks for your reply.
->>
->> On 12/27/2017 07:56 AM, Rob Herring wrote:
->>>>
->>>> >
->>>> >  drivers/of/of_pci_irq.c  | 49 +++++++++++++++++++++++++++++++
->>>
->>> Please move this to drivers/pci/of.c (or perhaps create pci/of_irq.c).
->>>
->>>> >  drivers/pci/Makefile     |  1 +
->>>> >  drivers/pci/pci-driver.c | 10 +++++++
->>>> >  drivers/pci/pci-of.c     | 75
->>>> > ++++++++++++++++++++++++++++++++++++++++++++++++
->>>
->>> We already have drivers/pci/of.c. It's not clear what the difference is
->>> from the filenames. Either merge with of.c or perhaps of-pm.c.
->>
->>
->> this new file does something similar to the pci-acpi.c and pci-mid.c..
->
-> pci-acpi.c has similar things to pci/of.c. The naming is just not consistent.
->
-> Also, I plan to move the rest of drivers/of/of_pci* to drivers/pci.
->
->> and i am agree the naming is not clear, maybe we can rename both of those
->> files to something like pci-pm-***.c?
->
-> At least pci-acpi.c is more than just PM functions, so that doesn't
-> make sense. Given that all the ACPI related functions are in 1 file,
-> we should do the same for DT.
+On Fri, Dec 01, 2017 at 06:27:10PM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> PCIe Downstream Ports normally have only a Device 0 below them.  To
+> optimize enumeration, we don't scan for other devices *unless* the
+> PCI_SCAN_ALL_PCIE_DEVS flag is set by set by quirks or the
+> "pci=pcie_scan_all" kernel parameter.
+> 
+> Previously PCI_SCAN_ALL_PCIE_DEVS only affected scanning below Switch
+> Downstream Ports, not Root Ports.
+> 
+> But the "Nemo" system, also known as the AmigaOne X1000, has a PA Semi Root
+> Port whose link leads to an AMD/ATI SB600 South Bridge.  The Root Port is a
+> PCIe device, of course, but the SB600 contains only conventional PCI
+> devices with no visible PCIe port.
+> 
+> Simplify and restructure only_one_child() so that we scan for all possible
+> devices below Root Ports as well as Switch Downstream Ports when
+> PCI_SCAN_ALL_PCIE_DEVS is set.
+> 
+> This is enough to make Nemo work with "pci=pcie_scan_all".  We would also
+> like to add a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically on Nemo so
+> users wouldn't have to use the "pci=pcie_scan_all" parameter, but we don't
+> have that yet.
+> 
+> Link: https://lkml.kernel.org/r/CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=198057
+> Reported-and-Tested-by: Christian Zigotzky <chzigotzky@xenosoft.de>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Agreed.
+Applied to pci/enumeration for v4.16.
 
-Thanks,
-Rafael
+> ---
+>  drivers/pci/probe.c |   25 +++++++++++++++----------
+>  1 file changed, 15 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 14e0ea1ff38b..303c0cb0550c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2215,22 +2215,27 @@ static unsigned next_fn(struct pci_bus *bus, struct pci_dev *dev, unsigned fn)
+>  
+>  static int only_one_child(struct pci_bus *bus)
+>  {
+> -	struct pci_dev *parent = bus->self;
+> +	struct pci_dev *bridge = bus->self;
+>  
+> -	if (!parent || !pci_is_pcie(parent))
+> +	/*
+> +	 * Systems with unusual topologies set PCI_SCAN_ALL_PCIE_DEVS so
+> +	 * we scan for all possible devices, not just Device 0.
+> +	 */
+> +	if (pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+>  		return 0;
+> -	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+> -		return 1;
+>  
+>  	/*
+> -	 * PCIe downstream ports are bridges that normally lead to only a
+> -	 * device 0, but if PCI_SCAN_ALL_PCIE_DEVS is set, scan all
+> -	 * possible devices, not just device 0.  See PCIe spec r3.0,
+> -	 * sec 7.3.1.
+> +	 * A PCIe Downstream Port normally leads to a Link with only Device
+> +	 * 0 on it (PCIe spec r3.1, sec 7.3.1).  As an optimization, scan
+> +	 * only for Device 0 in that situation.
+> +	 *
+> +	 * Checking has_secondary_link is a hack to identify Downstream
+> +	 * Ports because sometimes Switches are configured such that the
+> +	 * PCIe Port Type labels are backwards.
+>  	 */
+> -	if (parent->has_secondary_link &&
+> -	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+> +	if (bridge && pci_is_pcie(bridge) && bridge->has_secondary_link)
+>  		return 1;
+> +
+>  	return 0;
+>  }
+>  
+> 
