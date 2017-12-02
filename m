@@ -1,149 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:44861 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753234AbdLMQIX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 11:08:23 -0500
-Received: by mail-pf0-f194.google.com with SMTP id m26so1503173pfj.11
-        for <linux-pci@vger.kernel.org>; Wed, 13 Dec 2017 08:08:23 -0800 (PST)
-From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, marc.zyngier@arm.com, robh@kernel.org
-Cc: devicetree@vger.kernel.org, mingkai.hu@nxp.com,
-        peter.newton@nxp.com, minghuan.lian@nxp.com, rajesh.raina@nxp.com,
-        rajan.kapoor@nxp.com, prabhjot.singh@nxp.com,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Subject: [PATCH v5 1/3] PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver DT bindings
-Date: Wed, 13 Dec 2017 11:08:05 -0500
-Message-Id: <1513181285-19865-1-git-send-email-l.subrahmanya@mobiveil.co.in>
+Received: from mail.kernel.org ([198.145.29.99]:46966 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752232AbdLBVpm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 2 Dec 2017 16:45:42 -0500
+Subject: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Kenji Chen <kenji.chen@intel.com>,
+        Thierry Reding <treding@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        David Daney <david.daney@cavium.com>,
+        Krishna Kishore <kthota@nvidia.com>,
+        linux-kernel@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        linux-tegra@vger.kernel.org, Patrick Georgi <pgeorgi@chromium.org>,
+        Rajat Jain <rajatja@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Stefan Reinauer <stefan.reinauer@coreboot.org>,
+        Duncan Laurie <dlaurie@chromium.org>
+Date: Sat, 02 Dec 2017 15:45:38 -0600
+Message-ID: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the DT bindings for Mobiveil PCIe Host Bridge
-IP driver and updates the vendor prefixes file.
+The PCIe active link power state is L0.  ASPM defines two low-power
+states: L0s and L1.  The L1 PM Substates feature defines two
+additional low-power states: L1.1 and L2.2.
 
-Signed-off-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Acked-by: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org
-Cc: devicetree@vger.kernel.org
+The L1.2 state may have substantial entry/exit latency.  Downstream
+devices can use the Latency Tolerance Reporting (LTR) feature to
+report how much latency they can tolerate.  The L1 PM Substates
+capability includes a programmable L1.2 threshold register.  If the
+downstream devices can tolerate the latency indicated by the
+threshold, L1.2 may be used.
+
+If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be
+used whenever it is enabled and CLKREQ# is de-asserted.  Linux
+currently never enables LTR, but firmware may have done so.
+
+The current L1 PM substates support in Linux sets the L1.2 threshold
+to a fixed value (163.84us) copied from coreboot [1].  I don't know
+where that value came from, and it is incorrect for some platforms,
+e.g., Tegra [2].
+
+These patches change that so we calculate the L1.2 threshold based on
+values reported by the hardware, and we enable LTR whenever possible.
+
+This is all just my understanding from reading the spec.  I'd be glad
+to be corrected if I'm going wrong.
+
+I'm particularly puzzled about the coreboot code in
+pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
+
++	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
++		(1 << 21) | (1 << 23) | (1 << 30));
+
+This is writing the L1 PM Substates Control 1 register, but the shifts
+don't match up with any of the fields in the register, so this is an
+awfully funny way to write the threshold.
+
+[1] https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.html
+[2] https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@nvidia.com
+
 ---
-- updated MAINTAINERS file
 
- .../devicetree/bindings/pci/mobiveil-pcie.txt      | 73 ++++++++++++++++++++++
- .../devicetree/bindings/vendor-prefixes.txt        |  1 +
- MAINTAINERS                                        |  7 +++
- 3 files changed, 81 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
+Bjorn Helgaas (2):
+      PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
+      PCI/ASPM: Enable Latency Tolerance Reporting when supported
 
-diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-new file mode 100644
-index 0000000..e9dd1e8
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-@@ -0,0 +1,73 @@
-+* Mobiveil AXI PCIe Root Port Bridge DT description
-+
-+Mobiveil's GPEX 4.0 is a PCIe Gen4 root port bridge IP. This configurable IP
-+has up to 8 outbound and inbound windows for the address translation.
-+
-+Required properties:
-+- #address-cells: Address representation for root ports, set to <3>
-+- #size-cells: Size representation for root ports, set to <2>
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- compatible: Should contain "mbvl,gpex40-pcie"
-+- reg: Should contain PCIe registers location and length
-+	"config_axi_slave": PCIe controller registers
-+	"csr_axi_slave"	  : Bridge config registers
-+	"gpio_slave"	  : GPIO registers to control slot power
-+	"apb_csr"	  : MSI registers
-+
-+- device_type: must be "pci"
-+- apio-wins : number of requested apio outbound windows
-+		default 2 outbound windows are configured -
-+		1. Config window
-+		2. Memory window
-+- ppio-wins : number of requested ppio inbound windows
-+		default 1 inbound memory window is configured.
-+- bus-range: PCI bus numbers covered
-+- interrupt-controller: identifies the node as an interrupt controller
-+- #interrupt-cells: specifies the number of cells needed to encode an
-+	interrupt source. The value must be 1.
-+- interrupt-parent : phandle to the interrupt controller that
-+		it is attached to, it should be set to gic to point to
-+		ARM's Generic Interrupt Controller node in system DT.
-+- interrupts: The interrupt line of the PCIe controller
-+		last cell of this field is set to 4 to
-+		denote it as IRQ_TYPE_LEVEL_HIGH type interrupt.
-+- interrupt-map-mask,
-+	interrupt-map: standard PCI properties to define the mapping of the
-+	PCI interface to interrupt numbers.
-+- ranges: ranges for the PCI memory regions (I/O space region is not
-+	supported by hardware)
-+	Please refer to the standard PCI bus binding document for a more
-+	detailed explanation
-+
-+
-+Example:
-+++++++++
-+	pcie0: pcie@a0000000 {
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		compatible = "mbvl,gpex40-pcie";
-+		reg =	<0xa0000000 0x00001000>,
-+			<0xb0000000 0x00010000>,
-+			<0xff000000 0x00200000>,
-+			<0xb0010000 0x00001000>;
-+		reg-names =	"config_axi_slave",
-+				"csr_axi_slave",
-+				"gpio_slave",
-+				"apb_csr";
-+		device_type = "pci";
-+		apio-wins = <2>;
-+		ppio-wins = <1>;
-+		bus-range = <0x00000000 0x000000ff>;
-+		interrupt-controller;
-+		interrupt-parent = <&gic>;
-+		#interrupt-cells = <1>;
-+		interrupts = < 0 89 4 >;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pci_express 1>,
-+				<0 0 0 2 &pci_express 2>,
-+				<0 0 0 3 &pci_express 3>,
-+				<0 0 0 4 &pci_express 4>;
-+		ranges = < 0x83000000 0 0x00000000 0xa8000000 0 0x8000000>;
-+
-+	};
-diff --git a/Documentation/devicetree/bindings/vendor-prefixes.txt b/Documentation/devicetree/bindings/vendor-prefixes.txt
-index 0994bdd..8263cc7 100644
---- a/Documentation/devicetree/bindings/vendor-prefixes.txt
-+++ b/Documentation/devicetree/bindings/vendor-prefixes.txt
-@@ -197,6 +197,7 @@ lwn	Liebherr-Werk Nenzing GmbH
- macnica	Macnica Americas
- marvell	Marvell Technology Group Ltd.
- maxim	Maxim Integrated Products
-+mbvl	Mobiveil Inc.
- mcube	mCube
- meas	Measurement Specialties
- mediatek	MediaTek Inc.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 44512c3..0818ce1 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9162,6 +9162,13 @@ Q:	http://patchwork.linuxtv.org/project/linux-media/list/
- S:	Maintained
- F:	drivers/media/dvb-frontends/mn88473*
- 
-+PCI DRIVER FOR MOBIVEIL PCIE IP
-+M:	Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-+F:	drivers/pci/host/pcie-mobiveil.c
-+
- MODULE SUPPORT
- M:	Jessica Yu <jeyu@kernel.org>
- M:	Rusty Russell <rusty@rustcorp.com.au>
--- 
-1.8.3.1
+
+ drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++----------------
+ drivers/pci/probe.c     |   33 ++++++++++++++++++++++
+ include/linux/pci.h     |    2 +
+ 3 files changed, 82 insertions(+), 24 deletions(-)
