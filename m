@@ -1,72 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35556 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:46376 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756066AbdLOTEa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 14:04:30 -0500
-Date: Fri, 15 Dec 2017 13:04:26 -0600
+        id S1751596AbdLBA1O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Dec 2017 19:27:14 -0500
+Subject: [PATCH v1] PCI: Make PCI_SCAN_ALL_PCIE_DEVS work for Root as well
+ as Downstream Ports
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jingoo Han <jingoohan1@gmail.com>
-Cc: 'Joao Pinto' <Joao.Pinto@synopsys.com>,
-        'Ley Foon Tan' <lftan@altera.com>,
-        'Shawn Lin' <shawn.lin@rock-chips.com>,
-        'Michal Simek' <michal.simek@xilinx.com>,
-        'Jim Quinlan' <jim2101024@gmail.com>,
-        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, rfi@lists.rocketboards.org,
-        linux-rockchip@lists.infradead.org
-Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
-Message-ID: <20171215190426.GW30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
- <000f01d375d4$17e9c830$47bd5890$@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        Christian Zigotzky <chzigotzky@xenosoft.de>
+Date: Fri, 01 Dec 2017 18:27:10 -0600
+Message-ID: <20171202002710.17686.21340.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <000f01d375d4$17e9c830$47bd5890$@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 15, 2017 at 01:39:50PM -0500, Jingoo Han wrote:
-> On Thursday, December 14, 2017 5:58 PM, Bjorn Helgaas wrote:
-> > In the PCI config access path, the *_pcie_valid_device() functions in
-> > the dwc, altera, rockchip, and xilinx drivers all check whether the
-> > link is up.
-> > 
-> > I think this is racy because the link may go down after we check but
-> > before we perform the config access.
-> > 
-> > What would blow up if we removed the *_pcie_link_up() checks?
-> 
-> The original intention is to avoid config access before link up.
-> 
-> Also, I did not find any racy condition as you mentioned.
-> However, if you think that we need to prevent the racy condition,
-> someone can send a patch or add comments.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Here's the race:
+PCIe Downstream Ports normally have only a Device 0 below them.  To
+optimize enumeration, we don't scan for other devices *unless* the
+PCI_SCAN_ALL_PCIE_DEVS flag is set by set by quirks or the
+"pci=pcie_scan_all" kernel parameter.
 
-  pci_read_config_word
-    ...
-      dw_pcie_rd_conf
-        dw_pcie_valid_device
-          dw_pcie_link_up        # returns true; link currently up
-                                 <-- link goes down for unrelated reason
-        dw_pcie_rd_other_conf
-          dw_pcie_read
-            readl                # issue config read
+Previously PCI_SCAN_ALL_PCIE_DEVS only affected scanning below Switch
+Downstream Ports, not Root Ports.
 
-The readl() that issues the config read in the PCIe domain races with
-the link-down event.  If the readl() completes first, everything works
-as expected.  If the link-down happens first, I don't know what
-happens.  This is the core of my question.
+But the "Nemo" system, also known as the AmigaOne X1000, has a PA Semi Root
+Port whose link leads to an AMD/ATI SB600 South Bridge.  The Root Port is a
+PCIe device, of course, but the SB600 contains only conventional PCI
+devices with no visible PCIe port.
 
-The hardware *should* do something sane because link-down is an
-asynchronous event that is unrelated to the config read and may happen
-at any time.  It's just part of the PCIe environment and the spec
-defines mechanisms for dealing with and reporting the situation.
+Simplify and restructure only_one_child() so that we scan for all possible
+devices below Root Ports as well as Switch Downstream Ports when
+PCI_SCAN_ALL_PCIE_DEVS is set.
 
-> > I'd like to either remove the checks or add comments about why the
-> > race is acceptable.  If we've covered this before, I apologize.
-> > Adding a comment will keep me from pestering you about this again in
-> > the future.
-> > 
-> > Bjorn
-> 
+This is enough to make Nemo work with "pci=pcie_scan_all".  We would also
+like to add a quirk to set PCI_SCAN_ALL_PCIE_DEVS automatically on Nemo so
+users wouldn't have to use the "pci=pcie_scan_all" parameter, but we don't
+have that yet.
+
+Link: https://lkml.kernel.org/r/CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=198057
+Reported-and-Tested-by: Christian Zigotzky <chzigotzky@xenosoft.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c |   25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 14e0ea1ff38b..303c0cb0550c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2215,22 +2215,27 @@ static unsigned next_fn(struct pci_bus *bus, struct pci_dev *dev, unsigned fn)
+ 
+ static int only_one_child(struct pci_bus *bus)
+ {
+-	struct pci_dev *parent = bus->self;
++	struct pci_dev *bridge = bus->self;
+ 
+-	if (!parent || !pci_is_pcie(parent))
++	/*
++	 * Systems with unusual topologies set PCI_SCAN_ALL_PCIE_DEVS so
++	 * we scan for all possible devices, not just Device 0.
++	 */
++	if (pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+ 		return 0;
+-	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+-		return 1;
+ 
+ 	/*
+-	 * PCIe downstream ports are bridges that normally lead to only a
+-	 * device 0, but if PCI_SCAN_ALL_PCIE_DEVS is set, scan all
+-	 * possible devices, not just device 0.  See PCIe spec r3.0,
+-	 * sec 7.3.1.
++	 * A PCIe Downstream Port normally leads to a Link with only Device
++	 * 0 on it (PCIe spec r3.1, sec 7.3.1).  As an optimization, scan
++	 * only for Device 0 in that situation.
++	 *
++	 * Checking has_secondary_link is a hack to identify Downstream
++	 * Ports because sometimes Switches are configured such that the
++	 * PCIe Port Type labels are backwards.
+ 	 */
+-	if (parent->has_secondary_link &&
+-	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
++	if (bridge && pci_is_pcie(bridge) && bridge->has_secondary_link)
+ 		return 1;
++
+ 	return 0;
+ }
+ 
