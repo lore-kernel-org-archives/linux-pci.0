@@ -1,65 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59098 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755596AbdLOUwv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 15:52:51 -0500
-Date: Fri, 15 Dec 2017 14:52:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: John Strader <strader.john@code.jackst.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: Quirk - broken_intx_masking - Ceton InfiniTV4
-Message-ID: <20171215205244.GA30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <92a65068-60b2-c1a8-9e17-ac41fe3c5c93@code.jackst.com>
+Return-Path: <SRS0=d5tq=C7=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=d5tq=C7=ozlabs.ru=aik@kernel.org>
+Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, helgaas@kernel.org,
+ bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+ mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+ alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+ saeedm@mellanox.com
+References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
+Date: Sun, 3 Dec 2017 12:45:58 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <92a65068-60b2-c1a8-9e17-ac41fe3c5c93@code.jackst.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 14, 2017 at 05:12:59AM -0800, John Strader wrote:
-> Submitting a device for quirk_broken_intx_masking, as requested by
-> modinfo for vfio-pci "nointxmask" parameter.
+On 10/11/17 01:00, Bryant G. Ly wrote:
+> v1 - Initial patch
+> v2 - Addressed Bjorn's comment on creating a highly platform
+>      dependent global exported symbol.
+> v3 - Based patch off linux-ppc/master
+> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
+> v5 - Fixed comments and commit message
+
+
+What is this made against of? I'd like to give it a try but it does not
+apply to Linus'es tree or powerpc/next. Thanks.
+
 > 
-> The device is a Ceton InfiniTV4 [1b7c:0004].  I can confirm that this
-> device operates correctly with vfio when passed the nointxmask
-> parameter.  I can also confirm that applying quirk_broken_intx_masking
-> via drivers/pci/quirks.c in a custom compiled kernel also works.  I no
-> longer compile the custom kernel and seem to have misplaced the patch,
-> so I won't bother remaking a one-liner, but it was of the standard form:
+> Bryant G. Ly (3):
+>   powerpc/kernel: Separate SR-IOV Calls
+>   pseries: Add PSeries SR-IOV Machine dependent calls
+>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
 > 
-> DECLARE_PCI_FIXUP_FINAL(0x1b7c, 0x0004,
->                         quirk_broken_intx_masking);
+>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
+>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
+>  drivers/pci/iov.c                            | 11 ++++++++++
+>  include/linux/pci.h                          |  2 ++
+>  11 files changed, 118 insertions(+), 33 deletions(-)
+> 
 
-Thanks for your report!  I applied the patch below to pci/virtualization
-for v4.16.
 
-commit 7f50dcad8de026d7533a0d1295a27d843ce965aa
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Dec 15 14:51:44 2017 -0600
-
-    PCI: Mark Ceton InfiniTV4 INTx masking as broken
-    
-    PCI_COMMAND_INTX_DISABLE is writable on the Ceton InfiniTV4, indicating
-    that the device supports disabling the INTx# signal, but it apparently
-    doesn't work.
-    
-    Mark the device so we know we can't use PCI_COMMAND_INTX_DISABLE to disable
-    its interrupts.
-    
-    Link: https://lkml.kernel.org/r/92a65068-60b2-c1a8-9e17-ac41fe3c5c93@code.jackst.com
-    Reported-by: John Strader <strader.john@code.jackst.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 10684b17d0bd..bb9737ec64b5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3215,6 +3215,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
- 			quirk_broken_intx_masking);
- DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
- 			quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_FINAL(0x1b7c, 0x0004, /* Ceton InfiniTV4 */
-+			quirk_broken_intx_masking);
- 
- /*
-  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
+-- 
+Alexey
