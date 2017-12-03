@@ -1,69 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57546 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751688AbdLLRZn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Dec 2017 12:25:43 -0500
-Date: Tue, 12 Dec 2017 11:25:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Johan Hovold <johan@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2] PCI: keystone: fix interrupt-controller-node lookup
-Message-ID: <20171212172537.GB53955@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171117133831.1300-1-johan@kernel.org>
- <20171211102955.GK5672@localhost>
- <20171211104233.GB3225@red-moon>
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:40475 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751219AbdLCN4g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 3 Dec 2017 08:56:36 -0500
+Subject: Invalidation in SMMU v3
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+References: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
+ <8fd78f56-43ed-e480-1c98-5d1162452674@arm.com>
+ <e8effeac-bdfb-34dd-63e5-eb3fb08fd540@gmail.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>
+From: valmiki <valmikibow@gmail.com>
+Message-ID: <c2c2c5b0-7533-632b-f69e-050f125bef06@gmail.com>
+Date: Sun, 3 Dec 2017 19:26:31 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171211104233.GB3225@red-moon>
+In-Reply-To: <e8effeac-bdfb-34dd-63e5-eb3fb08fd540@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 11, 2017 at 10:42:33AM +0000, Lorenzo Pieralisi wrote:
-> On Mon, Dec 11, 2017 at 11:29:55AM +0100, Johan Hovold wrote:
-> > On Fri, Nov 17, 2017 at 02:38:31PM +0100, Johan Hovold wrote:
-> > > Fix child-node lookup during initialisation which was using the wrong
-> > > OF-helper and ended up searching the whole device tree depth-first
-> > > starting at the parent rather than just matching on its children.
-> > > 
-> > > To make things worse, the parent pci node could end up being prematurely
-> > > freed as of_find_node_by_name() drops a reference to its first argument.
-> > > Any matching child interrupt-controller node was also leaked.
-> > > 
-> > > Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
-> > > Cc: stable <stable@vger.kernel.org>     # 3.18
-> > > Acked-by: Murali Karicheri <m-karicheri2@ti.com>
-> > > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > Signed-off-by: Johan Hovold <johan@kernel.org>
-> > > ---
-> > > 
-> > > v2
-> > >  - amend commit message and mention explicitly that of_find_node_by_name()
-> > >    drops a reference to the start node
-> > >  - add Murali's and Lorenzo's acks
-> > 
-> > This one hasn't shown up in linux-next, so sending a reminder to make
-> > sure it doesn't fall between the cracks.
-> 
-> Hi Johan,
-> 
-> yes it is in the list of fixes to be sent upstream - I was about to
-> ask Bjorn to apply it.
+Hi Jean,
 
-Is this something that needs to be merged for v4.15?  If so, I need to
-be able to defend it to Linus as being a critical fix.  If the issue
-been around for 3 years (v3.18 was tagged Dec 7 2014), that requires
-pretty "clear and present danger."
+In PASID flow arm_smmu_atc_inv_master_all is called where size and iova 
+of arm_smmu_atc_inv_to_cmd are zero and  no address is being filled in 
+struct arm_smmu_cmdq_ent->atc.addr.
+So how will smmu hardware know if there are any ats translations 
+requested or not ?
+How invalidation are carried out in PASID flow w.r.t address and size?
 
->From the commit log, I see a sub-optimal search (not critical), a
-possible use-after-free (could conceivably be critical if people are
-tripping over this, but would need more specifics about that), and a
-leak (not critical).
 
-Given what I can see now, my inclination would be for Lorenzo to queue
-it for v4.16, which would still get in linux-next soonish.
+Regards,
+Valmiki
 
-Bjorn
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
