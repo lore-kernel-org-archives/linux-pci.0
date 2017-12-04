@@ -1,52 +1,95 @@
-Return-Path: <SRS0=BcYr=DJ=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=BcYr=DJ=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>, Andy Lutomirski <luto@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, the arch/x86 maintainers <x86@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-Date: Wed, 13 Dec 2017 23:39:24 +0100
-Message-ID: <2011671.y8uyto1vn5@aspire.rjw.lan>
-In-Reply-To: <alpine.DEB.2.20.1712131856130.1885@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:56490 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754087AbdLDPJo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 10:09:44 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Rich Felker <dalias@libc.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 7/8] arch/sh: pcie-sh7786: adjust the memory mapping
+Date: Mon,  4 Dec 2017 16:09:06 +0100
+Message-Id: <20171204150907.24345-8-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
+References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 13, 2017 7:19:17 PM CET Thomas Gleixner wrote:
-> On Wed, 13 Dec 2017, Linus Torvalds wrote:
-> 
-> > On Wed, Dec 13, 2017 at 8:41 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > >
-> > > Definitely. That was fragile forever but puzzles me is that I can't figure
-> > > out what now causes that spurious interrupt to surface out of the blue.
-> > 
-> > Perhaps just timing?
-> 
-> That's what I'm trying to figure out right now, because that is the only
-> sensible explanation left. The whole machinery of suspend is exactly the
-> same with and without the vector changes. I instrumented all functions
-> involved and the picture is the same. I even do not see any fundamental
-> timing differences where one would say: That's it.
-> 
-> What puzzles me even more is that in the range of commits I'm fiddling with
-> there is no other change than the vector management stuff and the point
-> where it breaks makes no sense at all. The point Maarten bisected it to
-> works nicely here, so that might just point to a very subtle timing issue.
-> 
-> > How hard would it be to change the ordering to just redirect irqs first?
-> 
-> The whole interrupt redirection happens when the non boot CPUs are brought
-> down, which is the very last step before the actual suspend happens.
-> 
-> We could probably do that earlier, but that's something Rafael needs to
-> answer ultimately.
+The code setting up the PCI -> SuperHighway mapping doesn't take into
+account the fact that the address stored in PCIELARx must be aligned
+with the size stored in PCIELAMRx.
 
-Well, that's both flattering and concerning. ;-)
+For example, when your physical memory starts at 0x0800_0000 (128 MB),
+a size of 64 MB or 128 MB is fine. However, if you have 256 MB of
+memory, it doesn't work because the base address is not aligned on the
+size.
 
-Anyway, yes, we can do that earlier AFAICS.  Action handlers are not going to
-run after we've called suspend_device_irqs() which happens before the final
-stage of PCI devices suspend (suspend_noirq) and it doesn't matter which CPU
-gets the interrupt from that point on (it is either wakeup or unwanted then).
+In such situation, we have to round down the base address to make sure
+it is aligned on the size of the area. For for a 0x0800_0000 base
+address with 256 MB of memory, we will round down to 0x0, and extend
+the size of the mapping to 512 MB.
 
-Thanks,
-Rafael
+This allows the mapping to work on platforms that have 256 MB of
+RAM. The current setup would only work with 128 MB of RAM or less.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/sh/drivers/pci/pcie-sh7786.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/arch/sh/drivers/pci/pcie-sh7786.c b/arch/sh/drivers/pci/pcie-sh7786.c
+index 69da026682ba..224bcad24dca 100644
+--- a/arch/sh/drivers/pci/pcie-sh7786.c
++++ b/arch/sh/drivers/pci/pcie-sh7786.c
+@@ -284,7 +284,7 @@ static int __init pcie_init(struct sh7786_pcie_port *port)
+ {
+ 	struct pci_channel *chan = port->hose;
+ 	unsigned int data;
+-	phys_addr_t memphys;
++	phys_addr_t memstart, memend;
+ 	size_t memsize;
+ 	int ret, i, win;
+ 
+@@ -339,15 +339,24 @@ static int __init pcie_init(struct sh7786_pcie_port *port)
+ 	data |= (0xff << 16);
+ 	pci_write_reg(chan, data, SH4A_PCIEMACCTLR);
+ 
+-	memphys = __pa(memory_start);
+-	memsize = roundup_pow_of_two(memory_end - memory_start);
++	memstart = __pa(memory_start);
++	memend   = __pa(memory_end);
++	memsize = roundup_pow_of_two(memend - memstart);
++
++	/*
++	 * The start address must be aligned on its size. So we round
++	 * it down, and then recalculate the size so that it covers
++	 * the entire memory.
++	 */
++	memstart = ALIGN_DOWN(memstart, memsize);
++	memsize = roundup_pow_of_two(memend - memstart);
+ 
+ 	/*
+ 	 * If there's more than 512MB of memory, we need to roll over to
+ 	 * LAR1/LAMR1.
+ 	 */
+ 	if (memsize > SZ_512M) {
+-		pci_write_reg(chan, memphys + SZ_512M, SH4A_PCIELAR1);
++		pci_write_reg(chan, memstart + SZ_512M, SH4A_PCIELAR1);
+ 		pci_write_reg(chan, ((memsize - SZ_512M) - SZ_256) | 1,
+ 			      SH4A_PCIELAMR1);
+ 		memsize = SZ_512M;
+@@ -363,7 +372,7 @@ static int __init pcie_init(struct sh7786_pcie_port *port)
+ 	 * LAR0/LAMR0 covers up to the first 512MB, which is enough to
+ 	 * cover all of lowmem on most platforms.
+ 	 */
+-	pci_write_reg(chan, memphys, SH4A_PCIELAR0);
++	pci_write_reg(chan, memstart, SH4A_PCIELAR0);
+ 	pci_write_reg(chan, (memsize - SZ_256) | 1, SH4A_PCIELAMR0);
+ 
+ 	/* Finish initialization */
+-- 
+2.13.6
