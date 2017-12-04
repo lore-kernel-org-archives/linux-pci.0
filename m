@@ -1,164 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2777 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751097AbdLYBew (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 24 Dec 2017 20:34:52 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: christophe leroy <christophe.leroy@c-s.fr>,
-        Greg KH <gregkh@linuxfoundation.org>
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
- <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
-CC: <linux-kernel@vger.kernel.org>, <ysxie@foxmail.com>,
-        <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
-        <boris.brezillon@free-electrons.com>, <richard@nod.at>,
-        <marek.vasut@gmail.com>, <cyrille.pitchen@wedev4u.fr>,
-        <linux-mtd@lists.infradead.org>, <alsa-devel@alsa-project.org>,
-        <wim@iguana.be>, <linux@roeck-us.net>,
-        <linux-watchdog@vger.kernel.org>, <b.zolnierkie@samsung.com>,
-        <linux-fbdev@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <linux-gpio@vger.kernel.org>, <ralf@linux-mips.org>,
-        <linux-mips@linux-mips.org>, <lgirdwood@gmail.com>,
-        <broonie@kernel.org>, <tglx@linutronix.de>, <jason@lakedaemon.net>,
-        <marc.zyngier@arm.com>, <arnd@arndb.de>,
-        <andriy.shevchenko@linux.intel.com>,
-        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
-        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
-        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
-        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
-        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
-        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
-        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
-        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
-        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <dvhart@infradead.org>, <andy@infradead.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
-        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
-        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
-        <dmaengine@vger.kernel.org>, <jslaby@suse.com>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <8dd19411-5b06-0aa4-fd0e-e5b112c25dcb@huawei.com>
-Date: Mon, 25 Dec 2017 09:34:25 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V2 3/7] PCI: make pci_flr_wait() generic and rename to
+ pci_dev_wait()
+To: Christoph Hellwig <hch@infradead.org>
+References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
+ <1511763628-11856-4-git-send-email-okaya@codeaurora.org>
+ <20171129173801.GD27742@infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0248af7b-0459-2b77-e439-bfcdfebcd7f6@codeaurora.org>
+Date: Mon, 4 Dec 2017 08:17:20 -0500
 MIME-Version: 1.0
-In-Reply-To: <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171129173801.GD27742@infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Linux PCI <linux-pci@vger.kernel.org>, timur@codeaurora.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2017/12/24 17:05, christophe leroy wrote:
-> 
-> 
-> Le 23/12/2017 à 14:48, Greg KH a écrit :
->> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->>> Hi all,
->>>
->>> When I tried to use devm_ioremap function and review related code, I found
->>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->>> except one use ioremap while the other use ioremap_nocache.
+On 11/29/2017 12:38 PM, Christoph Hellwig wrote:
+> On Mon, Nov 27, 2017 at 01:20:24AM -0500, Sinan Kaya wrote:
+>> Rev 3.1 Sec 2.3.1 Request Handling Rules:
+>> Valid reset conditions after which a device is permitted to return CRS
+>> are:
+>> * Cold, Warm, and Hot Resets,
+>> * FLR
+>> * A reset initiated in response to a D3hot to D0 uninitialized
 >>
->> For all arches?  Really?  Look at MIPS, and x86, they have different
->> functions.
->>
->>> While ioremap's
->>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->>> same function with devm_ioremap, which can just be killed to reduce the size
->>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>>
->>> I have posted two versions, which use macro instead of function for
->>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->>> thing. So here comes v3 and please help to review.
->>
->> I don't think this can be done, what am I missing?  These functions are
->> not identical, sorry for missing that before.
+>> Try to reuse FLR implementation towards other reset types.
 > 
-> devm_ioremap() and devm_ioremap_nocache() are quite similar, both use devm_ioremap_release() for the release, why not just defining:
+> Should we keep a helper for the FLR wait?  If not I guess the reference
+> for AF_FLR should be the PCI spec, not the PCIE spec.
 > 
-> static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
->                resource_size_t size, bool nocache)
-> {
-> [...]
->     if (nocache)
->         addr = ioremap_nocache(offset, size);
->     else
->         addr = ioremap(offset, size);
-> [...]
-> }
-> 
-> then in include/linux/io.h
-> 
-> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->                resource_size_t size)
-> {return __devm_ioremap(dev, offset, size, false);}
-> 
-> static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
->                    resource_size_t size);
-> {return __devm_ioremap(dev, offset, size, true);}
 
-Yeah, this seems good to me, right now we have devm_ioremap, devm_ioremap_wc, devm_ioremap_nocache
-May be we can use an enum like:
-typedef enum {
-	DEVM_IOREMAP = 0,
-	DEVM_IOREMAP_NOCACHE,
-	DEVM_IOREMAP_WC,
-} devm_ioremap_type;
+Bjorn,
 
-static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
-                resource_size_t size)
- {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP);}
+what is your opinion?
 
- static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
-                    resource_size_t size);
- {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_NOCACHE);}
+Sinan
 
- static inline void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
-                    resource_size_t size);
- {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_WC);}
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
- static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
-                resource_size_t size, devm_ioremap_type type)
- {
-     void __iomem **ptr, *addr = NULL;
- [...]
-     switch (type){
-     case DEVM_IOREMAP:
-         addr = ioremap(offset, size);
-         break;
-     case DEVM_IOREMAP_NOCACHE:
-         addr = ioremap_nocache(offset, size);
-         break;
-     case DEVM_IOREMAP_WC:
-         addr = ioremap_wc(offset, size);
-         break;
-     }
- [...]
- }
-
-Thanks
-Yisheng
-
-> 
-> Christophe
-> 
->>
->> thanks,
->>
->> greg k-h
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> 
-> ---
-> L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-> https://www.avast.com/antivirus
-> 
-> 
-> .
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
