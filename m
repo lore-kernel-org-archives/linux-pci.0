@@ -1,64 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.medvecky.net ([85.118.132.146]:33669 "EHLO
-        mail.medvecky.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751416AbdLEQvn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Dec 2017 11:51:43 -0500
-To: linux-pci@vger.kernel.org
-Cc: RayeR <rayer@seznam.cz>
-From: Rudolf Marek <r.marek@assembler.cz>
-Subject: PCI VGA 0x3b0/0x3C0 aliases handling in Linux
-Message-ID: <098b7b02-90f8-636e-37b8-665c32aab96e@assembler.cz>
-Date: Tue, 5 Dec 2017 17:43:00 +0100
+Received: from foss.arm.com ([217.140.101.70]:33766 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753504AbdLDLJK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 Dec 2017 06:09:10 -0500
+Subject: Re: Invalidation in SMMU v3
+To: valmiki <valmikibow@gmail.com>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        "kevin.tian@intel.com" <kevin.tian@intel.com>
+References: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
+ <8fd78f56-43ed-e480-1c98-5d1162452674@arm.com>
+ <e8effeac-bdfb-34dd-63e5-eb3fb08fd540@gmail.com>
+ <c2c2c5b0-7533-632b-f69e-050f125bef06@gmail.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <3decf6d6-46d8-b306-9ef3-b1f975a99c02@arm.com>
+Date: Mon, 4 Dec 2017 11:12:32 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <c2c2c5b0-7533-632b-f69e-050f125bef06@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+Hi Valmiki,
 
-Please CC us we are not subscribed. My friend  (on CC) ran into strange problems with his 
-old PCI sound card under Linux. The very same card works fine in Windoze. 
+On 03/12/17 13:56, valmiki wrote:
+> Hi Jean,
+> 
+> In PASID flow arm_smmu_atc_inv_master_all is called where size and iova 
+> of arm_smmu_atc_inv_to_cmd are zero and  no address is being filled in 
+> struct arm_smmu_cmdq_ent->atc.addr.
+> So how will smmu hardware know if there are any ats translations 
+> requested or not ?
+> How invalidation are carried out in PASID flow w.r.t address and size?
 
-It turned out that silly BIOS assigned the I/O BAR to an address which is positively decoded 
-by some other PCIe bridge. The unlucky region collides with the legacy VGA
-mirror region which is decoded by other PCI/PCIe bridge because bit 3 (PCI_BRIDGE_CTL_VGA) is set.
+arm_smmu_atc_inv_master_all() is used to invalidate the whole address
+space, for example when unbinding a process address space from the master.
 
-Here is a quote from random datasheet of PCI/PCIe bridge:
+The encoding is a bit special: when addr and size are 0,
+arm_smmu_atc_inv_to_cmd() sets cmd->atc.size to 52, which according to the
+SMMUv3 spec corresponds to a 2^64 byte span, meaning invalidate all. The
+SMMU then converts this command into a PCIe ATC invalidation (with bits
+62:12 all 1b and bit 63 = 0b, according to the ATS spec 2.3.2)
 
-VGA_EN:
+Smaller invalidations will go via arm_smmu_atc_inv_domain(), and
+arm_smmu_atc_inv_to_cmd() will compute the appropriate range that covers
+the requested address and size.
 
-*  Memory accesses in the range 0x000A_0000 to 
-000B_FFFF
-*  I/O addresses in the first 64 Kbytes of the I/O address 
-space (Address[31:16] for PCIe are 0x0000) and where 
-Address[9:0] is in the range of 0x3B0 to 0x3BB or 0x3C0 
-to 0x3DF (inclusive of ISA address aliases - 
-Address[15:10] may possess any value and is not used in 
-the decoding)
+In more details, when a range is unmapped from a process (with munmap()
+for example), the MMU notifier calls our invalidate_range() callback,
+which calls arm_smmu_atc_inv_domain() with the right PASID. When a process
+exits or unbind() is called, we use arm_smmu_atc_inv_master_all() with its
+PASID.
 
-So, as you can see, it effectively forces the VGA I/O region to be mirrored all over the 64K I/O space.
-
-What is interesting  is that the PCI bridge specs version 1.2?, added a new bit 4 (which is previously RO 0) which 
-allows to decode only the full address for the 0x3b0/0x3c0 :
-
-VGA_16BIT_EN:
-
-This bit enables the bridge to provide 16-bit decoding of 
-VGA I/O address precluding the decoding of alias addresses 
-every 1 KB. This bit has meaning only if VGA Enable bit is 
-set
-
-There is not even a define in the Linux which would describe this bit. The "fix" for the problem is to simply
-turn off the aliasing.
-
-I would like to ask:
-
-1) If there is some code already which would check this PCI resources collisions (at least issue an warning)
-
-2) Do you think that Linux should try to fix this? (Yes the BIOS messed it up, but hey, the Windoze figured it out)
-
-I suspect it will fix couple of problems people were seeing with old PCI cards as they tend to have the I/O regions
-(I stumbled upon various reports when was suspecting the PCIe to PCI ITE chip and interrupt routing problems)
-
-Thanks
-Rudolf
+Thanks,
+Jean
