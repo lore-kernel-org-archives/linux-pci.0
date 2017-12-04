@@ -1,63 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:56156 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751503AbdLLORD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 09:17:03 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 3/3] PCI: endpoint: Fix find_first_zero_bit() usage
-Date: Tue, 12 Dec 2017 15:16:34 +0100
-Message-Id: <20171212141634.5985-4-niklas.cassel@axis.com>
-In-Reply-To: <20171212141634.5985-1-niklas.cassel@axis.com>
-References: <20171212141634.5985-1-niklas.cassel@axis.com>
+Received: from mail.kernel.org ([198.145.29.99]:41106 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751846AbdLDWdO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 Dec 2017 17:33:14 -0500
+Date: Mon, 4 Dec 2017 16:33:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Dave Jones <davej@codemonkey.org.uk>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        linux-kernel@vger.kernel.org, David Woodhouse <dwmw@amazon.co.uk>
+Subject: Re: [PATCH v2] PCI: Remove sysfs resource mmap warning
+Message-ID: <20171204223311.GA24974@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171130163557.19488.80756.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171130163557.19488.80756.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-find_first_zero_bit()'s parameter 'size' is defined in bits,
-not in bytes.
+On Thu, Nov 30, 2017 at 10:35:57AM -0600, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> When a process uses sysfs and tries to mmap more space than is available in
+> a PCI BAR, we emit a warning and a backtrace.  The mmap fails anyway, so
+> the backtrace is mainly for debugging.  But in general we don't emit kernel
+> messages when syscalls return failure.
+> 
+> The similar procfs mmap path simply fails the mmap with no warning.  Remove
+> the sysfs warning.
+> 
+> Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Calling find_first_zero_bit() with the wrong size unit
-will lead to insidious bugs.
+Applied to pci/resource for v4.16.
 
-Fix this by calling find_first_zero_bit() with size BITS_PER_LONG,
-rather than sizeof() and add missing find_first_zero_bit() return
-handling.
-
-Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
----
- drivers/pci/endpoint/pci-ep-cfs.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index e1f5adc9e113..f5ccd1aa2963 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -109,7 +109,11 @@ static int pci_epc_epf_link(struct config_item *epc_item,
- 		return ret;
- 
- 	func_no = find_first_zero_bit(&epc_group->function_num_map,
--				      sizeof(epc_group->function_num_map));
-+				      BITS_PER_LONG);
-+	if (func_no >= BITS_PER_LONG) {
-+		ret = -EINVAL;
-+		goto err_func_no;
-+	}
- 	set_bit(func_no, &epc_group->function_num_map);
- 	epf->func_no = func_no;
- 
-@@ -121,6 +125,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
- 
- err_epf_bind:
- 	clear_bit(func_no, &epc_group->function_num_map);
-+err_func_no:
- 	pci_epc_remove_epf(epc, epf);
- 
- 	return ret;
--- 
-2.14.2
+> ---
+>  drivers/pci/pci-sysfs.c |    9 ++-------
+>  1 file changed, 2 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 06c7f0b85cd2..ccc0e28c6678 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1216,14 +1216,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+>  	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+>  		return -EINVAL;
+>  
+> -	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS)) {
+> -		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
+> -			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
+> -			pci_name(pdev), bar,
+> -			(u64)pci_resource_start(pdev, bar),
+> -			(u64)pci_resource_len(pdev, bar));
+> +	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS))
+>  		return -EINVAL;
+> -	}
+> +
+>  	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
+>  
+>  	return pci_mmap_resource_range(pdev, bar, vma, mmap_type, write_combine);
+> 
