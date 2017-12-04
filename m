@@ -1,55 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46468 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751718AbdLFTvW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Dec 2017 14:51:22 -0500
-Date: Wed, 6 Dec 2017 13:51:18 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?=
-        <ckoenig.leichtzumerken@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] x86/PCI: limit the size of the 64bit BAR to 256GB
-Message-ID: <20171206195118.GL23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171129141229.6107-1-christian.koenig@amd.com>
- <20171129141229.6107-4-christian.koenig@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20171129141229.6107-4-christian.koenig@amd.com>
+Received: from mail.free-electrons.com ([62.4.15.54]:56436 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752716AbdLDPJe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 10:09:34 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Rich Felker <dalias@libc.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 0/8] SH7786 PCIe support fixes
+Date: Mon,  4 Dec 2017 16:08:59 +0100
+Message-Id: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Nov 29, 2017 at 03:12:29PM +0100, Christian König wrote:
-> This avoids problems with Xen which hides some memory resources from the
-> OS and potentially also allows memory hotplug while this fixup is
-> enabled.
+Hello,
 
-The patch itself is OK, but the changelog doesn't say enough about
-what the problem is.  I have no clue about what the Xen issue is or
-why limiting the BAR to 256GB avoids the problem or what this has to
-do with memory hotplug.
+The following patches fix a number of issues I encountered while
+making PCIe work on a SH7786 platform (both a SH7786 SH4-AP board
+running little-endian with a basic E1000E NIC on PCIe, and a custom
+SH7786 board running big-endian with a custom IP in an FPGA accessed
+over PCIe).
 
-For example, we should be able to tell why 256GB is the right number.
-Maybe there's something specific in Xen you can reference?  Maybe an
-example of what goes wrong with some details?
+A quick summary of the issues:
 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> ---
->  arch/x86/pci/fixup.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index c817ab85dc82..149adbc7f2a3 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -701,7 +701,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
->  	res->name = "PCI Bus 0000:00";
->  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
->  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-> -	res->start = 0x100000000ull;
-> +	res->start = 0xbd00000000ull;
->  	res->end = 0xfd00000000ull - 1;
->  
->  	/* Just grab the free area behind system memory for this */
-> -- 
-> 2.11.0
-> 
+ - Some PCI MEM resources were used even if they conflict with RAM
+
+ - The addresses of the PCI MEM and IO regions did not match the
+   SH7786 datasheet (the first MEM region and the IO region were
+   inverted), causing the device MEM BARs to be unusable.
+
+ - The PCI -> SuperHyway mapping was not correct in some memory
+   configurations:
+
+   - With 64 MB or 128 MB and the RAM starting at 0x0800_0000, there
+     is an offset of 0x0800_0000 between PCI and memory addresses that
+     the DMA mapping API should observe.
+
+   - With 256 MB of RAM starting at 0x0800_0000, we have a region that
+     is not aligned on its size, to its must be expanded to 512 MB
+     with a base address of 0.
+
+The commit logs have much more details about the fixes.
+
+Best regards,
+
+Thomas Petazzoni
+
+Thomas Petazzoni (8):
+  arch/sh: add sh7786_mm_sel() function
+  arch/sh: make the DMA mapping operations observe dev->dma_pfn_offset
+  arch/sh: pci: don't use disabled resources
+  arch/sh: pcie-sh7786: mark unavailable PCI resource as disabled
+  arch/sh: pcie-sh7786: exclude unusable PCI MEM areas
+  arch/sh: pcie-sh7786: adjust PCI MEM and IO regions
+  arch/sh: pcie-sh7786: adjust the memory mapping
+  arch/sh: pcie-sh7786: handle non-zero DMA offset
+
+ arch/sh/drivers/pci/pci.c            |  5 +++
+ arch/sh/drivers/pci/pcie-sh7786.c    | 78 +++++++++++++++++++++++++-----------
+ arch/sh/include/cpu-sh4/cpu/sh7786.h |  7 ++++
+ arch/sh/kernel/dma-nommu.c           |  7 +++-
+ arch/sh/mm/consistent.c              |  4 +-
+ 5 files changed, 74 insertions(+), 27 deletions(-)
+
+-- 
+2.13.6
