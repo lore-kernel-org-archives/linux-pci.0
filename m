@@ -1,119 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 21 Dec 2017 18:27:12 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Honghui Zhang <honghui.zhang@mediatek.com>
-Subject: Re: [PATCH v2 2/2] PCI: mediatek: Fixup class type for MT7622
-Message-ID: <20171222002712.GE30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <1513822277-18329-1-git-send-email-honghui.zhang@mediatek.com>
- <1513822277-18329-3-git-send-email-honghui.zhang@mediatek.com>
- <1513838476.23174.3.camel@mhfsdcap03>
- <1513839672.25872.13.camel@mhfsdcap03>
+Return-Path: <SRS0=4d4G=DA=nvidia.com=vidyas@kernel.org>
+Return-Path: <SRS0=4d4G=DA=nvidia.com=vidyas@kernel.org>
+Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+To: Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+CC: Kenji Chen <kenji.chen@intel.com>, Thierry Reding <treding@nvidia.com>,
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>, David Daney
+	<david.daney@cavium.com>, Krishna Kishore <kthota@nvidia.com>,
+	<linux-kernel@vger.kernel.org>, Julia Lawall <Julia.Lawall@lip6.fr>,
+	<linux-tegra@vger.kernel.org>, Patrick Georgi <pgeorgi@chromium.org>, "Rajat
+ Jain" <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>, Stefan Reinauer
+	<stefan.reinauer@coreboot.org>, Duncan Laurie <dlaurie@chromium.org>
+References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <d462c519-3af0-d763-063d-62839f15ec29@nvidia.com>
+Date: Tue, 5 Dec 2017 00:38:50 +0530
 MIME-Version: 1.0
-In-Reply-To: <1513839672.25872.13.camel@mhfsdcap03>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, yu.yu@mediatek.com,
- linux-pci@vger.kernel.org, sean.wang@mediatek.com,
- linux-kernel@vger.kernel.org, matthias.bgg@gmail.com,
- lorenzo.pieralisi@arm.com, linux-mediatek@lists.infradead.org,
- xinping.qian@mediatek.com, yt.shen@mediatek.com, yingjoe.chen@mediatek.com,
- eddie.huang@mediatek.com, bhelgaas@google.com, Yong Wu <yong.wu@mediatek.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 21, 2017 at 03:01:12PM +0800, Honghui Zhang wrote:
-> On Thu, 2017-12-21 at 14:41 +0800, Yong Wu wrote:
-> > On Thu, 2017-12-21 at 10:11 +0800, honghui.zhang@mediatek.com wrote:
-> > > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > > 
-> > > The host bridge of MT7622 has hardware code the class code to an
-> > > arbitrary, meaningless value, fix that.
-> > > 
-> > > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > > ---
-> > >  drivers/pci/host/pcie-mediatek.c | 12 ++++++++++++
-> > >  1 file changed, 12 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> > > index 3248771..ae8d367 100644
-> > > --- a/drivers/pci/host/pcie-mediatek.c
-> > > +++ b/drivers/pci/host/pcie-mediatek.c
-> > > @@ -1174,3 +1174,15 @@ static struct platform_driver mtk_pcie_driver = {
-> > >  	},
-> > >  };
-> > >  builtin_platform_driver(mtk_pcie_driver);
-> > > +
-> > > +/* The host bridge of MT7622 advertises the wrong device class. */
-> > > +static void mtk_fixup_class(struct pci_dev *dev)
-> > > +{
-> > > +	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> > > +}
-> > > +
-> > > +/*
-> > > + * The HW default value of vendor id and device id for mt7622 are 0x0e8d,
-> > > + * 0x3258, which are arbitrary, meaningless values.
+Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
 
-They may be arbitrary but they are certainly not meaningless.
-
-> > What's the right vendor id and device id? is it possible to fix them
-> > too?
-> 
-> Vendor ID is managed by PCI-SIG, you may get the assigned vendor ID
-> from:
-> https://pci-ids.ucw.cz/read/PC?restrict=
-
-It's true that Vendor IDs are managed by the PCI-SIG.  The link above
-is not managed by the PCI-SIG and is not the official list of assigned
-Vendor IDs.
-
-> The vendor ID for Mediatek Corp. should be 14c3.
-> Device ID is something like vendor-defined.
-> Those values are in the configuration space and are read-only defined by
-> spec, it's been stored at the pci_dev, we may change the vendor and
-> device values in pci_dev, but I don't think it's necessary to change
-> that.
-> BTW, Does anyone really cares about the vendor ID and device ID except
-> the device's driver?
-
-Yes.  This is a fundamental misunderstanding of how Vendor and Device
-IDs work.  The *driver* really doesn't care about the IDs.  The PCI
-*core* cares about them because it uses the IDs to select the
-appropriate driver to bind to the device.
-
-> > > +DECLARE_PCI_FIXUP_EARLY(0x0e8d, 0x3258, mtk_fixup_class);
-
-This is absolutely not OK.  You cannot take over Vendor ID 0x0e8d
-unless it has been assigned to you by the PCI-SIG.
-
-To my knowledge, 0x0e8d has not been assigned to any company yet, but
-the PCI-SIG could assign it to some new company X tomorrow.  Company X
-may then build a device with Device ID 0x3258.  Now we cannot tell the
-difference between the Company X device that is correctly designed and
-this Mediatek device that is broken.
-
-This quirk would improperly overwrite dev->class for the Company X
-device, and we would not be able to bind the correct driver to either
-device.
-
-I am amazed that somebody could build a device that claims to be a PCI
-device and get the Vendor ID wrong.  That should be literally the
-first thing the hardware designer does.  If you have hardware in the
-field that uses the wrong Vendor ID, it is definitely not
-PCI-compliant.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Sunday 03 December 2017 03:15 AM, Bjorn Helgaas wrote:
+> The PCIe active link power state is L0.  ASPM defines two low-power
+> states: L0s and L1.  The L1 PM Substates feature defines two
+> additional low-power states: L1.1 and L2.2.
+>
+> The L1.2 state may have substantial entry/exit latency.  Downstream
+> devices can use the Latency Tolerance Reporting (LTR) feature to
+> report how much latency they can tolerate.  The L1 PM Substates
+> capability includes a programmable L1.2 threshold register.  If the
+> downstream devices can tolerate the latency indicated by the
+> threshold, L1.2 may be used.
+>
+> If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be
+> used whenever it is enabled and CLKREQ# is de-asserted.  Linux
+> currently never enables LTR, but firmware may have done so.
+>
+> The current L1 PM substates support in Linux sets the L1.2 threshold
+> to a fixed value (163.84us) copied from coreboot [1].  I don't know
+> where that value came from, and it is incorrect for some platforms,
+> e.g., Tegra [2].
+>
+> These patches change that so we calculate the L1.2 threshold based on
+> values reported by the hardware, and we enable LTR whenever possible.
+>
+> This is all just my understanding from reading the spec.  I'd be glad
+> to be corrected if I'm going wrong.
+>
+> I'm particularly puzzled about the coreboot code in
+> pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
+>
+> +	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
+> +		(1 << 21) | (1 << 23) | (1 << 30));
+>
+> This is writing the L1 PM Substates Control 1 register, but the shifts
+> don't match up with any of the fields in the register, so this is an
+> awfully funny way to write the threshold.
+>
+> [1] https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.html
+> [2] https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@nvidia.com
+>
+> ---
+>
+> Bjorn Helgaas (2):
+>        PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
+>        PCI/ASPM: Enable Latency Tolerance Reporting when supported
+>
+>
+>   drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++----------------
+>   drivers/pci/probe.c     |   33 ++++++++++++++++++++++
+>   include/linux/pci.h     |    2 +
+>   3 files changed, 82 insertions(+), 24 deletions(-)
