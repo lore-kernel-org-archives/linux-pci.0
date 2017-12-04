@@ -1,55 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:35603 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753197AbdLNP6M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 10:58:12 -0500
-Date: Thu, 14 Dec 2017 16:58:09 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, jonathanh@nvidia.com, vidyas@nvidia.com,
-        mperttunen@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, kthota@nvidia.com
-Subject: Re: [PATCH V3 09/12] PCI: tegra: Enable PCIe xclk clock clamping
-Message-ID: <20171214155809.GJ13733@ulmo>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-10-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 4 Dec 2017 14:24:44 -0800
+From: "tip-bot for Rafael J. Wysocki" <tipbot@zytor.com>
+Message-ID: <tip-2ee90363a838cf41ebf1ad24bad274762e467d8d@git.kernel.org>
+Cc: rafael.j.wysocki@intel.com, tglx@linutronix.de,
+        bhelgaas@google.com, hpa@zytor.com, mingo@kernel.org,
+        linux-pci@vger.kernel.org, dave.hansen@linux.intel.com,
+        linux-kernel@vger.kernel.org
+Reply-To: dave.hansen@linux.intel.com, linux-kernel@vger.kernel.org,
+          linux-pci@vger.kernel.org, bhelgaas@google.com, hpa@zytor.com,
+          mingo@kernel.org, rafael.j.wysocki@intel.com, tglx@linutronix.de
+In-Reply-To: <3186627.pxZj1QbYNg@aspire.rjw.lan>
+References: <3186627.pxZj1QbYNg@aspire.rjw.lan>
+To: linux-tip-commits@vger.kernel.org
+Subject: [tip:x86/urgent] x86 / PCI: Make broadcom_postcore_init() check
+ acpi_disabled
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="RUqJLqMNe5u4kDWT"
-In-Reply-To: <1509371843-22931-10-git-send-email-mmaddireddy@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Commit-ID:  2ee90363a838cf41ebf1ad24bad274762e467d8d
+Gitweb:     https://git.kernel.org/tip/2ee90363a838cf41ebf1ad24bad274762e467d8d
+Author:     Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+AuthorDate: Fri, 1 Dec 2017 15:08:12 +0100
+Committer:  Thomas Gleixner <tglx@linutronix.de>
+CommitDate: Mon, 4 Dec 2017 23:20:35 +0100
 
---RUqJLqMNe5u4kDWT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+x86 / PCI: Make broadcom_postcore_init() check acpi_disabled
 
-On Mon, Oct 30, 2017 at 07:27:20PM +0530, Manikanta Maddireddy wrote:
-> This patch enables PCIe xlck clock clamping by pad control. Pad control
+acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
+is set, but the host bridge information from the ACPI tables is not going
+to be used in that case and the Broadcom host bridge initialization should
+not be skipped then, So make broadcom_postcore_init() check acpi_disabled
+too to avoid this issue.
 
-xlck -> xclk
+Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
+Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Cc: stable@vger.kernel.org
+Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
+---
+ arch/x86/pci/broadcom_bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thierry
-
---RUqJLqMNe5u4kDWT
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloyn44ACgkQ3SOs138+
-s6EF3RAAm0zX7IRAw2ZpZZ9woITqnB/vnPKy7THPjX9Whj24HVjVjcSpnLs7JGsf
-AzoM6LR0/p6Neo0D/ydEA+hxtOHSkWV9ZuQjRNLqkaQk20kcQb7dEyRC1MngkZv3
-zPROYBJOVvda0v8shLF39VrushaNF5PfcvRWS7JNdwlgQSXv6Hi+++dq5PqE4W/V
-b4B3jdhZgIgkvMmbz2TzBo082YJMF9BtyFhUYoBfLCfmLFKkFyeEqvWv5v7lasz3
-Wy2Og3wNkEIqVLiKk02HxWKcrwZCUMepgUJ/ngYdloOOnkwaPhyJfL9gY6UKNRti
-ZCpci7mQyL1Yftzw6MdA3+QwOP9cqBYzxduQvQIBqTARzF1MW86fg0oA5smDTHYi
-2eyLdFUyMzMX8u2IB+eKeIC0fMWvXZoB1FUi2RI0UPzQD09XLXlHRmasR5gIRheQ
-AFG5hB5huU3NPC2rAniRNdwNXdd3C/0t1NJL9tpvqrKe9r5n2hds15l6XgYnAGMg
-x9OD+rluZaOoCsCG9bFkxkAolu/Meeh9YDIL8Y6rf//7uQF5+WWjTtz7l5XVys6Y
-Pgi4Ciqhe9eq7uOIPdbS8hErAKddiPQCEl4PYYdQJlNt7vgz550l6NUIefddnDye
-dM9dYr7LRhjmsrVz/8zP8OZ+12EWwFXAy53bjnwRqn98C4VyZlw=
-=dJlA
------END PGP SIGNATURE-----
-
---RUqJLqMNe5u4kDWT--
+diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
+index bb461cf..526536c 100644
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init(void)
+ 	 * We should get host bridge information from ACPI unless the BIOS
+ 	 * doesn't support it.
+ 	 */
+-	if (acpi_os_get_root_pointer())
++	if (!acpi_disabled && acpi_os_get_root_pointer())
+ 		return 0;
+ #endif
+ 
