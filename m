@@ -1,52 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V4 3/5] device property: Introduce a common API to fetch
- device match data
-To: Sakari Ailus <sakari.ailus@linux.intel.com>
-References: <1512096776-22883-1-git-send-email-okaya@codeaurora.org>
- <1512096776-22883-4-git-send-email-okaya@codeaurora.org>
- <20171201091325.weepl5rtxg4zqqyd@paasikivi.fi.intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <472bc344-009c-6163-e71f-d97ba856827d@codeaurora.org>
-Date: Fri, 1 Dec 2017 10:51:44 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:3917 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751756AbdLDRyF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 12:54:05 -0500
+From: Vidya Sagar <vidyas@nvidia.com>
+To: <treding@nvidia.com>, <bhelgaas@google.com>
+CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH V3 2/2] ARM64: tegra: limit PCIe config space mapping to 4K for T186
+Date: Mon, 4 Dec 2017 23:23:50 +0530
+Message-ID: <1512410030-21038-3-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
+References: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20171201091325.weepl5rtxg4zqqyd@paasikivi.fi.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, Rob Herring <robh@kernel.org>,
- Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-pci@vger.kernel.org,
- timur@codeaurora.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- open list <linux-kernel@vger.kernel.org>,
- Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/1/2017 4:13 AM, Sakari Ailus wrote:
-> Most of the dev->of_node checks have been removed from property.c and
-> replaced by calls to the firmware specific fwnode operations. What remains
-> should probably be moved there, too (apart from dev_fwnode).
-> 
-> How about adding a new op for this one to struct fwnode_operations in
-> include/linux/fwnode.h?
+reduces PCIe config space mapping size from its current 256MB
+to 4K to have only 4K of virtual memory mapping and to be
+in line with driver implementation
 
-Sure, let me look. I was following the get_dma function. Bad example I guess.
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+V3:
+* no change in this patch
 
+ arch/arm64/boot/dts/nvidia/tegra186.dtsi | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/nvidia/tegra186.dtsi b/arch/arm64/boot/dts/nvidia/tegra186.dtsi
+index 46d1f287fb0f..62fa3bef3e18 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra186.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra186.dtsi
+@@ -363,7 +363,7 @@
+ 		device_type = "pci";
+ 		reg = <0x0 0x10003000 0x0 0x00000800   /* PADS registers */
+ 		       0x0 0x10003800 0x0 0x00000800   /* AFI registers */
+-		       0x0 0x40000000 0x0 0x10000000>; /* configuration space */
++		       0x0 0x40000000 0x0 0x00001000>; /* configuration space */
+ 		reg-names = "pads", "afi", "cs";
+ 
+ 		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
+@@ -381,9 +381,9 @@
+ 		ranges = <0x82000000 0 0x10000000 0x0 0x10000000 0 0x00001000   /* port 0 configuration space */
+ 			  0x82000000 0 0x10001000 0x0 0x10001000 0 0x00001000   /* port 1 configuration space */
+ 			  0x82000000 0 0x10004000 0x0 0x10004000 0 0x00001000   /* port 2 configuration space */
+-			  0x81000000 0 0x0        0x0 0x50000000 0 0x00010000   /* downstream I/O (64 KiB) */
+-			  0x82000000 0 0x50100000 0x0 0x50100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
+-			  0xc2000000 0 0x58000000 0x0 0x58000000 0 0x28000000>; /* prefetchable memory (640 MiB) */
++			  0x81000000 0 0x0        0x0 0x40001000 0 0x00010000   /* downstream I/O (64 KiB) */
++			  0x82000000 0 0x40100000 0x0 0x40100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
++			  0xc2000000 0 0x48000000 0x0 0x48000000 0 0x38000000>; /* prefetchable memory (896 MiB) */
+ 
+ 		clocks = <&bpmp TEGRA186_CLK_AFI>,
+ 			 <&bpmp TEGRA186_CLK_PCIE>,
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
