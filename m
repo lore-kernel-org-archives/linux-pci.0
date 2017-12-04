@@ -1,78 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 8 Dec 2017 10:24:46 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Simon Horman <horms@verge.net.au>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: rcar: Fix use-after-free in probe error path
-Message-ID: <20171208102446.GA26816@red-moon>
-References: <1512641720-4715-1-git-send-email-geert+renesas@glider.be>
- <1512641720-4715-2-git-send-email-geert+renesas@glider.be>
+Return-Path: <SRS0=p6eV=DA=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=p6eV=DA=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
+To: Alexey Kardashevskiy <aik@ozlabs.ru>, helgaas@kernel.org,
+        bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com
+References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+ <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Mon, 4 Dec 2017 09:08:11 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1512641720-4715-2-git-send-email-geert+renesas@glider.be>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <3a49b44e-833a-8440-aa3c-a4984ac47147@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 07, 2017 at 11:15:19AM +0100, Geert Uytterhoeven wrote:
-> If CONFIG_DEBUG_SLAB=y, and no PCIe card is inserted, the kernel crashes
-> during probe on r8a7791/koelsch:
-> 
->     rcar-pcie fe000000.pcie: PCIe link down
->     Unable to handle kernel paging request at virtual address 6b6b6b6b
-> 
-> (seeing this message requires earlycon and keep_bootcon).
-> 
-> Indeed, pci_free_host_bridge() frees the PCI host bridge, including the
-> embedded rcar_pcie object, so pci_free_resource_list() must not be
-> called afterwards.
-> 
-> To fix this, move the call to pci_free_resource_list() up, and update the
-> label name accordingly.
-> 
-> Fixes: ddd535f1ea3eb27e ("PCI: rcar: Fix memory leak when no PCIe card is inserted")
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
->  drivers/pci/host/pcie-rcar.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 12796eccb2befd91..52ab3cb0a0bfe065 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1128,12 +1128,12 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	err = rcar_pcie_get_resources(pcie);
->  	if (err < 0) {
->  		dev_err(dev, "failed to request resources: %d\n", err);
-> -		goto err_free_bridge;
-> +		goto err_free_resource_list;
->  	}
->  
->  	err = rcar_pcie_parse_map_dma_ranges(pcie, dev->of_node);
->  	if (err)
-> -		goto err_free_bridge;
-> +		goto err_free_resource_list;
->  
->  	pm_runtime_enable(dev);
->  	err = pm_runtime_get_sync(dev);
-> @@ -1176,9 +1176,9 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  err_pm_disable:
->  	pm_runtime_disable(dev);
->  
-> -err_free_bridge:
-> -	pci_free_host_bridge(bridge);
-> +err_free_resource_list:
->  	pci_free_resource_list(&pcie->resources);
-> +	pci_free_host_bridge(bridge);
->  
->  	return err;
->  }
-> -- 
-> 2.7.4
-> 
+On 12/2/17 7:45 PM, Alexey Kardashevskiy wrote:
+> On 10/11/17 01:00, Bryant G. Ly wrote:
+>> v1 - Initial patch
+>> v2 - Addressed Bjorn's comment on creating a highly platform
+>>      dependent global exported symbol.
+>> v3 - Based patch off linux-ppc/master
+>> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
+>> v5 - Fixed comments and commit message
+>
+> What is this made against of? I'd like to give it a try but it does not
+> apply to Linus'es tree or powerpc/next. Thanks.
+>
+This was made against powerpc/next back when it was still under 4.14-rc6.
+It has been in review for awhile... 
+
+-Bryant
+
+>> Bryant G. Ly (3):
+>>   powerpc/kernel: Separate SR-IOV Calls
+>>   pseries: Add PSeries SR-IOV Machine dependent calls
+>>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+>>
+>>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
+>>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
+>>  drivers/pci/iov.c                            | 11 ++++++++++
+>>  include/linux/pci.h                          |  2 ++
+>>  11 files changed, 118 insertions(+), 33 deletions(-)
+>>
+>
