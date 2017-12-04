@@ -1,84 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 15 Dec 2017 12:30:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Thomas Gleixner <tglx@linutronix.de>, linux-pci@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Maarten Lankhorst <dev@mblankhorst.nl>,
-        Michal Hocko <mhocko@kernel.org>,
-        Andy Lutomirski <luto@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        the arch/x86 maintainers <x86@kernel.org>,
-        Daniel Vetter <daniel.vetter@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:56484 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754066AbdLDPJo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 10:09:44 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Rich Felker <dalias@libc.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pm@vger.kernel.org, Chen Yu <y.c.chen@intel.com>
-Subject: Re: [PATCH] PCI / PM: Force devices to D0 in pci_pm_thaw_noirq()
-Message-ID: <20171215183058.GV30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan>
- <alpine.DEB.2.20.1712141648190.4998@nanos>
- <11146834.AWaDHrVcmB@aspire.rjw.lan>
- <2582328.YfNXS1jHhG@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2582328.YfNXS1jHhG@aspire.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 6/8] arch/sh: pcie-sh7786: adjust PCI MEM and IO regions
+Date: Mon,  4 Dec 2017 16:09:05 +0100
+Message-Id: <20171204150907.24345-7-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
+References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 15, 2017 at 03:07:18AM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> It is incorrect to call pci_restore_state() for devices in low-power
-> states (D1-D3), as that involves the restoration of MSI setup which
-> requires MMIO to be operational and that is only the case in D0.
-> 
-> However, pci_pm_thaw_noirq() may do that if the driver's "freeze"
-> callbacks put the device into a low-power state, so fix it by making
-> it force devices into D0 via pci_set_power_state() instead of trying
-> to "update" their power state which is pointless.
-> 
-> Fixes: e60514bd4485 (PCI/PM: Restore the status of PCI devices across hibernation)
-> Cc: 4.13+ <stable@vger.kernel.org> # 4.13+
-> Reported-by: Thomas Gleixner <tglx@linutronix.de>
-> Reported-by: Maarten Lankhorst <dev@mblankhorst.nl>
-> Tested-by: Thomas Gleixner <tglx@linutronix.de>
-> Tested-by: Maarten Lankhorst <dev@mblankhorst.nl>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The current definition of the PCIe IO and MEM resources for SH7786
+doesn't match what the datasheet says. For example, for PCIe0
+0xfe100000 is advertised by the datasheet as a PCI IO region, while
+0xfd000000 is advertised as a PCI MEM region. The code currently
+inverts the two.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+The SH4A_PCIEPARL and SH4A_PCIEPTCTLR registers allow to define the
+base address and role of the different regions (including whether it's
+a MEM or IO region). However, practical experience on a SH7786 shows
+that if 0xfe100000 is used for LEL and 0xfd000000 for IO, a PCIe
+device using two MEM BARs cannot be accessed at all. Simply using
+0xfe100000 for IO and 0xfd000000 for MEM makes the PCIe device
+accessible.
 
-Let me know if you want me to take this.  I don't have anything
-currently queued up that touches pci-driver.c, so I'm happy if you
-take it yourself.
+It is very likely that this was never seen because there are two other
+PCI MEM region listed in the resources. However, for different
+reasons, none of the two other MEM regions are usable on the specific
+SH7786 platform the problem was encountered. Therefore, the last MEM
+region at 0xfe100000 was used to place the BARs, making the device
+non-functional.
 
-> ---
-> 
-> The bug is not as old as I thought, actually.
-> 
-> Yes, we did the pci_update_current_state() in pci_pm_thaw_noirq()
-> forever, but it started to be problematic in 4.13, when we started
-> to call pci_restore_state() in addition to it to fix another issue.
-> 
-> ---
->  drivers/pci/pci-driver.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -1027,7 +1027,12 @@ static int pci_pm_thaw_noirq(struct devi
->  	if (pci_has_legacy_pm_support(pci_dev))
->  		return pci_legacy_resume_early(dev);
->  
-> -	pci_update_current_state(pci_dev, PCI_D0);
-> +	/*
-> +	 * pci_restore_state() requires the device to be in D0 (because of MSI
-> +	 * restoration among other things), so force it into D0 in case the
-> +	 * driver's "freeze" callbacks put it into a low-power state directly.
-> +	 */
-> +	pci_set_power_state(pci_dev, PCI_D0);
->  	pci_restore_state(pci_dev);
->  
->  	if (drv && drv->pm && drv->pm->thaw_noirq)
-> 
+This commit therefore adjusts those PCI MEM and IO resources
+definitions so that they match what the datasheet says. They have only
+been tested with PCIe 0.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/sh/drivers/pci/pcie-sh7786.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/arch/sh/drivers/pci/pcie-sh7786.c b/arch/sh/drivers/pci/pcie-sh7786.c
+index 8d7c328b1899..69da026682ba 100644
+--- a/arch/sh/drivers/pci/pcie-sh7786.c
++++ b/arch/sh/drivers/pci/pcie-sh7786.c
+@@ -41,73 +41,73 @@ static struct sh7786_pcie_hwops {
+ 
+ static struct resource sh7786_pci0_resources[] = {
+ 	{
+-		.name	= "PCIe0 IO",
++		.name	= "PCIe0 MEM 0",
+ 		.start	= 0xfd000000,
+ 		.end	= 0xfd000000 + SZ_8M - 1,
+-		.flags	= IORESOURCE_IO,
++		.flags	= IORESOURCE_MEM,
+ 	}, {
+-		.name	= "PCIe0 MEM 0",
++		.name	= "PCIe0 MEM 1",
+ 		.start	= 0xc0000000,
+ 		.end	= 0xc0000000 + SZ_512M - 1,
+ 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
+ 	}, {
+-		.name	= "PCIe0 MEM 1",
++		.name	= "PCIe0 MEM 2",
+ 		.start	= 0x10000000,
+ 		.end	= 0x10000000 + SZ_64M - 1,
+ 		.flags	= IORESOURCE_MEM,
+ 	}, {
+-		.name	= "PCIe0 MEM 2",
++		.name	= "PCIe0 IO",
+ 		.start	= 0xfe100000,
+ 		.end	= 0xfe100000 + SZ_1M - 1,
+-		.flags	= IORESOURCE_MEM,
++		.flags	= IORESOURCE_IO,
+ 	},
+ };
+ 
+ static struct resource sh7786_pci1_resources[] = {
+ 	{
+-		.name	= "PCIe1 IO",
++		.name	= "PCIe1 MEM 0",
+ 		.start	= 0xfd800000,
+ 		.end	= 0xfd800000 + SZ_8M - 1,
+-		.flags	= IORESOURCE_IO,
++		.flags	= IORESOURCE_MEM,
+ 	}, {
+-		.name	= "PCIe1 MEM 0",
++		.name	= "PCIe1 MEM 1",
+ 		.start	= 0xa0000000,
+ 		.end	= 0xa0000000 + SZ_512M - 1,
+ 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
+ 	}, {
+-		.name	= "PCIe1 MEM 1",
++		.name	= "PCIe1 MEM 2",
+ 		.start	= 0x30000000,
+ 		.end	= 0x30000000 + SZ_256M - 1,
+ 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
+ 	}, {
+-		.name	= "PCIe1 MEM 2",
++		.name	= "PCIe1 IO",
+ 		.start	= 0xfe300000,
+ 		.end	= 0xfe300000 + SZ_1M - 1,
+-		.flags	= IORESOURCE_MEM,
++		.flags	= IORESOURCE_IO,
+ 	},
+ };
+ 
+ static struct resource sh7786_pci2_resources[] = {
+ 	{
+-		.name	= "PCIe2 IO",
++		.name	= "PCIe2 MEM 0",
+ 		.start	= 0xfc800000,
+ 		.end	= 0xfc800000 + SZ_4M - 1,
+-		.flags	= IORESOURCE_IO,
++		.flags	= IORESOURCE_MEM,
+ 	}, {
+-		.name	= "PCIe2 MEM 0",
++		.name	= "PCIe2 MEM 1",
+ 		.start	= 0x80000000,
+ 		.end	= 0x80000000 + SZ_512M - 1,
+ 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
+ 	}, {
+-		.name	= "PCIe2 MEM 1",
++		.name	= "PCIe2 MEM 2",
+ 		.start	= 0x20000000,
+ 		.end	= 0x20000000 + SZ_256M - 1,
+ 		.flags	= IORESOURCE_MEM | IORESOURCE_MEM_32BIT,
+ 	}, {
+-		.name	= "PCIe2 MEM 2",
++		.name	= "PCIe2 IO",
+ 		.start	= 0xfcd00000,
+ 		.end	= 0xfcd00000 + SZ_1M - 1,
+-		.flags	= IORESOURCE_MEM,
++		.flags	= IORESOURCE_IO,
+ 	},
+ };
+ 
+-- 
+2.13.6
