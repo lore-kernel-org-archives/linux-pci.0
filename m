@@ -1,41 +1,54 @@
-Return-Path: <SRS0=Fhe4=DI=ziepe.ca=jgg@kernel.org>
-Return-Path: <SRS0=Fhe4=DI=ziepe.ca=jgg@kernel.org>
-Date: Tue, 12 Dec 2017 16:42:43 -0700
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Felix Kuehling <Felix.Kuehling@amd.com>, oded.gabbay@gmail.com,
-	amd-gfx@lists.freedesktop.org, Jay Cornwall <Jay.Cornwall@amd.com>,
-	linux-pci@vger.kernel.org, Ram Amrani <Ram.Amrani@cavium.com>,
-	Doug Ledford <dledford@redhat.com>,
-	Michal Kalderon <Michal.Kalderon@cavium.com>,
-	Ariel Elior <Ariel.Elior@cavium.com>
-Subject: Re: [PATCH 29/37] PCI: Add pci_enable_atomic_ops_to_root
-Message-ID: <20171212234243.GD16603@ziepe.ca>
-References: <1512792555-26042-1-git-send-email-Felix.Kuehling@amd.com>
- <1512792555-26042-30-git-send-email-Felix.Kuehling@amd.com>
- <20171212232707.GF53955@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171212232707.GF53955@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=wBNu=DA=russell.cc=ruscur@kernel.org>
+Return-Path: <SRS0=wBNu=DA=russell.cc=ruscur@kernel.org>
+Message-ID: <1512362926.1689.1.camel@russell.cc>
+Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
+From: Russell Currey <ruscur@russell.cc>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, helgaas@kernel.org,
+	bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+	alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+	saeedm@mellanox.com
+Date: Mon, 04 Dec 2017 15:48:46 +1100
+In-Reply-To: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 12, 2017 at 05:27:07PM -0600, Bjorn Helgaas wrote:
-> [+cc Ram, Michal, Ariel, Doug, Jason]
+On Thu, 2017-11-09 at 08:00 -0600, Bryant G. Ly wrote:
+> v1 - Initial patch
+> v2 - Addressed Bjorn's comment on creating a highly platform
+>      dependent global exported symbol.
+> v3 - Based patch off linux-ppc/master
+> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
+> v5 - Fixed comments and commit message
+
+Looks good to me, for the whole series:
+
+Acked-by: Russell Currey <ruscur@russell.cc>
+
 > 
-> The [29/37] in the subject makes it look like this is part of a larger
-> series, but I can't find the rest of it on linux-pci or linux-kernel.
-
-Didn't find the cover letter, but the AMD patchworks captured the series..
-
-https://patchwork.freedesktop.org/project/amd-xorg-ddx/patches/
-
-> I don't want to merge a new interface unless there's an in-tree user
-> of it.  I assume the rest of the series includes a user.
-
-Looks like it.
-
-I would also guess we will see users in drivers/infiniband emerge as
-CPU coherent atomics are also a topic our hardware drivers will be
-interested in. But I am not aware of any pending patches.
-
-Jason
+> Bryant G. Ly (3):
+>   powerpc/kernel: Separate SR-IOV Calls
+>   pseries: Add PSeries SR-IOV Machine dependent calls
+>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+> 
+>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>  arch/powerpc/kernel/pci-common.c             | 23
+> +++++++++++++++++++
+>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--
+> ------------
+>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24
+> ++++++++++++++++++++
+>  arch/powerpc/platforms/pseries/pci.c         | 31
+> ++++++++++++++++++++++----
+>  drivers/pci/iov.c                            | 11 ++++++++++
+>  include/linux/pci.h                          |  2 ++
+>  11 files changed, 118 insertions(+), 33 deletions(-)
+> 
