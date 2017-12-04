@@ -1,69 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:41172 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753195AbdLNQAv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 11:00:51 -0500
-Date: Thu, 14 Dec 2017 17:00:47 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, jonathanh@nvidia.com, vidyas@nvidia.com,
-        mperttunen@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, kthota@nvidia.com
-Subject: Re: [PATCH V3 10/12] PCI: tegra: Add SW fixup for RAW violations
-Message-ID: <20171214160047.GK13733@ulmo>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-11-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="BOhpupldhMlYbdva"
-In-Reply-To: <1509371843-22931-11-git-send-email-mmaddireddy@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Pm7Q=DA=xenosoft.de=chzigotzky@kernel.org>
+Return-Path: <SRS0=Pm7Q=DA=xenosoft.de=chzigotzky@kernel.org>
+Content-Type: multipart/alternative;
+	boundary=Apple-Mail-5D467DE6-51B4-44F9-88F1-E7CE1EBB7423
+Mime-Version: 1.0 (1.0)
+Subject: SB600 for the Nemo board has non-zero devices on non-root bus
+From: Christian Zigotzky <chzigotzky@xenosoft.de>
+In-Reply-To: <4b18f51024d.45f899c9@auth.smtp.1and1.co.uk>
+Date: Mon, 4 Dec 2017 14:31:52 +0100
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, linux-pci@vger.kernel.org,
+ olof@lixom.net
+Message-Id: <9AED1664-A71D-4C15-A828-E64DF5C0498C@xenosoft.de>
+References: <f3513294-6da0-456f-0f98-1f8c3bac90c9@xenosoft.de> <87tvxl15qx.fsf@concordia.ellerman.id.au> <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de> <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com> <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de> <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com> <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de> <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com> <4b18f51024d.45f899c9@auth.smtp.1and1.co.uk>
+To: Darren Stevens <darren@stevens-zone.net>
 List-ID: <linux-pci.vger.kernel.org>
 
 
---BOhpupldhMlYbdva
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--Apple-Mail-5D467DE6-51B4-44F9-88F1-E7CE1EBB7423
+Content-Type: text/plain;
+	charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 30, 2017 at 07:27:21PM +0530, Manikanta Maddireddy wrote:
-> The logic which blocks read requests till AFI gets ACK for all outstanding
-> MC writes does not behave correctly when number of outstanding write
-> becomes more than 32.
+Darren,
+
+What do you think about Olof=E2=80=99s solution?
+
+Link: http://forum.hyperion-entertainment.biz/viewtopic.php?f=3D35&t=3D3891&=
+p=3D43206#p43201
+
+Thanks,
+Christian
+
+Sent from my iPhone
+
+> On 4. Dec 2017, at 12:40, Darren Stevens <darren@stevens-zone.net> wrote:
 >=20
-> SW fixup to prevent this issue is to limit outstanding posted writes and
-> tweak updateFC timer threshold.
+> Hello Bjorn
 >=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V3:
-> * changed soc parameter name
-> V2:
-> * no change in this patch
+> Firstly sorry for not being able to join in this discussion, I have been
+> moving house and only got my X1000 set up again yesterday..
 >=20
->  drivers/pci/host/pci-tegra.c | 30 ++++++++++++++++++++++++++++++
->  1 file changed, 30 insertions(+)
+>> On 30/11/2017, Bjorn Helgaas wrote:
+>> I *think* something like the patch below should make this work if you
+>> use the "pci=3Dpcie_scan_all" parameter.  We have some x86 DMI quirks
+>> that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
+>> something similar on powerpc, but maybe you do?
+>=20
+> Actually the root ports on the Nemo's PA6T processor don't respond to the
+> SB600 unless we turn on a special 'relax pci-e' bit in one of its control
+> registers. We use a small out of tree init routine to do this, and there
+> would be the ideal place to put a call to
+> pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS).
+>=20
+> This patch fixes the last major hurdle to getting the X1000 fully supporte=
+d in
+> the linux kernel, so thanks very much for that.
+>=20
+> Regards
+> Darren
+>=20
 
-Acked-by: Thierry Reding <treding@nvidia.com>
+--Apple-Mail-5D467DE6-51B4-44F9-88F1-E7CE1EBB7423
+Content-Type: text/html;
+	charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
---BOhpupldhMlYbdva
-Content-Type: application/pgp-signature; name="signature.asc"
+<html><head><meta http-equiv=3D"content-type" content=3D"text/html; charset=3D=
+utf-8"></head><body dir=3D"auto">Darren,<div><br></div><div>What do you thin=
+k about Olof=E2=80=99s solution?</div><div><br></div><div>Link:&nbsp;<a href=
+=3D"http://forum.hyperion-entertainment.biz/viewtopic.php?f=3D35&amp;t=3D389=
+1&amp;p=3D43206#p43201">http://forum.hyperion-entertainment.biz/viewtopic.ph=
+p?f=3D35&amp;t=3D3891&amp;p=3D43206#p43201</a></div><div><br></div><div>Than=
+ks,</div><div>Christian<br><br><div id=3D"AppleMailSignature">Sent from my i=
+Phone</div><div><br>On 4. Dec 2017, at 12:40, Darren Stevens &lt;<a href=3D"=
+mailto:darren@stevens-zone.net">darren@stevens-zone.net</a>&gt; wrote:<br><b=
+r></div><blockquote type=3D"cite"><div><span>Hello Bjorn</span><br><span></s=
+pan><br><span>Firstly sorry for not being&nbsp;able to join in this discussi=
+on, I have been</span><br><span>moving house and only got my X1000 set up ag=
+ain yesterday..</span><br><span></span><br><span>On 30/11/2017, Bjorn Helgaa=
+s wrote:</span><br><blockquote type=3D"cite"><span>I *think* something like t=
+he patch below should make this work if you</span><br></blockquote><blockquo=
+te type=3D"cite"><span>use the "pci=3Dpcie_scan_all" parameter. &nbsp;We hav=
+e some x86 DMI quirks</span><br></blockquote><blockquote type=3D"cite"><span=
+>that set PCI_SCAN_ALL_PCIE_DEVS automatically. &nbsp;I don't know how to do=
+</span><br></blockquote><blockquote type=3D"cite"><span>something similar on=
+ powerpc, but maybe you do?</span><br></blockquote><span></span><br><span>Ac=
+tually the root ports on the Nemo's PA6T processor don't respond to the</spa=
+n><br><span>SB600 unless we turn on a special 'relax pci-e' bit in one of it=
+s control</span><br><span>registers. We use a small out of tree init routine=
+ to do this, and there</span><br><span>would be the ideal place to put a cal=
+l to</span><br><span>pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS).</span><br><span><=
+/span><br><span>This patch fixes the last major hurdle to getting the X1000 f=
+ully supported in</span><br><span>the linux kernel, so thanks very much for t=
+hat.</span><br><span></span><br><span>Regards</span><br><span>Darren</span><=
+br><span></span><br></div></blockquote></div></body></html>=
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloyoC8ACgkQ3SOs138+
-s6EYeA/+KQIkffd4XNOpy3F1b750xtDvI09BFE3LB2g03gbceIPmfMEy8UBNz+Hs
-4RjRN/ZwuYMme3WFk3Nv7ntV79f0/4447rBk6mlLOfDAMVLgmR6IRRz4JVAjbyhF
-NG2JBqAGvSe31DiuLIaMLeJlbiFGWq5fdC9XAg6ykgtrhPK6+UkuNgUltu4q1ufz
-qu6PCOKlTuKpm6MxQcm3gFXRuCS/oHguuEVOyJSBuKrcBMbjnP44ks+nW4yRqHdS
-4ERtDCOH6Vc1UbK1x+Hp3Ebi2wQ0I/d5tn7oI++b3obXJzQUtTytFJIuPeAi8xFg
-VtunrL7iL4GEbNjO7IYh6NrK0GWaGYy2Q/U/t2/pIR3e/osMAviiIoD8HZiQx4/8
-o4ILObyfYoUGaUh08OcCKkrsyCndNckSTAJ5VaJe5VLps6OoislRYXVrW3vZsIHs
-ciIipfcgT2DzlBJJZNF0CC+DLyQo6Trll+kZr4Sk8fwxeuigkJbGHhXEsqwB6Cwl
-H6YOqnHIzK6Ad56zpVxsrp0muYEfnPJvwjFZhjFDy7zp52A+aDYBno312igVxK+N
-PgN9tAf6nNL19DJ3p9Gt9bgjO+kUhkAEE8SCCRYxhFaww9W3M4VdbyB3N+u5qwFO
-UoEJrOWkgW6cUbT1TSc3f1Y8nBlOUEzoLFU3ucb2EZ+CHcuDurY=
-=z/uE
------END PGP SIGNATURE-----
-
---BOhpupldhMlYbdva--
+--Apple-Mail-5D467DE6-51B4-44F9-88F1-E7CE1EBB7423--
