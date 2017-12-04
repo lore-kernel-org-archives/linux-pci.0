@@ -1,148 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
-Date: Fri, 08 Dec 2017 02:34:25 -0700
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Govinda Tatti" <Govinda.Tatti@Oracle.COM>
-Cc: <roger.pau@citrix.com>, <bhelgaas@google.com>,
-        <xen-devel@lists.xenproject.org>, <boris.ostrovsky@Oracle.COM>,
-        <konrad.wilk@Oracle.COM>, "Juergen Gross" <jgross@suse.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V3 2/2] Xen/PCIback: Implement PCI flr/slot/bus
- reset with 'reset' SysFS attribute
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
-In-Reply-To: <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=KSVl=DA=stevens-zone.net=darren@kernel.org>
+Return-Path: <SRS0=KSVl=DA=stevens-zone.net=darren@kernel.org>
+From: Darren Stevens <darren@stevens-zone.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Christian Zigotzky <chzigotzky@xenosoft.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	linux-pci@vger.kernel.org
+Date: Mon, 04 Dec 2017 11:40:11 +0000 (GMT)
+Message-ID: <4b18f51024d.45f899c9@auth.smtp.1and1.co.uk>
+In-Reply-To: <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
+References: <f3513294-6da0-456f-0f98-1f8c3bac90c9@xenosoft.de>
+ <87tvxl15qx.fsf@concordia.ellerman.id.au>
+ <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
+ <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
+ <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
+ <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
+ <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
+ <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
+Subject: Re: SB600 for the Nemo board has non-zero devices on non-root bus
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 07.12.17 at 23:21, <Govinda.Tatti@Oracle.COM> wrote:
-> Due to the complexity with the PCI lock we cannot do the reset when a
-> device is bound ('echo $BDF > bind') or when unbound ('echo $BDF > unbind')
-> as the pci_[slot|bus]_reset also takes the same lock resulting in a
-> dead-lock.
+Hello Bjorn
 
-It took me a moment to figure that here you're referring to the
-process of (un)binding, not the state. To avoid that ambiguity in
-wording, how about "... we cannot do the reset while a device is
-being bound (...) or while it is being unbound ..."?
+Firstly sorry for not being=A0able to join in this discussion, I have been
+moving house and only got my X1000 set up again yesterday..
 
-> --- a/Documentation/ABI/testing/sysfs-driver-pciback
-> +++ b/Documentation/ABI/testing/sysfs-driver-pciback
-> @@ -11,3 +11,18 @@ Description:
->                  #echo 00:19.0-E0:2:FF > /sys/bus/pci/drivers/pciback/quirks
->                  will allow the guest to read and write to the configuration
->                  register 0x0E.
-> +
-> +What:           /sys/bus/pci/drivers/pciback/reset
-> +Date:           Dec 2017
-> +KernelVersion:  4.15
-> +Contact:        xen-devel@lists.xenproject.org 
-> +Description:
-> +                An option to perform a flr/slot/bus reset when a PCI device
-> +		is owned by Xen PCI backend. Writing a string of DDDD:BB:DD.F
+On 30/11/2017, Bjorn Helgaas wrote:
+> I *think* something like the patch below should make this work if you
+> use the "pci=3Dpcie_scan_all" parameter.  We have some x86 DMI quirks
+> that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
+> something similar on powerpc, but maybe you do?
 
-SSSS:BB:DD.F (or else the D-s are ambiguous, the more that "domain"
-in Xen code is ambiguous anyway - I continue to be mislead by struct
-pcistub_device_id's domain field)
+Actually the root ports on the Nemo's PA6T processor don't respond to the
+SB600 unless we turn on a special 'relax pci-e' bit in one of its control
+registers. We use a small out of tree init routine to do this, and there
+would be the ideal place to put a call to
+pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS).
 
-Also I assume the SSSS part is optional (default zero), which
-probably can and should be expressed in some way.
+This patch fixes the last major hurdle to getting the X1000 fully supporte=
+d in
+the linux kernel, so thanks very much for that.
 
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -313,6 +313,102 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
->  	up_write(&pcistub_sem);
->  }
->  
-> +struct pcistub_args {
-> +	const struct pci_dev *dev;
-> +	unsigned int dcount;
-
-The sole use of this field is for a debug message. Why not drop it
-and make "dev" the "data" argument without further indirection?
-
-> +static int pcistub_device_search(struct pci_dev *dev, void *data)
-> +{
-> +	struct pcistub_device *psdev;
-> +	struct pcistub_args *arg = data;
-> +	bool found = false;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&pcistub_devices_lock, flags);
-> +
-> +	list_for_each_entry(psdev, &pcistub_devices, dev_list) {
-> +		if (psdev->dev == dev) {
-> +			found = true;
-> +			arg->dcount++;
-> +			break;
-
-Neither here nor in the caller I can see a check whether the device
-is currently assigned to a guest. Ownership by pciback alone imo is
-not sufficient to allow a reset to be performed.
-
-> +static int pcistub_device_reset(struct pci_dev *dev)
-> +{
-> +	struct xen_pcibk_dev_data *dev_data;
-> +	bool slot = false, bus = false;
-> +	struct pcistub_args arg = {};
-> +
-> +	if (!dev)
-> +		return -EINVAL;
-> +
-> +	dev_dbg(&dev->dev, "[%s]\n", __func__);
-> +
-> +	/* First check and try FLR */
-> +	if (pcie_has_flr(dev)) {
-> +		dev_dbg(&dev->dev, "resetting %s device using FLR\n",
-> +			pci_name(dev));
-> +		pcie_flr(dev);
-
-The lack of error check here puzzled me, but I see the function
-indeed returns void right now. I think the prereq patch should
-change this along with exporting the function - you really don't
-want the device to be handed to a guest when the FLR timed
-out.
-
-> +		return 0;
-> +	}
-> +
-> +	if (!pci_probe_reset_slot(dev->slot))
-> +		slot = true;
-> +	else if ((!pci_probe_reset_bus(dev->bus)) &&
-> +		 (!pci_is_root_bus(dev->bus)))
-
-Too many parentheses for my taste.
-
-> +static ssize_t reset_store(struct device_driver *drv, const char *buf,
-> +			   size_t count)
-> +{
-> +	struct pcistub_device *psdev;
-> +	int domain, bus, slot, func;
-> +	int err;
-> +
-> +	err = str_to_slot(buf, &domain, &bus, &slot, &func);
-> +	if (err)
-> +		return err;
-> +
-> +	psdev = pcistub_device_find(domain, bus, slot, func);
-> +	if (psdev) {
-> +		err = pcistub_device_reset(psdev->dev);
-> +		pcistub_device_put(psdev);
-> +	} else {
-> +		err = -ENODEV;
-> +	}
-> +
-> +	if (!err)
-> +		err = count;
-> +
-> +	return err;
-> +}
-> +static DRIVER_ATTR_WO(reset);
-
-Would it be worth for reads of the file to return whether the device
-can be reset this way (i.e. the result of the checks you do before
-actually doing the reset)?
-
-Jan
+Regards
+Darren
