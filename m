@@ -1,138 +1,327 @@
-Return-Path: <SRS0=Pdy9=DY=mediatek.com=honghui.zhang@kernel.org>
-Return-Path: <SRS0=Pdy9=DY=mediatek.com=honghui.zhang@kernel.org>
-Message-ID: <1514425152.25872.39.camel@mhfsdcap03>
-Subject: Re: [PATCH v5 2/2] PCI: mediatek: Set up class type and vendor ID
- for MT7622
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
-	<eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>,
-	<lorenzo.pieralisi@arm.com>, <hongkun.cao@mediatek.com>,
-	<youlin.pei@mediatek.com>, <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
-	<sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
-Date: Thu, 28 Dec 2017 09:39:12 +0800
-In-Reply-To: <20171227184542.GA79892@bhelgaas-glaptop.roam.corp.google.com>
-References: <1514336394-17747-1-git-send-email-honghui.zhang@mediatek.com>
-	 <1514336394-17747-3-git-send-email-honghui.zhang@mediatek.com>
-	 <20171227184542.GA79892@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:39872 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751421AbdLDSTm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 Dec 2017 13:19:42 -0500
+Date: Mon, 4 Dec 2017 18:20:13 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: bhelgaas@google.com, kishon@ti.com, linux-pci@vger.kernel.org,
+        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org, ard.biesheuvel@linaro.org
+Subject: Re: [PATCH 3/5] PCI: cadence: Add host driver for Cadence PCIe
+ controller
+Message-ID: <20171204182013.GA7343@red-moon>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <2670f7ddf59e708beb9d32bef1353e15bd4e1ecf.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <20171129173426.GB31205@red-moon>
+ <f870ad14-0bd5-9d7b-78f2-1e7f663d1127@free-electrons.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f870ad14-0bd5-9d7b-78f2-1e7f663d1127@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-12-27 at 12:45 -0600, Bjorn Helgaas wrote:
-> On Wed, Dec 27, 2017 at 08:59:54AM +0800, honghui.zhang@mediatek.com wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+[+Ard]
+
+Hi Cyrille,
+
+On Sun, Dec 03, 2017 at 09:44:46PM +0100, Cyrille Pitchen wrote:
+
+[...]
+
+> >> +cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn, int where)
+> >> +{
+> >> +     struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
+> >> +     struct cdns_pcie_rc *rc = pci_host_bridge_priv(bridge);
+> >> +     struct cdns_pcie *pcie = &rc->pcie;
+> >> +     unsigned int busn = bus->number;
+> >> +     u32 addr0, desc0;
+> >> +
+> >> +     if (busn < rc->bus_range->start || busn > rc->bus_range->end)
+> >> +             return NULL;
 > > 
-> > The hardware default value of IDs and class type is not correct,
-> > fix that by setup the correct values before start up.
+> > It does not hurt but I wonder whether you really need this check.
+> >
+> 
+> I can remove it.
+>  
+> >> +     if (busn == rc->bus_range->start) {
+> >> +             if (devfn)
 > > 
-> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > ---
-> >  drivers/pci/host/pcie-mediatek.c | 12 ++++++++++++
-> >  include/linux/pci_ids.h          |  2 ++
-> >  2 files changed, 14 insertions(+)
+> > I suspect I know why you need this check but I ask you to explain it
+> > anyway if you do not mind please.
+> >
+> 
+> If I have understood correctly, Cadence team told me that only the root
+> port is available on the first bus through device 0, function 0.
+> No other device/function should connected on this bus, all other devices
+> are behind at least one PCI bridge.
+> 
+> I can add a comment here to explain that.
+
+That's understood, the question is what happens if you do scan devfn != 0.
+
+> >> +                     return NULL;
+> >> +
+> >> +             return pcie->reg_base + (where & 0xfff);
+> >> +     }
+> >> +
+> >> +     /* Update Output registers for AXI region 0. */
+> >> +     addr0 = CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
 > > 
-> > diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> > index fc29a9a..62aac0ea 100644
-> > --- a/drivers/pci/host/pcie-mediatek.c
-> > +++ b/drivers/pci/host/pcie-mediatek.c
-> > @@ -74,6 +74,10 @@
-> >  
-> >  /* PCIe V2 per-port registers */
-> >  #define PCIE_MSI_VECTOR		0x0c0
-> > +
-> > +#define PCIE_CONF_ID		0x100
-> > +#define PCIE_CONF_CLASS		0x104
-> > +
-> >  #define PCIE_INT_MASK		0x420
-> >  #define INTX_MASK		GENMASK(19, 16)
-> >  #define INTX_SHIFT		16
-> > @@ -393,6 +397,14 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> >  		val |= PCIE_CSR_LTSSM_EN(port->slot) |
-> >  		       PCIE_CSR_ASPM_L1_EN(port->slot);
-> >  		writel(val, pcie->base + PCIE_SYS_CFG_V2);
-> > +
-> > +		/* Set up vendor ID and device ID for MT7622*/
-> > +		val = PCI_VENDOR_ID_MEDIATEK;
-> > +		writel(val, port->base + PCIE_CONF_ID);
-> > +
-> > +		/* Set up class code for MT7622 */
-> > +		val = PCI_CLASS_BRIDGE_PCI << 16;
-> > +		writel(val, port->base + PCIE_CONF_CLASS);
+> > Ok, so for every config access you reprogram addr0 to reflect the
+> > correct bus|devfn ID in the PCI bus TLP corresponding to an ECAM address
+> > in CPU physical address space, is my understanding correct ?
+> >
 > 
-> 1) Your comments mention MT7622 specifically, but this code is run for
-> both mt2712-pcie and mt7622-pcie.  If this code is safe and necessary
-> for both mt2712-pcie and mt7622-pcie, please remove the mention of
-> MT7622.
-
-Hmm, the code snippet added here will only be executed by MT7622, since
-MT2712 will not enter this  "if (pcie->base) {"  condition.
-Should the mention of MT7622 must be removed in this case?
-
+> The idea is to able to use only a 4KB memory area at a fixed address in the
+> space allocated for the PCIe controller in the AXI bus. I guess the plan is
+> to leave more space on the AXI bus to map all other PCIe devices.
 > 
-> 2) The first comment mentions both "vendor ID and device ID" but you
-> don't write the device ID.  Since this code applies to both
-> mt2712-pcie and mt7622-pcie, my guess is that you don't *want* to
-> write the device ID.  If that's the case, please fix the comment.
-> 
+> This is just my guess. Anyway one purpose of this driver was actually to
+> perform all PCI configuration space accesses through this single 4KB memory
+> area in the AXI bus, changing the mapping dynamically to reach the relevant
+> PCI device. 
 
-My bad, I did not check the comments carefully.
-Thanks.
+Thank you for explaining - that matches my understanding.
 
-> 3) If you only need to set the vendor ID, you're performing a 32-bit
-> write (writel()) to update a 16-bit value.  Please use writew()
-> instead.
-> 
-
-Ok, thanks, I guess I could use the following code snippet in the next
-version:
-val = readl(port->base + PCIE_CONF_VENDOR_ID)
-val &= ~GENMASK(15, 0);
-val |= PCI_VENDOR_ID_MEDIATEK;
-writel(val, port->base + PCIE_CONF_VENDOR_ID);
-
-> 4) If you only need to set the vendor ID, please use a definition like
-> "PCIE_CONF_VENDOR_ID" instead of the ambiguous "PCIE_CONF_ID".
-> 
-> 5) If you only need to set the vendor ID, please update the changelog
-> to mention "vendor ID" specifically instead of the ambiguous "IDs".
-
-> 6) Please add a space before the closing "*/" of the first comment.
-> 
-> 7) PCI_CLASS_BRIDGE_PCI is for a PCI-to-PCI bridge, i.e., one that has
-> PCI on both the primary (upstream) side and the secondary (downstream)
-> side.  That kind of bridge has a type 1 config header (see
-> PCI_HEADER_TYPE) and the PCI_PRIMARY_BUS and PCI_SECONDARY_BUS
-> registers tell us the bus number of the primary and secondary sides.
-> 
-> I don't believe this device is a PCI-to-PCI bridge.  I think it's a
-> *host* bridge that has some non-PCI interface on the upstream side and
-> should have a type 0 config header.  If that's the case you should use
-> PCI_CLASS_BRIDGE_HOST instead.
-> 
-
-Thanks very much for your help with the review, I will fix the other
-issue in the next version.
-
-> >  	}
-> >  
-> >  	/* Assert all reset signals */
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index ab20dc5..2480b0e 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -2113,6 +2113,8 @@
-> >  
-> >  #define PCI_VENDOR_ID_MYRICOM		0x14c1
-> >  
-> > +#define PCI_VENDOR_ID_MEDIATEK		0x14c3
-> > +
-> >  #define PCI_VENDOR_ID_TITAN		0x14D2
-> >  #define PCI_DEVICE_ID_TITAN_010L	0x8001
-> >  #define PCI_DEVICE_ID_TITAN_100L	0x8010
-> > -- 
-> > 2.6.4
+> >> +             CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) |
+> >> +             CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS(busn);
+> >> +     cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(0), addr0);
+> >> +
+> >> +     /* Configuration Type 0 or Type 1 access. */
+> >> +     desc0 = CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID |
+> >> +             CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(0);
+> >> +     /*
+> >> +      * The bus number was already set once for all in desc1 by
+> >> +      * cdns_pcie_host_init_address_translation().
+> >> +      */
+> >> +     if (busn == rc->bus_range->start + 1)
+> >> +             desc0 |= CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0;
+> >> +     else
+> >> +             desc0 |= CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1;
 > > 
+> > I would like to ask you why you have to do it here and the root port
+> > does not figure it out by itself, I do not have the datasheet so I am
+> > just asking for my own information.
+> 
+> PCI configuration space registers of the root port can only be read through
+> the APB bus at offset 0:
+> ->reg_base + (where & 0xfff)
+> 
+> They are internal registers of the PCIe controller so no TLP on the PCIe bus.
+> 
+> However to access the PCI configuration space registers of any other device,
+> the PCIe controller builds then sends a TLP on the PCIe bus using the offset
+> in the 4KB AXI area as the offset of the register in the PCI configuration
+> space:
+> ->cfg_base + (where & 0xfff)
+> 
+> > 
+> >> +     cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_DESC0(0), desc0);
+> >> +
+> >> +     return rc->cfg_base + (where & 0xfff);
+> >> +}
+> >> +
+> >> +static struct pci_ops cdns_pcie_host_ops = {
+> >> +     .map_bus        = cdns_pci_map_bus,
+> >> +     .read           = pci_generic_config_read,
+> >> +     .write          = pci_generic_config_write,
+> >> +};
+> >> +
+> >> +static const struct cdns_pcie_rc_data cdns_pcie_rc_data = {
+> >> +     .max_regions    = 32,
+> >> +     .vendor_id      = PCI_VENDOR_ID_CDNS,
+> >> +     .device_id      = 0x0200,
+> >> +     .no_bar_nbits   = 32,
+> >> +};
+> > 
+> > Should (some of) these parameters be retrieved through a DT binding ?
+> >
+> 
+> Indeed, maybe we get max_regions and no_bar_nbits from the DT.
+> 
+> About the vendor and device IDs, I don't know which would be the best
+> choice between some dedicated DT properties or associating a custom
+> structure as above to the 'compatible' string.
+> 
+> Honestly, I don't have any strong preference, please just tell me what
+> you would prefer :)
+
+I think it is best to ask DT maintainers (in CC) POV on this, they
+certainly have a more comprehensive view than mine on the subject - I
+have just noticed that _some_ data can be retrieved through DT therefore
+I raised the point - either through different compatible strings or
+some IP specific properties.
+
+> >> +static const struct of_device_id cdns_pcie_host_of_match[] = {
+> >> +     { .compatible = "cdns,cdns-pcie-host",
+> >> +       .data = &cdns_pcie_rc_data },
+> >> +
+> >> +     { },
+> >> +};
+> >> +
+> >> +static int cdns_pcie_parse_request_of_pci_ranges(struct device *dev,
+> >> +                                              struct list_head *resources,
+> >> +                                              struct resource **bus_range)
+> >> +{
+> >> +     int err, res_valid = 0;
+> >> +     struct device_node *np = dev->of_node;
+> >> +     resource_size_t iobase;
+> >> +     struct resource_entry *win, *tmp;
+> >> +
+> >> +     err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
+> >> +     if (err)
+> >> +             return err;
+> >> +
+> >> +     err = devm_request_pci_bus_resources(dev, resources);
+> >> +     if (err)
+> >> +             return err;
+> >> +
+> >> +     resource_list_for_each_entry_safe(win, tmp, resources) {
+> >> +             struct resource *res = win->res;
+> >> +
+> >> +             switch (resource_type(res)) {
+> >> +             case IORESOURCE_IO:
+> >> +                     err = pci_remap_iospace(res, iobase);
+> >> +                     if (err) {
+> >> +                             dev_warn(dev, "error %d: failed to map resource %pR\n",
+> >> +                                      err, res);
+> >> +                             resource_list_destroy_entry(win);
+> >> +                     }
+> >> +                     break;
+> >> +             case IORESOURCE_MEM:
+> >> +                     res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+> >> +                     break;
+> >> +             case IORESOURCE_BUS:
+> >> +                     *bus_range = res;
+> >> +                     break;
+> >> +             }
+> >> +     }
+> >> +
+> >> +     if (res_valid)
+> >> +             return 0;
+> >> +
+> >> +     dev_err(dev, "non-prefetchable memory resource required\n");
+> >> +     return -EINVAL;
+> > 
+> > Nit, I prefer you swap these two as it is done in pci-aardvark.c:
+> > 
+> >         if (!res_valid) {
+> >                 dev_err(dev, "non-prefetchable memory resource required\n");
+> >                 return -EINVAL;
+> >         }
+> > 
+> >         return 0;
+> > 
+> > but as per previous replies this function can be factorized in
+> > core PCI code - I would not bother unless you are willing to write
+> > the patch series that does the refactoring yourself :)
+> > 
+> >> +}
+> >> +
+> >> +static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+> >> +{
+> >> +     const struct cdns_pcie_rc_data *data = rc->data;
+> >> +     struct cdns_pcie *pcie = &rc->pcie;
+> >> +     u8 pbn, sbn, subn;
+> >> +     u32 value, ctrl;
+> >> +
+> >> +     /*
+> >> +      * Set the root complex BAR configuration register:
+> >> +      * - disable both BAR0 and BAR1.
+> >> +      * - enable Prefetchable Memory Base and Limit registers in type 1
+> >> +      *   config space (64 bits).
+> >> +      * - enable IO Base and Limit registers in type 1 config
+> >> +      *   space (32 bits).
+> >> +      */
+> >> +     ctrl = CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED;
+> >> +     value = CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL(ctrl) |
+> >> +             CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL(ctrl) |
+> >> +             CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE |
+> >> +             CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS |
+> >> +             CDNS_PCIE_LM_RC_BAR_CFG_IO_ENABLE |
+> >> +             CDNS_PCIE_LM_RC_BAR_CFG_IO_32BITS;
+> >> +     cdns_pcie_writel(pcie, CDNS_PCIE_LM_RC_BAR_CFG, value);
+> >> +
+> >> +     /* Set root port configuration space */
+> >> +     if (data->vendor_id != 0xffff)
+> >> +             cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, data->vendor_id);
+> >> +     if (data->device_id != 0xffff)
+> >> +             cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, data->device_id);
+> >> +
+> >> +     cdns_pcie_rp_writeb(pcie, PCI_CLASS_REVISION, 0);
+> >> +     cdns_pcie_rp_writeb(pcie, PCI_CLASS_PROG, 0);
+> >> +     cdns_pcie_rp_writew(pcie, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
+> >> +
+> >> +     pbn = rc->bus_range->start;
+> >> +     sbn = pbn + 1; /* Single root port. */
+> >> +     subn = rc->bus_range->end;
+> >> +     cdns_pcie_rp_writeb(pcie, PCI_PRIMARY_BUS, pbn);
+> >> +     cdns_pcie_rp_writeb(pcie, PCI_SECONDARY_BUS, sbn);
+> >> +     cdns_pcie_rp_writeb(pcie, PCI_SUBORDINATE_BUS, subn);
+> > 
+> > Again - I do not have the datasheet for this device therefore I would
+> > kindly ask you how this works; it seems to me that what you are doing
+> > here is done through normal configuration cycles in an ECAM compliant
+> > system to program the RP PRIMARY/SECONDARY/SUBORDINATE bus - I would
+> > like to understand why this code is needed.
+> >
+> 
+> I will test without those lines to test whether I can remove them.
+> 
+> At first, the PCIe controller was tested by Cadence team: there was code
+> in their bootloader to initialize the hardware (building the AXI <-> PCIe
+> mappings, ...): the bootloader used to set the primary, secondary and
+> subordinate bus numbers in the root port PCI config space.
+> 
+> Also there was a hardware trick to redirect accesses of the lowest
+> addresses in the AXI bus to the APB bus so the PCI configuration space of
+> the root port could have been accessed from the AXI bus too.
+> 
+> The AXI <-> PCIe mapping being done by the bootloader and the root port
+> config space being accessible from the AXI bus, it was possible to use
+> the pci-host-generic driver.
+
+That's what I was getting at. Ard (CC'ed) implemented a firmware set-up
+(even though it was for a different IP but maybe it applies here) that
+allows the kernel to use the pci-host-generic driver to initialize the
+PCI controller:
+
+https://marc.info/?l=linux-pci&m=150360022626351&w=2
+
+I want to understand if there is an IP initialization sequence whereby
+this IP can be made to work in an ECAM compliant way and therefore
+reuse (most of) the pci-host-generic driver code.
+
+> However, the hardware trick won't be included in the final design since
+> Cadence now wants to perform all PCI configuration space accesses through
+> a small 4KB window at a fixed address on the AXI bus.
+
+I would like to understand what the HW "trick" (if you can disclose it)
+was, because if there is a chance to reuse the pci-host-generic driver
+for this IP I want to take it (yes it may entail some firmware set-up in
+the bootloader) - was it a HW trick or a specific IP SW configuration ?
+
+> Also, we now want all initialisations to be done by the linux driver
+> instead of the bootloader.
+
+That's a choice, I do not necessarily agree with it and I think we
+should aim for more standardization on the PCI host bridge set-up
+at firmware->kernel handover on DT platforms.
+
+> I simply moved all those initialisations from the bootloader to the linux
+> driver but actually there is a chance that I can remove the 3 writes to
+> the PCI_*_BUS registers.
+
+I asked because I do not have this IP documentation so I rely on you to
+provide the correct initialization sequence and an explanation for it,
+I think I understand now the initialization sequence a bit more but it
+would be good to get to the bottom of it.
+
+Thank you,
+Lorenzo
