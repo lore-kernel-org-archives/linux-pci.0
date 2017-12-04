@@ -1,94 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>,
- <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v4 2/2] PCI: mediatek: Set up class type and vendor ID for
- MT7622
-Date: Fri, 22 Dec 2017 13:39:38 +0800
-Message-ID: <1513921178-16148-3-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1513921178-16148-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1513921178-16148-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:56462 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754057AbdLDPJo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 10:09:44 -0500
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Rich Felker <dalias@libc.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 4/8] arch/sh: pcie-sh7786: mark unavailable PCI resource as disabled
+Date: Mon,  4 Dec 2017 16:09:03 +0100
+Message-Id: <20171204150907.24345-5-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
+References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Some PCI MEM resources are marked as IORESOURCE_MEM_32BIT, which means
+they are only usable when the SH core runs in 32-bit mode. In 29-bit
+mode, such memory regions are not usable.
 
-The hardware default value of IDs and class type is not correct,
-fix that by setup the correct values before start up.
+The existing code for SH7786 properly skips such regions when
+configuring the PCIe controller registers. However, because such
+regions are still described in the resource array, the
+pcibios_scanbus() function in the SuperH pci.c will register them to
+the PCI core. Due to this, the PCI core will allocate MEM areas from
+this resource, and assign BARs pointing to this area, even though it's
+unusable.
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+In order to prevent this from happening, we mark such regions as
+IORESOURCE_DISABLED, which tells the SuperH pci.c pcibios_scanbus()
+function to skip them.
+
+Note that we separate marking the region as disabled from skipping it,
+because other regions will be marked as disabled in follow-up patches.
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- drivers/pci/host/pcie-mediatek.c | 12 ++++++++++++
- include/linux/pci_ids.h          |  3 +++
- 2 files changed, 15 insertions(+)
+ arch/sh/drivers/pci/pcie-sh7786.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index fc29a9a..0ef33e4 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -74,6 +74,10 @@
+diff --git a/arch/sh/drivers/pci/pcie-sh7786.c b/arch/sh/drivers/pci/pcie-sh7786.c
+index 45bbe6927251..c2f877b4ef7e 100644
+--- a/arch/sh/drivers/pci/pcie-sh7786.c
++++ b/arch/sh/drivers/pci/pcie-sh7786.c
+@@ -419,6 +419,9 @@ static int __init pcie_init(struct sh7786_pcie_port *port)
+ 		 * mode, so just skip them entirely.
+ 		 */
+ 		if ((res->flags & IORESOURCE_MEM_32BIT) && __in_29bit_mode())
++			res->flags |= IORESOURCE_DISABLED;
++
++		if (res->flags & IORESOURCE_DISABLED)
+ 			continue;
  
- /* PCIe V2 per-port registers */
- #define PCIE_MSI_VECTOR		0x0c0
-+
-+#define PCIE_CONF_ID		0x100
-+#define PCIE_CONF_CLASS		0x104
-+
- #define PCIE_INT_MASK		0x420
- #define INTX_MASK		GENMASK(19, 16)
- #define INTX_SHIFT		16
-@@ -393,6 +397,14 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
- 		val |= PCIE_CSR_LTSSM_EN(port->slot) |
- 		       PCIE_CSR_ASPM_L1_EN(port->slot);
- 		writel(val, pcie->base + PCIE_SYS_CFG_V2);
-+
-+		/* Set up vendor ID and device ID for MT7622*/
-+		val = PCI_VENDOR_ID_MEDIATEK | (PCI_DEVICE_ID_MT7622 << 16);
-+		writel(val, port->base + PCIE_CONF_ID);
-+
-+		/* Set up class code for MT7622 */
-+		val = PCI_CLASS_BRIDGE_PCI << 16;
-+		writel(val, port->base + PCIE_CONF_CLASS);
- 	}
- 
- 	/* Assert all reset signals */
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index ab20dc5..000c5df 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2113,6 +2113,9 @@
- 
- #define PCI_VENDOR_ID_MYRICOM		0x14c1
- 
-+#define PCI_VENDOR_ID_MEDIATEK		0x14c3
-+#define PCI_DEVICE_ID_MT7622		0x5396
-+
- #define PCI_VENDOR_ID_TITAN		0x14D2
- #define PCI_DEVICE_ID_TITAN_010L	0x8001
- #define PCI_DEVICE_ID_TITAN_100L	0x8010
+ 		pci_write_reg(chan, 0x00000000, SH4A_PCIEPTCTLR(win));
 -- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.13.6
