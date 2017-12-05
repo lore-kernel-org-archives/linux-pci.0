@@ -1,80 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:12067 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752630AbdLTD7E (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 22:59:04 -0500
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Alexandru Chirvasitu <achirvasub@gmail.com>
-CC: Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        <linux-pci@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <devel@linuxdriverproject.org>, KY Srinivasan <kys@microsoft.com>
-References: <20171218082011.GA24638@arch-chirva.localdomain>
- <20171218101131.GA5338@amd> <20171219083421.GB24638@arch-chirva.localdomain>
- <alpine.DEB.2.20.1712200124440.2282@nanos>
-From: Dou Liyang <douly.fnst@cn.fujitsu.com>
-Message-ID: <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
-Date: Wed, 20 Dec 2017 11:58:57 +0800
+Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [Question] Unsupported Request During PCI Enumeration
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <26340670-2744-b2e0-eed7-eb8e0ad2bc84@huawei.com>
+ <20171128003208.GB11228@bhelgaas-glaptop.roam.corp.google.com>
+ <c1235398-9a80-b4f3-94c9-3686651259fc@huawei.com>
+ <20171128145748.GD11228@bhelgaas-glaptop.roam.corp.google.com>
+ <12079a9c-9018-b1be-1596-8a2f6746677b@huawei.com>
+ <20171130231558.GD19640@bhelgaas-glaptop.roam.corp.google.com>
+ <b6b7e255-b7c1-d4dc-ba76-fd6ae494befb@huawei.com>
+ <20171201145717.GF19640@bhelgaas-glaptop.roam.corp.google.com>
+CC: Linux PCI <linux-pci@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <07e1748b-7e6b-eafb-2aef-fcbab90dd2b3@huawei.com>
+Date: Tue, 5 Dec 2017 14:18:54 +0800
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1712200124440.2282@nanos>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171201145717.GF19640@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thomas,
 
-At 12/20/2017 08:31 AM, Thomas Gleixner wrote:
-> On Tue, 19 Dec 2017, Alexandru Chirvasitu wrote:
-> 
->> I had never heard of 'bisect' before this casual mention (you might tell
->> I am a bit out of my depth). I've since applied it to Linus' tree between
-> 
->> bebc608 Linux 4.14 (good)
+
+在 2017/12/1 22:57, Bjorn Helgaas 写道:
+> On Fri, Dec 01, 2017 at 05:30:48PM +0800, Dongdong Liu wrote:
 >>
->> and
+>> 在 2017/12/1 7:15, Bjorn Helgaas 写道:
+>>> On Thu, Nov 30, 2017 at 08:47:38PM +0800, Dongdong Liu wrote:
+>>>>
+>>>>> I do not think drivers should be calling
+>>>>> pci_enable_pcie_error_reporting() directly.  And I don't think we
+>>>>> should depend on _HPX.  _HPX is intended for *platform-specific*
+>>>>> things, and I don't think this is platform-specific.  And of course,
+>>>>> _HPX only works on ACPI systems, and we want this to work everywhere.
+>>>>>
+>>>>> So I think we need a more comprehensive generic solution in Linux.  I
+>>>>> think we need several pieces:
+>>>>>
+>>>>> - Disable UR reporting during enumeration, similar to how we disable
+>>>>>   Master Abort reporting.
+>>>>>
+>>>>> - Restore original UR reporting setting after enumeration.
+>>>>>
+>>>>> - Clear any logged UR errors after enumeration.
+>>>>
+>>>> Agree.
+>>>>
+>>>>>
+>>>>> - Enable UR reporting as part of configuring every device, e.g., in
+>>>>>   pci_configure_device() or pci_init_capabilities().
+>>>>
+>>>> Enable UR reporting in pci_configure_device() or pci_init_capabilities() is
+>>>> not ok. It will still report UR as it is still in enumeration.
+>>>
+>>> True.  For bridges, it needs to be after we've enumerated children of
+>>> the bridge.
+>>>
+>>>>> I don't know whether we should enable UR reporting if AER is not
+>>>>> present; we'll have to think about that.  We may also have to
+>>>>> restructure how the AER driver works, because I think it currently
+>>>>> comes into play *after* we call pci_init_capabilities().  There are
+>>>>> probably some ordering issues there.
+>>>>
+>>>> I write a sample code as below, it can avoid report UR during
+>>>> enumeration. What do you think about the code ?
+>>>
+>>> Can you do it the same place we disable and restore Master-Abort Mode,
+>>> in pci_scan_bridge_extend()?  That's done for the same reason, so it
+>>> would be nice to keep it together.
+>>>
+>>> Maybe we could have a "pci_disable_enumeration_errors()" that would
+>>> disable both Master-Abort Mode and UR reporting, and a corresponding
+>>> "pci_restore_enumeration_errors()" that would clear any logged errors
+>>> and restore the original settings?
 >>
->> 4fbd8d1 Linux 4.15-rc1 (bad)
-> 
-> Is Linus current head 4.15-rc4 bad as well?
-> 
-[...]
-> 
-> Thanks for doing that bisect, but unfortunately this commit cannot be the
-> problematic one, It merily adds a config symbol, but it does not change any
-> code at all. It has no effect whatsoever. So something might have gone
-> wrong in your bisecting.
-> 
+>> Set devctl to disable UR in pci_scan_bridge_extend() can resolve
+>> bridge devices UR reporting issue. But for EP devices may still
+>> reprot UR, like non-ARI EP devices. So it's better to disable UR
+>> reporting in pci_device_add() after calling
+>> pci_configure_device(dev) and restore in pci_bus_add_device().  As
+>> in pci_configure_device() may parse _HPX to enable UR, disable UR
+>> reporting should call after pci_configure_device().
+>
+> Help me understand this issue with Endpoints and how ARI is involved.
+>
+> Is this an issue with multi-function devices, where function 0 exists
+> and then we try to read the Vendor ID of function 1, 2, ..., until one
+> fails to respond?  And when one fails to respond, the Endpoint logs a
+> UR error?
+Correct.
+>
+> And I guess the ARI connection is that with ARI, we use the ARI
+> Capability to find the next function, so we should never try to read
+> the Vendor ID of a non-existent function?
+Yes, I think so.
+>
+> pci_device_add() and pci_bus_add_device() don't have any obvious
+> connection to enumeration, so I don't really like those places.  If
+> I'm understanding the issue correctly, I'd rather do the error
+> disable/restore in pci_scan_slot(), where it's right next to the
+> enumeration of additional functions.
 
-Agree.
-
-> I CC'ed Dou Liyang. He has changed the early APIC setup code and there has
-> been an issue reported already. Though I lost track of that. Dou, any
-        ^^^^^^^^  Is it this one?
-                    https://marc.info/?l=linux-kernel&m=151188084018443
-> pointers?
-> 
-
-Not sure, but seems the APIC failed to start in that 32-bit system.
-
-I will look into it.
-
-Alex,
-
-Could you give me your .config file and the dmesg-log of 4.15.0-rc3.
+Looks good, I will consider this. Many thanks for your suggestion.
 
 Thanks,
-	dou
+Dongdong
+>
+>>>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>>>> index bc56cf1..1a46026 100644
+>>>> --- a/drivers/pci/bus.c
+>>>> +++ b/drivers/pci/bus.c
+>>>> @@ -14,6 +14,7 @@
+>>>> #include <linux/ioport.h>
+>>>> #include <linux/proc_fs.h>
+>>>> #include <linux/slab.h>
+>>>> +#include <linux/aer.h>
+>>>>
+>>>> #include "pci.h"
+>>>>
+>>>> @@ -311,6 +312,16 @@ void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
+>>>> void pci_bus_add_device(struct pci_dev *dev)
+>>>> {
+>>>>        int retval;
+>>>> +       u16 reg16;
+>>>> +
+>>>> +       /* Clear PCIe Capability's Device Status */
+>>>> +       pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
+>>>> +       pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
+>>>> +       pci_cleanup_aer_error_status_regs(dev);
+>>>> +
+>>>> +       /* Restore UR reporting */
+>>>> +       if (dev->devctl_ur)
+>>>> +               pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_URRE);
+>>>>
+>>>>        /*
+>>>>         * Can not put in pci_device_add yet because resources
+>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>> index 14e0ea1..7b34083 100644
+>>>> --- a/drivers/pci/probe.c
+>>>> +++ b/drivers/pci/probe.c
+>>>> @@ -2119,9 +2119,21 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+>>>> void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>>>> {
+>>>>        int ret;
+>>>> +       u16 reg16;
+>>>>
+>>>>        pci_configure_device(dev);
+>>>>
+>>>> +       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
+>>>> +       dev->devctl_ur = reg16 & PCI_EXP_DEVCTL_URRE;
+>>>> +       if (dev->devctl_ur) {
+>>>> +               /*
+>>>> +                * Turn off UR reporting, later restore UR reporting
+>>>> +                * after enumeration.
+>>>> +                */
+>>>> +               reg16 = reg16 & (~PCI_EXP_DEVCTL_URRE);
+>>>> +               pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
+>>>> +       }
+>>>> +
+>>>>        device_initialize(&dev->dev);
+>>>>        dev->dev.release = pci_release_dev;
+>>>>
+>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>> index ae8d2b4..c2a90f1 100644
+>>>> --- a/include/linux/pci.h
+>>>> +++ b/include/linux/pci.h
+>>>> @@ -440,6 +440,7 @@ struct pci_dev {
+>>>>        char *driver_override; /* Driver name to force a match */
+>>>>
+>>>>        unsigned long priv_flags; /* Private flags for the pci driver */
+>>>> +       u16 devctl_ur;
+>>>> };
+>
+> .
+>
