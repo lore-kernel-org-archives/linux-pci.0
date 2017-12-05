@@ -1,251 +1,52 @@
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v2 1/7] platform/pseries: Update VF config space after EEH
-Date: Mon, 18 Dec 2017 16:38:02 -0600
-In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20171218223808.83928-2-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 5 Dec 2017 12:11:27 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>,
+        Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5] PCI: hotplug: Drop checking of PCI_BRIDGE_CONTROL in
+ *_unconfigure_device()
+Message-ID: <20171205101127.GO22431@lahna.fi.intel.com>
+References: <20171109111508.47678-1-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171109111508.47678-1-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add EEH platform operations for pseries to update VF
-config space. With this change after EEH, the VF
-will have updated config space for pseries platform.
+On Thu, Nov 09, 2017 at 02:15:08PM +0300, Mika Westerberg wrote:
+> During PCIe surprise hot-unplug the device is not accessible anymore and
+> register reads return 0xffffffff. When that happens pciehp_unconfigure_device()
+> may inadvertently think the device below the bridge may be a display
+> device of somesort as reading PCI_BRIDGE_CONTROL register also returns
+> 0xff. This results failure of the remove operation:
+> 
+>   pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
+>   pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
+>   pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
+> 
+> Because of this the hierarchy is left untouched preventing further
+> hotplug operations.
+> 
+> Now, it is not clear why the check is there in the first place and why
+> we would like to prevent removing a bridge if it has PCI_BRIDGE_CTL_VGA
+> set. In case of PCIe surprise hot-unplug, it would not even be possible
+> to prevent the removal.
+> 
+> Given this and the issue described above, I think it makes sense to drop
+> the whole PCI_BRIDGE_CONTROL check from pciehp_unconfigure_device().
+> While there do the same for shpchp_configure_device() based on the same
+> reasoning and the fact that the same bug might trigger in standard PCI
+> hotplug as well.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |  1 +
- arch/powerpc/kernel/eeh.c                    | 59 +++++++++++++++++++++++++
- arch/powerpc/platforms/powernv/eeh-powernv.c | 65 ++--------------------------
- arch/powerpc/platforms/pseries/eeh_pseries.c | 26 ++++++++++-
- 4 files changed, 88 insertions(+), 63 deletions(-)
+Hi Bjorn,
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 5161c37dd039..82829c65f31a 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -297,6 +297,7 @@ int eeh_pe_reset(struct eeh_pe *pe, int option);
- int eeh_pe_configure(struct eeh_pe *pe);
- int eeh_pe_inject_err(struct eeh_pe *pe, int type, int func,
- 		      unsigned long addr, unsigned long mask);
-+int eeh_restore_vf_config(struct pci_dn *pdn);
- 
- /**
-  * EEH_POSSIBLE_ERROR() -- test for possible MMIO failure.
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index cbca0a667682..cc649809885e 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -740,6 +740,65 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
- 	return NULL;
- }
- 
-+int eeh_restore_vf_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 devctl, cmd, cap2, aer_capctl;
-+	int old_mps;
-+
-+	if (edev->pcie_cap) {
-+		/* Restore MPS */
-+		old_mps = (ffs(pdn->mps) - 8) << 5;
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+		devctl |= old_mps;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+
-+		/* Disable Completion Timeout */
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
-+				     4, &cap2);
-+		if (cap2 & 0x10) {
-+			eeh_ops->read_config(pdn,
-+					     edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					     4, &cap2);
-+			cap2 |= 0x10;
-+			eeh_ops->write_config(pdn,
-+					      edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					      4, cap2);
-+		}
-+	}
-+
-+	/* Enable SERR and parity checking */
-+	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
-+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
-+
-+	/* Enable report various errors */
-+	if (edev->pcie_cap) {
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_CERE;
-+		devctl |= (PCI_EXP_DEVCTL_NFERE |
-+			   PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_URRE);
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+	}
-+
-+	/* Enable ECRC generation and check */
-+	if (edev->pcie_cap && edev->aer_cap) {
-+		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				     4, &aer_capctl);
-+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-+		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				      4, aer_capctl);
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * pcibios_set_pcie_reset_state - Set PCI-E reset state
-  * @dev: pci device struct
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 961e64115d92..0665b6d03cb3 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1655,70 +1655,11 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
- 	return ret;
- }
- 
--static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
--{
--	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
--	u32 devctl, cmd, cap2, aer_capctl;
--	int old_mps;
--
--	if (edev->pcie_cap) {
--		/* Restore MPS */
--		old_mps = (ffs(pdn->mps) - 8) << 5;
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				     2, &devctl);
--		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
--		devctl |= old_mps;
--		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				      2, devctl);
--
--		/* Disable Completion Timeout */
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
--				     4, &cap2);
--		if (cap2 & 0x10) {
--			eeh_ops->read_config(pdn,
--					     edev->pcie_cap + PCI_EXP_DEVCTL2,
--					     4, &cap2);
--			cap2 |= 0x10;
--			eeh_ops->write_config(pdn,
--					      edev->pcie_cap + PCI_EXP_DEVCTL2,
--					      4, cap2);
--		}
--	}
--
--	/* Enable SERR and parity checking */
--	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
--	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
--	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
--
--	/* Enable report various errors */
--	if (edev->pcie_cap) {
--		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				     2, &devctl);
--		devctl &= ~PCI_EXP_DEVCTL_CERE;
--		devctl |= (PCI_EXP_DEVCTL_NFERE |
--			   PCI_EXP_DEVCTL_FERE |
--			   PCI_EXP_DEVCTL_URRE);
--		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
--				      2, devctl);
--	}
--
--	/* Enable ECRC generation and check */
--	if (edev->pcie_cap && edev->aer_cap) {
--		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
--				     4, &aer_capctl);
--		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
--		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
--				      4, aer_capctl);
--	}
--
--	return 0;
--}
--
- static int pnv_eeh_restore_config(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
- 	struct pnv_phb *phb;
--	s64 ret;
-+	s64 ret = 0;
- 	int config_addr = (pdn->busno << 8) | (pdn->devfn);
- 
- 	if (!edev)
-@@ -1732,7 +1673,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 	 * to be exported by firmware in extendible way.
- 	 */
- 	if (edev->physfn) {
--		ret = pnv_eeh_restore_vf_config(pdn);
-+		ret = eeh_restore_vf_config(pdn);
- 	} else {
- 		phb = pdn->phb->private_data;
- 		ret = opal_pci_reinit(phb->opal_id,
-@@ -1745,7 +1686,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 		return -EIO;
- 	}
- 
--	return 0;
-+	return ret;
- }
- 
- static struct eeh_ops pnv_eeh_ops = {
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index 2295f117e2d3..a671ef4f57f5 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -708,6 +708,30 @@ static int pseries_eeh_write_config(struct pci_dn *pdn, int where, int size, u32
- 	return rtas_write_config(pdn, where, size, val);
- }
- 
-+static int pseries_eeh_restore_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	s64 ret = 0;
-+
-+	if (!edev)
-+		return -EEXIST;
-+
-+	/*
-+	 * FIXME: The MPS, error routing rules, timeout setting are worthy
-+	 * to be exported by firmware in extendible way.
-+	 */
-+	if (edev->physfn)
-+		ret = eeh_restore_vf_config(pdn);
-+
-+	if (ret) {
-+		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-+			__func__, edev->pe_config_addr, ret);
-+		return -EIO;
-+	}
-+
-+	return ret;
-+}
-+
- static struct eeh_ops pseries_eeh_ops = {
- 	.name			= "pseries",
- 	.init			= pseries_eeh_init,
-@@ -723,7 +747,7 @@ static struct eeh_ops pseries_eeh_ops = {
- 	.read_config		= pseries_eeh_read_config,
- 	.write_config		= pseries_eeh_write_config,
- 	.next_error		= NULL,
--	.restore_config		= NULL
-+	.restore_config		= pseries_eeh_restore_config
- };
- 
- /**
--- 
-2.14.3 (Apple Git-98)
+Any comments on this patch?
