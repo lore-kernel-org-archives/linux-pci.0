@@ -1,35 +1,95 @@
-Return-Path: <SRS0=c4Ay=DJ=gmail.com=linus971@kernel.org>
-Return-Path: <SRS0=c4Ay=DJ=gmail.com=linus971@kernel.org>
-MIME-Version: 1.0
-Sender: linus971@gmail.com
-In-Reply-To: <alpine.DEB.2.20.1712131738020.1885@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com>
- <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl>
- <alpine.DEB.2.20.1712061344560.1724@nanos> <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
- <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl>
- <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
- <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.20.1712131738020.1885@nanos>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 13 Dec 2017 09:45:50 -0800
-Message-ID: <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com>
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
-	Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Andy Lutomirski <luto@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "the arch/x86 maintainers" <x86@kernel.org>,
-	Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:43795 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752242AbdLEQW5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Dec 2017 11:22:57 -0500
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+To: mathias.nyman@intel.com
+Cc: bhelgaas@google.com, gregkh@linuxfoundation.org,
+        linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Joe Lee <asmt.swfae@gmail.com>
+Subject: [PATCH] xhci: Fix front USB ports on ASUS PRIME B350M-A
+Date: Wed,  6 Dec 2017 00:22:42 +0800
+Message-Id: <20171205162242.4057-1-kai.heng.feng@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 8:41 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> Definitely. That was fragile forever but puzzles me is that I can't figure
-> out what now causes that spurious interrupt to surface out of the blue.
+The board in question has three XHCI HCs:
+02:00.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] USB 3.1 XHCI Controller [1022:43bb] (rev 02)
+04:00.0 USB controller [0c03]: ASMedia Technology Inc. Device [1b21:1343]
+0a:00.3 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] USB3 Host Controller [1022:145c]
 
-Perhaps just timing?
+The front ports are connected to HC [1022:43bb] (02:00.0).
 
-How hard would it be to change the ordering to just redirect irqs first?
+After plugging high speed devices into front ports several times, it
+stops responding to high speed devices. Super speed devices can still
+get detected though.
 
-                 Linus
+When I plugged a high speed device, [1b21:1343] (04:00.0) also got woke
+up:
+[  140.834823] xhci_hcd 0000:02:00.0: // Setting command ring address to 0xff73b001
+[  140.838220] xhci_hcd 0000:02:00.0: xhci_resume: starting port polling.
+[  140.838226] xhci_hcd 0000:02:00.0: xhci_hub_status_data: stopping port polling.
+[  140.838266] xhci_hcd 0000:02:00.0: xhci_suspend: stopping port polling.
+[  140.838362] xhci_hcd 0000:02:00.0: // Setting command ring address to 0xff73b001
+[  140.858908] xhci_hcd 0000:04:00.0: // Setting command ring address to 0xfffd9001
+[  140.862745] xhci_hcd 0000:04:00.0: xhci_resume: starting port polling.
+[  140.862754] xhci_hcd 0000:04:00.0: xhci_hub_status_data: stopping port polling.
+[  140.862760] xhci_hcd 0000:04:00.0: xhci_hub_status_data: stopping port polling.
+[  140.862787] xhci_hcd 0000:04:00.0: xhci_suspend: stopping port polling.
+[  140.862811] xhci_hcd 0000:04:00.0: // Setting command ring address to 0xfffd9001
+
+Seems like [1022:43bb] is wired to [1b21:1343] internally.
+
+Both HCs support D3hot PME, so I tried to disable D3cold on them.
+Turns out disable D3cold on [1b21:1343] (04:00.0) can workaround the
+issue for [1022:43bb] (02:00.0).
+
+Also, [1022:43bb] (02:00.0) sometimes failed to suspend:
+[  549.114587] xhci_hcd 0000:02:00.0: WARN: xHC CMD_RUN timeout
+[  549.114608] suspend_common(): xhci_pci_suspend+0x0/0xc0 returns -110
+[  549.114638] xhci_hcd 0000:02:00.0: can't suspend (hcd_pci_runtime_suspend returned -110)
+[  549.116744] usb usb3: root hub lost power or was reset
+[  549.116746] usb usb4: root hub lost power or was reset
+
+Based on previous guesswork, the issue can be workaround by doing PCI
+reset on [1b21:1343] (04:00.0).
+
+Cc: Joe Lee <asmt.swfae@gmail.com>
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+ drivers/pci/quirks.c          | 2 ++
+ drivers/usb/host/pci-quirks.c | 3 +++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 10684b17d0bd..380061dae51d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1699,6 +1699,8 @@ static void quirk_radeon_pm(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6741, quirk_radeon_pm);
+ 
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ASMEDIA, 0x1343, pci_d3cold_disable);
++
+ #ifdef CONFIG_X86_IO_APIC
+ static int dmi_disable_ioapicreroute(const struct dmi_system_id *d)
+ {
+diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+index 161536717025..8c4318671e37 100644
+--- a/drivers/usb/host/pci-quirks.c
++++ b/drivers/usb/host/pci-quirks.c
+@@ -1176,6 +1176,9 @@ bool usb_xhci_needs_pci_reset(struct pci_dev *pdev)
+ 	    (pdev->device == 0x0014 || pdev->device == 0x0015))
+ 		return true;
+ 
++	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1343)
++		return true;
++
+ 	return false;
+ }
+ EXPORT_SYMBOL_GPL(usb_xhci_needs_pci_reset);
+-- 
+2.14.1
