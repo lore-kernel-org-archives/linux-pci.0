@@ -1,34 +1,107 @@
-Return-Path: <SRS0=av5M=DI=bombadil.srs.infradead.org=BATV+096fce5175ea1cd588ed+5224+infradead.org+hch@kernel.org>
-Return-Path: <SRS0=av5M=DI=bombadil.srs.infradead.org=BATV+096fce5175ea1cd588ed+5224+infradead.org+hch@kernel.org>
-Date: Tue, 12 Dec 2017 07:07:26 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Govinda Tatti <Govinda.Tatti@Oracle.COM>,
-	xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	boris.ostrovsky@Oracle.COM, jgross@suse.com, JBeulich@suse.com,
-	roger.pau@citrix.com, konrad.wilk@Oracle.COM
-Subject: Re: [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr() interface
-Message-ID: <20171212150726.GA20341@infradead.org>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
- <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <rjw@sisk.pl>, <linux-pci@vger.kernel.org>
+CC: <stable@vger.kernel.org>, <linuxarm@huawei.com>,
+        Dongdong Liu
+	<liudongdong3@huawei.com>
+Subject: [PATCH V2 2/2] PCI/AER: Fix AER device configuration
+Date: Tue, 5 Dec 2017 17:50:38 +0800
+Message-ID: <1512467438-42850-3-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
+References: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 08, 2017 at 02:24:24PM -0600, Bjorn Helgaas wrote:
-> I'd rather change pcie_flr() so you could *always* call it, and it
-> would return 0, -ENOTTY, or whatever, based on whether FLR is
-> supported.  Is that feasible?
-> 
-> I don't like the "Can I do this? Ok, do this" style of interfaces.
-> It's racy (not really applicable in this case) and seems clunky.
+AER driver only binds to root ports. It binds to one device and it also
+configures other downstream devices.  That opens the door to concurrency
+issues and makes it really hard to ensure that hotplug works correctly.
+The aer_probe() path should only touch the device it is binding, it
+should not use pci_walk_bus().  If we need to configure another device,
+that should be done in the enumeration path for *that device*.
+We can use  _HPX to set PCI_EXP_DEVCTL to enable error report and ensure
+that hotplug works correctly.  For more_HPX details information,
+we can see ACPI 6.1 section 6.2.9 _HPX (Hot Plug Parameter Extensions).
 
-I was tempted to change all that for the whole reset sequence but didn't
-dare to do that because someone probably put some thought into the
-current scheme.
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ drivers/pci/pcie/aer/aerdrv.c | 49 ++++---------------------------------------
+ 1 file changed, 4 insertions(+), 45 deletions(-)
 
-I'd love to get rid of the "can I do this" interfaces entirely, and also
-change to EOPNOTSUPP for the not supported case.
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index 6ff5f5b..cd63025 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -58,41 +58,6 @@ bool pci_aer_available(void)
+ 	return !pcie_aer_disable && pci_msi_enabled();
+ }
+ 
+-static int set_device_error_reporting(struct pci_dev *dev, void *data)
+-{
+-	bool enable = *((bool *)data);
+-	int type = pci_pcie_type(dev);
+-
+-	if ((type == PCI_EXP_TYPE_ROOT_PORT) ||
+-	    (type == PCI_EXP_TYPE_UPSTREAM) ||
+-	    (type == PCI_EXP_TYPE_DOWNSTREAM)) {
+-		if (enable)
+-			pci_enable_pcie_error_reporting(dev);
+-		else
+-			pci_disable_pcie_error_reporting(dev);
+-	}
+-
+-	if (enable)
+-		pcie_set_ecrc_checking(dev);
+-
+-	return 0;
+-}
+-
+-/**
+- * set_downstream_devices_error_reporting - enable/disable the error reporting  bits on the root port and its downstream ports.
+- * @dev: pointer to root port's pci_dev data structure
+- * @enable: true = enable error reporting, false = disable error reporting.
+- */
+-static void set_downstream_devices_error_reporting(struct pci_dev *dev,
+-						   bool enable)
+-{
+-	set_device_error_reporting(dev, &enable);
+-
+-	if (!dev->subordinate)
+-		return;
+-	pci_walk_bus(dev->subordinate, set_device_error_reporting, &enable);
+-}
+-
+ /**
+  * aer_enable_rootport - enable Root Port's interrupts when receiving messages
+  * @rpc: pointer to a Root Port data structure
+@@ -123,11 +88,8 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
+ 	pci_read_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, &reg32);
+ 	pci_write_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, reg32);
+ 
+-	/*
+-	 * Enable error reporting for the root port device and downstream port
+-	 * devices.
+-	 */
+-	set_downstream_devices_error_reporting(pdev, true);
++	/* Enable error reporting for the root port device */
++	pci_enable_pcie_error_reporting(pdev);
+ 
+ 	/* Enable Root Port's interrupt in response to error messages */
+ 	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, &reg32);
+@@ -147,11 +109,8 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
+ 	u32 reg32;
+ 	int pos;
+ 
+-	/*
+-	 * Disable error reporting for the root port device and downstream port
+-	 * devices.
+-	 */
+-	set_downstream_devices_error_reporting(pdev, false);
++	/* Disable error reporting for the root port device */
++	pci_disable_pcie_error_reporting(pdev);
+ 
+ 	pos = pdev->aer_cap;
+ 	/* Disable Root's interrupt in response to error messages */
+-- 
+1.9.1
