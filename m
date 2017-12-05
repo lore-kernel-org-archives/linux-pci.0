@@ -1,38 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:33874 "EHLO ms.lwn.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752434AbdLCWMe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 3 Dec 2017 17:12:34 -0500
-Date: Sun, 3 Dec 2017 15:12:32 -0700
-From: Jonathan Corbet <corbet@lwn.net>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] Documentation: fix docs build error after source file
- removed
-Message-ID: <20171203151232.502b25f9@lwn.net>
-In-Reply-To: <5fc71be8-e465-211d-757f-457a8054673c@infradead.org>
-References: <5fc71be8-e465-211d-757f-457a8054673c@infradead.org>
+Return-Path: <SRS0=X9zb=DB=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=X9zb=DB=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
+To: Alexey Kardashevskiy <aik@ozlabs.ru>, helgaas@kernel.org,
+        bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com
+References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+ <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
+ <3a49b44e-833a-8440-aa3c-a4984ac47147@linux.vnet.ibm.com>
+ <466ac4c0-6503-a2eb-e352-d2bdfca10cb5@ozlabs.ru>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Tue, 5 Dec 2017 09:13:04 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <466ac4c0-6503-a2eb-e352-d2bdfca10cb5@ozlabs.ru>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <9777301b-3807-2b1d-fbd5-ffa62b78d8f5@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 3 Dec 2017 13:15:39 -0800
-Randy Dunlap <rdunlap@infradead.org> wrote:
 
-> The pci/htirq.c file was removed so remove it from the documentation
-> file also.
-> 
-> Error: Cannot open file ../drivers/pci/htirq.c
-> WARNING: kernel-doc '../scripts/kernel-doc -rst -enable-lineno -export ../drivers/pci/htirq.c' failed with return code 2
-> 
-> Fixes: fd2fa6c18b72 ("x86/PCI: Remove unused HyperTransport interrupt support")
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-Applied, thanks.
+On 12/4/17 7:24 PM, Alexey Kardashevskiy wrote:
+> On 05/12/17 02:08, Bryant G. Ly wrote:
+>>
+>> On 12/2/17 7:45 PM, Alexey Kardashevskiy wrote:
+>>> On 10/11/17 01:00, Bryant G. Ly wrote:
+>>>> v1 - Initial patch
+>>>> v2 - Addressed Bjorn's comment on creating a highly platform
+>>>>      dependent global exported symbol.
+>>>> v3 - Based patch off linux-ppc/master
+>>>> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
+>>>> v5 - Fixed comments and commit message
+>>> What is this made against of? I'd like to give it a try but it does not
+>>> apply to Linus'es tree or powerpc/next. Thanks.
+>>>
+>> This was made against powerpc/next back when it was still under 4.14-rc6.
+>> It has been in review for awhile... 
+> Sure, sha1 or github tree would be enough though to try.
 
-jon
+6cff0a118f23b98c604a3604ea9de11338e24fbe
+
+or if you want to just use the github tree its:
+
+https://github.com/powervm/sriov-ppc/tree/upstream
+
+>
+>> -Bryant
+>>
+>>>> Bryant G. Ly (3):
+>>>>   powerpc/kernel: Separate SR-IOV Calls
+>>>>   pseries: Add PSeries SR-IOV Machine dependent calls
+>>>>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+>>>>
+>>>>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>>>>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>>>>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>>>>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>>>>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>>>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>>>>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>>>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
+>>>>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
+>>>>  drivers/pci/iov.c                            | 11 ++++++++++
+>>>>  include/linux/pci.h                          |  2 ++
+>>>>  11 files changed, 118 insertions(+), 33 deletions(-)
+>>>>
+>
