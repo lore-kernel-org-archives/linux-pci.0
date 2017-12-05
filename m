@@ -1,62 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:39481 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753699AbdLHOCX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 09:02:23 -0500
+Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>, <rjw@sisk.pl>, <linux-pci@vger.kernel.org>
+CC: <stable@vger.kernel.org>, <linuxarm@huawei.com>,
+        Dongdong Liu
+	<liudongdong3@huawei.com>
+Subject: [PATCH V2 1/2] PCI/portdrv: Fix switch devctrl error report enable
+Date: Tue, 5 Dec 2017 17:50:37 +0800
+Message-ID: <1512467438-42850-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
+References: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20171208025616.16267-6-sergey.senozhatsky@gmail.com>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com> <20171208025616.16267-6-sergey.senozhatsky@gmail.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 8 Dec 2017 15:02:22 +0100
-Message-ID: <CAJZ5v0hQ+QyJZ_bw9AGaSByvckpK5MeU=jkuy-MYg4Qdzoxrrw@mail.gmail.com>
-Subject: Re: [PATCH 5/9] pnp: remove unneeded kallsyms include
-To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Rafael Wysocki <rjw@rjwysocki.net>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 8, 2017 at 3:56 AM, Sergey Senozhatsky
-<sergey.senozhatsky.work@gmail.com> wrote:
-> The file was converted from print_fn_descriptor_symbol()
-> to %pF some time ago (2e532d68a2b3e2aa {pci,pnp} quirks.c:
-> don't use deprecated print_fn_descriptor_symbol()). kallsyms
-> does not seem to be needed anymore.
->
-> Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pnp/quirks.c | 1 -
->  1 file changed, 1 deletion(-)
->
-> diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
-> index f054cdddfef8..803666ae3635 100644
-> --- a/drivers/pnp/quirks.c
-> +++ b/drivers/pnp/quirks.c
-> @@ -21,7 +21,6 @@
->  #include <linux/slab.h>
->  #include <linux/pnp.h>
->  #include <linux/io.h>
-> -#include <linux/kallsyms.h>
->  #include "base.h"
->
->  static void quirk_awe32_add_ports(struct pnp_dev *dev,
-> --
+Current code has a bug, switch upstream/downstream port error report
+is disabled.
+DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
 
-Do you want me to apply this or do you want to route it differently?
+We call aer_probe() for a root port, and it enables AER reporting for
+the root port and any downstream devices:
+
+aer_probe(root port)                        # only binds to root ports
+  aer_enable_rootport
+    set_downstream_devices_error_reporting(root, true)
+      set_device_error_reporting(root, true)
+        pci_enable_pcie_error_reporting
+          pcie_capability_set_word(root, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
+        pci_walk_bus(root->subordinate set_device_error_reporting, true)
+          set_device_error_reporting(dev, true)
+            pci_enable_pcie_error_reporting
+              pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+PCI_EXP_AER_FLAGS)
+
+We later call pcie_portdrv_probe() for every downstream bridge (it
+matches PCI_CLASS_BRIDGE_PCI devices, then discards any non-PCIe
+devices), and it *disables* AER reporting:
+
+pcie_portdrv_probe(switch port)
+  pcie_port_device_register
+    get_port_device_capability
+      pci_disable_pcie_error_reporting
+        pcie_capability_clear_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
+
+The result is that we first enable AER for the downstream switch
+ports, then we disable it again.
+
+It does not need to disable AER for upstream/downstream ports as
+AER driver only binds to root ports.
+
+Fixes: 2bd50dd800b5(PCI: PCIe: Disable PCIe port services during port
+initialization)
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+CC: stable@vger.kernel.org
+---
+ drivers/pci/pcie/portdrv_core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index a592103..a0dff44 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -241,7 +241,9 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 		 * Disable AER on this port in case it's been enabled by the
+ 		 * BIOS (the AER service driver will enable it when necessary).
+ 		 */
+-		pci_disable_pcie_error_reporting(dev);
++		if ((pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
++		    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
++			pci_disable_pcie_error_reporting(dev);
+ 	}
+ 	/* VC support */
+ 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VC))
+-- 
+1.9.1
