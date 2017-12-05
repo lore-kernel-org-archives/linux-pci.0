@@ -1,147 +1,112 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 14 Dec 2017 16:51:33 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47188 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752283AbdLEROn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Dec 2017 12:14:43 -0500
+Date: Tue, 5 Dec 2017 11:14:40 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jim Quinlan <jim2101024@gmail.com>
-Subject: Re: [PATCH v3 3/8] PCI: brcmstb: Add Broadcom STB PCIe host
- controller driver
-Message-ID: <20171214225133.GM30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
- <1510697532-32828-4-git-send-email-jim2101024@gmail.com>
- <20171212221642.GB95453@bhelgaas-glaptop.roam.corp.google.com>
- <CANCKTBvtqNWZYXpLdUnEWwA2=14XhJ6adR5muOAYubY_1SxZWw@mail.gmail.com>
+To: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc: mathias.nyman@intel.com, bhelgaas@google.com,
+        gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Joe Lee <asmt.swfae@gmail.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH] xhci: Fix front USB ports on ASUS PRIME B350M-A
+Message-ID: <20171205171440.GA23510@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171205162242.4057-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <CANCKTBvtqNWZYXpLdUnEWwA2=14XhJ6adR5muOAYubY_1SxZWw@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Florian Fainelli <f.fainelli@gmail.com>,
- Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171205162242.4057-1-kai.heng.feng@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 06:53:53PM -0500, Jim Quinlan wrote:
-> On Tue, Dec 12, 2017 at 5:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Tue, Nov 14, 2017 at 05:12:07PM -0500, Jim Quinlan wrote:
-> >> This commit adds the basic Broadcom STB PCIe controller.  Missing is
-> >> the ability to process MSI and also handle dma-ranges for inbound
-> >> memory accesses.  These two functionalities are added in subsequent
-> >> commits.
-> >>
-> >> The PCIe block contains an MDIO interface.  This is a local interface
-> >> only accessible by the PCIe controller.  It cannot be used or shared
-> >> by any other HW.  As such, the small amount of code for this
-> >> controller is included in this driver as there is little upside to put
-> >> it elsewhere.
-> ...
+[+cc Rafael, linux-pm]
 
-> >> +static bool brcm_pcie_valid_device(struct brcm_pcie *pcie, struct pci_bus *bus,
-> >> +                                int dev)
-> >> +{
-> >> +     if (pci_is_root_bus(bus)) {
-> >> +             if (dev > 0)
-> >> +                     return false;
-> >> +     } else {
-> >> +             /* If there is no link, then there is no device */
-> >> +             if (!brcm_pcie_link_up(pcie))
-> >> +                     return false;
-> >
-> > This is racy, since the link can go down after you check but before
-> > you do the config access.  I assume your hardware can deal with a
-> > config access that targets a link that is down?
+On Wed, Dec 06, 2017 at 12:22:42AM +0800, Kai-Heng Feng wrote:
+> The board in question has three XHCI HCs:
+> 02:00.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] USB 3.1 XHCI Controller [1022:43bb] (rev 02)
+> 04:00.0 USB controller [0c03]: ASMedia Technology Inc. Device [1b21:1343]
+> 0a:00.3 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] USB3 Host Controller [1022:145c]
 > 
-> Yes, that can happen but there is really nothing that can be done if
-> the link goes down in that vulnerability window.  What do you suggest
-> doing?
-
-Most hardware drops writes and returns ~0 on reads if the link is
-down.  I assume your hardware does something similar, and that should
-be enough.  You shouldn't have to check whether the link is up.
-
-The hardware might report errors, e.g., via AER, if the link is down.
-And we might not not handle those nicely.  If we have issues there, we
-should find out and fix them.
-
-I see that dwc, altera, rockchip, and xilinx all do check for link up
-there, too.  I can't remember if they had a legitimate reason, or if I
-just missed it.
-
-> >> +static void brcm_pcie_remove_controller(struct brcm_pcie *pcie)
-> >> +{
-> >> +     struct list_head *pos, *q;
-> >> +     struct brcm_pcie *tmp;
-> >> +
-> >> +     mutex_lock(&brcm_pcie_lock);
-> >> +     list_for_each_safe(pos, q, &brcm_pcie) {
-> >> +             tmp = list_entry(pos, struct brcm_pcie, list);
-> >> +             if (tmp == pcie) {
-> >> +                     list_del(pos);
-> >> +                     if (list_empty(&brcm_pcie))
-> >> +                             num_memc = 0;
-> >> +                     break;
-> >> +             }
-> >> +     }
-> >> +     mutex_unlock(&brcm_pcie_lock);
-> >
-> > I'm missing something.  I don't see that num_memc is ever set to
-> > anything *other* than zero.
-> The num_memc is set and used in the dma commit.  I will remove its
-> declaration from this commit.
-
-Thanks, that will make the patches much easier to read.
-
-> >> +     pcie->id = of_get_pci_domain_nr(dn);
-> >
-> > Why do you call of_get_pci_domain_nr() directly?  No other driver
-> > does.
+> The front ports are connected to HC [1022:43bb] (02:00.0).
 > 
-> We use the domain as the controller number (id).  We use the id to
-> identify and fix a HW bug that only affects the 2nd controller; see
-> the clause
-> " } else if (of_machine_is_compatible("brcm,bcm7278a0")) {".
+> After plugging high speed devices into front ports several times, it
+> stops responding to high speed devices. Super speed devices can still
+> get detected though.
+> 
+> When I plugged a high speed device, [1b21:1343] (04:00.0) also got woke
+> up:
+> [  140.834823] xhci_hcd 0000:02:00.0: // Setting command ring address to 0xff73b001
+> [  140.838220] xhci_hcd 0000:02:00.0: xhci_resume: starting port polling.
+> [  140.838226] xhci_hcd 0000:02:00.0: xhci_hub_status_data: stopping port polling.
+> [  140.838266] xhci_hcd 0000:02:00.0: xhci_suspend: stopping port polling.
+> [  140.838362] xhci_hcd 0000:02:00.0: // Setting command ring address to 0xff73b001
+> [  140.858908] xhci_hcd 0000:04:00.0: // Setting command ring address to 0xfffd9001
+> [  140.862745] xhci_hcd 0000:04:00.0: xhci_resume: starting port polling.
+> [  140.862754] xhci_hcd 0000:04:00.0: xhci_hub_status_data: stopping port polling.
+> [  140.862760] xhci_hcd 0000:04:00.0: xhci_hub_status_data: stopping port polling.
+> [  140.862787] xhci_hcd 0000:04:00.0: xhci_suspend: stopping port polling.
+> [  140.862811] xhci_hcd 0000:04:00.0: // Setting command ring address to 0xfffd9001
+> 
+> Seems like [1022:43bb] is wired to [1b21:1343] internally.
+> 
+> Both HCs support D3hot PME, so I tried to disable D3cold on them.
+> Turns out disable D3cold on [1b21:1343] (04:00.0) can workaround the
+> issue for [1022:43bb] (02:00.0).
+> 
+> Also, [1022:43bb] (02:00.0) sometimes failed to suspend:
+> [  549.114587] xhci_hcd 0000:02:00.0: WARN: xHC CMD_RUN timeout
+> [  549.114608] suspend_common(): xhci_pci_suspend+0x0/0xc0 returns -110
+> [  549.114638] xhci_hcd 0000:02:00.0: can't suspend (hcd_pci_runtime_suspend returned -110)
+> [  549.116744] usb usb3: root hub lost power or was reset
+> [  549.116746] usb usb4: root hub lost power or was reset
+> 
+> Based on previous guesswork, the issue can be workaround by doing PCI
+> reset on [1b21:1343] (04:00.0).
 
-pci_register_host_bridge() already sets bus->domain_nr for every host
-bridge.  That path calls of_get_pci_domain_nr() eventually.   But I
-guess that's too late for your use case, because you have this:
+Naive questions: Does this indicate that xhci_hcd is lacking something
+in the "resume from D3cold" path?  Is there a bugzilla for this?  If
+not, can you open one and attach the complete dmesg log and complete
+"lspci -vv" output (as root)?  Google found some possibly related
+issues but I can't quite tie them together yet.
 
-  brcm_pcie_probe
-    brcm_pcie_setup
-      brcm_pcie_bridge_sw_init_set
-        if (of_machine_is_compatible("brcm,bcm7278a0")) {
-          offset = pcie->id ? ...                    <--- use
-    pci_scan_root_bus_bridge
-      pci_register_host_bridge
-        bus->domain_nr = pci_bus_find_domain_nr      <--- available
+I don't have an issue with the quirk per se, but in general I think
+it's better to debug an issue than simply avoid it.
 
-I guess you haven't added a binding for brcm,bcm7278a0 yet?
-
-I'm not really sure that using the linux,pci-domain DT property is the
-best way to distinguish the two controllers.  Maybe Rob has an
-opinion?
-
-> >> +     if (pcie->id < 0)
-> >> +             return pcie->id;
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Cc: Joe Lee <asmt.swfae@gmail.com>
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> ---
+>  drivers/pci/quirks.c          | 2 ++
+>  drivers/usb/host/pci-quirks.c | 3 +++
+>  2 files changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 10684b17d0bd..380061dae51d 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -1699,6 +1699,8 @@ static void quirk_radeon_pm(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6741, quirk_radeon_pm);
+>  
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ASMEDIA, 0x1343, pci_d3cold_disable);
+> +
+>  #ifdef CONFIG_X86_IO_APIC
+>  static int dmi_disable_ioapicreroute(const struct dmi_system_id *d)
+>  {
+> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+> index 161536717025..8c4318671e37 100644
+> --- a/drivers/usb/host/pci-quirks.c
+> +++ b/drivers/usb/host/pci-quirks.c
+> @@ -1176,6 +1176,9 @@ bool usb_xhci_needs_pci_reset(struct pci_dev *pdev)
+>  	    (pdev->device == 0x0014 || pdev->device == 0x0015))
+>  		return true;
+>  
+> +	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1343)
+> +		return true;
+> +
+>  	return false;
+>  }
+>  EXPORT_SYMBOL_GPL(usb_xhci_needs_pci_reset);
+> -- 
+> 2.14.1
+> 
