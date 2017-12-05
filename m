@@ -1,71 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.185]:56598 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751609AbdLLPjf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 10:39:35 -0500
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>
-CC: 'Niklas Cassel' <niklas.cassel@axis.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kishon@ti.com" <kishon@ti.com>, Niklas Cassel <niklass@axis.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v4 0/3] Fix find_first_zero_bit() usage
-Date: Tue, 12 Dec 2017 15:39:47 +0000
-Message-ID: <963608b179be4d5297082dcf915ac924@AcuMS.aculab.com>
-References: <20171212141634.5985-1-niklas.cassel@axis.com>
- <5a6a30994101482c94f16203e3c8ba7d@AcuMS.aculab.com>
- <20171212152416.GA1262@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20171212152416.GA1262@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.99]:55996 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752911AbdLETH5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Dec 2017 14:07:57 -0500
+Date: Tue, 5 Dec 2017 13:07:55 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rudolf Marek <r.marek@assembler.cz>
+Cc: linux-pci@vger.kernel.org, RayeR <rayer@seznam.cz>
+Subject: Re: PCI VGA 0x3b0/0x3C0 aliases handling in Linux
+Message-ID: <20171205190755.GB23510@bhelgaas-glaptop.roam.corp.google.com>
+References: <098b7b02-90f8-636e-37b8-665c32aab96e@assembler.cz>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <098b7b02-90f8-636e-37b8-665c32aab96e@assembler.cz>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi
-> Sent: 12 December 2017 15:24
+On Tue, Dec 05, 2017 at 05:43:00PM +0100, Rudolf Marek wrote:
+> It turned out that silly BIOS assigned the I/O BAR to an address
+> which is positively decoded by some other PCIe bridge. The unlucky
+> region collides with the legacy VGA mirror region which is decoded
+> by other PCI/PCIe bridge because bit 3 (PCI_BRIDGE_CTL_VGA) is set.
 > 
-> On Tue, Dec 12, 2017 at 02:33:52PM +0000, David Laight wrote:
-> > From: Niklas Cassel
-> > > find_first_zero_bit()'s parameter 'size' is defined in bits,
-> > > not in bytes.
-> > >
-> > > Calling find_first_zero_bit() with the wrong size unit
-> > > will lead to insidious bugs.
-> > >
-> > > Fix all uses of find_first_zero_bit() called with
-> > > sizeof() as size argument in drivers/pci.
-> > ...
-> >
-> > Isn't all this code just using the wrong function.
-> > Shouldn't they be using ffz() (or whatever it is called)
-> > to find the first zero in a numeric argument rather that
-> > find_first_zero_bit() which is intended for large bitmaps.
-> >
-> > Perhaps the type for 'large bitmaps' should be:
-> > struct {
-> > 	unsigned long bitmap_bits[0];
-> > } bitmap;
-> > rather than unsigned long[].
+> Here is a quote from random datasheet of PCI/PCIe bridge:
 > 
-> David,
+> VGA_EN:
 > 
-> I think you are referring to patch 3, which is a fix for the current
-> find_first_zero_bit() usage. The point is, I think that
-> struct pci_epc_group.function_num_map should actually be converted
-> to a bitmap (and therefore using find_first_zero_bit() on it is the
-> right API); patch 3 is just a fix for current code.
+> *  Memory accesses in the range 0x000A_0000 to 000B_FFFF *  I/O
+> addresses in the first 64 Kbytes of the I/O address space
+> (Address[31:16] for PCIe are 0x0000) and where Address[9:0] is in
+> the range of 0x3B0 to 0x3BB or 0x3C0 to 0x3DF (inclusive of ISA
+> address aliases - Address[15:10] may possess any value and is not
+> used in the decoding)
 > 
-> Unless you think patch 3 is technically wrong I would go ahead
-> with the series as-is for fixes and we will refactor
-> struct pci_epc_group.function_num_map usage to a proper bitmap
-> for the upcoming merge window.
+> So, as you can see, it effectively forces the VGA I/O region to be
+> mirrored all over the 64K I/O space.
+> 
+> What is interesting  is that the PCI bridge specs version 1.2?,
+> added a new bit 4 (which is previously RO 0) which allows to decode
+> only the full address for the 0x3b0/0x3c0 :
+> 
+> VGA_16BIT_EN:
+> 
+> This bit enables the bridge to provide 16-bit decoding of VGA I/O
+> address precluding the decoding of alias addresses every 1 KB. This
+> bit has meaning only if VGA Enable bit is set
+> 
+> There is not even a define in the Linux which would describe this
+> bit. The "fix" for the problem is to simply turn off the aliasing.
+> 
+> I would like to ask:
+> 
+> 1) If there is some code already which would check this PCI
+> resources collisions (at least issue an warning)
 
-I may not have looked very closely at these patches, but IIRC some other
-similar ones were using explicit foo |= 1 << bit to set the bit.
+We do check for PCI resource collisions, e.g., in
+pci_claim_resource(), but this does not account for aliasing.
 
-While technically correct (changes 4 or 8 to 32 or 64) it might be
-better described as '8 * sizeof xxxx'.
-Then the code is correct regardless of the bitmap size (unless smaller
-than a long on (probably) BE systems).
+> 2) Do you think that Linux should try to fix this? (Yes the BIOS
+> messed it up, but hey, the Windoze figured it out)
 
-	David
+So if I understand correctly, you have
+
+  - A bridge with PCI_BRIDGE_CTL_VGA set but VGA_16BIT_EN is clear
+
+  - A peer of the bridge with an I/O BAR set to some alias of
+    0x3c0-0x3df
+
+In this case I think both the bridge and the peer device will claim
+accesses to 0x3c0-0x3df, which is a bad thing.
+
+And your proposal is that Linux should either
+
+  - Turn on VGA_16BIT_EN (if supported by the bridge), or
+
+  - If VGA_16BIT_EN is not supported by the bridge, try to reassign
+    the peer I/O BAR so it doesn't conflict with the 0x3c0-0x3df
+    aliases
+
+If I'm understanding correctly, this sounds very reasonable.
+
+> I suspect it will fix couple of problems people were seeing with old
+> PCI cards as they tend to have the I/O regions (I stumbled upon
+> various reports when was suspecting the PCIe to PCI ITE chip and
+> interrupt routing problems)
+
+To help understand and document this better, it would be nice to see a
+complete dmesg log and "lspci -vv" output (as root) showing the
+problem.  A kernel.org bugzilla would be a good place to store this.
+
+It would also be great to collect up the other reports you've found
+and see if we can definitively tie them to this issue and potentially
+test a fix.
+
+Bjorn
