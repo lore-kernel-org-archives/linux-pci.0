@@ -1,98 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60158 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:58274 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752329AbdLLRet (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Dec 2017 12:34:49 -0500
-Date: Tue, 12 Dec 2017 11:34:40 -0600
+        id S1751746AbdLETkw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Dec 2017 14:40:52 -0500
+Date: Tue, 5 Dec 2017 13:40:50 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: cyndis@kapsi.fi, thierry.reding@gmail.com, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, jonathanh@nvidia.com,
-        robh+dt@kernel.org, frowand.list@gmail.com, rjw@rjwysocki.net,
-        tglx@linutronix.de, vidyas@nvidia.com, kthota@nvidia.com,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH V4 2/7] PCI: tegra: Use bus->sysdata to store and get
- host private data
-Message-ID: <20171212173440.GC53955@bhelgaas-glaptop.roam.corp.google.com>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
- <1512723493-865-3-git-send-email-mmaddireddy@nvidia.com>
+To: linux-pci@vger.kernel.org
+Cc: Kenji Chen <kenji.chen@intel.com>,
+        Thierry Reding <treding@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        David Daney <david.daney@cavium.com>,
+        Krishna Kishore <kthota@nvidia.com>,
+        linux-kernel@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        linux-tegra@vger.kernel.org, Patrick Georgi <pgeorgi@chromium.org>,
+        Rajat Jain <rajatja@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Stefan Reinauer <stefan.reinauer@coreboot.org>,
+        Duncan Laurie <dlaurie@chromium.org>
+Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+Message-ID: <20171205194050.GD23510@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1512723493-865-3-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 08, 2017 at 02:28:08PM +0530, Manikanta Maddireddy wrote:
-> Tegra host driver is using pci_find_host_bridge() to get private data,
-> however pci_find_host_bridge() is causing module build failure because
-> it is not exported. pci_find_host_bridge() can be avoided by using
-> bus->sysdata to store and get private data.
+On Sat, Dec 02, 2017 at 03:45:38PM -0600, Bjorn Helgaas wrote:
+> The PCIe active link power state is L0.  ASPM defines two low-power
+> states: L0s and L1.  The L1 PM Substates feature defines two
+> additional low-power states: L1.1 and L2.2.
 > 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-
-Thanks a lot for doing this!  Looks like it was even easier than I
-expected :)
-
+> The L1.2 state may have substantial entry/exit latency.  Downstream
+> devices can use the Latency Tolerance Reporting (LTR) feature to
+> report how much latency they can tolerate.  The L1 PM Substates
+> capability includes a programmable L1.2 threshold register.  If the
+> downstream devices can tolerate the latency indicated by the
+> threshold, L1.2 may be used.
+> 
+> If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be
+> used whenever it is enabled and CLKREQ# is de-asserted.  Linux
+> currently never enables LTR, but firmware may have done so.
+> 
+> The current L1 PM substates support in Linux sets the L1.2 threshold
+> to a fixed value (163.84us) copied from coreboot [1].  I don't know
+> where that value came from, and it is incorrect for some platforms,
+> e.g., Tegra [2].
+> 
+> These patches change that so we calculate the L1.2 threshold based on
+> values reported by the hardware, and we enable LTR whenever possible.
+> 
+> This is all just my understanding from reading the spec.  I'd be glad
+> to be corrected if I'm going wrong.
+> 
+> I'm particularly puzzled about the coreboot code in
+> pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
+> 
+> +	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
+> +		(1 << 21) | (1 << 23) | (1 << 30));
+> 
+> This is writing the L1 PM Substates Control 1 register, but the shifts
+> don't match up with any of the fields in the register, so this is an
+> awfully funny way to write the threshold.
+> 
+> [1] https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.html
+> [2] https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@nvidia.com
+> 
 > ---
-> V4:
-> * new patch in V4
 > 
->  drivers/pci/host/pci-tegra.c | 13 +++++--------
->  1 file changed, 5 insertions(+), 8 deletions(-)
+> Bjorn Helgaas (2):
+>       PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
+>       PCI/ASPM: Enable Latency Tolerance Reporting when supported
 > 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 6f2f44539020..a549c5899e26 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -448,8 +448,7 @@ static unsigned long tegra_pcie_conf_offset(unsigned char b, unsigned int devfn,
->  
->  static int tegra_pcie_add_bus(struct pci_bus *bus)
->  {
-> -	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-> -	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-> +	struct tegra_pcie *pcie = bus->sysdata;
->  	struct tegra_pcie_bus *b;
->  
->  	b = kzalloc(sizeof(*b), GFP_KERNEL);
-> @@ -466,8 +465,7 @@ static int tegra_pcie_add_bus(struct pci_bus *bus)
->  
->  static void tegra_pcie_remove_bus(struct pci_bus *child)
->  {
-> -	struct pci_host_bridge *host = pci_find_host_bridge(child);
-> -	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-> +	struct tegra_pcie *pcie = child->sysdata;
->  	struct tegra_pcie_bus *bus, *tmp;
->  
->  	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
-> @@ -483,8 +481,7 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
->  					unsigned int devfn,
->  					int where)
->  {
-> -	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-> -	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-> +	struct tegra_pcie *pcie = bus->sysdata;
->  	void __iomem *addr = NULL;
->  	u32 val = 0;
->  	u32 offset = 0;
-> @@ -675,8 +672,7 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
->  
->  static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
->  {
-> -	struct pci_host_bridge *host = pci_find_host_bridge(pdev->bus);
-> -	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
-> +	struct tegra_pcie *pcie = pdev->bus->sysdata;
->  	int irq;
->  
->  	tegra_cpuidle_pcie_irqs_in_use();
-> @@ -2570,6 +2566,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  		return -ENOMEM;
->  
->  	pcie = pci_host_bridge_priv(host);
-> +	host->sysdata = pcie;
->  
->  	pcie->soc = of_device_get_match_data(dev);
->  	INIT_LIST_HEAD(&pcie->buses);
-> -- 
-> 2.1.4
 > 
+>  drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++----------------
+>  drivers/pci/probe.c     |   33 ++++++++++++++++++++++
+>  include/linux/pci.h     |    2 +
+>  3 files changed, 82 insertions(+), 24 deletions(-)
+
+I applied these with Vidya's Reviewed-by to pci/aspm for v4.16.
+
+I'd still really like to hear from the coreboot folks about the
+rationale for the current coreboot code.  You folks are in a much
+better position to actually understand the hardware details.
+
+Bjorn
