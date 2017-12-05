@@ -1,164 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:1628 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751644AbdLMT1n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 14:27:43 -0500
-Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
- port
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
-        <mperttunen@nvidia.com>, <linux-tegra@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <kthota@nvidia.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
- <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
- <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
- <20171213140848.GA1736@red-moon>
- <b72dda91-5307-f024-9810-d6abadf7f337@nvidia.com>
- <20171213183417.GD4060@red-moon>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <a9bc0f46-69e1-d7ca-8cd3-e54259c4a92d@nvidia.com>
-Date: Thu, 14 Dec 2017 00:57:28 +0530
+Received: from mail.kernel.org ([198.145.29.99]:34010 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750740AbdLEUjX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Dec 2017 15:39:23 -0500
+Date: Tue, 5 Dec 2017 14:39:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [PATCH -next] pci: add function stub for
+ pci_get_domain_bus_and_slot()
+Message-ID: <20171205203920.GI23510@bhelgaas-glaptop.roam.corp.google.com>
+References: <80e3c9bb-fb65-4d87-76f9-db7c1273cef3@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20171213183417.GD4060@red-moon>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <80e3c9bb-fb65-4d87-76f9-db7c1273cef3@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[+cc Sinan]
 
+On Tue, Nov 28, 2017 at 02:31:21PM -0800, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@infradead.org>
+> 
+> The coretemp driver build fails when CONFIG_PCI is not enabled
+> because it uses a function that does not have a stub for that
+> config case, so add the function stub.
+> 
+> ../drivers/hwmon/coretemp.c: In function 'adjust_tjmax':
+> ../drivers/hwmon/coretemp.c:250:9: error: implicit declaration of function 'pci_get_domain_bus_and_slot' [-Werror=implicit-function-declaration]
+>   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
+> ../drivers/hwmon/coretemp.c:250:32: warning: initialization makes pointer from integer without a cast [enabled by default]
+>   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
-On 14-Dec-17 12:04 AM, Lorenzo Pieralisi wrote:
-> On Wed, Dec 13, 2017 at 10:02:02PM +0530, Manikanta Maddireddy wrote:
->>
->>
->> On 13-Dec-17 7:38 PM, Lorenzo Pieralisi wrote:
->>> On Wed, Dec 13, 2017 at 05:20:39PM +0530, Manikanta Maddireddy wrote:
->>>>
->>>>
->>>> On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
->>>>> On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
->>>>>> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
->>>>>> after all the required root port register programming is completed.
->>>>>>
->>>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->>>>>> ---
->>>>>> V3:
->>>>>> * no change in this patch
->>>>>> V2:
->>>>>> * no change in this patch
->>>>>>
->>>>>>  drivers/pci/host/pci-tegra.c | 9 +++++----
->>>>>>  1 file changed, 5 insertions(+), 4 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->>>>>> index 96e8038c3019..b41c60c7414c 100644
->>>>>> --- a/drivers/pci/host/pci-tegra.c
->>>>>> +++ b/drivers/pci/host/pci-tegra.c
->>>>>> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->>>>>>  		}
->>>>>>  	}
->>>>>>  
->>>>>> -	/* take the PCIe interface module out of reset */
->>>>>> -	reset_control_deassert(pcie->pcie_xrst);
->>>>>> -
->>>>>>  	/* finally enable PCIe */
->>>>>>  	value = afi_readl(pcie, AFI_CONFIGURATION);
->>>>>>  	value |= AFI_CONFIGURATION_EN_FPCI;
->>>>>> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
->>>>>>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
->>>>>>  	}
->>>>>>  
->>>>>> -	reset_control_assert(pcie->pcie_xrst);
->>>>>
->>>>> This does not look like it is part of the reset de-assertion code move.
->>>>>
->>>>> tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
->>>>>
->>>>> in other words, why are you removing it ?
->>>>>
->>>>> Lorenzo
->>>>
->>>> Hi Lorenzo,
->>>>
->>>> Host driver should start LTSSM after programming all controller registers.
->>>> In tegra_pcie_enable_controller() bunch of AFI module programming is done and
->>>> I am adding PCIe register programming in this series.
->>>> So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
->>>> which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
->>>
->>> I asked why you removed the reset assertion in tegra_pcie_power_off(),
->>> it is not clear to me. You still call tegra_pcie_power_off() in
->>> the tegra_pcie_probe() error path and I see no reason why the reset
->>> assertion - called through:
->>>
->>> tegra_pcie_put_resources()
->>> 	-> tegra_pcie_power_of()
->>> 	
->>> is removed, if it was needed previously.
->>>
->>> Lorenzo
->>>
->>
->> New sequence with this patch will be
->> tegra_pcie_enable_controller() -> tegra_pcie_request_resources() -> tegra_pcie_enable_ports()
->>                                    ->goto put_resources on fail        -> reset_control_deassert(pcie->pcie_xrst);
->>
->> Since pcie_xrst deassert happens after tegra_pcie_request_resources(), there is no need to assert pcie_xrst on put_resource failure.
-> 
-> I do not understand you, sorry for being blunt.
-> 
-> What has tegra_pcie_request_resources() to do with the reset
-> assertion/deassertion ?
-> 
-> This patch moves:
-> 
-> reset_control_deassert(pcie->pcie_xrst);
-> 
-> from:
-> 
-> tegra_pcie_enable_controller()
-> 
-> to
-> 
-> tegra_pcie_enable_ports()
-> 
-> if:
-> 
-> reset_control_assert(pcie->pcie_xrst);
-> 
-> was needed before this patch in tegra_pcie_power_off()
-> 
-> why it is not needed there after this patch is applied ?
-> 
-> Lorenzo
-> 
-Opposite of tegra_pcie_enable_ports() is missing on disable_msi
-failure in current driver. So I took care of assert pcie_xrst
-in https://patchwork.ozlabs.org/patch/846043/ along with other
-resources.
+Applied with Guenter's ack to pci/enumeration for v4.16, thanks!
 
->>>>>>  	reset_control_assert(pcie->afi_rst);
->>>>>>  	reset_control_assert(pcie->pex_rst);
->>>>>>  
->>>>>> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->>>>>>  			 port->index, port->lanes);
->>>>>>  
->>>>>>  		tegra_pcie_port_enable(port);
->>>>>> +	}
->>>>>>  
->>>>>> +	/* take the PCIe interface module out of reset */
->>>>>> +	reset_control_deassert(pcie->pcie_xrst);
->>>>>> +
->>>>>> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
->>>>>>  		if (tegra_pcie_port_check_link(port))
->>>>>>  			continue;
->>>>>>  
->>>>>> -- 
->>>>>> 2.1.4
->>>>>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
+Apparently no other code calls pci_get_domain_bus_and_slot() when
+CONFIG_PCI isn't enabled.
+
+15ab6790f628 ("hwmon: (coretemp) deprecate pci_get_bus_and_slot()") is
+already in linux-next via hwmon-staging.
+
+The pci tree is merged into next slightly before hwmon-staging, so
+this should be resolved as soon as the 0-day builder builds my
+pci/enumeration branch and I merge it into my next branch.
+
+> ---
+>  include/linux/pci.h |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> --- linux-next-20171128.orig/include/linux/pci.h
+> +++ linux-next-20171128/include/linux/pci.h
+> @@ -1660,6 +1660,9 @@ static inline struct pci_dev *pci_get_sl
+>  static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+>  						unsigned int devfn)
+>  { return NULL; }
+> +static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
+> +					unsigned int bus, unsigned int devfn)
+> +{ return NULL; }
+>  
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+> 
+> 
