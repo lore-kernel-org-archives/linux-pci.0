@@ -1,55 +1,23 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:46238 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752616AbdLHC5f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 21:57:35 -0500
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-To: Peter Zijlstra <peterz@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Rafael Wysocki <rjw@rjwysocki.net>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: [PATCH 7/9] workqueue: remove unneeded kallsyms include
-Date: Fri,  8 Dec 2017 11:56:14 +0900
-Message-Id: <20171208025616.16267-8-sergey.senozhatsky@gmail.com>
-In-Reply-To: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=olVR=DB=bombadil.srs.infradead.org=BATV+839b15e1e43cccab5553+5217+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=olVR=DB=bombadil.srs.infradead.org=BATV+839b15e1e43cccab5553+5217+infradead.org+hch@kernel.org>
+Date: Tue, 5 Dec 2017 11:15:37 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: helgaas@kernel.org, rjw@sisk.pl, linux-pci@vger.kernel.org,
+	stable@vger.kernel.org, linuxarm@huawei.com
+Subject: Re: [PATCH V2 1/2] PCI/portdrv: Fix switch devctrl error report
+ enable
+Message-ID: <20171205191537.GA21975@infradead.org>
+References: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
+ <1512467438-42850-2-git-send-email-liudongdong3@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1512467438-42850-2-git-send-email-liudongdong3@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The filw was converted from print_symbol() to %pf some time
-ago (044c782ce3a901fb "workqueue: fix checkpatch issues").
-kallsyms does not seem to be needed anymore.
+On Tue, Dec 05, 2017 at 05:50:37PM +0800, Dongdong Liu wrote:
+> +		if ((pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
+> +		    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
+> +			pci_disable_pcie_error_reporting(dev);
 
-Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Lai Jiangshan <jiangshanlai@gmail.com>
----
- kernel/workqueue.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index f4ff9fa5586a..acf485eada1b 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -38,7 +38,6 @@
- #include <linux/hardirq.h>
- #include <linux/mempolicy.h>
- #include <linux/freezer.h>
--#include <linux/kallsyms.h>
- #include <linux/debug_locks.h>
- #include <linux/lockdep.h>
- #include <linux/idr.h>
--- 
-2.15.1
+No need for the inner braces here.
