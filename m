@@ -1,231 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:25253 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750762AbdL0F6L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Dec 2017 00:58:11 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Subject: Re: [RFC 2/2] pci: dwc: pci-exynos: add the codes to support the
- exynos5433
-To: Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        krzk@kernel.org, jingoohan1@gmail.com, kgene@kernel.org,
-        lorenzo.pieralisi@arm.com
-Message-id: <ff1f1aeb-60e7-9dc4-c18d-aee237699ff3@samsung.com>
-Date: Wed, 27 Dec 2017 14:58:08 +0900
-MIME-version: 1.0
-In-reply-to: <20171226211123.feje5l46y62aft7u@rob-hp-laptop>
-Content-type: text/plain; charset="utf-8"
-References: <20171221121408.22636-1-jh80.chung@samsung.com>
-        <CGME20171221121409epcas1p1a12d0f3b0b5d5e732da865ee78f6bb47@epcas1p1.samsung.com>
-        <20171221121408.22636-2-jh80.chung@samsung.com>
-        <20171226211123.feje5l46y62aft7u@rob-hp-laptop>
+Received: from smtp-out4.electric.net ([192.162.216.185]:57141 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751598AbdLFODh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Dec 2017 09:03:37 -0500
+Received: from 1eMaIP-0003I2-Vw by out4d.electric.net with emc1-ok (Exim 4.87)
+        (envelope-from <David.Laight@ACULAB.COM>)
+        id 1eMaIQ-0003Jt-UH
+        for linux-pci@vger.kernel.org; Wed, 06 Dec 2017 06:03:34 -0800
+Received: from [156.67.243.126] (helo=AcuMS.aculab.com)
+        by out4d.electric.net with esmtps (TLSv1.2:ECDHE-RSA-AES256-SHA384:256)
+        (Exim 4.87)
+        (envelope-from <David.Laight@ACULAB.COM>)
+        id 1eMaIP-0003I2-Vw
+        for linux-pci@vger.kernel.org; Wed, 06 Dec 2017 06:03:33 -0800
+From: David Laight <David.Laight@ACULAB.COM>
+To: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>
+Subject: PCIe link not recovering
+Date: Wed, 6 Dec 2017 14:03:55 +0000
+Message-ID: <3d3c69b6dcc44963b1ad80120c69767b@AcuMS.aculab.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/27/2017 06:11 AM, Rob Herring wrote:
-> On Thu, Dec 21, 2017 at 09:14:07PM +0900, Jaehoon Chung wrote:
->> Exynos5433 has the PCIe for WiFi.
->> Added the codes relevant to PCIe for supporting the exynos5433.
->> Also changed the binding documentation name to
->> 'samsung,exynos-pcie.txt'.
->> (It's not only exynos5440 anymore.)
->>
->> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
->> ---
->>  ...exynos5440-pcie.txt => samsung,exynos-pcie.txt} |   2 +-
->>  drivers/pci/dwc/pci-exynos.c                       | 183 ++++++++++++++++-----
->>  2 files changed, 144 insertions(+), 41 deletions(-)
->>  rename Documentation/devicetree/bindings/pci/{samsung,exynos5440-pcie.txt => samsung,exynos-pcie.txt} (97%)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
->> similarity index 97%
->> rename from Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
->> rename to Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
->> index 34a11bfbfb60..958dcc150505 100644
->> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
->> @@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
->>  and thus inherits all the common properties defined in designware-pcie.txt.
->>  
->>  Required properties:
->> -- compatible: "samsung,exynos5440-pcie"
->> +- compatible: "samsung,exynos5440-pcie" or "samsung,exynos5433-pcie"
-> 
-> Quite a lot of driver changes for just a new compatible.
+If I perform the following:
+1) echo 1 >/sys/devices/pcixxxx/xxx/remove
+2) completely reset the PCIe endpoint
+3) echo 1 >/sys/devices/pcixxxx/rescan
+I expect the endpoint to be reprobed (provided the BARs are compatible).
 
-It needs to distinguish between exynos5440 and other exynos variants.
-So needs to add the new common compatible likes "samsung,exynos5-pcie" or "samsung,exynos-pcie".
+However on a new motherboard (SkyLake) it looks as though the root bridge isn't
+trying to bring the PCIe link back up.
+(The same system disk works fine in a slighty older system.)
 
-Actually, i hope that exynos5440 can be removed from mainline kernel.
+There are 2 bits different in the lspci output for the root port between
+the 'link up' and 'link down states':
 
-> 
->>  - reg: base addresses and lengths of the PCIe controller,
-> 
-> For example, you're adding the DBI registers which is not documented 
-> here. 
-> 
-> Perhaps it is time to remove the old phy support before adding a new 
-> platform.
+--- link_up     2017-12-06 13:37:37.523661300 +0000
++++ link_down   2017-12-06 13:37:37.509614300 +0000
+@@ -21,7 +21,7 @@
+                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+-               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
++               DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #2, Speed 8GT/s, Width x8, ASPM L0s L1, Exit Latency L0s <256ns, L1 <8us
+                        ClockPM- Surprise- LLActRep- BwNot+ ASPMOptComp+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+@@ -51,7 +51,7 @@
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+-                       Status: NegoPending- InProgress-
++                       Status: NegoPending+ InProgress-
+        Capabilities: [140 v1] Root Complex Link
+                Desc:   PortNumber=02 ComponentID=01 EltType=Config
+                Link0:  Desc:   TargetPort=00 TargetComponent=01 AssocRCRB- LinkType=MemMapped LinkValid+
 
-Ok, I will send the patches to remove the old phy.
+The first just looks like a notification that there has been an error.
+The last one might imply that it knows it needs to do something - but
+needs to be 'kicked'.
 
-> 
->>  	the PHY controller, additional register for the PHY controller.
->>  	(Registers for the PHY controller are DEPRECATED.
->> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
->> index 5596fdedbb94..8dee2e90347e 100644
->> --- a/drivers/pci/dwc/pci-exynos.c
->> +++ b/drivers/pci/dwc/pci-exynos.c
->> @@ -40,6 +40,8 @@
->>  #define PCIE_IRQ_SPECIAL		0x008
->>  #define PCIE_IRQ_EN_PULSE		0x00c
->>  #define PCIE_IRQ_EN_LEVEL		0x010
->> +#define PCIE_SW_WAKE			0x018
->> +#define PCIE_BUS_EN			BIT(1)
->>  #define IRQ_MSI_ENABLE			BIT(2)
->>  #define PCIE_IRQ_EN_SPECIAL		0x014
->>  #define PCIE_PWR_RESET			0x018
->> @@ -49,7 +51,8 @@
->>  #define PCIE_NONSTICKY_RESET		0x024
->>  #define PCIE_APP_INIT_RESET		0x028
->>  #define PCIE_APP_LTSSM_ENABLE		0x02c
->> -#define PCIE_ELBI_RDLH_LINKUP		0x064
->> +#define PCIE_ELBI_RDLH_LINKUP		0x074
->> +#define PCIE_ELBI_XMLH_LINKUP		BIT(4)
->>  #define PCIE_ELBI_LTSSM_ENABLE		0x1
->>  #define PCIE_ELBI_SLV_AWMISC		0x11c
->>  #define PCIE_ELBI_SLV_ARMISC		0x120
->> @@ -94,6 +97,10 @@
->>  #define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
->>  #define PCIE_PHY_TRSV3_LVCC		0x31c
->>  
->> +/* DBI register */
->> +#define PCIE_MISC_CONTROL_1_OFF		0x8BC
->> +#define DBI_RO_WR_EN			BIT(0)
->> +
->>  struct exynos_pcie_mem_res {
->>  	void __iomem *elbi_base;   /* DT 0th resource: PCIe CTRL */
->>  	void __iomem *phy_base;    /* DT 1st resource: PHY CTRL */
->> @@ -221,6 +228,96 @@ static const struct exynos_pcie_ops exynos5440_pcie_ops = {
->>  	.deinit_clk_resources	= exynos5440_pcie_deinit_clk_resources,
->>  };
->>  
->> +static int exynos5433_pcie_get_mem_resources(struct platform_device *pdev,
->> +					     struct exynos_pcie *ep)
->> +{
->> +	struct dw_pcie *pci = ep->pci;
->> +	struct device *dev = pci->dev;
->> +	struct resource *res;
->> +
->> +	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
->> +	if (!ep->mem_res)
->> +		return -ENOMEM;
->> +
->> +	/* External Local Bus interface(ELBI) Register */
-> 
-> These are standard DW registers IIRC. So the DW core should handle this.
-> 
->> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
->> +	ep->mem_res->elbi_base = devm_ioremap_resource(&pdev->dev, res);
->> +	if (IS_ERR(ep->mem_res->elbi_base))
->> +		return PTR_ERR(ep->mem_res->elbi_base);
->> +
->> +	/* Data Bus Interface(DBI) Register */
->> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
->> +	pci->dbi_base = devm_ioremap_resource(&pdev->dev, res);
-> 
-> This is handled by the DW plat driver. Perhaps the DW core should handle 
-> it too. 
+I believe that the endpoint is flipping between the 'Detect Active' and 'Detect Quiet'
+states. Which would imply that the root port isn't trying to establish the link.
 
-Will fix.
+Does the kernel have to prod the root complex somehow?
 
-> 
-> Does the 5440 really not have DBI registers or you just happen to not 
-> need to access them?
+	David
 
-I didn't have exynso5440 TRM, do you means exynos5433? It doesn't have its own DBI register.
+The full output (link_down) is:
 
-> 
->> +	if (IS_ERR(pci->dbi_base))
->> +		return PTR_ERR(pci->dbi_base);
->> +
->> +	return 0;
->> +}
->> +
->> +static int exynos5433_pcie_get_clk_resources(struct exynos_pcie *ep)
->> +{
->> +	struct dw_pcie *pci = ep->pci;
->> +	struct device *dev = pci->dev;
->> +
->> +	ep->clk_res = devm_kzalloc(dev, sizeof(*ep->clk_res), GFP_KERNEL);
->> +	if (!ep->clk_res)
->> +		return -ENOMEM;
->> +
->> +	ep->clk_res->clk = devm_clk_get(dev, "pcie");
->> +	if (IS_ERR(ep->clk_res->clk)) {
->> +		dev_err(dev, "Failed to get pcie rc clock\n");
->> +		return PTR_ERR(ep->clk_res->clk);
->> +	}
->> +
->> +	ep->clk_res->bus_clk = devm_clk_get(dev, "pcie_bus");
->> +	if (IS_ERR(ep->clk_res->bus_clk)) {
->> +		dev_err(dev, "Failed to get pcie bus clock\n");
->> +		return PTR_ERR(ep->clk_res->bus_clk);
->> +	}
->> +
->> +	return 0;
->> +}
-> 
-> Can't you reuse exynos5440_pcie_get_clk_resources? They appear to be the 
-> same.
-
-Will reuse.
-
-> 
->> +
->> +static void exynos5433_pcie_deinit_clk_resources(struct exynos_pcie *ep)
->> +{
->> +	clk_disable_unprepare(ep->clk_res->bus_clk);
->> +	clk_disable_unprepare(ep->clk_res->clk);
->> +}
->> +
->> +
->> +static int exynos5433_pcie_init_clk_resources(struct exynos_pcie *ep)
->> +{
->> +	struct dw_pcie *pci = ep->pci;
->> +	struct device *dev = pci->dev;
->> +	int ret;
->> +
->> +	ret = clk_prepare_enable(ep->clk_res->clk);
->> +	if (ret) {
->> +		dev_err(dev, "cannot enable pcie rc clock");
->> +		return ret;
->> +	}
->> +
->> +	ret = clk_prepare_enable(ep->clk_res->bus_clk);
->> +	if (ret) {
->> +		dev_err(dev, "cannot enable pcie bus clock");
->> +		goto err_bus_clk;
->> +	}
->> +
->> +	return 0;
->> +
->> +err_bus_clk:
->> +	clk_disable_unprepare(ep->clk_res->clk);
->> +
->> +	return ret;
->> +}
-> 
-> Ditto.
-
-Ok. Will fix.
-
-Best Regards,
-Jaehoon Chung
-
-> 
-> Rob
-> 
-> 
-> 
+00:01.0 PCI bridge: Intel Corporation Skylake PCIe Controller (x16) (rev 05) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 122
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        Memory behind bridge: df000000-df2fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [88] Subsystem: Super Micro Computer Inc Skylake PCIe Controller (x16)
+        Capabilities: [80] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
+                Address: fee00218  Data: 0000
+        Capabilities: [a0] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0
+                        ExtTag- RBE+
+                DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #2, Speed 8GT/s, Width x8, ASPM L0s L1, Exit Latency L0s <256ns, L1 <8us
+                        ClockPM- Surprise- LLActRep- BwNot+ ASPMOptComp+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+                        Slot #1, PowerLimit 75.000W; Interlock- NoCompl+
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+                        Changed: MRL- PresDet+ LinkState-
+                RootCtl: ErrCorrectable+ ErrNon-Fatal+ ErrFatal+ PMEIntEna+ CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+                DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR+, OBFF Via WAKE# ARIFwd-
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Via WAKE# ARIFwd-
+                LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+                         EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+        Capabilities: [100 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending+ InProgress-
+        Capabilities: [140 v1] Root Complex Link
+                Desc:   PortNumber=02 ComponentID=01 EltType=Config
+                Link0:  Desc:   TargetPort=00 TargetComponent=01 AssocRCRB- LinkType=MemMapped LinkValid+
+                        Addr:   00000000fed19000
+        Capabilities: [d94 v1] #19
+        Kernel driver in use: pcieport
+        Kernel modules: shpchp
