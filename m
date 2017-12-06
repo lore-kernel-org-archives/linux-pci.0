@@ -1,93 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44148 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751864AbdL0KUw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Dec 2017 05:20:52 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH 3/4] PCI/ERR: Do not do recovery if DPC service is active
-Date: Wed, 27 Dec 2017 15:50:21 +0530
-Message-Id: <1514370022-4431-4-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
-References: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
+Received: from terminus.zytor.com ([65.50.211.136]:45697 "EHLO
+        terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752282AbdLFLh5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Dec 2017 06:37:57 -0500
+Date: Wed, 6 Dec 2017 03:35:44 -0800
+From: "tip-bot for Rafael J. Wysocki" <tipbot@zytor.com>
+Message-ID: <tip-ddec3bdee05b06f1dda20ded003c3e10e4184cab@git.kernel.org>
+Cc: linux-kernel@vger.kernel.org, dave.hansen@linux.intel.com,
+        linux-pci@vger.kernel.org, rafael.j.wysocki@intel.com,
+        mingo@kernel.org, hpa@zytor.com, bhelgaas@google.com,
+        tglx@linutronix.de
+Reply-To: tglx@linutronix.de, bhelgaas@google.com, hpa@zytor.com,
+          mingo@kernel.org, rafael.j.wysocki@intel.com,
+          linux-pci@vger.kernel.org, dave.hansen@linux.intel.com,
+          linux-kernel@vger.kernel.org
+In-Reply-To: <3186627.pxZj1QbYNg@aspire.rjw.lan>
+References: <3186627.pxZj1QbYNg@aspire.rjw.lan>
+To: linux-tip-commits@vger.kernel.org
+Subject: [tip:x86/urgent] x86/PCI: Make broadcom_postcore_init() check
+ acpi_disabled
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If AER attempts to do recovery for any device, and DPC is active on
-any upstream port, AER should not do recovery, since it will be handled
-by DPC
+Commit-ID:  ddec3bdee05b06f1dda20ded003c3e10e4184cab
+Gitweb:     https://git.kernel.org/tip/ddec3bdee05b06f1dda20ded003c3e10e4184cab
+Author:     Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+AuthorDate: Fri, 1 Dec 2017 15:08:12 +0100
+Committer:  Ingo Molnar <mingo@kernel.org>
+CommitDate: Wed, 6 Dec 2017 12:27:47 +0100
 
-Change-Id: Ida507ce9145f420e35302db34e967f1b421e15c9
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+x86/PCI: Make broadcom_postcore_init() check acpi_disabled
 
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 8bac584..1f01e76 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -267,6 +267,22 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 	return result_data.result;
- }
+acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
+is set, but the host bridge information from the ACPI tables is not going
+to be used in that case and the Broadcom host bridge initialization should
+not be skipped then, So make broadcom_postcore_init() check acpi_disabled
+too to avoid this issue.
+
+Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
+Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Cc: stable@vger.kernel.org
+Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/pci/broadcom_bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
+index bb461cf..526536c 100644
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init(void)
+ 	 * We should get host bridge information from ACPI unless the BIOS
+ 	 * doesn't support it.
+ 	 */
+-	if (acpi_os_get_root_pointer())
++	if (!acpi_disabled && acpi_os_get_root_pointer())
+ 		return 0;
+ #endif
  
-+/*
-+ * pcie_port_upstream_bridge - returns immediate upstream bridge.
-+ * dev: pcie device
-+ */
-+static struct pci_dev *pcie_port_upstream_bridge(struct pci_dev *dev)
-+{
-+	struct pci_dev *parent;
-+
-+	parent = pci_upstream_bridge(dev);
-+
-+	if (parent && pci_is_pcie(parent))
-+		return parent;
-+
-+	return NULL;
-+}
-+
- /**
-  * pci_do_recovery - handle nonfatal/fatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-@@ -280,9 +296,29 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- {
- 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
- 	enum pci_channel_state state;
-+	struct pcie_port_service_driver *driver;
-+	struct pci_dev *pdev = dev;
- 
- 	mutex_lock(&pci_err_recovery_lock);
- 
-+	if (severity != PCI_ERR_DPC_FATAL) {
-+		/*
-+		 * DPC service could be running in RP
-+		 * or any upstream switch.
-+		 */
-+		do {
-+			driver = pci_find_dpc_service(pdev);
-+			if (driver) {
-+				dev_printk(KERN_NOTICE, &dev->dev,
-+				"AER: Recovery to be done by DPC %s\n",
-+				pci_name(dev));
-+				mutex_unlock(&pci_err_recovery_lock);
-+				return;
-+			}
-+		pdev = pcie_port_upstream_bridge(dev);
-+		} while (pdev);
-+	}
-+
- 	if ((severity == PCI_ERR_AER_FATAL) ||
- 	    (severity == PCI_ERR_DPC_FATAL))
- 		state = pci_channel_io_frozen;
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
