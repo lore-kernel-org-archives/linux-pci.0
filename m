@@ -1,70 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:38385 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752078AbdLHC4a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 21:56:30 -0500
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-To: Peter Zijlstra <peterz@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Rafael Wysocki <rjw@rjwysocki.net>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: [PATCH 0/9] remove some of unneeded kallsyms includes
-Date: Fri,  8 Dec 2017 11:56:07 +0900
-Message-Id: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=HBpM=DC=lixom.net=olof@kernel.org>
+Return-Path: <SRS0=HBpM=DC=lixom.net=olof@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <87indkdo03.fsf@concordia.ellerman.id.au>
+References: <87tvxl15qx.fsf@concordia.ellerman.id.au> <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
+ <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
+ <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de> <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
+ <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de> <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
+ <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de> <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
+ <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de> <20171202230052.34y2ivxgpgr3osct@localhost>
+ <87indkdo03.fsf@concordia.ellerman.id.au>
+From: Olof Johansson <olof@lixom.net>
+Date: Wed, 6 Dec 2017 07:53:58 -0800
+Message-ID: <CAOesGMj2FL2NmbyM+LLYYYxesFQw=5Fo9HvZO4FcJhGh1GHJ+g@mail.gmail.com>
+Subject: Re: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Christian Zigotzky <chzigotzky@xenosoft.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Darren Stevens <darren@stevens-zone.net>,
+	Bjorn Helgaas <helgaas@kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Wed, Dec 6, 2017 at 4:44 AM, Michael Ellerman <mpe@ellerman.id.au> wrote:
+> Olof Johansson <olof@lixom.net> writes:
+>
+>> On Sat, Dec 02, 2017 at 01:54:41PM +0100, Christian Zigotzky wrote:
+>>> On 02 December 2017 at 00:27AM, Bjorn Helgaas wrote:
+>>> >
+>>> > Thanks for testing that.  I'll merge a similar patch for v4.16.
+>>> >
+>>> > I don't think using "pci=pcie_scan_all" is really an acceptable
+>>> > long-term answer for you, though.  Is there some way we can identify
+>>> > at run-time whether we're on a Nemo system?  If so, we can make this
+>>> > happen automatically.
+>>> >
+>>> > Bjorn
+>>> >
+>>> Hi Bjorn,
+>>>
+>>> Many thanks for your effort! I appreciate it very much. :-)
+>>>
+>>> We can identify the Nemo board at the boot time. See dmesg output: [
+>>> 0.061592] NEMO SB600 IOB base e0000000
+>>>
+>>> @linuxppc-dev
+>>> Any other ideas? Maybe the same as we can identify the other P.A. Semi
+>>> boards (Electra, Chitra, and Athena).
+>>>
+>>> @Olof
+>>> Maybe you know how we can identify the P.A. Semi Nemo board at the run-time.
+>>>
+>>> @Darren
+>>> Do you have an idea?
+>>
+>>
+>> The below patch, together with Bjorn's, should do it. Christian, can you test
+>> and report back?
+>>
+>> I'm guessing it won't do any harm to set this on non-X1000 platforms. My
+>> test system is currently powered down so I can't check.
+>
+> My pasemi board had been powered off for a while and when I turned it
+> back on something popped, the power supply blew up and tripped a
+> breaker.
+>
+> So I also can't test this, at least for now, until I get my "allowed to
+> use hardware" license back from my colleagues in the office.
 
-	A small patch set that removes some kallsyms includes
-here and there. Mostly those kallsyms includes are leftovers:
-printk() gained %pS/%pF modifiers support some time ago, so
-print_symbol() and friends became sort of unneeded [along with
-print_fn_descriptor_symbol() deprecation], thus some of the
-users were converted to pS/pF. This patch set just cleans up
-that convertion.
+Ouch. Sounds like it's the PSU not the board. Hopefully there was no
+board damage, let me know if you need a replacement though and I'll
+see what I can find.
 
-	We still have a number of print_symbol() users [which
-must be converted to ps/pf, print_symbol() uses a stack buffer
-KSYM_SYMBOL_LEN to do what printk(ps/pf) can do], but this is
-out of scope.
 
-	I compile tested the patch set; but, as always and
-usual, would be great if 0day build robot double check it.
-
-Sergey Senozhatsky (9):
-  sched/autogroup: remove unneeded kallsyms include
-  mm: remove unneeded kallsyms include
-  power: remove unneeded kallsyms include
-  pci: remove unneeded kallsyms include
-  pnp: remove unneeded kallsyms include
-  mm: remove unneeded kallsyms include
-  workqueue: remove unneeded kallsyms include
-  hrtimer: remove unneeded kallsyms include
-  genirq: remove unneeded kallsyms include
-
- drivers/base/power/main.c | 1 -
- drivers/pci/quirks.c      | 1 -
- drivers/pnp/quirks.c      | 1 -
- kernel/irq/spurious.c     | 1 -
- kernel/sched/autogroup.c  | 1 -
- kernel/time/hrtimer.c     | 1 -
- kernel/workqueue.c        | 1 -
- mm/memory.c               | 4 ----
- mm/vmalloc.c              | 1 -
- 9 files changed, 12 deletions(-)
-
--- 
-2.15.1
+-Olof
