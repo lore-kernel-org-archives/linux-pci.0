@@ -1,107 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:33259 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752903AbdLNP3R (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 10:29:17 -0500
-Date: Thu, 14 Dec 2017 16:29:13 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, jonathanh@nvidia.com, vidyas@nvidia.com,
-        mperttunen@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, kthota@nvidia.com
-Subject: Re: [PATCH V3 04/12] PCI: tegra: Advertise PCIe Advanced Error
- Reporting (AER) capability
-Message-ID: <20171214152913.GF13733@ulmo>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-5-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFCv2 PATCH 26/36] iommu/arm-smmu-v3: Add support for Hardware
+ Translation Table Update
+To: Yisheng Xie <xieyisheng1@huawei.com>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Cc: "joro@8bytes.org" <joro@8bytes.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        Mark Rutland <Mark.Rutland@arm.com>,
+        Catalin Marinas <Catalin.Marinas@arm.com>,
+        Will Deacon <Will.Deacon@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+        Sudeep Holla <Sudeep.Holla@arm.com>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        Robin Murphy <Robin.Murphy@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        "tn@semihalf.com" <tn@semihalf.com>,
+        "liubo95@huawei.com" <liubo95@huawei.com>,
+        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
+        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "rfranz@cavium.com" <rfranz@cavium.com>,
+        "dwmw2@infradead.org" <dwmw2@infradead.org>,
+        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
+        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "robdclark@gmail.com" <robdclark@gmail.com>
+References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
+ <20171006133203.22803-27-jean-philippe.brucker@arm.com>
+ <d2ec2e61-f758-0394-41d2-555ae65feb0d@huawei.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <8bdba799-49ec-edc9-dbcf-9277424dea57@arm.com>
+Date: Wed, 6 Dec 2017 11:06:59 +0000
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="K/NRh952CO+2tg14"
-In-Reply-To: <1509371843-22931-5-git-send-email-mmaddireddy@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <d2ec2e61-f758-0394-41d2-555ae65feb0d@huawei.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 06/12/17 06:51, Yisheng Xie wrote:
+> Hi Jean,
+> 
+> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
+>> If the SMMU supports it and the kernel was built with HTTU support, enable
+>> +	if (IS_ENABLED(CONFIG_ARM64_HW_AFDBM) && (reg & (IDR0_HA | IDR0_HD))) {
+>> +		smmu->features |= ARM_SMMU_FEAT_HA;
+>> +		if (reg & IDR0_HD)
+>> +			smmu->features |= ARM_SMMU_FEAT_HD;
+>> +	}
+> 
+> What is relationship of armv8.1 HW_AFDBM and SMMUv3 HTTU? I mean why we need
+> IS_ENABLED(CONFIG_ARM64_HW_AFDBM) ?
 
---K/NRh952CO+2tg14
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I think the reason we needed this was that, without CONFIG_ARM64_HW_AFDBM,
+the CPU wouldn't update the pte atomically and pte_dirty() wouldn't check
+the DBM bit 51 (only the SW dirty bit 55).
 
-On Mon, Oct 30, 2017 at 07:27:15PM +0530, Manikanta Maddireddy wrote:
-> Default root port settings hide AER capability. This patch enables the
-> advertisement of AER capability by root port.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V3:
-> * updated commit log
-> V2:
-> * no change in this patch
->=20
->  drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
->=20
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index ed5e8acfdc32..46896aaab81d 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -187,6 +187,9 @@
->  #define RP_VEND_XP	0x00000f00
->  #define  RP_VEND_XP_DL_UP	(1 << 30)
-> =20
-> +#define RP_VEND_CTL1	0xf48
-> +#define  RP_VEND_CTL1_ERPT	(1 << 13)
-> +
->  #define RP_VEND_CTL2 0x00000fa8
->  #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
-> =20
-> @@ -2055,6 +2058,16 @@ static void tegra_pcie_apply_pad_settings(struct t=
-egra_pcie *pcie)
->  		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
->  }
-> =20
-> +static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
-> +{
-> +	unsigned long value;
-> +
-> +	/* Enable AER capability */
-> +	value =3D readl(port->base + RP_VEND_CTL1);
-> +	value |=3D RP_VEND_CTL1_ERPT;
-> +	writel(value, port->base + RP_VEND_CTL1);
-> +}
-> +
->  /*
->   * FIXME: If there are no PCIe cards attached, then calling this function
->   * can result in the increase of the bootup time as there are big timeout
-> @@ -2120,6 +2133,7 @@ static void tegra_pcie_enable_ports(struct tegra_pc=
-ie *pcie)
->  			 port->index, port->lanes);
-> =20
->  		tegra_pcie_port_enable(port);
-> +		tegra_pcie_enable_rp_features(port);
+Since af29678fe785 ("arm64: Remove the !CONFIG_ARM64_HW_AFDBM alternative
+code paths") removed lots of #ifdefs, I'll see if we can remove the above
+IS_ENABLED as well.
 
-Same as for patch 5: move this into tegra_pcie_port_enable()?
+> If CONFIG_ARM64_HW_AFDBM=y but the process do not support ARMv8.1, should it also
+> enable related feature for SMMUv3?
 
-Thierry
+Yes I think we can enable HTTU in the SMMU even if the CPU doesn't support
+it (though HTTU is only useful when sharing process address spaces). The
+mm code checks for both HW and SW bits even when the CPU doesn't support
+ARMv8.1
 
---K/NRh952CO+2tg14
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloymMkACgkQ3SOs138+
-s6G2IQ/7BTWfnyY6zcb/ukTLQsFMA3VK1P+eDHYQ4k2vbITad+8dO7MAJf2uADvT
-vGk+F8skYqGJaPnTQp1urH3+WiUyHyOXYlhJ/VeJ9hzG1gsWpOK7LhSi8N/T0oXc
-NAgHcrb0q2hgPNq1cpYguS8sE+X4AytyGkp6dv9Wr2u2snZBfq0ohdWjtWHkjzb2
-eyQWhnL1LeIhlj7fFMvUw5vO4Z933BGFXNVW9++v/bW3BLFYDcf4TtYJGPcjaDNu
-qklQ8ibBjNQ/aPSe32y5q/gCCf4tYBECJOMzwT45POvo2ESXLzUkjZofzHIb1Ack
-CjsYdQSV/KOQF8skA1OA2ELNYyGj8kiGBKuqMdQAWLk7hNj4flGRDSXZowxVYDEL
-j8FDDp20+6MixcSQYqZIczDTNyLgdJgEr/TBtLzuNr0cHImNAay7nzOalS4VWseg
-Uskl11nTk09TRI+Q4j8+DcByIjgAAiTRf2J2a0EkKeLdnq8gf6qqzD0bfTpUBkSy
-nV+oR5K+MCC55xAznK02Mjos6pBCpgtjh/WQgsl/vABgKxBQYcYIZ1xiKSZ45gK7
-yB6pw0rcwW4vfeVt8omIbXs9nZmhJdpf9wDsbByMpwNS3vdLVeUNLp3IX0w2mMTK
-nma6Z4M8TxTF7KL/JPTLgjnykXeeOGrNbOssOypRSpml1/YJQc8=
-=MfJ5
------END PGP SIGNATURE-----
-
---K/NRh952CO+2tg14--
+Thanks,
+Jean
