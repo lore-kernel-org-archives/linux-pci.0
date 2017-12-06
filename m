@@ -1,74 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.140]:44045 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751708AbdLZChn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 21:37:43 -0500
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-Date: Tue, 26 Dec 2017 10:36:42 +0800
-Message-Id: <20171226023646.17722-2-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
-References: <20171226023646.17722-1-jeffy.chen@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:55784 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751500AbdLFVCM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Dec 2017 16:02:12 -0500
+Date: Wed, 6 Dec 2017 15:02:09 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Matthew Minter <matt@masarand.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH -next] pci: add function stub for
+ pci_get_domain_bus_and_slot()
+Message-ID: <20171206210209.GN23510@bhelgaas-glaptop.roam.corp.google.com>
+References: <80e3c9bb-fb65-4d87-76f9-db7c1273cef3@infradead.org>
+ <20171205203920.GI23510@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171205203920.GI23510@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
-so add definitions of the optional PCIe WAKE# pin for PCI devices.
+[+cc Arnd, Rafael, Thomas, Matthew, Lorenzo]
 
-Also add an definition of the optional PCI interrupt pin for PCI
-devices to distinguish it from the PCIe WAKE# pin.
+On Tue, Dec 05, 2017 at 02:39:20PM -0600, Bjorn Helgaas wrote:
+> [+cc Sinan]
+> 
+> On Tue, Nov 28, 2017 at 02:31:21PM -0800, Randy Dunlap wrote:
+> > From: Randy Dunlap <rdunlap@infradead.org>
+> > 
+> > The coretemp driver build fails when CONFIG_PCI is not enabled
+> > because it uses a function that does not have a stub for that
+> > config case, so add the function stub.
+> > 
+> > ../drivers/hwmon/coretemp.c: In function 'adjust_tjmax':
+> > ../drivers/hwmon/coretemp.c:250:9: error: implicit declaration of function 'pci_get_domain_bus_and_slot' [-Werror=implicit-function-declaration]
+> >   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
+> > ../drivers/hwmon/coretemp.c:250:32: warning: initialization makes pointer from integer without a cast [enabled by default]
+> >   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
+> > 
+> > Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> 
+> Applied with Guenter's ack to pci/enumeration for v4.16, thanks!
+> 
+> Apparently no other code calls pci_get_domain_bus_and_slot() when
+> CONFIG_PCI isn't enabled.
+> 
+> 15ab6790f628 ("hwmon: (coretemp) deprecate pci_get_bus_and_slot()") is
+> already in linux-next via hwmon-staging.
+> 
+> The pci tree is merged into next slightly before hwmon-staging, so
+> this should be resolved as soon as the 0-day builder builds my
+> pci/enumeration branch and I merge it into my next branch.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+On Arnd's advice, I moved this to for-linus for v4.15 in case any of
+the conversion patches get merged before PCI during the v4.16 merge
+window.
 
-Changes in v13: None
-Changes in v12:
-Only add irq definitions for PCI devices and rewrite the commit message.
-
-Changes in v11: None
-Changes in v10: None
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-
-Changes in v7: None
-Changes in v6: None
-Changes in v5:
-Move to pci.txt
-
-Changes in v3: None
-Changes in v2: None
-
- Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index c77981c5dd18..3045ac452f27 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,3 +24,13 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
-+
-+PCI devices may support the following properties:
-+
-+- interrupts: Interrupt specifier for each name in interrupt-names.
-+- interrupt-names:
-+    May contain "wakeup" for PCIe WAKE# interrupt and "pci" for PCI interrupt.
-+    The PCI devices may optionally include an 'interrupts' property that
-+    represents the legacy PCI interrupt. And when we try to specify the PCIe
-+    WAKE# pin, a corresponding 'interrupt-names' property is required to
-+    distinguish them.
--- 
-2.11.0
+> > ---
+> >  include/linux/pci.h |    3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > --- linux-next-20171128.orig/include/linux/pci.h
+> > +++ linux-next-20171128/include/linux/pci.h
+> > @@ -1660,6 +1660,9 @@ static inline struct pci_dev *pci_get_sl
+> >  static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+> >  						unsigned int devfn)
+> >  { return NULL; }
+> > +static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
+> > +					unsigned int bus, unsigned int devfn)
+> > +{ return NULL; }
+> >  
+> >  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+> >  static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+> > 
+> > 
