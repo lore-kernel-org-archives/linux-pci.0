@@ -1,79 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:52459 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753640AbdL1PdR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 10:33:17 -0500
-Subject: Re: [PATCH v2] PCI: dwc: Use {upper,lower}_32_bits() macros for
- clarity
-To: Stephen Boyd <sboyd@codeaurora.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <Gustavo.Pimentel@synopsys.com>
-References: <20171227232540.22341-1-sboyd@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <f855815f-79a3-9be2-1513-2c9edc907079@synopsys.com>
-Date: Thu, 28 Dec 2017 15:33:11 +0000
+Received: from mail.kernel.org ([198.145.29.99]:59112 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751598AbdLFV1o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Dec 2017 16:27:44 -0500
+Date: Wed, 6 Dec 2017 15:27:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, adouglas@cadence.com,
+        stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
+        eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
+        sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+        robh@kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/5] PCI: Add vendor ID for Cadence
+Message-ID: <20171206212741.GP23510@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <a93032cbbe02dc9efef8536a4b2a851d1b08ab6f.1511439189.git.cyrille.pitchen@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <20171227232540.22341-1-sboyd@codeaurora.org>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a93032cbbe02dc9efef8536a4b2a851d1b08ab6f.1511439189.git.cyrille.pitchen@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Hi Stephen,
-
-Às 11:25 PM de 12/27/2017, Stephen Boyd escreveu:
-> We have macros for getting the upper or lower 32 bits of a
-> number. Use them here to shave a couple lines off the code
-> and provide clarity.
+On Thu, Nov 23, 2017 at 04:01:46PM +0100, Cyrille Pitchen wrote:
+> This patch adds a new PCI vendor ID for Cadence.
 > 
-> Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I assume Lorenzo will merge this along with the rest of the Cadence
+support.
+
 > ---
+>  include/linux/pci_ids.h | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> Changes from v1:
->  * Update dw_msi_setup_msg() too
->  * Reword commit text slightly
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index ab20dc5db423..eb13e84e1fef 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2381,6 +2381,8 @@
+>  
+>  #define PCI_VENDOR_ID_LENOVO		0x17aa
+>  
+> +#define PCI_VENDOR_ID_CDNS		0x17cd
+> +
+>  #define PCI_VENDOR_ID_ARECA		0x17d3
+>  #define PCI_DEVICE_ID_ARECA_1110	0x1110
+>  #define PCI_DEVICE_ID_ARECA_1120	0x1120
+> -- 
+> 2.11.0
 > 
->  drivers/pci/dwc/pcie-designware-host.c | 10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 81e2157a7cfb..454b8d244071 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -89,10 +89,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
->  	msi_target = virt_to_phys((void *)pp->msi_data);
->  
->  	/* program the msi_data */
-> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> -			    (u32)(msi_target & 0xffffffff));
-> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
-> -			    (u32)(msi_target >> 32 & 0xffffffff));
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4, lower_32_bits(msi_target));
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, upper_32_bits(msi_target));
->  }
->  
->  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-> @@ -189,8 +187,8 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
->  	else
->  		msi_target = virt_to_phys((void *)pp->msi_data);
->  
-> -	msg.address_lo = (u32)(msi_target & 0xffffffff);
-> -	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
-> +	msg.address_lo = lower_32_bits(msi_target);
-> +	msg.address_hi = upper_32_bits(msi_target);
->  
->  	if (pp->ops->get_msi_data)
->  		msg.data = pp->ops->get_msi_data(pp, pos);
-> 
-
-Thanks for the patch.
-Gustavo' patch-set targeting the update of the Interrupt API for
-pcie-designware* already does this modification, so I would suggest that we wait
-for Gustavo' patch to be stable and get the same modification.
-
-Best regards,
-Joao Pinto
