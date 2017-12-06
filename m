@@ -1,85 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 20 Dec 2017 17:34:16 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-omap@vger.kernel.org, Niklas Cassel <niklass@axis.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 00/18] dwc MSI fixes, ARTPEC-6 EP mode support,
- ARTPEC-7 SoC support
-Message-ID: <20171220173416.GD1709@red-moon>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:46468 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751718AbdLFTvW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Dec 2017 14:51:22 -0500
+Date: Wed, 6 Dec 2017 13:51:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?=
+        <ckoenig.leichtzumerken@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] x86/PCI: limit the size of the 64bit BAR to 256GB
+Message-ID: <20171206195118.GL23510@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171129141229.6107-1-christian.koenig@amd.com>
+ <20171129141229.6107-4-christian.koenig@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20171129141229.6107-4-christian.koenig@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 20, 2017 at 12:29:21AM +0100, Niklas Cassel wrote:
-> This is a series that adds:
-> - PCI endpoint mode support in the ARTPEC-6 driver.
-> - ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
-> - Small fixes for MSI in designware-ep and designware-host,
->   needed to get endpoint mode support working for ARTPEC-6.
-> - Cleanups in pci-dra7xx to better prepare for endpoint mode in other
->   DWC based PCIe drivers.
+On Wed, Nov 29, 2017 at 03:12:29PM +0100, Christian König wrote:
+> This avoids problems with Xen which hides some memory resources from the
+> OS and potentially also allows memory hotplug while this fixup is
+> enabled.
 
-Joao, Jingoo,
+The patch itself is OK, but the changelog doesn't say enough about
+what the problem is.  I have no clue about what the Xen issue is or
+why limiting the BAR to 256GB avoids the problem or what this has to
+do with memory hotplug.
 
-Gustavo tested the series and Kishon ACK'ed the relevant patches,
-I need your ACKs on designware patches to queue this series for
-v4.16.
+For example, we should be able to tell why 256GB is the right number.
+Maybe there's something specific in Xen you can reference?  Maybe an
+example of what goes wrong with some details?
 
-I am away from tomorrow (noon) till beginning of January which means
-that either I queue this series tomorrow or at -rc6, please do
-chime in if you can.
-
-Thanks,
-Lorenzo
-
-> Changes since V5:
-> -Dropped GFP_DMA32 from "PCI: dwc: Use the DMA-API to get the MSI address"
->  so that we use the exact same GFP flags as before.
-> -Rewrote commit message for "PCI: dwc: Make cpu_addr_fixup take struct
-> dw_pcie as argument" to be more detailed.
+> Signed-off-by: Christian König <christian.koenig@amd.com>
+> ---
+>  arch/x86/pci/fixup.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Niklas Cassel (18):
->   PCI: dwc: Use the DMA-API to get the MSI address
->   PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
->   PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be
->     writable
->   PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
->   PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
->   PCI: designware-ep: Add generic function for raising MSI irq
->   PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep
->     mode
->   PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than
->     in probe
->   PCI: dwc: dra7xx: Help compiler to remove unused code
->   PCI: dwc: artpec6: Remove unused defines
->   PCI: dwc: artpec6: Use BIT and GENMASK macros
->   PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller
->     functions
->   bindings: PCI: artpec: Add support for endpoint mode
->   PCI: dwc: artpec6: Add support for endpoint mode
->   PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
->   PCI: dwc: artpec6: Deassert the core before waiting for PHY
->   bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
->   PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
-> 
->  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   5 +-
->  drivers/pci/dwc/Kconfig                            |  68 +--
->  drivers/pci/dwc/Makefile                           |   4 +-
->  drivers/pci/dwc/pci-dra7xx.c                       |  27 +-
->  drivers/pci/dwc/pcie-artpec6.c                     | 470 ++++++++++++++++++---
->  drivers/pci/dwc/pcie-designware-ep.c               |  59 ++-
->  drivers/pci/dwc/pcie-designware-host.c             |  15 +-
->  drivers/pci/dwc/pcie-designware.c                  |   2 +-
->  drivers/pci/dwc/pcie-designware.h                  |  22 +-
->  9 files changed, 554 insertions(+), 118 deletions(-)
-> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index c817ab85dc82..149adbc7f2a3 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -701,7 +701,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>  	res->name = "PCI Bus 0000:00";
+>  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+>  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+> -	res->start = 0x100000000ull;
+> +	res->start = 0xbd00000000ull;
+>  	res->end = 0xfd00000000ull - 1;
+>  
+>  	/* Just grab the free area behind system memory for this */
 > -- 
-> 2.14.2
+> 2.11.0
 > 
