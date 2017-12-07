@@ -1,164 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:58979 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752453AbdLNNCF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:02:05 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: kishon@ti.com, Niklas Cassel <niklass@axis.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 1/3] PCI: designware-ep: Fix find_first_zero_bit() usage
-Date: Thu, 14 Dec 2017 14:01:44 +0100
-Message-Id: <20171214130147.1790-2-niklas.cassel@axis.com>
-In-Reply-To: <20171214130147.1790-1-niklas.cassel@axis.com>
-References: <20171214130147.1790-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=B59L=DD=intel.com=kenji.chen@kernel.org>
+Return-Path: <SRS0=B59L=DD=intel.com=kenji.chen@kernel.org>
+From: "Chen, Kenji" <kenji.chen@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Thierry Reding
+	<treding@nvidia.com>, Manikanta Maddireddy <mmaddireddy@nvidia.com>, "David
+ Daney" <david.daney@cavium.com>, Krishna Kishore <kthota@nvidia.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Vidya Sagar
+	<vidyas@nvidia.com>, Julia Lawall <Julia.Lawall@lip6.fr>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, Patrick Georgi
+	<pgeorgi@chromium.org>, Rajat Jain <rajatja@google.com>, Yinghai Lu
+	<yinghai@kernel.org>, Stefan Reinauer <stefan.reinauer@coreboot.org>, Duncan
+ Laurie <dlaurie@chromium.org>
+Subject: RE: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+Date: Thu, 7 Dec 2017 15:00:43 +0000
+Message-ID: <A7A4B3ECFA40144E98B82E71E29693557CA5BA74@PGSMSX102.gar.corp.intel.com>
+References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171205194050.GD23510@bhelgaas-glaptop.roam.corp.google.com>
+ <A7A4B3ECFA40144E98B82E71E29693557CA5516C@PGSMSX102.gar.corp.intel.com>
+ <20171207144515.GA11788@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171207144515.GA11788@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-find_first_zero_bit()'s parameter 'size' is defined in bits,
-not in bytes.
+For Intel Broadwell, SKylake, and KabyLake PCIe Root Port, the threshold is=
+ recommended as it is in the commit. If the BIOS/Coreboot porting between p=
+latforms is taken into consideration, using a build definition or variables=
+ from somewhere of customizable zone is preferred. Let Coreboot guys make t=
+he call since I am working for Intel Only.
 
-find_first_zero_bit() is called with size in bytes rather than bits,
-which thus defines a too low upper limit, causing
-dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
-and bar 5, which makes bar 5 overwrite the settings set by bar 4.
+-----Original Message-----
+From: Bjorn Helgaas [mailto:helgaas@kernel.org]=20
+Sent: Thursday, December 7, 2017 10:45 PM
+To: Chen, Kenji <kenji.chen@intel.com>
+Cc: linux-pci@vger.kernel.org; Thierry Reding <treding@nvidia.com>; Manikan=
+ta Maddireddy <mmaddireddy@nvidia.com>; David Daney <david.daney@cavium.com=
+>; Krishna Kishore <kthota@nvidia.com>; linux-kernel@vger.kernel.org; Vidya=
+ Sagar <vidyas@nvidia.com>; Julia Lawall <Julia.Lawall@lip6.fr>; linux-tegr=
+a@vger.kernel.org; Patrick Georgi <pgeorgi@chromium.org>; Rajat Jain <rajat=
+ja@google.com>; Yinghai Lu <yinghai@kernel.org>; Stefan Reinauer <stefan.re=
+inauer@coreboot.org>; Duncan Laurie <dlaurie@chromium.org>
+Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
 
-Since the sizes of the bitmaps are known, dynamically allocate the
-bitmaps, and use the correct size when calling find_first_zero_bit().
+On Wed, Dec 06, 2017 at 01:55:37AM +0000, Chen, Kenji wrote:
+> https://pcisig.com/sites/default/files/specification_documents/ECN_L1_
+> PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
 
-Additionally, make sure that ep->num_ob_windows and ep->num_ib_windows,
-which are obtained from device tree, are smaller than the maximum number
-of iATUs (MAX_IATU_IN/MAX_IATU_OUT).
+With all due respect, this doesn't seem to add any new information.
+For example, the L1 PM Substates Control 1 register description from the ab=
+ove is basically identical to the published PCIe r3.1, sec 7.33.3.
 
-Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
- drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
- 2 files changed, 32 insertions(+), 10 deletions(-)
+So it doesn't answer the questions of:
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index d53d5f168363..d5eb143040e3 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 	u32 free_win;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
--	free_win = find_first_zero_bit(&ep->ib_window_map,
--				       sizeof(ep->ib_window_map));
-+	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
- 	if (free_win >= ep->num_ib_windows) {
- 		dev_err(pci->dev, "no free inbound window\n");
- 		return -EINVAL;
-@@ -85,7 +84,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 	}
- 
- 	ep->bar_to_atu[bar] = free_win;
--	set_bit(free_win, &ep->ib_window_map);
-+	set_bit(free_win, ep->ib_window_map);
- 
- 	return 0;
- }
-@@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 	u32 free_win;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
--	free_win = find_first_zero_bit(&ep->ob_window_map,
--				       sizeof(ep->ob_window_map));
-+	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
- 	if (free_win >= ep->num_ob_windows) {
- 		dev_err(pci->dev, "no free outbound window\n");
- 		return -EINVAL;
-@@ -106,7 +104,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
- 				  phys_addr, pci_addr, size);
- 
--	set_bit(free_win, &ep->ob_window_map);
-+	set_bit(free_win, ep->ob_window_map);
- 	ep->outbound_addr[free_win] = phys_addr;
- 
- 	return 0;
-@@ -121,7 +119,7 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
- 	dw_pcie_ep_reset_bar(pci, bar);
- 
- 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
--	clear_bit(atu_index, &ep->ib_window_map);
-+	clear_bit(atu_index, ep->ib_window_map);
- }
- 
- static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
-@@ -175,7 +173,7 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
- 		return;
- 
- 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
--	clear_bit(atu_index, &ep->ob_window_map);
-+	clear_bit(atu_index, ep->ob_window_map);
- }
- 
- static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
-@@ -298,12 +296,32 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		dev_err(dev, "unable to read *num-ib-windows* property\n");
- 		return ret;
- 	}
-+	if (ep->num_ib_windows > MAX_IATU_IN) {
-+		dev_err(dev, "invalid *num-ib-windows*\n");
-+		return -EINVAL;
-+	}
- 
- 	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
- 	if (ret < 0) {
- 		dev_err(dev, "unable to read *num-ob-windows* property\n");
- 		return ret;
- 	}
-+	if (ep->num_ob_windows > MAX_IATU_OUT) {
-+		dev_err(dev, "invalid *num-ob-windows*\n");
-+		return -EINVAL;
-+	}
-+
-+	ep->ib_window_map = devm_kzalloc(dev, sizeof(long) *
-+					 BITS_TO_LONGS(ep->num_ib_windows),
-+					 GFP_KERNEL);
-+	if (!ep->ib_window_map)
-+		return -ENOMEM;
-+
-+	ep->ob_window_map = devm_kzalloc(dev, sizeof(long) *
-+					 BITS_TO_LONGS(ep->num_ob_windows),
-+					 GFP_KERNEL);
-+	if (!ep->ob_window_map)
-+		return -ENOMEM;
- 
- 	addr = devm_kzalloc(dev, sizeof(phys_addr_t) * ep->num_ob_windows,
- 			    GFP_KERNEL);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index e5d9d77b778e..e6fd0b024b21 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -113,6 +113,10 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
-+/* Maximum number of inbound/outbound iATUs */
-+#define MAX_IATU_IN			256
-+#define MAX_IATU_OUT			256
-+
- struct pcie_port;
- struct dw_pcie;
- struct dw_pcie_ep;
-@@ -192,8 +196,8 @@ struct dw_pcie_ep {
- 	size_t			page_size;
- 	u8			bar_to_atu[6];
- 	phys_addr_t		*outbound_addr;
--	unsigned long		ib_window_map;
--	unsigned long		ob_window_map;
-+	unsigned long		*ib_window_map;
-+	unsigned long		*ob_window_map;
- 	u32			num_ib_windows;
- 	u32			num_ob_windows;
- };
--- 
-2.14.2
+  1) Why coreboot sets the L1.2 threshold to a fixed value, and
+
+  2) How "(1 << 21) | (1 << 23) | (1 << 30)" relates to the Control 1
+     register
+
+> Pls also check My Intel Doc# 545845 for the bits fields description.
+
+I don't have access to this document.  The Linux code I'm proposing is base=
+d on the PCIe spec and is intended to work on all hardware that conforms to=
+ that spec.  I'm not very familiar with coreboot, but maybe the L1 Substate=
+s code there is only intended to work on certain Intel chipsets and doesn't=
+ need to work on other hardware?
+
+Bjorn
+
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Wednesday, December 6, 2017 3:41 AM
+> To: linux-pci@vger.kernel.org
+> Cc: Chen, Kenji <kenji.chen@intel.com>; Thierry Reding=20
+> <treding@nvidia.com>; Manikanta Maddireddy <mmaddireddy@nvidia.com>;=20
+> David Daney <david.daney@cavium.com>; Krishna Kishore=20
+> <kthota@nvidia.com>; linux-kernel@vger.kernel.org; Vidya Sagar=20
+> <vidyas@nvidia.com>; Julia Lawall <Julia.Lawall@lip6.fr>;=20
+> linux-tegra@vger.kernel.org; Patrick Georgi <pgeorgi@chromium.org>;=20
+> Rajat Jain <rajatja@google.com>; Yinghai Lu <yinghai@kernel.org>;=20
+> Stefan Reinauer <stefan.reinauer@coreboot.org>; Duncan Laurie=20
+> <dlaurie@chromium.org>
+> Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+>=20
+> On Sat, Dec 02, 2017 at 03:45:38PM -0600, Bjorn Helgaas wrote:
+> > The PCIe active link power state is L0.  ASPM defines two low-power
+> > states: L0s and L1.  The L1 PM Substates feature defines two=20
+> > additional low-power states: L1.1 and L2.2.
+> >=20
+> > The L1.2 state may have substantial entry/exit latency.  Downstream=20
+> > devices can use the Latency Tolerance Reporting (LTR) feature to=20
+> > report how much latency they can tolerate.  The L1 PM Substates=20
+> > capability includes a programmable L1.2 threshold register.  If the=20
+> > downstream devices can tolerate the latency indicated by the=20
+> > threshold, L1.2 may be used.
+> >=20
+> > If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be=20
+> > used whenever it is enabled and CLKREQ# is de-asserted.  Linux=20
+> > currently never enables LTR, but firmware may have done so.
+> >=20
+> > The current L1 PM substates support in Linux sets the L1.2 threshold=20
+> > to a fixed value (163.84us) copied from coreboot [1].  I don't know=20
+> > where that value came from, and it is incorrect for some platforms,=20
+> > e.g., Tegra [2].
+> >=20
+> > These patches change that so we calculate the L1.2 threshold based=20
+> > on values reported by the hardware, and we enable LTR whenever possible=
+.
+> >=20
+> > This is all just my understanding from reading the spec.  I'd be=20
+> > glad to be corrected if I'm going wrong.
+> >=20
+> > I'm particularly puzzled about the coreboot code in
+> > pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
+> >=20
+> > +	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
+> > +		(1 << 21) | (1 << 23) | (1 << 30));
+> >=20
+> > This is writing the L1 PM Substates Control 1 register, but the=20
+> > shifts don't match up with any of the fields in the register, so=20
+> > this is an awfully funny way to write the threshold.
+> >=20
+> > [1]
+> > https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.
+> > html [2]
+> > https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@n
+> > vi
+> > dia.com
+> >=20
+> > ---
+> >=20
+> > Bjorn Helgaas (2):
+> >       PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristic=
+s
+> >       PCI/ASPM: Enable Latency Tolerance Reporting when supported
+> >=20
+> >=20
+> >  drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++--------=
+--------
+> >  drivers/pci/probe.c     |   33 ++++++++++++++++++++++
+> >  include/linux/pci.h     |    2 +
+> >  3 files changed, 82 insertions(+), 24 deletions(-)
+>=20
+> I applied these with Vidya's Reviewed-by to pci/aspm for v4.16.
+>=20
+> I'd still really like to hear from the coreboot folks about the rationale=
+ for the current coreboot code.  You folks are in a much better position to=
+ actually understand the hardware details.
+>=20
+> Bjorn
