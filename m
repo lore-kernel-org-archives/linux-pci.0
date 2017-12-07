@@ -1,111 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:44782 "EHLO
-        relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752367AbdLKNam (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Dec 2017 08:30:42 -0500
-From: Biju Das <biju.das@bp.renesas.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-CC: Simon Horman <horms@verge.net.au>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Chris Paterson <Chris.Paterson2@renesas.com>,
-        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-renesas-soc@vger.kernel.org"
-        <linux-renesas-soc@vger.kernel.org>
-Subject: RE: [PATCH v2] dt-bindings: PCI: rcar: Add device tree support for
- r8a7743
-Date: Mon, 11 Dec 2017 13:30:37 +0000
-Message-ID: <KL1PR06MB1702B0E1D37DC38E9E3835F1B8370@KL1PR06MB1702.apcprd06.prod.outlook.com>
-References: <1510653543-53770-1-git-send-email-biju.das@bp.renesas.com>
-In-Reply-To: <1510653543-53770-1-git-send-email-biju.das@bp.renesas.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 6 Dec 2017 16:29:56 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Tony Lindgren <tony@atomide.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
+        dianders@chromium.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>
+Subject: Re: [RFC PATCH v10 6/7] PCI / PM: Move acpi wakeup code to pci core
+Message-ID: <20171207002955.GA40447@google.com>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+ <1894178.xtK0vD2N4H@aspire.rjw.lan>
+ <20171114025109.GA43048@google.com>
+ <1882670.s3LR2t44nD@aspire.rjw.lan>
+ <20171206193421.GA143886@google.com>
+ <20171207001754.GB28152@atomide.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171207001754.GB28152@atomide.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn Helgaas,
+On Wed, Dec 06, 2017 at 04:17:54PM -0800, Tony Lindgren wrote:
+> * Brian Norris <briannorris@chromium.org> [171206 19:36]:
+> > By the way, it seems pretty ambiguous how we want to handle things like
+> > (a) multiple devices sharing the same WAKE#
+> > (b) systems where a slot is swappable
+> > 
+> > For (a), the main problem is that if we have to repeat the interrupt
+> > definition in multiple devices, then we have to deal with something like
+> > IRQF_SHARED. That can be done, but it makes it much harder to use the
+> > dedicated wakeirq helpers.
+> 
+> This will get messy, let's not go there :) That is unless the hardware
+> really has a single interrupt wired to multiple devices. And in that
+> case almost certainly a custom interrupt handler is needed.
 
-Does this patch look okay to you?
+As Rafael mentioned, the spec doesn't clearly delineate a required
+hierarchy to the WAKE# pin, and it's certainly possible to share it. I'm
+fine dodging that question for now, and only writing said custom
+interrupt handler if/when needed.
 
-Regards,
-Biju
+But device tree bindings are "forever", so it seems reasonable to at
+least agree how it should be defined.
 
-> -----Original Message-----
-> From: Biju Das [mailto:biju.das@bp.renesas.com]
-> Sent: 14 November 2017 09:59
-> To: Bjorn Helgaas <bhelgaas@google.com>; Rob Herring
-> <robh+dt@kernel.org>; Mark Rutland <mark.rutland@arm.com>
-> Cc: Simon Horman <horms@verge.net.au>; Magnus Damm
-> <magnus.damm@gmail.com>; Chris Paterson <Chris.Paterson2@renesas.com>;
-> Fabrizio Castro <fabrizio.castro@bp.renesas.com>; linux-pci@vger.kernel.o=
-rg;
-> linux-renesas-soc@vger.kernel.org; Biju Das <biju.das@bp.renesas.com>
-> Subject: [PATCH v2] dt-bindings: PCI: rcar: Add device tree support for r=
-8a7743
->
-> Add support for r8a7743. The Renesas RZ/G1M(R8A7743)PCIe controller is
-> identical to the R-Car Gen2 family.
->
-> No driver change is needed due to the fallback compatible value "renesas,=
-pcie-
-> rcar-gen2".
-> Adding the SoC-specific compatible values here has three purposes:
-> 1. Document which SoCs have this hardware module, 2. Allow checkpatch to
-> validate compatible values.
-> 3. Allow the driver to support SoC specific implementations in future
->    as necessary.
->
-> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
-> Reviewed-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
-> v1-->v2
->    Corrected RZ-G1 to RZ/G1.
->
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> index 76ba3a6..1fb614e 100644
-> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-> @@ -1,13 +1,15 @@
->  * Renesas R-Car PCIe interface
->
->  Required properties:
-> -compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
-> +compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
-> +    "renesas,pcie-r8a7779" for the R8A7779 SoC;
->      "renesas,pcie-r8a7790" for the R8A7790 SoC;
->      "renesas,pcie-r8a7791" for the R8A7791 SoC;
->      "renesas,pcie-r8a7793" for the R8A7793 SoC;
->      "renesas,pcie-r8a7795" for the R8A7795 SoC;
->      "renesas,pcie-r8a7796" for the R8A7796 SoC;
-> -    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
-> +    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 or
-> +     RZ/G1 compatible device.
->      "renesas,pcie-rcar-gen3" for a generic R-Car Gen3 compatible device.
->
->      When compatible with the generic version, nodes must list the
-> --
-> 1.9.1
-
-
-
-[https://www2.renesas.eu/media/email/unicef_2017.jpg]
-
-This Christmas, instead of sending out cards, Renesas Electronics Europe ha=
-ve decided to support Unicef with a donation. For further details click her=
-e<https://www.unicef.org/> to find out about the valuable work they do, hel=
-ping children all over the world.
-We would like to take this opportunity to wish you a Merry Christmas and a =
-prosperous New Year.
-
-
-
-Renesas Electronics Europe Ltd, Dukes Meadow, Millboard Road, Bourne End, B=
-uckinghamshire, SL8 5FH, UK. Registered in England & Wales under Registered=
- No. 04586709.
+Brian
