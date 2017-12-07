@@ -1,120 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 23/26] video: fbdev: nvidia: deprecate
- pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:59 -0500
-Message-Id: <1513661883-28662-24-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:NVIDIA rivafb and nvidiafb FRAMEBUFFER DRIVER"
- <linux-fbdev@vger.kernel.org>, Antonino Daplas <adaplas@gmail.com>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
- Sinan Kaya <okaya@codeaurora.org>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58817 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750862AbdLGIAX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Dec 2017 03:00:23 -0500
+From: Bandan Das <bsd@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Christian =?utf-8?Q?K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH] x86/pci: Add a break condition when enabling BAR
+Date: Thu, 07 Dec 2017 03:00:21 -0500
+Message-ID: <jpga7yvotm2.fsf@linux.bootlegged.copy>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+On an old flaky system with AMD Opteron 6320, boot hangs
+with the following trace since commit fa564ad9:
 
-struct nvidia_par has a pointer to struct pci_dev. Use the pci_dev
-member to extract the domain information and pass it to
-pci_get_domain_bus_and_slot() function.
+[   28.181012] Hardware name: HP ProLiant DL385p Gen8, BIOS A28 09/03/2014
+[   28.184022] RIP: 0010:lock_acquire+0xd5/0x1e0
+[   28.185010] RSP: 0018:ffffb7ad818c39a8 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff11
+[   28.187010] RAX: ffffa074fb39b140 RBX: 0000000000000246 RCX: 0000000000000000
+[   28.189014] RDX: ffffffffb20a55a9 RSI: 0000000000040009 RDI: 0000000000000246
+[   28.191012] RBP: 0000000000000000 R08: 0000000000000006 R09: 0000000000000000
+[   28.193020] R10: 0000000000000001 R11: 00000000dac664b5 R12: 0000000000000000
+[   28.196013] R13: 0000000000000000 R14: 0000000000000001 R15: 0000000000000000
+[   28.197011] FS:  0000000000000000(0000) GS:ffffa074fbd00000(0000) knlGS:0000000000000000
+[   28.201014] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   28.201014] CR2: 0000000000000000 CR3: 00000003b6e10000 CR4: 00000000000406e0
+[   28.205008] Call Trace:
+[   28.205013]  ? request_resource_conflict+0x19/0x40
+[   28.207013]  _raw_write_lock+0x2e/0x40
+[   28.209008]  ? request_resource_conflict+0x19/0x40
+[   28.209010]  request_resource_conflict+0x19/0x40
+[   28.212013]  pci_amd_enable_64bit_bar+0x103/0x1a0
+[   28.213025]  pci_fixup_device+0xd4/0x210
+[   28.213025]  pci_setup_device+0x193/0x570
+[   28.215010]  ? get_device+0x13/0x20
+[   28.217008]  pci_scan_single_device+0x98/0xd0
+[   28.217011]  pci_scan_slot+0x90/0x130
+[   28.219010]  pci_scanild_bus_extend+0x3a/0x270
+[   28.321008]  acpi_pci_root_create+0x1a9/0x210
+[   28.321014]  ? pci_acpi_scan_root+0x135/0x1b0
+[   28.324013]  pci_acpi_scan_root+0x15f/0x1b0
+[   28.325008]  acpi_pci_root_add+0x283/0x560
+[   28.325014]  ? acpi_match_device_ids+0xc/0x20
+[   28.327013]  acpi_bus_attach+0xf9/0x1c0
+[   28.329008]  acpi_bus_attach+0x82/0x1c0
+[   28.329044]  acpi_bus_attach+0x82/0x1c0
+[   28.331010]  acpi_bus_scan+0x47/0xa0
+[   28.333008]  acpi_scan_init+0x12d/0x28d
+[   28.333013]  ? bus_register+0x208/0x280
+[   28.333013]  acpi_init+0x30f/0x36f
+[   28.335010]  ? acpi_sleep_proc_init+0x24/0x24
+[   28.337013]  do_one_initcall+0x4d/0x19c
+[   28.337013]  ? do_early_param+0x29/0x86
+[   28.340013]  kernel_init_freeable+0x209/0x2a4
+[   28.341008]  ? set_debug_rodata+0x11/0x11
+[   28.341011]  ? rest_init+0xc0/0xc0
+[   28.343013]  kernel_init+0xa/0x104
+[   28.345008]  ret_from_fork+0x24/0x30
+[   28.345010] Code: 24 08 49 c1 e9 09 49 83 f1 01 41 83 e1 01 e8 73
+e4 ff ff 65 48 8b 04 25 c0 d4 00 00 48 89 df c7 80 fc 0c 00 00 00 00
+00 00 57 9d <0f> 1f 44 00 00 48 83 c4 30 5b 5d 41 5c 41 5d 41 5e 41 5f
+c3 65
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Since request_resource() will unconditionally return a conflict for invalid
+regions, there will be no way to break out of the loop when enabling 64bit BAR.
+Add checks and exit the loop in these cases without attempting to enable
+BAR.
+
+Signed-off-by: Bandan Das <bsd@redhat.com>
 ---
- drivers/video/fbdev/nvidia/nv_hw.c    | 11 ++++++-----
- drivers/video/fbdev/nvidia/nv_setup.c |  3 ++-
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ arch/x86/pci/fixup.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/video/fbdev/nvidia/nv_hw.c b/drivers/video/fbdev/nvidia/nv_hw.c
-index 81c80ac..8335da4 100644
---- a/drivers/video/fbdev/nvidia/nv_hw.c
-+++ b/drivers/video/fbdev/nvidia/nv_hw.c
-@@ -683,10 +683,11 @@ static void nForceUpdateArbitrationSettings(unsigned VClk,
- 	nv10_sim_state sim_data;
- 	unsigned int M, N, P, pll, MClk, NVClk, memctrl;
- 	struct pci_dev *dev;
-+	int domain = pci_domain_nr(par->pci_dev->bus);
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 1e996df..8933a1b 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -696,8 +696,13 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+ 	res->end = 0xfd00000000ull - 1;
  
- 	if ((par->Chipset & 0x0FF0) == 0x01A0) {
- 		unsigned int uMClkPostDiv;
--		dev = pci_get_bus_and_slot(0, 3);
-+		dev = pci_get_domain_bus_and_slot(domain, 0, 3);
- 		pci_read_config_dword(dev, 0x6C, &uMClkPostDiv);
- 		uMClkPostDiv = (uMClkPostDiv >> 8) & 0xf;
+ 	/* Just grab the free area behind system memory for this */
+-	while ((conflict = request_resource_conflict(&iomem_resource, res)))
++	while ((conflict = request_resource_conflict(&iomem_resource, res))) {
++		if ((res->start > res->end) ||
++		    (res->start < iomem_resource.start) ||
++		    (res->end > iomem_resource.end))
++			break;
+ 		res->start = conflict->end + 1;
++	}
  
-@@ -694,7 +695,7 @@ static void nForceUpdateArbitrationSettings(unsigned VClk,
- 			uMClkPostDiv = 4;
- 		MClk = 400000 / uMClkPostDiv;
- 	} else {
--		dev = pci_get_bus_and_slot(0, 5);
-+		dev = pci_get_domain_bus_and_slot(domain, 0, 5);
- 		pci_read_config_dword(dev, 0x4c, &MClk);
- 		MClk /= 1000;
- 	}
-@@ -707,13 +708,13 @@ static void nForceUpdateArbitrationSettings(unsigned VClk,
- 	sim_data.pix_bpp = (char)pixelDepth;
- 	sim_data.enable_video = 0;
- 	sim_data.enable_mp = 0;
--	dev = pci_get_bus_and_slot(0, 1);
-+	dev = pci_get_domain_bus_and_slot(domain, 0, 1);
- 	pci_read_config_dword(dev, 0x7C, &sim_data.memory_type);
- 	pci_dev_put(dev);
- 	sim_data.memory_type = (sim_data.memory_type >> 12) & 1;
- 	sim_data.memory_width = 64;
- 
--	dev = pci_get_bus_and_slot(0, 3);
-+	dev = pci_get_domain_bus_and_slot(domain, 0, 3);
- 	pci_read_config_dword(dev, 0, &memctrl);
- 	pci_dev_put(dev);
- 	memctrl >>= 16;
-@@ -721,7 +722,7 @@ static void nForceUpdateArbitrationSettings(unsigned VClk,
- 	if ((memctrl == 0x1A9) || (memctrl == 0x1AB) || (memctrl == 0x1ED)) {
- 		u32 dimm[3];
- 
--		dev = pci_get_bus_and_slot(0, 2);
-+		dev = pci_get_domain_bus_and_slot(domain, 0, 2);
- 		pci_read_config_dword(dev, 0x40, &dimm[0]);
- 		dimm[0] = (dimm[0] >> 8) & 0x4f;
- 		pci_read_config_dword(dev, 0x44, &dimm[1]);
-diff --git a/drivers/video/fbdev/nvidia/nv_setup.c b/drivers/video/fbdev/nvidia/nv_setup.c
-index 2f2e162..b17acd2 100644
---- a/drivers/video/fbdev/nvidia/nv_setup.c
-+++ b/drivers/video/fbdev/nvidia/nv_setup.c
-@@ -264,7 +264,8 @@ static void nv10GetConfig(struct nvidia_par *par)
- 	}
- #endif
- 
--	dev = pci_get_bus_and_slot(0, 1);
-+	dev = pci_get_domain_bus_and_slot(pci_domain_nr(par->pci_dev->bus),
-+					  0, 1);
- 	if ((par->Chipset & 0xffff) == 0x01a0) {
- 		u32 amt;
+ 	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
  
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.9.4
