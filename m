@@ -1,106 +1,44 @@
-Return-Path: <SRS0=2GJ2=DL=realsil.com.cn=rui_feng@kernel.org>
-Return-Path: <SRS0=2GJ2=DL=realsil.com.cn=rui_feng@kernel.org>
-From: =?gb2312?B?t+vI8Q==?= <rui_feng@realsil.com.cn>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "lee.jones@linaro.org" <lee.jones@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Hans de Goede
-	<hdegoede@redhat.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: =?gb2312?B?tPC4tDogW1BBVENIIHY2XSBtZmQ6IEFkZCBzdXBwb3J0IGZvciBSVFM1MjUw?= =?gb2312?Q?S_power_saving?=
-Date: Fri, 15 Dec 2017 09:42:45 +0000
-Message-ID: <2A308283684ECD4B896628E09AF5361E01A8150B@RS-MBS01.realsil.com.cn>
-References: <1504772799-15173-1-git-send-email-rui_feng@realsil.com.cn>
- <20171214222522.GL30595@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171214222522.GL30595@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from muru.com ([72.249.23.125]:53918 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751748AbdLGAR6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Dec 2017 19:17:58 -0500
+Date: Wed, 6 Dec 2017 16:17:54 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
+        dianders@chromium.org, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>
+Subject: Re: [RFC PATCH v10 6/7] PCI / PM: Move acpi wakeup code to pci core
+Message-ID: <20171207001754.GB28152@atomide.com>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+ <1894178.xtK0vD2N4H@aspire.rjw.lan>
+ <20171114025109.GA43048@google.com>
+ <1882670.s3LR2t44nD@aspire.rjw.lan>
+ <20171206193421.GA143886@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171206193421.GA143886@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBbK2NjIEhhbnMsIERhdmUsIGxpbnV4LXBjaV0NCj4gDQo+IE9uIFRodSwgU2VwIDA3LCAyMDE3
-IGF0IDA0OjI2OjM5UE0gKzA4MDAsIHJ1aV9mZW5nQHJlYWxzaWwuY29tLmNuIHdyb3RlOg0KPiA+
-IEZyb206IFJ1aSBGZW5nIDxydWlfZmVuZ0ByZWFsc2lsLmNvbS5jbj4NCj4gDQo+IEkgd2lzaCB0
-aGlzIGhhZCBiZWVuIHBvc3RlZCB0byBsaW51eC1wY2kgYmVmb3JlIGJlaW5nIG1lcmdlZC4NCj4g
-DQo+IEknbSBjb25jZXJuZWQgYmVjYXVzZSBzb21lIG9mIHRoaXMgYXBwZWFycyB0byBvdmVybGFw
-IGFuZCBjb25mbGljdCB3aXRoIFBDSQ0KPiBjb3JlIG1hbmFnZW1lbnQgb2YgQVNQTS4NCj4gDQo+
-IEkgYXNzdW1lIHRoZXNlIGRldmljZXMgYWR2ZXJ0aXNlIEFTUE0gc3VwcG9ydCBpbiB0aGVpciBM
-aW5rIENhcGFiaWxpdGVzDQo+IHJlZ2lzdGVycywgcmlnaHQ/ICBJZiBzbywgd2h5IGlzbid0IHRo
-ZSBleGlzdGluZyBQQ0kgY29yZSBBU1BNIHN1cHBvcnQNCj4gc3VmZmljaWVudD8NCj4gDQpXaGVu
-IEwxU1MgaXMgY29uZmlndXJlZCwgdGhlIGRldmljZShoYXJkd2FyZSkgY2FuJ3QgZW50ZXIgTDFT
-UyBzdGF0dXMgYXV0b21hdGljYWxseSwNCml0IG5lZWQgZHJpdmVyKHNvZnR3YXJlKSB0byBkbyBz
-b21lIHdvcmsgdG8gYWNoaWV2ZSB0aGUgZnVuY3Rpb24uDQoNCj4gPiBFbmFibGUgcG93ZXIgc2F2
-aW5nIGZvciBSVFM1MjUwUyBhcyBmb2xsb3dpbmcgc3RlcHM6DQo+ID4gMS5TZXQgMHhGRTU4IHRv
-IGVuYWJsZSBjbG9jayBwb3dlciBtYW5hZ2VtZW50Lg0KPiANCj4gSXMgdGhpcyBjbG9jayBwb3dl
-ciBtYW5hZ2VtZW50IHNvbWV0aGluZyBzcGVjaWZpYyB0byBSVFM1MjUwUywgb3IgaXMgaXQNCj4g
-c3RhbmRhcmQgUENJZSBhcmNoaXRlY3RlZCBzdHVmZj8NCj4gDQoweEZFNTggaXMgc3BlY2lmaWMg
-cmVnaXN0ZXIgdG8gUlRTNTI1MFMgbm90IHN0YW5kYXJkIFBDSWUgYXJjaGl0ZWN0ZWQgc3R1ZmYu
-DQoNCj4gPiAyLkNoZWNrIGNmZyBzcGFjZSB3aGV0aGVyIHN1cHBvcnQgTDFTUyBvciBub3QuDQo+
-IA0KPiBUaGlzIHNvdW5kcyBsaWtlIHN0YW5kYXJkIFBDSWUgQVNQTSBMMSBTdWJzdGF0ZXMsIHJp
-Z2h0Pw0KPiANClllcy4NCg0KPiA+IDMuSWYgc3VwcG9ydCBMMVNTLCBzZXQgMHhGRjAzIHRvIGZy
-ZWUgY2xrcmVxLg0KPiA+IDQuV2hlbiBlbnRlcmluZyBpZGxlIHN0YXR1cywgZW5hYmxlIGFzcG0N
-Cj4gPiAgIGFuZCBzZXQgcGFyYW1ldGVycyBmb3IgTDFTUyBhbmQgTFRSLg0KPiA+IDUuV25lbiBl
-bnRlcmluZyBydW4gc3RhdHVzLCBkaXNhYmxlIGFzcG0NCj4gPiAgIGFuZCBzZXQgcGFyYW1ldGVy
-cyBmb3IgTDFTUyBhbmQgTFRSLg0KPiANCj4gSW4gZ2VuZXJhbCwgZHJpdmVycyBzaG91bGQgbm90
-IGNvbmZpZ3VyZSBBU1BNLCBMMVNTLCBhbmQgTFRSIHRoZW1zZWx2ZXM7IHRoZQ0KPiBQQ0kgY29y
-ZSBzaG91bGQgZG8gdGhhdC4NCj4gDQo+IElmIGEgZHJpdmVyIG5lZWRzIHRvIHR3ZWFrIEFTUE0g
-YXQgcnVuLXRpbWUsIGl0IHNob3VsZCB1c2UgaW50ZXJmYWNlcyBleHBvcnRlZA0KPiBieSB0aGUg
-UENJIGNvcmUgdG8gZG8gc28uDQo+IA0KV2hpY2ggaW50ZXJmYWNlIEkgY2FuIHVzZSB0byBzZXQg
-QVNQTT8gSSB1c2UgInBjaV93cml0ZV9jb25maWdfYnl0ZSIgbm93Lg0KDQo+ID4gSWYgZW50ZXJp
-bmcgTDFTUyBtb2RlIHN1Y2Nlc3NmdWxseSwNCj4gPiBlbGVjdHJpYyBjdXJyZW50IHdpbGwgYmUg
-YmVsb3cgMm1BLg0KPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBSdWkgRmVuZyA8cnVpX2ZlbmdAcmVh
-bHNpbC5jb20uY24+IC4uLg0KPiANCj4gPiArc3RhdGljIHZvaWQgcnRzNTI0OV9pbml0X2Zyb21f
-Y2ZnKHN0cnVjdCBydHN4X3BjciAqcGNyKSB7DQo+ID4gKwlzdHJ1Y3QgcnRzeF9jcl9vcHRpb24g
-Km9wdGlvbiA9ICYocGNyLT5vcHRpb24pOw0KPiA+ICsJdTMyIGx2YWw7DQo+ID4gKw0KPiA+ICsJ
-aWYgKENIS19QQ0lfUElEKHBjciwgUElEXzUyNEEpKQ0KPiA+ICsJCXJ0c3hfcGNpX3JlYWRfY29u
-ZmlnX2R3b3JkKHBjciwNCj4gPiArCQkJUENSX0FTUE1fU0VUVElOR19SRUcxLCAmbHZhbCk7DQo+
-ID4gKwllbHNlDQo+ID4gKwkJcnRzeF9wY2lfcmVhZF9jb25maWdfZHdvcmQocGNyLA0KPiA+ICsJ
-CQlQQ1JfQVNQTV9TRVRUSU5HX1JFRzIsICZsdmFsKTsNCj4gDQo+IFRoaXMgbG9va3MgbGlrZSB5
-b3UncmUgcmVhZGluZyB0aGUgQVNQTSBMMSBTdWJzdGF0ZXMgY2FwYWJpbGl0eSwgaS5lLiwNCj4g
-UENJX0wxU1NfQ0FQLCB1c2luZyBoYXJkLWNvZGVkIG9mZnNldHMgYmFzZWQgb24gdGhlIERldmlj
-ZSBJRC4gIFlvdSBzaG91bGQNCj4gYmUgdXNpbmcgcGNpX2ZpbmRfZXh0X2NhcGFiaWxpdHkoKSB0
-byBsb2NhdGUgaXQuDQo+IA0KPiA+ICsJaWYgKGx2YWwgJiBBU1BNX0wxXzFfRU5fTUFTSykNCj4g
-PiArCQlydHN4X3NldF9kZXZfZmxhZyhwY3IsIEFTUE1fTDFfMV9FTik7DQo+ID4gKw0KPiA+ICsJ
-aWYgKGx2YWwgJiBBU1BNX0wxXzJfRU5fTUFTSykNCj4gPiArCQlydHN4X3NldF9kZXZfZmxhZyhw
-Y3IsIEFTUE1fTDFfMl9FTik7DQo+ID4gKw0KPiA+ICsJaWYgKGx2YWwgJiBQTV9MMV8xX0VOX01B
-U0spDQo+ID4gKwkJcnRzeF9zZXRfZGV2X2ZsYWcocGNyLCBQTV9MMV8xX0VOKTsNCj4gPiArDQo+
-ID4gKwlpZiAobHZhbCAmIFBNX0wxXzJfRU5fTUFTSykNCj4gPiArCQlydHN4X3NldF9kZXZfZmxh
-ZyhwY3IsIFBNX0wxXzJfRU4pOw0KPiANCj4gWW91J3JlIGFkZGluZyB0aGVzZToNCj4gDQo+ICAg
-I2RlZmluZSBBU1BNX0wxXzFfRU5fTUFTSyAgICAgICAgICAgICAgQklUKDMpDQo+ICAgI2RlZmlu
-ZSBBU1BNX0wxXzJfRU5fTUFTSyAgICAgICAgICAgICAgQklUKDIpDQo+ICAgI2RlZmluZSBQTV9M
-MV8xX0VOX01BU0sgICAgICAgICAgICAgICAgQklUKDEpDQo+ICAgI2RlZmluZSBQTV9MMV8yX0VO
-X01BU0sgICAgICAgICAgICAgICAgQklUKDApDQo+IA0KPiBUaGUgUENJIGNvcmUgYWxyZWFkeSBk
-ZWZpbmVzIHRoZXNlIGFuZCB5b3Ugc2hvdWxkIHVzZSB0aGVtIGluc3RlYWQ6DQo+IA0KPiAgICNk
-ZWZpbmUgIFBDSV9MMVNTX0NBUF9QQ0lQTV9MMV8yICAgICAgICAweDAwMDAwMDAxICAvKiBQQ0kt
-UE0NCj4gTDEuMiBTdXBwb3J0ZWQgKi8NCj4gICAjZGVmaW5lICBQQ0lfTDFTU19DQVBfUENJUE1f
-TDFfMSAgICAgICAgMHgwMDAwMDAwMiAgLyogUENJLVBNDQo+IEwxLjEgU3VwcG9ydGVkICovDQo+
-ICAgI2RlZmluZSAgUENJX0wxU1NfQ0FQX0FTUE1fTDFfMiAgICAgICAgIDB4MDAwMDAwMDQgIC8q
-IEFTUE0gTDEuMg0KPiBTdXBwb3J0ZWQgKi8NCj4gICAjZGVmaW5lICBQQ0lfTDFTU19DQVBfQVNQ
-TV9MMV8xICAgICAgICAgMHgwMDAwMDAwOCAgLyogQVNQTSBMMS4xDQo+IFN1cHBvcnRlZCAqLw0K
-PiANCj4gPiArCWlmIChvcHRpb24tPmx0cl9lbikgew0KPiA+ICsJCXUxNiB2YWw7DQo+ID4gKw0K
-PiA+ICsJCXBjaWVfY2FwYWJpbGl0eV9yZWFkX3dvcmQocGNyLT5wY2ksIFBDSV9FWFBfREVWQ1RM
-MiwgJnZhbCk7DQo+ID4gKwkJaWYgKHZhbCAmIFBDSV9FWFBfREVWQ1RMMl9MVFJfRU4pIHsNCj4g
-PiArCQkJb3B0aW9uLT5sdHJfZW5hYmxlZCA9IHRydWU7DQo+ID4gKwkJCW9wdGlvbi0+bHRyX2Fj
-dGl2ZSA9IHRydWU7DQo+IA0KPiBsdHJfYWN0aXZlIGlzIG5ldmVyIGFjdHVhbGx5IHVzZWQuDQo+
-IA0KPiA+ICsJCQlydHN4X3NldF9sdHJfbGF0ZW5jeShwY3IsIG9wdGlvbi0+bHRyX2FjdGl2ZV9s
-YXRlbmN5KTsNCj4gPiArCQl9IGVsc2Ugew0KPiA+ICsJCQlvcHRpb24tPmx0cl9lbmFibGVkID0g
-ZmFsc2U7DQo+ID4gKwkJfQ0KPiA+ICsJfQ0KPiA+ICt9DQo+ID4gLi4uDQo+IA0KPiA+ICtzdGF0
-aWMgdm9pZCBydHM1MjQ5X3NldF9hc3BtKHN0cnVjdCBydHN4X3BjciAqcGNyLCBib29sIGVuYWJs
-ZSkgew0KPiA+ICsJc3RydWN0IHJ0c3hfY3Jfb3B0aW9uICpvcHRpb24gPSAmcGNyLT5vcHRpb247
-DQo+ID4gKwl1OCB2YWwgPSAwOw0KPiA+ICsNCj4gPiArCWlmIChwY3ItPmFzcG1fZW5hYmxlZCA9
-PSBlbmFibGUpDQo+ID4gKwkJcmV0dXJuOw0KPiA+ICsNCj4gPiArCWlmIChvcHRpb24tPmRldl9h
-c3BtX21vZGUgPT0gREVWX0FTUE1fRFlOQU1JQykgew0KPiA+ICsJCWlmIChlbmFibGUpDQo+ID4g
-KwkJCXZhbCA9IHBjci0+YXNwbV9lbjsNCj4gPiArCQlydHN4X3BjaV91cGRhdGVfY2ZnX2J5dGUo
-cGNyLA0KPiA+ICsJCQlwY3ItPnBjaWVfY2FwICsgUENJX0VYUF9MTktDVEwsDQo+ID4gKwkJCUFT
-UE1fTUFTS19ORUcsIHZhbCk7DQo+IA0KPiBUaGlzIHN0b21wcyBvbiB3aGF0ZXZlciBBU1BNIGNv
-bmZpZ3VyYXRpb24gdGhlIFBDSSBjb3JlIGRpZC4NCldlIGRpc2FibGUvZW5hYmxlIGFzcG0gZHlu
-YW1pYyBpbiBvcmRlciB0byBpbXByb3ZlIHJlYWQvd3JpdGUgcGVyZm9ybWFuY2UgYW5kIG1vcmUg
-c3RhYmxlLA0Kc28gd2UgZG9uJ3QgYWxsb3cgUENJIGNvcmUgZG8gaXQuDQoNCj4gDQo+ID4gKwl9
-IGVsc2UgaWYgKG9wdGlvbi0+ZGV2X2FzcG1fbW9kZSA9PSBERVZfQVNQTV9CQUNLRE9PUikgew0K
-PiANCj4gREVWX0FTUE1fQkFDS0RPT1IgaXMgbmV2ZXIgc2V0LCBzbyB0aGlzIGxvb2tzIGxpa2Ug
-ZGVhZCBjb2RlLg0KPiANCj4gPiArCQl1OCBtYXNrID0gRk9SQ0VfQVNQTV9WQUxfTUFTSyB8IEZP
-UkNFX0FTUE1fQ1RMMDsNCj4gPiArCQlpZiAoIWVuYWJsZSkNCj4gPiArCQkJdmFsID0gRk9SQ0Vf
-QVNQTV9DVEwwOw0KPiA+ICsJCXJ0c3hfcGNpX3dyaXRlX3JlZ2lzdGVyKHBjciwgQVNQTV9GT1JD
-RV9DVEwsIG1hc2ssIHZhbCk7DQo+ID4gKwl9DQo+ID4gKw0KPiA+ICsJcGNyLT5hc3BtX2VuYWJs
-ZWQgPSBlbmFibGU7DQo+ID4gK30NCj4gDQo+IC0tLS0tLVBsZWFzZSBjb25zaWRlciB0aGUgZW52
-aXJvbm1lbnQgYmVmb3JlIHByaW50aW5nIHRoaXMgZS1tYWlsLg0K
+* Brian Norris <briannorris@chromium.org> [171206 19:36]:
+> By the way, it seems pretty ambiguous how we want to handle things like
+> (a) multiple devices sharing the same WAKE#
+> (b) systems where a slot is swappable
+> 
+> For (a), the main problem is that if we have to repeat the interrupt
+> definition in multiple devices, then we have to deal with something like
+> IRQF_SHARED. That can be done, but it makes it much harder to use the
+> dedicated wakeirq helpers.
+
+This will get messy, let's not go there :) That is unless the hardware
+really has a single interrupt wired to multiple devices. And in that
+case almost certainly a custom interrupt handler is needed.
+
+Regards,
+
+Tony
