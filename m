@@ -1,54 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:14263 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935278AbdLSI6l (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 03:58:41 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>
-CC: Mark Rutland <mark.rutland@arm.com>, <linux-omap@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v2 1/3] dt-bindings: PCI: dra7xx: Add SoC specific compatible strings
-Date: Tue, 19 Dec 2017 14:28:21 +0530
-Message-ID: <20171219085823.8695-2-kishon@ti.com>
-In-Reply-To: <20171219085823.8695-1-kishon@ti.com>
-References: <20171219085823.8695-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 7 Dec 2017 08:45:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Chen, Kenji" <kenji.chen@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Thierry Reding <treding@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        David Daney <david.daney@cavium.com>,
+        Krishna Kishore <kthota@nvidia.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+        Patrick Georgi <pgeorgi@chromium.org>,
+        Rajat Jain <rajatja@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Stefan Reinauer <stefan.reinauer@coreboot.org>,
+        Duncan Laurie <dlaurie@chromium.org>
+Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+Message-ID: <20171207144515.GA11788@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20171205194050.GD23510@bhelgaas-glaptop.roam.corp.google.com>
+ <A7A4B3ECFA40144E98B82E71E29693557CA5516C@PGSMSX102.gar.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <A7A4B3ECFA40144E98B82E71E29693557CA5516C@PGSMSX102.gar.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add new compatible strings for dra74x SoC (also used by dra76x) and
-dra72x. This can be used to perform SoC specific configuration
-(like configuring PCIe in x2 lane mode).
+On Wed, Dec 06, 2017 at 01:55:37AM +0000, Chen, Kenji wrote:
+> https://pcisig.com/sites/default/files/specification_documents/ECN_L1_PM_Substates_with_CLKREQ_31_May_2013_Rev10a.pdf
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
- Documentation/devicetree/bindings/pci/ti-pci.txt | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+With all due respect, this doesn't seem to add any new information.
+For example, the L1 PM Substates Control 1 register description from
+the above is basically identical to the published PCIe r3.1, sec
+7.33.3.
 
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-index 7f7af3044016..82cb875e4cec 100644
---- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -1,8 +1,12 @@
- TI PCI Controllers
- 
- PCIe DesignWare Controller
-- - compatible: Should be "ti,dra7-pcie" for RC
--	       Should be "ti,dra7-pcie-ep" for EP
-+ - compatible: Should be "ti,dra7-pcie" for RC (deprecated)
-+	       Should be "ti,dra7-pcie-ep" for EP (deprecated)
-+	       Should be "ti,dra746-pcie-rc" for dra74x/dra76 in RC mode
-+	       Should be "ti,dra746-pcie-ep" for dra74x/dra76 in EP mode
-+	       Should be "ti,dra726-pcie-rc" for dra72x in RC mode
-+	       Should be "ti,dra726-pcie-ep" for dra72x in EP mode
-  - phys : list of PHY specifiers (used by generic PHY framework)
-  - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
- 	       number of PHYs as specified in *phys* property.
--- 
-2.11.0
+So it doesn't answer the questions of:
+
+  1) Why coreboot sets the L1.2 threshold to a fixed value, and
+
+  2) How "(1 << 21) | (1 << 23) | (1 << 30)" relates to the Control 1
+     register
+
+> Pls also check My Intel Doc# 545845 for the bits fields description.
+
+I don't have access to this document.  The Linux code I'm proposing is
+based on the PCIe spec and is intended to work on all hardware that
+conforms to that spec.  I'm not very familiar with coreboot, but maybe
+the L1 Substates code there is only intended to work on certain Intel
+chipsets and doesn't need to work on other hardware?
+
+Bjorn
+
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org] 
+> Sent: Wednesday, December 6, 2017 3:41 AM
+> To: linux-pci@vger.kernel.org
+> Cc: Chen, Kenji <kenji.chen@intel.com>; Thierry Reding <treding@nvidia.com>; Manikanta Maddireddy <mmaddireddy@nvidia.com>; David Daney <david.daney@cavium.com>; Krishna Kishore <kthota@nvidia.com>; linux-kernel@vger.kernel.org; Vidya Sagar <vidyas@nvidia.com>; Julia Lawall <Julia.Lawall@lip6.fr>; linux-tegra@vger.kernel.org; Patrick Georgi <pgeorgi@chromium.org>; Rajat Jain <rajatja@google.com>; Yinghai Lu <yinghai@kernel.org>; Stefan Reinauer <stefan.reinauer@coreboot.org>; Duncan Laurie <dlaurie@chromium.org>
+> Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
+> 
+> On Sat, Dec 02, 2017 at 03:45:38PM -0600, Bjorn Helgaas wrote:
+> > The PCIe active link power state is L0.  ASPM defines two low-power
+> > states: L0s and L1.  The L1 PM Substates feature defines two 
+> > additional low-power states: L1.1 and L2.2.
+> > 
+> > The L1.2 state may have substantial entry/exit latency.  Downstream 
+> > devices can use the Latency Tolerance Reporting (LTR) feature to 
+> > report how much latency they can tolerate.  The L1 PM Substates 
+> > capability includes a programmable L1.2 threshold register.  If the 
+> > downstream devices can tolerate the latency indicated by the 
+> > threshold, L1.2 may be used.
+> > 
+> > If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be 
+> > used whenever it is enabled and CLKREQ# is de-asserted.  Linux 
+> > currently never enables LTR, but firmware may have done so.
+> > 
+> > The current L1 PM substates support in Linux sets the L1.2 threshold 
+> > to a fixed value (163.84us) copied from coreboot [1].  I don't know 
+> > where that value came from, and it is incorrect for some platforms, 
+> > e.g., Tegra [2].
+> > 
+> > These patches change that so we calculate the L1.2 threshold based on 
+> > values reported by the hardware, and we enable LTR whenever possible.
+> > 
+> > This is all just my understanding from reading the spec.  I'd be glad 
+> > to be corrected if I'm going wrong.
+> > 
+> > I'm particularly puzzled about the coreboot code in
+> > pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
+> > 
+> > +	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
+> > +		(1 << 21) | (1 << 23) | (1 << 30));
+> > 
+> > This is writing the L1 PM Substates Control 1 register, but the shifts 
+> > don't match up with any of the fields in the register, so this is an 
+> > awfully funny way to write the threshold.
+> > 
+> > [1] 
+> > https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.
+> > html [2] 
+> > https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@nvi
+> > dia.com
+> > 
+> > ---
+> > 
+> > Bjorn Helgaas (2):
+> >       PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
+> >       PCI/ASPM: Enable Latency Tolerance Reporting when supported
+> > 
+> > 
+> >  drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++----------------
+> >  drivers/pci/probe.c     |   33 ++++++++++++++++++++++
+> >  include/linux/pci.h     |    2 +
+> >  3 files changed, 82 insertions(+), 24 deletions(-)
+> 
+> I applied these with Vidya's Reviewed-by to pci/aspm for v4.16.
+> 
+> I'd still really like to hear from the coreboot folks about the rationale for the current coreboot code.  You folks are in a much better position to actually understand the hardware details.
+> 
+> Bjorn
