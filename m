@@ -1,66 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:56468 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754055AbdLDPJo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 10:09:44 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAPDyKFpyfMTw9vdSDHxarZquSRA9zU9aMdb-pkzhMWKrFGxayw@mail.gmail.com>
+References: <3600031.yTsliOITBg@aspire.rjw.lan> <CAPDyKFpyfMTw9vdSDHxarZquSRA9zU9aMdb-pkzhMWKrFGxayw@mail.gmail.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 7 Dec 2017 22:17:42 +0100
+Message-ID: <CAJZ5v0j=61dC0+pzpwcZ3zzH0UotfqGycDH833gK-4s+fLWmsA@mail.gmail.com>
+Subject: Re: [PATCH] PM / sleep: Avoid excess pm_runtime_enable() calls in device_resume()
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 3/8] arch/sh: pci: don't use disabled resources
-Date: Mon,  4 Dec 2017 16:09:02 +0100
-Message-Id: <20171204150907.24345-4-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In pcibios_scanbus(), we provide to the PCI core the usable MEM and IO
-regions using pci_add_resource_offset(). We travel through all
-resources available in the "struct pci_channel".
+On Thu, Dec 7, 2017 at 8:44 PM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+> On 7 December 2017 at 03:26, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>
+>> Middle-layer code doing suspend-time optimizations for devices with
+>> the DPM_FLAG_SMART_SUSPEND flag set (currently, the PCI bus type and
+>> the ACPI PM domain) needs to make the core skip ->thaw_early and
+>> ->thaw callbacks for those devices in some cases and it sets the
+>> power.direct_complete flag for them for this purpose.
+>>
+>> However, it turns out that setting power.direct_complete outside of
+>> the PM core is a bad idea as it triggers an excessive invocation of
+>> pm_runtime_enable() in device_resume().
+>
+> Do we need to clarify the comment about the flag in pm.h?
+>
+> Or is "/* Owned by the PM core */" sufficient?
 
-Also, in register_pci_controller(), we travel through all resources to
-request them, making sure they don't conflict with already requested
-resources.
+That should be sufficient (and I sort of tried to ignore it ...).
 
-However, some resources may be disabled, in which case they should not
-be requested nor provided to the PCI core.
+>>
+>> For this reason, provide a helper to clear power.is_late_suspended
+>> and power.is_suspended to be invoked by the middle-layer code in
+>> question instead of setting power.direct_complete and make that code
+>> call the new helper.
+>>
+>> Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
+>> Fixes: 05087360fd7a (ACPI / PM: Take SMART_SUSPEND driver flag into account)
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Reviewed-by: Ulf Hansson <ulf.hansson@linaro,org>
 
-In the current situation, none of the resources are disabled. However,
-follow-up patches in this series will make some resources disabled,
-making this preliminary change necessary.
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/sh/drivers/pci/pci.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 5976a2c8a3e3..e5b7437ab4af 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -49,6 +49,8 @@ static void pcibios_scanbus(struct pci_channel *hose)
- 	for (i = 0; i < hose->nr_resources; i++) {
- 		res = hose->resources + i;
- 		offset = 0;
-+		if (res->flags & IORESOURCE_DISABLED)
-+			continue;
- 		if (res->flags & IORESOURCE_IO)
- 			offset = hose->io_offset;
- 		else if (res->flags & IORESOURCE_MEM)
-@@ -102,6 +104,9 @@ int register_pci_controller(struct pci_channel *hose)
- 	for (i = 0; i < hose->nr_resources; i++) {
- 		struct resource *res = hose->resources + i;
- 
-+		if (res->flags & IORESOURCE_DISABLED)
-+			continue;
-+
- 		if (res->flags & IORESOURCE_IO) {
- 			if (request_resource(&ioport_resource, res) < 0)
- 				goto out;
--- 
-2.13.6
+Thanks!
