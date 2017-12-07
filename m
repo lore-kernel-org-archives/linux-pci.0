@@ -1,77 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46966 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752232AbdLBVpm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 2 Dec 2017 16:45:42 -0500
-Subject: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Kenji Chen <kenji.chen@intel.com>,
-        Thierry Reding <treding@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        David Daney <david.daney@cavium.com>,
-        Krishna Kishore <kthota@nvidia.com>,
-        linux-kernel@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        linux-tegra@vger.kernel.org, Patrick Georgi <pgeorgi@chromium.org>,
-        Rajat Jain <rajatja@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Stefan Reinauer <stefan.reinauer@coreboot.org>,
-        Duncan Laurie <dlaurie@chromium.org>
-Date: Sat, 02 Dec 2017 15:45:38 -0600
-Message-ID: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-it0-f67.google.com ([209.85.214.67]:44001 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752078AbdLGTow (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 14:44:52 -0500
+Received: by mail-it0-f67.google.com with SMTP id u62so17509417ita.2
+        for <linux-pci@vger.kernel.org>; Thu, 07 Dec 2017 11:44:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <3600031.yTsliOITBg@aspire.rjw.lan>
+References: <3600031.yTsliOITBg@aspire.rjw.lan>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 7 Dec 2017 20:44:51 +0100
+Message-ID: <CAPDyKFpyfMTw9vdSDHxarZquSRA9zU9aMdb-pkzhMWKrFGxayw@mail.gmail.com>
+Subject: Re: [PATCH] PM / sleep: Avoid excess pm_runtime_enable() calls in device_resume()
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe active link power state is L0.  ASPM defines two low-power
-states: L0s and L1.  The L1 PM Substates feature defines two
-additional low-power states: L1.1 and L2.2.
+On 7 December 2017 at 03:26, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Middle-layer code doing suspend-time optimizations for devices with
+> the DPM_FLAG_SMART_SUSPEND flag set (currently, the PCI bus type and
+> the ACPI PM domain) needs to make the core skip ->thaw_early and
+> ->thaw callbacks for those devices in some cases and it sets the
+> power.direct_complete flag for them for this purpose.
+>
+> However, it turns out that setting power.direct_complete outside of
+> the PM core is a bad idea as it triggers an excessive invocation of
+> pm_runtime_enable() in device_resume().
 
-The L1.2 state may have substantial entry/exit latency.  Downstream
-devices can use the Latency Tolerance Reporting (LTR) feature to
-report how much latency they can tolerate.  The L1 PM Substates
-capability includes a programmable L1.2 threshold register.  If the
-downstream devices can tolerate the latency indicated by the
-threshold, L1.2 may be used.
+Do we need to clarify the comment about the flag in pm.h?
 
-If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be
-used whenever it is enabled and CLKREQ# is de-asserted.  Linux
-currently never enables LTR, but firmware may have done so.
+Or is "/* Owned by the PM core */" sufficient?
 
-The current L1 PM substates support in Linux sets the L1.2 threshold
-to a fixed value (163.84us) copied from coreboot [1].  I don't know
-where that value came from, and it is incorrect for some platforms,
-e.g., Tegra [2].
+>
+> For this reason, provide a helper to clear power.is_late_suspended
+> and power.is_suspended to be invoked by the middle-layer code in
+> question instead of setting power.direct_complete and make that code
+> call the new helper.
+>
+> Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
+> Fixes: 05087360fd7a (ACPI / PM: Take SMART_SUSPEND driver flag into account)
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-These patches change that so we calculate the L1.2 threshold based on
-values reported by the hardware, and we enable LTR whenever possible.
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro,org>
 
-This is all just my understanding from reading the spec.  I'd be glad
-to be corrected if I'm going wrong.
+Kind regards
+Uffe
 
-I'm particularly puzzled about the coreboot code in
-pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
-
-+	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
-+		(1 << 21) | (1 << 23) | (1 << 30));
-
-This is writing the L1 PM Substates Control 1 register, but the shifts
-don't match up with any of the fields in the register, so this is an
-awfully funny way to write the threshold.
-
-[1] https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.html
-[2] https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@nvidia.com
-
----
-
-Bjorn Helgaas (2):
-      PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
-      PCI/ASPM: Enable Latency Tolerance Reporting when supported
-
-
- drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++----------------
- drivers/pci/probe.c     |   33 ++++++++++++++++++++++
- include/linux/pci.h     |    2 +
- 3 files changed, 82 insertions(+), 24 deletions(-)
+> ---
+>  drivers/acpi/device_pm.c  |    2 +-
+>  drivers/base/power/main.c |   15 +++++++++++++++
+>  drivers/pci/pci-driver.c  |    2 +-
+>  include/linux/pm.h        |    1 +
+>  4 files changed, 18 insertions(+), 2 deletions(-)
+>
+> Index: linux-pm/include/linux/pm.h
+> ===================================================================
+> --- linux-pm.orig/include/linux/pm.h
+> +++ linux-pm/include/linux/pm.h
+> @@ -765,6 +765,7 @@ extern int pm_generic_poweroff_late(stru
+>  extern int pm_generic_poweroff(struct device *dev);
+>  extern void pm_generic_complete(struct device *dev);
+>
+> +extern void dev_pm_skip_next_resume_phases(struct device *dev);
+>  extern bool dev_pm_smart_suspend_and_suspended(struct device *dev);
+>
+>  #else /* !CONFIG_PM_SLEEP */
+> Index: linux-pm/drivers/base/power/main.c
+> ===================================================================
+> --- linux-pm.orig/drivers/base/power/main.c
+> +++ linux-pm/drivers/base/power/main.c
+> @@ -526,6 +526,21 @@ static void dpm_watchdog_clear(struct dp
+>  /*------------------------- Resume routines -------------------------*/
+>
+>  /**
+> + * dev_pm_skip_next_resume_phases - Skip next system resume phases for device.
+> + * @dev: Target device.
+> + *
+> + * Make the core skip the "early resume" and "resume" phases for @dev.
+> + *
+> + * This function can be called by middle-layer code during the "noirq" phase of
+> + * system resume if necessary, but not by device drivers.
+> + */
+> +void dev_pm_skip_next_resume_phases(struct device *dev)
+> +{
+> +       dev->power.is_late_suspended = false;
+> +       dev->power.is_suspended = false;
+> +}
+> +
+> +/**
+>   * device_resume_noirq - Execute a "noirq resume" callback for given device.
+>   * @dev: Device to handle.
+>   * @state: PM transition of the system being carried out.
+> Index: linux-pm/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-driver.c
+> +++ linux-pm/drivers/pci/pci-driver.c
+> @@ -999,7 +999,7 @@ static int pci_pm_thaw_noirq(struct devi
+>          * the subsequent "thaw" callbacks for the device.
+>          */
+>         if (dev_pm_smart_suspend_and_suspended(dev)) {
+> -               dev->power.direct_complete = true;
+> +               dev_pm_skip_next_resume_phases(dev);
+>                 return 0;
+>         }
+>
+> Index: linux-pm/drivers/acpi/device_pm.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/device_pm.c
+> +++ linux-pm/drivers/acpi/device_pm.c
+> @@ -1138,7 +1138,7 @@ int acpi_subsys_thaw_noirq(struct device
+>          * skip all of the subsequent "thaw" callbacks for the device.
+>          */
+>         if (dev_pm_smart_suspend_and_suspended(dev)) {
+> -               dev->power.direct_complete = true;
+> +               dev_pm_skip_next_resume_phases(dev);
+>                 return 0;
+>         }
+>
+>
