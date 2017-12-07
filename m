@@ -1,48 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:59456 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:42702 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751680AbdLFRhO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Dec 2017 12:37:14 -0500
-To: Arnd Bergmann <arnd@arndb.de>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>
-Cc: Stephen Bates <sbates@raithlin.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        Doug Meyer <dmeyer@gigaio.com>,
-        Kelvin Cao <kelvin.cao@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-ntb@googlegroups.com,
-        linux-kernel@vger.kernel.org
-References: <20171206141923.817850-1-arnd@arndb.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <6cdab766-60a2-0ef9-5495-f842acde8604@deltatee.com>
-Date: Wed, 6 Dec 2017 10:37:06 -0700
+        id S1750862AbdLGULe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Dec 2017 15:11:34 -0500
+Date: Thu, 7 Dec 2017 14:11:29 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bandan Das <bsd@redhat.com>
+Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] x86/pci: Add a break condition when enabling BAR
+Message-ID: <20171207201129.GA17271@bhelgaas-glaptop.roam.corp.google.com>
+References: <jpga7yvotm2.fsf@linux.bootlegged.copy>
+ <8ce90b86-a2ec-c158-8f6d-e939c97aa065@amd.com>
+ <jpgtvx2como.fsf@linux.bootlegged.copy>
 MIME-Version: 1.0
-In-Reply-To: <20171206141923.817850-1-arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH] ntb_hw_switchtec: fix logic error
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <jpgtvx2como.fsf@linux.bootlegged.copy>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
-
-Thanks, nice catch.
-
-On 06/12/17 07:19 AM, Arnd Bergmann wrote:
-> Newer gcc (version 7 and 8 presumably) warn about a statement mixing
-> the << operator with logical and:
+On Thu, Dec 07, 2017 at 02:41:03PM -0500, Bandan Das wrote:
+> Christian König <christian.koenig@amd.com> writes:
 > 
-> drivers/ntb/hw/mscc/ntb_hw_switchtec.c: In function 'switchtec_ntb_init_sndev':
-> drivers/ntb/hw/mscc/ntb_hw_switchtec.c:888:24: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+> > Hi Bandas,
+> >
+> > thanks for the patch, but this is a known issue with a fix already on
+> > the way into the next -rc.
 > 
-> My interpretation here is that the author must have intended a bitmask
-> rather than a comparison, so I'm changing the '&&' to '&', which makes
-> a lot more sense in the context.
-> 
-> Fixes: 1b249475275d ("ntb_hw_switchtec: Allow using Switchtec NTB in multi-partition setups")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Oh great! Thank you, have a pointer to the patch so that I can test ?
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+It's in linux-next.  If you want just the patch, see
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=for-linus
+(there are a couple patches there).
 
-Logan
+There's still one fix for a related issue that I haven't applied yet
+because it needs a little more detailed changelog.
+
+Bjorn
