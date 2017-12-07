@@ -1,38 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:11582 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752563AbdLNOqt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Dec 2017 09:46:49 -0500
-Date: Thu, 14 Dec 2017 07:50:31 -0700
-From: Keith Busch <keith.busch@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        liudongdong3@huawei.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/DPC: Fix shared interrupt handling
-Message-ID: <20171214145030.GA25329@localhost.localdomain>
-References: <20171214000051.30999.6989.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171214000051.30999.6989.stgit@gimli.home>
+Message-ID: <1512661374.11506.19.camel@pengutronix.de>
+Subject: Re: Re-activate task to add MSI-X to pcie-designware
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Gustavo.Pimentel@synopsys.com,
+        linux-pci <linux-pci@vger.kernel.org>
+Date: Thu, 07 Dec 2017 16:42:54 +0100
+In-Reply-To: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
+References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 05:01:58PM -0700, Alex Williamson wrote:
-> @@ -109,6 +109,7 @@ static void interrupt_event_handler(struct work_struct *work)
->  	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
->  	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
->  	struct pci_bus *parent = pdev->subordinate;
-> +	u16 ctl;
->  
->  	pci_lock_rescan_remove();
->  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-> @@ -135,6 +136,10 @@ static void interrupt_event_handler(struct work_struct *work)
->  
->  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
->  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
-> +
-> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
-> +	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
-> +			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
+Hi Joao,
 
-Did you mean to re-enable the interrupt here rather than mask it off?
+Am Donnerstag, den 07.12.2017, 15:14 +0000 schrieb Joao Pinto:
+> Hello to all,
+> 
+> I am sending this e-mail to request your opinion about the tasks needed to add
+> support for MSI-X for pcie-designware based solutions.
+> 
+> A few months ago I submited a patch-set that added support for MSI-X:
+> 
+> [v2,9/9] pci: remove limitation of the number of the available IRQs
+> https://patchwork.ozlabs.org/patch/771320/
+> [v2,8/9] pci: removing old irq api from pcie-designware
+> https://patchwork.ozlabs.org/patch/771360/
+> [v2,7/9] pci: keystone SoC driver adapted to new irq API
+> https://patchwork.ozlabs.org/patch/771361/
+> [v2,6/9] pci: qcom SoC driver adapted to new irq API
+> https://patchwork.ozlabs.org/patch/771362/
+> [v2,5/9] pci: generic PCIe DW driver adapted to new irq API
+> https://patchwork.ozlabs.org/patch/771365/
+> [v2,4/9] pci: artpec6 SoC driver adapted to new irq API
+> https://patchwork.ozlabs.org/patch/771364/
+> [v2,3/9] pci: imx6 SoC driver adapted to new irq API
+> https://patchwork.ozlabs.org/patch/771363/
+> [v2,2/9] pci: exynos SoC driver adapted to new irq API
+> https://patchwork.ozlabs.org/patch/771359/
+> [v2,1/9] pci: adding new irq api to pci-designware
+> https://patchwork.ozlabs.org/patch/771366/
+> 
+> The patch-set was globally accepted, but it broke the MSI mechanism for
+> Keystone, due to its specificity.
+> 
+> We are now going to resume this task and we would like to have your feedback
+> about our plan:
+> 
+> Task 1: Help TI to create a keystone_msi driver to isolate its custom msi mechanism
+> Task 2: Port the existing patches to the new kernel version (except the keystone
+> one)
+> 
+> If TI can do the keystone_msi implementation it would be easier. If it's not
+> possible, we volunteer to do it, but we will need testing & debug assistance.
+> 
+> I appreciate very much your attention and feedback.
+> 
+> Thanks and have a good day,
+> Joao Pinto
+> 
+
+The trivial implementation I have for MSI-X support is below. This has
+been tested on i.MX6, but I guess it also works on Keystone as it
+doesn't change the way the IRQs are set up.
+
+-------------------------------->8-------------------------------------
+
+>From 0d722f67e3995cf26795f6a5d66cca8e4997ed64 Mon Sep 17 00:00:00 2001
+From: Lucas Stach <l.stach@pengutronix.de>
+Date: Thu, 7 Dec 2017 12:54:04 +0100
+Subject: [PATCH] PCI: dwc: implement MSI-X support
+
+The DWC MSI controller does not support different MSI-X target addresses
+and does not allow to route individual IRQs to different CPUs. Aside from
+those shortcomings it is able to support MSI-X just fine.
+
+Some devices like the Intel i210 network controller depend on MSI-X to
+be available to enable all hardware features, so even a feature limited
+implementation of MSI-X on the host side is useful.
+
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 81e2157a7cfb..a85101dd15c9 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -206,9 +206,6 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+ 	int irq, pos;
+ 	struct pcie_port *pp = pdev->bus->sysdata;
+ 
+-	if (desc->msi_attrib.is_msix)
+-		return -EINVAL;
+-
+ 	irq = assign_irq(1, desc, &pos);
+ 	if (irq < 0)
+ 		return irq;
+@@ -226,9 +223,19 @@ static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+ 	struct msi_desc *desc;
+ 	struct pcie_port *pp = pdev->bus->sysdata;
+ 
+-	/* MSI-X interrupts are not supported */
+-	if (type == PCI_CAP_ID_MSIX)
+-		return -EINVAL;
++	if (type == PCI_CAP_ID_MSIX) {
++		if ((MAX_MSI_IRQS - bitmap_weight(pp->msi_irq_in_use,
++						  MAX_MSI_IRQS)) < nvec)
++			return -ENOSPC;
++
++		for_each_pci_msi_entry(desc, pdev) {
++			int ret = dw_msi_setup_irq(chip, pdev, desc);
++			if (ret)
++				return ret;
++		}
++
++		return 0;
++	}
+ 
+ 	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
+ 	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
+-- 
+2.11.0
