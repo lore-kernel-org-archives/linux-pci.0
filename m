@@ -1,49 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:48512 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751293AbdL1Q14 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 28 Dec 2017 11:27:56 -0500
-Date: Fri, 29 Dec 2017 00:27:08 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Oza Pawandeep <poza@codeaurora.org>
-Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
+Received: from smtprelay.synopsys.com ([198.182.47.9]:44548 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753676AbdLGPOb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 10:14:31 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: Murali Karicheri <m-karicheri2@ti.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        "Roy Zang" <tie-fei.zang@freescale.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
         Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>,
-        Oza Pawandeep <poza@codeaurora.org>
-Subject: [RFC PATCH] PCI/DPC/AER: pci_find_dpc_dev() can be static
-Message-ID: <20171228162708.GA58636@lkp-ib04>
-References: <1514370022-4431-3-git-send-email-poza@codeaurora.org>
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        <Gustavo.Pimentel@synopsys.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re-activate task to add MSI-X to pcie-designware
+Message-ID: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
+Date: Thu, 7 Dec 2017 15:14:22 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1514370022-4431-3-git-send-email-poza@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hello to all,
 
-Fixes: fc0212127f27 ("PCI/DPC/AER: Address Concurrency between AER and DPC")
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
- pcie-dpc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I am sending this e-mail to request your opinion about the tasks needed to add
+support for MSI-X for pcie-designware based solutions.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index e7ced58..68296ec 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -88,7 +88,7 @@ static int find_dpc_dev_iter(struct device *device, void *data)
- 	return 0;
- }
- 
--struct device *pci_find_dpc_dev(struct pci_dev *pdev)
-+static struct device *pci_find_dpc_dev(struct pci_dev *pdev)
- {
- 	struct device *dev = NULL;
- 
+A few months ago I submited a patch-set that added support for MSI-X:
+
+[v2,9/9] pci: remove limitation of the number of the available IRQs
+https://patchwork.ozlabs.org/patch/771320/
+[v2,8/9] pci: removing old irq api from pcie-designware
+https://patchwork.ozlabs.org/patch/771360/
+[v2,7/9] pci: keystone SoC driver adapted to new irq API
+https://patchwork.ozlabs.org/patch/771361/
+[v2,6/9] pci: qcom SoC driver adapted to new irq API
+https://patchwork.ozlabs.org/patch/771362/
+[v2,5/9] pci: generic PCIe DW driver adapted to new irq API
+https://patchwork.ozlabs.org/patch/771365/
+[v2,4/9] pci: artpec6 SoC driver adapted to new irq API
+https://patchwork.ozlabs.org/patch/771364/
+[v2,3/9] pci: imx6 SoC driver adapted to new irq API
+https://patchwork.ozlabs.org/patch/771363/
+[v2,2/9] pci: exynos SoC driver adapted to new irq API
+https://patchwork.ozlabs.org/patch/771359/
+[v2,1/9] pci: adding new irq api to pci-designware
+https://patchwork.ozlabs.org/patch/771366/
+
+The patch-set was globally accepted, but it broke the MSI mechanism for
+Keystone, due to its specificity.
+
+We are now going to resume this task and we would like to have your feedback
+about our plan:
+
+Task 1: Help TI to create a keystone_msi driver to isolate its custom msi mechanism
+Task 2: Port the existing patches to the new kernel version (except the keystone
+one)
+
+If TI can do the keystone_msi implementation it would be easier. If it's not
+possible, we volunteer to do it, but we will need testing & debug assistance.
+
+I appreciate very much your attention and feedback.
+
+Thanks and have a good day,
+Joao Pinto
