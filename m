@@ -1,71 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60160 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbdLWNsc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 08:48:32 -0500
-Date: Sat, 23 Dec 2017 14:48:31 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Yisheng Xie <xieyisheng1@huawei.com>
-Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
-        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
-        boris.brezillon@free-electrons.com, richard@nod.at,
-        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
-        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
-        wim@iguana.be, linux@roeck-us.net, linux-watchdog@vger.kernel.org,
-        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
-        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
-        ralf@linux-mips.org, linux-mips@linux-mips.org,
-        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
-        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
-        andriy.shevchenko@linux.intel.com,
-        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
-        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
-        linux-media@vger.kernel.org, a.zummo@towertech.it,
-        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie,
-        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
-        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
-        dvhart@infradead.org, andy@infradead.org,
-        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
-        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
-        netdev@vger.kernel.org, vinod.koul@intel.com,
-        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
-        jslaby@suse.com
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-Message-ID: <20171223134831.GB10103@kroah.com>
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:58968 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752557AbdLHVaQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 16:30:16 -0500
+Subject: Re: [PATCH 3/3] x86/PCI: limit the size of the 64bit BAR to 256GB
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
+References: <20171129141229.6107-1-christian.koenig@amd.com>
+ <20171129141229.6107-4-christian.koenig@amd.com>
+ <20171206195118.GL23510@bhelgaas-glaptop.roam.corp.google.com>
+ <20171208175635.GB12367@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xen-devel <xen-devel@lists.xen.org>,
+        Juergen Gross <jgross@suse.com>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <c8968d82-2c83-a3b9-d656-702987b0a0b7@oracle.com>
+Date: Fri, 8 Dec 2017 16:30:03 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+In-Reply-To: <20171208175635.GB12367@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
-> Hi all,
-> 
-> When I tried to use devm_ioremap function and review related code, I found
-> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
-> except one use ioremap while the other use ioremap_nocache.
+On 12/08/2017 12:56 PM, Bjorn Helgaas wrote:
+> On Wed, Dec 06, 2017 at 01:51:18PM -0600, Bjorn Helgaas wrote:
+>> On Wed, Nov 29, 2017 at 03:12:29PM +0100, Christian König wrote:
+>>> This avoids problems with Xen which hides some memory resources from the
+>>> OS and potentially also allows memory hotplug while this fixup is
+>>> enabled.
+>> The patch itself is OK, but the changelog doesn't say enough about
+>> what the problem is.  I have no clue about what the Xen issue is or
+>> why limiting the BAR to 256GB avoids the problem or what this has to
+>> do with memory hotplug.
+>>
+>> For example, we should be able to tell why 256GB is the right number.
+>> Maybe there's something specific in Xen you can reference?  Maybe an
+>> example of what goes wrong with some details?
+> Ping?  Is this change required to fix issues people are seeing?  If
+> so, we either need to rework the changelog and get it merged, or
+> revert the quirk as a whole.
+>
+> I tentatively applied the first two patches to for-linus, but I
+> haven't asked Linus to pull them because I assumed we really needed
+> all three.
 
-For all arches?  Really?  Look at MIPS, and x86, they have different
-functions.
+This is not a fix but rather is a workaround. The problem is that Xen
+dom0 may be running with less than all of the system memory and the
+chunk of host memory that dom0 doesn't have is not exposed in e820 as
+reserved. And so pci_amd_enable_64bit_bar() assumes that it can be used
+for MMIO, with predictable results. Only trying to use very high
+addresses limits chances that there is memory there.
 
-> While ioremap's
-> default function is ioremap_nocache, so devm_ioremap_nocache also have the
-> same function with devm_ioremap, which can just be killed to reduce the size
-> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
-> 
-> I have posted two versions, which use macro instead of function for
-> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
-> devm_ioremap_nocache for no need to keep a macro around for the duplicate
-> thing. So here comes v3 and please help to review.
+The alternative is to revert f5775e0b6116b7e2425ccf535243b21768566d87.
 
-I don't think this can be done, what am I missing?  These functions are
-not identical, sorry for missing that before.
+I have been working on a proper fix but haven't been able to finish it yet.
 
-thanks,
+-boris
 
-greg k-h
+
+>
+> Bjorn
+>
+>>> Signed-off-by: Christian König <christian.koenig@amd.com>
+>>> ---
+>>>  arch/x86/pci/fixup.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+>>> index c817ab85dc82..149adbc7f2a3 100644
+>>> --- a/arch/x86/pci/fixup.c
+>>> +++ b/arch/x86/pci/fixup.c
+>>> @@ -701,7 +701,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>>>  	res->name = "PCI Bus 0000:00";
+>>>  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+>>>  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+>>> -	res->start = 0x100000000ull;
+>>> +	res->start = 0xbd00000000ull;
+>>>  	res->end = 0xfd00000000ull - 1;
+>>>  
+>>>  	/* Just grab the free area behind system memory for this */
+>>> -- 
+>>> 2.11.0
+>>>
