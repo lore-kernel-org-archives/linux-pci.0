@@ -1,341 +1,123 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v6 18/18] PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
-Date: Wed, 20 Dec 2017 00:29:39 +0100
-Message-Id: <20171219232940.659-19-niklas.cassel@axis.com>
-In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:23538 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752350AbdLHVsI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Dec 2017 16:48:08 -0500
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: alex.williamson@redhat.com
+Cc: Liang-Min Wang <liang-min.wang@intel.com>, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, alexander.h.duyck@intel.com
+Subject: [PATCH v2] Enable SR-IOV instantiation through /sys file
+Date: Fri,  8 Dec 2017 13:47:58 -0800
+Message-Id: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for	the ARTPEC-7 SoC in the	artpec6	driver.
-The ARTPEC-6 SoC and the ARTPEC-7 SoC are very similar.
-Unfortunately, some fields in the PCIECFG and PCIESTAT
-register have changed.
+From: Liang-Min Wang <liang-min.wang@intel.com>
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+When a SR-IOV capable device is bound with vfio-pci, the
+device loses capability of creating SR-IOV instances through /sy/bus/
+pci/devices/.../sriov_numvfs. This patch re-activates this capability
+for a PCIe device that is SR-IOV capable and is bound with vfio-pci.ko.
+This patch also disables drivers_autoprobe attribute of SR-IOV devices
+created from vfio-pci bound device by default, so user-space PF device
+can coordinate the bring-up of SR-IOV devices
+
+Signed-off-by: Liang-Min Wang <liang-min.wang@intel.com>
 ---
- drivers/pci/dwc/pcie-artpec6.c | 187 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 183 insertions(+), 4 deletions(-)
+ drivers/pci/pci-driver.c    | 12 ++++++++++++
+ drivers/vfio/pci/vfio_pci.c | 22 ++++++++++++++++++++++
+ include/linux/pci.h         |  1 +
+ 3 files changed, 35 insertions(+)
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 064c5a93ea80..312f21b6e013 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -27,14 +27,21 @@
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 7f47bb7..19522fe 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1467,6 +1467,18 @@ void pci_dev_put(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_dev_put);
  
- #define to_artpec6_pcie(x)	dev_get_drvdata((x)->dev)
- 
-+enum artpec_pcie_variants {
-+	ARTPEC6,
-+	ARTPEC7,
-+};
++/**
++ * pci_dev_sriov_autoprobe_set - set device sriov driver autoprobe
++ * @dev: device with which sriov autoprobe will be set
++ *
++ */
++void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool autoprobe)
++{
++	if (dev && dev->sriov)
++		dev->sriov->drivers_autoprobe = autoprobe;
++}
++EXPORT_SYMBOL(pci_dev_sriov_autoprobe_set);
 +
- struct artpec6_pcie {
- 	struct dw_pcie		*pci;
- 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
- 	void __iomem		*phy_base;	/* DT phy */
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- };
- 
- struct artpec_pcie_of_data {
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- };
- 
-@@ -43,6 +50,13 @@ static const struct of_device_id artpec6_pcie_of_match[];
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET			0x700
- 
-+#define ACK_F_ASPM_CTRL_OFF		(PL_OFFSET + 0xc)
-+#define ACK_N_FTS_MASK			GENMASK(15, 8)
-+#define ACK_N_FTS(x)			(((x) << 8) & ACK_N_FTS_MASK)
-+
-+#define FAST_TRAINING_SEQ_MASK		GENMASK(7, 0)
-+#define FAST_TRAINING_SEQ(x)		(((x) << 0) & FAST_TRAINING_SEQ_MASK)
-+
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
- #define  PCIECFG_DBG_OEN		BIT(24)
-@@ -57,6 +71,13 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
- #define  PCIECFG_CISRREN		BIT(2)
- #define  PCIECFG_MACRO_ENABLE		BIT(0)
-+/* ARTPEC-7 specific fields */
-+#define  PCIECFG_REFCLKSEL		BIT(23)
-+#define  PCIECFG_NOC_RESET		BIT(3)
-+
-+#define PCIESTAT			0x1c
-+/* ARTPEC-7 specific fields */
-+#define  PCIESTAT_EXTREFCLK		BIT(3)
- 
- #define NOCCFG				0x40
- #define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
-@@ -67,6 +88,12 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define PHY_STATUS			0x118
- #define  PHY_COSPLLLOCK			BIT(0)
- 
-+#define PHY_TX_ASIC_OUT			0x4040
-+#define  PHY_TX_ASIC_OUT_TX_ACK		BIT(0)
-+
-+#define PHY_RX_ASIC_OUT			0x405c
-+#define  PHY_RX_ASIC_OUT_ACK		BIT(0)
-+
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+ static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
  {
- 	u32 val;
-@@ -125,7 +152,7 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- 	.stop_link = artpec6_pcie_stop_link,
+ 	struct pci_dev *pdev;
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index f041b1a..004836c 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -1213,6 +1213,8 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		return -ENOMEM;
+ 	}
+ 
++	/* disable sriov automatic driver attachment */
++	pci_dev_sriov_autoprobe_set(pdev, false);
+ 	vdev->pdev = pdev;
+ 	vdev->irq_type = VFIO_PCI_NUM_IRQS;
+ 	mutex_init(&vdev->igate);
+@@ -1256,6 +1258,7 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+ 	if (!vdev)
+ 		return;
+ 
++	pci_disable_sriov(pdev);
+ 	vfio_iommu_group_put(pdev->dev.iommu_group, &pdev->dev);
+ 	kfree(vdev->region);
+ 	kfree(vdev);
+@@ -1303,12 +1306,31 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
+ 	.error_detected = vfio_pci_aer_err_detected,
  };
  
--static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
-+static void artpec6_pcie_wait_for_phy_a6(struct artpec6_pcie *artpec6_pcie)
- {
- 	struct dw_pcie *pci = artpec6_pcie->pci;
- 	struct device *dev = pci->dev;
-@@ -152,7 +179,49 @@ static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
- 		dev_err(dev, "PHY PLL did not lock\n");
- }
- 
--static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+static void artpec6_pcie_wait_for_phy_a7(struct artpec6_pcie *artpec6_pcie)
++static int vfio_sriov_configure(struct pci_dev *pdev, int num_vfs)
 +{
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	struct device *dev = pci->dev;
-+	u32 val;
-+	u16 phy_status_tx, phy_status_rx;
-+	unsigned int retries;
++	int status;
 +
-+	retries = 50;
-+	do {
-+		usleep_range(1000, 2000);
-+		val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+		retries--;
-+	} while (retries &&
-+		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
-+	if (!retries)
-+		dev_err(dev, "PCIe clock manager did not leave idle state\n");
-+
-+	retries = 50;
-+	do {
-+		usleep_range(1000, 2000);
-+		phy_status_tx = readw(artpec6_pcie->phy_base + PHY_TX_ASIC_OUT);
-+		phy_status_rx = readw(artpec6_pcie->phy_base + PHY_RX_ASIC_OUT);
-+		retries--;
-+	} while (retries && ((phy_status_tx & PHY_TX_ASIC_OUT_TX_ACK) ||
-+				(phy_status_rx & PHY_RX_ASIC_OUT_ACK)));
-+	if (!retries)
-+		dev_err(dev, "PHY did not enter Pn state\n");
-+}
-+
-+static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
-+{
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		artpec6_pcie_wait_for_phy_a6(artpec6_pcie);
-+		break;
-+	case ARTPEC7:
-+		artpec6_pcie_wait_for_phy_a7(artpec6_pcie);
-+		break;
++	if (!num_vfs) {
++		pci_disable_sriov(pdev);
++		return 0;
 +	}
-+}
 +
-+static void artpec6_pcie_init_phy_a6(struct artpec6_pcie *artpec6_pcie)
- {
- 	u32 val;
- 
-@@ -182,12 +251,90 @@ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
- 	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
- }
- 
-+static void artpec6_pcie_init_phy_a7(struct artpec6_pcie *artpec6_pcie)
-+{
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	u32 val;
-+	bool extrefclk;
-+
-+	/* Check if external reference clock is connected */
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIESTAT);
-+	extrefclk = !!(val & PCIESTAT_EXTREFCLK);
-+	dev_dbg(pci->dev, "Using reference clock: %s\n",
-+		extrefclk ? "external" : "internal");
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
-+	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
-+		PCIECFG_PCLK_ENABLE;
-+	if (extrefclk)
-+		val |= PCIECFG_REFCLKSEL;
-+	else
-+		val &= ~PCIECFG_REFCLKSEL;
-+	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
-+	usleep_range(10, 20);
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+	val |= NOCCFG_ENABLE_CLK_PCIE;
-+	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
-+	usleep_range(20, 30);
-+
-+	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
-+	val &= ~NOCCFG_POWER_PCIE_IDLEREQ;
-+	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
-+}
-+
-+static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
-+{
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		artpec6_pcie_init_phy_a6(artpec6_pcie);
-+		break;
-+	case ARTPEC7:
-+		artpec6_pcie_init_phy_a7(artpec6_pcie);
-+		break;
++	status = pci_enable_sriov(pdev, num_vfs);
++	if (!status) {
++		pr_crit("Created %d SR-IOV from a user-space driver based upon vfio-pci\n", num_vfs);
++		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
 +	}
++
++	return status;
 +}
 +
-+static void artpec6_pcie_set_nfts(struct artpec6_pcie *artpec6_pcie)
-+{
-+	struct dw_pcie *pci = artpec6_pcie->pci;
-+	u32 val;
-+
-+	if (artpec6_pcie->variant != ARTPEC7)
-+		return;
-+
-+	/*
-+	 * Increase the N_FTS (Number of Fast Training Sequences)
-+	 * to be transmitted when transitioning from L0s to L0.
-+	 */
-+	val = dw_pcie_readl_dbi(pci, ACK_F_ASPM_CTRL_OFF);
-+	val &= ~ACK_N_FTS_MASK;
-+	val |= ACK_N_FTS(180);
-+	dw_pcie_writel_dbi(pci, ACK_F_ASPM_CTRL_OFF, val);
-+
-+	/*
-+	 * Set the Number of Fast Training Sequences that the core
-+	 * advertises as its N_FTS during Gen2 or Gen3 link training.
-+	 */
-+	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val &= ~FAST_TRAINING_SEQ_MASK;
-+	val |= FAST_TRAINING_SEQ(180);
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
-+}
-+
- static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
- {
- 	u32 val;
- 
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val |= PCIECFG_CORE_RESET_REQ;
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		val |= PCIECFG_CORE_RESET_REQ;
-+		break;
-+	case ARTPEC7:
-+		val &= ~PCIECFG_NOC_RESET;
-+		break;
-+	}
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- }
- 
-@@ -196,7 +343,14 @@ static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
- 	u32 val;
- 
- 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
--	val &= ~PCIECFG_CORE_RESET_REQ;
-+	switch (artpec6_pcie->variant) {
-+	case ARTPEC6:
-+		val &= ~PCIECFG_CORE_RESET_REQ;
-+		break;
-+	case ARTPEC7:
-+		val |= PCIECFG_NOC_RESET;
-+		break;
-+	}
- 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
- 	usleep_range(100, 200);
- }
-@@ -219,6 +373,7 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
- 	artpec6_pcie_wait_for_phy(artpec6_pcie);
-+	artpec6_pcie_set_nfts(artpec6_pcie);
- 	dw_pcie_setup_rc(pp);
- 	artpec6_pcie_establish_link(pci);
- 	dw_pcie_wait_for_link(pci);
-@@ -287,6 +442,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
- 	artpec6_pcie_init_phy(artpec6_pcie);
- 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
- 	artpec6_pcie_wait_for_phy(artpec6_pcie);
-+	artpec6_pcie_set_nfts(artpec6_pcie);
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++)
- 		dw_pcie_ep_reset_bar(pci, bar);
-@@ -358,6 +514,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	int ret;
- 	const struct of_device_id *match;
- 	const struct artpec_pcie_of_data *data;
-+	enum artpec_pcie_variants variant;
- 	enum dw_pcie_device_mode mode;
- 
- 	match = of_match_device(artpec6_pcie_of_match, dev);
-@@ -365,6 +522,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 
- 	data = (struct artpec_pcie_of_data *)match->data;
-+	variant = (enum artpec_pcie_variants)data->variant;
- 	mode = (enum dw_pcie_device_mode)data->mode;
- 
- 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
-@@ -379,6 +537,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &dw_pcie_ops;
- 
- 	artpec6_pcie->pci = pci;
-+	artpec6_pcie->variant = variant;
- 	artpec6_pcie->mode = mode;
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-@@ -430,10 +589,22 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- }
- 
- static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
-+	.variant = ARTPEC6,
- 	.mode = DW_PCIE_RC_TYPE,
+ static struct pci_driver vfio_pci_driver = {
+ 	.name		= "vfio-pci",
+ 	.id_table	= NULL, /* only dynamic ids */
+ 	.probe		= vfio_pci_probe,
+ 	.remove		= vfio_pci_remove,
+ 	.err_handler	= &vfio_err_handlers,
++	.sriov_configure = vfio_sriov_configure,
  };
  
- static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
-+	.variant = ARTPEC6,
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
-+static const struct artpec_pcie_of_data artpec7_pcie_rc_of_data = {
-+	.variant = ARTPEC7,
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct artpec_pcie_of_data artpec7_pcie_ep_of_data = {
-+	.variant = ARTPEC7,
- 	.mode = DW_PCIE_EP_TYPE,
- };
- 
-@@ -446,6 +617,14 @@ static const struct of_device_id artpec6_pcie_of_match[] = {
- 		.compatible = "axis,artpec6-pcie-ep",
- 		.data = &artpec6_pcie_ep_of_data,
- 	},
-+	{
-+		.compatible = "axis,artpec7-pcie",
-+		.data = &artpec7_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "axis,artpec7-pcie-ep",
-+		.data = &artpec7_pcie_ep_of_data,
-+	},
- 	{},
- };
- 
+ struct vfio_devices {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0403894..e04b69d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -921,6 +921,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ struct pci_dev *pci_dev_get(struct pci_dev *dev);
+ void pci_dev_put(struct pci_dev *dev);
+ void pci_remove_bus(struct pci_bus *b);
++void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool autoprobe);
+ void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+ void pci_stop_and_remove_bus_device_locked(struct pci_dev *dev);
+ void pci_stop_root_bus(struct pci_bus *bus);
 -- 
-2.14.2
+1.9.1
