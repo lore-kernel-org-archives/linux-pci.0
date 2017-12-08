@@ -1,57 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Vignesh R <vigneshr@ti.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Kishon Vijay Abraham I <kishon@ti.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34256 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752616AbdLHC5o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 21:57:44 -0500
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Peter Zijlstra <peterz@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@suse.com>,
+        Rafael Wysocki <rjw@rjwysocki.net>,
+        Len Brown <len.brown@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Vignesh R <vigneshr@ti.com>
-Subject: [PATCH v2 2/2] PCI: dra7xx: Iterate over INTx status bits
-Date: Fri, 29 Dec 2017 17:11:31 +0530
-Message-ID: <20171229114131.22296-3-vigneshr@ti.com>
-In-Reply-To: <20171229114131.22296-1-vigneshr@ti.com>
-References: <20171229114131.22296-1-vigneshr@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Fengguang Wu <fengguang.wu@intel.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: [PATCH 8/9] hrtimer: remove unneeded kallsyms include
+Date: Fri,  8 Dec 2017 11:56:15 +0900
+Message-Id: <20171208025616.16267-9-sergey.senozhatsky@gmail.com>
+In-Reply-To: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
+References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible that more than one legacy IRQ may be set at the same
-time, therefore iterate and handle all the pending INTx interrupts
-before clearing the status and exiting the IRQ handler. Otherwise, some
-interrupts would be lost.
+hrtimer does not seem to use any of kallsyms functions/defines.
 
-Signed-off-by: Vignesh R <vigneshr@ti.com>
+Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/dwc/pci-dra7xx.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ kernel/time/hrtimer.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 892f93910012..48c6ae535847 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -257,7 +257,8 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 	struct dra7xx_pcie *dra7xx = arg;
- 	struct dw_pcie *pci = dra7xx->pci;
- 	struct pcie_port *pp = &pci->pp;
--	u32 reg;
-+	unsigned long reg;
-+	u32 virq, bit;
- 
- 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI);
- 
-@@ -269,8 +270,11 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 	case INTB:
- 	case INTC:
- 	case INTD:
--		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
--						    ffs(reg) - 1));
-+		for_each_set_bit(bit, &reg, PCI_NUM_INTX) {
-+			virq = irq_find_mapping(dra7xx->irq_domain, bit);
-+			if (virq)
-+				generic_handle_irq(virq);
-+		}
- 		break;
- 	}
- 
+diff --git a/kernel/time/hrtimer.c b/kernel/time/hrtimer.c
+index d32520840fde..6d8183b38e35 100644
+--- a/kernel/time/hrtimer.c
++++ b/kernel/time/hrtimer.c
+@@ -37,7 +37,6 @@
+ #include <linux/hrtimer.h>
+ #include <linux/notifier.h>
+ #include <linux/syscalls.h>
+-#include <linux/kallsyms.h>
+ #include <linux/interrupt.h>
+ #include <linux/tick.h>
+ #include <linux/seq_file.h>
 -- 
 2.15.1
