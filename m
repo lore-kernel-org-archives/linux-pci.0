@@ -1,102 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.130]:39563 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750806AbdLZBHB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 20:07:01 -0500
-Message-ID: <5A41A0A7.5070605@rock-chips.com>
-Date: Tue, 26 Dec 2017 09:06:47 +0800
-From: JeffyChen <jeffy.chen@rock-chips.com>
+Return-Path: <SRS0=EdPE=DE=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=EdPE=DE=ozlabs.ru=aik@kernel.org>
+Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, helgaas@kernel.org,
+ bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+ mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+ alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+ saeedm@mellanox.com
+References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+ <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
+ <3a49b44e-833a-8440-aa3c-a4984ac47147@linux.vnet.ibm.com>
+ <466ac4c0-6503-a2eb-e352-d2bdfca10cb5@ozlabs.ru>
+ <9777301b-3807-2b1d-fbd5-ffa62b78d8f5@linux.vnet.ibm.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <e4b660df-f23d-9f4f-6b1b-d681e4ff8bae@ozlabs.ru>
+Date: Fri, 8 Dec 2017 17:03:07 +1100
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE#
- signal for OF
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com> <20171225114742.18920-5-jeffy.chen@rock-chips.com> <9593014.U0c2JQdoEZ@aspire.rjw.lan>
-In-Reply-To: <9593014.U0c2JQdoEZ@aspire.rjw.lan>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <9777301b-3807-2b1d-fbd5-ffa62b78d8f5@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
-
-Thanks for your reply :)
-
-On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
->> >+
->> >+	dn = pci_device_to_OF_node(ppdev);
->> >+	if (!dn)
->> >+		return 0;
->> >+
->> >+	irq = of_irq_get_byname(dn, "wakeup");
-> Why is this a property of the bridge and not of the device itself?
-That is suggested by Brian, because in that way, the wakeup pin would 
-not "tied to what exact device is installed (or no device, if it's a slot)."
-
->
->> >+	if (irq == -EPROBE_DEFER)
-> Braces here, please.
-ok, will fix in the next version.
-
->
->> >+		return irq;
->> >+	/* Ignore other errors, since a missing wakeup is non-fatal. */
->> >+	else if (irq < 0) {
->> >+		dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
->> >+		return 0;
->> >+	}
->> >+
->> >+	device_init_wakeup(&pdev->dev, true);
-> Why do you call this before dev_pm_set_dedicated_wake_irq()?
-hmmm, i thought so too, but it turns out the dedicated wake irq 
-framework requires device_init_wakeup(dev, true) before attach the wake irq:
-
-int device_wakeup_attach_irq(struct device *dev,
-                              struct wake_irq *wakeirq)
-{
-         struct wakeup_source *ws;
-
-         ws = dev->power.wakeup;
-         if (!ws) {
-                 dev_err(dev, "forgot to call device_init_wakeup?\n");
-                 return -EINVAL;
+On 06/12/17 02:13, Bryant G. Ly wrote:
+> 
+> 
+> On 12/4/17 7:24 PM, Alexey Kardashevskiy wrote:
+>> On 05/12/17 02:08, Bryant G. Ly wrote:
+>>>
+>>> On 12/2/17 7:45 PM, Alexey Kardashevskiy wrote:
+>>>> On 10/11/17 01:00, Bryant G. Ly wrote:
+>>>>> v1 - Initial patch
+>>>>> v2 - Addressed Bjorn's comment on creating a highly platform
+>>>>>      dependent global exported symbol.
+>>>>> v3 - Based patch off linux-ppc/master
+>>>>> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
+>>>>> v5 - Fixed comments and commit message
+>>>> What is this made against of? I'd like to give it a try but it does not
+>>>> apply to Linus'es tree or powerpc/next. Thanks.
+>>>>
+>>> This was made against powerpc/next back when it was still under 4.14-rc6.
+>>> It has been in review for awhile... 
+>> Sure, sha1 or github tree would be enough though to try.
+> 
+> 6cff0a118f23b98c604a3604ea9de11338e24fbe
+> 
+> or if you want to just use the github tree its:
+> 
+> https://github.com/powervm/sriov-ppc/tree/upstream
 
 
->
->> >+
->> >+	ret = dev_pm_set_dedicated_wake_irq(&pdev->dev, irq);
->> >+	if (ret < 0) {
->> >+		dev_err(&pdev->dev, "failed to set wake IRQ: %d\n", ret);
->> >+		device_init_wakeup(&pdev->dev, false);
->> >+		return ret;
->> >+	}
->> >+
-> It would be more straightforward to call device_init_wakeup() here.
->
->> >+	return 0;
->> >+}
->> >+EXPORT_SYMBOL_GPL(of_pci_setup_wake_irq);
->> >+
->> >+void of_pci_teardown_wake_irq(struct pci_dev *pdev)
->> >+{
->> >+	if (!pdev->dev.power.wakeirq)
->> >+		return;
->> >+
->> >+	dev_pm_clear_wake_irq(&pdev->dev);
->> >+	device_init_wakeup(&pdev->dev, false);
->> >+}
->> >+EXPORT_SYMBOL_GPL(of_pci_teardown_wake_irq);
->> >+
->> >  /**
->> >   * of_irq_parse_pci - Resolve the interrupt for a PCI device
->> >   * @pdev:       the device whose interrupt is to be resolved
-> Thanks,
-> Rafael
->
->
->
->
+Thanks! Looks good, works fine (tried MLX5 wit hpowernv - works, pseries
+under KVM - prints a nice error instead of crashing),
+
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+
+
+
+
+> 
+>>
+>>> -Bryant
+>>>
+>>>>> Bryant G. Ly (3):
+>>>>>   powerpc/kernel: Separate SR-IOV Calls
+>>>>>   pseries: Add PSeries SR-IOV Machine dependent calls
+>>>>>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+>>>>>
+>>>>>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>>>>>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>>>>>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>>>>>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>>>>>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>>>>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>>>>>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>>>>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
+>>>>>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
+>>>>>  drivers/pci/iov.c                            | 11 ++++++++++
+>>>>>  include/linux/pci.h                          |  2 ++
+>>>>>  11 files changed, 118 insertions(+), 33 deletions(-)
+>>>>>
+>>
+> 
+
+
+-- 
+Alexey
