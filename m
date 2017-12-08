@@ -1,163 +1,260 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v6 06/18] PCI: designware-ep: Add generic function for
- raising MSI irq
-To: Niklas Cassel <niklas.cassel@axis.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171219232940.659-7-niklas.cassel@axis.com>
- <5fc44bf0-9d0e-e905-32fb-449d9ed1b01a@ti.com>
- <20171227222909.GA14106@axis.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <e8a50bf0-edab-db41-0c80-13a1509e289c@ti.com>
-Date: Thu, 28 Dec 2017 13:36:28 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17401 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752303AbdLHI65 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:58:57 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V4 4/7] PCI: tegra: Free resources on probe failure
+Date: Fri, 8 Dec 2017 14:28:10 +0530
+Message-ID: <1512723493-865-5-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20171227222909.GA14106@axis.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
+tegra_pcie_probe() can fail in multiple instances, this patch takes care
+of freeing the resources which are allocated before probe fail.
 
-On Thursday 28 December 2017 03:59 AM, Niklas Cassel wrote:
-> On Tue, Dec 26, 2017 at 06:20:54PM +0530, Kishon Vijay Abraham I wrote:
->> Hi Niklas,
-> 
-> Hello Kishon
-> 
->>
->> On Wednesday 20 December 2017 04:59 AM, Niklas Cassel wrote:
->>> Add a generic function for raising MSI irqs that can be used by all
->>> DWC based controllers.
->>>
->>> Note that certain controllers, like DRA7xx, have a special convenience
->>> register for raising MSI irqs that doesn't require you to explicitly map
->>> the MSI address. Therefore, it is likely that certain drivers will
->>> not use this generic function, even if they can.
->>>
->>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->>> ---
->>>  drivers/pci/dwc/pcie-designware-ep.c | 35 +++++++++++++++++++++++++++++++++++
->>>  drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
->>>  2 files changed, 44 insertions(+)
->>>
->>> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
->>> index 700ed2f4becf..c5aa1cac5041 100644
->>> --- a/drivers/pci/dwc/pcie-designware-ep.c
->>> +++ b/drivers/pci/dwc/pcie-designware-ep.c
->>> @@ -282,6 +282,41 @@ static const struct pci_epc_ops epc_ops = {
->>>  	.stop			= dw_pcie_ep_stop,
->>>  };
->>>  
->>> +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
->>> +			     u8 interrupt_num)
->>> +{
->>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>> +	struct pci_epc *epc = ep->epc;
->>> +	u16 msg_ctrl, msg_data;
->>> +	u32 msg_addr_lower, msg_addr_upper;
->>> +	u64 msg_addr;
->>> +	bool has_upper;
->>> +	int ret;
->>> +
->>> +	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
->>> +	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
->>> +	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
->>> +	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
->>> +	if (has_upper) {
->>> +		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
->>> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
->>> +	} else {
->>> +		msg_addr_upper = 0;
->>> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
->>> +	}
->>> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
->>> +	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr,
->>> +				  epc->mem->page_size);
->>> +	if (ret)
->>> +		return ret;
->>> +
->>> +	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
->>
->> Shouldn't this be msg_data + (interrupt_num - 1)?
-> 
-> I'm not quite sure about this, but if there is a pending irq,
-> not yet processed by the RC, the msg_data we read out in this
-> function should have a bit set, matching the pending irq.
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V2:
+* no change in this patch
+V3:
+* change 'if check' to 'legacy_phy is true' for tegra_pcie_phys_put_legacy()
+* commit log correction
+V4:
+* no change in this patch
 
-IIUC, the msg_data that we read here should not depend on the pending irq on
-the RC side. msg_data should have the starting MSI vector number assigned by RC
-for that EP device. (msg.data = pos; in dw_msi_setup_msg() also seem to suggest
-the same).
-> 
-> If that irq is the same as the irq we are trying to raise,
-> doing an addition will produce a bogus vector number,
-> but a bitwise or should work.
+ drivers/pci/host/pci-tegra.c | 100 ++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 84 insertions(+), 16 deletions(-)
 
-if msg_data has the starting MSI vector, doing an addition should get to the
-correct MSI vector.
-> 
-> For that reason, I think that doing bitwise or seems safer.
-> However, other than this case, I don't see why it should
-> matter if we do an addition or a bitwise or.
-> 
-> Are you having some problem with the code?
-> It seems to be working fine on ARTPEC-6:
-> 
-> # ./pcitest -m 1
-> MSI1:           OKAY
-> # ./pcitest -m 2
-> MSI2:           OKAY
-> # ./pcitest -m 3
-> MSI3:           OKAY
-> # ./pcitest -m 4
-> MSI4:           OKAY
-> # ./pcitest -m 5
-> MSI5:           OKAY
-> # ./pcitest -m 6
-> MSI6:           OKAY
-> # ./pcitest -m 7
-> MSI7:           OKAY
-> # ./pcitest -m 8
-> MSI8:           OKAY
-> # ./pcitest -m 9
-> MSI9:           OKAY
-> # cat /proc/interrupts | grep -i msi
->  82:          9          0     GIC-0 180 Level     artpec6-pcie-msi
-> 188:          1          0   PCI-MSI  16 Edge      pci-endpoint-test
-> 189:          1          0   PCI-MSI  17 Edge      pci-endpoint-test
-> 190:          1          0   PCI-MSI  18 Edge      pci-endpoint-test
-> 191:          1          0   PCI-MSI  19 Edge      pci-endpoint-test
-> 192:          1          0   PCI-MSI  20 Edge      pci-endpoint-test
-> 193:          1          0   PCI-MSI  21 Edge      pci-endpoint-test
-> 194:          1          0   PCI-MSI  22 Edge      pci-endpoint-test
-> 195:          1          0   PCI-MSI  23 Edge      pci-endpoint-test
-> 196:          1          0   PCI-MSI  24 Edge      pci-endpoint-test
-> 197:          0          0   PCI-MSI  25 Edge      pci-endpoint-test
-> 198:          0          0   PCI-MSI  26 Edge      pci-endpoint-test
-> 199:          0          0   PCI-MSI  27 Edge      pci-endpoint-test
-> 200:          0          0   PCI-MSI  28 Edge      pci-endpoint-test
-> 201:          0          0   PCI-MSI  29 Edge      pci-endpoint-test
-> 202:          0          0   PCI-MSI  30 Edge      pci-endpoint-test
-> 203:          0          0   PCI-MSI  31 Edge      pci-endpoint-test
-> 
-> From EP:
-> irq: 1 read msg_data: 0x10 writing: 0x10
-> irq: 2 read msg_data: 0x10 writing: 0x11
-> irq: 3 read msg_data: 0x10 writing: 0x12
-> irq: 4 read msg_data: 0x10 writing: 0x13
-> irq: 5 read msg_data: 0x10 writing: 0x14
-> irq: 6 read msg_data: 0x10 writing: 0x15
-> irq: 7 read msg_data: 0x10 writing: 0x16
-> irq: 8 read msg_data: 0x10 writing: 0x17
-> irq: 9 read msg_data: 0x10 writing: 0x18
-
-since your msg_data is 0x10, you are not facing the issue. What if it's 0x1? In
-my case If I have Gustavo's patch series applied, msg_data has a value of 0x1
-and I don't get certain MSI interrupts.
-
-Thanks
-Kishon
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 0d91f1a3a6b4..596dbe06d911 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -662,14 +662,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
+ 	pci_add_resource(windows, &pcie->busn);
+ 
+ 	err = devm_request_pci_bus_resources(dev, windows);
+-	if (err < 0)
++	if (err < 0) {
++		pci_free_resource_list(windows);
+ 		return err;
++	}
+ 
+ 	pci_remap_iospace(&pcie->pio, pcie->io.start);
+ 
+ 	return 0;
+ }
+ 
++static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
++{
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct list_head *windows = &host->windows;
++
++	pci_unmap_iospace(&pcie->pio);
++	pci_free_resource_list(windows);
++}
++
+ static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+ {
+ 	struct tegra_pcie *pcie = pdev->bus->sysdata;
+@@ -1069,29 +1080,40 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static void tegra_pcie_power_off(struct tegra_pcie *pcie)
++static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	const struct tegra_pcie_soc *soc = pcie->soc;
+ 	int err;
+ 
+-	/* TODO: disable and unprepare clocks? */
+-
+ 	if (soc->program_uphy) {
+ 		err = tegra_pcie_phy_power_off(pcie);
+ 		if (err < 0)
+ 			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+ 	}
++}
++
++static void tegra_pcie_power_off(struct tegra_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	const struct tegra_pcie_soc *soc = pcie->soc;
++	int err;
+ 
+ 	reset_control_assert(pcie->afi_rst);
+ 	reset_control_assert(pcie->pex_rst);
+ 
+-	if (!dev->pm_domain)
+-		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
++	clk_disable_unprepare(pcie->pll_e);
++	if (soc->has_cml_clk)
++		clk_disable_unprepare(pcie->cml_clk);
++	clk_disable_unprepare(pcie->afi_clk);
++	clk_disable_unprepare(pcie->pex_clk);
+ 
+ 	err = regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
+ 	if (err < 0)
+ 		dev_warn(dev, "failed to disable regulators: %d\n", err);
++
++	if (!dev->pm_domain)
++		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+ }
+ 
+ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+@@ -1222,6 +1244,15 @@ static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static void tegra_pcie_phys_put_legacy(struct tegra_pcie *pcie)
++{
++	int err;
++
++	err = phy_exit(pcie->phy);
++	if (err < 0)
++		dev_err(pcie->dev, "failed to teardown PHY: %d\n", err);
++}
++
+ static struct phy *devm_of_phy_optional_get_index(struct device *dev,
+ 						  struct device_node *np,
+ 						  const char *consumer,
+@@ -1275,6 +1306,19 @@ static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
+ 	return 0;
+ }
+ 
++static void tegra_pcie_port_put_phys(struct tegra_pcie_port *port)
++{
++	struct device *dev = port->pcie->dev;
++	unsigned int i;
++	int err;
++
++	for (i = 0; i < port->lanes; i++) {
++		err = phy_exit(port->phys[i]);
++		if (err < 0)
++			dev_err(dev, "failed to teardown PHY#%u: %d\n", i, err);
++	}
++}
++
+ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
+ {
+ 	const struct tegra_pcie_soc *soc = pcie->soc;
+@@ -1294,6 +1338,17 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
++{
++	struct tegra_pcie_port *port;
++
++	if (pcie->legacy_phy)
++		tegra_pcie_phys_put_legacy(pcie);
++
++	list_for_each_entry(port, &pcie->ports, list)
++		tegra_pcie_port_put_phys(port);
++}
++
+ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+@@ -1326,7 +1381,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 	err = tegra_pcie_power_on(pcie);
+ 	if (err) {
+ 		dev_err(dev, "failed to power up: %d\n", err);
+-		return err;
++		goto phys_put;
+ 	}
+ 
+ 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
+@@ -1384,25 +1439,23 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 
+ poweroff:
+ 	tegra_pcie_power_off(pcie);
++phys_put:
++	if (soc->program_uphy)
++		tegra_pcie_phys_put(pcie);
+ 	return err;
+ }
+ 
+ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
+ 	const struct tegra_pcie_soc *soc = pcie->soc;
+-	int err;
+ 
+ 	if (pcie->irq > 0)
+ 		free_irq(pcie->irq, pcie);
+ 
+ 	tegra_pcie_power_off(pcie);
+ 
+-	if (soc->program_uphy) {
+-		err = phy_exit(pcie->phy);
+-		if (err < 0)
+-			dev_err(dev, "failed to teardown PHY: %d\n", err);
+-	}
++	if (soc->program_uphy)
++		tegra_pcie_phys_put(pcie);
+ 
+ 	return 0;
+ }
+@@ -2283,6 +2336,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ 	}
+ }
+ 
++static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
++{
++	struct tegra_pcie_port *port, *tmp;
++
++	reset_control_assert(pcie->pcie_xrst);
++
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
++		tegra_pcie_port_disable(port);
++}
++
+ static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
+ 					 struct pci_dev *pci_dev)
+ {
+@@ -2589,7 +2652,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = tegra_pcie_request_resources(pcie);
+ 	if (err)
+-		goto put_resources;
++		goto disable_controller;
+ 
+ 	/* setup the AFI address translations */
+ 	tegra_pcie_setup_translations(pcie);
+@@ -2598,7 +2661,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 		err = tegra_pcie_enable_msi(pcie);
+ 		if (err < 0) {
+ 			dev_err(dev, "failed to enable MSI support: %d\n", err);
+-			goto put_resources;
++			goto free_resources;
+ 		}
+ 	}
+ 
+@@ -2638,6 +2701,11 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ disable_msi:
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		tegra_pcie_disable_msi(pcie);
++	tegra_pcie_disable_ports(pcie);
++free_resources:
++	tegra_pcie_free_resources(pcie);
++disable_controller:
++	tegra_pcie_disable_controller(pcie);
+ put_resources:
+ 	tegra_pcie_put_resources(pcie);
+ 	return err;
+-- 
+2.1.4
