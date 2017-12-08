@@ -1,118 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:43966 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755554AbdLOTbg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Dec 2017 14:31:36 -0500
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@gmail.com>
-Subject: [PATCH v16 0/4] Replace PCI pool by DMA pool API
-Date: Fri, 15 Dec 2017 20:31:19 +0100
-Message-Id: <20171215193123.13395-1-romain.perier@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:54396 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753723AbdLHOoy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Dec 2017 09:44:54 -0500
+Date: Fri, 8 Dec 2017 08:44:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Subject: Re: PCIe link not recovering
+Message-ID: <20171208144451.GB2386@bhelgaas-glaptop.roam.corp.google.com>
+References: <3d3c69b6dcc44963b1ad80120c69767b@AcuMS.aculab.com>
+ <20171206224727.GQ23510@bhelgaas-glaptop.roam.corp.google.com>
+ <ba011f7daeee41afbf6c5afa5408959a@AcuMS.aculab.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ba011f7daeee41afbf6c5afa5408959a@AcuMS.aculab.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current PCI pool API are simple macro functions direct expanded to
-the appropriate dma pool functions. The prototypes are almost the same
-and semantically, they are very similar. I propose to use the DMA pool
-API directly and get rid of the old API.
+On Fri, Dec 08, 2017 at 12:18:29PM +0000, David Laight wrote:
+> From: Bjorn Helgaas
+> > Sent: 06 December 2017 22:47
+> >
+> > On Wed, Dec 06, 2017 at 02:03:55PM +0000, David Laight wrote:
+> > > If I perform the following:
+> > > 1) echo 1 >/sys/devices/pcixxxx/xxx/remove
+> > > 2) completely reset the PCIe endpoint
+> > > 3) echo 1 >/sys/devices/pcixxxx/rescan
+> > > I expect the endpoint to be reprobed (provided the BARs are compatible).
+> > 
+> > I expect that, too.  Even if the BARs are wrong (they should be
+> > cleared by the reset), we should at least discover the device.
+> 
+> That matches what I've seen every other system do.
+> 
+> If I reset the fpga during boot (well held in bios setup) it still isn't found.
+> On other boards I've done that to load a different set of BARs and had the
+> BIOS allocate resources based on the later image.
+> 
+> > > However on a new motherboard (SkyLake) it looks as though the root bridge isn't
+> > > trying to bring the PCIe link back up.
+> > > (The same system disk works fine in a slighty older system.)
+> ...
+> > > I believe that the endpoint is flipping between the 'Detect Active' and 'Detect Quiet'
+> > > states. Which would imply that the root port isn't trying to establish the link.
+> > 
+> > I guess this refers to PCIe r3.1, sec 4.2.6.1.2, and Figure 4-23, the
+> > "Detect Substate Machine".  I'm not a hardware person, so still
+> > doesn't help me much :)  Out of curiosity, do you have an analyzer or
+> > other visibility into what the Endpoint is doing?
+> 
+> We don't have an analyser (cost too much) so I can't see what is actually
+> happening on the link itself.
+> The target is a fpga and we log all the low level state transitions to a
+> memory block (and some transitions to a serial EEPROM).
 
-This set of patches, replaces the old API by the dma pool API
-and remove the defines.
+A built-in analyzer, nice :)
 
-Changes in v16:
-- Rebased series onto next-20171215
-- I have fixed patch 04/04, so it can be applied
-- Added Acked-by for Bjorn Helgaas on patch 04/04
+> I'll set things up so I can read the trace while the PCIe link is still down.
+> (I think the trace I looked at last time went back to the reset - but it
+> is hard to tell.)
+> 
+> ...
+> > > The full output (link_down) is:
+> > >
+> > > 00:01.0 PCI bridge: Intel Corporation Skylake PCIe Controller (x16) (rev 05) (prog-if 00 [Normal decode])
+> ...
+> > 
+> > I'm surprised there's no AER capability.  The Root Ports in my Sky Lake
+> > system advertise AER, Access Control Services, and L1 PM Substates
+> > capabilities, none of which are shown here.  Must be configurable via
+> > the BIOS or something.
+> 
+> Nothing I've seen in the BIOS setup (just rechecked).
+> 
+> The PCIe lanes behind the 'Sunrise Point-H PCI Express Root Port'
+> at 00:1c.0 do support AER.
+> On this motherboard that is one of the ethernet chips, the m-PCIe
+> and the M.2 connectors. I don't have the required adapters for those.
+> 
+> But the big x16 connector (which we think we can split into two gen1 x1)
+> doesn't report AER.
+> I think it is directly connected to the cpu (i7-7700).
 
-Changes in v15:
-- Rebased series onto next-20171120
-- Added patch 04/05 for mpt3sas scsi driver
+Sounds like the PCIe port you're using might be a separate bit of IP
+with possibly slightly different features.  If you had the datasheet
+for it, there might be a clue.  But I can't think of anything to do on
+the kernel side, at least in terms of the public PCIe spec.  Given a
+datasheet, there might be some sort of quirk-ish thing we could do.
 
-Changes in v14:
-- Rebased series onto next-20171018
-- Rebased patch 03/05 on latest driver
-
-Changes in v13:
-- Rebased series onto next-20170906
-- Added a new commit for the hinic ethernet driver
-- Remove previously merged patches
-
-Changes in v12:
-- Rebased series onto next-20170822
-
-Changes in v11:
-- Rebased series onto next-20170809
-- Removed patches 08-14, these have been merged.
-
-Changes in v10:
-- Rebased series onto next-20170706
-- I have fixed and improved patch "scsi: megaraid: Replace PCI pool old API"
-
-Changes in v9:
-- Rebased series onto next-20170522
-- I have fixed and improved the patch for lpfc driver
-
-Changes in v8:
-- Rebased series onto next-20170428
-
-Changes in v7:
-- Rebased series onto next-20170416
-- Added Acked-by, Tested-by and Reviwed-by tags
-
-Changes in v6:
-- Fixed an issue reported by kbuild test robot about changes in DAC960
-- Removed patches 15/19,16/19,17/19,18/19. They have been merged by Greg
-- Added Acked-by Tags
-
-Changes in v5:
-- Re-worded the cover letter (remove sentence about checkpatch.pl)
-- Rebased series onto next-20170308
-- Fix typos in commit message
-- Added Acked-by Tags
-
-Changes in v4:
-- Rebased series onto next-20170301
-- Removed patch 20/20: checks done by checkpath.pl, no longer required.
-  Thanks to Peter and Joe for their feedbacks.
-- Added Reviewed-by tags
-
-Changes in v3:
-- Rebased series onto next-20170224
-- Fix checkpath.pl reports for patch 11/20 and patch 12/20
-- Remove prefix RFC
-Changes in v2:
-- Introduced patch 18/20
-- Fixed cosmetic changes: spaces before brace, live over 80 characters
-- Removed some of the check for NULL pointers before calling dma_pool_destroy
-- Improved the regexp in checkpatch for pci_pool, thanks to Joe Perches
-- Added Tested-by and Acked-by tags
-
-Romain Perier (4):
-  block: DAC960: Replace PCI pool old API
-  net: e100: Replace PCI pool old API
-  hinic: Replace PCI pool old API
-  PCI: Remove PCI pool macro functions
-
- drivers/block/DAC960.c                            | 38 +++++++++++------------
- drivers/block/DAC960.h                            |  4 +--
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
- drivers/net/ethernet/intel/e100.c                 | 12 +++----
- include/linux/pci.h                               |  9 ------
- 6 files changed, 32 insertions(+), 43 deletions(-)
-
--- 
-2.14.1
+Bjorn
