@@ -1,28 +1,55 @@
-Return-Path: <SRS0=Eef5=DO=linux.vnet.ibm.com=jjalvare@kernel.org>
-Return-Path: <SRS0=Eef5=DO=linux.vnet.ibm.com=jjalvare@kernel.org>
-Subject: Re: [PATCH v1 4/7] powerpc/kernel Add EEH operations to notify resume
-To: Alexey Kardashevskiy <aik@ozlabs.ru>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, alex.williamson@redhat.com, helgaas@kernel.org,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com
-References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
- <20171213153242.98015-5-bryantly@linux.vnet.ibm.com>
- <b2d30341-1945-0331-fb36-d441efc89109@ozlabs.ru>
-From: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
-Date: Mon, 18 Dec 2017 13:29:37 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17384 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752303AbdLHI6n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:58:43 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V4 1/7] of: Export of_pci_range_to_resource()
+Date: Fri, 8 Dec 2017 14:28:07 +0530
+Message-ID: <1512723493-865-2-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <b2d30341-1945-0331-fb36-d441efc89109@ozlabs.ru>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <8e76e076-d003-03e0-2ed9-af445a14e326@linux.vnet.ibm.com>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yes, way less. So our current design only supports less than or equal to
-256 VFs per PF. That is 256*2 bytes.
+Tegra PCIe host driver parses of_pci_range from device tree and converts
+to resource. Export of_pci_range_to_resource() to allow Tegra PCIe host
+driver to be compiled as loadable kernel module.
 
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+V2:
+* commit message update
+V3:
+* no change in this patch
+V4:
+* no change in this patch
 
-On 12/17/17 11:02 PM, Alexey Kardashevskiy wrote:
-> It is kind of assumed that the number of VFs is always less than 2048 minus
-> rtas call parameters (RTAS_DATA_BUF_SIZE==4096 now)?
+ drivers/of/address.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index fa6cabfc3cb9..8d9b93f8701a 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -361,6 +361,7 @@ int of_pci_range_to_resource(struct of_pci_range *range,
+ 	res->end = (resource_size_t)OF_BAD_ADDR;
+ 	return err;
+ }
++EXPORT_SYMBOL(of_pci_range_to_resource);
+ #endif /* CONFIG_PCI */
+ 
+ /*
+-- 
+2.1.4
