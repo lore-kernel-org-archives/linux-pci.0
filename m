@@ -1,184 +1,85 @@
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Return-Path: <SRS0=WhFh=DE=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=WhFh=DE=linux.vnet.ibm.com=bryantly@kernel.org>
+Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
+To: Alexey Kardashevskiy <aik@ozlabs.ru>, helgaas@kernel.org,
+        bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au
 Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
         linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v2 4/7] powerpc/kernel Add EEH operations to notify resume
-Date: Mon, 18 Dec 2017 16:38:05 -0600
-In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20171218223808.83928-5-bryantly@linux.vnet.ibm.com>
+        saeedm@mellanox.com
+References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
+ <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
+ <3a49b44e-833a-8440-aa3c-a4984ac47147@linux.vnet.ibm.com>
+ <466ac4c0-6503-a2eb-e352-d2bdfca10cb5@ozlabs.ru>
+ <9777301b-3807-2b1d-fbd5-ffa62b78d8f5@linux.vnet.ibm.com>
+ <e4b660df-f23d-9f4f-6b1b-d681e4ff8bae@ozlabs.ru>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Date: Fri, 8 Dec 2017 08:52:57 -0600
+MIME-Version: 1.0
+In-Reply-To: <e4b660df-f23d-9f4f-6b1b-d681e4ff8bae@ozlabs.ru>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <daf93824-1f46-a4ab-050d-180cd3765816@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-When pseries SR-IOV is enabled and after a PF driver
-has resumed from EEH, platform has to be notified
-of the event so the child VFs can be allowed to
-resume their normal recovery path.
+On 12/8/17 12:03 AM, Alexey Kardashevskiy wrote:
 
-This patch makes the EEH operation allow unfreeze
-platform dependent code and adds the call to
-pseries EEH code.
+> On 06/12/17 02:13, Bryant G. Ly wrote:
+>>
+>> On 12/4/17 7:24 PM, Alexey Kardashevskiy wrote:
+>>> On 05/12/17 02:08, Bryant G. Ly wrote:
+>>>> On 12/2/17 7:45 PM, Alexey Kardashevskiy wrote:
+>>>>> On 10/11/17 01:00, Bryant G. Ly wrote:
+>>>>>> v1 - Initial patch
+>>>>>> v2 - Addressed Bjorn's comment on creating a highly platform
+>>>>>>      dependent global exported symbol.
+>>>>>> v3 - Based patch off linux-ppc/master
+>>>>>> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
+>>>>>> v5 - Fixed comments and commit message
+>>>>> What is this made against of? I'd like to give it a try but it does not
+>>>>> apply to Linus'es tree or powerpc/next. Thanks.
+>>>>>
+>>>> This was made against powerpc/next back when it was still under 4.14-rc6.
+>>>> It has been in review for awhile... 
+>>> Sure, sha1 or github tree would be enough though to try.
+>> 6cff0a118f23b98c604a3604ea9de11338e24fbe
+>>
+>> or if you want to just use the github tree its:
+>>
+>> https://github.com/powervm/sriov-ppc/tree/upstream
+>
+> Thanks! Looks good, works fine (tried MLX5 wit hpowernv - works, pseries
+> under KVM - prints a nice error instead of crashing),
+>
+> Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>
+>
+Thanks for the review/testing. I will drop the full patch that enables SRIOV on PowerVM next week.
+The patch will require unreleased PHYP and PFW firmware to fully function.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |  1 +
- arch/powerpc/kernel/eeh_driver.c             |  3 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |  3 +-
- arch/powerpc/platforms/pseries/eeh_pseries.c | 90 +++++++++++++++++++++++++++-
- 4 files changed, 95 insertions(+), 2 deletions(-)
+I will include you and Russell to those patches. 
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 82829c65f31a..fd37cc101f4f 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -214,6 +214,7 @@ struct eeh_ops {
- 	int (*write_config)(struct pci_dn *pdn, int where, int size, u32 val);
- 	int (*next_error)(struct eeh_pe **pe);
- 	int (*restore_config)(struct pci_dn *pdn);
-+	int (*notify_resume)(struct pci_dn *pdn);
- };
- 
- extern int eeh_subsystem_flags;
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index 9d4e8177c2e0..ed710076b042 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -385,6 +385,9 @@ static void *eeh_report_resume(void *data, void *userdata)
- 
- 	eeh_pcid_put(dev);
- 	kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
-+#ifdef CONFIG_PCI_IOV
-+	eeh_ops->notify_resume(eeh_dev_to_pdn(edev));
-+#endif
- 	return NULL;
- }
- 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 0665b6d03cb3..33c86c1a1720 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1704,7 +1704,8 @@ static struct eeh_ops pnv_eeh_ops = {
- 	.read_config            = pnv_eeh_read_config,
- 	.write_config           = pnv_eeh_write_config,
- 	.next_error		= pnv_eeh_next_error,
--	.restore_config		= pnv_eeh_restore_config
-+	.restore_config		= pnv_eeh_restore_config,
-+	.notify_resume		= NULL
- };
- 
- #ifdef CONFIG_PCI_IOV
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index c4bc5dd0c6ec..1bae44f30b73 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -743,6 +743,93 @@ static int pseries_eeh_restore_config(struct pci_dn *pdn)
- 	return ret;
- }
- 
-+#ifdef CONFIG_PCI_IOV
-+int pseries_send_allow_unfreeze(struct pci_dn *pdn,
-+				u16 *vf_pe_array, int cur_vfs)
-+{
-+	int rc;
-+	int ibm_allow_unfreeze = rtas_token("ibm,open-sriov-allow-unfreeze");
-+	unsigned long buid, addr;
-+
-+	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
-+	buid = pdn->phb->buid;
-+	spin_lock(&rtas_data_buf_lock);
-+	memcpy(rtas_data_buf, vf_pe_array, RTAS_DATA_BUF_SIZE);
-+	rc = rtas_call(ibm_allow_unfreeze, 5, 1, NULL,
-+		       addr,
-+		       BUID_HI(buid),
-+		       BUID_LO(buid),
-+		       rtas_data_buf, cur_vfs * sizeof(u16));
-+	spin_unlock(&rtas_data_buf_lock);
-+	if (rc)
-+		pr_warn("%s: Failed to allow unfreeze for PHB#%x-PE#%lx, rc=%x\n",
-+			__func__,
-+			pdn->phb->global_number, addr, rc);
-+	return rc;
-+}
-+
-+static int pseries_call_allow_unfreeze(struct eeh_dev *edev)
-+{
-+	struct pci_dn *pdn, *tmp, *parent, *physfn_pdn;
-+	int cur_vfs = 0, rc = 0, vf_index, bus, devfn;
-+	u16 *vf_pe_array;
-+
-+	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
-+	if (!vf_pe_array)
-+		return -ENOMEM;
-+
-+	if (edev->pdev->is_physfn) {
-+		cur_vfs = pci_num_vf(edev->pdev);
-+		pdn = eeh_dev_to_pdn(edev);
-+		parent = pdn->parent;
-+
-+		for (vf_index = 0; vf_index < cur_vfs; vf_index++)
-+			vf_pe_array[vf_index] =
-+				cpu_to_be16(pdn->pe_num_map[vf_index]);
-+		rc = pseries_send_allow_unfreeze(pdn, vf_pe_array, cur_vfs);
-+		pdn->last_allow_rc = rc;
-+		for (vf_index = 0; vf_index < cur_vfs; vf_index++) {
-+			list_for_each_entry_safe(pdn, tmp, &parent->child_list,
-+						 list) {
-+				bus = pci_iov_virtfn_bus(edev->pdev, vf_index);
-+				devfn = pci_iov_virtfn_devfn(edev->pdev,
-+							     vf_index);
-+				if (pdn->busno != bus ||
-+				    pdn->devfn != devfn)
-+					continue;
-+				pdn->last_allow_rc = rc;
-+			}
-+		}
-+	} else {
-+		pdn = pci_get_pdn(edev->pdev);
-+		vf_pe_array[0] = cpu_to_be16(pdn->pe_number);
-+		physfn_pdn = pci_get_pdn(edev->physfn);
-+		rc = pseries_send_allow_unfreeze(physfn_pdn, vf_pe_array, 1);
-+		pdn->last_allow_rc = rc;
-+	}
-+
-+	kfree(vf_pe_array);
-+	return rc;
-+}
-+
-+static int pseries_notify_resume(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+
-+	if (!edev)
-+		return -EEXIST;
-+
-+	if (rtas_token("ibm,open-sriov-allow-unfreeze")
-+	    == RTAS_UNKNOWN_SERVICE)
-+		return -EINVAL;
-+
-+	if (edev->pdev->is_physfn || edev->pdev->is_virtfn)
-+		return pseries_call_allow_unfreeze(edev);
-+
-+	return 0;
-+}
-+#endif
-+
- static struct eeh_ops pseries_eeh_ops = {
- 	.name			= "pseries",
- 	.init			= pseries_eeh_init,
-@@ -758,7 +845,8 @@ static struct eeh_ops pseries_eeh_ops = {
- 	.read_config		= pseries_eeh_read_config,
- 	.write_config		= pseries_eeh_write_config,
- 	.next_error		= NULL,
--	.restore_config		= pseries_eeh_restore_config
-+	.restore_config		= pseries_eeh_restore_config,
-+	.notify_resume		= pseries_notify_resume
- };
- 
- /**
--- 
-2.14.3 (Apple Git-98)
+-Bryant
+
+>
+>>>> -Bryant
+>>>>
+>>>>>> Bryant G. Ly (3):
+>>>>>>   powerpc/kernel: Separate SR-IOV Calls
+>>>>>>   pseries: Add PSeries SR-IOV Machine dependent calls
+>>>>>>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
+>>>>>>
+>>>>>>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
+>>>>>>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
+>>>>>>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
+>>>>>>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
+>>>>>>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
+>>>>>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
+>>>>>>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
+>>>>>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
+>>>>>>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
+>>>>>>  drivers/pci/iov.c                            | 11 ++++++++++
+>>>>>>  include/linux/pci.h                          |  2 ++
+>>>>>>  11 files changed, 118 insertions(+), 33 deletions(-)
+>>>>>>
+>
