@@ -1,47 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:38946 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753012AbdL1JwP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 04:52:15 -0500
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20171228095213epoutp02fdaa08c9c67b23ead503d02fda8e0a08~EbI5hUwee1594315943epoutp02R
-        for <linux-pci@vger.kernel.org>; Thu, 28 Dec 2017 09:52:13 +0000 (GMT)
-Subject: Re: [PATCH] PCI: dwc: designware: don't sleep in atomic context
-To: Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: 'Kishon Vijay Abraham I' <kishon@ti.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Joao Pinto' <Joao.Pinto@synopsys.com>
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-Message-ID: <15081638-4327-3ab2-c240-9b170a1f9c5e@samsung.com>
-Date: Thu, 28 Dec 2017 15:23:10 +0530
-MIME-Version: 1.0
-In-Reply-To: <000301d37a7a$4b9681f0$e2c385d0$@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-References: <CGME20171012075438epcas2p32599c2db4ed1512c81d1039bb1ed5607@epcas2p3.samsung.com>
-        <1507794889-11148-1-git-send-email-pankaj.dubey@samsung.com>
-        <000301d37a7a$4b9681f0$e2c385d0$@gmail.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:38385 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752078AbdLHC4a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 21:56:30 -0500
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Peter Zijlstra <peterz@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@suse.com>,
+        Rafael Wysocki <rjw@rjwysocki.net>,
+        Len Brown <len.brown@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Fengguang Wu <fengguang.wu@intel.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: [PATCH 0/9] remove some of unneeded kallsyms includes
+Date: Fri,  8 Dec 2017 11:56:07 +0900
+Message-Id: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+Hello,
 
+	A small patch set that removes some kallsyms includes
+here and there. Mostly those kallsyms includes are leftovers:
+printk() gained %pS/%pF modifiers support some time ago, so
+print_symbol() and friends became sort of unneeded [along with
+print_fn_descriptor_symbol() deprecation], thus some of the
+users were converted to pS/pF. This patch set just cleans up
+that convertion.
 
-On 12/21/2017 10:09 PM, Jingoo Han wrote:
-> On Thursday, October 12, 2017 3:55 AM, Pankaj Dubey wrote:
->> In pcie-designware.c many places we are calling "usleep_range" which
->> are in atomic context. This patch fixes these potential BUGs and
->> replaces "usleep_range" with mdelay calls.
->>
->> Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> Sorry for my late response.
->
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
->
-> Best regards,
-> Jingoo Han
+	We still have a number of print_symbol() users [which
+must be converted to ps/pf, print_symbol() uses a stack buffer
+KSYM_SYMBOL_LEN to do what printk(ps/pf) can do], but this is
+out of scope.
 
-Thanks for review and Ack. Will resubmit this along with your ack.
+	I compile tested the patch set; but, as always and
+usual, would be great if 0day build robot double check it.
 
-Thanks,
-Pankaj Dubey
+Sergey Senozhatsky (9):
+  sched/autogroup: remove unneeded kallsyms include
+  mm: remove unneeded kallsyms include
+  power: remove unneeded kallsyms include
+  pci: remove unneeded kallsyms include
+  pnp: remove unneeded kallsyms include
+  mm: remove unneeded kallsyms include
+  workqueue: remove unneeded kallsyms include
+  hrtimer: remove unneeded kallsyms include
+  genirq: remove unneeded kallsyms include
+
+ drivers/base/power/main.c | 1 -
+ drivers/pci/quirks.c      | 1 -
+ drivers/pnp/quirks.c      | 1 -
+ kernel/irq/spurious.c     | 1 -
+ kernel/sched/autogroup.c  | 1 -
+ kernel/time/hrtimer.c     | 1 -
+ kernel/workqueue.c        | 1 -
+ mm/memory.c               | 4 ----
+ mm/vmalloc.c              | 1 -
+ 9 files changed, 12 deletions(-)
+
+-- 
+2.15.1
