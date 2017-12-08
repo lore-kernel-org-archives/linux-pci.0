@@ -1,84 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:56020 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756191AbdLONWM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 08:22:12 -0500
-Date: Fri, 15 Dec 2017 13:22:52 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Johan Hovold <johan@kernel.org>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        stable <stable@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: keystone: fix interrupt-controller-node lookup
-Message-ID: <20171215132252.GA30737@red-moon>
-References: <20171117133831.1300-1-johan@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171117133831.1300-1-johan@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171208163710.GB24344@atomide.com>
+References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
+ <1894178.xtK0vD2N4H@aspire.rjw.lan> <20171114025109.GA43048@google.com>
+ <1882670.s3LR2t44nD@aspire.rjw.lan> <20171206193421.GA143886@google.com>
+ <20171207001754.GB28152@atomide.com> <20171207002955.GA40447@google.com> <20171208163710.GB24344@atomide.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 8 Dec 2017 18:12:42 +0100
+Message-ID: <CAJZ5v0jSOG-dQ27wSA9DXaBj2ae_KSC21VUhsBdxQc68EEOcKg@mail.gmail.com>
+Subject: Re: [RFC PATCH v10 6/7] PCI / PM: Move acpi wakeup code to pci core
+To: Tony Lindgren <tony@atomide.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PM <linux-pm@vger.kernel.org>, shawn.lin@rock-chips.com,
+        Doug Anderson <dianders@chromium.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Len Brown <lenb@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 17, 2017 at 02:38:31PM +0100, Johan Hovold wrote:
-> Fix child-node lookup during initialisation which was using the wrong
-> OF-helper and ended up searching the whole device tree depth-first
-> starting at the parent rather than just matching on its children.
-> 
-> To make things worse, the parent pci node could end up being prematurely
-> freed as of_find_node_by_name() drops a reference to its first argument.
-> Any matching child interrupt-controller node was also leaked.
-> 
-> Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
-> Cc: stable <stable@vger.kernel.org>     # 3.18
-> Acked-by: Murali Karicheri <m-karicheri2@ti.com>
-> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Johan Hovold <johan@kernel.org>
-> ---
+On Fri, Dec 8, 2017 at 5:37 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Brian Norris <briannorris@chromium.org> [171207 00:32]:
+>> On Wed, Dec 06, 2017 at 04:17:54PM -0800, Tony Lindgren wrote:
+>> > * Brian Norris <briannorris@chromium.org> [171206 19:36]:
+>> > > By the way, it seems pretty ambiguous how we want to handle things like
+>> > > (a) multiple devices sharing the same WAKE#
+>> > > (b) systems where a slot is swappable
+>> > >
+>> > > For (a), the main problem is that if we have to repeat the interrupt
+>> > > definition in multiple devices, then we have to deal with something like
+>> > > IRQF_SHARED. That can be done, but it makes it much harder to use the
+>> > > dedicated wakeirq helpers.
+>> >
+>> > This will get messy, let's not go there :) That is unless the hardware
+>> > really has a single interrupt wired to multiple devices. And in that
+>> > case almost certainly a custom interrupt handler is needed.
+>>
+>> As Rafael mentioned, the spec doesn't clearly delineate a required
+>> hierarchy to the WAKE# pin, and it's certainly possible to share it. I'm
+>> fine dodging that question for now, and only writing said custom
+>> interrupt handler if/when needed.
+>
+> OK if the WAKE# pin is shared then PCI (or hardware specific?) code needs
+> to figure out from where it came from.
 
-Applied to pci/keystone for v4.16.
+Right.
 
-Thanks,
-Lorenzo
+Basically, that would need a list (or equivalent) of devices sharing
+the wakeup IRQ and if that triggers, it needs to walk the list and
+call pci_pme_wakeup() for all devices in it.
 
-> v2
->  - amend commit message and mention explicitly that of_find_node_by_name()
->    drops a reference to the start node
->  - add Murali's and Lorenzo's acks
-> 
-> 
->  drivers/pci/dwc/pci-keystone.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-> index 5bee3af47588..39405598b22d 100644
-> --- a/drivers/pci/dwc/pci-keystone.c
-> +++ b/drivers/pci/dwc/pci-keystone.c
-> @@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
->  	}
->  
->  	/* interrupt controller is in a child node */
-> -	*np_temp = of_find_node_by_name(np_pcie, controller);
-> +	*np_temp = of_get_child_by_name(np_pcie, controller);
->  	if (!(*np_temp)) {
->  		dev_err(dev, "Node for %s is absent\n", controller);
->  		return -EINVAL;
-> @@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
->  	temp = of_irq_count(*np_temp);
->  	if (!temp) {
->  		dev_err(dev, "No IRQ entries in %s\n", controller);
-> +		of_node_put(*np_temp);
->  		return -EINVAL;
->  	}
->  
-> @@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
->  			break;
->  	}
->  
-> +	of_node_put(*np_temp);
-> +
->  	if (temp) {
->  		*num_irqs = temp;
->  		return 0;
-> -- 
-> 2.15.0
-> 
+>> But device tree bindings are "forever", so it seems reasonable to at
+>> least agree how it should be defined.
+>
+> Well that's why we're just using the existing interrupts-extended
+> binding there :) It does not leave out the option for shared interrupts,
+> it's just that drivers/base/power/wakeirq.c can't deal with them in a
+> sane way or at least we'd have to add a flag to not enable/disable the
+> wakeirq automatically.
+
+I think that the binding needs to be sort-of PCI-specific to cover the
+shared case.
+
+I'm not sure if there are any other buses needing that (they would
+need to define standard PM registers as PCI does).
