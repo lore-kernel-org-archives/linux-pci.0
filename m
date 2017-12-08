@@ -1,137 +1,148 @@
-Return-Path: <SRS0=vD3+=DC=xenosoft.de=chzigotzky@kernel.org>
-Return-Path: <SRS0=vD3+=DC=xenosoft.de=chzigotzky@kernel.org>
-Subject: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
-From: Christian Zigotzky <chzigotzky@xenosoft.de>
-To: Olof Johansson <olof@lixom.net>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Darren Stevens <darren@stevens-zone.net>, Bjorn Helgaas
- <helgaas@kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-References: <87tvxl15qx.fsf@concordia.ellerman.id.au>
- <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
- <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
- <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
- <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
- <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
- <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
- <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
- <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
- <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de>
- <20171202230052.34y2ivxgpgr3osct@localhost>
- <CAOesGMhfMpt+xG1vhVHU+O5o4W5y2S5mZyn9tp+CPn9G6XrNVA@mail.gmail.com>
- <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de>
-Message-ID: <1d5276c3-1d29-114a-c868-6f022eee58e7@xenosoft.de>
-Date: Wed, 6 Dec 2017 09:37:39 +0100
-MIME-Version: 1.0
-In-Reply-To: <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de>
-Content-Type: multipart/mixed;
- boundary="------------49430AA4B75205C66C8FB399"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
+Date: Fri, 08 Dec 2017 02:34:25 -0700
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Govinda Tatti" <Govinda.Tatti@Oracle.COM>
+Cc: <roger.pau@citrix.com>, <bhelgaas@google.com>,
+        <xen-devel@lists.xenproject.org>, <boris.ostrovsky@Oracle.COM>,
+        <konrad.wilk@Oracle.COM>, "Juergen Gross" <jgross@suse.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH V3 2/2] Xen/PCIback: Implement PCI flr/slot/bus
+ reset with 'reset' SysFS attribute
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
+In-Reply-To: <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------49430AA4B75205C66C8FB399
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+>>> On 07.12.17 at 23:21, <Govinda.Tatti@Oracle.COM> wrote:
+> Due to the complexity with the PCI lock we cannot do the reset when a
+> device is bound ('echo $BDF > bind') or when unbound ('echo $BDF > unbind')
+> as the pci_[slot|bus]_reset also takes the same lock resulting in a
+> dead-lock.
 
-On 03 December 2017 10:43AM, Christian Zigotzky wrote:
- >
- > On 3. Dec 2017, at 00:02, Olof Johansson <olof@lixom.net> wrote:
- >>
- >>> On Sat, Dec 2, 2017 at 3:00 PM, Olof Johansson <olof@lixom.net> wrote:
- >>>
- >>> The below patch, together with Bjorn's, should do it. Christian, 
-can you test
- >>> and report back?
- >>>
- >>> I'm guessing it won't do any harm to set this on non-X1000 
-platforms. My
- >>> test system is currently powered down so I can't check.
- >>>
- >>>
- >>> From a3b390277627b0342c8ccfc16e58679e0d8abdde Mon Sep 17 00:00:00 2001
- >>> From: Olof Johansson <olof@lixom.net>
- >>> Date: Sat, 2 Dec 2017 14:56:36 -0800
- >>> Subject: [PATCH] powerpc/pasemi: set PCI_SCAN_ALL_PCI_DEVS
- >>>
- >>> Needed on Amiga X1000 with SB600.
- >>>
- >>> Reported-by: Christian Zigotzky <chzigotzky@xenosoft.de>
- >>> Cc: Bjorn Helgaas <bhelgaas@google.com>
- >>> Signed-off-by: Olof Johansson <olof@lixom.net>
- >>> ---
- >>> arch/powerpc/platforms/pasemi/pci.c | 2 ++
- >>> 1 file changed, 2 insertions(+)
- >>>
- >>> diff --git a/arch/powerpc/platforms/pasemi/pci.c 
-b/arch/powerpc/platforms/pasemi/pci.c
- >>> index 5ff6108..ea54ed2 100644
- >>> --- a/arch/powerpc/platforms/pasemi/pci.c
- >>> +++ b/arch/powerpc/platforms/pasemi/pci.c
- >>> @@ -224,6 +224,8 @@ void __init pas_pci_init(void)
- >>>                return;
- >>>        }
- >>>
- >>> +       pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS):
- >>
- >> Typo, should be ';', not ':'. I obviously didn't even try compiling 
-this. :)
- >>
- >>
- >> -Olof
- >
- > Hi Olof,
- >
- > Thanks a lot for your patch! I will test it on Wednesday.
- >
- > Cheers,
- > Christian
+It took me a moment to figure that here you're referring to the
+process of (un)binding, not the state. To avoid that ambiguity in
+wording, how about "... we cannot do the reset while a device is
+being bound (...) or while it is being unbound ..."?
 
+> --- a/Documentation/ABI/testing/sysfs-driver-pciback
+> +++ b/Documentation/ABI/testing/sysfs-driver-pciback
+> @@ -11,3 +11,18 @@ Description:
+>                  #echo 00:19.0-E0:2:FF > /sys/bus/pci/drivers/pciback/quirks
+>                  will allow the guest to read and write to the configuration
+>                  register 0x0E.
+> +
+> +What:           /sys/bus/pci/drivers/pciback/reset
+> +Date:           Dec 2017
+> +KernelVersion:  4.15
+> +Contact:        xen-devel@lists.xenproject.org 
+> +Description:
+> +                An option to perform a flr/slot/bus reset when a PCI device
+> +		is owned by Xen PCI backend. Writing a string of DDDD:BB:DD.F
 
-Hi Olof,
+SSSS:BB:DD.F (or else the D-s are ambiguous, the more that "domain"
+in Xen code is ambiguous anyway - I continue to be mislead by struct
+pcistub_device_id's domain field)
 
-I tested your patch today. Unfortunately the kernel 4.15-rc2 doesn't 
-compile with your patch.
+Also I assume the SSSS part is optional (default zero), which
+probably can and should be expressed in some way.
 
-Error messages:
+> --- a/drivers/xen/xen-pciback/pci_stub.c
+> +++ b/drivers/xen/xen-pciback/pci_stub.c
+> @@ -313,6 +313,102 @@ void pcistub_put_pci_dev(struct pci_dev *dev)
+>  	up_write(&pcistub_sem);
+>  }
+>  
+> +struct pcistub_args {
+> +	const struct pci_dev *dev;
+> +	unsigned int dcount;
 
-                        ^~~~~~~~~
-arch/powerpc/platforms/pasemi/pci.c: In function ‘pas_pci_init’:
-arch/powerpc/platforms/pasemi/pci.c:298:2: error: implicit declaration 
-of function ‘pci_set_flag’ [-Werror=implicit-function-declaration]
-   pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS);
-   ^~~~~~~~~~~~
-cc1: some warnings being treated as errors
+The sole use of this field is for a debug message. Why not drop it
+and make "dev" the "data" argument without further indirection?
 
----
+> +static int pcistub_device_search(struct pci_dev *dev, void *data)
+> +{
+> +	struct pcistub_device *psdev;
+> +	struct pcistub_args *arg = data;
+> +	bool found = false;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&pcistub_devices_lock, flags);
+> +
+> +	list_for_each_entry(psdev, &pcistub_devices, dev_list) {
+> +		if (psdev->dev == dev) {
+> +			found = true;
+> +			arg->dcount++;
+> +			break;
 
-I figured out that we need 'pci_set_flags' instead of 'pci_set_flag'. I 
-modified your patch and after that the kernel compiles. Please find 
-attached the new patch.
+Neither here nor in the caller I can see a check whether the device
+is currently assigned to a guest. Ownership by pciback alone imo is
+not sufficient to allow a reset to be performed.
 
-Cheers,
-Christian
+> +static int pcistub_device_reset(struct pci_dev *dev)
+> +{
+> +	struct xen_pcibk_dev_data *dev_data;
+> +	bool slot = false, bus = false;
+> +	struct pcistub_args arg = {};
+> +
+> +	if (!dev)
+> +		return -EINVAL;
+> +
+> +	dev_dbg(&dev->dev, "[%s]\n", __func__);
+> +
+> +	/* First check and try FLR */
+> +	if (pcie_has_flr(dev)) {
+> +		dev_dbg(&dev->dev, "resetting %s device using FLR\n",
+> +			pci_name(dev));
+> +		pcie_flr(dev);
 
---------------49430AA4B75205C66C8FB399
-Content-Type: text/x-patch;
- name="pci.c.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="pci.c.patch"
+The lack of error check here puzzled me, but I see the function
+indeed returns void right now. I think the prereq patch should
+change this along with exporting the function - you really don't
+want the device to be handed to a guest when the FLR timed
+out.
 
-arch/powerpc/platforms/pasemi/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+> +		return 0;
+> +	}
+> +
+> +	if (!pci_probe_reset_slot(dev->slot))
+> +		slot = true;
+> +	else if ((!pci_probe_reset_bus(dev->bus)) &&
+> +		 (!pci_is_root_bus(dev->bus)))
 
-diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
-index 5ff6108..ea54ed2 100644
---- a/arch/powerpc/platforms/pasemi/pci.c
-+++ b/arch/powerpc/platforms/pasemi/pci.c
-@@ -224,6 +224,8 @@ void __init pas_pci_init(void)
- 		return;
- 	}
- 
-+	pci_set_flags(PCI_SCAN_ALL_PCIE_DEVS);
-+
- 	for (np = NULL; (np = of_get_next_child(root, np)) != NULL;)
- 		if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
- 			of_node_get(np);
+Too many parentheses for my taste.
 
---------------49430AA4B75205C66C8FB399--
+> +static ssize_t reset_store(struct device_driver *drv, const char *buf,
+> +			   size_t count)
+> +{
+> +	struct pcistub_device *psdev;
+> +	int domain, bus, slot, func;
+> +	int err;
+> +
+> +	err = str_to_slot(buf, &domain, &bus, &slot, &func);
+> +	if (err)
+> +		return err;
+> +
+> +	psdev = pcistub_device_find(domain, bus, slot, func);
+> +	if (psdev) {
+> +		err = pcistub_device_reset(psdev->dev);
+> +		pcistub_device_put(psdev);
+> +	} else {
+> +		err = -ENODEV;
+> +	}
+> +
+> +	if (!err)
+> +		err = count;
+> +
+> +	return err;
+> +}
+> +static DRIVER_ATTR_WO(reset);
+
+Would it be worth for reads of the file to return whether the device
+can be reset this way (i.e. the result of the checks you do before
+actually doing the reset)?
+
+Jan
