@@ -1,75 +1,51 @@
-Return-Path: <SRS0=qZKk=DR=linux.vnet.ibm.com=jjalvare@kernel.org>
-Return-Path: <SRS0=qZKk=DR=linux.vnet.ibm.com=jjalvare@kernel.org>
-Subject: Re: [PATCH v2 2/7] powerpc/kernel: Add uevents in EEH error/resume
-To: Russell Currey <ruscur@russell.cc>, Bjorn Helgaas <helgaas@kernel.org>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-        seroyer@linux.vnet.ibm.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Dongdong Liu <liudongdong3@huawei.com>
-References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
- <20171218223808.83928-3-bryantly@linux.vnet.ibm.com>
- <20171219045009.GC14941@bhelgaas-glaptop.roam.corp.google.com>
- <1513659576.2151.6.camel@russell.cc>
-From: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
-Date: Wed, 20 Dec 2017 21:04:10 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:42150 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753545AbdLHLUx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 06:20:53 -0500
+Date: Fri, 8 Dec 2017 20:20:48 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@suse.com>,
+        Rafael Wysocki <rjw@rjwysocki.net>,
+        Len Brown <len.brown@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: Re: [PATCH 1/9] sched/autogroup: remove unneeded kallsyms include
+Message-ID: <20171208112048.GH628@jagdpanzerIV>
+References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
+ <20171208025616.16267-2-sergey.senozhatsky@gmail.com>
+ <20171208105611.rcoxze4erxkpimad@hirez.programming.kicks-ass.net>
 MIME-Version: 1.0
-In-Reply-To: <1513659576.2151.6.camel@russell.cc>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <cb6afad3-b0f9-f60c-eeaf-7f0aec88f7ef@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171208105611.rcoxze4erxkpimad@hirez.programming.kicks-ass.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/18/17 10:59 PM, Russell Currey wrote:
+On (12/08/17 11:56), Peter Zijlstra wrote:
+> On Fri, Dec 08, 2017 at 11:56:08AM +0900, Sergey Senozhatsky wrote:
+> > Autogroup does not seem to use any of kallsyms functions/defines.
+> > 
+> > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+> > Cc: Peter Zijlstra <peterz@infradead.org>
+> 
+> Feel free to take this through whatever tree you need this in.
+> 
+> Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 
-> On Mon, 2017-12-18 at 22:50 -0600, Bjorn Helgaas wrote:
->> [+cc Keith, Gabriele, Dongdong]
->>
->> On Mon, Dec 18, 2017 at 04:38:03PM -0600, Bryant G. Ly wrote:
->>> Devices can go offline when EEH is reported. This patch adds
->>> a change to the kernel object and lets udev know of error.
->>> When device resumes a change is also set reporting device as
->>> online. Therefore, EEH events are better propagated to user
->>> space for devices in powerpc arch.
->> I'm on vacation and can't review this in detail, but I wonder if you
->> can compare this with the uevents we emit for DPC, AER, and hotplug
->> events (if any).  I hope we don't end up with userspace having to be
->> aware of the differences between EEH, DPC, AER, etc.
->>
->> From a very quick look, I only see a few uevents even mentioned in
->> drivers/pci: KOBJ_ADD in __pci_hp_register() and KOBJ_CHANGE in the
->> SR-IOV code.  I'm worried that we're missing some important uevents
->> in
->> the PCI core.  
+Thanks!
 
-The only place where I see the KOBJ_REMOVE being used is when the device is 
-removed in pci_destroy_dev -> device_del whic will be called implicitly
-in permanent failure path of EEH code
 
->> That's not an argument against what you're doing here;
->> it just would be nice to fill in any missing pieces in the core also,
->> and hopefully make them consistent with these EEH events.
-> I don't think this needs to be particularly complex, could we get away
-> with events for when devices do the following?
->
-> - begin recovery
-> - successfully recover
-> - fail recovery
+Petr, let's pick up sched/autogroup patches then. Thank you.
 
-If there are no objections in the on going review of this patch 
-I can change them to these names:
-
-  - BEGIN_RECOVERY
-  - SUCCESSFUL_RECOVERY
-  - FAILED_RECOVERY
-
->
-> It might be worthwhile sorting out some consistent, non-EEH-specific
-> naming, and then other device error recovery systems can do the same
-> later.
->
-Do you have a more consistent naming in mind for these events? 
-
-- Juan
+	-ss
