@@ -1,302 +1,356 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:50550 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752428AbdL2JXw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 04:23:52 -0500
-Subject: Re: [PATCH v2 7/9] PCI: endpoint: Add the function number as argument
- to EPC ops
-To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>
-References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
- <425171aaba3a9e8ea68b9e94f37b1c97e8cf9861.1513620412.git.cyrille.pitchen@free-electrons.com>
-CC: <adouglas@cadence.com>, <stelford@cadence.com>,
-        <dgary@cadence.com>, <kgopi@cadence.com>, <eandrews@cadence.com>,
-        <thomas.petazzoni@free-electrons.com>, <sureshp@cadence.com>,
-        <nsekhar@ti.com>, <linux-kernel@vger.kernel.org>,
-        <robh@kernel.org>, <devicetree@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ca8f5a74-3db5-87f4-3af5-ed5ee0d3b634@ti.com>
-Date: Fri, 29 Dec 2017 14:53:37 +0530
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:12025 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752303AbdLHI7K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:59:10 -0500
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
+        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
+CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
+        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
+        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V4 7/7] PCI: tegra: Add power management support
+Date: Fri, 8 Dec 2017 14:28:13 +0530
+Message-ID: <1512723493-865-8-git-send-email-mmaddireddy@nvidia.com>
+In-Reply-To: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <425171aaba3a9e8ea68b9e94f37b1c97e8cf9861.1513620412.git.cyrille.pitchen@free-electrons.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Tegra186 powergate driver is implemented as power domain driver, power
+partition ungate/gate are registered as power_on/power_off callback
+functions. There are no direct functions to power gate/ungate host
+controller in Tegra186. Host controller driver should add "power-domains"
+property in device tree and implement runtime suspend and resume
+callback functons. Power gate and ungate is taken care by power domain
+driver when host controller driver calls pm_runtime_put_sync and
+pm_runtime_get_sync respectively.
 
-On Monday 18 December 2017 11:46 PM, Cyrille Pitchen wrote:
-> This patch updates the prototype of most handlers from 'struct
-> pci_epc_ops' so the EPC library can now support multi-function devices.
-> 
-> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-> ---
->  drivers/pci/dwc/pcie-designware-ep.c          | 20 +++++----
->  drivers/pci/endpoint/functions/pci-epf-test.c | 41 ++++++++++--------
->  drivers/pci/endpoint/pci-epc-core.c           | 62 ++++++++++++++++-----------
->  include/linux/pci-epc.h                       | 43 +++++++++++--------
->  4 files changed, 96 insertions(+), 70 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index d53d5f168363..7a573d8bb62d 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -39,7 +39,7 @@ static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->  	dw_pcie_writel_dbi(pci, reg, 0x0);
->  }
->  
-> -static int dw_pcie_ep_write_header(struct pci_epc *epc,
-> +static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
->  				   struct pci_epf_header *hdr)
->  {
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> @@ -112,7 +112,8 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
->  	return 0;
->  }
->  
-> -static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
-> +static void dw_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
-> +				 enum pci_barno bar)
->  {
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
->  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> @@ -124,7 +125,8 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
->  	clear_bit(atu_index, &ep->ib_window_map);
->  }
->  
-> -static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
-> +static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
-> +			      enum pci_barno bar,
->  			      dma_addr_t bar_phys, size_t size, int flags)
->  {
->  	int ret;
-> @@ -163,7 +165,8 @@ static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
->  	return -EINVAL;
->  }
->  
-> -static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
-> +static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no,
-> +				  phys_addr_t addr)
->  {
->  	int ret;
->  	u32 atu_index;
-> @@ -178,7 +181,8 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
->  	clear_bit(atu_index, &ep->ob_window_map);
->  }
->  
-> -static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
-> +static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
-> +			       phys_addr_t addr,
->  			       u64 pci_addr, size_t size)
->  {
->  	int ret;
-> @@ -194,7 +198,7 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
->  	return 0;
->  }
->  
-> -static int dw_pcie_ep_get_msi(struct pci_epc *epc)
-> +static int dw_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
->  {
->  	int val;
->  	u32 lower_addr;
-> @@ -214,7 +218,7 @@ static int dw_pcie_ep_get_msi(struct pci_epc *epc)
->  	return val;
->  }
->  
-> -static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
-> +static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 encode_int)
->  {
->  	int val;
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> @@ -226,7 +230,7 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
->  	return 0;
->  }
->  
-> -static int dw_pcie_ep_raise_irq(struct pci_epc *epc,
-> +static int dw_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
->  				enum pci_epc_irq_type type, u8 interrupt_num)
->  {
->  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index f9308c2f22e6..7bacca8daec6 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -104,7 +104,8 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
->  		goto err;
->  	}
->  
-> -	ret = pci_epc_map_addr(epc, src_phys_addr, reg->src_addr, reg->size);
-> +	ret = pci_epc_map_addr(epc, epf->func_no, src_phys_addr, reg->src_addr,
-> +			       reg->size);
->  	if (ret) {
->  		dev_err(dev, "failed to map source address\n");
->  		reg->status = STATUS_SRC_ADDR_INVALID;
-> @@ -119,7 +120,8 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
->  		goto err_src_map_addr;
->  	}
->  
-> -	ret = pci_epc_map_addr(epc, dst_phys_addr, reg->dst_addr, reg->size);
-> +	ret = pci_epc_map_addr(epc, epf->func_no, dst_phys_addr, reg->dst_addr,
-> +			       reg->size);
->  	if (ret) {
->  		dev_err(dev, "failed to map destination address\n");
->  		reg->status = STATUS_DST_ADDR_INVALID;
-> @@ -128,13 +130,13 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
->  
->  	memcpy(dst_addr, src_addr, reg->size);
->  
-> -	pci_epc_unmap_addr(epc, dst_phys_addr);
-> +	pci_epc_unmap_addr(epc, epf->func_no, dst_phys_addr);
->  
->  err_dst_addr:
->  	pci_epc_mem_free_addr(epc, dst_phys_addr, dst_addr, reg->size);
->  
->  err_src_map_addr:
-> -	pci_epc_unmap_addr(epc, src_phys_addr);
-> +	pci_epc_unmap_addr(epc, epf->func_no, src_phys_addr);
->  
->  err_src_addr:
->  	pci_epc_mem_free_addr(epc, src_phys_addr, src_addr, reg->size);
-> @@ -164,7 +166,8 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
->  		goto err;
->  	}
->  
-> -	ret = pci_epc_map_addr(epc, phys_addr, reg->src_addr, reg->size);
-> +	ret = pci_epc_map_addr(epc, epf->func_no, phys_addr, reg->src_addr,
-> +			       reg->size);
->  	if (ret) {
->  		dev_err(dev, "failed to map address\n");
->  		reg->status = STATUS_SRC_ADDR_INVALID;
-> @@ -186,7 +189,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
->  	kfree(buf);
->  
->  err_map_addr:
-> -	pci_epc_unmap_addr(epc, phys_addr);
-> +	pci_epc_unmap_addr(epc, epf->func_no, phys_addr);
->  
->  err_addr:
->  	pci_epc_mem_free_addr(epc, phys_addr, src_addr, reg->size);
-> @@ -215,7 +218,8 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
->  		goto err;
->  	}
->  
-> -	ret = pci_epc_map_addr(epc, phys_addr, reg->dst_addr, reg->size);
-> +	ret = pci_epc_map_addr(epc, epf->func_no, phys_addr, reg->dst_addr,
-> +			       reg->size);
->  	if (ret) {
->  		dev_err(dev, "failed to map address\n");
->  		reg->status = STATUS_DST_ADDR_INVALID;
-> @@ -242,7 +246,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
->  	kfree(buf);
->  
->  err_map_addr:
-> -	pci_epc_unmap_addr(epc, phys_addr);
-> +	pci_epc_unmap_addr(epc, epf->func_no, phys_addr);
->  
->  err_addr:
->  	pci_epc_mem_free_addr(epc, phys_addr, dst_addr, reg->size);
-> @@ -260,11 +264,11 @@ static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test, u8 irq)
->  	struct pci_epf_test_reg *reg = epf_test->reg[test_reg_bar];
->  
->  	reg->status |= STATUS_IRQ_RAISED;
-> -	msi_count = pci_epc_get_msi(epc);
-> +	msi_count = pci_epc_get_msi(epc, epf->func_no);
->  	if (irq > msi_count || msi_count <= 0)
-> -		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-> +		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_LEGACY, 0);
->  	else
-> -		pci_epc_raise_irq(epc, PCI_EPC_IRQ_MSI, irq);
-> +		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
->  }
->  
->  static void pci_epf_test_cmd_handler(struct work_struct *work)
-> @@ -291,7 +295,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  
->  	if (command & COMMAND_RAISE_LEGACY_IRQ) {
->  		reg->status = STATUS_IRQ_RAISED;
-> -		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-> +		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_LEGACY, 0);
->  		goto reset_handler;
->  	}
->  
-> @@ -326,11 +330,11 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
->  	}
->  
->  	if (command & COMMAND_RAISE_MSI_IRQ) {
-> -		msi_count = pci_epc_get_msi(epc);
-> +		msi_count = pci_epc_get_msi(epc, epf->func_no);
->  		if (irq > msi_count || msi_count <= 0)
->  			goto reset_handler;
->  		reg->status = STATUS_IRQ_RAISED;
-> -		pci_epc_raise_irq(epc, PCI_EPC_IRQ_MSI, irq);
-> +		pci_epc_raise_irq(epc, epf->func_no, PCI_EPC_IRQ_MSI, irq);
->  		goto reset_handler;
->  	}
->  
-> @@ -358,7 +362,7 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
->  	for (bar = BAR_0; bar <= BAR_5; bar++) {
->  		if (epf_test->reg[bar]) {
->  			pci_epf_free_space(epf, epf_test->reg[bar], bar);
-> -			pci_epc_clear_bar(epc, bar);
-> +			pci_epc_clear_bar(epc, epf->func_no, bar);
->  		}
->  	}
->  }
-> @@ -380,7 +384,8 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
->  
->  	for (bar = BAR_0; bar <= BAR_5; bar++) {
->  		epf_bar = &epf->bar[bar];
-> -		ret = pci_epc_set_bar(epc, bar, epf_bar->phys_addr,
-> +		ret = pci_epc_set_bar(epc, epf->func_no, bar,
-> +				      epf_bar->phys_addr,
->  				      epf_bar->size, flags);
->  		if (ret) {
->  			pci_epf_free_space(epf, epf_test->reg[bar], bar);
-> @@ -433,7 +438,7 @@ static int pci_epf_test_bind(struct pci_epf *epf)
->  	if (WARN_ON_ONCE(!epc))
->  		return -EINVAL;
->  
-> -	ret = pci_epc_write_header(epc, header);
-> +	ret = pci_epc_write_header(epc, epf->func_no, header);
->  	if (ret) {
->  		dev_err(dev, "configuration header write failed\n");
->  		return ret;
-> @@ -447,7 +452,7 @@ static int pci_epf_test_bind(struct pci_epf *epf)
->  	if (ret)
->  		return ret;
->  
-> -	ret = pci_epc_set_msi(epc, epf->msi_interrupts);
-> +	ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
->  	if (ret)
->  		return ret;
->  
-> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-> index cd7d4788b94d..77420364a728 100644
-> --- a/drivers/pci/endpoint/pci-epc-core.c
-> +++ b/drivers/pci/endpoint/pci-epc-core.c
-> @@ -141,25 +141,26 @@ EXPORT_SYMBOL_GPL(pci_epc_start);
->  /**
->   * pci_epc_raise_irq() - interrupt the host system
->   * @epc: the EPC device which has to interrupt the host
-> + * @func_no: the endpoint function number in the EPC device
->   * @type: specify the type of interrupt; legacy or MSI
->   * @interrupt_num: the MSI interrupt number
->   *
->   * Invoke to raise an MSI or legacy interrupt
->   */
-> -int pci_epc_raise_irq(struct pci_epc *epc, enum pci_epc_irq_type type,
-> -		      u8 interrupt_num)
-> +int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no,
-> +		      enum pci_epc_irq_type type, u8 interrupt_num)
->  {
->  	int ret;
->  	unsigned long flags;
->  
-> -	if (IS_ERR(epc))
-> +	if (IS_ERR(epc) || func_no > BAR_5)
+Register suspend_noirq & resume_noirq callback functions to allow PCIe to
+come up after resume from RAM. Both runtime and noirq pm ops share same
+callback functions.
 
-why is function number compared with BAR? here and everywhere below..
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+---
+V2:
+* no change in this patch
+V3:
+* no change in this patch
+V4:
+* no change in this patch
 
-Thanks
-Kishon
+ drivers/pci/host/pci-tegra.c | 174 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 106 insertions(+), 68 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 1972081322c4..534cb4fccbbc 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1385,31 +1385,25 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 		}
+ 	}
+ 
+-	err = tegra_pcie_power_on(pcie);
+-	if (err) {
+-		dev_err(dev, "failed to power up: %d\n", err);
+-		goto phys_put;
+-	}
+-
+ 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
+ 	pcie->pads = devm_ioremap_resource(dev, pads);
+ 	if (IS_ERR(pcie->pads)) {
+ 		err = PTR_ERR(pcie->pads);
+-		goto poweroff;
++		goto phys_put;
+ 	}
+ 
+ 	afi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "afi");
+ 	pcie->afi = devm_ioremap_resource(dev, afi);
+ 	if (IS_ERR(pcie->afi)) {
+ 		err = PTR_ERR(pcie->afi);
+-		goto poweroff;
++		goto phys_put;
+ 	}
+ 
+ 	/* request configuration space, but remap later, on demand */
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cs");
+ 	if (!res) {
+ 		err = -EADDRNOTAVAIL;
+-		goto poweroff;
++		goto phys_put;
+ 	}
+ 
+ 	axi_addr = pcie->soc->use_4k_conf_space ?
+@@ -1417,21 +1411,21 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 	pcie->cs = devm_request_mem_region(dev, axi_addr, SZ_4K, res->name);
+ 	if (!pcie->cs) {
+ 		err = -EADDRNOTAVAIL;
+-		goto poweroff;
++		goto phys_put;
+ 	}
+ 
+ 	pcie->cfg_va_base = devm_ioremap(dev, pcie->cs->start, SZ_4K);
+ 	if (!pcie->cfg_va_base) {
+ 		dev_err(pcie->dev, "failed to ioremap config space\n");
+ 		err = -EADDRNOTAVAIL;
+-		goto poweroff;
++		goto phys_put;
+ 	}
+ 
+ 	/* request interrupt */
+ 	err = platform_get_irq_byname(pdev, "intr");
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to get IRQ: %d\n", err);
+-		goto poweroff;
++		goto phys_put;
+ 	}
+ 
+ 	pcie->irq = err;
+@@ -1439,13 +1433,11 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 	err = request_irq(pcie->irq, tegra_pcie_isr, IRQF_SHARED, "PCIE", pcie);
+ 	if (err) {
+ 		dev_err(dev, "failed to register IRQ: %d\n", err);
+-		goto poweroff;
++		goto phys_put;
+ 	}
+ 
+ 	return 0;
+ 
+-poweroff:
+-	tegra_pcie_power_off(pcie);
+ phys_put:
+ 	if (soc->program_uphy)
+ 		tegra_pcie_phys_put(pcie);
+@@ -1459,8 +1451,6 @@ static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
+ 	if (pcie->irq > 0)
+ 		free_irq(pcie->irq, pcie);
+ 
+-	tegra_pcie_power_off(pcie);
+-
+ 	if (soc->program_uphy)
+ 		tegra_pcie_phys_put(pcie);
+ 
+@@ -1638,37 +1628,41 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+ 	int err;
+ 	u32 reg;
+ 
+-	mutex_init(&msi->lock);
++	if (!msi->phys) {
++		mutex_init(&msi->lock);
+ 
+-	msi->chip.dev = dev;
+-	msi->chip.setup_irq = tegra_msi_setup_irq;
+-	msi->chip.teardown_irq = tegra_msi_teardown_irq;
++		msi->chip.dev = dev;
++		msi->chip.setup_irq = tegra_msi_setup_irq;
++		msi->chip.teardown_irq = tegra_msi_teardown_irq;
+ 
+-	msi->domain = irq_domain_add_linear(dev->of_node, INT_PCI_MSI_NR,
+-					    &msi_domain_ops, &msi->chip);
+-	if (!msi->domain) {
+-		dev_err(dev, "failed to create IRQ domain\n");
+-		return -ENOMEM;
+-	}
++		msi->domain = irq_domain_add_linear(dev->of_node,
++						    INT_PCI_MSI_NR,
++						    &msi_domain_ops,
++						    &msi->chip);
++		if (!msi->domain) {
++			dev_err(dev, "failed to create IRQ domain\n");
++			return -ENOMEM;
++		}
+ 
+-	err = platform_get_irq_byname(pdev, "msi");
+-	if (err < 0) {
+-		dev_err(dev, "failed to get IRQ: %d\n", err);
+-		goto err;
+-	}
++		err = platform_get_irq_byname(pdev, "msi");
++		if (err < 0) {
++			dev_err(dev, "failed to get IRQ: %d\n", err);
++			goto err;
++		}
+ 
+-	msi->irq = err;
++		msi->irq = err;
+ 
+-	err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
+-			  tegra_msi_irq_chip.name, pcie);
+-	if (err < 0) {
+-		dev_err(dev, "failed to request IRQ: %d\n", err);
+-		goto err;
+-	}
++		err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
++				  tegra_msi_irq_chip.name, pcie);
++		if (err < 0) {
++			dev_err(dev, "failed to request IRQ: %d\n", err);
++			goto err;
++		}
+ 
+-	/* setup AFI/FPCI range */
+-	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+-	msi->phys = virt_to_phys((void *)msi->pages);
++		/* setup AFI/FPCI range */
++		msi->pages = __get_free_pages(GFP_KERNEL, 0);
++		msi->phys = virt_to_phys((void *)msi->pages);
++	}
+ 
+ 	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+ 	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
+@@ -2694,26 +2688,16 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 		return err;
+ 	}
+ 
+-	err = tegra_pcie_enable_controller(pcie);
+-	if (err)
++	pm_runtime_enable(pcie->dev);
++	err = pm_runtime_get_sync(pcie->dev);
++	if (err) {
++		dev_err(dev, "fail to enable pcie controller: %d\n", err);
+ 		goto put_resources;
++	}
+ 
+ 	err = tegra_pcie_request_resources(pcie);
+ 	if (err)
+-		goto disable_controller;
+-
+-	/* setup the AFI address translations */
+-	tegra_pcie_setup_translations(pcie);
+-
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		err = tegra_pcie_enable_msi(pcie);
+-		if (err < 0) {
+-			dev_err(dev, "failed to enable MSI support: %d\n", err);
+-			goto free_resources;
+-		}
+-	}
+-
+-	tegra_pcie_enable_ports(pcie);
++		goto pm_runtime_put;
+ 
+ 	host->busnr = pcie->busn.start;
+ 	host->dev.parent = &pdev->dev;
+@@ -2724,7 +2708,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	err = pci_scan_root_bus_bridge(host);
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to register host: %d\n", err);
+-		goto disable_msi;
++		goto free_resources;
+ 	}
+ 
+ 	pci_bus_size_bridges(host->bus);
+@@ -2746,14 +2730,13 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ 
+-disable_msi:
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		tegra_pcie_disable_msi(pcie);
+-	tegra_pcie_disable_ports(pcie);
+ free_resources:
+ 	tegra_pcie_free_resources(pcie);
+-disable_controller:
+-	tegra_pcie_disable_controller(pcie);
++pm_runtime_put:
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		tegra_pcie_disable_msi(pcie);
++	pm_runtime_put_sync(pcie->dev);
++	pm_runtime_disable(pcie->dev);
+ put_resources:
+ 	tegra_pcie_put_resources(pcie);
+ 	return err;
+@@ -2763,7 +2746,6 @@ static int tegra_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
+ 	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+-	struct tegra_pcie_port *port, *tmp;
+ 
+ 	if (IS_ENABLED(CONFIG_DEBUG_FS))
+ 		tegra_pcie_debugfs_exit(pcie);
+@@ -2771,21 +2753,77 @@ static int tegra_pcie_remove(struct platform_device *pdev)
+ 	pci_remove_root_bus(host->bus);
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		tegra_pcie_disable_msi(pcie);
++	tegra_pcie_free_resources(pcie);
++	pm_runtime_put_sync(pcie->dev);
++	pm_runtime_disable(pcie->dev);
++	tegra_pcie_put_resources(pcie);
++
++	return 0;
++}
++
++static int tegra_pcie_pm_suspend(struct device *dev)
++{
++	struct tegra_pcie *pcie = dev_get_drvdata(dev);
++	struct tegra_pcie_port *port, *tmp;
++
+ 	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+ 		tegra_pcie_pme_turnoff(port);
+ 	tegra_pcie_disable_ports(pcie);
+-	tegra_pcie_free_resources(pcie);
+ 	tegra_pcie_disable_controller(pcie);
+-	tegra_pcie_put_resources(pcie);
++	tegra_pcie_power_off(pcie);
+ 
+ 	return 0;
+ }
+ 
++static int tegra_pcie_pm_resume(struct device *dev)
++{
++	struct tegra_pcie *pcie = dev_get_drvdata(dev);
++	int err;
++
++	err = tegra_pcie_power_on(pcie);
++	if (err) {
++		dev_err(dev, "tegra pcie power on fail: %d\n", err);
++		return err;
++	}
++	err = tegra_pcie_enable_controller(pcie);
++	if (err) {
++		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
++		goto poweroff;
++	}
++	tegra_pcie_setup_translations(pcie);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		err = tegra_pcie_enable_msi(pcie);
++		if (err < 0) {
++			dev_err(dev, "failed to enable MSI support: %d\n", err);
++			goto disable_controller;
++		}
++	}
++
++	tegra_pcie_enable_ports(pcie);
++
++	return 0;
++
++disable_controller:
++	tegra_pcie_disable_controller(pcie);
++poweroff:
++	tegra_pcie_power_off(pcie);
++
++	return err;
++}
++
++static const struct dev_pm_ops tegra_pcie_pm_ops = {
++	SET_RUNTIME_PM_OPS(tegra_pcie_pm_suspend, tegra_pcie_pm_resume, NULL)
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(tegra_pcie_pm_suspend,
++				      tegra_pcie_pm_resume)
++};
++
+ static struct platform_driver tegra_pcie_driver = {
+ 	.driver = {
+ 		.name = "tegra-pcie",
+ 		.of_match_table = tegra_pcie_of_match,
+ 		.suppress_bind_attrs = true,
++		.pm = &tegra_pcie_pm_ops,
+ 	},
+ 	.probe = tegra_pcie_probe,
+ 	.remove = tegra_pcie_remove,
+-- 
+2.1.4
