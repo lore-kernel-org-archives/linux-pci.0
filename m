@@ -1,100 +1,141 @@
-Return-Path: <SRS0=9AXQ=DL=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=9AXQ=DL=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Fri, 15 Dec 2017 17:14:40 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jim Quinlan <jim2101024@gmail.com>, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
-	Brian Norris <computersforpeace@gmail.com>,
-	Russell King <rmk+kernel@armlinux.org.uk>,
-	Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
-	Linux-MIPS <linux-mips@linux-mips.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	Gregory Fong <gregory.0xf0@gmail.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v3 1/8] SOC: brcmstb: add memory API
-Message-ID: <20171215171440.GB32131@red-moon>
-References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
- <1510697532-32828-2-git-send-email-jim2101024@gmail.com>
- <20171205205926.GJ23510@bhelgaas-glaptop.roam.corp.google.com>
- <CANCKTBvoXpF-H8Pck5TsH+7tNM=di1-uoedqACE+kjNEAUodYg@mail.gmail.com>
- <20171212211404.GA95453@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 8 Dec 2017 15:58:02 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: Liang-Min Wang <liang-min.wang@intel.com>, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, alexander.h.duyck@intel.com
+Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
+Message-ID: <20171208155802.4d1159c5@t450s.home>
+In-Reply-To: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
+References: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171212211404.GA95453@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 12, 2017 at 03:14:04PM -0600, Bjorn Helgaas wrote:
-> [+cc Lorenzo]
-> 
-> On Tue, Dec 12, 2017 at 03:53:28PM -0500, Jim Quinlan wrote:
-> > On Tue, Dec 5, 2017 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > On Tue, Nov 14, 2017 at 05:12:05PM -0500, Jim Quinlan wrote:
-> > >> From: Florian Fainelli <f.fainelli@gmail.com>
-> > >>
-> > >> This commit adds a memory API suitable for ascertaining the sizes of
-> > >> each of the N memory controllers in a Broadcom STB chip.  Its first
-> > >> user will be the Broadcom STB PCIe root complex driver, which needs
-> > >> to know these sizes to properly set up DMA mappings for inbound
-> > >> regions.
-> > >>
-> > >> We cannot use memblock here or anything like what Linux provides
-> > >> because it collapses adjacent regions within a larger block, and here
-> > >> we actually need per-memory controller addresses and sizes, which is
-> > >> why we resort to manual DT parsing.
-> > >>
-> > >> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> > >> ---
-> > >>  drivers/soc/bcm/brcmstb/Makefile |   2 +-
-> > >>  drivers/soc/bcm/brcmstb/memory.c | 172 +++++++++++++++++++++++++++++++++++++++
-> > >>  include/soc/brcmstb/memory_api.h |  25 ++++++
-> > >>  3 files changed, 198 insertions(+), 1 deletion(-)
-> > >>  create mode 100644 drivers/soc/bcm/brcmstb/memory.c
-> > >>  create mode 100644 include/soc/brcmstb/memory_api.h
-> > >>
-> > >> diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmstb/Makefile
-> > >> index 9120b27..4cea7b6 100644
-> > >> --- a/drivers/soc/bcm/brcmstb/Makefile
-> > >> +++ b/drivers/soc/bcm/brcmstb/Makefile
-> > >> @@ -1 +1 @@
-> > >> -obj-y                                += common.o biuctrl.o
-> > >> +obj-y                                += common.o biuctrl.o memory.o
-> > >> diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmstb/memory.c
-> > >> new file mode 100644
-> > >> index 0000000..eb647ad9
-> > >> --- /dev/null
-> > >> +++ b/drivers/soc/bcm/brcmstb/memory.c
-> > >
-> > > I sort of assume based on [1] that every new file should have an SPDX
-> > > identifier ("The Linux kernel requires the precise SPDX identifier in
-> > > all source files") and that the actual text of the GPL can be omitted.
-> > >
-> > > Only a few files in drivers/pci currently have an SPDX identifier.  I
-> > > don't know if that's oversight or work-in-progress or what.
-> > >
-> > > [1] https://lkml.kernel.org/r/20171204212120.484179273@linutronix.de
-> > >
-> > 
-> > Bjorn, Did you get a chance to review the other commits of this
-> > submission (V3)?  I would like any additional feedback before I send
-> > out a V4 with SPDX fixes.  Thanks, JimQ
-> 
-> Lorenzo is taking over drivers/pci/host/* and he'll no doubt have some
-> comments when he gets to this.  I'll point out a few quick formatting
-> things in the meantime.
+On Fri,  8 Dec 2017 13:47:58 -0800
+Jeff Kirsher <jeffrey.t.kirsher@intel.com> wrote:
 
-I need some time to review the code but overall I am quite worried about
-patches 1 and 4 in particular, it is ok to have platform host bridge
-drivers but we can't rewrite a DMA layer for a specific host bridge, I
-really do not like that - it is just not manageable from a maintenance
-perspective for the mainline kernel.
+> From: Liang-Min Wang <liang-min.wang@intel.com>
+> 
+> When a SR-IOV capable device is bound with vfio-pci, the
+> device loses capability of creating SR-IOV instances through /sy/bus/
+> pci/devices/.../sriov_numvfs. This patch re-activates this capability
+> for a PCIe device that is SR-IOV capable and is bound with vfio-pci.ko.
+> This patch also disables drivers_autoprobe attribute of SR-IOV devices
+> created from vfio-pci bound device by default, so user-space PF device
+> can coordinate the bring-up of SR-IOV devices
+> 
+> Signed-off-by: Liang-Min Wang <liang-min.wang@intel.com>
+> ---
+>  drivers/pci/pci-driver.c    | 12 ++++++++++++
+>  drivers/vfio/pci/vfio_pci.c | 22 ++++++++++++++++++++++
+>  include/linux/pci.h         |  1 +
+>  3 files changed, 35 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 7f47bb7..19522fe 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1467,6 +1467,18 @@ void pci_dev_put(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pci_dev_put);
+>  
+> +/**
+> + * pci_dev_sriov_autoprobe_set - set device sriov driver autoprobe
+> + * @dev: device with which sriov autoprobe will be set
+> + *
+> + */
+> +void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool autoprobe)
+> +{
+> +	if (dev && dev->sriov)
+> +		dev->sriov->drivers_autoprobe = autoprobe;
+> +}
+> +EXPORT_SYMBOL(pci_dev_sriov_autoprobe_set);
 
-Lorenzo
+_GPL?
+
+It'd also be best to separate the pci and vfio changes into different
+patches.  Bjorn would need to at least ack this PCI interface.
+
+> +
+>  static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+>  {
+>  	struct pci_dev *pdev;
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index f041b1a..004836c 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -1213,6 +1213,8 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  		return -ENOMEM;
+>  	}
+>  
+> +	/* disable sriov automatic driver attachment */
+> +	pci_dev_sriov_autoprobe_set(pdev, false);
+
+This looks stateful, VF autoprobe is not restored on release.  Also,
+how would we know the initial state to restore it to?
+
+>  	vdev->pdev = pdev;
+>  	vdev->irq_type = VFIO_PCI_NUM_IRQS;
+>  	mutex_init(&vdev->igate);
+> @@ -1256,6 +1258,7 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+>  	if (!vdev)
+>  		return;
+>  
+> +	pci_disable_sriov(pdev);
+>  	vfio_iommu_group_put(pdev->dev.iommu_group, &pdev->dev);
+>  	kfree(vdev->region);
+>  	kfree(vdev);
+> @@ -1303,12 +1306,31 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
+>  	.error_detected = vfio_pci_aer_err_detected,
+>  };
+>  
+> +static int vfio_sriov_configure(struct pci_dev *pdev, int num_vfs)
+> +{
+> +	int status;
+> +
+> +	if (!num_vfs) {
+> +		pci_disable_sriov(pdev);
+> +		return 0;
+> +	}
+> +
+> +	status = pci_enable_sriov(pdev, num_vfs);
+> +	if (!status) {
+> +		pr_crit("Created %d SR-IOV from a user-space driver based upon vfio-pci\n", num_vfs);
+> +		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
+> +	}
+
+This probably deserves more explanation, in comment and commit log.
+Probably a dev_crit() is also justified, knowing the PF would be
+useful.  Thanks,
+
+Alex
+
+> +
+> +	return status;
+> +}
+> +
+>  static struct pci_driver vfio_pci_driver = {
+>  	.name		= "vfio-pci",
+>  	.id_table	= NULL, /* only dynamic ids */
+>  	.probe		= vfio_pci_probe,
+>  	.remove		= vfio_pci_remove,
+>  	.err_handler	= &vfio_err_handlers,
+> +	.sriov_configure = vfio_sriov_configure,
+>  };
+>  
+>  struct vfio_devices {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 0403894..e04b69d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -921,6 +921,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>  struct pci_dev *pci_dev_get(struct pci_dev *dev);
+>  void pci_dev_put(struct pci_dev *dev);
+>  void pci_remove_bus(struct pci_bus *b);
+> +void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool autoprobe);
+>  void pci_stop_and_remove_bus_device(struct pci_dev *dev);
+>  void pci_stop_and_remove_bus_device_locked(struct pci_dev *dev);
+>  void pci_stop_root_bus(struct pci_bus *bus);
