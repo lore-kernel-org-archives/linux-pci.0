@@ -1,14 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1513739295.18782.1.camel@mtkswgap22>
-Subject: Re: [PATCH] PCI: Mediatek: clear irq status after irq dispathed to
- avoid reentry
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: <honghui.zhang@mediatek.com>
-Date: Wed, 20 Dec 2017 11:08:15 +0800
-In-Reply-To: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
+Date: Fri, 8 Dec 2017 11:23:58 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH] PCI: xgene: Remove leftover pci_scan_child_bus() call
+Message-ID: <20171208112358.GF26816@red-moon>
+References: <20171121154931.7724-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
+In-Reply-To: <20171121154931.7724-1-lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,80 +15,53 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, yt.shen@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, matthias.bgg@gmail.com,
- linux-mediatek@lists.infradead.org, yong.wu@mediatek.com, bhelgaas@google.com,
- yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-12-20 at 10:52 +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
+Hi Tanmay,
+
+On Tue, Nov 21, 2017 at 03:49:31PM +0000, Lorenzo Pieralisi wrote:
+> The changes in commit 9af275be15f7 ("PCI: xgene: Convert PCI scan API to
+> pci_scan_root_bus_bridge()") converted the xgene PCI host driver to
+> the new pci_scan_root_bus_bridge() bus scanning API but erroneously left
+> the existing pci_scan_child_bus() call in place which resulted in duplicate
+> PCI bus enumerations.
 > 
-> There maybe a same irq reentry scenario after irq received in current
-> irq handle flow:
-> 	EP device		PCIe host driver	EP driver
-> 1. issue an irq
-> 			2. received irq
-> 			3. clear irq status
-> 			4. dispatch irq
-> 						5. clear irq source
-> The irq status was not successfully cleared at step 2 since the irq
-> source was not cleared yet. So the PCIe host driver may receive the
-> same irq after step 5. Then there's an irq reentry occurred.
-> Even worse, if the reentry irq was not an irq that EP driver expected,
-> it may not handle the irq. Then we may run into the dead loop from
-> step 2 to step 4.
-> Clear the irq status after irq have been dispatched to avoid the irq
-> reentry.
+> Remove the leftover pci_scan_child_bus() call to properly complete the API
+> conversion.
 > 
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> Fixes: 9af275be15f7 ("PCI: xgene: Convert PCI scan API to pci_scan_root_bus_bridge()")
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Tanmay Inamdar <tinamdar@apm.com>
 > ---
->  drivers/pci/host/pcie-mediatek.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  drivers/pci/host/pci-xgene.c | 1 -
+>  1 file changed, 1 deletion(-)
+
+Would you mind testing this fix and tag accordingly so that I can ask
+Bjorn to pull it please ?
+
+Thanks,
+Lorenzo
+
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index 465aa2a..e60c457 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -668,7 +668,6 @@ static int xgene_pcie_probe(struct platform_device *pdev)
+>  
+>  	bus = bridge->bus;
+>  
+> -	pci_scan_child_bus(bus);
+>  	pci_assign_unassigned_bus_resources(bus);
+>  	list_for_each_entry(child, &bus->children, node)
+>  		pcie_bus_configure_settings(child);
+> -- 
+> 2.9.5
 > 
-> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> index db93efd..3248771 100644
-> --- a/drivers/pci/host/pcie-mediatek.c
-> +++ b/drivers/pci/host/pcie-mediatek.c
-> @@ -605,11 +605,11 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
->  
->  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
->  		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
-> -			/* Clear the INTx */
-> -			writel(1 << bit, port->base + PCIE_INT_STATUS);
->  			virq = irq_find_mapping(port->irq_domain,
->  						bit - INTX_SHIFT);
->  			generic_handle_irq(virq);
-> +			/* Clear the INTx */
-> +			writel(1 << bit, port->base + PCIE_INT_STATUS);
->  		}
->  	}
->  
-> @@ -619,10 +619,10 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
->  
->  			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
->  				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
-> -					/* Clear the MSI */
-> -					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
->  					virq = irq_find_mapping(port->msi_domain, bit);
->  					generic_handle_irq(virq);
-> +					/* Clear the MSI */
-> +					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
->  				}
->  			}
->  			/* Clear MSI interrupt status */
-
-Acked-by: Ryder Lee <ryder.lee@mediatek.com>
-
-Thanks.
-
-
 
 _______________________________________________
 linux-arm-kernel mailing list
