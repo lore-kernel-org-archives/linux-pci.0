@@ -1,73 +1,197 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:46880 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753380AbdLHOss (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 09:48:48 -0500
-Date: Fri, 8 Dec 2017 23:48:44 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Rafael Wysocki <rjw@rjwysocki.net>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH 3/9] power: remove unneeded kallsyms include
-Message-ID: <20171208144844.GA489@tigerII.localdomain>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
- <20171208025616.16267-4-sergey.senozhatsky@gmail.com>
- <CAJZ5v0g1CBhKTYi=CzYPcBXdH=yZ3iJcKzZ6TaftNWoq+X5wnQ@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:50084 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751945AbdLHVYM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Dec 2017 16:24:12 -0500
+Subject: [PATCH] lspci: Decode "VGA 16-bit decode" in bridge control register
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org, Rudolf Marek <r.marek@assembler.cz>,
+        RayeR <rayer@seznam.cz>
+Date: Fri, 08 Dec 2017 15:24:10 -0600
+Message-ID: <20171208212410.30418.94419.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0g1CBhKTYi=CzYPcBXdH=yZ3iJcKzZ6TaftNWoq+X5wnQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On (12/08/17 15:01), Rafael J. Wysocki wrote:
-> On Fri, Dec 8, 2017 at 3:56 AM, Sergey Senozhatsky
-> <sergey.senozhatsky.work@gmail.com> wrote:
-> > The file was converted from print_fn_descriptor_symbol()
-> > to %pF some time ago (c80cfb0406c01bb "vsprintf: use new
-> > vsprintf symbolic function pointer format"). kallsyms does
-> > not seem to be needed anymore.
-> >
-> > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-> > Cc: Rafael Wysocki <rjw@rjwysocki.net>
-> > Cc: Len Brown <len.brown@intel.com>
-> > ---
-> >  drivers/base/power/main.c | 1 -
-> >  1 file changed, 1 deletion(-)
-> >
-> > diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
-> > index 5bc2cf1f812c..e2539d8423f7 100644
-> > --- a/drivers/base/power/main.c
-> > +++ b/drivers/base/power/main.c
-> > @@ -18,7 +18,6 @@
-> >   */
-> >
-> >  #include <linux/device.h>
-> > -#include <linux/kallsyms.h>
-> >  #include <linux/export.h>
-> >  #include <linux/mutex.h>
-> >  #include <linux/pm.h>
-> > --
-> 
-> Do you want me to apply this or do you want to route it differently?
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Hello Rafael,
+Decode the "VGA 16-bit decode" bit in the bridge control register.  This
+bit was added in the PCI-to-PCI Bridge Arch Spec, r1.2, sec 3.2.5.18.
+Note that the bit is only meaningful if the VGA Enable bit or the VGA
+Palette Snoop Enable bit is set.
 
-don't mind if you'll pick it up.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ lib/header.h           |    1 
+ lspci.c                |    3 +
+ tests/bridge-ctl-vga16 |  129 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 132 insertions(+), 1 deletion(-)
+ create mode 100644 tests/bridge-ctl-vga16
 
-	-ss
+diff --git a/lib/header.h b/lib/header.h
+index b3108e5..0b12b2c 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -135,6 +135,7 @@
+ #define  PCI_BRIDGE_CTL_SERR	0x02	/* The same for SERR forwarding */
+ #define  PCI_BRIDGE_CTL_NO_ISA	0x04	/* Disable bridging of ISA ports */
+ #define  PCI_BRIDGE_CTL_VGA	0x08	/* Forward VGA addresses */
++#define  PCI_BRIDGE_CTL_VGA_16BIT 0x10	/* VGA 16-bit decode */
+ #define  PCI_BRIDGE_CTL_MASTER_ABORT 0x20  /* Report master aborts */
+ #define  PCI_BRIDGE_CTL_BUS_RESET 0x40	/* Secondary bus reset */
+ #define  PCI_BRIDGE_CTL_FAST_BACK 0x80	/* Fast Back2Back enabled on secondary interface */
+diff --git a/lspci.c b/lspci.c
+index c6f1500..b50c76a 100644
+--- a/lspci.c
++++ b/lspci.c
+@@ -578,11 +578,12 @@ show_htype1(struct device *d)
+ 
+   if (verbose > 1)
+     {
+-      printf("\tBridgeCtl: Parity%c SERR%c NoISA%c VGA%c MAbort%c >Reset%c FastB2B%c\n",
++      printf("\tBridgeCtl: Parity%c SERR%c NoISA%c VGA%c VGA16%c MAbort%c >Reset%c FastB2B%c\n",
+ 	FLAG(brc, PCI_BRIDGE_CTL_PARITY),
+ 	FLAG(brc, PCI_BRIDGE_CTL_SERR),
+ 	FLAG(brc, PCI_BRIDGE_CTL_NO_ISA),
+ 	FLAG(brc, PCI_BRIDGE_CTL_VGA),
++	FLAG(brc, PCI_BRIDGE_CTL_VGA_16BIT),
+ 	FLAG(brc, PCI_BRIDGE_CTL_MASTER_ABORT),
+ 	FLAG(brc, PCI_BRIDGE_CTL_BUS_RESET),
+ 	FLAG(brc, PCI_BRIDGE_CTL_FAST_BACK));
+diff --git a/tests/bridge-ctl-vga16 b/tests/bridge-ctl-vga16
+new file mode 100644
+index 0000000..59e9812
+--- /dev/null
++++ b/tests/bridge-ctl-vga16
+@@ -0,0 +1,129 @@
++00:1c.0 PCI bridge: Intel Corporation Device 9d10 (rev f1) (prog-if 00 [Normal decode])
++	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
++	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
++	Latency: 0
++	Interrupt: pin A routed to IRQ 255
++	Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
++	I/O behind bridge: None
++	Memory behind bridge: f1100000-f11fffff [size=1M]
++	Prefetchable memory behind bridge: None
++	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
++	BridgeCtl: Parity- SERR- NoISA- VGA+ VGA16+ MAbort- >Reset- FastB2B-
++		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
++	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
++		DevCap:	MaxPayload 256 bytes, PhantFunc 0
++			ExtTag- RBE+
++		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
++			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
++			MaxPayload 256 bytes, MaxReadReq 128 bytes
++		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
++		LnkCap:	Port #1, Speed 8GT/s, Width x1, ASPM L1, Exit Latency L1 <16us
++			ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
++		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
++			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
++		LnkSta:	Speed 5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
++		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
++			Slot #0, PowerLimit 10.000W; Interlock- NoCompl+
++		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
++			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
++		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
++			Changed: MRL- PresDet- LinkState+
++		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
++		RootCap: CRSVisible-
++		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
++		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR+, OBFF Not Supported ARIFwd+
++			 AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
++		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled ARIFwd-
++			 AtomicOpsCtl: ReqEn- EgressBlck-
++		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
++			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
++			 Compliance De-emphasis: -6dB
++		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
++			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
++	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
++		Address: 00000000  Data: 0000
++	Capabilities: [90] Subsystem: Lenovo Device 2238
++	Capabilities: [a0] Power Management version 3
++		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
++		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
++00: 86 80 10 9d 07 00 10 00 f1 00 04 06 00 00 81 00
++10: 00 00 00 00 00 00 00 00 00 02 02 00 f0 00 00 20
++20: 10 f1 10 f1 f1 ff 01 00 00 00 00 00 00 00 00 00
++30: 00 00 00 00 40 00 00 00 00 00 00 00 ff 01 18 00
++40: 10 80 42 01 01 80 00 00 20 00 10 00 13 48 72 01
++50: 42 00 12 70 00 b2 04 00 00 00 40 01 00 00 00 00
++60: 00 00 00 00 37 08 00 00 00 04 00 00 0e 00 00 00
++70: 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++90: 0d a0 00 00 aa 17 38 22 00 00 00 00 00 00 00 00
++a0: 01 00 03 c8 00 00 00 00 00 00 00 00 00 00 00 00
++b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++d0: 11 10 00 07 42 18 00 00 08 00 9e 8b 00 00 00 00
++e0: 00 f7 f3 00 00 00 00 00 06 80 12 00 00 00 00 00
++f0: 50 01 00 00 00 03 00 40 b3 0f 30 08 04 00 00 01
++
++00:1c.2 PCI bridge: Intel Corporation Device 9d12 (rev f1) (prog-if 00 [Normal decode])
++	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
++	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
++	Latency: 0
++	Interrupt: pin C routed to IRQ 255
++	Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
++	I/O behind bridge: None
++	Memory behind bridge: f1000000-f10fffff [size=1M]
++	Prefetchable memory behind bridge: None
++	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
++	BridgeCtl: Parity- SERR- NoISA- VGA- VGA16- MAbort- >Reset- FastB2B-
++		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
++	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
++		DevCap:	MaxPayload 256 bytes, PhantFunc 0
++			ExtTag- RBE+
++		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
++			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
++			MaxPayload 128 bytes, MaxReadReq 128 bytes
++		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
++		LnkCap:	Port #3, Speed 8GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <1us, L1 <16us
++			ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
++		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
++			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
++		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
++		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
++			Slot #2, PowerLimit 10.000W; Interlock- NoCompl+
++		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
++			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
++		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
++			Changed: MRL- PresDet- LinkState+
++		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
++		RootCap: CRSVisible-
++		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
++		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR+, OBFF Not Supported ARIFwd+
++			 AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
++		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled ARIFwd-
++			 AtomicOpsCtl: ReqEn- EgressBlck-
++		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
++			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
++			 Compliance De-emphasis: -6dB
++		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
++			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
++	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
++		Address: 00000000  Data: 0000
++	Capabilities: [90] Subsystem: Lenovo Device 2238
++	Capabilities: [a0] Power Management version 3
++		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
++		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
++00: 86 80 12 9d 07 00 10 00 f1 00 04 06 00 00 81 00
++10: 00 00 00 00 00 00 00 00 00 04 04 00 f0 00 00 20
++20: 00 f1 00 f1 f1 ff 01 00 00 00 00 00 00 00 00 00
++30: 00 00 00 00 40 00 00 00 00 00 00 00 ff 03 00 00
++40: 10 80 42 01 01 80 00 00 00 00 10 00 13 4c 72 03
++50: 42 00 11 70 00 b2 14 00 00 00 40 01 00 00 00 00
++60: 00 00 00 00 37 08 00 00 00 04 00 00 0e 00 00 00
++70: 03 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00
++80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++90: 0d a0 00 00 aa 17 38 22 00 00 00 00 00 00 00 00
++a0: 01 00 03 c8 00 00 00 00 00 00 00 00 00 00 00 00
++b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++d0: 01 10 00 07 42 18 00 00 08 00 9e 8b 00 00 00 00
++e0: 00 03 63 00 56 88 56 88 16 00 10 00 00 00 00 00
++f0: 50 01 00 00 00 00 00 4c b3 0f 30 08 04 00 00 03
