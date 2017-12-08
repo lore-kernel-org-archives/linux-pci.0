@@ -1,98 +1,56 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 19 Dec 2017 09:37:26 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>
-Cc: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        Jayachandran.Nair@cavium.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
-        Ganapatrao.Kulkarni@cavium.com, mw@semihalf.com,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V1 1/1] iommu: Make sure device's ID array elements are
- unique
-Message-ID: <20171219093726.432e16e7@t450s.home>
-In-Reply-To: <1513696821-32291-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
-References: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
-        <1513696821-32291-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f175.google.com ([209.85.128.175]:43212 "EHLO
+        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752257AbdLHI2P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:28:15 -0500
+Received: by mail-wr0-f175.google.com with SMTP id z34so10002337wrz.10
+        for <linux-pci@vger.kernel.org>; Fri, 08 Dec 2017 00:28:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20171122080240.6bd46a28@why.wild-wind.fr.eu.org>
+References: <CAFZiPx1sgxr8X9mtW11fK1XMPuk+4jUFb5Cc-pVJn06ZztHwng@mail.gmail.com>
+ <20171108172424.GA19449@infradead.org> <CAFZiPx0wbm=hA0qXMjJihOaeRHhKzgZdSLTwTZdGZ2aoMM-3Rw@mail.gmail.com>
+ <20171122080240.6bd46a28@why.wild-wind.fr.eu.org>
+From: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date: Fri, 8 Dec 2017 13:58:13 +0530
+Message-ID: <CAFZiPx2iR1-D5+8gvPjvG9qeFefOTqFqZ=UXc3aR66Wya9m3zg@mail.gmail.com>
+Subject: Re: [Patch] export irq_set_msi_desc
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-pci@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>, jason@lakedaemon.net
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 19 Dec 2017 16:20:21 +0100
-Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com> wrote:
+Marc,
+I have dropped this patch off from the patch series.
+I will look into generic handling of MSI too.
 
-> While iterating over DMA aliases for a PCI device, for some rare cases
-> (i.e. PCIe-to-PCI/X bridges) we may get exactly the same ID as initial child
-> device. In turn, the same ID may get registered for a device multiple times.
-> Eventually IOMMU  driver may try to configure the same ID within domain
-> multiple times too which for some IOMMU drivers is illegal and causes kernel
-> panic.
-> 
-> Rule out ID duplication prior to device ID array registration.
-> 
-> CC: stable@vger.kernel.org	# v4.14+
+Thanks.
 
-You've identified a release, is there a specific commit this fixes?
 
-> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>
-> ---
->  drivers/iommu/iommu.c | 28 ++++++++++++++++++++++++++++
->  1 file changed, 28 insertions(+)
-> 
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index 3de5c0b..9b2c138 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -1945,6 +1945,31 @@ void iommu_fwspec_free(struct device *dev)
->  }
->  EXPORT_SYMBOL_GPL(iommu_fwspec_free);
->  
-> +static void iommu_fwspec_remove_ids_dup(struct device *dev, u32 *ids,
-> +					int *num_ids)
-> +{
-> +	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
-> +	int i, j, k, valid_ids = *num_ids;
-> +
-> +	for (i = 0; i < valid_ids; i++) {
-> +		for (j = 0; j < fwspec->num_ids; j++) {
-> +			if (ids[i] != fwspec->ids[j])
-> +				continue;
-> +
-> +			dev_info(dev, "found 0x%x ID duplication, skipped\n",
-> +				 ids[i]);
-> +
-> +			for (k = i + 1; k < valid_ids; k++)
-> +				ids[k - 1] = ids[k];
-
-Use memmove()?
-
-> +
-> +			valid_ids--;
-> +			break;
-
-At this point ids[i] is not the ids[i] that we tested for dupes, it's
-what was ids[i + 1], but we're going to i++ on the next iteration and
-we therefore never test that entry.
-
-> +		}
-> +	}
-> +
-> +	*num_ids = valid_ids;
-> +}
-> +
->  int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
->  {
->  	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
-> @@ -1954,6 +1979,9 @@ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
->  	if (!fwspec)
->  		return -EINVAL;
->  
-> +	/* Rule out IDs already registered */
-> +	iommu_fwspec_remove_ids_dup(dev, ids, &num_ids);
-> +
->  	size = offsetof(struct iommu_fwspec, ids[fwspec->num_ids + num_ids]);
->  	if (size > sizeof(*fwspec)) {
->  		fwspec = krealloc(dev->iommu_fwspec, size, GFP_KERNEL);
-
+On Wed, Nov 22, 2017 at 1:32 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On Thu, 9 Nov 2017 10:42:06 +0530
+> subrahmanya l <l.subrahmanya@mobiveil.co.in> wrote:
+>
+>> Christoph,
+>>
+>> Xilinx MSI driver uses it.
+>>
+>> file path: https://github.com/Xilinx/linux-xlnx/blob/master/drivers/pci/host/pcie-xilinx.c#L286
+>>
+>> I used the same driver as reference to write another Rootport driver
+>> which needs it too.
+>
+> You shouldn't need this at all. The driver you are looking at is using
+> a deprecated API, and you should implement the MSI part of your driver
+> using the generic MSI layer which takes care of this and shouldn't
+> require exporting this function.
+>
+> There is a number of drivers in the tree that have been converted to
+> generic MSI, such as pcie-tango.c for example.
+>
+> Thanks,
+>
+>         M.
+> --
+> Without deviation from the norm, progress is not possible.
