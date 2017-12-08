@@ -1,91 +1,51 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH] PCI: Mediatek: clear irq status after irq dispathed to avoid
- reentry
-Date: Wed, 20 Dec 2017 10:52:14 +0800
-Message-ID: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:51306 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752350AbdLHWYo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 17:24:44 -0500
+Date: Fri, 8 Dec 2017 14:24:42 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+        Michal Hocko <mhocko@suse.com>,
+        Rafael Wysocki <rjw@rjwysocki.net>,
+        Len Brown <len.brown@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: Re: [PATCH 0/9] remove some of unneeded kallsyms includes
+Message-Id: <20171208142442.7c09406d7f0bc3d2c1bfe411@linux-foundation.org>
+In-Reply-To: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
+References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Fri,  8 Dec 2017 11:56:07 +0900 Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com> wrote:
 
-There maybe a same irq reentry scenario after irq received in current
-irq handle flow:
-	EP device		PCIe host driver	EP driver
-1. issue an irq
-			2. received irq
-			3. clear irq status
-			4. dispatch irq
-						5. clear irq source
-The irq status was not successfully cleared at step 2 since the irq
-source was not cleared yet. So the PCIe host driver may receive the
-same irq after step 5. Then there's an irq reentry occurred.
-Even worse, if the reentry irq was not an irq that EP driver expected,
-it may not handle the irq. Then we may run into the dead loop from
-step 2 to step 4.
-Clear the irq status after irq have been dispatched to avoid the irq
-reentry.
+> 	A small patch set that removes some kallsyms includes
+> here and there. Mostly those kallsyms includes are leftovers:
+> printk() gained %pS/%pF modifiers support some time ago, so
+> print_symbol() and friends became sort of unneeded [along with
+> print_fn_descriptor_symbol() deprecation], thus some of the
+> users were converted to pS/pF. This patch set just cleans up
+> that convertion.
+> 
+> 	We still have a number of print_symbol() users [which
+> must be converted to ps/pf, print_symbol() uses a stack buffer
+> KSYM_SYMBOL_LEN to do what printk(ps/pf) can do], but this is
+> out of scope.
+> 
+> 	I compile tested the patch set; but, as always and
+> usual, would be great if 0day build robot double check it.
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index db93efd..3248771 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -605,11 +605,11 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
- 
- 	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
- 		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
--			/* Clear the INTx */
--			writel(1 << bit, port->base + PCIE_INT_STATUS);
- 			virq = irq_find_mapping(port->irq_domain,
- 						bit - INTX_SHIFT);
- 			generic_handle_irq(virq);
-+			/* Clear the INTx */
-+			writel(1 << bit, port->base + PCIE_INT_STATUS);
- 		}
- 	}
- 
-@@ -619,10 +619,10 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
- 
- 			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
- 				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
--					/* Clear the MSI */
--					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
- 					virq = irq_find_mapping(port->msi_domain, bit);
- 					generic_handle_irq(virq);
-+					/* Clear the MSI */
-+					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
- 				}
- 			}
- 			/* Clear MSI interrupt status */
--- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I grabbed everything and shall drop any patches which later turn up in
+the various subsystem trees.
