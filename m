@@ -1,45 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33399 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751169AbdL1W6E (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 17:58:04 -0500
-Date: Thu, 28 Dec 2017 23:57:55 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Alexandru Chirvasitu <achirvasub@gmail.com>
-cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-In-Reply-To: <20171228225014.GE10658@chirva-slack.chirva-slack>
-Message-ID: <alpine.DEB.2.20.1712282357380.1899@nanos>
-References: <20171228142117.GA10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281531120.1899@nanos> <20171228154835.GB10658@chirva-slack.chirva-slack> <20171228160522.GC10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281706010.1899@nanos>
- <20171228172250.GD10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281823140.1899@nanos> <20171228175009.ucxr4to2nb42e3s4@D-69-91-141-110.dhcp4.washington.edu> <alpine.DEB.2.20.1712281930590.1899@nanos> <alpine.DEB.2.20.1712282253180.1899@nanos>
- <20171228225014.GE10658@chirva-slack.chirva-slack>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 8 Dec 2017 11:56:40 +0100
+From: Peter Zijlstra <peterz@infradead.org>
+To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-mm@kvack.org,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: Re: [PATCH] sched/autogroup: move sched.h include
+Message-ID: <20171208105640.2ovmvxpds6psdnnq@hirez.programming.kicks-ass.net>
+References: <20171208025616.16267-2-sergey.senozhatsky@gmail.com>
+ <20171208082422.5021-1-sergey.senozhatsky@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171208082422.5021-1-sergey.senozhatsky@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
-
-> Attached.
+On Fri, Dec 08, 2017 at 05:24:22PM +0900, Sergey Senozhatsky wrote:
+> Move local "sched.h" include to the bottom. sched.h defines
+> several macros that are getting redefined in ARCH-specific
+> code, for instance, finish_arch_post_lock_switch() and
+> prepare_arch_switch(), so we need ARCH-specific definitions
+> to come in first.
 > 
-> I don't have a 4.14 family kernel available at the moment on that
-> machine. What I'm attaching comes from the 4.13 one I was playing with
-> yesterday, what with kexec and all.
+> Suggested-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
+> Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
 
-Good enough. Thanks !
+Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+> ---
+>  kernel/sched/autogroup.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/kernel/sched/autogroup.c b/kernel/sched/autogroup.c
+> index 0786227a3f48..bb4b9fe026a1 100644
+> --- a/kernel/sched/autogroup.c
+> +++ b/kernel/sched/autogroup.c
+> @@ -1,12 +1,12 @@
+>  // SPDX-License-Identifier: GPL-2.0
+> -#include "sched.h"
+> -
+>  #include <linux/proc_fs.h>
+>  #include <linux/seq_file.h>
+>  #include <linux/utsname.h>
+>  #include <linux/security.h>
+>  #include <linux/export.h>
+>  
+> +#include "sched.h"
+> +
+>  unsigned int __read_mostly sysctl_sched_autogroup_enabled = 1;
+>  static struct autogroup autogroup_default;
+>  static atomic_t autogroup_seq_nr;
+> -- 
+> 2.15.1
+> 
