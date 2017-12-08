@@ -1,90 +1,98 @@
-Return-Path: <SRS0=eErG=DP=realsil.com.cn=rui_feng@kernel.org>
-Return-Path: <SRS0=eErG=DP=realsil.com.cn=rui_feng@kernel.org>
-From: =?utf-8?B?5Yav6ZSQ?= <rui_feng@realsil.com.cn>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "lee.jones@linaro.org" <lee.jones@linaro.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Hans de Goede
-	<hdegoede@redhat.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: =?utf-8?B?562U5aSNOiDnrZTlpI06IFtQQVRDSCB2Nl0gbWZkOiBBZGQgc3VwcG9ydCBm?= =?utf-8?Q?or_RTS5250S_power_saving?=
-Date: Tue, 19 Dec 2017 08:15:24 +0000
-Message-ID: <2A308283684ECD4B896628E09AF5361E01A8193C@RS-MBS01.realsil.com.cn>
-References: <1504772799-15173-1-git-send-email-rui_feng@realsil.com.cn>
- <20171214222522.GL30595@bhelgaas-glaptop.roam.corp.google.com>
- <2A308283684ECD4B896628E09AF5361E01A8150B@RS-MBS01.realsil.com.cn>
- <20171215151522.GT30595@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171215151522.GT30595@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out4.electric.net ([192.162.216.187]:62822 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752325AbdLHMSL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 07:18:11 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Bjorn Helgaas' <helgaas@kernel.org>
+CC: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Subject: RE: PCIe link not recovering
+Date: Fri, 8 Dec 2017 12:18:29 +0000
+Message-ID: <ba011f7daeee41afbf6c5afa5408959a@AcuMS.aculab.com>
+References: <3d3c69b6dcc44963b1ad80120c69767b@AcuMS.aculab.com>
+ <20171206224727.GQ23510@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171206224727.GQ23510@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBPbiBGcmksIERlYyAxNSwgMjAxNyBhdCAwOTo0Mjo0NUFNICswMDAwLCDlhq/plJAgd3JvdGU6
-DQo+ID4gPiBbK2NjIEhhbnMsIERhdmUsIGxpbnV4LXBjaV0NCj4gPiA+DQo+ID4gPiBPbiBUaHUs
-IFNlcCAwNywgMjAxNyBhdCAwNDoyNjozOVBNICswODAwLCBydWlfZmVuZ0ByZWFsc2lsLmNvbS5j
-bg0KPiB3cm90ZToNCj4gPiA+ID4gRnJvbTogUnVpIEZlbmcgPHJ1aV9mZW5nQHJlYWxzaWwuY29t
-LmNuPg0KPiA+ID4NCj4gPiA+IEkgd2lzaCB0aGlzIGhhZCBiZWVuIHBvc3RlZCB0byBsaW51eC1w
-Y2kgYmVmb3JlIGJlaW5nIG1lcmdlZC4NCj4gPiA+DQo+ID4gPiBJJ20gY29uY2VybmVkIGJlY2F1
-c2Ugc29tZSBvZiB0aGlzIGFwcGVhcnMgdG8gb3ZlcmxhcCBhbmQgY29uZmxpY3QNCj4gPiA+IHdp
-dGggUENJIGNvcmUgbWFuYWdlbWVudCBvZiBBU1BNLg0KPiA+ID4NCj4gPiA+IEkgYXNzdW1lIHRo
-ZXNlIGRldmljZXMgYWR2ZXJ0aXNlIEFTUE0gc3VwcG9ydCBpbiB0aGVpciBMaW5rDQo+ID4gPiBD
-YXBhYmlsaXRlcyByZWdpc3RlcnMsIHJpZ2h0PyAgSWYgc28sIHdoeSBpc24ndCB0aGUgZXhpc3Rp
-bmcgUENJDQo+ID4gPiBjb3JlIEFTUE0gc3VwcG9ydCBzdWZmaWNpZW50Pw0KPiA+ID4NCj4gPiBX
-aGVuIEwxU1MgaXMgY29uZmlndXJlZCwgdGhlIGRldmljZShoYXJkd2FyZSkgY2FuJ3QgZW50ZXIg
-TDFTUyBzdGF0dXMNCj4gPiBhdXRvbWF0aWNhbGx5LCBpdCBuZWVkIGRyaXZlcihzb2Z0d2FyZSkg
-dG8gZG8gc29tZSB3b3JrIHRvIGFjaGlldmUgdGhlDQo+IGZ1bmN0aW9uLg0KPiANCj4gU28gdGhp
-cyBpcyBhIGhhcmR3YXJlIGRlZmVjdCBpbiB0aGUgZGV2aWNlPyAgQXMgZmFyIGFzIEkga25vdywg
-QVNQTSBhbmQgTDFTUw0KPiBhcmUgc3BlY2lmaWVkIHN1Y2ggdGhhdCB0aGV5IHNob3VsZCB3b3Jr
-IHdpdGhvdXQgc3BlY2lhbCBkcml2ZXIgc3VwcG9ydC4NCj4gDQpZZXMsIHlvdSBjYW4gc2F5IHRo
-YXQuDQoNCj4gPiA+ID4gRW5hYmxlIHBvd2VyIHNhdmluZyBmb3IgUlRTNTI1MFMgYXMgZm9sbG93
-aW5nIHN0ZXBzOg0KPiA+ID4gPiAxLlNldCAweEZFNTggdG8gZW5hYmxlIGNsb2NrIHBvd2VyIG1h
-bmFnZW1lbnQuDQo+ID4gPg0KPiA+ID4gSXMgdGhpcyBjbG9jayBwb3dlciBtYW5hZ2VtZW50IHNv
-bWV0aGluZyBzcGVjaWZpYyB0byBSVFM1MjUwUywgb3IgaXMNCj4gPiA+IGl0IHN0YW5kYXJkIFBD
-SWUgYXJjaGl0ZWN0ZWQgc3R1ZmY/DQo+ID4gPg0KPiA+IDB4RkU1OCBpcyBzcGVjaWZpYyByZWdp
-c3RlciB0byBSVFM1MjUwUyBub3Qgc3RhbmRhcmQgUENJZSBhcmNoaXRlY3RlZCBzdHVmZi4NCj4g
-DQo+IE9LLiAgSSBhc2tlZCBiZWNhdXNlIGRldmljZXMgb2Z0ZW4gbWlycm9yIGFyY2hpdGVjdGVk
-IFBDSWUgY29uZmlnIHRoaW5ncyBpbg0KPiBkZXZpY2Utc3BlY2lmaWMgTU1JTyBzcGFjZSwgYW5k
-IGlmIEkgc3F1aW50IGp1c3QgcmlnaHQsIEkgY2FuIHNvcnQgb2YgbWF0Y2ggdXAgdGhlDQo+IHJl
-Z2lzdGVyIGJpdHMgeW91IHVzZWQgd2l0aCB0aGluZ3MgaW4gdGhlIFBDSWUgc3BlYy4NCj4gDQo+
-ID4gPiA+IDIuQ2hlY2sgY2ZnIHNwYWNlIHdoZXRoZXIgc3VwcG9ydCBMMVNTIG9yIG5vdC4NCj4g
-PiA+DQo+ID4gPiBUaGlzIHNvdW5kcyBsaWtlIHN0YW5kYXJkIFBDSWUgQVNQTSBMMSBTdWJzdGF0
-ZXMsIHJpZ2h0Pw0KPiA+ID4NCj4gPiBZZXMuDQo+ID4NCj4gPiA+ID4gMy5JZiBzdXBwb3J0IEwx
-U1MsIHNldCAweEZGMDMgdG8gZnJlZSBjbGtyZXEuDQo+ID4gPiA+IDQuV2hlbiBlbnRlcmluZyBp
-ZGxlIHN0YXR1cywgZW5hYmxlIGFzcG0NCj4gPiA+ID4gICBhbmQgc2V0IHBhcmFtZXRlcnMgZm9y
-IEwxU1MgYW5kIExUUi4NCj4gPiA+ID4gNS5XbmVuIGVudGVyaW5nIHJ1biBzdGF0dXMsIGRpc2Fi
-bGUgYXNwbQ0KPiA+ID4gPiAgIGFuZCBzZXQgcGFyYW1ldGVycyBmb3IgTDFTUyBhbmQgTFRSLg0K
-PiA+ID4NCj4gPiA+IEluIGdlbmVyYWwsIGRyaXZlcnMgc2hvdWxkIG5vdCBjb25maWd1cmUgQVNQ
-TSwgTDFTUywgYW5kIExUUg0KPiA+ID4gdGhlbXNlbHZlczsgdGhlIFBDSSBjb3JlIHNob3VsZCBk
-byB0aGF0Lg0KPiA+ID4NCj4gPiA+IElmIGEgZHJpdmVyIG5lZWRzIHRvIHR3ZWFrIEFTUE0gYXQg
-cnVuLXRpbWUsIGl0IHNob3VsZCB1c2UNCj4gPiA+IGludGVyZmFjZXMgZXhwb3J0ZWQgYnkgdGhl
-IFBDSSBjb3JlIHRvIGRvIHNvLg0KPiA+ID4NCj4gPiBXaGljaCBpbnRlcmZhY2UgSSBjYW4gdXNl
-IHRvIHNldCBBU1BNPyBJIHVzZSAicGNpX3dyaXRlX2NvbmZpZ19ieXRlIiBub3cuDQo+IA0KPiBX
-aGF0IGRvIHlvdSBuZWVkIHRvIGRvPyAgaW5jbHVkZS9saW51eC9wY2ktYXNwbS5oIGV4cG9ydHMN
-Cj4gcGNpX2Rpc2FibGVfbGlua19zdGF0ZSgpLCB3aGljaCBpcyBtYWlubHkgdXNlZCB0byBhdm9p
-ZCBBU1BNIHN0YXRlcyB0aGF0IGhhdmUNCj4gaGFyZHdhcmUgZXJyYXRhLg0KPiANCkkgd2FudCB0
-byBlbmFibGUgQVNQTShMMCAtPiBMMSkgYW5kIGRpc2FibGUgQVNQTShMMSAtPiBMMCksIHdoaWNo
-IGludGVyZmFjZSBjYW4gSSB1c2U/DQoNCj4gSWYgeW91IG5lZWQgdG8gZG8gc29tZXRoaW5nIGJl
-eW9uZCB0aGF0LCB3ZSBjYW4gdGFsayBhYm91dCBhZGRpbmcgc29tZXRoaW5nDQo+IG5ldy4NCj4g
-DQo+IFRoZXJlIGFyZSBxdWl0ZSBhIGZldyBvdGhlciB0aGluZ3MgaW4gaW5jbHVkZS9saW51eC9w
-Y2ktYXNwbS5oLCBidXQgdGhleSdyZSBhbGwNCj4gZm9yIGludGVybmFsIHVzZSBpbiB0aGUgUENJ
-IGNvcmUuICBJJ2xsIG1vdmUgdGhlbSB0byBkcml2ZXJzL3BjaS9wY2kuaCB0byBhdm9pZA0KPiBj
-b25mdXNpb24uDQo+IA0KPiA+ID4gPiArc3RhdGljIHZvaWQgcnRzNTI0OV9zZXRfYXNwbShzdHJ1
-Y3QgcnRzeF9wY3IgKnBjciwgYm9vbCBlbmFibGUpIHsNCj4gPiA+ID4gKwlzdHJ1Y3QgcnRzeF9j
-cl9vcHRpb24gKm9wdGlvbiA9ICZwY3ItPm9wdGlvbjsNCj4gPiA+ID4gKwl1OCB2YWwgPSAwOw0K
-PiA+ID4gPiArDQo+ID4gPiA+ICsJaWYgKHBjci0+YXNwbV9lbmFibGVkID09IGVuYWJsZSkNCj4g
-PiA+ID4gKwkJcmV0dXJuOw0KPiA+ID4gPiArDQo+ID4gPiA+ICsJaWYgKG9wdGlvbi0+ZGV2X2Fz
-cG1fbW9kZSA9PSBERVZfQVNQTV9EWU5BTUlDKSB7DQo+ID4gPiA+ICsJCWlmIChlbmFibGUpDQo+
-ID4gPiA+ICsJCQl2YWwgPSBwY3ItPmFzcG1fZW47DQo+ID4gPiA+ICsJCXJ0c3hfcGNpX3VwZGF0
-ZV9jZmdfYnl0ZShwY3IsDQo+ID4gPiA+ICsJCQlwY3ItPnBjaWVfY2FwICsgUENJX0VYUF9MTktD
-VEwsDQo+ID4gPiA+ICsJCQlBU1BNX01BU0tfTkVHLCB2YWwpOw0KPiA+ID4NCj4gPiA+IFRoaXMg
-c3RvbXBzIG9uIHdoYXRldmVyIEFTUE0gY29uZmlndXJhdGlvbiB0aGUgUENJIGNvcmUgZGlkLg0K
-PiA+IFdlIGRpc2FibGUvZW5hYmxlIGFzcG0gZHluYW1pYyBpbiBvcmRlciB0byBpbXByb3ZlIHJl
-YWQvd3JpdGUNCj4gPiBwZXJmb3JtYW5jZSBhbmQgbW9yZSBzdGFibGUsIHNvIHdlIGRvbid0IGFs
-bG93IFBDSSBjb3JlIGRvIGl0Lg0KPiANCj4gVGhpcyBpcyBwcmV0dHkgdmFndWUuICBDYW4geW91
-IGJlIGFueSBtb3JlIHNwZWNpZmljPyAgSWYgdGhlcmUgYXJlDQo+IHBlcmZvcm1hbmNlIG9yIHN0
-YWJpbGl0eSBwcm9ibGVtcyBpbiB0aGUgUENJIGNvcmUgQVNQTSBzdXBwb3J0LCBJJ2QgcHJlZmVy
-IHRvDQo+IGZpeCB0aG9zZSBpbnN0ZWFkIG9mIHdvcmtpbmcgYXJvdW5kIHRoZW0gaW4gZXZlcnkg
-ZHJpdmVyLg0KPiANCkl0J3MgZGV2aWNlJ3MgZGVmZWN0IG5vdCBQQ0kgY29yZSwgc28gbm8gbmVl
-ZCB0byBmaXggUENJIGNvcmUuDQoNCj4gQmpvcm4NCj4gDQo+IC0tLS0tLVBsZWFzZSBjb25zaWRl
-ciB0aGUgZW52aXJvbm1lbnQgYmVmb3JlIHByaW50aW5nIHRoaXMgZS1tYWlsLg0K
+From: Bjorn Helgaas
+> Sent: 06 December 2017 22:47
+>
+> On Wed, Dec 06, 2017 at 02:03:55PM +0000, David Laight wrote:
+> > If I perform the following:
+> > 1) echo 1 >/sys/devices/pcixxxx/xxx/remove
+> > 2) completely reset the PCIe endpoint
+> > 3) echo 1 >/sys/devices/pcixxxx/rescan
+> > I expect the endpoint to be reprobed (provided the BARs are compatible).
+> 
+> I expect that, too.  Even if the BARs are wrong (they should be
+> cleared by the reset), we should at least discover the device.
+
+That matches what I've seen every other system do.
+
+If I reset the fpga during boot (well held in bios setup) it still isn't found.
+On other boards I've done that to load a different set of BARs and had the
+BIOS allocate resources based on the later image.
+
+> > However on a new motherboard (SkyLake) it looks as though the root bridge isn't
+> > trying to bring the PCIe link back up.
+> > (The same system disk works fine in a slighty older system.)
+...
+> > I believe that the endpoint is flipping between the 'Detect Active' and 'Detect Quiet'
+> > states. Which would imply that the root port isn't trying to establish the link.
+> 
+> I guess this refers to PCIe r3.1, sec 4.2.6.1.2, and Figure 4-23, the
+> "Detect Substate Machine".  I'm not a hardware person, so still
+> doesn't help me much :)  Out of curiosity, do you have an analyzer or
+> other visibility into what the Endpoint is doing?
+
+We don't have an analyser (cost too much) so I can't see what is actually
+happening on the link itself.
+The target is a fpga and we log all the low level state transitions to a
+memory block (and some transitions to a serial EEPROM).
+I'll set things up so I can read the trace while the PCIe link is still down.
+(I think the trace I looked at last time went back to the reset - but it
+is hard to tell.)
+
+...
+> > The full output (link_down) is:
+> >
+> > 00:01.0 PCI bridge: Intel Corporation Skylake PCIe Controller (x16) (rev 05) (prog-if 00 [Normal decode])
+...
+> 
+> I'm surprised there's no AER capability.  The Root Ports in my Sky Lake
+> system advertise AER, Access Control Services, and L1 PM Substates
+> capabilities, none of which are shown here.  Must be configurable via
+> the BIOS or something.
+
+Nothing I've seen in the BIOS setup (just rechecked).
+
+The PCIe lanes behind the 'Sunrise Point-H PCI Express Root Port'
+at 00:1c.0 do support AER.
+On this motherboard that is one of the ethernet chips, the m-PCIe
+and the M.2 connectors. I don't have the required adapters for those.
+
+But the big x16 connector (which we think we can split into two gen1 x1)
+doesn't report AER.
+I think it is directly connected to the cpu (i7-7700).
+
+We might be able to ask SuperMicro (well we can ask...)
+
+...
+> You could try clearing that corrected error in DevSta, e.g.,
+> 
+>   # setpci -s00:01.0 0xaa.w=0x0001
+> 
+> to see if the Link comes up.  I doubt that would make a difference,
+> but maybe.
+
+Made no difference.
+
+Nothing ever appears in the kernel log either.
+FWIW I'm normally running a 4.13.0-16 Ubuntu 17.10 kernel,
+but can run a 'bleeding edge' one.
+
+	David
