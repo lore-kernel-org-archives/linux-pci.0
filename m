@@ -1,144 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:33659 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751655AbdLUQr2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Dec 2017 11:47:28 -0500
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
-        "'Niklas Cassel'" <niklas.cassel@axis.com>,
-        "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>
-Cc: "'Niklas Cassel'" <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20171219232940.659-1-niklas.cassel@axis.com> <20171219232940.659-7-niklas.cassel@axis.com> <fd89cef7-ffab-7d1b-162f-8a155c4576be@synopsys.com>
-In-Reply-To: <fd89cef7-ffab-7d1b-162f-8a155c4576be@synopsys.com>
-Subject: Re: [PATCH v6 06/18] PCI: designware-ep: Add generic function for raising MSI irq
-Date: Thu, 21 Dec 2017 11:47:25 -0500
-Message-ID: <000401d37a7b$61e574b0$25b05e10$@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:59246 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752105AbdLHR4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Dec 2017 12:56:37 -0500
+Date: Fri, 8 Dec 2017 11:56:35 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?=
+        <ckoenig.leichtzumerken@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] x86/PCI: limit the size of the 64bit BAR to 256GB
+Message-ID: <20171208175635.GB12367@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171129141229.6107-1-christian.koenig@amd.com>
+ <20171129141229.6107-4-christian.koenig@amd.com>
+ <20171206195118.GL23510@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20171206195118.GL23510@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 20, 2017 2:33 PM, Joao Pinto wrote:
->=20
->=20
-> Hi,
->=20
-> =C3=80s 11:29 PM de 12/19/2017, Niklas Cassel escreveu:
-> > Add a generic function for raising MSI irqs that can be used by all
-> > DWC based controllers.
-> >
-> > Note that certain controllers, like DRA7xx, have a special =
-convenience
-> > register for raising MSI irqs that doesn't require you to explicitly =
-map
-> > the MSI address. Therefore, it is likely that certain drivers will
-> > not use this generic function, even if they can.
-> >
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+On Wed, Dec 06, 2017 at 01:51:18PM -0600, Bjorn Helgaas wrote:
+> On Wed, Nov 29, 2017 at 03:12:29PM +0100, Christian König wrote:
+> > This avoids problems with Xen which hides some memory resources from the
+> > OS and potentially also allows memory hotplug while this fixup is
+> > enabled.
+> 
+> The patch itself is OK, but the changelog doesn't say enough about
+> what the problem is.  I have no clue about what the Xen issue is or
+> why limiting the BAR to 256GB avoids the problem or what this has to
+> do with memory hotplug.
+> 
+> For example, we should be able to tell why 256GB is the right number.
+> Maybe there's something specific in Xen you can reference?  Maybe an
+> example of what goes wrong with some details?
+
+Ping?  Is this change required to fix issues people are seeing?  If
+so, we either need to rework the changelog and get it merged, or
+revert the quirk as a whole.
+
+I tentatively applied the first two patches to for-linus, but I
+haven't asked Linus to pull them because I assumed we really needed
+all three.
+
+Bjorn
+
+> > Signed-off-by: Christian König <christian.koenig@amd.com>
 > > ---
-> >  drivers/pci/dwc/pcie-designware-ep.c | 35
-> +++++++++++++++++++++++++++++++++++
-> >  drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
-> >  2 files changed, 44 insertions(+)
-> >
-> > diff --git a/drivers/pci/dwc/pcie-designware-ep.c
-> b/drivers/pci/dwc/pcie-designware-ep.c
-> > index 700ed2f4becf..c5aa1cac5041 100644
-> > --- a/drivers/pci/dwc/pcie-designware-ep.c
-> > +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> > @@ -282,6 +282,41 @@ static const struct pci_epc_ops epc_ops =3D {
-> >  	.stop			=3D dw_pcie_ep_stop,
-> >  };
-> >
-> > +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
-> > +			     u8 interrupt_num)
-> > +{
-> > +	struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
-> > +	struct pci_epc *epc =3D ep->epc;
-> > +	u16 msg_ctrl, msg_data;
-> > +	u32 msg_addr_lower, msg_addr_upper;
-> > +	u64 msg_addr;
-> > +	bool has_upper;
-> > +	int ret;
-> > +
-> > +	/* Raise MSI per the PCI Local Bus Specification Revision 3.0,
-> 6.8.1. */
-> > +	msg_ctrl =3D dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-> > +	has_upper =3D !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
-> > +	msg_addr_lower =3D dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-> > +	if (has_upper) {
-> > +		msg_addr_upper =3D dw_pcie_readl_dbi(pci,
-> MSI_MESSAGE_ADDR_U32);
-> > +		msg_data =3D dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-> > +	} else {
-> > +		msg_addr_upper =3D 0;
-> > +		msg_data =3D dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-> > +	}
-> > +	msg_addr =3D ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-> > +	ret =3D dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr,
-> > +				  epc->mem->page_size);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
-> > +
-> > +	dw_pcie_ep_unmap_addr(epc, ep->msi_mem_phys);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
-> >  {
-> >  	struct pci_epc *epc =3D ep->epc;
-> > diff --git a/drivers/pci/dwc/pcie-designware.h =
-b/drivers/pci/dwc/pcie-
-> designware.h
-> > index 37dfad8d003f..24edac035160 100644
-> > --- a/drivers/pci/dwc/pcie-designware.h
-> > +++ b/drivers/pci/dwc/pcie-designware.h
-> > @@ -106,6 +106,8 @@
-> >  #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
-> >  #define MSI_MESSAGE_ADDR_L32		0x54
-> >  #define MSI_MESSAGE_ADDR_U32		0x58
-> > +#define MSI_MESSAGE_DATA_32		0x58
-> > +#define MSI_MESSAGE_DATA_64		0x5C
-> >
-> >  /*
-> >   * Maximum number of MSI IRQs can be 256 per controller. But keep
-> > @@ -338,6 +340,7 @@ static inline int dw_pcie_host_init(struct =
-pcie_port
-> *pp)
-> >  void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
-> >  int dw_pcie_ep_init(struct dw_pcie_ep *ep);
-> >  void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-> > +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 =
-interrupt_num);
-> >  void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
-> >  #else
-> >  static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
-> > @@ -353,6 +356,12 @@ static inline void dw_pcie_ep_exit(struct
-> dw_pcie_ep *ep)
-> >  {
-> >  }
-> >
-> > +static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
-> > +					   u8 interrupt_num)
-> > +{
-> > +	return 0;
-> > +}
-> > +
-> >  static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum
-> pci_barno bar)
-> >  {
-> >  }
-> >
->=20
-> Acked-by: Joao Pinto <jpinto@synopsys.com>
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
+> >  arch/x86/pci/fixup.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> > index c817ab85dc82..149adbc7f2a3 100644
+> > --- a/arch/x86/pci/fixup.c
+> > +++ b/arch/x86/pci/fixup.c
+> > @@ -701,7 +701,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+> >  	res->name = "PCI Bus 0000:00";
+> >  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+> >  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+> > -	res->start = 0x100000000ull;
+> > +	res->start = 0xbd00000000ull;
+> >  	res->end = 0xfd00000000ull - 1;
+> >  
+> >  	/* Just grab the free area behind system memory for this */
+> > -- 
+> > 2.11.0
+> > 
