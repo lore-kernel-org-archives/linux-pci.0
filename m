@@ -1,52 +1,24 @@
-Return-Path: <SRS0=qAcQ=DL=gmail.com=jingoohan1@kernel.org>
-Return-Path: <SRS0=qAcQ=DL=gmail.com=jingoohan1@kernel.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Bjorn Helgaas'" <helgaas@kernel.org>,
-	"'Joao Pinto'" <Joao.Pinto@synopsys.com>,
-	"'Ley Foon Tan'" <lftan@altera.com>,
-	"'Shawn Lin'" <shawn.lin@rock-chips.com>,
-	"'Michal Simek'" <michal.simek@xilinx.com>
-Cc: "'Jim Quinlan'" <jim2101024@gmail.com>,
-	"'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
-	<linux-pci@vger.kernel.org>,
-	<rfi@lists.rocketboards.org>,
-	<linux-rockchip@lists.infradead.org>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
-Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
-Date: Fri, 15 Dec 2017 13:39:50 -0500
-Message-ID: <000f01d375d4$17e9c830$47bd5890$@gmail.com>
+Return-Path: <SRS0=kzs2=DF=assembler.cz=r.marek@kernel.org>
+Return-Path: <SRS0=kzs2=DF=assembler.cz=r.marek@kernel.org>
+Subject: Re: [PATCH] lspci: Decode "VGA 16-bit decode" in bridge control
+ register
+To: Bjorn Helgaas <helgaas@kernel.org>, Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org, RayeR <rayer@seznam.cz>
+References: <20171208212410.30418.94419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Rudolf Marek <r.marek@assembler.cz>
+Message-ID: <ef7e0e6a-404a-c54e-de99-cfebe2ff20cf@assembler.cz>
+Date: Sat, 9 Dec 2017 12:08:00 +0100
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+In-Reply-To: <20171208212410.30418.94419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 14, 2017 5:58 PM, Bjorn Helgaas wrote:
-> 
-> Hi all,
-> 
-> In the PCI config access path, the *_pcie_valid_device() functions in
-> the dwc, altera, rockchip, and xilinx drivers all check whether the
-> link is up.
-> 
-> I think this is racy because the link may go down after we check but
-> before we perform the config access.
-> 
-> What would blow up if we removed the *_pcie_link_up() checks?
+Hi Bjorn,
 
-The original intention is to avoid config access before link up.
+Thanks for the patch. It works as expected on my system.
+I tried to swap the bit and see if lspci sees that.
 
-Also, I did not find any racy condition as you mentioned.
-However, if you think that we need to prevent the racy condition,
-someone can send a patch or add comments.
+The patch does not apply cleanly on git or on 3.5.6, but maybe my mail client did something to it.
 
-Best regards,
-Jingoo Han
-
-> 
-> I'd like to either remove the checks or add comments about why the
-> race is acceptable.  If we've covered this before, I apologize.
-> Adding a comment will keep me from pestering you about this again in
-> the future.
-> 
-> Bjorn
+Thanks
+Rudolf
