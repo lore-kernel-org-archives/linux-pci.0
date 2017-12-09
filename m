@@ -1,56 +1,217 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58560 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751112AbdLETqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Dec 2017 14:46:55 -0500
-Date: Tue, 5 Dec 2017 13:46:53 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: rayer <rayer@seznam.cz>
-Cc: Rudolf Marek <r.marek@assembler.cz>, linux-pci@vger.kernel.org
-Subject: Re: PCI VGA 0x3b0/0x3C0 aliases handling in Linux
-Message-ID: <20171205194653.GE23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <098b7b02-90f8-636e-37b8-665c32aab96e@assembler.cz>
- <20171205190755.GB23510@bhelgaas-glaptop.roam.corp.google.com>
- <5A26F4E3.9030901@seznam.cz>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:35894 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751251AbdLIXoA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Dec 2017 18:44:00 -0500
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH 2/3] r8169: switch to device-managed functions in probe
+To: Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <9eee5aba-a739-a609-fd65-76666f377ed1@gmail.com>
+Message-ID: <80a201d7-ff1d-c823-c055-05250a018c48@gmail.com>
+Date: Sun, 10 Dec 2017 00:43:51 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A26F4E3.9030901@seznam.cz>
+In-Reply-To: <9eee5aba-a739-a609-fd65-76666f377ed1@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 05, 2017 at 08:34:59PM +0100, rayer wrote:
-> Bjorn Helgaas wrote:
-> >So if I understand correctly, you have
-> >   - A bridge with PCI_BRIDGE_CTL_VGA set but VGA_16BIT_EN is clear
-> >   - A peer of the bridge with an I/O BAR set to some alias of
-> >     0x3c0-0x3df
-> Yes. The tested card is SB Audigy that was assigned to IO base
-> address CFC0h with 32 Bytes window by PnP BIOS mechanism. The VGA
-> registers are aliasing every 400h over enite 16bit IO space and come
-> into colision with SB registers. It may shoot down any other PCI
-> card that got mapped to "wrong" IO base. This may then result to
-> bugs that tlookl like IRQ was not assigned properly but the primary
-> issue is IO colision.
-> >In this case I think both the bridge and the peer device will claim
-> >accesses to 0x3c0-0x3df, which is a bad thing.
-> >
-> >And your proposal is that Linux should either
-> >
-> >   - Turn on VGA_16BIT_EN (if supported by the bridge), or
-> >
-> >   - If VGA_16BIT_EN is not supported by the bridge, try to reassign
-> >     the peer I/O BAR so it doesn't conflict with the 0x3c0-0x3df
-> >     aliases
+Simplify probe error path and remove callback by using device-managed
+functions.
 
-> Yes, it's a question if is safe to do as implicit action or do it
-> only if specific kernel parameter is given. I belive it is safe to
-> enable VGA_16BIT_EN when supported.
+rtl_disable_msi isn't needed any longer because the release callback
+of pcim_enable_device does this implicitely.
 
-I think the situation is that we're taking a situation that is known
-to be broken (two devices claiming same transaction) and making a
-change (enabling VGA_16BIT_EN) that might fix it.  If it *doesn't* fix
-it, we're no worse off than we were before, so I think it's safe to do
-by default as long as we check to see whether VGA_16BIT_EN is
-writable.  In general I don't like to add kernel parameters.
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+ drivers/net/ethernet/realtek/r8169.c | 80 +++++++++---------------------------
+ 1 file changed, 20 insertions(+), 60 deletions(-)
 
-Bjorn
+diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
+index fc0d5fa65..3c7d90d3a 100644
+--- a/drivers/net/ethernet/realtek/r8169.c
++++ b/drivers/net/ethernet/realtek/r8169.c
+@@ -4643,16 +4643,6 @@ static void rtl8169_phy_timer(struct timer_list *t)
+ 	rtl_schedule_task(tp, RTL_FLAG_TASK_PHY_PENDING);
+ }
+ 
+-static void rtl8169_release_board(struct pci_dev *pdev, struct net_device *dev,
+-				  void __iomem *ioaddr)
+-{
+-	iounmap(ioaddr);
+-	pci_release_regions(pdev);
+-	pci_clear_mwi(pdev);
+-	pci_disable_device(pdev);
+-	free_netdev(dev);
+-}
+-
+ DECLARE_RTL_COND(rtl_phy_reset_cond)
+ {
+ 	return tp->phy_reset_pending(tp);
+@@ -4784,14 +4774,6 @@ static int rtl_tbi_ioctl(struct rtl8169_private *tp, struct mii_ioctl_data *data
+ 	return -EOPNOTSUPP;
+ }
+ 
+-static void rtl_disable_msi(struct pci_dev *pdev, struct rtl8169_private *tp)
+-{
+-	if (tp->features & RTL_FEATURE_MSI) {
+-		pci_disable_msi(pdev);
+-		tp->features &= ~RTL_FEATURE_MSI;
+-	}
+-}
+-
+ static void rtl_init_mdio_ops(struct rtl8169_private *tp)
+ {
+ 	struct mdio_ops *ops = &tp->mdio_ops;
+@@ -8256,9 +8238,6 @@ static void rtl_remove_one(struct pci_dev *pdev)
+ 
+ 	unregister_netdev(dev);
+ 
+-	dma_free_coherent(&tp->pci_dev->dev, sizeof(*tp->counters),
+-			  tp->counters, tp->counters_phys_addr);
+-
+ 	rtl_release_firmware(tp);
+ 
+ 	if (pci_dev_run_wake(pdev))
+@@ -8266,9 +8245,6 @@ static void rtl_remove_one(struct pci_dev *pdev)
+ 
+ 	/* restore original MAC address */
+ 	rtl_rar_set(tp, dev->perm_addr);
+-
+-	rtl_disable_msi(pdev, tp);
+-	rtl8169_release_board(pdev, dev, tp->mmio_addr);
+ }
+ 
+ static const struct net_device_ops rtl_netdev_ops = {
+@@ -8445,11 +8421,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		       MODULENAME, RTL8169_VERSION);
+ 	}
+ 
+-	dev = alloc_etherdev(sizeof (*tp));
+-	if (!dev) {
+-		rc = -ENOMEM;
+-		goto out;
+-	}
++	dev = devm_alloc_etherdev(&pdev->dev, sizeof (*tp));
++	if (!dev)
++		return -ENOMEM;
+ 
+ 	SET_NETDEV_DEV(dev, &pdev->dev);
+ 	dev->netdev_ops = &rtl_netdev_ops;
+@@ -8472,13 +8446,13 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 				     PCIE_LINK_STATE_CLKPM);
+ 
+ 	/* enable device (incl. PCI PM wakeup and hotplug setup) */
+-	rc = pci_enable_device(pdev);
++	rc = pcim_enable_device(pdev);
+ 	if (rc < 0) {
+ 		netif_err(tp, probe, dev, "enable failure\n");
+-		goto err_out_free_dev_1;
++		return rc;
+ 	}
+ 
+-	if (pci_set_mwi(pdev) < 0)
++	if (pcim_set_mwi(pdev) < 0)
+ 		netif_info(tp, probe, dev, "Mem-Wr-Inval unavailable\n");
+ 
+ 	/* make sure PCI base addr 1 is MMIO */
+@@ -8486,30 +8460,28 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		netif_err(tp, probe, dev,
+ 			  "region #%d not an MMIO resource, aborting\n",
+ 			  region);
+-		rc = -ENODEV;
+-		goto err_out_mwi_2;
++		return -ENODEV;
+ 	}
+ 
+ 	/* check for weird/broken PCI region reporting */
+ 	if (pci_resource_len(pdev, region) < R8169_REGS_SIZE) {
+ 		netif_err(tp, probe, dev,
+ 			  "Invalid PCI region size(s), aborting\n");
+-		rc = -ENODEV;
+-		goto err_out_mwi_2;
++		return -ENODEV;
+ 	}
+ 
+ 	rc = pci_request_regions(pdev, MODULENAME);
+ 	if (rc < 0) {
+ 		netif_err(tp, probe, dev, "could not request regions\n");
+-		goto err_out_mwi_2;
++		return rc;
+ 	}
+ 
+ 	/* ioremap MMIO region */
+-	ioaddr = ioremap(pci_resource_start(pdev, region), R8169_REGS_SIZE);
++	ioaddr = devm_ioremap(&pdev->dev, pci_resource_start(pdev, region),
++			      R8169_REGS_SIZE);
+ 	if (!ioaddr) {
+ 		netif_err(tp, probe, dev, "cannot remap MMIO, aborting\n");
+-		rc = -EIO;
+-		goto err_out_free_res_3;
++		return -EIO;
+ 	}
+ 	tp->mmio_addr = ioaddr;
+ 
+@@ -8535,7 +8507,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+ 		if (rc < 0) {
+ 			netif_err(tp, probe, dev, "DMA configuration failed\n");
+-			goto err_out_unmap_4;
++			return rc;
+ 		}
+ 	}
+ 
+@@ -8697,8 +8669,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	tp->rtl_fw = RTL_FIRMWARE_UNKNOWN;
+ 
+-	tp->counters = dma_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
+-					   &tp->counters_phys_addr, GFP_KERNEL);
++	tp->counters = dmam_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
++					    &tp->counters_phys_addr,
++					    GFP_KERNEL);
+ 	if (!tp->counters) {
+ 		rc = -ENOMEM;
+ 		goto err_out_msi_5;
+@@ -8706,7 +8679,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	rc = register_netdev(dev);
+ 	if (rc < 0)
+-		goto err_out_cnt_6;
++		goto err_out_msi_5;
+ 
+ 	pci_set_drvdata(pdev, dev);
+ 
+@@ -8735,25 +8708,12 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	netif_carrier_off(dev);
+ 
+-out:
+-	return rc;
++	return 0;
+ 
+-err_out_cnt_6:
+-	dma_free_coherent(&pdev->dev, sizeof(*tp->counters), tp->counters,
+-			  tp->counters_phys_addr);
+ err_out_msi_5:
+ 	netif_napi_del(&tp->napi);
+-	rtl_disable_msi(pdev, tp);
+-err_out_unmap_4:
+-	iounmap(ioaddr);
+-err_out_free_res_3:
+-	pci_release_regions(pdev);
+-err_out_mwi_2:
+-	pci_clear_mwi(pdev);
+-	pci_disable_device(pdev);
+-err_out_free_dev_1:
+-	free_netdev(dev);
+-	goto out;
++
++	return rc;
+ }
+ 
+ static struct pci_driver rtl8169_pci_driver = {
+-- 
+2.15.1
