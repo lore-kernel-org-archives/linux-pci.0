@@ -1,99 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:49987 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753446AbdLTAbe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 19:31:34 -0500
-Date: Wed, 20 Dec 2017 01:31:25 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Alexandru Chirvasitu <achirvasub@gmail.com>
-cc: Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>,
-        Dou Liyang <douly.fnst@cn.fujitsu.com>
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-In-Reply-To: <20171219083421.GB24638@arch-chirva.localdomain>
-Message-ID: <alpine.DEB.2.20.1712200124440.2282@nanos>
-References: <20171218082011.GA24638@arch-chirva.localdomain> <20171218101131.GA5338@amd> <20171219083421.GB24638@arch-chirva.localdomain>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:35424 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751190AbdLIXn7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Dec 2017 18:43:59 -0500
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH 1/3] PCI: introduce a device-managed version of pci_set_mwi
+To: Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <9eee5aba-a739-a609-fd65-76666f377ed1@gmail.com>
+Message-ID: <3e560e2b-7f11-74e2-6db5-60c8479dc59b@gmail.com>
+Date: Sun, 10 Dec 2017 00:43:48 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <9eee5aba-a739-a609-fd65-76666f377ed1@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 19 Dec 2017, Alexandru Chirvasitu wrote:
+Introduce a device-managed version of pci_set_mwi. First user is the
+Realtek r8169 driver.
 
-> I had never heard of 'bisect' before this casual mention (you might tell
-> I am a bit out of my depth). I've since applied it to Linus' tree between
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+ drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 30 insertions(+)
 
-> bebc608 Linux 4.14 (good)
-> 
-> and
-> 
-> 4fbd8d1 Linux 4.15-rc1 (bad)
-
-Is Linus current head 4.15-rc4 bad as well?
-
-> It took about 13 attempts (I had access to a faster machine to compile
-> on, and ccache helped once the cache built up some momentum). The result
-> is (as presented by 'git bisect' at the end of the process, between the
-> --- dividers added by me for clarity):
-
-> --- start of output ---
-> 
-> 2b5175c4fa974b6aa05bbd2ee8d443a8036a1714 is the first bad commit
-> commit 2b5175c4fa974b6aa05bbd2ee8d443a8036a1714
-> Author: Thomas Gleixner <tglx@linutronix.de>
-> Date:   Tue Oct 17 09:54:57 2017 +0200
-> 
->     genirq: Add config option for reservation mode
->     
->     The interrupt reservation mode requires reactivation of PCI/MSI
->     interrupts. Create a config option, so the PCI code can set the
->     corresponding flag when required.
->     
->     Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
->     Cc: Josh Poulson <jopoulso@microsoft.com>
->     Cc: Mihai Costache <v-micos@microsoft.com>
->     Cc: Stephen Hemminger <sthemmin@microsoft.com>
->     Cc: Marc Zyngier <marc.zyngier@arm.com>
->     Cc: linux-pci@vger.kernel.org
->     Cc: Haiyang Zhang <haiyangz@microsoft.com>
->     Cc: Dexuan Cui <decui@microsoft.com>
->     Cc: Simon Xiao <sixiao@microsoft.com>
->     Cc: Saeed Mahameed <saeedm@mellanox.com>
->     Cc: Jork Loeser <Jork.Loeser@microsoft.com>
->     Cc: Bjorn Helgaas <bhelgaas@google.com>
->     Cc: devel@linuxdriverproject.org
->     Cc: KY Srinivasan <kys@microsoft.com>
->     Link: https://lkml.kernel.org/r/20171017075600.369375409@linutronix.de
-> 
-> :040000 040000 5e73031cc0c8411a20722cce7876ab7b82ed3858 dcf98e7a6b7d5f7c5353b7ccab02125e6d332ec8 M      kernel
-> 
-> --- end of output ---
-> 
-> Consequently, I am cc-ing in the listed addresses.
-
-Thanks for doing that bisect, but unfortunately this commit cannot be the
-problematic one, It merily adds a config symbol, but it does not change any
-code at all. It has no effect whatsoever. So something might have gone
-wrong in your bisecting.
-
-I CC'ed Dou Liyang. He has changed the early APIC setup code and there has
-been an issue reported already. Though I lost track of that. Dou, any
-pointers?
-
-Thanks,
-
-	tglx
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4a7c6864f..fc57c378d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1458,6 +1458,7 @@ struct pci_devres {
+ 	unsigned int pinned:1;
+ 	unsigned int orig_intx:1;
+ 	unsigned int restore_intx:1;
++	unsigned int mwi:1;
+ 	u32 region_mask;
+ };
+ 
+@@ -1476,6 +1477,9 @@ static void pcim_release(struct device *gendev, void *res)
+ 		if (this->region_mask & (1 << i))
+ 			pci_release_region(dev, i);
+ 
++	if (this->mwi)
++		pci_clear_mwi(dev);
++
+ 	if (this->restore_intx)
+ 		pci_intx(dev, this->orig_intx);
+ 
+@@ -3760,6 +3764,31 @@ int pci_set_mwi(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_set_mwi);
+ 
++/**
++ * pcim_set_mwi - Managed pci_set_mwi()
++ * @dev: the PCI device for which MWI is enabled
++ *
++ * Managed pci_set_mwi().
++ *
++ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
++ */
++int pcim_set_mwi(struct pci_dev *dev)
++{
++	struct pci_devres *dr;
++	int ret;
++
++	ret = pci_set_mwi(dev);
++	if (ret)
++		return ret;
++
++	dr = find_pci_dr(dev);
++	if (dr)
++		dr->mwi = 1;
++
++	return 0;
++}
++EXPORT_SYMBOL(pcim_set_mwi);
++
+ /**
+  * pci_try_set_mwi - enables memory-write-invalidate PCI transaction
+  * @dev: the PCI device for which MWI is enabled
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 978aad784..0a7ac863a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1064,6 +1064,7 @@ int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
+ int pci_set_cacheline_size(struct pci_dev *dev);
+ #define HAVE_PCI_SET_MWI
+ int __must_check pci_set_mwi(struct pci_dev *dev);
++int __must_check pcim_set_mwi(struct pci_dev *dev);
+ int pci_try_set_mwi(struct pci_dev *dev);
+ void pci_clear_mwi(struct pci_dev *dev);
+ void pci_intx(struct pci_dev *dev, int enable);
+-- 
+2.15.1
