@@ -1,40 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33720 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755868AbdLOW6m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 17:58:42 -0500
-Subject: [PATCH] [media] netup_unidvb: use PCI_EXP_DEVCTL2_COMP_TIMEOUT macro
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Abylay Ospan <aospan@netup.ru>, linux-pci@vger.kernel.org,
-        Sergey Kozlov <serjk@netup.ru>, linux-media@vger.kernel.org
-Date: Fri, 15 Dec 2017 16:58:38 -0600
-Message-ID: <20171215225838.177000.19883.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=67P7=DG=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Return-Path: <SRS0=67P7=DG=gmail.com=ckoenig.leichtzumerken@kernel.org>
+Reply-To: christian.koenig@amd.com
+Subject: Re: [PATCH 3/3] x86/PCI: limit the size of the 64bit BAR to 256GB
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20171129141229.6107-1-christian.koenig@amd.com>
+ <20171129141229.6107-4-christian.koenig@amd.com>
+ <20171206195118.GL23510@bhelgaas-glaptop.roam.corp.google.com>
+ <20171208175635.GB12367@bhelgaas-glaptop.roam.corp.google.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
+Message-ID: <be4fe1d8-0e86-1c06-a489-e0beca65ea10@gmail.com>
+Date: Sun, 10 Dec 2017 11:03:37 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171208175635.GB12367@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Am 08.12.2017 um 18:56 schrieb Bjorn Helgaas:
+> On Wed, Dec 06, 2017 at 01:51:18PM -0600, Bjorn Helgaas wrote:
+>> On Wed, Nov 29, 2017 at 03:12:29PM +0100, Christian König wrote:
+>>> This avoids problems with Xen which hides some memory resources from the
+>>> OS and potentially also allows memory hotplug while this fixup is
+>>> enabled.
+>> The patch itself is OK, but the changelog doesn't say enough about
+>> what the problem is.  I have no clue about what the Xen issue is or
+>> why limiting the BAR to 256GB avoids the problem or what this has to
+>> do with memory hotplug.
+>>
+>> For example, we should be able to tell why 256GB is the right number.
+>> Maybe there's something specific in Xen you can reference?  Maybe an
+>> example of what goes wrong with some details?
+> Ping?
 
-Use the existing PCI_EXP_DEVCTL2_COMP_TIMEOUT macro instead of hard-coding
-the PCIe Completion Timeout Value mask.  No functional change intended.
+Sorry for the delay, first been to busy and then got a bad cold and 
+today is the first day I've got out of bed again.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/media/pci/netup_unidvb/netup_unidvb_core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Is this change required to fix issues people are seeing?  If
+> so, we either need to rework the changelog and get it merged, or
+> revert the quirk as a whole.
 
-diff --git a/drivers/media/pci/netup_unidvb/netup_unidvb_core.c b/drivers/media/pci/netup_unidvb/netup_unidvb_core.c
-index 11829c0fa138..6cf88a0bf458 100644
---- a/drivers/media/pci/netup_unidvb/netup_unidvb_core.c
-+++ b/drivers/media/pci/netup_unidvb/netup_unidvb_core.c
-@@ -862,7 +862,7 @@ static int netup_unidvb_initdev(struct pci_dev *pci_dev,
- 		PCI_EXP_DEVCTL_NOSNOOP_EN, 0);
- 	/* Adjust PCIe completion timeout. */
- 	pcie_capability_clear_and_set_word(pci_dev,
--		PCI_EXP_DEVCTL2, 0xf, 0x2);
-+		PCI_EXP_DEVCTL2, PCI_EXP_DEVCTL2_COMP_TIMEOUT, 0x2);
- 
- 	if (netup_unidvb_request_mmio(pci_dev)) {
- 		dev_err(&pci_dev->dev,
+It's just a precaution to eventually avoid problems, I will try to 
+provided a patch with updated commit log tomorrow.
+
+> I tentatively applied the first two patches to for-linus, but I
+> haven't asked Linus to pull them because I assumed we really needed
+> all three.
+
+The first two patches are perfectly enough for now.
+
+Thanks,
+Christian.
+
+>
+> Bjorn
+>
+>>> Signed-off-by: Christian König <christian.koenig@amd.com>
+>>> ---
+>>>   arch/x86/pci/fixup.c | 2 +-
+>>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+>>> index c817ab85dc82..149adbc7f2a3 100644
+>>> --- a/arch/x86/pci/fixup.c
+>>> +++ b/arch/x86/pci/fixup.c
+>>> @@ -701,7 +701,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>>>   	res->name = "PCI Bus 0000:00";
+>>>   	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+>>>   		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+>>> -	res->start = 0x100000000ull;
+>>> +	res->start = 0xbd00000000ull;
+>>>   	res->end = 0xfd00000000ull - 1;
+>>>   
+>>>   	/* Just grab the free area behind system memory for this */
+>>> -- 
+>>> 2.11.0
+>>>
