@@ -1,131 +1,79 @@
-Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v1 1/7] platform/pseries: Update VF config space after EEH
-Date: Wed, 13 Dec 2017 09:32:36 -0600
-In-Reply-To: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
-References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20171213153242.98015-2-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53604 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752340AbdLKV5B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Dec 2017 16:57:01 -0500
+Subject: Patch "x86/PCI: Make broadcom_postcore_init() check acpi_disabled" has been added to the 4.14-stable tree
+To: rafael.j.wysocki@intel.com, bhelgaas@google.com,
+        dave.hansen@linux.intel.com, gregkh@linuxfoundation.org,
+        linux-pci@vger.kernel.org, mingo@kernel.org, tglx@linutronix.de
+Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
+From: <gregkh@linuxfoundation.org>
+Date: Mon, 11 Dec 2017 22:54:17 +0100
+Message-ID: <151302925723099@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add EEH platform operations for pseries to update VF
-config space. With this change after EEH, the VF
-will have updated config space for pseries platform.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+This is a note to let you know that I've just added the patch titled
+
+    x86/PCI: Make broadcom_postcore_init() check acpi_disabled
+
+to the 4.14-stable tree which can be found at:
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+
+The filename of the patch is:
+     x86-pci-make-broadcom_postcore_init-check-acpi_disabled.patch
+and it can be found in the queue-4.14 subdirectory.
+
+If you, or anyone else, feels it should not be added to the stable tree,
+please let <stable@vger.kernel.org> know about it.
+
+
+>From ddec3bdee05b06f1dda20ded003c3e10e4184cab Mon Sep 17 00:00:00 2001
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Date: Fri, 1 Dec 2017 15:08:12 +0100
+Subject: x86/PCI: Make broadcom_postcore_init() check acpi_disabled
+
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+commit ddec3bdee05b06f1dda20ded003c3e10e4184cab upstream.
+
+acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
+is set, but the host bridge information from the ACPI tables is not going
+to be used in that case and the Broadcom host bridge initialization should
+not be skipped then, So make broadcom_postcore_init() check acpi_disabled
+too to avoid this issue.
+
+Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
+Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- arch/powerpc/platforms/pseries/eeh_pseries.c | 85 +++++++++++++++++++++++++++-
- 1 file changed, 84 insertions(+), 1 deletion(-)
+ arch/x86/pci/broadcom_bus.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index 2295f117e2d3..1a9a6fa91151 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -708,6 +708,89 @@ static int pseries_eeh_write_config(struct pci_dn *pdn, int where, int size, u32
- 	return rtas_write_config(pdn, where, size, val);
- }
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init
+ 	 * We should get host bridge information from ACPI unless the BIOS
+ 	 * doesn't support it.
+ 	 */
+-	if (acpi_os_get_root_pointer())
++	if (!acpi_disabled && acpi_os_get_root_pointer())
+ 		return 0;
+ #endif
  
-+static int pseries_eeh_restore_vf_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 devctl, cmd, cap2, aer_capctl;
-+	int old_mps;
-+
-+	if (edev->pcie_cap) {
-+		/* Restore MPS */
-+		old_mps = (ffs(pdn->mps) - 8) << 5;
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+		devctl |= old_mps;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+
-+		/* Disable Completion Timeout */
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
-+				     4, &cap2);
-+		if (cap2 & 0x10) {
-+			eeh_ops->read_config(pdn,
-+					     edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					     4, &cap2);
-+			cap2 |= 0x10;
-+			eeh_ops->write_config(pdn,
-+					      edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					      4, cap2);
-+		}
-+	}
-+
-+	/* Enable SERR and parity checking */
-+	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
-+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
-+
-+	/* Enable report various errors */
-+	if (edev->pcie_cap) {
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_CERE;
-+		devctl |= (PCI_EXP_DEVCTL_NFERE |
-+			   PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_URRE);
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+	}
-+
-+	/* Enable ECRC generation and check */
-+	if (edev->pcie_cap && edev->aer_cap) {
-+		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				     4, &aer_capctl);
-+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-+		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				      4, aer_capctl);
-+	}
-+
-+	return 0;
-+}
-+
-+static int pseries_eeh_restore_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	s64 ret;
-+
-+	if (!edev)
-+		return -EEXIST;
-+
-+	/*
-+	 * FIXME: The MPS, error routing rules, timeout setting are worthy
-+	 * to be exported by firmware in extendible way.
-+	 */
-+	if (edev->physfn)
-+		ret = pseries_eeh_restore_vf_config(pdn);
-+
-+	if (ret) {
-+		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-+			__func__, edev->pe_config_addr, ret);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
- static struct eeh_ops pseries_eeh_ops = {
- 	.name			= "pseries",
- 	.init			= pseries_eeh_init,
-@@ -723,7 +806,7 @@ static struct eeh_ops pseries_eeh_ops = {
- 	.read_config		= pseries_eeh_read_config,
- 	.write_config		= pseries_eeh_write_config,
- 	.next_error		= NULL,
--	.restore_config		= NULL
-+	.restore_config		= pseries_eeh_restore_config
- };
- 
- /**
--- 
-2.14.3 (Apple Git-98)
+
+
+Patches currently in stable-queue which might be from rafael.j.wysocki@intel.com are
+
+queue-4.14/x86-pci-make-broadcom_postcore_init-check-acpi_disabled.patch
