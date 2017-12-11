@@ -1,40 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42702 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750862AbdLGULe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Dec 2017 15:11:34 -0500
-Date: Thu, 7 Dec 2017 14:11:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bandan Das <bsd@redhat.com>
-Cc: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] x86/pci: Add a break condition when enabling BAR
-Message-ID: <20171207201129.GA17271@bhelgaas-glaptop.roam.corp.google.com>
-References: <jpga7yvotm2.fsf@linux.bootlegged.copy>
- <8ce90b86-a2ec-c158-8f6d-e939c97aa065@amd.com>
- <jpgtvx2como.fsf@linux.bootlegged.copy>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 11 Dec 2017 10:42:33 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Johan Hovold <johan@kernel.org>
+Subject: Re: [PATCH v2] PCI: keystone: fix interrupt-controller-node lookup
+Message-ID: <20171211104233.GB3225@red-moon>
+References: <20171117133831.1300-1-johan@kernel.org>
+ <20171211102955.GK5672@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <jpgtvx2como.fsf@linux.bootlegged.copy>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171211102955.GK5672@localhost>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable <stable@vger.kernel.org>, Murali Karicheri <m-karicheri2@ti.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 07, 2017 at 02:41:03PM -0500, Bandan Das wrote:
-> Christian König <christian.koenig@amd.com> writes:
+On Mon, Dec 11, 2017 at 11:29:55AM +0100, Johan Hovold wrote:
+> On Fri, Nov 17, 2017 at 02:38:31PM +0100, Johan Hovold wrote:
+> > Fix child-node lookup during initialisation which was using the wrong
+> > OF-helper and ended up searching the whole device tree depth-first
+> > starting at the parent rather than just matching on its children.
+> > 
+> > To make things worse, the parent pci node could end up being prematurely
+> > freed as of_find_node_by_name() drops a reference to its first argument.
+> > Any matching child interrupt-controller node was also leaked.
+> > 
+> > Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+> > Cc: stable <stable@vger.kernel.org>     # 3.18
+> > Acked-by: Murali Karicheri <m-karicheri2@ti.com>
+> > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Signed-off-by: Johan Hovold <johan@kernel.org>
+> > ---
+> > 
+> > v2
+> >  - amend commit message and mention explicitly that of_find_node_by_name()
+> >    drops a reference to the start node
+> >  - add Murali's and Lorenzo's acks
 > 
-> > Hi Bandas,
-> >
-> > thanks for the patch, but this is a known issue with a fix already on
-> > the way into the next -rc.
-> 
-> Oh great! Thank you, have a pointer to the patch so that I can test ?
+> This one hasn't shown up in linux-next, so sending a reminder to make
+> sure it doesn't fall between the cracks.
 
-It's in linux-next.  If you want just the patch, see
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=for-linus
-(there are a couple patches there).
+Hi Johan,
 
-There's still one fix for a related issue that I haven't applied yet
-because it needs a little more detailed changelog.
+yes it is in the list of fixes to be sent upstream - I was about to
+ask Bjorn to apply it.
 
-Bjorn
+Thanks,
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
