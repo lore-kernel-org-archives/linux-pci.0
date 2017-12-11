@@ -1,130 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39518 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751630AbdLFSnU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Dec 2017 13:43:20 -0500
-Date: Wed, 6 Dec 2017 12:43:14 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rudolf Marek <r.marek@assembler.cz>
-Cc: linux-pci@vger.kernel.org, RayeR <rayer@seznam.cz>, mj@ucw.cz
-Subject: Re: PCI VGA 0x3b0/0x3C0 aliases handling in Linux
-Message-ID: <20171206184314.GK23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <098b7b02-90f8-636e-37b8-665c32aab96e@assembler.cz>
- <20171205190755.GB23510@bhelgaas-glaptop.roam.corp.google.com>
- <0a488e5b-d954-b2bc-0089-6c0542b8c571@assembler.cz>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 4/4] PCI: dwc: pci-dra7xx: Fix legacy IRQ handling
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20171201061311.16691-1-vigneshr@ti.com>
+ <20171201061311.16691-5-vigneshr@ti.com>
+ <20171208183523.GB1885@e107981-ln.cambridge.arm.com>
+From: Vignesh R <vigneshr@ti.com>
+Message-ID: <f2f05d1d-c3a7-1a27-75ca-3fdc623b07bb@ti.com>
+Date: Mon, 11 Dec 2017 10:12:52 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0a488e5b-d954-b2bc-0089-6c0542b8c571@assembler.cz>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171208183523.GB1885@e107981-ln.cambridge.arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Tony Lindgren <tony@atomide.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ KISHON VIJAY ABRAHAM <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 05, 2017 at 09:35:22PM +0100, Rudolf Marek wrote:
-> Dne 5.12.2017 v 20:07 Bjorn Helgaas napsal(a):
-> > So if I understand correctly, you have
-> > 
-> >   - A bridge with PCI_BRIDGE_CTL_VGA set but VGA_16BIT_EN is clear
-> 
-> Yes
-> 
-> >   - A peer of the bridge with an I/O BAR set to some alias of
-> >     0x3c0-0x3df
-> 
-> It is not a peer bridge, but some other bridge on bus 0. The non-working device is
-> a Audigy PCI card (05:00.0)
 
-00:01.0 and 00:1c.3 are peers in the sense that they're both on the
-same bus.  00:1c.3 doesn't have a *BAR* that contains 0x3c0, but I
-think it does have an I/O *window* set to an alias of 0x3c0, like
-this (we don't actually print the implicit VGA bridge windows, but
-maybe we should):
 
-  00:01.0 PCI bridge to [bus 01]
-  00:01.0   implicit bridge window [io 0x03c0-0x03df] + ISA aliases
-  01:xx.0 VGA device legacy resource [io 0x03c0-0x03df]
-  00:1c.3 PCI bridge to [bus 04-05]
-  00:1c.3   bridge window [io 0xc000-0xcfff]
-  04:00.0 PCI bridge to [bus 05]
-  04:00.0   bridge window [io 0xc000-0xcfff]
-  05:00.0 Audigy reg 0x10: [io 0xcfc0-0xcfdf]
+On Saturday 09 December 2017 12:05 AM, Lorenzo Pieralisi wrote:
+> On Fri, Dec 01, 2017 at 11:43:11AM +0530, Vignesh R wrote:
+>> Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
+>> uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
+>> 4 which is numbered 0-3. Therefore when INTD IRQ line is used with
+>> pci-dra7xx driver following warning is seen:
+>>
+>>        WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
+>>        error: hwirq 0x4 is too large for dummy
+>>
+>> Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
+>> range into the 0-3 as done in other PCIe drivers.
+>>
+>> Also, iterate over all the INTx bits and call their respective IRQ
+>> handlers before clearing the status register.
+> 
+> It seems to me that you are fixing two bugs with one patch and therefore
+> I would ask you to split it in two or explain to me why we should
+> consider lumping them together.
+> 
 
-0xcfc0 is a 10-bit alias of 0x03c0, so both bridges (00:01.0 and
-00:1c.3) will claim it.
+Ok, I will split the patch into two in v2.
 
-> The path is 00:1c.3 (Intel PCIe bridge) -> 4:00.0 (ITE PCIe-PCI bridge) -> 5:00.0 (audigy)
-> The other bridge is 00:01.0 which connects to some VGA on bus 1.
-> 
-> The Audigy has only one resource:
-> 
-> Region 0: I/O ports at cfc0 [size=32]
-> 
-> Which collides with the 0x3b0. We used "isadump -f" to verify we indeed see an alias.
-> Rayer booted to DOS, edited the BAR and loadlin back to Linux and the device works,
-> so it was that. Later he reported that setting the bit4 also fixed that.
-> >
-> > In this case I think both the bridge and the peer device will claim
-> > accesses to 0x3c0-0x3df, which is a bad thing.
-> 
-> Yes, the isadump -f confirmed that.
 
-> > And your proposal is that Linux should either
-> > 
-> >   - Turn on VGA_16BIT_EN (if supported by the bridge), or
-> > 
-> >   - If VGA_16BIT_EN is not supported by the bridge, try to reassign
-> >     the peer I/O BAR so it doesn't conflict with the 0x3c0-0x3df
-> >     aliases
-> 
-> The Aliases are:
-> 
-> 0x3B0 - 0x3BB  and 0x3C0 - 0x3DF and it seems that also VGA palette snoops 
-> and VGA palette snoops: 0x3C6, 0x3C8, 0x3C9 
-> 
-> It seems that the VGA_16BIT_EN could also control the palette snoops alias,
-> so in the end it should remove all aliases.
-> I hope someone access to more recent PCI bridge specs can confirm.
+-- 
+Regards
+Vignesh
 
-The PCI-to-PCI Bridge spec, r1.2, sec 3.2.5.18, says VGA_16BIT_EN
-controls the bridge decoding for "all VGA I/O register accesses that
-are forwarded from primary to secondary."  I would say that would
-include VGA palette snoops.
-
-> > If I'm understanding correctly, this sounds very reasonable.
-> 
-> Yes exactly. Question is why the insanity alias exists in the first place. 
-> What Mr. PCI tried to fix or break with that alias design?
-> Besides making logic simpler, I have no idea.
-
-I think this 10-bit aliasing is a compatibility feature for ISA.
-
-> >> I suspect it will fix couple of problems people were seeing with old
-> >> PCI cards as they tend to have the I/O regions (I stumbled upon
-> >> various reports when was suspecting the PCIe to PCI ITE chip and
-> >> interrupt routing problems)
-> > 
-> > To help understand and document this better, it would be nice to see a
-> > complete dmesg log and "lspci -vv" output (as root) showing the
-> > problem.  A kernel.org bugzilla would be a good place to store this.
-> 
-> Yes sure, in what category
-> 
-> drivers/pci or platform/hardware?
-
-drivers/pci
-
-> > It would also be great to collect up the other reports you've found
-> > and see if we can definitively tie them to this issue and potentially
-> > test a fix.
-> 
-> Oh, hm, those were random searches using a search engine. I was talking about [1], 
-> but reading it again, all issues were interrupt related.
-> 
-> I'll try to reproduce my searches.
-> 
-> Btw, latest pciutils-3.5.6 also lack of decoding of the bit4. I added to Martin Mares to CC.
-> 
-> I can prepare a patch for PCIutils if needed. Martin, please tell.
-
-Yes, a pciutils patch would be great.  It would be ideal if you could
-prepare the patch and send it to Martin and cc linux-pci.
-
-> [1] https://bugzilla.kernel.org/show_bug.cgi?id=43238
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
