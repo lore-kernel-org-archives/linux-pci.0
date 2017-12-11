@@ -1,140 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34502 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:56530 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755795AbdLOXDG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 18:03:06 -0500
-Subject: [PATCH] qed: Remove unused QED_RDMA_DEV_CAP_* symbols and
- dev->dev_caps
+        id S1751274AbdLKRyy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Dec 2017 12:54:54 -0500
+Date: Mon, 11 Dec 2017 11:54:53 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, Ariel Elior <Ariel.Elior@cavium.com>,
-        everest-linux-l2@cavium.com
-Date: Fri, 15 Dec 2017 17:03:01 -0600
-Message-ID: <20171215230301.177993.80284.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com, mmaddireddy@nvidia.com, robh+dt@kernel.org,
+        devicetree@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH V3 0/2] Tegra PCIe end point config space map code
+ refactoring
+Message-ID: <20171211175452.GC16032@bhelgaas-glaptop.roam.corp.google.com>
+References: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
+ <20171211105431.GI10671@ulmo>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171211105431.GI10671@ulmo>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+[+cc Lorenzo]
 
-The QED_RDMA_DEV_CAP_* symbols are only used to set bits in dev->dev_caps.
-Nobody ever looks at those bits.  Remove the symbols and dev_caps itself.
+On Mon, Dec 11, 2017 at 11:54:31AM +0100, Thierry Reding wrote:
+> On Mon, Dec 04, 2017 at 11:23:48PM +0530, Vidya Sagar wrote:
+> > PCIe host controller in Tegra SoCs has 1GB of aperture available
+> > for mapping end points config space, IO and BARs. In that, currently
+> > 256MB is being reserved for mapping end points configuration space
+> > which leaves less memory space available for mapping end points BARs
+> > on some of the platforms.
+> > This patch series attempts to map only 4K space from 1GB aperture to
+> > access end points configuration space.
+> > 
+> > Currently, this change can benefit T20 and T186 in saving (i.e. repurposed
+> > to use for BAR mapping) physical space as well as kernel virtual mapping space,
+> > it saves only kernel virtual address space in T30, T124, T132 and T210.
+> > 
+> > NOTE: Since T186 PCIe DT entry is not yet present in main line (it is currently
+> > merged to 'for-4.15/arm64/dt' branch), nothing gets broken with this change for T186.
+> > For older platforms (T20, T30, T124, T132, T210), this change works fine without any
+> > DT modifications
+> > 
+> > Testing Done on T124, T210 & T186:
+> >  Enumeration and basic functionality of immediate devices
+> >  Enumeration of devices behind a PCIe switch
+> >  Complete 4K configuration space access
+> > 
+> > Vidya Sagar (2):
+> >   PCI: tegra: refactor config space mapping code
+> >   ARM64: tegra: limit PCIe config space mapping to 4K for T186
+> > 
+> >  arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +-
+> >  drivers/pci/host/pci-tegra.c             | 125 ++++++++++---------------------
+> >  2 files changed, 44 insertions(+), 89 deletions(-)
+> 
+> Hi Bjorn,
+> 
+> there's a bunch of PCI related patches for Tegra floating around on the
+> lists. I'm wondering if you'd be okay if I pick those up into the Tegra
+> tree after they've been reviewed and send you a pull request later on
+> (say around v4.15-rc6). That would allow me to get things cooking in
+> linux-next for a bit and get broader testing in addition to the
+> flexibility to patch things up if they break.
 
-Note that if these are ever used and added back, it looks incorrect to set
-QED_RDMA_DEV_CAP_ATOMIC_OP based on PCI_EXP_DEVCTL2_LTR_EN.  LTR is the
-Latency Tolerance Reporting mechanism, which has nothing to do with Atomic
-Ops.
+Lorenzo will be merging the Tegra stuff, so this is more a question
+for him.
 
-No functional change intended.
+Just to clarify, I think your questions is about putting those patches
+in
+git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git#for-next.
+If you put them there they will show up in linux-next, and then when
+Lorenzo merges them, you'll have to coordinate so they don't get
+merged into linux-next twice (once via the usual PCI tree route and
+again via the Tegra tree).
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/net/ethernet/qlogic/qed/qed_rdma.c |   20 ----------
- include/linux/qed/qed_rdma_if.h            |   55 +---------------------------
- 2 files changed, 1 insertion(+), 74 deletions(-)
+If you wait until after they've been reviewed to put them into the
+Tegra tree, I'm not sure what the gain is, because I assume Lorenzo
+would merge them at about that same point.
 
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_rdma.c b/drivers/net/ethernet/qlogic/qed/qed_rdma.c
-index c8c4b3940564..1091b6aae0c6 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_rdma.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_rdma.c
-@@ -394,7 +394,6 @@ static void qed_rdma_init_devinfo(struct qed_hwfn *p_hwfn,
- {
- 	struct qed_rdma_device *dev = p_hwfn->p_rdma_info->dev;
- 	struct qed_dev *cdev = p_hwfn->cdev;
--	u32 pci_status_control;
- 	u32 num_qps;
- 
- 	/* Vendor specific information */
-@@ -468,25 +467,6 @@ static void qed_rdma_init_devinfo(struct qed_hwfn *p_hwfn,
- 	dev->max_ah = p_hwfn->p_rdma_info->num_qps;
- 	dev->max_stats_queues = (u8)RESC_NUM(p_hwfn, QED_RDMA_STATS_QUEUE);
- 
--	/* Set capablities */
--	dev->dev_caps = 0;
--	SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_RNR_NAK, 1);
--	SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_PORT_ACTIVE_EVENT, 1);
--	SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_PORT_CHANGE_EVENT, 1);
--	SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_RESIZE_CQ, 1);
--	SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_BASE_MEMORY_EXT, 1);
--	SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_BASE_QUEUE_EXT, 1);
--	SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_ZBVA, 1);
--	SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_LOCAL_INV_FENCE, 1);
--
--	/* Check atomic operations support in PCI configuration space. */
--	pci_read_config_dword(cdev->pdev,
--			      cdev->pdev->pcie_cap + PCI_EXP_DEVCTL2,
--			      &pci_status_control);
--
--	if (pci_status_control & PCI_EXP_DEVCTL2_LTR_EN)
--		SET_FIELD(dev->dev_caps, QED_RDMA_DEV_CAP_ATOMIC_OP, 1);
--
- 	if (QED_IS_IWARP_PERSONALITY(p_hwfn))
- 		qed_iwarp_init_devinfo(p_hwfn);
- }
-diff --git a/include/linux/qed/qed_rdma_if.h b/include/linux/qed/qed_rdma_if.h
-index 4dd72ba210f5..a8db5572d3c2 100644
---- a/include/linux/qed/qed_rdma_if.h
-+++ b/include/linux/qed/qed_rdma_if.h
-@@ -109,60 +109,7 @@ struct qed_rdma_device {
- 	u8 max_pkey;
- 	u16 max_srq_wr;
- 	u8 max_stats_queues;
--	u32 dev_caps;
--
--	/* Abilty to support RNR-NAK generation */
--
--#define QED_RDMA_DEV_CAP_RNR_NAK_MASK                           0x1
--#define QED_RDMA_DEV_CAP_RNR_NAK_SHIFT                  0
--	/* Abilty to support shutdown port */
--#define QED_RDMA_DEV_CAP_SHUTDOWN_PORT_MASK                     0x1
--#define QED_RDMA_DEV_CAP_SHUTDOWN_PORT_SHIFT                    1
--	/* Abilty to support port active event */
--#define QED_RDMA_DEV_CAP_PORT_ACTIVE_EVENT_MASK         0x1
--#define QED_RDMA_DEV_CAP_PORT_ACTIVE_EVENT_SHIFT                2
--	/* Abilty to support port change event */
--#define QED_RDMA_DEV_CAP_PORT_CHANGE_EVENT_MASK         0x1
--#define QED_RDMA_DEV_CAP_PORT_CHANGE_EVENT_SHIFT                3
--	/* Abilty to support system image GUID */
--#define QED_RDMA_DEV_CAP_SYS_IMAGE_MASK                 0x1
--#define QED_RDMA_DEV_CAP_SYS_IMAGE_SHIFT                        4
--	/* Abilty to support bad P_Key counter support */
--#define QED_RDMA_DEV_CAP_BAD_PKEY_CNT_MASK                      0x1
--#define QED_RDMA_DEV_CAP_BAD_PKEY_CNT_SHIFT                     5
--	/* Abilty to support atomic operations */
--#define QED_RDMA_DEV_CAP_ATOMIC_OP_MASK                 0x1
--#define QED_RDMA_DEV_CAP_ATOMIC_OP_SHIFT                        6
--#define QED_RDMA_DEV_CAP_RESIZE_CQ_MASK                 0x1
--#define QED_RDMA_DEV_CAP_RESIZE_CQ_SHIFT                        7
--	/* Abilty to support modifying the maximum number of
--	 * outstanding work requests per QP
--	 */
--#define QED_RDMA_DEV_CAP_RESIZE_MAX_WR_MASK                     0x1
--#define QED_RDMA_DEV_CAP_RESIZE_MAX_WR_SHIFT                    8
--	/* Abilty to support automatic path migration */
--#define QED_RDMA_DEV_CAP_AUTO_PATH_MIG_MASK                     0x1
--#define QED_RDMA_DEV_CAP_AUTO_PATH_MIG_SHIFT                    9
--	/* Abilty to support the base memory management extensions */
--#define QED_RDMA_DEV_CAP_BASE_MEMORY_EXT_MASK                   0x1
--#define QED_RDMA_DEV_CAP_BASE_MEMORY_EXT_SHIFT          10
--#define QED_RDMA_DEV_CAP_BASE_QUEUE_EXT_MASK                    0x1
--#define QED_RDMA_DEV_CAP_BASE_QUEUE_EXT_SHIFT                   11
--	/* Abilty to support multipile page sizes per memory region */
--#define QED_RDMA_DEV_CAP_MULTI_PAGE_PER_MR_EXT_MASK             0x1
--#define QED_RDMA_DEV_CAP_MULTI_PAGE_PER_MR_EXT_SHIFT            12
--	/* Abilty to support block list physical buffer list */
--#define QED_RDMA_DEV_CAP_BLOCK_MODE_MASK                        0x1
--#define QED_RDMA_DEV_CAP_BLOCK_MODE_SHIFT                       13
--	/* Abilty to support zero based virtual addresses */
--#define QED_RDMA_DEV_CAP_ZBVA_MASK                              0x1
--#define QED_RDMA_DEV_CAP_ZBVA_SHIFT                             14
--	/* Abilty to support local invalidate fencing */
--#define QED_RDMA_DEV_CAP_LOCAL_INV_FENCE_MASK                   0x1
--#define QED_RDMA_DEV_CAP_LOCAL_INV_FENCE_SHIFT          15
--	/* Abilty to support Loopback on QP */
--#define QED_RDMA_DEV_CAP_LB_INDICATOR_MASK                      0x1
--#define QED_RDMA_DEV_CAP_LB_INDICATOR_SHIFT                     16
-+
- 	u64 page_size_caps;
- 	u8 dev_ack_delay;
- 	u32 reserved_lkey;
+This cycle isn't going to be ideal timing with all the holidays
+coming up.  I know I'm going to be traveling and on vacation quite a
+bit in the rc5, 6, 7 timeframe.
+
+Bjorn
