@@ -1,46 +1,203 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:59892 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751403AbdLCVPn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 3 Dec 2017 16:15:43 -0500
-To: LKML <linux-kernel@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] Documentation: fix docs build error after source file removed
-Message-ID: <5fc71be8-e465-211d-757f-457a8054673c@infradead.org>
-Date: Sun, 3 Dec 2017 13:15:39 -0800
+Received: from mga04.intel.com ([192.55.52.120]:37329 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752103AbdLKS6x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Dec 2017 13:58:53 -0500
+From: "Wang, Liang-min" <liang-min.wang@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Alexander Duyck <alexander.duyck@gmail.com>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Duyck, Alexander H" <alexander.h.duyck@intel.com>
+Subject: RE: [PATCH v2] Enable SR-IOV instantiation through /sys file
+Date: Mon, 11 Dec 2017 18:58:52 +0000
+Message-ID: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB708BE@FMSMSX110.amr.corp.intel.com>
+References: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
+        <20171208155802.4d1159c5@t450s.home>
+        <CAKgT0Ue=Wa-gamGoJFnHigqh+g4L9BRFE7c4RtG5nug-4HtZSA@mail.gmail.com>
+        <20171208163459.00fc5b20@t450s.home>
+        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB707A8@FMSMSX110.amr.corp.intel.com>
+ <20171211111326.250f51cf@t450s.home>
+In-Reply-To: <20171211111326.250f51cf@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@infradead.org>
 
-The pci/htirq.c file was removed so remove it from the documentation
-file also.
 
-Error: Cannot open file ../drivers/pci/htirq.c
-WARNING: kernel-doc '../scripts/kernel-doc -rst -enable-lineno -export ../drivers/pci/htirq.c' failed with return code 2
-
-Fixes: fd2fa6c18b72 ("x86/PCI: Remove unused HyperTransport interrupt support")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
- Documentation/driver-api/pci.rst |    3 ---
- 1 file changed, 3 deletions(-)
-
---- lnx-415-rc2.orig/Documentation/driver-api/pci.rst
-+++ lnx-415-rc2/Documentation/driver-api/pci.rst
-@@ -25,9 +25,6 @@ PCI Support Library
- .. kernel-doc:: drivers/pci/irq.c
-    :export:
+> -----Original Message-----
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Monday, December 11, 2017 1:13 PM
+> To: Wang, Liang-min <liang-min.wang@intel.com>
+> Cc: Alexander Duyck <alexander.duyck@gmail.com>; Kirsher, Jeffrey T
+> <jeffrey.t.kirsher@intel.com>; kvm@vger.kernel.org; linux-
+> pci@vger.kernel.org; linux-kernel@vger.kernel.org; Bjorn Helgaas
+> <bhelgaas@google.com>; Duyck, Alexander H <alexander.h.duyck@intel.com>
+> Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
+> 
+> On Mon, 11 Dec 2017 14:22:30 +0000
+> "Wang, Liang-min" <liang-min.wang@intel.com> wrote:
+> 
+> > > -----Original Message-----
+> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > Sent: Friday, December 08, 2017 6:35 PM
+> > > To: Alexander Duyck <alexander.duyck@gmail.com>
+> > > Cc: Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>; Wang, Liang-min
+> <liang-
+> > > min.wang@intel.com>; kvm@vger.kernel.org; linux-pci@vger.kernel.org;
+> linux-
+> > > kernel@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>; Duyck,
+> > > Alexander H <alexander.h.duyck@intel.com>
+> > > Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
+> > >
+> > > On Fri, 8 Dec 2017 15:19:18 -0800
+> > > Alexander Duyck <alexander.duyck@gmail.com> wrote:
+> > >
+> > > > On Fri, Dec 8, 2017 at 2:58 PM, Alex Williamson
+> > > > <alex.williamson@redhat.com> wrote:
+> > > > > On Fri,  8 Dec 2017 13:47:58 -0800
+> > > > > Jeff Kirsher <jeffrey.t.kirsher@intel.com> wrote:
+> > > > >
+> > > > >> From: Liang-Min Wang <liang-min.wang@intel.com>
+> > > > >>
+> > > > >> When a SR-IOV capable device is bound with vfio-pci, the
+> > > > >> device loses capability of creating SR-IOV instances through /sy/bus/
+> > > > >> pci/devices/.../sriov_numvfs. This patch re-activates this capability
+> > > > >> for a PCIe device that is SR-IOV capable and is bound with vfio-pci.ko.
+> > > > >> This patch also disables drivers_autoprobe attribute of SR-IOV devices
+> > > > >> created from vfio-pci bound device by default, so user-space PF device
+> > > > >> can coordinate the bring-up of SR-IOV devices
+> > > > >>
+> > > > >> Signed-off-by: Liang-Min Wang <liang-min.wang@intel.com>
+> > > > >> ---
+> > > > >>  drivers/pci/pci-driver.c    | 12 ++++++++++++
+> > > > >>  drivers/vfio/pci/vfio_pci.c | 22 ++++++++++++++++++++++
+> > > > >>  include/linux/pci.h         |  1 +
+> > > > >>  3 files changed, 35 insertions(+)
+> > > > >>
+> > > > >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > > > >> index 7f47bb7..19522fe 100644
+> > > > >> --- a/drivers/pci/pci-driver.c
+> > > > >> +++ b/drivers/pci/pci-driver.c
+> > > > >> @@ -1467,6 +1467,18 @@ void pci_dev_put(struct pci_dev *dev)
+> > > > >>  }
+> > > > >>  EXPORT_SYMBOL(pci_dev_put);
+> > > > >>
+> > > > >> +/**
+> > > > >> + * pci_dev_sriov_autoprobe_set - set device sriov driver autoprobe
+> > > > >> + * @dev: device with which sriov autoprobe will be set
+> > > > >> + *
+> > > > >> + */
+> > > > >> +void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool
+> autoprobe)
+> > > > >> +{
+> > > > >> +     if (dev && dev->sriov)
+> > > > >> +             dev->sriov->drivers_autoprobe = autoprobe;
+> > > > >> +}
+> > > > >> +EXPORT_SYMBOL(pci_dev_sriov_autoprobe_set);
+> > > > >
+> > > > > _GPL?
+> > > > >
+> > > > > It'd also be best to separate the pci and vfio changes into different
+> > > > > patches.  Bjorn would need to at least ack this PCI interface.
+> > > > >
+> > > > >> +
+> > > > >>  static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
+> > > > >>  {
+> > > > >>       struct pci_dev *pdev;
+> > > > >> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> > > > >> index f041b1a..004836c 100644
+> > > > >> --- a/drivers/vfio/pci/vfio_pci.c
+> > > > >> +++ b/drivers/vfio/pci/vfio_pci.c
+> > > > >> @@ -1213,6 +1213,8 @@ static int vfio_pci_probe(struct pci_dev
+> *pdev,
+> > > const struct pci_device_id *id)
+> > > > >>               return -ENOMEM;
+> > > > >>       }
+> > > > >>
+> > > > >> +     /* disable sriov automatic driver attachment */
+> > > > >> +     pci_dev_sriov_autoprobe_set(pdev, false);
+> > > > >
+> > > > > This looks stateful, VF autoprobe is not restored on release.  Also,
+> > > > > how would we know the initial state to restore it to?
+> > > >
+> > > > The initial state is whatever the user set it to. It is something that
+> > > > can be toggled on and off via sysfs, and it defaults to true at
+> > > > initialization. In this case we are opting to toggle it off when VFIO
+> > > > is attached to the device. Restoring it after unloading the driver
+> > > > might be even more confusing since it is something the user could
+> > > > toggle at any time so a restore would end up overwriting that.
+> > >
+> > > I'm not really willing to sign up for the inevitable bug reports when
+> > > users can't figure out how to make their VFs work again in the host
+> > > after they've used the PF for userspace drivers with vfio-pci.  I
+> > > agree, both options are confusing, how do we make it not confusing?
+> > > Can PCI core reset the autoprobe attribute to the default at some
+> > > obvious point?  Thanks,
+> > >
+> >
+> > I would like to confirm the scenario discussed here is to unload PF driver,
+> right?
+> > Since users need to release all SR-IOV from PF driver first before PF driver is
+> > released, does it make sense to restore autoprobe when VFs are released?
+> 
+> We don't know that VFs will be created, but perhaps you mean the point
+> at which SR-IOV would be disabled in the PF unbind process.  Still, I
+> think you're left with userspace and kernel-space both trying to use
+> the same control bit and they're going to step on each other and create
+> corner cases that are inconsistent.  It's not necessarily even clear
+> how using separate trackers solves it since the kernel isn't
+> necessarily behaving in the way the user directed.  Maybe the user
+> interface to autoprobe needs to be locked out if the PF driver disables
+> it.
  
--.. kernel-doc:: drivers/pci/htirq.c
--   :export:
--
- .. kernel-doc:: drivers/pci/probe.c
-    :export:
- 
+To ensure there is no overlap between user-space applications to modify
+autoprobe bit while kernel is changing its value. One approach is to move
+the overwrite and restore into vfio_sriov_configure like below:
+
+static int vfio_sriov_configure(struct pci_dev *pdev, int num_vfs)
+{
+	int status;
+	bool old_autoprobe;
+
+	if (!num_vfs) {		
+		pci_disable_sriov(pdev);
+		return 0;
+	}
+
+	/*
+	 To avoid newly created VF to be bound with driver when
+	 user-space PF may not be ready, disable the SR-IOV
+	 instance driver automatic attachment, and save the original
+	 setting and restore the setting after SR-IOV are created.
+	 */
+	old_autoprobe = pci_dev_sriov_autoprobe_set(pdev, vdev->sriov_driver_autoprobe);
+
+	status = pci_enable_sriov(pdev, num_vfs);
+	if (!status) {
+		dev_crit("Created %d SR-IOV from a user-space driver based upon vfio-pci\n"
+			"These VFs are not bound with driver when they are created.\n"
+			"User needs to bring up user-space PF driver first,"
+			" then bind new VFs with respective driver to"
+			" ensure there is a PF driver to respond any VF request\n", num_vfs);
+		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
+	}
+	pci_dev_sriov_autoprobe_set(pdev, old_autoprobe);
+
+Would that resolve the issue as described? If not, could there be an example to illustrate the scenario that was described.
+
+Larry
+
+> 
+> Didn't we also discuss whether or not it's safe for vfio to enable
+> SR-IOV while the PF is in use by a user?  Does that all fall into the
+> "Dr. it hurts when I do this..." category and contributes to tainting
+> the kernel when enabled?  Definitely worth some comment words to
+> describe the various considerations contributing to kernel tainting.
+> Thanks,
+> 
+> Alex
