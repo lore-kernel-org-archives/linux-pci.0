@@ -1,46 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 12 Dec 2017 11:51:21 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Rafael Wysocki <rjw@rjwysocki.net>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH 7/9] workqueue: remove unneeded kallsyms include
-Message-ID: <20171212025121.GE7798@jagdpanzerIV>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
- <20171208025616.16267-8-sergey.senozhatsky@gmail.com>
- <20171211151621.GF2421075@devbig577.frc2.facebook.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51750 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752361AbdLKRRx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Dec 2017 12:17:53 -0500
+Date: Mon, 11 Dec 2017 11:17:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Chris Clayton <chris2553@googlemail.com>,
+        LKML <linux-kernel@vger.kernel.org>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+Subject: Re: Oops on 4.15-rc[123] on shutdown/reboot
+Message-ID: <20171211171751.GB16032@bhelgaas-glaptop.roam.corp.google.com>
+References: <1d802670-2d50-dd05-1205-561b0c025845@googlemail.com>
+ <32fa4f94-8f36-0321-81fd-f9ccb91c2a1f@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171211151621.GF2421075@devbig577.frc2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <32fa4f94-8f36-0321-81fd-f9ccb91c2a1f@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On (12/11/17 07:16), Tejun Heo wrote:
-> On Fri, Dec 08, 2017 at 11:56:14AM +0900, Sergey Senozhatsky wrote:
-> > The filw was converted from print_symbol() to %pf some time
-> > ago (044c782ce3a901fb "workqueue: fix checkpatch issues").
-> > kallsyms does not seem to be needed anymore.
-> > 
-> > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-> > Cc: Tejun Heo <tj@kernel.org>
-> > Cc: Lai Jiangshan <jiangshanlai@gmail.com>
+[+cc linux-pci]
+
+On Mon, Dec 11, 2017 at 11:29:50AM -0500, Sinan Kaya wrote:
+> Hi Chris,
 > 
-> Applied to wq/for-4.15-fixes.
+> > 
+> > I'm more than happy to provide additional diagnostics and test proposed fixes. As a starter for ten, I've attached the
+> > output from 'lspci -v'. If, however, you need to see the backtrace, I'll need some advice on how to capture that.
+> >
+> 
+> Can you open a bugzilla and also share the boot log?
+> 
+> There must be something unique about your system.
 
-thanks.
-
-	-ss
+Can you attach "lspci -vv" output (as root) to the bugzilla, too?
