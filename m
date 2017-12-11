@@ -1,97 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3606 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752102AbdLMLuy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 06:50:54 -0500
-Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
- port
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
-        <mperttunen@nvidia.com>, <linux-tegra@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <kthota@nvidia.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
- <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
-Date: Wed, 13 Dec 2017 17:20:39 +0530
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:46467 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751347AbdLKKyj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Dec 2017 05:54:39 -0500
+Date: Mon, 11 Dec 2017 11:54:31 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com, mmaddireddy@nvidia.com, robh+dt@kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH V3 0/2] Tegra PCIe end point config space map code
+ refactoring
+Message-ID: <20171211105431.GI10671@ulmo>
+References: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="KrHCbChajFcK0yQE"
+In-Reply-To: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
+--KrHCbChajFcK0yQE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
-> On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
->> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
->> after all the required root port register programming is completed.
->>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->> V3:
->> * no change in this patch
->> V2:
->> * no change in this patch
->>
->>  drivers/pci/host/pci-tegra.c | 9 +++++----
->>  1 file changed, 5 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->> index 96e8038c3019..b41c60c7414c 100644
->> --- a/drivers/pci/host/pci-tegra.c
->> +++ b/drivers/pci/host/pci-tegra.c
->> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->>  		}
->>  	}
->>  
->> -	/* take the PCIe interface module out of reset */
->> -	reset_control_deassert(pcie->pcie_xrst);
->> -
->>  	/* finally enable PCIe */
->>  	value = afi_readl(pcie, AFI_CONFIGURATION);
->>  	value |= AFI_CONFIGURATION_EN_FPCI;
->> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
->>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
->>  	}
->>  
->> -	reset_control_assert(pcie->pcie_xrst);
-> 
-> This does not look like it is part of the reset de-assertion code move.
-> 
-> tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
-> 
-> in other words, why are you removing it ?
-> 
-> Lorenzo
+On Mon, Dec 04, 2017 at 11:23:48PM +0530, Vidya Sagar wrote:
+> PCIe host controller in Tegra SoCs has 1GB of aperture available
+> for mapping end points config space, IO and BARs. In that, currently
+> 256MB is being reserved for mapping end points configuration space
+> which leaves less memory space available for mapping end points BARs
+> on some of the platforms.
+> This patch series attempts to map only 4K space from 1GB aperture to
+> access end points configuration space.
+>=20
+> Currently, this change can benefit T20 and T186 in saving (i.e. repurposed
+> to use for BAR mapping) physical space as well as kernel virtual mapping =
+space,
+> it saves only kernel virtual address space in T30, T124, T132 and T210.
+>=20
+> NOTE: Since T186 PCIe DT entry is not yet present in main line (it is cur=
+rently
+> merged to 'for-4.15/arm64/dt' branch), nothing gets broken with this chan=
+ge for T186.
+> For older platforms (T20, T30, T124, T132, T210), this change works fine =
+without any
+> DT modifications
+>=20
+> Testing Done on T124, T210 & T186:
+>  Enumeration and basic functionality of immediate devices
+>  Enumeration of devices behind a PCIe switch
+>  Complete 4K configuration space access
+>=20
+> Vidya Sagar (2):
+>   PCI: tegra: refactor config space mapping code
+>   ARM64: tegra: limit PCIe config space mapping to 4K for T186
+>=20
+>  arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +-
+>  drivers/pci/host/pci-tegra.c             | 125 ++++++++++---------------=
+------
+>  2 files changed, 44 insertions(+), 89 deletions(-)
 
-Hi Lorenzo,
+Hi Bjorn,
 
-Host driver should start LTSSM after programming all controller registers.
-In tegra_pcie_enable_controller() bunch of AFI module programming is done and
-I am adding PCIe register programming in this series.
-So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
-which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
+there's a bunch of PCI related patches for Tegra floating around on the
+lists. I'm wondering if you'd be okay if I pick those up into the Tegra
+tree after they've been reviewed and send you a pull request later on
+(say around v4.15-rc6). That would allow me to get things cooking in
+linux-next for a bit and get broader testing in addition to the
+flexibility to patch things up if they break.
 
-> 
->>  	reset_control_assert(pcie->afi_rst);
->>  	reset_control_assert(pcie->pex_rst);
->>  
->> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->>  			 port->index, port->lanes);
->>  
->>  		tegra_pcie_port_enable(port);
->> +	}
->>  
->> +	/* take the PCIe interface module out of reset */
->> +	reset_control_deassert(pcie->pcie_xrst);
->> +
->> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
->>  		if (tegra_pcie_port_check_link(port))
->>  			continue;
->>  
->> -- 
->> 2.1.4
->>
+Thierry
+
+--KrHCbChajFcK0yQE
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlouY+QACgkQ3SOs138+
+s6Gv/A/+I3RDNHLScnSYOD6XgtW2jtMYkMSXhFht/Xx6+3BJ4/lgxLLrhQ/QScel
+ZgaO7nEsHsHKBTiaINm5DiFWMLrQMfp2txF0UKwbcmcfmElZmkdK/rXCUm0ALMCh
+wu5f8jN3E0Pwn4bUBjFVz2apeSDC6F0jOb3UR3wjsRv6MkdfakP+yVVCdy0ljyzs
++AofdrBvQC7a75pERFC6vYlXqYoUjbN+puTQWMOn7/knXYlRJcqra4sgPdme7YS4
+YgOujKoxlhDg0PQqNYmJwDnx52KKaRt9JXjLSuBkwMcJ8p5xHVAq7lkzsue2xbHJ
+jNvQKs0/J3+rxUo/Y2t2lPW6nyzL465EPPVeCYhp8ABDi3mPdhQvFclw9mgfxIpE
+mfx71HA3VaHDCDgwK6C02TWU2jvZaG6Ub4uRYAwyjo/slial6mASttspME8Id80I
+ClDBJZ1UXkTmBDqTlNbfT5GFCfZM6RaGG2b9Mf0fHPFEi/LAyBy8P/eP34DZOh45
+Rd7suNsd0sDUdrYjPfGnZoiF0K0gvT10Uz+BLBkVVhI8/HrpbXM01OzZouSEd8vh
+9fXwcdTziKaYMsTppx/v0a1O2RUMFBv2sW+JHKsU9+QF18lTYLbKWoi1eqflZRNX
+CbCBEXIfC3Vo7ZPbPxnSHbCQgad3VihPBAUsmcycHBa3YhJs7Jo=
+=T1P+
+-----END PGP SIGNATURE-----
+
+--KrHCbChajFcK0yQE--
