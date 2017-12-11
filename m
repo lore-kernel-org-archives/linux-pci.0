@@ -1,126 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:55400 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755501AbdLTTc7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 14:32:59 -0500
-Subject: Re: [PATCH v6 06/18] PCI: designware-ep: Add generic function for
- raising MSI irq
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171219232940.659-7-niklas.cassel@axis.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <fd89cef7-ffab-7d1b-162f-8a155c4576be@synopsys.com>
-Date: Wed, 20 Dec 2017 19:32:54 +0000
+Received: from mail.kernel.org ([198.145.29.99]:55712 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751728AbdLKOqA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Dec 2017 09:46:00 -0500
+Date: Mon, 11 Dec 2017 08:45:59 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rudolf Marek <r.marek@assembler.cz>
+Cc: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org,
+        RayeR <rayer@seznam.cz>
+Subject: Re: [PATCH] lspci: Decode "VGA 16-bit decode" in bridge control
+ register
+Message-ID: <20171211144559.GA16032@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171208212410.30418.94419.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <ef7e0e6a-404a-c54e-de99-cfebe2ff20cf@assembler.cz>
 MIME-Version: 1.0
-In-Reply-To: <20171219232940.659-7-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ef7e0e6a-404a-c54e-de99-cfebe2ff20cf@assembler.cz>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Dec 09, 2017 at 12:08:00PM +0100, Rudolf Marek wrote:
+> Hi Bjorn,
+> 
+> Thanks for the patch. It works as expected on my system.
+> I tried to swap the bit and see if lspci sees that.
+> 
+> The patch does not apply cleanly on git or on 3.5.6, but maybe my mail client did something to it.
 
-Hi,
+I saved the email message and applied it successfully to e4d209fdc067
+("README: kernel.org does not speak FTP any longer"), which I think is the
+current head of git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git
 
-Às 11:29 PM de 12/19/2017, Niklas Cassel escreveu:
-> Add a generic function for raising MSI irqs that can be used by all
-> DWC based controllers.
-> 
-> Note that certain controllers, like DRA7xx, have a special convenience
-> register for raising MSI irqs that doesn't require you to explicitly map
-> the MSI address. Therefore, it is likely that certain drivers will
-> not use this generic function, even if they can.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/dwc/pcie-designware-ep.c | 35 +++++++++++++++++++++++++++++++++++
->  drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
->  2 files changed, 44 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> index 700ed2f4becf..c5aa1cac5041 100644
-> --- a/drivers/pci/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> @@ -282,6 +282,41 @@ static const struct pci_epc_ops epc_ops = {
->  	.stop			= dw_pcie_ep_stop,
->  };
->  
-> +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
-> +			     u8 interrupt_num)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	struct pci_epc *epc = ep->epc;
-> +	u16 msg_ctrl, msg_data;
-> +	u32 msg_addr_lower, msg_addr_upper;
-> +	u64 msg_addr;
-> +	bool has_upper;
-> +	int ret;
-> +
-> +	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
-> +	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-> +	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
-> +	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-> +	if (has_upper) {
-> +		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
-> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-> +	} else {
-> +		msg_addr_upper = 0;
-> +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-> +	}
-> +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-> +	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr,
-> +				  epc->mem->page_size);
-> +	if (ret)
-> +		return ret;
-> +
-> +	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
-> +
-> +	dw_pcie_ep_unmap_addr(epc, ep->msi_mem_phys);
-> +
-> +	return 0;
-> +}
-> +
->  void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
->  {
->  	struct pci_epc *epc = ep->epc;
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index 37dfad8d003f..24edac035160 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -106,6 +106,8 @@
->  #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
->  #define MSI_MESSAGE_ADDR_L32		0x54
->  #define MSI_MESSAGE_ADDR_U32		0x58
-> +#define MSI_MESSAGE_DATA_32		0x58
-> +#define MSI_MESSAGE_DATA_64		0x5C
->  
->  /*
->   * Maximum number of MSI IRQs can be 256 per controller. But keep
-> @@ -338,6 +340,7 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
->  void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
->  int dw_pcie_ep_init(struct dw_pcie_ep *ep);
->  void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-> +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 interrupt_num);
->  void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
->  #else
->  static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
-> @@ -353,6 +356,12 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
->  {
->  }
->  
-> +static inline int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
-> +					   u8 interrupt_num)
-> +{
-> +	return 0;
-> +}
-> +
->  static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
->  {
->  }
-> 
+So I suspect maybe your mail client corrupted it.
 
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+Bjorn
