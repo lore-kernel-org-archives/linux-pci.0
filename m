@@ -1,39 +1,55 @@
-Return-Path: <SRS0=RDL9=DK=gmail.com=linus971@kernel.org>
-Return-Path: <SRS0=RDL9=DK=gmail.com=linus971@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:54810 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752030AbdLKKTK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Dec 2017 05:19:10 -0500
+Date: Mon, 11 Dec 2017 10:19:47 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Stephen Boyd <sboyd@codeaurora.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: Use {upper,lower}_32_bits() macros for clarity
+Message-ID: <20171211101947.GA3225@red-moon>
+References: <20171129005334.16425-1-sboyd@codeaurora.org>
 MIME-Version: 1.0
-Sender: linus971@gmail.com
-In-Reply-To: <alpine.DEB.2.20.1712142331030.2257@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com>
- <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl>
- <alpine.DEB.2.20.1712061344560.1724@nanos> <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
- <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl>
- <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
- <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com>
- <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos>
- <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos>
- <CA+55aFwQBV9J1zxbBPLC5dOK-ebd1zcN6BaoB897AaKhc_tDtA@mail.gmail.com> <alpine.DEB.2.20.1712142331030.2257@nanos>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 14 Dec 2017 14:47:33 -0800
-Message-ID: <CA+55aFzEt3hspSXgA28emi7aka0wQc8SaC=wdVKp=DtmbptQTQ@mail.gmail.com>
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
-	Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Andy Lutomirski <luto@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "the arch/x86 maintainers" <x86@kernel.org>,
-	Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171129005334.16425-1-sboyd@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 14, 2017 at 2:36 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> But, because the silly firmware comes out of suspend with all PIC lines
-> unmasked for whatever reason, the PIC can observe that IRQ being raised and
-> the CPU not handling it. So yes, I forgot about 7 being magic, but I still
-> think it's the firmware which causes it by unmasking the PIC irqs.
+On Tue, Nov 28, 2017 at 04:53:34PM -0800, Stephen Boyd wrote:
+> We have macros for getting the upper or lower 32 bits of a
+> number. Use them here to shave a couple lines off the code.
+> 
+> Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+> ---
+>  drivers/pci/dwc/pcie-designware-host.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 157621175147..ae5abfddf8de 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -89,10 +89,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+>  	msi_target = virt_to_phys((void *)pp->msi_data);
+>  
+>  	/* program the msi_data */
+> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> -			    (u32)(msi_target & 0xffffffff));
+> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+> -			    (u32)(msi_target >> 32 & 0xffffffff));
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4, lower_32_bits(msi_target));
+> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, upper_32_bits(msi_target));
+>  }
 
-Yes, that sounds quite likely.
+Hi Stephen,
 
-            Linus
+I was about to apply it but I think that for consistency it would be
+better to convert to {lower,upper}_32_bits() also code in
+dw_msi_setup_msg() and slightly reword the log accordingly; if you do
+not mind sending a v2 with those changes I will apply then.
+
+Thanks,
+Lorenzo
