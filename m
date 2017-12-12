@@ -1,132 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41186 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751169AbdL1Wr2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 28 Dec 2017 17:47:28 -0500
-Date: Thu, 28 Dec 2017 16:47:18 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 12 Dec 2017 15:14:04 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Cc: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, adouglas@cadence.com,
-        stelford@cadence.com, dgary@cadence.com, kgopi@cadence.com,
-        eandrews@cadence.com, thomas.petazzoni@free-electrons.com,
-        sureshp@cadence.com, nsekhar@ti.com, linux-kernel@vger.kernel.org,
-        robh@kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 1/9] PCI: Regroup all PCI related entries into
- drivers/pci/Makefile
-Message-ID: <20171228224718.GA19819@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
- <49f5a733e05a46521340e913876332f3804e2042.1513620412.git.cyrille.pitchen@free-electrons.com>
+To: Jim Quinlan <jim2101024@gmail.com>
+Subject: Re: [PATCH v3 1/8] SOC: brcmstb: add memory API
+Message-ID: <20171212211404.GA95453@bhelgaas-glaptop.roam.corp.google.com>
+References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+ <1510697532-32828-2-git-send-email-jim2101024@gmail.com>
+ <20171205205926.GJ23510@bhelgaas-glaptop.roam.corp.google.com>
+ <CANCKTBvoXpF-H8Pck5TsH+7tNM=di1-uoedqACE+kjNEAUodYg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <49f5a733e05a46521340e913876332f3804e2042.1513620412.git.cyrille.pitchen@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CANCKTBvoXpF-H8Pck5TsH+7tNM=di1-uoedqACE+kjNEAUodYg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 18, 2017 at 07:16:01PM +0100, Cyrille Pitchen wrote:
-> This patch cleans drivers/Makefile up by moving the pci/endpoint and
-> pci/dwc entries from drivers/Makefile into drivers/pci/Makefile.
+[+cc Lorenzo]
 
-Thanks a lot for doing this!
+On Tue, Dec 12, 2017 at 03:53:28PM -0500, Jim Quinlan wrote:
+> On Tue, Dec 5, 2017 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Nov 14, 2017 at 05:12:05PM -0500, Jim Quinlan wrote:
+> >> From: Florian Fainelli <f.fainelli@gmail.com>
+> >>
+> >> This commit adds a memory API suitable for ascertaining the sizes of
+> >> each of the N memory controllers in a Broadcom STB chip.  Its first
+> >> user will be the Broadcom STB PCIe root complex driver, which needs
+> >> to know these sizes to properly set up DMA mappings for inbound
+> >> regions.
+> >>
+> >> We cannot use memblock here or anything like what Linux provides
+> >> because it collapses adjacent regions within a larger block, and here
+> >> we actually need per-memory controller addresses and sizes, which is
+> >> why we resort to manual DT parsing.
+> >>
+> >> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> >> ---
+> >>  drivers/soc/bcm/brcmstb/Makefile |   2 +-
+> >>  drivers/soc/bcm/brcmstb/memory.c | 172 ++++++++++++++++++++++++++++++=
++++++++++
+> >>  include/soc/brcmstb/memory_api.h |  25 ++++++
+> >>  3 files changed, 198 insertions(+), 1 deletion(-)
+> >>  create mode 100644 drivers/soc/bcm/brcmstb/memory.c
+> >>  create mode 100644 include/soc/brcmstb/memory_api.h
+> >>
+> >> diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmst=
+b/Makefile
+> >> index 9120b27..4cea7b6 100644
+> >> --- a/drivers/soc/bcm/brcmstb/Makefile
+> >> +++ b/drivers/soc/bcm/brcmstb/Makefile
+> >> @@ -1 +1 @@
+> >> -obj-y                                +=3D common.o biuctrl.o
+> >> +obj-y                                +=3D common.o biuctrl.o memory.o
+> >> diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmst=
+b/memory.c
+> >> new file mode 100644
+> >> index 0000000..eb647ad9
+> >> --- /dev/null
+> >> +++ b/drivers/soc/bcm/brcmstb/memory.c
+> >
+> > I sort of assume based on [1] that every new file should have an SPDX
+> > identifier ("The Linux kernel requires the precise SPDX identifier in
+> > all source files") and that the actual text of the GPL can be omitted.
+> >
+> > Only a few files in drivers/pci currently have an SPDX identifier.  I
+> > don't know if that's oversight or work-in-progress or what.
+> >
+> > [1] https://lkml.kernel.org/r/20171204212120.484179273@linutronix.de
+> >
+> =
 
-s/This patch cleans/Clean up/
+> Bjorn, Did you get a chance to review the other commits of this
+> submission (V3)?  I would like any additional feedback before I send
+> out a V4 with SPDX fixes.  Thanks, JimQ
 
-Speaking of cleanup, this Makefile has useless comments and blank
-lines.  Maybe you could add a new patch to remove them and reorder it
-into a sensible order, with the Intel MID special case at the end and
-the host/dwc/cadence stuff together?
+Lorenzo is taking over drivers/pci/host/* and he'll no doubt have some
+comments when he gets to this.  I'll point out a few quick formatting
+things in the meantime.
 
-> Since we don't want to introduce any dependency between CONFIG_PCI and
-> CONFIG_PCI_ENDPOINT, we now always execute drivers/pci/Makefile.
->
-> Hence all Makefiles in drivers/pci/ were updated accordingly so no file is
-> compiled when CONFIG_PCI is not defined.
-> 
-> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-> ---
->  drivers/Makefile          |  5 +----
->  drivers/pci/Kconfig       |  1 +
->  drivers/pci/Makefile      | 11 ++++++++---
->  drivers/pci/host/Makefile |  2 ++
->  4 files changed, 12 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/Makefile b/drivers/Makefile
-> index 1d034b680431..9757199b9a65 100644
-> --- a/drivers/Makefile
-> +++ b/drivers/Makefile
-> @@ -16,10 +16,7 @@ obj-$(CONFIG_PINCTRL)		+= pinctrl/
->  obj-$(CONFIG_GPIOLIB)		+= gpio/
->  obj-y				+= pwm/
->  
-> -obj-$(CONFIG_PCI)		+= pci/
-> -obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
-> -# PCI dwc controller drivers
-> -obj-y				+= pci/dwc/
-> +obj-y				+= pci/
->
->  obj-$(CONFIG_PARISC)		+= parisc/
->  obj-$(CONFIG_RAPIDIO)		+= rapidio/
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index bda151788f3f..7eeb969ab86a 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -125,6 +125,7 @@ config PCI_PASID
->  
->  config PCI_LABEL
->  	def_bool y if (DMI || ACPI)
-> +	depends on PCI
->  	select NLS
->  
->  config PCI_HYPERV
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index c7819b973df7..7284a7f6ad1e 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -3,12 +3,15 @@
->  # Makefile for the PCI bus specific drivers.
->  #
->  
-> -obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
-> +obj-$(CONFIG_PCI)	+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
->  			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
->  			irq.o vpd.o setup-bus.o vc.o mmap.o setup-irq.o
->  
-> +ifdef CONFIG_PCI
->  obj-$(CONFIG_PROC_FS) += proc.o
->  obj-$(CONFIG_SYSFS) += slot.o
-> +obj-$(CONFIG_OF) += of.o
-> +endif
->  
->  obj-$(CONFIG_PCI_QUIRKS) += quirks.o
->  
-> @@ -44,10 +47,12 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
->  
->  obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
->  
-> -obj-$(CONFIG_OF) += of.o
-> -
->  ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
->  
->  # PCI host controller drivers
->  obj-y += host/
->  obj-y += switch/
-> +
-> +obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
-> +# PCI dwc controller drivers
-> +obj-y				+= dwc/
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 34ec1d88f961..3b1059190867 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -34,6 +34,8 @@ obj-$(CONFIG_VMD) += vmd.o
->  # ARM64 and use internal ifdefs to only build the pieces we need
->  # depending on whether ACPI, the DT driver, or both are enabled.
->  
-> +ifdef CONFIG_PCI
->  obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
->  obj-$(CONFIG_ARM64) += pci-thunder-pem.o
->  obj-$(CONFIG_ARM64) += pci-xgene.o
-> +endif
-> -- 
-> 2.11.0
-> 
+> >> @@ -0,0 +1,172 @@
+> >> +/*
+> >> + * Copyright =A9 2015-2017 Broadcom
+> >> + *
+> >> + * This program is free software; you can redistribute it and/or modi=
+fy
+> >> + * it under the terms of the GNU General Public License version 2 as
+> >> + * published by the Free Software Foundation.
+> >> + *
+> >> + * This program is distributed in the hope that it will be useful,
+> >> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> >> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+> >> + * GNU General Public License for more details.
+> >> + *
+> >> + * A copy of the GPL is available at
+> >> + * http://www.broadcom.com/licenses/GPLv2.php or from the Free Softwa=
+re
+> >> + * Foundation at https://www.gnu.org/licenses/ .
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
