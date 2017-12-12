@@ -1,116 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 20 Dec 2017 18:52:41 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: honghui.zhang@mediatek.com
-Subject: Re: [PATCH] PCI: Mediatek: clear irq status after irq dispathed to
- avoid reentry
-Message-ID: <20171221005240.GC30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <SRS0=mmYt=DI=gmail.com=jhovold@kernel.org>
+Return-Path: <SRS0=mmYt=DI=gmail.com=jhovold@kernel.org>
+Sender: Johan Hovold <jhovold@gmail.com>
+Date: Tue, 12 Dec 2017 20:29:54 +0100
+From: Johan Hovold <johan@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Johan Hovold <johan@kernel.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable <stable@vger.kernel.org>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: keystone: fix interrupt-controller-node lookup
+Message-ID: <20171212192954.GB5185@localhost>
+References: <20171117133831.1300-1-johan@kernel.org>
+ <20171211102955.GK5672@localhost>
+ <20171211104233.GB3225@red-moon>
+ <20171212172537.GB53955@bhelgaas-glaptop.roam.corp.google.com>
+ <20171212180731.GA22805@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, yong.wu@mediatek.com, linux-kernel@vger.kernel.org,
- yt.shen@mediatek.com, matthias.bgg@gmail.com,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-mediatek@lists.infradead.org, xinping.qian@mediatek.com,
- bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171212180731.GA22805@red-moon>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo, please cc him on all drivers/{host,dwc,endpoint} material]
-
-Please run "git log --oneline drivers/pci/host/pcie-mediatek.c" and
-make yours match.  Same capitalization, same sentence structure, etc.,
-e.g.,
-
-  PCI: mediatek: Clear IRQ status ...
-
-s/dispathed/dispatched/
-
-s/irq/IRQ/ in the summary and all the English text below.
-
-On Wed, Dec 20, 2017 at 10:52:14AM +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Tue, Dec 12, 2017 at 06:07:31PM +0000, Lorenzo Pieralisi wrote:
+> On Tue, Dec 12, 2017 at 11:25:37AM -0600, Bjorn Helgaas wrote:
+> > On Mon, Dec 11, 2017 at 10:42:33AM +0000, Lorenzo Pieralisi wrote:
+> > > On Mon, Dec 11, 2017 at 11:29:55AM +0100, Johan Hovold wrote:
+> > > > On Fri, Nov 17, 2017 at 02:38:31PM +0100, Johan Hovold wrote:
+> > > > > Fix child-node lookup during initialisation which was using the wrong
+> > > > > OF-helper and ended up searching the whole device tree depth-first
+> > > > > starting at the parent rather than just matching on its children.
+> > > > > 
+> > > > > To make things worse, the parent pci node could end up being prematurely
+> > > > > freed as of_find_node_by_name() drops a reference to its first argument.
+> > > > > Any matching child interrupt-controller node was also leaked.
+> > > > > 
+> > > > > Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+> > > > > Cc: stable <stable@vger.kernel.org>     # 3.18
+> > > > > Acked-by: Murali Karicheri <m-karicheri2@ti.com>
+> > > > > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > > > Signed-off-by: Johan Hovold <johan@kernel.org>
+> > > > > ---
+> > > > > 
+> > > > > v2
+> > > > >  - amend commit message and mention explicitly that of_find_node_by_name()
+> > > > >    drops a reference to the start node
+> > > > >  - add Murali's and Lorenzo's acks
+> > > > 
+> > > > This one hasn't shown up in linux-next, so sending a reminder to make
+> > > > sure it doesn't fall between the cracks.
+> > > 
+> > > Hi Johan,
+> > > 
+> > > yes it is in the list of fixes to be sent upstream - I was about to
+> > > ask Bjorn to apply it.
+> > 
+> > Is this something that needs to be merged for v4.15?  If so, I need to
+> > be able to defend it to Linus as being a critical fix.  If the issue
+> > been around for 3 years (v3.18 was tagged Dec 7 2014), that requires
+> > pretty "clear and present danger."
+> > 
+> > From the commit log, I see a sub-optimal search (not critical), a
+> > possible use-after-free (could conceivably be critical if people are
+> > tripping over this, but would need more specifics about that), and a
+> > leak (not critical).
+> > 
+> > Given what I can see now, my inclination would be for Lorenzo to queue
+> > it for v4.16, which would still get in linux-next soonish.
 > 
-> There maybe a same irq reentry scenario after irq received in current
-> irq handle flow:
-> 	EP device		PCIe host driver	EP driver
-> 1. issue an irq
-> 			2. received irq
-> 			3. clear irq status
-> 			4. dispatch irq
-> 						5. clear irq source
-> The irq status was not successfully cleared at step 2 since the irq
-> source was not cleared yet. So the PCIe host driver may receive the
-> same irq after step 5. Then there's an irq reentry occurred.
-> Even worse, if the reentry irq was not an irq that EP driver expected,
-> it may not handle the irq. Then we may run into the dead loop from
+> It is fine by me and I think, as already mentioned, that the stable
+> tag is dubious so I will probably drop it.
 
-By "dead loop" I assume you mean "infinite loop"?  I don't think it's
-a deadlock since nothing is waiting.
+The unbalanced put can indeed cause serious problems, for example, after
+probe deferrals. Crashes after probe deferrals has been reported for
+other drivers with the same type of bug, and I have reproduced it
+locally (using yet another driver).
 
-> step 2 to step 4.
-> Clear the irq status after irq have been dispatched to avoid the irq
-> reentry.
-> 
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> ---
->  drivers/pci/host/pcie-mediatek.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> index db93efd..3248771 100644
-> --- a/drivers/pci/host/pcie-mediatek.c
-> +++ b/drivers/pci/host/pcie-mediatek.c
-> @@ -605,11 +605,11 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
->  
->  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
->  		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
-> -			/* Clear the INTx */
-> -			writel(1 << bit, port->base + PCIE_INT_STATUS);
->  			virq = irq_find_mapping(port->irq_domain,
->  						bit - INTX_SHIFT);
->  			generic_handle_irq(virq);
-> +			/* Clear the INTx */
-> +			writel(1 << bit, port->base + PCIE_INT_STATUS);
->  		}
->  	}
->  
-> @@ -619,10 +619,10 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
->  
->  			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
->  				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
-> -					/* Clear the MSI */
-> -					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
->  					virq = irq_find_mapping(port->msi_domain, bit);
->  					generic_handle_irq(virq);
-> +					/* Clear the MSI */
-> +					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
->  				}
->  			}
->  			/* Clear MSI interrupt status */
-> -- 
-> 2.6.4
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I'm also fine with holding this one off for 4.16 (as we're at -rc3), but
+I do think the stable tag is still warranted.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Johan
