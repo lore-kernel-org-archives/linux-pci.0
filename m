@@ -1,122 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:60030 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751500AbdLEUGG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Dec 2017 15:06:06 -0500
-Date: Tue, 5 Dec 2017 14:06:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Rob Herring <robh@kernel.org>,
+Received: from bastet.se.axis.com ([195.60.68.11]:56130 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752275AbdLLOQu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 09:16:50 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        linux-kernel@vger.kernel.org, Simon Horman <horms@verge.net.au>,
-        Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCH v1] PCI: Remove PCI_REASSIGN_ALL_RSRC use on arm and arm64
-Message-ID: <20171205200604.GG23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171130201505.7811.2713.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171130201505.7811.2713.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: kishon@ti.com, Niklas Cassel <niklass@axis.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4 1/3] PCI: designware-ep: Fix find_first_zero_bit() usage
+Date: Tue, 12 Dec 2017 15:16:32 +0100
+Message-Id: <20171212141634.5985-2-niklas.cassel@axis.com>
+In-Reply-To: <20171212141634.5985-1-niklas.cassel@axis.com>
+References: <20171212141634.5985-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 30, 2017 at 02:15:05PM -0600, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> On arm, PCI_REASSIGN_ALL_RSRC is used only in pcibios_assign_all_busses(),
-> which helps decide whether to reconfigure bridge bus numbers.  It has
-> nothing to do with BAR assignments.  On arm64 and powerpc,
-> pcibios_assign_all_busses() tests PCI_REASSIGN_ALL_BUS, which makes more
-> sense.
-> 
-> Align arm with arm64 and powerpc, so they all use PCI_REASSIGN_ALL_BUS for
-> pcibios_assign_all_busses().
-> 
-> Remove PCI_REASSIGN_ALL_RSRC from the Tegra, Versatile, and R-Car drivers.
-> These drivers are used only on arm or arm64, where PCI_REASSIGN_ALL_RSRC is
-> not used after this change, so removing it should have no effect.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+find_first_zero_bit()'s parameter 'size' is defined in bits,
+not in bytes.
 
-Applied with Reviewed-by Manikanta and Lorenzo and similar change to
-pci-host-common.c on pci/resource for v4.16.
+find_first_zero_bit() is called with size in bytes rather than bits,
+which thus defines a too low upper limit, causing
+dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
+and bar 5, which makes bar 5 overwrite the settings set by bar 4.
 
-> ---
->  arch/arm/include/asm/pci.h       |    5 +----
->  arch/arm/kernel/bios32.c         |    2 +-
->  drivers/pci/host/pci-tegra.c     |    2 +-
->  drivers/pci/host/pci-versatile.c |    2 +-
->  drivers/pci/host/pcie-rcar.c     |    2 +-
->  5 files changed, 5 insertions(+), 8 deletions(-)
-> 
-> diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
-> index 960d9dc4f380..1f0de808d111 100644
-> --- a/arch/arm/include/asm/pci.h
-> +++ b/arch/arm/include/asm/pci.h
-> @@ -10,10 +10,7 @@ extern unsigned long pcibios_min_io;
->  extern unsigned long pcibios_min_mem;
->  #define PCIBIOS_MIN_MEM pcibios_min_mem
->  
-> -static inline int pcibios_assign_all_busses(void)
-> -{
-> -	return pci_has_flag(PCI_REASSIGN_ALL_RSRC);
-> -}
-> +#define pcibios_assign_all_busses()	pci_has_flag(PCI_REASSIGN_ALL_BUS)
->  
->  #ifdef CONFIG_PCI_DOMAINS
->  static inline int pci_proc_domain(struct pci_bus *bus)
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 0cd0aefb3a8f..ed46ca69813d 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -527,7 +527,7 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
->  	struct pci_sys_data *sys;
->  	LIST_HEAD(head);
->  
-> -	pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-> +	pci_add_flags(PCI_REASSIGN_ALL_BUS);
->  	if (hw->preinit)
->  		hw->preinit();
->  	pcibios_init_hw(parent, hw, &head);
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index f9d3960dc39f..ee193767f77b 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -2382,7 +2382,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
->  
->  	tegra_pcie_enable_ports(pcie);
->  
-> -	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-> +	pci_add_flags(PCI_REASSIGN_ALL_BUS);
->  	host->busnr = pcie->busn.start;
->  	host->dev.parent = &pdev->dev;
->  	host->ops = &tegra_pcie_ops;
-> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-> index d417acab0ecf..2a2dfcd68e86 100644
-> --- a/drivers/pci/host/pci-versatile.c
-> +++ b/drivers/pci/host/pci-versatile.c
-> @@ -202,7 +202,7 @@ static int versatile_pci_probe(struct platform_device *pdev)
->  	writel(0, versatile_cfg_base[0] + PCI_INTERRUPT_LINE);
->  
->  	pci_add_flags(PCI_ENABLE_PROC_DOMAINS);
-> -	pci_add_flags(PCI_REASSIGN_ALL_BUS | PCI_REASSIGN_ALL_RSRC);
-> +	pci_add_flags(PCI_REASSIGN_ALL_BUS);
->  
->  	list_splice_init(&pci_res, &bridge->windows);
->  	bridge->dev.parent = dev;
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index 12796eccb2be..03fabb0552ae 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -459,7 +459,7 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
->  
->  	rcar_pcie_setup(&bridge->windows, pcie);
->  
-> -	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-> +	pci_add_flags(PCI_REASSIGN_ALL_BUS);
->  
->  	bridge->dev.parent = dev;
->  	bridge->sysdata = pcie;
-> 
+Since the sizes of the bitmaps are known, dynamically allocate the
+bitmaps, and use the correct size when calling find_first_zero_bit().
+
+Additionally, make sure that ep->num_ob_windows and ep->num_ib_windows,
+which are obtained from device tree, are smaller than the maximum number
+of iATUs (MAX_IATU_IN/MAX_IATU_OUT).
+
+Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
+ drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
+ 2 files changed, 32 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index d53d5f168363..d5eb143040e3 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 	u32 free_win;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	free_win = find_first_zero_bit(&ep->ib_window_map,
+-				       sizeof(ep->ib_window_map));
++	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
+ 	if (free_win >= ep->num_ib_windows) {
+ 		dev_err(pci->dev, "no free inbound window\n");
+ 		return -EINVAL;
+@@ -85,7 +84,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 	}
+ 
+ 	ep->bar_to_atu[bar] = free_win;
+-	set_bit(free_win, &ep->ib_window_map);
++	set_bit(free_win, ep->ib_window_map);
+ 
+ 	return 0;
+ }
+@@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 	u32 free_win;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	free_win = find_first_zero_bit(&ep->ob_window_map,
+-				       sizeof(ep->ob_window_map));
++	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
+ 	if (free_win >= ep->num_ob_windows) {
+ 		dev_err(pci->dev, "no free outbound window\n");
+ 		return -EINVAL;
+@@ -106,7 +104,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
+ 				  phys_addr, pci_addr, size);
+ 
+-	set_bit(free_win, &ep->ob_window_map);
++	set_bit(free_win, ep->ob_window_map);
+ 	ep->outbound_addr[free_win] = phys_addr;
+ 
+ 	return 0;
+@@ -121,7 +119,7 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
+ 	dw_pcie_ep_reset_bar(pci, bar);
+ 
+ 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
+-	clear_bit(atu_index, &ep->ib_window_map);
++	clear_bit(atu_index, ep->ib_window_map);
+ }
+ 
+ static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
+@@ -175,7 +173,7 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
+ 		return;
+ 
+ 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
+-	clear_bit(atu_index, &ep->ob_window_map);
++	clear_bit(atu_index, ep->ob_window_map);
+ }
+ 
+ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
+@@ -298,12 +296,32 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		dev_err(dev, "unable to read *num-ib-windows* property\n");
+ 		return ret;
+ 	}
++	if (ep->num_ib_windows > MAX_IATU_IN) {
++		dev_err(dev, "invalid *num-ib-windows*\n");
++		return -EINVAL;
++	}
+ 
+ 	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
+ 	if (ret < 0) {
+ 		dev_err(dev, "unable to read *num-ob-windows* property\n");
+ 		return ret;
+ 	}
++	if (ep->num_ob_windows > MAX_IATU_OUT) {
++		dev_err(dev, "invalid *num-ob-windows*\n");
++		return -EINVAL;
++	}
++
++	ep->ib_window_map = devm_kzalloc(dev, sizeof(long) *
++					 BITS_TO_LONGS(ep->num_ib_windows),
++					 GFP_KERNEL);
++	if (!ep->ib_window_map)
++		return -ENOMEM;
++
++	ep->ob_window_map = devm_kzalloc(dev, sizeof(long) *
++					 BITS_TO_LONGS(ep->num_ob_windows),
++					 GFP_KERNEL);
++	if (!ep->ob_window_map)
++		return -ENOMEM;
+ 
+ 	addr = devm_kzalloc(dev, sizeof(phys_addr_t) * ep->num_ob_windows,
+ 			    GFP_KERNEL);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index e5d9d77b778e..e6fd0b024b21 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -113,6 +113,10 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
++/* Maximum number of inbound/outbound iATUs */
++#define MAX_IATU_IN			256
++#define MAX_IATU_OUT			256
++
+ struct pcie_port;
+ struct dw_pcie;
+ struct dw_pcie_ep;
+@@ -192,8 +196,8 @@ struct dw_pcie_ep {
+ 	size_t			page_size;
+ 	u8			bar_to_atu[6];
+ 	phys_addr_t		*outbound_addr;
+-	unsigned long		ib_window_map;
+-	unsigned long		ob_window_map;
++	unsigned long		*ib_window_map;
++	unsigned long		*ob_window_map;
+ 	u32			num_ib_windows;
+ 	u32			num_ob_windows;
+ };
+-- 
+2.14.2
