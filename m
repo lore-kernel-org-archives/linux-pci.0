@@ -1,61 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:56445 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753997AbdLDPJe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 10:09:34 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 1/8] arch/sh: add sh7786_mm_sel() function
-Date: Mon,  4 Dec 2017 16:09:00 +0100
-Message-Id: <20171204150907.24345-2-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Fhe4=DI=ziepe.ca=jgg@kernel.org>
+Return-Path: <SRS0=Fhe4=DI=ziepe.ca=jgg@kernel.org>
+Date: Tue, 12 Dec 2017 16:42:43 -0700
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Felix Kuehling <Felix.Kuehling@amd.com>, oded.gabbay@gmail.com,
+	amd-gfx@lists.freedesktop.org, Jay Cornwall <Jay.Cornwall@amd.com>,
+	linux-pci@vger.kernel.org, Ram Amrani <Ram.Amrani@cavium.com>,
+	Doug Ledford <dledford@redhat.com>,
+	Michal Kalderon <Michal.Kalderon@cavium.com>,
+	Ariel Elior <Ariel.Elior@cavium.com>
+Subject: Re: [PATCH 29/37] PCI: Add pci_enable_atomic_ops_to_root
+Message-ID: <20171212234243.GD16603@ziepe.ca>
+References: <1512792555-26042-1-git-send-email-Felix.Kuehling@amd.com>
+ <1512792555-26042-30-git-send-email-Felix.Kuehling@amd.com>
+ <20171212232707.GF53955@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171212232707.GF53955@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The SH7786 has different physical memory layout configurations,
-configurable through the MMSELR register. The configuration is
-typically defined by the bootloader, so Linux generally doesn't care.
+On Tue, Dec 12, 2017 at 05:27:07PM -0600, Bjorn Helgaas wrote:
+> [+cc Ram, Michal, Ariel, Doug, Jason]
+> 
+> The [29/37] in the subject makes it look like this is part of a larger
+> series, but I can't find the rest of it on linux-pci or linux-kernel.
 
-Except that depending on the configuration, some PCI MEM areas may or
-may not be available. This commit adds a helper function that allows
-to retrieve the current physical memory layout configuration. It will
-be used in a following patch to exclude unusable PCI MEM areas during
-the PCI initialization.
+Didn't find the cover letter, but the AMD patchworks captured the series..
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/sh/include/cpu-sh4/cpu/sh7786.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+https://patchwork.freedesktop.org/project/amd-xorg-ddx/patches/
 
-diff --git a/arch/sh/include/cpu-sh4/cpu/sh7786.h b/arch/sh/include/cpu-sh4/cpu/sh7786.h
-index 0df09e638f09..96b8cb1f754a 100644
---- a/arch/sh/include/cpu-sh4/cpu/sh7786.h
-+++ b/arch/sh/include/cpu-sh4/cpu/sh7786.h
-@@ -14,6 +14,8 @@
- #ifndef __CPU_SH7786_H__
- #define __CPU_SH7786_H__
- 
-+#include <linux/io.h>
-+
- enum {
- 	/* PA */
- 	GPIO_PA7, GPIO_PA6, GPIO_PA5, GPIO_PA4,
-@@ -131,4 +133,9 @@ enum {
- 	GPIO_FN_IRL7, GPIO_FN_IRL6, GPIO_FN_IRL5, GPIO_FN_IRL4,
- };
- 
-+static inline u32 sh7786_mm_sel(void)
-+{
-+	return __raw_readl(0xFC400020) & 0x7;
-+}
-+
- #endif /* __CPU_SH7786_H__ */
--- 
-2.13.6
+> I don't want to merge a new interface unless there's an in-tree user
+> of it.  I assume the rest of the series includes a user.
+
+Looks like it.
+
+I would also guess we will see users in drivers/infiniband emerge as
+CPU coherent atomics are also a topic our hardware drivers will be
+interested in. But I am not aware of any pending patches.
+
+Jason
