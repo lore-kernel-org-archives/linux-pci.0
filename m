@@ -1,68 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33088 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754246AbdLNXeR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Dec 2017 18:34:17 -0500
-Date: Thu, 14 Dec 2017 17:34:08 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Ingo Molnar <mingo@kernel.org>
-Subject: [GIT PULL] PCI fixes for v4.15
-Message-ID: <20171214233408.GA68544@bhelgaas-glaptop.roam.corp.google.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:47412 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750853AbdLLRmv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Dec 2017 12:42:51 -0500
+Date: Tue, 12 Dec 2017 17:43:29 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+Subject: Re: [PATCH V3 12/12] PCI: tegra: Update flow control threshold in
+ Tegra210
+Message-ID: <20171212174329.GA22418@red-moon>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-13-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1509371843-22931-13-git-send-email-mmaddireddy@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
+On Mon, Oct 30, 2017 at 07:27:23PM +0530, Manikanta Maddireddy wrote:
+> Recommended update FC threshold in Tegra210 is 0x60 for best performance
+> of x1 link. Setting this to 0x60 provides the best balance between number
+> of UpdateFC and read data sent over the link.
+> 
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V3:
+> * changed soc parameter name
+> V2:
+> * no change in this patch
+> 
+>  drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index b29329226e3d..812d32cfdd0e 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -223,6 +223,7 @@
+>  #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+>  #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+>  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+> +#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
 
-  - add a pci_get_domain_bus_and_slot() stub for the CONFIG_PCI=n case to
-    avoid build breakage in the v4.16 merge window if a
-    pci_get_bus_and_slot() -> pci_get_domain_bus_and_slot() patch gets
-    merged before the PCI tree (Randy Dunlap)
+You define a SOC specific threshold and a update_fc_threshold bool
+variable to update it ? And what are you going to do if that's needed
+on something that it is not a T210 ? Should not this be a(nother)
+struct tegra_pcie_soc parameter instead than a macro ?
 
-  - fix an AMD boot regression in the 64bit BAR support added in v4.15
-    (Christian König)
+Not that I am happy about it but this deviates from the current
+approach.
 
-  - fix an R-Car use-after-free that causes a crash if no PCIe card is
-    present (Geert Uytterhoeven)
+>  #define RP_VEND_CTL0	0xf44
+>  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+> @@ -323,6 +324,7 @@ struct tegra_pcie_soc {
+>  	bool update_clamp_threshold;
+>  	bool raw_violation_fixup;
+>  	bool program_deskew_time;
+> +	bool update_fc_threshold;
+>  };
+>  
+>  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+> @@ -2231,6 +2233,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>  		value |= RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
+>  		writel(value, port->base + RP_VEND_CTL0);
+>  	}
+> +
+> +	if (soc->update_fc_threshold) {
+> +		value = readl(port->base + RP_VEND_XP);
+> +		value &= ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
+> +		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
+> +		writel(value, port->base + RP_VEND_XP);
+> +	}
 
+If, say, a platform requires update_fc_threshold and raw_violation_fixup
+what takes precedence (ie they required programming the _same_
+registers) ? update_fc_threshold takes precedence, since it is applied
+last - but I would like you to think about this and realize that this
+per-SoC mechanism does not scale anymore.
 
-The following changes since commit 4fbd8d194f06c8a3fd2af1ce560ddb31f7ec8323:
+You should a) enforce some firmware initialization - most of the
+parameters in struct tegra_pcie_soc could have been pre-programmed
+by FW and b) think about adding some DT properties to handle the PCI
+host bridge set-up.
 
-  Linux 4.15-rc1 (2017-11-26 16:01:47 -0800)
+Lorenzo
 
-are available in the Git repository at:
-
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.15-fixes-1
-
-for you to fetch changes up to 0c31f1d7be1b5c4858b1d714dcefa25f41428cab:
-
-  PCI: rcar: Fix use-after-free in probe error path (2017-12-12 11:01:47 -0600)
-
-----------------------------------------------------------------
-pci-v4.15-fixes-1
-
-----------------------------------------------------------------
-Christian König (2):
-      x86/PCI: Fix infinite loop in search for 64bit BAR placement
-      x86/PCI: Only enable a 64bit BAR on single-socket AMD Family 15h
-
-Geert Uytterhoeven (1):
-      PCI: rcar: Fix use-after-free in probe error path
-
-Randy Dunlap (1):
-      PCI: Add pci_get_domain_bus_and_slot() stub
-
- arch/x86/pci/fixup.c         | 27 +++++++++++++++++++++------
- drivers/pci/host/pcie-rcar.c |  8 ++++----
- include/linux/pci.h          |  3 +++
- 3 files changed, 28 insertions(+), 10 deletions(-)
+>  }
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+> @@ -2371,6 +2380,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.update_clamp_threshold = false,
+>  	.raw_violation_fixup = false,
+>  	.program_deskew_time = false,
+> +	.update_fc_threshold = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra30_pcie = {
+> @@ -2391,6 +2401,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>  	.update_clamp_threshold = false,
+>  	.raw_violation_fixup = false,
+>  	.program_deskew_time = false,
+> +	.update_fc_threshold = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra124_pcie = {
+> @@ -2410,6 +2421,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>  	.update_clamp_threshold = true,
+>  	.raw_violation_fixup = true,
+>  	.program_deskew_time = false,
+> +	.update_fc_threshold = false,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra210_pcie = {
+> @@ -2437,6 +2449,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>  	.update_clamp_threshold = true,
+>  	.raw_violation_fixup = false,
+>  	.program_deskew_time = true,
+> +	.update_fc_threshold = true,
+>  };
+>  
+>  static const struct tegra_pcie_soc tegra186_pcie = {
+> @@ -2457,6 +2470,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>  	.update_clamp_threshold = false,
+>  	.raw_violation_fixup = false,
+>  	.program_deskew_time = false,
+> +	.update_fc_threshold = false,
+>  };
+>  
+>  static const struct of_device_id tegra_pcie_of_match[] = {
+> -- 
+> 2.1.4
+> 
