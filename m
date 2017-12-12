@@ -1,30 +1,100 @@
-Return-Path: <SRS0=Eef5=DO=linux.vnet.ibm.com=jjalvare@kernel.org>
-Return-Path: <SRS0=Eef5=DO=linux.vnet.ibm.com=jjalvare@kernel.org>
-Subject: Re: [PATCH v1 7/7] pseries/setup: Add Initialization of VF Bars
-To: Alexey Kardashevskiy <aik@ozlabs.ru>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, alex.williamson@redhat.com, helgaas@kernel.org,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com
-References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
- <20171213153242.98015-8-bryantly@linux.vnet.ibm.com>
- <4ea33f2e-d98c-85ef-eedf-2e8ca49aa839@ozlabs.ru>
-From: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
-Date: Mon, 18 Dec 2017 13:29:54 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:36650 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750955AbdLLGlM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 01:41:12 -0500
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH v2 1/3] PCI: Add pcim_set_mwi(), a device-managed
+ pci_set_mwi()
+To: Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <36fa928b-e974-c023-de3e-c2bd05f53df2@gmail.com>
+Message-ID: <cf62bb8b-603b-7d6c-851c-ccbacdc1a0e2@gmail.com>
+Date: Tue, 12 Dec 2017 07:40:56 +0100
 MIME-Version: 1.0
-In-Reply-To: <4ea33f2e-d98c-85ef-eedf-2e8ca49aa839@ozlabs.ru>
+In-Reply-To: <36fa928b-e974-c023-de3e-c2bd05f53df2@gmail.com>
 Content-Type: text/plain; charset=utf-8
-Message-Id: <8bdf7127-a3ec-1c75-2593-e39a8bd31e34@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is PF only path. Yes either we have a root returned otherwise
-will fall back to iomem_resource.
+Add pcim_set_mwi(), a device-managed version of pci_set_mwi().
+First user is the Realtek r8169 driver.
 
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+v2:
+- Reorder calls
+- Adjust and commit message
+---
+ drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 26 insertions(+)
 
-On 12/18/17 1:21 AM, Alexey Kardashevskiy wrote:
-> @dev here is a VF, right? I am not familiar with powervn much but from what
-> I see - the devices are sitting on a root bus of their own PHB and they all
-> either have a root returned from pci_find_parent_resource() or none of them
-> has a root and will fall back to &iomem_resource, or both cases are possible?
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4a7c6864f..764ca7b88 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1458,6 +1458,7 @@ struct pci_devres {
+ 	unsigned int pinned:1;
+ 	unsigned int orig_intx:1;
+ 	unsigned int restore_intx:1;
++	unsigned int mwi:1;
+ 	u32 region_mask;
+ };
+ 
+@@ -1476,6 +1477,9 @@ static void pcim_release(struct device *gendev, void *res)
+ 		if (this->region_mask & (1 << i))
+ 			pci_release_region(dev, i);
+ 
++	if (this->mwi)
++		pci_clear_mwi(dev);
++
+ 	if (this->restore_intx)
+ 		pci_intx(dev, this->orig_intx);
+ 
+@@ -3760,6 +3764,27 @@ int pci_set_mwi(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_set_mwi);
+ 
++/**
++ * pcim_set_mwi - a device-managed pci_set_mwi()
++ * @dev: the PCI device for which MWI is enabled
++ *
++ * Managed pci_set_mwi().
++ *
++ * RETURNS: An appropriate -ERRNO error value on error, or zero for success.
++ */
++int pcim_set_mwi(struct pci_dev *dev)
++{
++	struct pci_devres *dr;
++
++	dr = find_pci_dr(dev);
++	if (!dr)
++		return -ENOMEM;
++
++	dr->mwi = 1;
++	return pci_set_mwi(dev);
++}
++EXPORT_SYMBOL(pcim_set_mwi);
++
+ /**
+  * pci_try_set_mwi - enables memory-write-invalidate PCI transaction
+  * @dev: the PCI device for which MWI is enabled
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 978aad784..0a7ac863a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1064,6 +1064,7 @@ int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
+ int pci_set_cacheline_size(struct pci_dev *dev);
+ #define HAVE_PCI_SET_MWI
+ int __must_check pci_set_mwi(struct pci_dev *dev);
++int __must_check pcim_set_mwi(struct pci_dev *dev);
+ int pci_try_set_mwi(struct pci_dev *dev);
+ void pci_clear_mwi(struct pci_dev *dev);
+ void pci_intx(struct pci_dev *dev, int enable);
+-- 
+2.15.1
