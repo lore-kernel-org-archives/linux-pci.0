@@ -1,58 +1,221 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V2 3/7] PCI: make pci_flr_wait() generic and rename to
- pci_dev_wait()
-To: Christoph Hellwig <hch@infradead.org>
-References: <1511763628-11856-1-git-send-email-okaya@codeaurora.org>
- <1511763628-11856-4-git-send-email-okaya@codeaurora.org>
- <20171129173801.GD27742@infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <0248af7b-0459-2b77-e439-bfcdfebcd7f6@codeaurora.org>
-Date: Mon, 4 Dec 2017 08:17:20 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:38179 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751799AbdLLGlN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 01:41:13 -0500
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH v2 2/3] r8169: switch to device-managed functions in probe
+To: Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <36fa928b-e974-c023-de3e-c2bd05f53df2@gmail.com>
+Message-ID: <59cef452-8991-2ddf-896c-a250622584f5@gmail.com>
+Date: Tue, 12 Dec 2017 07:41:02 +0100
 MIME-Version: 1.0
-In-Reply-To: <20171129173801.GD27742@infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux PCI <linux-pci@vger.kernel.org>, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <36fa928b-e974-c023-de3e-c2bd05f53df2@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/29/2017 12:38 PM, Christoph Hellwig wrote:
-> On Mon, Nov 27, 2017 at 01:20:24AM -0500, Sinan Kaya wrote:
->> Rev 3.1 Sec 2.3.1 Request Handling Rules:
->> Valid reset conditions after which a device is permitted to return CRS
->> are:
->> * Cold, Warm, and Hot Resets,
->> * FLR
->> * A reset initiated in response to a D3hot to D0 uninitialized
->>
->> Try to reuse FLR implementation towards other reset types.
-> 
-> Should we keep a helper for the FLR wait?  If not I guess the reference
-> for AF_FLR should be the PCI spec, not the PCIE spec.
-> 
+Simplify probe error path and remove callback by using device-managed
+functions.
 
-Bjorn,
+rtl_disable_msi isn't needed any longer because the release callback
+of pcim_enable_device does this implicitely.
 
-what is your opinion?
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+v2:
+- no changes
+---
+ drivers/net/ethernet/realtek/r8169.c | 80 +++++++++---------------------------
+ 1 file changed, 20 insertions(+), 60 deletions(-)
 
-Sinan
-
+diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
+index fc0d5fa65..3c7d90d3a 100644
+--- a/drivers/net/ethernet/realtek/r8169.c
++++ b/drivers/net/ethernet/realtek/r8169.c
+@@ -4643,16 +4643,6 @@ static void rtl8169_phy_timer(struct timer_list *t)
+ 	rtl_schedule_task(tp, RTL_FLAG_TASK_PHY_PENDING);
+ }
+ 
+-static void rtl8169_release_board(struct pci_dev *pdev, struct net_device *dev,
+-				  void __iomem *ioaddr)
+-{
+-	iounmap(ioaddr);
+-	pci_release_regions(pdev);
+-	pci_clear_mwi(pdev);
+-	pci_disable_device(pdev);
+-	free_netdev(dev);
+-}
+-
+ DECLARE_RTL_COND(rtl_phy_reset_cond)
+ {
+ 	return tp->phy_reset_pending(tp);
+@@ -4784,14 +4774,6 @@ static int rtl_tbi_ioctl(struct rtl8169_private *tp, struct mii_ioctl_data *data
+ 	return -EOPNOTSUPP;
+ }
+ 
+-static void rtl_disable_msi(struct pci_dev *pdev, struct rtl8169_private *tp)
+-{
+-	if (tp->features & RTL_FEATURE_MSI) {
+-		pci_disable_msi(pdev);
+-		tp->features &= ~RTL_FEATURE_MSI;
+-	}
+-}
+-
+ static void rtl_init_mdio_ops(struct rtl8169_private *tp)
+ {
+ 	struct mdio_ops *ops = &tp->mdio_ops;
+@@ -8256,9 +8238,6 @@ static void rtl_remove_one(struct pci_dev *pdev)
+ 
+ 	unregister_netdev(dev);
+ 
+-	dma_free_coherent(&tp->pci_dev->dev, sizeof(*tp->counters),
+-			  tp->counters, tp->counters_phys_addr);
+-
+ 	rtl_release_firmware(tp);
+ 
+ 	if (pci_dev_run_wake(pdev))
+@@ -8266,9 +8245,6 @@ static void rtl_remove_one(struct pci_dev *pdev)
+ 
+ 	/* restore original MAC address */
+ 	rtl_rar_set(tp, dev->perm_addr);
+-
+-	rtl_disable_msi(pdev, tp);
+-	rtl8169_release_board(pdev, dev, tp->mmio_addr);
+ }
+ 
+ static const struct net_device_ops rtl_netdev_ops = {
+@@ -8445,11 +8421,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		       MODULENAME, RTL8169_VERSION);
+ 	}
+ 
+-	dev = alloc_etherdev(sizeof (*tp));
+-	if (!dev) {
+-		rc = -ENOMEM;
+-		goto out;
+-	}
++	dev = devm_alloc_etherdev(&pdev->dev, sizeof (*tp));
++	if (!dev)
++		return -ENOMEM;
+ 
+ 	SET_NETDEV_DEV(dev, &pdev->dev);
+ 	dev->netdev_ops = &rtl_netdev_ops;
+@@ -8472,13 +8446,13 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 				     PCIE_LINK_STATE_CLKPM);
+ 
+ 	/* enable device (incl. PCI PM wakeup and hotplug setup) */
+-	rc = pci_enable_device(pdev);
++	rc = pcim_enable_device(pdev);
+ 	if (rc < 0) {
+ 		netif_err(tp, probe, dev, "enable failure\n");
+-		goto err_out_free_dev_1;
++		return rc;
+ 	}
+ 
+-	if (pci_set_mwi(pdev) < 0)
++	if (pcim_set_mwi(pdev) < 0)
+ 		netif_info(tp, probe, dev, "Mem-Wr-Inval unavailable\n");
+ 
+ 	/* make sure PCI base addr 1 is MMIO */
+@@ -8486,30 +8460,28 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		netif_err(tp, probe, dev,
+ 			  "region #%d not an MMIO resource, aborting\n",
+ 			  region);
+-		rc = -ENODEV;
+-		goto err_out_mwi_2;
++		return -ENODEV;
+ 	}
+ 
+ 	/* check for weird/broken PCI region reporting */
+ 	if (pci_resource_len(pdev, region) < R8169_REGS_SIZE) {
+ 		netif_err(tp, probe, dev,
+ 			  "Invalid PCI region size(s), aborting\n");
+-		rc = -ENODEV;
+-		goto err_out_mwi_2;
++		return -ENODEV;
+ 	}
+ 
+ 	rc = pci_request_regions(pdev, MODULENAME);
+ 	if (rc < 0) {
+ 		netif_err(tp, probe, dev, "could not request regions\n");
+-		goto err_out_mwi_2;
++		return rc;
+ 	}
+ 
+ 	/* ioremap MMIO region */
+-	ioaddr = ioremap(pci_resource_start(pdev, region), R8169_REGS_SIZE);
++	ioaddr = devm_ioremap(&pdev->dev, pci_resource_start(pdev, region),
++			      R8169_REGS_SIZE);
+ 	if (!ioaddr) {
+ 		netif_err(tp, probe, dev, "cannot remap MMIO, aborting\n");
+-		rc = -EIO;
+-		goto err_out_free_res_3;
++		return -EIO;
+ 	}
+ 	tp->mmio_addr = ioaddr;
+ 
+@@ -8535,7 +8507,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+ 		if (rc < 0) {
+ 			netif_err(tp, probe, dev, "DMA configuration failed\n");
+-			goto err_out_unmap_4;
++			return rc;
+ 		}
+ 	}
+ 
+@@ -8697,8 +8669,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	tp->rtl_fw = RTL_FIRMWARE_UNKNOWN;
+ 
+-	tp->counters = dma_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
+-					   &tp->counters_phys_addr, GFP_KERNEL);
++	tp->counters = dmam_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
++					    &tp->counters_phys_addr,
++					    GFP_KERNEL);
+ 	if (!tp->counters) {
+ 		rc = -ENOMEM;
+ 		goto err_out_msi_5;
+@@ -8706,7 +8679,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	rc = register_netdev(dev);
+ 	if (rc < 0)
+-		goto err_out_cnt_6;
++		goto err_out_msi_5;
+ 
+ 	pci_set_drvdata(pdev, dev);
+ 
+@@ -8735,25 +8708,12 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	netif_carrier_off(dev);
+ 
+-out:
+-	return rc;
++	return 0;
+ 
+-err_out_cnt_6:
+-	dma_free_coherent(&pdev->dev, sizeof(*tp->counters), tp->counters,
+-			  tp->counters_phys_addr);
+ err_out_msi_5:
+ 	netif_napi_del(&tp->napi);
+-	rtl_disable_msi(pdev, tp);
+-err_out_unmap_4:
+-	iounmap(ioaddr);
+-err_out_free_res_3:
+-	pci_release_regions(pdev);
+-err_out_mwi_2:
+-	pci_clear_mwi(pdev);
+-	pci_disable_device(pdev);
+-err_out_free_dev_1:
+-	free_netdev(dev);
+-	goto out;
++
++	return rc;
+ }
+ 
+ static struct pci_driver rtl8169_pci_driver = {
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.15.1
