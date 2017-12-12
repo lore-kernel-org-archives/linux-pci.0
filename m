@@ -1,37 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:62189 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751083AbdL0AoI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 19:44:08 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Rob Herring <robh@kernel.org>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [RFC PATCH v12 1/5] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-Date: Wed, 27 Dec 2017 01:43:09 +0100
-Message-ID: <3268448.IvXk7OJtIY@aspire.rjw.lan>
-In-Reply-To: <20171226233552.nacwqbpkozmy7n6c@rob-hp-laptop>
-References: <20171226023646.17722-1-jeffy.chen@rock-chips.com> <20171226023646.17722-2-jeffy.chen@rock-chips.com> <20171226233552.nacwqbpkozmy7n6c@rob-hp-laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from bastet.se.axis.com ([195.60.68.11]:56137 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751503AbdLLOQw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 09:16:52 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 2/3] PCI: endpoint: Fix error handling in pci_epc_epf_link()
+Date: Tue, 12 Dec 2017 15:16:33 +0100
+Message-Id: <20171212141634.5985-3-niklas.cassel@axis.com>
+In-Reply-To: <20171212141634.5985-1-niklas.cassel@axis.com>
+References: <20171212141634.5985-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 27, 2017 12:35:52 AM CET Rob Herring wrote:
-> On Tue, Dec 26, 2017 at 10:36:42AM +0800, Jeffy Chen wrote:
-> > We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
-> > so add definitions of the optional PCIe WAKE# pin for PCI devices.
-> > 
-> > Also add an definition of the optional PCI interrupt pin for PCI
-> > devices to distinguish it from the PCIe WAKE# pin.
-> 
-> By v13 you should drop "RFC". RFC implies not ready for merging.
+The error handling in pci_epc_epf_link() is broken,
+since the clean up code for pci_epc_add_epf() calls clear_bit(),
+even though the matching set_bit() is done after pci_epc_add_epf().
 
-Which very much still is the case AFAICS.
+Also, clear_bit() should be done before pci_epc_remove_epf(),
+since clean up code should normally do things in the reverse order.
 
-Thanks,
-Rafael
+Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/pci/endpoint/pci-ep-cfs.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 4f74386c1ced..e1f5adc9e113 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -106,7 +106,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+ 	epf = epf_group->epf;
+ 	ret = pci_epc_add_epf(epc, epf);
+ 	if (ret)
+-		goto err_add_epf;
++		return ret;
+ 
+ 	func_no = find_first_zero_bit(&epc_group->function_num_map,
+ 				      sizeof(epc_group->function_num_map));
+@@ -120,10 +120,8 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+ 	return 0;
+ 
+ err_epf_bind:
+-	pci_epc_remove_epf(epc, epf);
+-
+-err_add_epf:
+ 	clear_bit(func_no, &epc_group->function_num_map);
++	pci_epc_remove_epf(epc, epf);
+ 
+ 	return ret;
+ }
+-- 
+2.14.2
