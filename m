@@ -1,43 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41486 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751117AbdL2FP4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 00:15:56 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 29 Dec 2017 10:45:55 +0530
-From: poza@codeaurora.org
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:33464 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754474AbdLLMzm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 07:55:42 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
         Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Wei Zhang <wzhang@fb.com>, Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH 0/4] Address error and recovery for AER and DPC
-In-Reply-To: <20171228173428.GA16071@localhost.localdomain>
-References: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
- <20171228173428.GA16071@localhost.localdomain>
-Message-ID: <25e27773fd3bd15b22432e6db6f156dc@codeaurora.org>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Ingo Molnar <mingo@kernel.org>
+Subject: [PATCH 4.9 023/148] x86/PCI: Make broadcom_postcore_init() check acpi_disabled
+Date: Tue, 12 Dec 2017 13:43:53 +0100
+Message-Id: <20171212124432.158658505@linuxfoundation.org>
+In-Reply-To: <20171212124431.207182779@linuxfoundation.org>
+References: <20171212124431.207182779@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-12-28 23:04, Keith Busch wrote:
-> On Wed, Dec 27, 2017 at 02:20:18AM -0800, Oza Pawandeep wrote:
->> DPC should enumerate the devices after recovering the link, which is
->> achieved by implementing error_resume callback.
-> 
-> Wouldn't that race with the link-up event that pciehp currently 
-> handles?
+4.9-stable review patch.  If anyone has any objections, please let me know.
 
-It is with pci_lock_rescan_remove().
-I was able to test with and without pciehp on our platform, and things 
-seemed to be okay.
+------------------
 
-Regards,
-Oza.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+commit ddec3bdee05b06f1dda20ded003c3e10e4184cab upstream.
+
+acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
+is set, but the host bridge information from the ACPI tables is not going
+to be used in that case and the Broadcom host bridge initialization should
+not be skipped then, So make broadcom_postcore_init() check acpi_disabled
+too to avoid this issue.
+
+Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
+Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ arch/x86/pci/broadcom_bus.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init
+ 	 * We should get host bridge information from ACPI unless the BIOS
+ 	 * doesn't support it.
+ 	 */
+-	if (acpi_os_get_root_pointer())
++	if (!acpi_disabled && acpi_os_get_root_pointer())
+ 		return 0;
+ #endif
+ 
