@@ -1,130 +1,140 @@
-Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
-Date: Thu, 14 Dec 2017 12:54:05 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
-    Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-    Andy Lutomirski <luto@kernel.org>,
-    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-    the arch/x86 maintainers <x86@kernel.org>,
-    Daniel Vetter <daniel.vetter@intel.com>,
-    Bjorn Helgaas <bhelgaas@google.com>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-In-Reply-To: <alpine.DEB.2.20.1712132201380.1885@nanos>
-Message-ID: <alpine.DEB.2.20.1712132211570.1885@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com> <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl> <alpine.DEB.2.20.1712061344560.1724@nanos>
- <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl> <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl> <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
- <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos>
- <alpine.DEB.2.20.1712132201380.1885@nanos>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH][resend] pciehp: fix a race between pciehp and
+ removing operations by sysfs
+To: <bhelgaas@google.com>
+References: <1513067384-10914-1-git-send-email-wangxiongfeng2@huawei.com>
+From: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+Message-ID: <55cc79f2-cece-c84b-5c95-050a954d3669@huawei.com>
+Date: Tue, 12 Dec 2017 19:30:31 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1513067384-10914-1-git-send-email-wangxiongfeng2@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, liudongdong3@huawei.com,
+ linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+ linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 13 Dec 2017, Thomas Gleixner wrote:
-> On Wed, 13 Dec 2017, Thomas Gleixner wrote:
-> > On Wed, 13 Dec 2017, Thomas Gleixner wrote:
-> > > On Wed, 13 Dec 2017, Linus Torvalds wrote:
-> > > 
-> > > > On Wed, Dec 13, 2017 at 8:41 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > > > >
-> > > > > Definitely. That was fragile forever but puzzles me is that I can't figure
-> > > > > out what now causes that spurious interrupt to surface out of the blue.
-> > > > 
-> > > > Perhaps just timing?
-> > > 
-> > > That's what I'm trying to figure out right now, because that is the only
-> > > sensible explanation left. The whole machinery of suspend is exactly the
-> > > same with and without the vector changes. I instrumented all functions
-> > > involved and the picture is the same. I even do not see any fundamental
-> > > timing differences where one would say: That's it.
-> > > 
-> > > What puzzles me even more is that in the range of commits I'm fiddling with
-> > > there is no other change than the vector management stuff and the point
-> > > where it breaks makes no sense at all. The point Maarten bisected it to
-> > > works nicely here, so that might just point to a very subtle timing issue.
-> > 
-> > After doing more debugging on this it turns out that this looks like a
-> > legacy interrupt coming in. The vector number is always 55, which is legacy
-> > IRQ 7 as seen from the PIC. The corresponding IOAPIC interrupt pin is
-> > masked and vector 55 is completely unused.
-> > 
-> > More questions than answers. Still investigating.
+This patch seems to introduce another issue. pciehp_power_thread() use
+'container_of' to get the 'slot' according to 'work_struct'.
+If the 'slot' has been freed before that, there will be an issue.
 
-At least that one could be explained by the changes. In the previous
-management scheme the IOAPIC interrupts were always allocated even when the
-interrupt was not in use. The new scheme does not longer do that because
-people complained about the vector waste (16 vectors on each CPU) and it
-got rid of all the special casing of IRQ0-15.
+On 2017/12/12 16:29, Xiongfeng Wang wrote:
+> When the Attention button on a PCIE slot is pressed, 5 seconds later,
+> pciehp_power_thread() will be scheduled on slot->wq. This function will
+> get a global mutex lock 'pci_rescan_remove_lock' in
+> pciehp_unconfigure_device().
+> 
+> At the same time, we remove the pcie port by sysfs, which results in
+> pci_stop_and_remove_bus_device_locked() called. This function will get
+> the global mutex lock 'pci_rescan_remove_lock', and then release the
+> struct 'ctrl', which will wait until the work_struct on slot->wq is
+> finished.
+> 
+> If pci_stop_and_remove_bus_device_locked() got the mutex lock, and
+> before it drains workqueue slot->wq, pciehp_power_thread() is scheduled
+> on slot->wq and tries to get the mutex lock. Then
+> pci_stop_and_remove_bus_device_locked() tries to drain workqueue
+> slot->wq and wait until work struct 'pciehp_power_thread()' is finished.
+> Then a hung_task happens.
+> 
+> This patch solve this problem by schedule 'pciehp_power_thread()' on a
+> system workqueue instead of slot->wq.
+> 
+> The Call Trace we got is as following.
+> 
+>  INFO: task kworker/0:2:4413 blocked for more than 120 seconds.
+>        Tainted: P        W  O    4.12.0-rc1 #1
+>  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>  kworker/0:2     D    0  4413      2 0x00000000
+>  Workqueue: pciehp-0 pciehp_power_thread
+>  Call trace:
+>  [<ffff0000080861d4>] __switch_to+0x94/0xa8
+>  [<ffff000008bea9c0>] __schedule+0x1b0/0x708
+>  [<ffff000008beaf58>] schedule+0x40/0xa4
+>  [<ffff000008beb33c>] schedule_preempt_disabled+0x28/0x40
+>  [<ffff000008bec1dc>] __mutex_lock.isra.8+0x148/0x50c
+>  [<ffff000008bec5c4>] __mutex_lock_slowpath+0x24/0x30
+>  [<ffff000008bec618>] mutex_lock+0x48/0x54
+>  [<ffff0000084d8188>] pci_lock_rescan_remove+0x20/0x28
+>  [<ffff0000084f87c0>] pciehp_unconfigure_device+0x54/0x1cc
+>  [<ffff0000084f8260>] pciehp_disable_slot+0x4c/0xbc
+>  [<ffff0000084f8370>] pciehp_power_thread+0xa0/0xb8
+>  [<ffff0000080e9ce8>] process_one_work+0x13c/0x3f8
+>  [<ffff0000080ea004>] worker_thread+0x60/0x3e4
+>  [<ffff0000080f0814>] kthread+0x10c/0x138
+>  [<ffff0000080836c0>] ret_from_fork+0x10/0x50
+>  INFO: task bash:31732 blocked for more than 120 seconds.
+>        Tainted: P        W  O    4.12.0-rc1 #1
+>  "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>  bash            D    0 31732      1 0x00000009
+>  Call trace:
+>  [<ffff0000080861d4>] __switch_to+0x94/0xa8
+>  [<ffff000008bea9c0>] __schedule+0x1b0/0x708
+>  [<ffff000008beaf58>] schedule+0x40/0xa4
+>  [<ffff000008bee7b4>] schedule_timeout+0x1a0/0x340
+>  [<ffff000008bebb88>] wait_for_common+0x108/0x1bc
+>  [<ffff000008bebc64>] wait_for_completion+0x28/0x34
+>  [<ffff0000080e7594>] flush_workqueue+0x130/0x488
+>  [<ffff0000080e79b0>] drain_workqueue+0xc4/0x164
+>  [<ffff0000080ec3cc>] destroy_workqueue+0x28/0x1f4
+>  [<ffff0000084fa094>] pciehp_release_ctrl+0x34/0xe0
+>  [<ffff0000084f75b0>] pciehp_remove+0x30/0x3c
+>  [<ffff0000084f24d8>] pcie_port_remove_service+0x3c/0x54
+>  [<ffff00000876b1e4>] device_release_driver_internal+0x150/0x1d0
+>  [<ffff00000876b28c>] device_release_driver+0x28/0x34
+>  [<ffff00000876a018>] bus_remove_device+0xe0/0x11c
+>  [<ffff000008766348>] device_del+0x200/0x304
+>  [<ffff00000876646c>] device_unregister+0x20/0x38
+>  [<ffff0000084f2560>] remove_iter+0x44/0x54
+>  [<ffff000008765230>] device_for_each_child+0x4c/0x90
+>  [<ffff0000084f2c98>] pcie_port_device_remove+0x2c/0x48
+>  [<ffff0000084f2f48>] pcie_portdrv_remove+0x60/0x6c
+>  [<ffff0000084e3de4>] pci_device_remove+0x48/0x110
+>  [<ffff00000876b1e4>] device_release_driver_internal+0x150/0x1d0
+>  [<ffff00000876b28c>] device_release_driver+0x28/0x34
+>  [<ffff0000084db028>] pci_stop_bus_device+0x9c/0xac
+>  [<ffff0000084db190>] pci_stop_and_remove_bus_device_locked+0x24/0x3c
+>  [<ffff0000084e5eb0>] remove_store+0x74/0x80
+>  [<ffff000008764680>] dev_attr_store+0x44/0x5c
+>  [<ffff0000082e7e1c>] sysfs_kf_write+0x5c/0x74
+>  [<ffff0000082e7014>] kernfs_fop_write+0xcc/0x1dc
+>  [<ffff0000082602e0>] __vfs_write+0x48/0x13c
+>  [<ffff00000826174c>] vfs_write+0xa8/0x198
+>  [<ffff000008262ce8>] SyS_write+0x54/0xb0
+>  [<ffff000008083730>] el0_svc_naked+0x24/0x28
+> 
+> Signed-off-by: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+> ---
+>  drivers/pci/hotplug/pciehp_ctrl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> index 83f3d4a..9d39d85 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -221,7 +221,7 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
+>  	info->p_slot = p_slot;
+>  	INIT_WORK(&info->work, pciehp_power_thread);
+>  	info->req = req;
+> -	queue_work(p_slot->wq, &info->work);
+> +	schedule_work(&info->work);
+>  }
+>  
+>  void pciehp_queue_pushbutton_work(struct work_struct *work)
+> 
 
-So the old scheme silently consumed the spurious vector. I added debug code
-to that effect to 4.14 and on that machine IRQ7 is triggered at the same
-point post resume and the core code drops it silently because the interrupt
-is marked masked and no action assigned.
 
-So the only difference to today is that the new code complains, while the
-old one does an extra mask of the already masked IOAPIC pin and silently
-returns.
-
-After quite some investigation I found out that its independent of the
-graphics thing. That's a genuine issue on that platform which seems to emit
-random legacy vectors which were never ever used for unknown reasons. I
-verified that both the IOAPIC and the PIC are masked, so they cannot send
-crap. Though it turned out that the silly firmware unmasks the PIC and
-leaves it that way when it returns from suspend. Now there is a race
-whether the kernel resume path manages to mask the PIC again early enough
-before something triggers IRQ7 or not. Adding/removing debug code makes the
-problem come and go. So I really don't worry about that one and rather
-prefer to have the spurious interrupt printed than silently consumed by
-chance.
-
-Now the graphics issue is a different story. That only happens on
-hibernation after doing the snapshot. There all non boot cpus are onlined
-again and after that the devices are 'thawed'. The following reenable of
-interrupts fails because i915 is not in PCI_D0 state.
-
-Suspend:
-
-   irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
-   __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-   __pci_write_msi_msg: Not written <- Device not in PCI_D0
-   ....
-   device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [resume]
-   pci_pm_resume_noirq <-dpm_run_callback
-   pci_pm_resume_noirq <-dpm_run_callback
-   pci_pm_default_resume_early <-pci_pm_resume_noirq
-   pci_pm_default_resume_early <-pci_pm_resume_noirq
-   __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a  <-- Set the new affinity
-   device_pm_callback_end: i915 0000:00:02.0, err=0
-
-Hibernate:
-
-   irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
-   __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-   __pci_write_msi_msg: Not written <- Device not in PCI_D0
-   ....
-   device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [thaw]
-   pci_pm_thaw_noirq <-dpm_run_callback
-   __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-   __pci_write_msi_msg: Not written  <--- Device is not in PCI_D0
-   device_pm_callback_end: i915 0000:00:02.0, err=0
-
-So that code path fails to set the new affinity because at the point where
-the MSI msg should be written the device state is != PCI_D0.
-
-Now, what's different vs. 4.14:
-
-The 4.14 code accidentaly had the irq descriptor for this vector still
-populated in the old CPU due to the convoluted way the vector allocation
-worked. I have still to investigate if one of those cases is actually
-leaking the descriptor, which would be a fatal bug.
-
-But the new code does a proper cleanup and does not repopulate it on the
-offline CPU. So that unearthes the issue. I'm handing that over to the PM
-folks to look at. I got lost in that maze of callbacks.
-
-Thanks,
-
-	tglx
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
