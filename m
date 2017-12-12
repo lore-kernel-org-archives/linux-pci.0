@@ -1,63 +1,84 @@
-Return-Path: <SRS0=DeKn=DC=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=DeKn=DC=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Olof Johansson <olof@lixom.net>, Christian Zigotzky <chzigotzky@xenosoft.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Darren Stevens <darren@stevens-zone.net>, Bjorn Helgaas <helgaas@kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
-In-Reply-To: <20171202230052.34y2ivxgpgr3osct@localhost>
-References: <87tvxl15qx.fsf@concordia.ellerman.id.au> <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de> <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com> <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de> <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com> <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de> <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com> <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de> <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com> <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de> <20171202230052.34y2ivxgpgr3osct@localhost>
-Date: Wed, 06 Dec 2017 23:44:44 +1100
-Message-ID: <87indkdo03.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42562 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751281AbdLLLcz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Dec 2017 06:32:55 -0500
+Date: Tue, 12 Dec 2017 11:32:48 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
+ port
+Message-ID: <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Olof Johansson <olof@lixom.net> writes:
+On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
+> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
+> after all the required root port register programming is completed.
+> 
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V3:
+> * no change in this patch
+> V2:
+> * no change in this patch
+> 
+>  drivers/pci/host/pci-tegra.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 96e8038c3019..b41c60c7414c 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>  		}
+>  	}
+>  
+> -	/* take the PCIe interface module out of reset */
+> -	reset_control_deassert(pcie->pcie_xrst);
+> -
+>  	/* finally enable PCIe */
+>  	value = afi_readl(pcie, AFI_CONFIGURATION);
+>  	value |= AFI_CONFIGURATION_EN_FPCI;
+> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+>  	}
+>  
+> -	reset_control_assert(pcie->pcie_xrst);
 
-> On Sat, Dec 02, 2017 at 01:54:41PM +0100, Christian Zigotzky wrote:
->> On 02 December 2017 at 00:27AM, Bjorn Helgaas wrote:
->> >=20
->> > Thanks for testing that.  I'll merge a similar patch for v4.16.
->> >=20
->> > I don't think using "pci=3Dpcie_scan_all" is really an acceptable
->> > long-term answer for you, though.  Is there some way we can identify
->> > at run-time whether we're on a Nemo system?  If so, we can make this
->> > happen automatically.
->> >=20
->> > Bjorn
->> >=20
->> Hi Bjorn,
->>=20
->> Many thanks for your effort! I appreciate it very much. :-)
->>=20
->> We can identify the Nemo board at the boot time. See dmesg output: [=C2=
-=A0=C2=A0=C2=A0
->> 0.061592] NEMO SB600 IOB base e0000000
->>=20
->> @linuxppc-dev
->> Any other ideas? Maybe the same as we can identify the other P.A. Semi
->> boards (Electra, Chitra, and Athena).
->>=20
->> @Olof
->> Maybe you know how we can identify the P.A. Semi Nemo board at the run-t=
-ime.
->>=20
->> @Darren
->> Do you have an idea?
->
->
-> The below patch, together with Bjorn's, should do it. Christian, can you =
-test
-> and report back?
->
-> I'm guessing it won't do any harm to set this on non-X1000 platforms. My
-> test system is currently powered down so I can't check.
+This does not look like it is part of the reset de-assertion code move.
 
-My pasemi board had been powered off for a while and when I turned it
-back on something popped, the power supply blew up and tripped a
-breaker.
+tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
 
-So I also can't test this, at least for now, until I get my "allowed to
-use hardware" license back from my colleagues in the office.
+in other words, why are you removing it ?
 
-cheers
+Lorenzo
+
+>  	reset_control_assert(pcie->afi_rst);
+>  	reset_control_assert(pcie->pex_rst);
+>  
+> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>  			 port->index, port->lanes);
+>  
+>  		tegra_pcie_port_enable(port);
+> +	}
+>  
+> +	/* take the PCIe interface module out of reset */
+> +	reset_control_deassert(pcie->pcie_xrst);
+> +
+> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>  		if (tegra_pcie_port_check_link(port))
+>  			continue;
+>  
+> -- 
+> 2.1.4
+> 
