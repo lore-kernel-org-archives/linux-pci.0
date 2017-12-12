@@ -1,94 +1,134 @@
-Return-Path: <SRS0=xdTs=DI=gmail.com=jim2101024@kernel.org>
-Return-Path: <SRS0=xdTs=DI=gmail.com=jim2101024@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+To: <bhelgaas@google.com>, <wangxiongfeng2@huawei.com>
+Subject: [RFC PATCH][resend] pciehp: fix a race between pciehp and removing
+ operations by sysfs
+Date: Tue, 12 Dec 2017 16:29:44 +0800
+Message-ID: <1513067384-10914-1-git-send-email-wangxiongfeng2@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20171205205926.GJ23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
- <1510697532-32828-2-git-send-email-jim2101024@gmail.com> <20171205205926.GJ23510@bhelgaas-glaptop.roam.corp.google.com>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Tue, 12 Dec 2017 15:53:28 -0500
-Message-ID: <CANCKTBvoXpF-H8Pck5TsH+7tNM=di1-uoedqACE+kjNEAUodYg@mail.gmail.com>
-Subject: Re: [PATCH v3 1/8] SOC: brcmstb: add memory API
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>, Brian Norris <computersforpeace@gmail.com>,
-	Russell King <rmk+kernel@armlinux.org.uk>, Robin Murphy <robin.murphy@arm.com>,
-	Christoph Hellwig <hch@lst.de>, Florian Fainelli <f.fainelli@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
-	Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
-	Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, liudongdong3@huawei.com,
+ linux-arm-kernel@lists.infradead.org, arnd@arndb.de,
+ linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 5, 2017 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Nov 14, 2017 at 05:12:05PM -0500, Jim Quinlan wrote:
->> From: Florian Fainelli <f.fainelli@gmail.com>
->>
->> This commit adds a memory API suitable for ascertaining the sizes of
->> each of the N memory controllers in a Broadcom STB chip.  Its first
->> user will be the Broadcom STB PCIe root complex driver, which needs
->> to know these sizes to properly set up DMA mappings for inbound
->> regions.
->>
->> We cannot use memblock here or anything like what Linux provides
->> because it collapses adjacent regions within a larger block, and here
->> we actually need per-memory controller addresses and sizes, which is
->> why we resort to manual DT parsing.
->>
->> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
->> ---
->>  drivers/soc/bcm/brcmstb/Makefile |   2 +-
->>  drivers/soc/bcm/brcmstb/memory.c | 172 ++++++++++++++++++++++++++++++++=
-+++++++
->>  include/soc/brcmstb/memory_api.h |  25 ++++++
->>  3 files changed, 198 insertions(+), 1 deletion(-)
->>  create mode 100644 drivers/soc/bcm/brcmstb/memory.c
->>  create mode 100644 include/soc/brcmstb/memory_api.h
->>
->> diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmstb/=
-Makefile
->> index 9120b27..4cea7b6 100644
->> --- a/drivers/soc/bcm/brcmstb/Makefile
->> +++ b/drivers/soc/bcm/brcmstb/Makefile
->> @@ -1 +1 @@
->> -obj-y                                +=3D common.o biuctrl.o
->> +obj-y                                +=3D common.o biuctrl.o memory.o
->> diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmstb/=
-memory.c
->> new file mode 100644
->> index 0000000..eb647ad9
->> --- /dev/null
->> +++ b/drivers/soc/bcm/brcmstb/memory.c
->
-> I sort of assume based on [1] that every new file should have an SPDX
-> identifier ("The Linux kernel requires the precise SPDX identifier in
-> all source files") and that the actual text of the GPL can be omitted.
->
-> Only a few files in drivers/pci currently have an SPDX identifier.  I
-> don't know if that's oversight or work-in-progress or what.
->
-> [1] https://lkml.kernel.org/r/20171204212120.484179273@linutronix.de
->
+When the Attention button on a PCIE slot is pressed, 5 seconds later,
+pciehp_power_thread() will be scheduled on slot->wq. This function will
+get a global mutex lock 'pci_rescan_remove_lock' in
+pciehp_unconfigure_device().
 
-Bjorn, Did you get a chance to review the other commits of this
-submission (V3)?  I would like any additional feedback before I send
-out a V4 with SPDX fixes.  Thanks, JimQ
+At the same time, we remove the pcie port by sysfs, which results in
+pci_stop_and_remove_bus_device_locked() called. This function will get
+the global mutex lock 'pci_rescan_remove_lock', and then release the
+struct 'ctrl', which will wait until the work_struct on slot->wq is
+finished.
 
->> @@ -0,0 +1,172 @@
->> +/*
->> + * Copyright =C2=A9 2015-2017 Broadcom
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 as
->> + * published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
->> + * GNU General Public License for more details.
->> + *
->> + * A copy of the GPL is available at
->> + * http://www.broadcom.com/licenses/GPLv2.php or from the Free Software
->> + * Foundation at https://www.gnu.org/licenses/ .
+If pci_stop_and_remove_bus_device_locked() got the mutex lock, and
+before it drains workqueue slot->wq, pciehp_power_thread() is scheduled
+on slot->wq and tries to get the mutex lock. Then
+pci_stop_and_remove_bus_device_locked() tries to drain workqueue
+slot->wq and wait until work struct 'pciehp_power_thread()' is finished.
+Then a hung_task happens.
+
+This patch solve this problem by schedule 'pciehp_power_thread()' on a
+system workqueue instead of slot->wq.
+
+The Call Trace we got is as following.
+
+ INFO: task kworker/0:2:4413 blocked for more than 120 seconds.
+       Tainted: P        W  O    4.12.0-rc1 #1
+ "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ kworker/0:2     D    0  4413      2 0x00000000
+ Workqueue: pciehp-0 pciehp_power_thread
+ Call trace:
+ [<ffff0000080861d4>] __switch_to+0x94/0xa8
+ [<ffff000008bea9c0>] __schedule+0x1b0/0x708
+ [<ffff000008beaf58>] schedule+0x40/0xa4
+ [<ffff000008beb33c>] schedule_preempt_disabled+0x28/0x40
+ [<ffff000008bec1dc>] __mutex_lock.isra.8+0x148/0x50c
+ [<ffff000008bec5c4>] __mutex_lock_slowpath+0x24/0x30
+ [<ffff000008bec618>] mutex_lock+0x48/0x54
+ [<ffff0000084d8188>] pci_lock_rescan_remove+0x20/0x28
+ [<ffff0000084f87c0>] pciehp_unconfigure_device+0x54/0x1cc
+ [<ffff0000084f8260>] pciehp_disable_slot+0x4c/0xbc
+ [<ffff0000084f8370>] pciehp_power_thread+0xa0/0xb8
+ [<ffff0000080e9ce8>] process_one_work+0x13c/0x3f8
+ [<ffff0000080ea004>] worker_thread+0x60/0x3e4
+ [<ffff0000080f0814>] kthread+0x10c/0x138
+ [<ffff0000080836c0>] ret_from_fork+0x10/0x50
+ INFO: task bash:31732 blocked for more than 120 seconds.
+       Tainted: P        W  O    4.12.0-rc1 #1
+ "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ bash            D    0 31732      1 0x00000009
+ Call trace:
+ [<ffff0000080861d4>] __switch_to+0x94/0xa8
+ [<ffff000008bea9c0>] __schedule+0x1b0/0x708
+ [<ffff000008beaf58>] schedule+0x40/0xa4
+ [<ffff000008bee7b4>] schedule_timeout+0x1a0/0x340
+ [<ffff000008bebb88>] wait_for_common+0x108/0x1bc
+ [<ffff000008bebc64>] wait_for_completion+0x28/0x34
+ [<ffff0000080e7594>] flush_workqueue+0x130/0x488
+ [<ffff0000080e79b0>] drain_workqueue+0xc4/0x164
+ [<ffff0000080ec3cc>] destroy_workqueue+0x28/0x1f4
+ [<ffff0000084fa094>] pciehp_release_ctrl+0x34/0xe0
+ [<ffff0000084f75b0>] pciehp_remove+0x30/0x3c
+ [<ffff0000084f24d8>] pcie_port_remove_service+0x3c/0x54
+ [<ffff00000876b1e4>] device_release_driver_internal+0x150/0x1d0
+ [<ffff00000876b28c>] device_release_driver+0x28/0x34
+ [<ffff00000876a018>] bus_remove_device+0xe0/0x11c
+ [<ffff000008766348>] device_del+0x200/0x304
+ [<ffff00000876646c>] device_unregister+0x20/0x38
+ [<ffff0000084f2560>] remove_iter+0x44/0x54
+ [<ffff000008765230>] device_for_each_child+0x4c/0x90
+ [<ffff0000084f2c98>] pcie_port_device_remove+0x2c/0x48
+ [<ffff0000084f2f48>] pcie_portdrv_remove+0x60/0x6c
+ [<ffff0000084e3de4>] pci_device_remove+0x48/0x110
+ [<ffff00000876b1e4>] device_release_driver_internal+0x150/0x1d0
+ [<ffff00000876b28c>] device_release_driver+0x28/0x34
+ [<ffff0000084db028>] pci_stop_bus_device+0x9c/0xac
+ [<ffff0000084db190>] pci_stop_and_remove_bus_device_locked+0x24/0x3c
+ [<ffff0000084e5eb0>] remove_store+0x74/0x80
+ [<ffff000008764680>] dev_attr_store+0x44/0x5c
+ [<ffff0000082e7e1c>] sysfs_kf_write+0x5c/0x74
+ [<ffff0000082e7014>] kernfs_fop_write+0xcc/0x1dc
+ [<ffff0000082602e0>] __vfs_write+0x48/0x13c
+ [<ffff00000826174c>] vfs_write+0xa8/0x198
+ [<ffff000008262ce8>] SyS_write+0x54/0xb0
+ [<ffff000008083730>] el0_svc_naked+0x24/0x28
+
+Signed-off-by: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 83f3d4a..9d39d85 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -221,7 +221,7 @@ static void pciehp_queue_power_work(struct slot *p_slot, int req)
+ 	info->p_slot = p_slot;
+ 	INIT_WORK(&info->work, pciehp_power_thread);
+ 	info->req = req;
+-	queue_work(p_slot->wq, &info->work);
++	schedule_work(&info->work);
+ }
+ 
+ void pciehp_queue_pushbutton_work(struct work_struct *work)
+-- 
+1.7.12.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
