@@ -1,252 +1,235 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44034 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751972AbdL0KUr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Dec 2017 05:20:47 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH 2/4] PCI/DPC/AER: Address Concurrency between AER and DPC
-Date: Wed, 27 Dec 2017 15:50:20 +0530
-Message-Id: <1514370022-4431-3-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
-References: <1514370022-4431-1-git-send-email-poza@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:49580 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752707AbdLLX1M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Dec 2017 18:27:12 -0500
+Date: Tue, 12 Dec 2017 17:27:07 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Felix Kuehling <Felix.Kuehling@amd.com>
+Cc: oded.gabbay@gmail.com, amd-gfx@lists.freedesktop.org,
+        Jay Cornwall <Jay.Cornwall@amd.com>, linux-pci@vger.kernel.org,
+        Ram Amrani <Ram.Amrani@cavium.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Michal Kalderon <Michal.Kalderon@cavium.com>,
+        Ariel Elior <Ariel.Elior@cavium.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH 29/37] PCI: Add pci_enable_atomic_ops_to_root
+Message-ID: <20171212232707.GF53955@bhelgaas-glaptop.roam.corp.google.com>
+References: <1512792555-26042-1-git-send-email-Felix.Kuehling@amd.com>
+ <1512792555-26042-30-git-send-email-Felix.Kuehling@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1512792555-26042-30-git-send-email-Felix.Kuehling@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch addresses the race condition between AER and DPC for recovery.
+[+cc Ram, Michal, Ariel, Doug, Jason]
 
-Current DPC driver does not do recovery, e.g. calling end-point's driver's
-callbacks, which sanitize the device.
-DPC driver implements link_reset callback, and calls pci_do_recovery.
+The [29/37] in the subject makes it look like this is part of a larger
+series, but I can't find the rest of it on linux-pci or linux-kernel.
 
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+I don't want to merge a new interface unless there's an in-tree user
+of it.  I assume the rest of the series includes a user.
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 2d976a6..e7ced58 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -15,6 +15,9 @@
- #include <linux/pci.h>
- #include <linux/pcieport_if.h>
- #include "../pci.h"
-+#include "portdrv.h"
-+
-+static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
- 
- struct rp_pio_header_log_regs {
- 	u32 dw0;
-@@ -67,6 +70,60 @@ struct dpc_dev {
- 	"Memory Request Completion Timeout",		 /* Bit Position 18 */
- };
- 
-+static int find_dpc_dev_iter(struct device *device, void *data)
-+{
-+	struct pcie_port_service_driver *service_driver;
-+	struct device **dev;
-+
-+	dev = (struct device **) data;
-+
-+	if (device->bus == &pcie_port_bus_type && device->driver) {
-+		service_driver = to_service_driver(device->driver);
-+		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
-+			*dev = device;
-+			return 1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+struct device *pci_find_dpc_dev(struct pci_dev *pdev)
-+{
-+	struct device *dev = NULL;
-+
-+	device_for_each_child(&pdev->dev, &dev, find_dpc_dev_iter);
-+
-+	return dev;
-+}
-+
-+static int find_dpc_service_iter(struct device *device, void *data)
-+{
-+	struct pcie_port_service_driver *service_driver, **drv;
-+
-+	drv = (struct pcie_port_service_driver **) data;
-+
-+	if (device->bus == &pcie_port_bus_type && device->driver) {
-+		service_driver = to_service_driver(device->driver);
-+		if (service_driver->service == PCIE_PORT_SERVICE_DPC) {
-+			*drv = service_driver;
-+			return 1;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev)
-+{
-+	struct pcie_port_service_driver *drv = NULL;
-+
-+	device_for_each_child(&dev->dev, &drv, find_dpc_service_iter);
-+
-+	return drv;
-+}
-+EXPORT_SYMBOL(pci_find_dpc_service);
-+
- static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- {
- 	unsigned long timeout = jiffies + HZ;
-@@ -104,11 +161,23 @@ static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- 		dev_warn(dev, "Link state not disabled for DPC event\n");
- }
- 
--static void interrupt_event_handler(struct work_struct *work)
-+/**
-+ * dpc_reset_link - reset link DPC  routine
-+ * @dev: pointer to Root Port's pci_dev data structure
-+ *
-+ * Invoked by Port Bus driver when performing link reset at Root Port.
-+ */
-+static pci_ers_result_t dpc_reset_link(struct pci_dev *pdev)
- {
--	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
--	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
- 	struct pci_bus *parent = pdev->subordinate;
-+	struct pci_dev *dev, *temp;
-+	struct dpc_dev *dpc;
-+	struct pcie_device *pciedev;
-+	struct device *devdpc;
-+
-+	devdpc = pci_find_dpc_dev(pdev);
-+	pciedev = to_pcie_device(devdpc);
-+	dpc = get_service_data(pciedev);
- 
- 	pci_lock_rescan_remove();
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-@@ -125,7 +194,7 @@ static void interrupt_event_handler(struct work_struct *work)
- 
- 	dpc_wait_link_inactive(dpc);
- 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
--		return;
-+		return PCI_ERS_RESULT_DISCONNECT;
- 	if (dpc->rp && dpc->rp_pio_status) {
- 		pci_write_config_dword(pdev,
- 				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
-@@ -135,6 +204,17 @@ static void interrupt_event_handler(struct work_struct *work)
- 
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
- 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
-+static void interrupt_event_handler(struct work_struct *work)
-+{
-+	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
-+	struct pci_dev *pdev = dpc->dev->port;
-+
-+	/* From DPC point of view error is always FATAL. */
-+	pci_do_recovery(pdev, PCI_ERR_DPC_FATAL);
- }
- 
- static void dpc_rp_pio_print_tlp_header(struct device *dev,
-@@ -339,6 +419,7 @@ static void dpc_remove(struct pcie_device *dev)
- 	.service	= PCIE_PORT_SERVICE_DPC,
- 	.probe		= dpc_probe,
- 	.remove		= dpc_remove,
-+	.reset_link     = dpc_reset_link,
- };
- 
- static int __init dpc_service_init(void)
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index d59866c..8bac584 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -176,7 +176,7 @@ static pci_ers_result_t pci_default_reset_link(struct pci_dev *dev)
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
--pci_ers_result_t pci_reset_link(struct pci_dev *dev)
-+pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity)
- {
- 	struct pci_dev *udev;
- 	pci_ers_result_t status;
-@@ -191,7 +191,10 @@ pci_ers_result_t pci_reset_link(struct pci_dev *dev)
- 	}
- 
- 	/* Use the aer driver of the component firstly */
--	driver = pci_find_aer_service(udev);
-+	if (severity == PCI_ERR_DPC_FATAL)
-+		driver = pci_find_dpc_service(udev);
-+	else
-+		driver = pci_find_aer_service(udev);
- 
- 	if (driver && driver->reset_link) {
- 		status = driver->reset_link(udev);
-@@ -280,7 +283,8 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 
- 	mutex_lock(&pci_err_recovery_lock);
- 
--	if (severity == PCI_ERR_AER_FATAL)
-+	if ((severity == PCI_ERR_AER_FATAL) ||
-+	    (severity == PCI_ERR_DPC_FATAL))
- 		state = pci_channel_io_frozen;
- 	else
- 		state = pci_channel_io_normal;
-@@ -290,8 +294,9 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- 			"error_detected",
- 			pci_report_error_detected);
- 
--	if (severity == PCI_ERR_AER_FATAL) {
--		result = pci_reset_link(dev);
-+	if ((severity == PCI_ERR_AER_FATAL) ||
-+	    (severity == PCI_ERR_DPC_FATAL)) {
-+		result = pci_reset_link(dev, severity);
- 		if (result != PCI_ERS_RESULT_RECOVERED)
- 			goto failed;
- 	}
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 4f1992d..b013e24 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -80,4 +80,5 @@ static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
- #endif /* !CONFIG_ACPI */
- 
- struct pcie_port_service_driver *pci_find_aer_service(struct pci_dev *dev);
-+struct pcie_port_service_driver *pci_find_dpc_service(struct pci_dev *dev);
- #endif /* _PORTDRV_H_ */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 083408e..123ee15 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2005,6 +2005,7 @@ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int res
- #define PCI_ERR_AER_NONFATAL		0
- #define PCI_ERR_AER_FATAL		1
- #define PCI_ERR_AER_CORRECTABLE		2
-+#define PCI_ERR_DPC_FATAL		4
- 
- pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 					enum pci_channel_state state,
-@@ -2014,7 +2015,7 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- int pci_report_slot_reset(struct pci_dev *dev, void *data);
- int pci_report_resume(struct pci_dev *dev, void *data);
- int pci_report_error_detected(struct pci_dev *dev, void *data);
--pci_ers_result_t pci_reset_link(struct pci_dev *dev);
-+pci_ers_result_t pci_reset_link(struct pci_dev *dev, int severity);
- pci_ers_result_t pci_merge_result(enum pci_ers_result orig,
- 				enum pci_ers_result new);
- void pci_do_recovery(struct pci_dev *dev, int severity);
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+On Fri, Dec 08, 2017 at 11:09:07PM -0500, Felix Kuehling wrote:
+> From: Jay Cornwall <Jay.Cornwall@amd.com>
+> 
+> The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be
+> requested by, routed through and completed by PCIe components. Routing and
+> completion do not require software support. Component support for each is
+> detectable via the DEVCAP2 register.
+> 
+> AtomicOp requests are permitted only if a component's
+> DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
+> detected but is a no-op if set on a component with no support. These
+> requests can only be serviced if the upstream components support AtomicOp
+> completion and/or routing to a component which does.
+> 
+> A concrete example is the AMD Fiji-class GPU, which is specified to
+> support AtomicOp requests, routed through a PLX 8747 switch (advertising
+> AtomicOp routing) to a Haswell host bridge (advertising AtomicOp
+> completion support). When AtomicOp requests are disabled the GPU logs
+> attempts to initiate requests to an MMIO register for debugging.
+> 
+> Add pci_enable_atomic_ops_to_root for per-device control over AtomicOp
+> requests. Upstream bridges are checked for AtomicOp routing capability and
+> the call fails if any lack this capability. The root port is checked for
+> AtomicOp completion capabilities and the call fails if it does not support
+> any. Routes to other PCIe components are not checked for AtomicOp routing
+> and completion capabilities.
+> 
+> v2: Check for AtomicOp route to root port with AtomicOp completion
+> v3: Style fixes
+> v4: Endpoint to root port only, check upstream egress blocking
+> v5: Rebase, use existing PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK define
+> 
+> CC: linux-pci@vger.kernel.org
+> Signed-off-by: Jay Cornwall <Jay.Cornwall@amd.com>
+> Signed-off-by: Felix Kuehling <Felix.Kuehling@amd.com>
+> ---
+>  drivers/pci/pci.c             | 81 +++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h           |  1 +
+>  include/uapi/linux/pci_regs.h |  2 ++
+>  3 files changed, 84 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6078dfc..89a8bb0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2966,6 +2966,87 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+>  }
+>  
+>  /**
+> + * pci_enable_atomic_ops_to_root - enable AtomicOp requests to root port
+> + * @dev: the PCI device
+> + *
+> + * Return 0 if the device is capable of generating AtomicOp requests,
+
+I don't believe this part.
+
+You return 0 if the upstream path can route AtomicOps and the Root
+Port can complete them.  But there's nothing here that's conditional
+on capabilities of *dev*.
+
+You could read back PCI_EXP_DEVCTL2 to see if
+PCI_EXP_DEVCTL2_ATOMIC_REQ was writable, but even then, you can't
+really tell what the device is capable of.
+
+> + * all upstream bridges support AtomicOp routing, egress blocking is disabled
+> + * on all upstream ports, and the root port supports 32-bit, 64-bit and/or
+> + * 128-bit AtomicOp completion, or negative otherwise.
+> + */
+> +int pci_enable_atomic_ops_to_root(struct pci_dev *dev)
+> +{
+> +	struct pci_bus *bus = dev->bus;
+> +
+> +	if (!pci_is_pcie(dev))
+> +		return -EINVAL;
+> +
+> +	switch (pci_pcie_type(dev)) {
+> +	/*
+> +	 * PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
+> +	 * to implement AtomicOp requester capabilities.
+> +	 */
+> +	case PCI_EXP_TYPE_ENDPOINT:
+> +	case PCI_EXP_TYPE_LEG_END:
+> +	case PCI_EXP_TYPE_RC_END:
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +
+> +	while (bus->parent) {
+> +		struct pci_dev *bridge = bus->self;
+> +		u32 cap;
+> +
+> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+> +
+> +		switch (pci_pcie_type(bridge)) {
+> +		/*
+> +		 * Upstream, downstream and root ports may implement AtomicOp
+> +		 * routing capabilities. AtomicOp routing via a root port is
+> +		 * not considered.
+> +		 */
+> +		case PCI_EXP_TYPE_UPSTREAM:
+> +		case PCI_EXP_TYPE_DOWNSTREAM:
+> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTE))
+> +				return -EINVAL;
+> +			break;
+> +
+> +		/*
+> +		 * Root ports are permitted to implement AtomicOp completion
+> +		 * capabilities.
+> +		 */
+> +		case PCI_EXP_TYPE_ROOT_PORT:
+> +			if (!(cap & (PCI_EXP_DEVCAP2_ATOMIC_COMP32 |
+> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP64 |
+> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP128)))
+> +				return -EINVAL;
+> +			break;
+> +		}
+
+IIUC, you want to enable an endpoint, e.g., an AMD Fiji-class GPU, to
+initiate AtomicOps that target system memory.  This interface
+(pci_enable_atomic_ops_to_root()) doesn't specify what size operations
+the driver wants to do.  If the GPU requests a 128-bit op and the Root
+Port doesn't support it, I think we'll see an Unsupported Request
+error.
+
+Do you need to extend this interface so the driver can specify what
+sizes it wants?
+
+The existing code in qedr_pci_set_atomic() is very similar.  We should
+make this new interface work for both places, then actually use it in
+qedr_pci_set_atomic().
+
+> +
+> +		/*
+> +		 * Upstream ports may block AtomicOps on egress.
+> +		 */
+> +		if (pci_pcie_type(bridge) == PCI_EXP_TYPE_UPSTREAM) {
+
+pci_pcie_type() is not a reliable method for determining the function
+of a switch port.  There are systems where the upstream port is
+labeled as a downstream port, e.g.,
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=c8fc9339409d
+
+> +			u32 ctl2;
+> +
+> +			pcie_capability_read_dword(bridge, PCI_EXP_DEVCTL2,
+> +						   &ctl2);
+> +			if (ctl2 & PCI_EXP_DEVCTL2_ATOMIC_EGRESS_BLOCK)
+> +				return -EINVAL;
+> +		}
+> +
+> +		bus = bus->parent;
+> +	}
+> +
+> +	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
+> +				 PCI_EXP_DEVCTL2_ATOMIC_REQ);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(pci_enable_atomic_ops_to_root);
+> +
+> +/**
+>   * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+>   * @dev: the PCI device
+>   * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index f4f8ee5..2a39f63 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2062,6 +2062,7 @@ void pci_request_acs(void);
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>  bool pci_acs_path_enabled(struct pci_dev *start,
+>  			  struct pci_dev *end, u16 acs_flags);
+> +int pci_enable_atomic_ops_to_root(struct pci_dev *dev);
+>  
+>  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+>  #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index f8d5804..45f251a 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -623,7 +623,9 @@
+>  #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
+>  #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
+>  #define  PCI_EXP_DEVCAP2_ATOMIC_ROUTE	0x00000040 /* Atomic Op routing */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
+>  #define PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* Atomic 64-bit compare */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion*/
+
+The comments should be similar.  I think yours are better than the
+original, so please change the original to
+
+  /* 64b AtomicOp completion */
+
+so they all match.
+
+>  #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
+>  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+>  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+> -- 
+> 2.7.4
+> 
