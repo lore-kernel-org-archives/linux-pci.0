@@ -1,46 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 19 Dec 2017 09:13:56 -0500 (EST)
-Message-Id: <20171219.091356.821622473544969175.davem@davemloft.net>
-To: okaya@codeaurora.org
-Subject: Re: [PATCH V4 20/26] openprom: deprecate pci_get_bus_and_slot()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1513661883-28662-21-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-21-git-send-email-okaya@codeaurora.org>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- sparclinux@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:42706 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750731AbdLLLpc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Dec 2017 06:45:32 -0500
+Date: Tue, 12 Dec 2017 11:45:27 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+Subject: Re: [PATCH V3 02/12] PCI: tegra: Move REFCLK pad settings out of
+ phy_power_on()
+Message-ID: <20171212114527.GB30799@e107981-ln.cambridge.arm.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-3-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1509371843-22931-3-git-send-email-mmaddireddy@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sinan Kaya <okaya@codeaurora.org>
-Date: Tue, 19 Dec 2017 00:37:56 -0500
+On Mon, Oct 30, 2017 at 07:27:13PM +0530, Manikanta Maddireddy wrote:
+> In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
 
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> pci_get_domain_bus_and_slot().
-> 
-> Hard-coding the domain as 0 since domain information is not available.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+It is time you defined what FW does and what the kernel does and stick
+to that SW initialization sequence for all Tegra PCI host bridges from
+now onwards. Those tegra_pcie_soc structures in the driver will end up
+with a gazillion hardcoded parameters if you do not take a stance from
+that perspective and I do not like that - at all.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+You may want to use DT bindings to describe the FW<->OS handover - or
+just enforce firmware guidelines for Tegra systems - something has to be
+done.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+This patch makes sense stand-alone but I wanted to get the message
+across.
+
+Thanks,
+Lorenzo
+
+> in driver. REFCLK pad settings are independent of PHY and should be
+> programmed by driver. So move REFCLK pad settings out of phy_power_on().
+> These pad settings improve REFCLK peak to peak amplitude.
+> 
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V3:
+> * Corrected commit log
+> V2:
+> * no change in this patch
+> 
+>  drivers/pci/host/pci-tegra.c | 20 +++++++++++++-------
+>  1 file changed, 13 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index b41c60c7414c..068510b40c1a 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -910,7 +910,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
+>  static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+>  {
+>  	struct device *dev = pcie->dev;
+> -	const struct tegra_pcie_soc *soc = pcie->soc;
+>  	struct tegra_pcie_port *port;
+>  	int err;
+>  
+> @@ -936,12 +935,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+>  		}
+>  	}
+>  
+> -	/* Configure the reference clock driver */
+> -	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+> -
+> -	if (soc->num_ports > 2)
+> -		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+> -
+>  	return 0;
+>  }
+>  
+> @@ -2049,6 +2042,17 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>  	return 0;
+>  }
+>  
+> +static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
+> +{
+> +	const struct tegra_pcie_soc *soc = pcie->soc;
+> +
+> +	/* Configure the reference clock driver */
+> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+> +
+> +	if (soc->num_ports > 2)
+> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+> +}
+> +
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+>   * can result in the increase of the bootup time as there are big timeout
+> @@ -2107,6 +2111,8 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>  	struct device *dev = pcie->dev;
+>  	struct tegra_pcie_port *port, *tmp;
+>  
+> +	tegra_pcie_apply_pad_settings(pcie);
+> +
+>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>  		dev_info(dev, "probing port %u, using %u lanes\n",
+>  			 port->index, port->lanes);
+> -- 
+> 2.1.4
+> 
