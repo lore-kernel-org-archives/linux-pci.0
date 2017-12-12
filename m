@@ -1,108 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:55011 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756176AbdLTTKO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 14:10:14 -0500
-Subject: Re: [PATCH v6 01/18] PCI: dwc: Use the DMA-API to get the MSI address
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171219232940.659-2-niklas.cassel@axis.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <b7f66e90-1fc2-a957-831d-32881df98ba9@synopsys.com>
-Date: Wed, 20 Dec 2017 19:10:08 +0000
+Return-Path: <SRS0=d/Ya=DI=Oracle.COM=Govinda.Tatti@kernel.org>
+Return-Path: <SRS0=d/Ya=DI=Oracle.COM=Govinda.Tatti@kernel.org>
+Subject: Re: [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr() interface
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, bhelgaas@google.com,
+        boris.ostrovsky@Oracle.COM, jgross@suse.com, JBeulich@suse.com,
+        roger.pau@citrix.com, konrad.wilk@Oracle.COM
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
+ <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+From: Govinda Tatti <Govinda.Tatti@Oracle.COM>
+Message-ID: <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
+Date: Mon, 11 Dec 2017 18:29:29 -0600
 MIME-Version: 1.0
-In-Reply-To: <20171219232940.659-2-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
 
-Às 11:29 PM de 12/19/2017, Niklas Cassel escreveu:
-> Use the DMA-API to get the MSI address. This address will be written to
-> our PCI config space and to the register which determines which AXI
-> address the DWC IP will spoof for incoming MSI irqs.
-> 
-> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
-> to write to the MSI address, the proper way to get the MSI address is by
-> using the DMA API, not by using virt_to_phys().
-> 
-> Using virt_to_phys() might work on some systems, but using the DMA API
-> should work on all systems.
-> 
-> This is essentially the same thing as allocating a buffer in a driver
-> to which the endpoint will write to. To do this, we use the DMA API.
-> 
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
->  drivers/pci/dwc/pcie-designware.h      |  3 ++-
->  2 files changed, 14 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 81e2157a7cfb..bf558df5b7b3 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -83,10 +83,19 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->  
->  void dw_pcie_msi_init(struct pcie_port *pp)
->  {
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct device *dev = pci->dev;
-> +	struct page *page;
->  	u64 msi_target;
->  
-> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
-> -	msi_target = virt_to_phys((void *)pp->msi_data);
-> +	page = alloc_page(GFP_KERNEL);
-> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
-> +	if (dma_mapping_error(dev, pp->msi_data)) {
-> +		dev_err(dev, "failed to map MSI data\n");
-> +		__free_page(page);
-> +		return;
-> +	}
-> +	msi_target = (u64)pp->msi_data;
->  
->  	/* program the msi_data */
->  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> @@ -187,7 +196,7 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
->  	if (pp->ops->get_msi_addr)
->  		msi_target = pp->ops->get_msi_addr(pp);
->  	else
-> -		msi_target = virt_to_phys((void *)pp->msi_data);
-> +		msi_target = (u64)pp->msi_data;
->  
->  	msg.address_lo = (u32)(msi_target & 0xffffffff);
->  	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index e5d9d77b778e..ecdede68522a 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -14,6 +14,7 @@
->  #ifndef _PCIE_DESIGNWARE_H
->  #define _PCIE_DESIGNWARE_H
->  
-> +#include <linux/dma-mapping.h>
->  #include <linux/irq.h>
->  #include <linux/msi.h>
->  #include <linux/pci.h>
-> @@ -168,7 +169,7 @@ struct pcie_port {
->  	const struct dw_pcie_host_ops *ops;
->  	int			msi_irq;
->  	struct irq_domain	*irq_domain;
-> -	unsigned long		msi_data;
-> +	dma_addr_t		msi_data;
->  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
->  };
->  
-> 
+Thanks Bjorn for your review comments. Please see below for my comments.
 
-Makes total sense! Thanks.
+On 12/8/2017 2:24 PM, Bjorn Helgaas wrote:
+> On Thu, Dec 07, 2017 at 05:21:44PM -0500, Govinda Tatti wrote:
+>> This patch exports pcie_has_flr() and it is being used by Xen pciback
+>> driver to reset (flr/slot/bus) PCI devices based on 'reset' SysFS
+>> attribute.
+>>
+>> Signed-off-by: Govinda Tatti <Govinda.Tatti@Oracle.COM>
+>> ---
+>> v3: -New
+>>
+>>   drivers/pci/pci.c   | 3 ++-
+>>   include/linux/pci.h | 1 +
+>>   2 files changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 6078dfc..499e922 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3872,7 +3872,7 @@ static void pci_flr_wait(struct pci_dev *dev)
+>>    * Returns true if the device advertises support for PCIe function level
+>>    * resets.
+>>    */
+>> -static bool pcie_has_flr(struct pci_dev *dev)
+>> +bool pcie_has_flr(struct pci_dev *dev)
+>>   {
+>>   	u32 cap;
+>>   
+>> @@ -3882,6 +3882,7 @@ static bool pcie_has_flr(struct pci_dev *dev)
+>>   	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+>>   	return cap & PCI_EXP_DEVCAP_FLR;
+>>   }
+>> +EXPORT_SYMBOL_GPL(pcie_has_flr);
+> I'd rather change pcie_flr() so you could *always* call it, and it
+> would return 0, -ENOTTY, or whatever, based on whether FLR is
+> supported.  Is that feasible?
+Sure, I will add pcie_has_flr() logic inside pcie_flr() and return 
+appropriate
+values as suggested by you. Do we still want to retain pcie_has_flr() and
+its usage inside pci.c?.Otherwise, I will remove it and do required cleanup.
 
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+Please let me know.
+
+Cheers
+GOVINDA
