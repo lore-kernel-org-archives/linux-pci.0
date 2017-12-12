@@ -1,64 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:59958 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755534AbdLORgE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 12:36:04 -0500
-Date: Fri, 15 Dec 2017 17:36:43 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        thierry.reding@gmail.com
-Cc: cyndis@kapsi.fi, bhelgaas@google.com, jonathanh@nvidia.com,
-        robh+dt@kernel.org, frowand.list@gmail.com, rjw@rjwysocki.net,
-        tglx@linutronix.de, vidyas@nvidia.com, kthota@nvidia.com,
-        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH V4 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for
- Tegra PCIe
-Message-ID: <20171215173643.GA1050@red-moon>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
- <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.kernel.org ([198.145.29.99]:46936 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751554AbdLLSMl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Dec 2017 13:12:41 -0500
+Date: Tue, 12 Dec 2017 12:12:37 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?=
+        <ckoenig.leichtzumerken@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        xen-devel <xen-devel@lists.xen.org>
+Subject: Re: [PATCH] x86/PCI: limit the size of the 64bit BAR to 256GB
+Message-ID: <20171212181237.GD53955@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171211150452.23518-1-christian.koenig@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20171211150452.23518-1-christian.koenig@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 08, 2017 at 02:28:09PM +0530, Manikanta Maddireddy wrote:
-> Primary, secondary and subordinate default bus numbers are 0 in Tegra and
-> it is expecting SW to program these numbers in configration space.
+[+cc Boris, Juergen, xen-devel]
+
+On Mon, Dec 11, 2017 at 04:04:52PM +0100, Christian König wrote:
+> Xen hides a bit of system memory from the OS for its own purpose by
+> intercepting e820. This memory is unfortunately not reported as
+> reserved, but rather completely invisible.
 > 
-> pci_scan_bridge_extend() function programs these numbers in configuration
-> space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
-> flag is set. Since secondary & subordinate default bus numbers are 0,
-> PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
-> 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Avoid this address space collision and possible similar problems by
+> limiting the size of the newly allocated root hub window to 256GB which
+> should be sufficient for the short term.
+
+It sounds like Boris is working on a more complete fix, so I'm going
+to drop this for now.  This changelog includes a few more details, but
+I think it makes implicit assumptions about where memory and holes
+are and how big they are, and it's still not clear why 256GB is the
+right number.  Is it connected to the expected size of the BAR, or
+related somehow to the size of the hole?
+
+If we need this as a short-term workaround, we can do that, but I
+would like to include a reference to f5775e0b6116 ("x86/xen: discard
+RAM regions above the maximum reservation") and somehow make what's
+going on here a little more explicit.
+
+> Signed-off-by: Christian König <christian.koenig@amd.com>
 > ---
-> V3:
-> * new patch in V3
-> V4:
-> * no change in this patch
+>  arch/x86/pci/fixup.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
->  drivers/pci/host/pci-tegra.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index a549c5899e26..0d91f1a3a6b4 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -2604,7 +2604,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 8f86060f5cf6..ed8bc6ab0573 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -702,7 +702,7 @@ static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>  	res->name = "PCI Bus 0000:00";
+>  	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
+>  		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+> -	res->start = 0x100000000ull;
+> +	res->start = 0xbd00000000ull;
+>  	res->end = 0xfd00000000ull - 1;
 >  
->  	tegra_pcie_enable_ports(pcie);
->  
-> -	pci_add_flags(PCI_REASSIGN_ALL_BUS);
-
-This looks obviously OK to me but I need Thierry's ACK to queue it.
-
-Lorenzo
-
->  	host->busnr = pcie->busn.start;
->  	host->dev.parent = &pdev->dev;
->  	host->ops = &tegra_pcie_ops;
+>  	/* Just grab the free area behind system memory for this */
 > -- 
-> 2.1.4
+> 2.11.0
 > 
