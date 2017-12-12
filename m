@@ -1,106 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:34837 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755280AbdL2Jdg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 04:33:36 -0500
-Subject: Re: [PATCH v3 7/9] pci: keystone SoC driver adapted to new irq API
-To: Jingoo Han <jingoohan1@gmail.com>,
-        'Kishon Vijay Abraham I' <kishon@ti.com>,
-        "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-        "thomas.petazzoni@free-electrons.com"
-        <thomas.petazzoni@free-electrons.com>,
-        "minghuan.Lian@freescale.com" <minghuan.Lian@freescale.com>,
-        "mingkai.hu@freescale.com" <mingkai.hu@freescale.com>,
-        "tie-fei.zang@freescale.com" <tie-fei.zang@freescale.com>,
-        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        "svarbanov@mm-sol.com" <svarbanov@mm-sol.com>,
-        "nsekhar@ti.com" <nsekhar@ti.com>
-References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
- <d814c419df5591f9170223d61388a0af746577c4.1514455857.git.gustavo.pimentel@synopsys.com>
- <10d22382-4914-da3b-a842-eb33693c7a83@ti.com>
- <000201d37ff6$dbdb6fb0$93924f10$@gmail.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <f176417f-604a-16d2-aeff-d6733ffd4ae6@synopsys.com>
-Date: Fri, 29 Dec 2017 09:33:31 +0000
+Return-Path: <SRS0=hqxK=DI=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=hqxK=DI=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 12 Dec 2017 11:01:58 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	kthota@nvidia.com, mmaddireddy@nvidia.com, robh+dt@kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH V3 0/2] Tegra PCIe end point config space map code
+ refactoring
+Message-ID: <20171212110158.GA30601@e107981-ln.cambridge.arm.com>
+References: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
+ <20171211105431.GI10671@ulmo>
+ <20171211175452.GC16032@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <000201d37ff6$dbdb6fb0$93924f10$@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171211175452.GC16032@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo and Kishon,
-
-On 28/12/2017 16:13, Jingoo Han wrote:
-> On Thursday, December 28, 2017 7:44 AM, Kishon Vijay Abraham I wrote:
->>
->> Hi Gustavo,
->>
->> On Thursday 28 December 2017 05:26 PM, Gustavo Pimentel wrote:
->>> This patch adapts Keystone SoC specific driver to use the new interrupt
->> api
->>> available in pcie-designware. A new callback was added to
->> dw_pcie_host_ops
->>> to handle a specific Keystone function and msi_host_init callback is
->>> changed to simplify the access to pci data structure for keystone all
->> SoC
->>> drivers that use the structure.
->>>
->>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>> ---
->>> Change v1->v2:
->>> - Removed hardcoded num_vectors configuration (now it is done in the
->> core driver by default)
->>> Change v2->v3:
->>> -
->>>
->>>
->>>
->>>
->>>
->>>  drivers/pci/dwc/pci-keystone-dw.c      | 88
-> ++---------------------------
->> -----
->>>  drivers/pci/dwc/pci-keystone.c         |  1 +
->>>  drivers/pci/dwc/pci-keystone.h         |  4 +-
->>>  drivers/pci/dwc/pci-layerscape.c       |  3 +-
->>>  drivers/pci/dwc/pcie-designware-host.c | 19 ++++++--
->>>  drivers/pci/dwc/pcie-designware.h      |  3 +-
->>
->> The designware specific patches should be part of
->> "[1/9] pci: adding new irq api to pci-designware"
-
-Ok, I will move your (Kishon) fixes to the 0001 patch file, no problem.
-
->>
->> Also layerscap is not related to $subject.
-
-Please note there are some initial changes on this patch (maybe they could be in
-a isolated patch) related to pci-layerscape.c, pcie-designware-host.c and
-pcie-designware.h files that changes the msi_host_init callback signature and
-this affects the Keystone, Layerscape drivers and the core at the same time,
-that's the reason why this modification touches on these three files and should
-be together.
-Was I able to pass this information clearly?
-
+On Mon, Dec 11, 2017 at 11:54:53AM -0600, Bjorn Helgaas wrote:
+> [+cc Lorenzo]
 > 
-> Yes, right.
+> On Mon, Dec 11, 2017 at 11:54:31AM +0100, Thierry Reding wrote:
+> > On Mon, Dec 04, 2017 at 11:23:48PM +0530, Vidya Sagar wrote:
+> > > PCIe host controller in Tegra SoCs has 1GB of aperture available
+> > > for mapping end points config space, IO and BARs. In that, currently
+> > > 256MB is being reserved for mapping end points configuration space
+> > > which leaves less memory space available for mapping end points BARs
+> > > on some of the platforms.
+> > > This patch series attempts to map only 4K space from 1GB aperture to
+> > > access end points configuration space.
+> > > 
+> > > Currently, this change can benefit T20 and T186 in saving (i.e. repurposed
+> > > to use for BAR mapping) physical space as well as kernel virtual mapping space,
+> > > it saves only kernel virtual address space in T30, T124, T132 and T210.
+> > > 
+> > > NOTE: Since T186 PCIe DT entry is not yet present in main line (it is currently
+> > > merged to 'for-4.15/arm64/dt' branch), nothing gets broken with this change for T186.
+> > > For older platforms (T20, T30, T124, T132, T210), this change works fine without any
+> > > DT modifications
+> > > 
+> > > Testing Done on T124, T210 & T186:
+> > >  Enumeration and basic functionality of immediate devices
+> > >  Enumeration of devices behind a PCIe switch
+> > >  Complete 4K configuration space access
+> > > 
+> > > Vidya Sagar (2):
+> > >   PCI: tegra: refactor config space mapping code
+> > >   ARM64: tegra: limit PCIe config space mapping to 4K for T186
+> > > 
+> > >  arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +-
+> > >  drivers/pci/host/pci-tegra.c             | 125 ++++++++++---------------------
+> > >  2 files changed, 44 insertions(+), 89 deletions(-)
+> > 
+> > Hi Bjorn,
+> > 
+> > there's a bunch of PCI related patches for Tegra floating around on the
+> > lists. I'm wondering if you'd be okay if I pick those up into the Tegra
+> > tree after they've been reviewed and send you a pull request later on
+> > (say around v4.15-rc6). That would allow me to get things cooking in
+> > linux-next for a bit and get broader testing in addition to the
+> > flexibility to patch things up if they break.
 > 
-> To Gustavo,
-> Please split this patch to two patches. 
+> Lorenzo will be merging the Tegra stuff, so this is more a question
+> for him.
+> 
+> Just to clarify, I think your questions is about putting those patches
+> in
+> git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git#for-next.
+> If you put them there they will show up in linux-next, and then when
+> Lorenzo merges them, you'll have to coordinate so they don't get
+> merged into linux-next twice (once via the usual PCI tree route and
+> again via the Tegra tree).
+> 
+> If you wait until after they've been reviewed to put them into the
+> Tegra tree, I'm not sure what the gain is, because I assume Lorenzo
+> would merge them at about that same point.
 
-If both agree I can split this patch, by the reason described before, OK?
+I think that after the review, the Tegra patches that are considered for
+upstream they should go to -next via the PCI tree as any other platform PCI
+patches; the relevant patches need ACKs from the respective platform
+maintainer - I am getting to them as fast as I can.
 
-> 
->>
->> Thanks
->> Kishon
-> 
+> This cycle isn't going to be ideal timing with all the holidays
+> coming up.  I know I'm going to be traveling and on vacation quite a
+> bit in the rc5, 6, 7 timeframe.
+
+Yes timing is not ideal - I won't be able to review anything in the -rc5
+week either but apart from that I should be online.
+
+Lorenzo
