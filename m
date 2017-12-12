@@ -1,56 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:17392 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752303AbdLHI6w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:58:52 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V4 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for Tegra PCIe
-Date: Fri, 8 Dec 2017 14:28:09 +0530
-Message-ID: <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59168 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753151AbdLLMsB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 07:48:01 -0500
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Ingo Molnar <mingo@kernel.org>
+Subject: [PATCH 4.14 047/164] x86/PCI: Make broadcom_postcore_init() check acpi_disabled
+Date: Tue, 12 Dec 2017 13:43:47 +0100
+Message-Id: <20171212123446.011087976@linuxfoundation.org>
+In-Reply-To: <20171212123443.785979602@linuxfoundation.org>
+References: <20171212123443.785979602@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Primary, secondary and subordinate default bus numbers are 0 in Tegra and
-it is expecting SW to program these numbers in configration space.
+4.14-stable review patch.  If anyone has any objections, please let me know.
 
-pci_scan_bridge_extend() function programs these numbers in configuration
-space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
-flag is set. Since secondary & subordinate default bus numbers are 0,
-PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
+------------------
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+commit ddec3bdee05b06f1dda20ded003c3e10e4184cab upstream.
+
+acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
+is set, but the host bridge information from the ACPI tables is not going
+to be used in that case and the Broadcom host bridge initialization should
+not be skipped then, So make broadcom_postcore_init() check acpi_disabled
+too to avoid this issue.
+
+Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
+Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
-V3:
-* new patch in V3
-V4:
-* no change in this patch
+ arch/x86/pci/broadcom_bus.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/pci/host/pci-tegra.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index a549c5899e26..0d91f1a3a6b4 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -2604,7 +2604,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init
+ 	 * We should get host bridge information from ACPI unless the BIOS
+ 	 * doesn't support it.
+ 	 */
+-	if (acpi_os_get_root_pointer())
++	if (!acpi_disabled && acpi_os_get_root_pointer())
+ 		return 0;
+ #endif
  
- 	tegra_pcie_enable_ports(pcie);
- 
--	pci_add_flags(PCI_REASSIGN_ALL_BUS);
- 	host->busnr = pcie->busn.start;
- 	host->dev.parent = &pdev->dev;
- 	host->ops = &tegra_pcie_ops;
--- 
-2.1.4
