@@ -1,44 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:53918 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751748AbdLGAR6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Dec 2017 19:17:58 -0500
-Date: Wed, 6 Dec 2017 16:17:54 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Brian Norris <briannorris@chromium.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
-        dianders@chromium.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Len Brown <lenb@kernel.org>
-Subject: Re: [RFC PATCH v10 6/7] PCI / PM: Move acpi wakeup code to pci core
-Message-ID: <20171207001754.GB28152@atomide.com>
-References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
- <1894178.xtK0vD2N4H@aspire.rjw.lan>
- <20171114025109.GA43048@google.com>
- <1882670.s3LR2t44nD@aspire.rjw.lan>
- <20171206193421.GA143886@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171206193421.GA143886@google.com>
+Received: from prv-mh.provo.novell.com ([137.65.248.74]:35243 "EHLO
+        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752433AbdLLPBt (ORCPT
+        <rfc822;groupwise-linux-pci@vger.kernel.org:6:2>);
+        Tue, 12 Dec 2017 10:01:49 -0500
+Message-Id: <5A2FFD690200007800196DFB@prv-mh.provo.novell.com>
+Date: Tue, 12 Dec 2017 08:01:45 -0700
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Govinda Tatti" <Govinda.Tatti@Oracle.COM>
+Cc: <roger.pau@citrix.com>, <bhelgaas@google.com>,
+        <xen-devel@lists.xenproject.org>, <boris.ostrovsky@Oracle.COM>,
+        <konrad.wilk@Oracle.COM>, "Juergen Gross" <jgross@suse.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH V3 2/2] Xen/PCIback: Implement PCI flr/slot/bus
+ reset with 'reset' SysFS attribute
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
+ <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
+ <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
+In-Reply-To: <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Brian Norris <briannorris@chromium.org> [171206 19:36]:
-> By the way, it seems pretty ambiguous how we want to handle things like
-> (a) multiple devices sharing the same WAKE#
-> (b) systems where a slot is swappable
+>>> On 12.12.17 at 15:48, <Govinda.Tatti@Oracle.COM> wrote:
+> Thanks Jan for your review comments. Please see below for my comments.
+
+First of all - can you please do something about your reply style?
+HTML mail should be avoided. You'll see that the (plain text) reply
+as a result is rather hard to follow, too.
+
+> --- a/Documentation/ABI/testing/sysfs-driver-pciback
+> +++ b/Documentation/ABI/testing/sysfs-driver-pciback
+> @@ -11,3 +11,18 @@ Description:
+>                  #echo 00:19.0-E0:2:FF > /sys/bus/pci/drivers/pciback/quirks
+>                  will allow the guest to read and write to the configuration
+>                  register 0x0E.
+> +
+> +What:           /sys/bus/pci/drivers/pciback/reset
+> +Date:           Dec 2017
+> +KernelVersion:  4.15
+> +Contact:        xen-devel@lists.xenproject.org 
+> +Description:
+> +                An option to perform a flr/slot/bus reset when a PCI device
+> + is owned by Xen PCI backend. Writing a string of DDDD:BB:DD.F  
+> SSSS:BB:DD.F (or else the D-s are ambiguous, the more that "domain"
+> in Xen code is ambiguous anyway - I continue to be mislead by struct
+> pcistub_device_id's domain field)  Thanks for catching this issue. I will 
+> fix it.
 > 
-> For (a), the main problem is that if we have to repeat the interrupt
-> definition in multiple devices, then we have to deal with something like
-> IRQF_SHARED. That can be done, but it makes it much harder to use the
-> dedicated wakeirq helpers.
+> 
+> Also I assume the SSSS part is optional (default zero), which
+> probably can and should be expressed in some way.  SSSS can be 0 or 
+> non-zero, subject to system configuration.
 
-This will get messy, let's not go there :) That is unless the hardware
-really has a single interrupt wired to multiple devices. And in that
-case almost certainly a custom interrupt handler is needed.
+The question isn't system configuration, but whether the field can
+be omitted on input, with zero being assumed in such a case. That's
+a common shorthand, considering that the vast majority of x86
+(and maybe other) systems aren't using segments other than zero.
 
-Regards,
-
-Tony
+Jan
