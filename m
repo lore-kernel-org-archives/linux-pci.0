@@ -1,79 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, Len Brown <lenb@kernel.org>,
-        "open list:ACPI" <linux-acpi@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH V4 2/5] ACPI / bus: Introduce acpi_get_match_data() function
-Date: Fri, 01 Dec 2017 14:52:53 +0100
-Message-ID: <2290830.PQXLc2Sk7k@aspire.rjw.lan>
-In-Reply-To: <1512096776-22883-3-git-send-email-okaya@codeaurora.org>
-References: <1512096776-22883-1-git-send-email-okaya@codeaurora.org> <1512096776-22883-3-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=SB5a=DJ=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=SB5a=DJ=linutronix.de=tglx@kernel.org>
+Date: Wed, 13 Dec 2017 21:52:34 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
+    Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+    Andy Lutomirski <luto@kernel.org>,
+    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+    the arch/x86 maintainers <x86@kernel.org>,
+    Daniel Vetter <daniel.vetter@intel.com>,
+    Bjorn Helgaas <bhelgaas@google.com>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+In-Reply-To: <alpine.DEB.2.20.1712131856130.1885@nanos>
+Message-ID: <alpine.DEB.2.20.1712132149420.1885@nanos>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com> <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl> <alpine.DEB.2.20.1712061344560.1724@nanos>
+ <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl> <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl> <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
+ <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 1, 2017 3:52:53 AM CET Sinan Kaya wrote:
-> OF has of_device_get_match_data() function to extract driver specific data
-> structure. Add a similar function for ACPI.
+On Wed, 13 Dec 2017, Thomas Gleixner wrote:
+> On Wed, 13 Dec 2017, Linus Torvalds wrote:
 > 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> > On Wed, Dec 13, 2017 at 8:41 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> > >
+> > > Definitely. That was fragile forever but puzzles me is that I can't figure
+> > > out what now causes that spurious interrupt to surface out of the blue.
+> > 
+> > Perhaps just timing?
+> 
+> That's what I'm trying to figure out right now, because that is the only
+> sensible explanation left. The whole machinery of suspend is exactly the
+> same with and without the vector changes. I instrumented all functions
+> involved and the picture is the same. I even do not see any fundamental
+> timing differences where one would say: That's it.
+> 
+> What puzzles me even more is that in the range of commits I'm fiddling with
+> there is no other change than the vector management stuff and the point
+> where it breaks makes no sense at all. The point Maarten bisected it to
+> works nicely here, so that might just point to a very subtle timing issue.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+After doing more debugging on this it turns out that this looks like a
+legacy interrupt coming in. The vector number is always 55, which is legacy
+IRQ 7 as seen from the PIC. The corresponding IOAPIC interrupt pin is
+masked and vector 55 is completely unused.
 
-> ---
->  drivers/acpi/bus.c   | 12 ++++++++++++
->  include/linux/acpi.h |  6 ++++++
->  2 files changed, 18 insertions(+)
-> 
-> diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
-> index 4d0979e..b271eb1 100644
-> --- a/drivers/acpi/bus.c
-> +++ b/drivers/acpi/bus.c
-> @@ -785,6 +785,18 @@ const struct acpi_device_id *acpi_match_device(const struct acpi_device_id *ids,
->  }
->  EXPORT_SYMBOL_GPL(acpi_match_device);
->  
-> +void *acpi_get_match_data(const struct device *dev)
-> +{
-> +	const struct acpi_device_id *match;
-> +
-> +	match = acpi_match_device(dev->driver->acpi_match_table, dev);
-> +	if (!match)
-> +		return NULL;
-> +
-> +	return (void *)match->driver_data;
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_get_match_data);
-> +
->  int acpi_match_device_ids(struct acpi_device *device,
->  			  const struct acpi_device_id *ids)
->  {
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 502af53..a927260 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -584,6 +584,7 @@ extern int acpi_nvs_for_each_region(int (*func)(__u64, __u64, void *),
->  const struct acpi_device_id *acpi_match_device(const struct acpi_device_id *ids,
->  					       const struct device *dev);
->  
-> +void *acpi_get_match_data(const struct device *dev);
->  extern bool acpi_driver_match_device(struct device *dev,
->  				     const struct device_driver *drv);
->  int acpi_device_uevent_modalias(struct device *, struct kobj_uevent_env *);
-> @@ -755,6 +756,11 @@ static inline const struct acpi_device_id *acpi_match_device(
->  	return NULL;
->  }
->  
-> +static inline void *acpi_get_match_data(const struct device *dev)
-> +{
-> +	return NULL;
-> +}
-> +
->  static inline bool acpi_driver_match_device(struct device *dev,
->  					    const struct device_driver *drv)
->  {
-> 
+More questions than answers. Still investigating.
+
+Thanks,
+
+	tglx
