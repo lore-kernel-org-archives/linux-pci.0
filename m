@@ -1,60 +1,164 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1513689898.7000.191.camel@linux.intel.com>
-Subject: Re: [PATCH V4 14/26] pch_gbe: deprecate pci_get_bus_and_slot()
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
- timur@codeaurora.org
-Date: Tue, 19 Dec 2017 15:24:58 +0200
-In-Reply-To: <ef7d09ce-06af-ad3e-1048-3b413cc32e9b@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-15-git-send-email-okaya@codeaurora.org>
- <1513680330.7000.167.camel@linux.intel.com>
- <ef7d09ce-06af-ad3e-1048-3b413cc32e9b@codeaurora.org>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kees Cook <keescook@chromium.org>, linux-arm-msm@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Eric Dumazet <edumazet@google.com>,
- "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
- Tobias Klauser <tklauser@distanz.ch>, "David S. Miller" <davem@davemloft.net>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:1628 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751644AbdLMT1n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 14:27:43 -0500
+Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
+ port
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
+        <mperttunen@nvidia.com>, <linux-tegra@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <kthota@nvidia.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
+ <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
+ <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
+ <20171213140848.GA1736@red-moon>
+ <b72dda91-5307-f024-9810-d6abadf7f337@nvidia.com>
+ <20171213183417.GD4060@red-moon>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <a9bc0f46-69e1-d7ca-8cd3-e54259c4a92d@nvidia.com>
+Date: Thu, 14 Dec 2017 00:57:28 +0530
+MIME-Version: 1.0
+In-Reply-To: <20171213183417.GD4060@red-moon>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-12-19 at 07:17 -0500, Sinan Kaya wrote:
-> On 12/19/2017 5:45 AM, Andy Shevchenko wrote:
-> > On Tue, 2017-12-19 at 00:37 -0500, Sinan Kaya wrote:
-> > > 
 
-> > pci_get_bus_and_slot() still might be useful for the wired devices
-> > in
-> > SoC where we know for sure that domain == 0.
-> > 
+
+On 14-Dec-17 12:04 AM, Lorenzo Pieralisi wrote:
+> On Wed, Dec 13, 2017 at 10:02:02PM +0530, Manikanta Maddireddy wrote:
+>>
+>>
+>> On 13-Dec-17 7:38 PM, Lorenzo Pieralisi wrote:
+>>> On Wed, Dec 13, 2017 at 05:20:39PM +0530, Manikanta Maddireddy wrote:
+>>>>
+>>>>
+>>>> On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
+>>>>> On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
+>>>>>> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
+>>>>>> after all the required root port register programming is completed.
+>>>>>>
+>>>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>>>>>> ---
+>>>>>> V3:
+>>>>>> * no change in this patch
+>>>>>> V2:
+>>>>>> * no change in this patch
+>>>>>>
+>>>>>>  drivers/pci/host/pci-tegra.c | 9 +++++----
+>>>>>>  1 file changed, 5 insertions(+), 4 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>>>>>> index 96e8038c3019..b41c60c7414c 100644
+>>>>>> --- a/drivers/pci/host/pci-tegra.c
+>>>>>> +++ b/drivers/pci/host/pci-tegra.c
+>>>>>> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>>>>>>  		}
+>>>>>>  	}
+>>>>>>  
+>>>>>> -	/* take the PCIe interface module out of reset */
+>>>>>> -	reset_control_deassert(pcie->pcie_xrst);
+>>>>>> -
+>>>>>>  	/* finally enable PCIe */
+>>>>>>  	value = afi_readl(pcie, AFI_CONFIGURATION);
+>>>>>>  	value |= AFI_CONFIGURATION_EN_FPCI;
+>>>>>> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+>>>>>>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+>>>>>>  	}
+>>>>>>  
+>>>>>> -	reset_control_assert(pcie->pcie_xrst);
+>>>>>
+>>>>> This does not look like it is part of the reset de-assertion code move.
+>>>>>
+>>>>> tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
+>>>>>
+>>>>> in other words, why are you removing it ?
+>>>>>
+>>>>> Lorenzo
+>>>>
+>>>> Hi Lorenzo,
+>>>>
+>>>> Host driver should start LTSSM after programming all controller registers.
+>>>> In tegra_pcie_enable_controller() bunch of AFI module programming is done and
+>>>> I am adding PCIe register programming in this series.
+>>>> So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
+>>>> which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
+>>>
+>>> I asked why you removed the reset assertion in tegra_pcie_power_off(),
+>>> it is not clear to me. You still call tegra_pcie_power_off() in
+>>> the tegra_pcie_probe() error path and I see no reason why the reset
+>>> assertion - called through:
+>>>
+>>> tegra_pcie_put_resources()
+>>> 	-> tegra_pcie_power_of()
+>>> 	
+>>> is removed, if it was needed previously.
+>>>
+>>> Lorenzo
+>>>
+>>
+>> New sequence with this patch will be
+>> tegra_pcie_enable_controller() -> tegra_pcie_request_resources() -> tegra_pcie_enable_ports()
+>>                                    ->goto put_resources on fail        -> reset_control_deassert(pcie->pcie_xrst);
+>>
+>> Since pcie_xrst deassert happens after tegra_pcie_request_resources(), there is no need to assert pcie_xrst on put_resource failure.
 > 
-> Then hard code the domain number as 0 while calling
-> pci_get_domain_bus_and_slot()
-> if you know for sure that this device will never work on a non-zero
-> domain.
+> I do not understand you, sorry for being blunt.
+> 
+> What has tegra_pcie_request_resources() to do with the reset
+> assertion/deassertion ?
+> 
+> This patch moves:
+> 
+> reset_control_deassert(pcie->pcie_xrst);
+> 
+> from:
+> 
+> tegra_pcie_enable_controller()
+> 
+> to
+> 
+> tegra_pcie_enable_ports()
+> 
+> if:
+> 
+> reset_control_assert(pcie->pcie_xrst);
+> 
+> was needed before this patch in tegra_pcie_power_off()
+> 
+> why it is not needed there after this patch is applied ?
+> 
+> Lorenzo
+> 
+Opposite of tegra_pcie_enable_ports() is missing on disable_msi
+failure in current driver. So I took care of assert pcie_xrst
+in https://patchwork.ozlabs.org/patch/846043/ along with other
+resources.
 
-Thanks for so detailed explanation.
-
-Okay, I suppose you did estimate the amount of drivers / modules that
-may look better with pci_get_bus_and_slot() and the result is comparable
-  small.
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>>>>>>  	reset_control_assert(pcie->afi_rst);
+>>>>>>  	reset_control_assert(pcie->pex_rst);
+>>>>>>  
+>>>>>> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>>>>>>  			 port->index, port->lanes);
+>>>>>>  
+>>>>>>  		tegra_pcie_port_enable(port);
+>>>>>> +	}
+>>>>>>  
+>>>>>> +	/* take the PCIe interface module out of reset */
+>>>>>> +	reset_control_deassert(pcie->pcie_xrst);
+>>>>>> +
+>>>>>> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>>>>>>  		if (tegra_pcie_port_check_link(port))
+>>>>>>  			continue;
+>>>>>>  
+>>>>>> -- 
+>>>>>> 2.1.4
+>>>>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
