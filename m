@@ -1,82 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 01/26] alpha/PCI: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:37 -0500
-Message-Id: <1513661883-28662-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kate Stewart <kstewart@linuxfoundation.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-arm-msm@vger.kernel.org,
- Philippe Ombredanne <pombredanne@nexb.com>,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- Masahiro Yamada <yamada.masahiro@socionext.com>,
- "open list:ALPHA PORT" <linux-alpha@vger.kernel.org>,
- Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Matt Turner <mattst88@gmail.com>,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org,
- Richard Henderson <rth@twiddle.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v1 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
+Date: Wed, 13 Dec 2017 09:32:38 -0600
+In-Reply-To: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171213153242.98015-4-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+To correctly use EEH code one has to make
+sure that the EEH_PE_VF is set for dynamic created
+VFs. Therefore this patch allocates an eeh_pe of
+eeh type EEH_PE_VF and associates PE with parent.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-extract the domain number. Other places, use the actual domain number from
-the device.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
 ---
- arch/alpha/kernel/pci.c          | 2 +-
- arch/alpha/kernel/sys_nautilus.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h        | 5 ++++-
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 9 ++++++++-
+ 2 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 87da005..2e86ebb 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -425,7 +425,7 @@ struct resource * __init
- 		if (bus == 0 && dfn == 0) {
- 			hose = pci_isa_hose;
- 		} else {
--			dev = pci_get_bus_and_slot(bus, dfn);
-+			dev = pci_get_domain_bus_and_slot(0, bus, dfn);
- 			if (!dev)
- 				return -ENODEV;
- 			hose = dev->sysdata;
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 239dc0e..ff4f54b 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -237,7 +237,7 @@
- 	bus = hose->bus = bridge->bus;
- 	pcibios_claim_one_bus(bus);
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 9f66ddebb799..c30c7cba4c30 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -211,7 +211,10 @@ struct pci_dn {
+ 	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
+ 	bool    m64_single_mode;	/* Use M64 BAR in Single Mode */
+ #define IODA_INVALID_M64        (-1)
+-	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
++	union {
++		int     (*m64_map)[PCI_SRIOV_NUM_BARS];
++		int     last_allow_rc;
++	};
+ #endif /* CONFIG_PCI_IOV */
+ 	int	mps;			/* Maximum Payload Size */
+ 	struct list_head child_list;
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index 1a9a6fa91151..5bdd1678a9ff 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -58,6 +58,8 @@ static int ibm_configure_pe;
+ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+ {
+ 	struct pci_dn *pdn = pci_get_pdn(pdev);
++	struct pci_dn *physfn_pdn;
++	struct eeh_dev *edev;
  
--	irongate = pci_get_bus_and_slot(0, 0);
-+	irongate = pci_get_domain_bus_and_slot(pci_domain_nr(bus), 0, 0);
- 	bus->self = irongate;
- 	bus->resource[0] = &irongate_io;
- 	bus->resource[1] = &irongate_mem;
+ 	if (!pdev->is_virtfn)
+ 		return;
+@@ -65,6 +67,10 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+ 	pdn->device_id  =  pdev->device;
+ 	pdn->vendor_id  =  pdev->vendor;
+ 	pdn->class_code =  pdev->class;
++	pdn->last_allow_rc =  0;
++	physfn_pdn      =  pci_get_pdn(pdev->physfn);
++	pdn->pe_number  =  physfn_pdn->pe_num_map[pdn->vf_index];
++	edev = pdn_to_eeh_dev(pdn);
+ 
+ 	/*
+ 	 * The following operations will fail if VF's sysfs files
+@@ -72,8 +78,9 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+ 	 */
+ 	eeh_add_device_early(pdn);
+ 	eeh_add_device_late(pdev);
++	edev->pe_config_addr =  (pdn->busno << 16) | (pdn->devfn << 8);
++	eeh_add_to_parent_pe(edev);
+ 	eeh_sysfs_add_device(pdev);
+-
+ }
+ 
+ /*
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.3 (Apple Git-98)
