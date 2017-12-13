@@ -1,135 +1,197 @@
-Return-Path: <SRS0=t6io=DL=gmail.com=jim2101024@kernel.org>
-Return-Path: <SRS0=t6io=DL=gmail.com=jim2101024@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:40632 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753209AbdLMQnM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 11:43:12 -0500
+Subject: Re: [PATCH 3/5] PCI: cadence: Add host driver for Cadence PCIe
+ controller
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, kishon@ti.com,
+        linux-pci <linux-pci@vger.kernel.org>, adouglas@cadence.com,
+        Scott Telford <stelford@cadence.com>, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        sureshp@cadence.com, nsekhar@ti.com,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <2670f7ddf59e708beb9d32bef1353e15bd4e1ecf.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <20171129173426.GB31205@red-moon>
+ <f870ad14-0bd5-9d7b-78f2-1e7f663d1127@free-electrons.com>
+ <20171204182013.GA7343@red-moon>
+ <CAKv+Gu_1XZmsKJ_7ay7D74xSAhDW0y++7-CC3YfG7LOUcNZSqA@mail.gmail.com>
+ <20171206113214.GA27582@red-moon>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Message-ID: <12e8cff4-3e4f-866b-6dac-27316ff4f1bc@free-electrons.com>
+Date: Wed, 13 Dec 2017 17:42:59 +0100
 MIME-Version: 1.0
-In-Reply-To: <20171214225133.GM30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
- <1510697532-32828-4-git-send-email-jim2101024@gmail.com> <20171212221642.GB95453@bhelgaas-glaptop.roam.corp.google.com>
- <CANCKTBvtqNWZYXpLdUnEWwA2=14XhJ6adR5muOAYubY_1SxZWw@mail.gmail.com> <20171214225133.GM30595@bhelgaas-glaptop.roam.corp.google.com>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Fri, 15 Dec 2017 14:53:57 -0500
-Message-ID: <CANCKTBvFhHb57JdG01aiSypBAcUeLzY3Dhuh5xP-_F5k_NcAhA@mail.gmail.com>
-Subject: Re: [PATCH v3 3/8] PCI: brcmstb: Add Broadcom STB PCIe host
- controller driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>, Brian Norris <computersforpeace@gmail.com>,
-	Russell King <rmk+kernel@armlinux.org.uk>, Robin Murphy <robin.murphy@arm.com>,
-	Christoph Hellwig <hch@lst.de>, Florian Fainelli <f.fainelli@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
-	Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
-	Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20171206113214.GA27582@red-moon>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 14, 2017 at 5:51 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Dec 13, 2017 at 06:53:53PM -0500, Jim Quinlan wrote:
->> On Tue, Dec 12, 2017 at 5:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Tue, Nov 14, 2017 at 05:12:07PM -0500, Jim Quinlan wrote:
->> >> This commit adds the basic Broadcom STB PCIe controller.  Missing is
->> >> the ability to process MSI and also handle dma-ranges for inbound
->> >> memory accesses.  These two functionalities are added in subsequent
->> >> commits.
->> >>
->> >> The PCIe block contains an MDIO interface.  This is a local interface
->> >> only accessible by the PCIe controller.  It cannot be used or shared
->> >> by any other HW.  As such, the small amount of code for this
->> >> controller is included in this driver as there is little upside to put
->> >> it elsewhere.
->> ...
->
->> >> +static bool brcm_pcie_valid_device(struct brcm_pcie *pcie, struct pci_bus *bus,
->> >> +                                int dev)
->> >> +{
->> >> +     if (pci_is_root_bus(bus)) {
->> >> +             if (dev > 0)
->> >> +                     return false;
->> >> +     } else {
->> >> +             /* If there is no link, then there is no device */
->> >> +             if (!brcm_pcie_link_up(pcie))
->> >> +                     return false;
->> >
->> > This is racy, since the link can go down after you check but before
->> > you do the config access.  I assume your hardware can deal with a
->> > config access that targets a link that is down?
+Hi all,
+
+Le 06/12/2017 à 12:32, Lorenzo Pieralisi a écrit :
+> On Mon, Dec 04, 2017 at 06:49:12PM +0000, Ard Biesheuvel wrote:
+> 
+> [...]
+> 
+>>>>>> +static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+>>>>>> +{
+>>>>>> +     const struct cdns_pcie_rc_data *data = rc->data;
+>>>>>> +     struct cdns_pcie *pcie = &rc->pcie;
+>>>>>> +     u8 pbn, sbn, subn;
+>>>>>> +     u32 value, ctrl;
+>>>>>> +
+>>>>>> +     /*
+>>>>>> +      * Set the root complex BAR configuration register:
+>>>>>> +      * - disable both BAR0 and BAR1.
+>>>>>> +      * - enable Prefetchable Memory Base and Limit registers in type 1
+>>>>>> +      *   config space (64 bits).
+>>>>>> +      * - enable IO Base and Limit registers in type 1 config
+>>>>>> +      *   space (32 bits).
+>>>>>> +      */
+>>>>>> +     ctrl = CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED;
+>>>>>> +     value = CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL(ctrl) |
+>>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL(ctrl) |
+>>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE |
+>>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS |
+>>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_IO_ENABLE |
+>>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_IO_32BITS;
+>>>>>> +     cdns_pcie_writel(pcie, CDNS_PCIE_LM_RC_BAR_CFG, value);
+>>>>>> +
+>>>>>> +     /* Set root port configuration space */
+>>>>>> +     if (data->vendor_id != 0xffff)
+>>>>>> +             cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, data->vendor_id);
+>>>>>> +     if (data->device_id != 0xffff)
+>>>>>> +             cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, data->device_id);
+>>>>>> +
+>>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_CLASS_REVISION, 0);
+>>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_CLASS_PROG, 0);
+>>>>>> +     cdns_pcie_rp_writew(pcie, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
+>>>>>> +
+>>>>>> +     pbn = rc->bus_range->start;
+>>>>>> +     sbn = pbn + 1; /* Single root port. */
+>>>>>> +     subn = rc->bus_range->end;
+>>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_PRIMARY_BUS, pbn);
+>>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_SECONDARY_BUS, sbn);
+>>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_SUBORDINATE_BUS, subn);
+>>>>>
+>>>>> Again - I do not have the datasheet for this device therefore I would
+>>>>> kindly ask you how this works; it seems to me that what you are doing
+>>>>> here is done through normal configuration cycles in an ECAM compliant
+>>>>> system to program the RP PRIMARY/SECONDARY/SUBORDINATE bus - I would
+>>>>> like to understand why this code is needed.
+>>>>>
+>>>>
+>>>> I will test without those lines to test whether I can remove them.
+>>>>
+>>>> At first, the PCIe controller was tested by Cadence team: there was code
+>>>> in their bootloader to initialize the hardware (building the AXI <-> PCIe
+>>>> mappings, ...): the bootloader used to set the primary, secondary and
+>>>> subordinate bus numbers in the root port PCI config space.
+>>>>
+>>>> Also there was a hardware trick to redirect accesses of the lowest
+>>>> addresses in the AXI bus to the APB bus so the PCI configuration space of
+>>>> the root port could have been accessed from the AXI bus too.
+>>>>
+>>>> The AXI <-> PCIe mapping being done by the bootloader and the root port
+>>>> config space being accessible from the AXI bus, it was possible to use
+>>>> the pci-host-generic driver.
+>>>
+>>> That's what I was getting at. Ard (CC'ed) implemented a firmware set-up
+>>> (even though it was for a different IP but maybe it applies here) that
+>>> allows the kernel to use the pci-host-generic driver to initialize the
+>>> PCI controller:
+>>>
+>>> https://marc.info/?l=linux-pci&m=150360022626351&w=2
+>>>
+>>> I want to understand if there is an IP initialization sequence whereby
+>>> this IP can be made to work in an ECAM compliant way and therefore
+>>> reuse (most of) the pci-host-generic driver code.
+>>>
 >>
->> Yes, that can happen but there is really nothing that can be done if
->> the link goes down in that vulnerability window.  What do you suggest
->> doing?
->
-> Most hardware drops writes and returns ~0 on reads if the link is
-> down.  I assume your hardware does something similar, and that should
-> be enough.  You shouldn't have to check whether the link is up.
-Unfortunately our HW is quite unforgiving and effects a synchronous or
-asynchronous abort when doing a config access when the link or power
-has gone down on the EP.  I will open a discussion with the PCIe HW
-folks regarding why our controller does not behave like "most
-hardware".  Thanks, Jim
->
-> The hardware might report errors, e.g., via AER, if the link is down.
-> And we might not not handle those nicely.  If we have issues there, we
-> should find out and fix them.
->
-> I see that dwc, altera, rockchip, and xilinx all do check for link up
-> there, too.  I can't remember if they had a legitimate reason, or if I
-> just missed it.
->
->> >> +static void brcm_pcie_remove_controller(struct brcm_pcie *pcie)
->> >> +{
->> >> +     struct list_head *pos, *q;
->> >> +     struct brcm_pcie *tmp;
->> >> +
->> >> +     mutex_lock(&brcm_pcie_lock);
->> >> +     list_for_each_safe(pos, q, &brcm_pcie) {
->> >> +             tmp = list_entry(pos, struct brcm_pcie, list);
->> >> +             if (tmp == pcie) {
->> >> +                     list_del(pos);
->> >> +                     if (list_empty(&brcm_pcie))
->> >> +                             num_memc = 0;
->> >> +                     break;
->> >> +             }
->> >> +     }
->> >> +     mutex_unlock(&brcm_pcie_lock);
->> >
->> > I'm missing something.  I don't see that num_memc is ever set to
->> > anything *other* than zero.
->> The num_memc is set and used in the dma commit.  I will remove its
->> declaration from this commit.
->
-> Thanks, that will make the patches much easier to read.
->
->> >> +     pcie->id = of_get_pci_domain_nr(dn);
->> >
->> > Why do you call of_get_pci_domain_nr() directly?  No other driver
->> > does.
+>> I think the Synopsys case is probably very similar. There are some
+>> registers that look like the config space of a root port, but in
+>> reality, every memory access that hits a live host bridge window is
+>> forwarded onto the link, regardless of the values of the bridge BARs.
+>> That is why in the quoted case, we can get away with ignoring the root
+>> port altogether, rather than jumping through hoops to make the IP
+>> block's PCI config space registers appear at B/D/F 0/0/0, while still
+>> having to filter type 0 config TLPs going onto the link (which is
+>> arguably the job of the root port to begin with)
 >>
->> We use the domain as the controller number (id).  We use the id to
->> identify and fix a HW bug that only affects the 2nd controller; see
->> the clause
->> " } else if (of_machine_is_compatible("brcm,bcm7278a0")) {".
->
-> pci_register_host_bridge() already sets bus->domain_nr for every host
-> bridge.  That path calls of_get_pci_domain_nr() eventually.   But I
-> guess that's too late for your use case, because you have this:
->
->   brcm_pcie_probe
->     brcm_pcie_setup
->       brcm_pcie_bridge_sw_init_set
->         if (of_machine_is_compatible("brcm,bcm7278a0")) {
->           offset = pcie->id ? ...                    <--- use
->     pci_scan_root_bus_bridge
->       pci_register_host_bridge
->         bus->domain_nr = pci_bus_find_domain_nr      <--- available
->
-> I guess you haven't added a binding for brcm,bcm7278a0 yet?
->
-> I'm not really sure that using the linux,pci-domain DT property is the
-> best way to distinguish the two controllers.  Maybe Rob has an
-> opinion?
->
->> >> +     if (pcie->id < 0)
->> >> +             return pcie->id;
->
-> Bjorn
+>> So if this IP does implement a proper root port (i.e., one where the
+>> bridge BARs are actually taken into account, and where type 0 config
+>> TLPs are in fact filtered), I strongly recommend mapping its config
+>> space registers in an ECAM compliant matter, which implies no
+>> accessors in the OS.
+>>
+>> However, given the observation above, this IP does not appear to
+>> filter type 0 config TLPs to devfn > 0 downstream of the root port
+>> either.
+> 
+> Unfortunately that matches my understanding too, let's wait for
+> Cyrille's reply on my query.
+> 
+>>>> However, the hardware trick won't be included in the final design since
+>>>> Cadence now wants to perform all PCI configuration space accesses through
+>>>> a small 4KB window at a fixed address on the AXI bus.
+>>>
+>>> I would like to understand what the HW "trick" (if you can disclose it)
+>>> was, because if there is a chance to reuse the pci-host-generic driver
+>>> for this IP I want to take it (yes it may entail some firmware set-up in
+>>> the bootloader) - was it a HW trick or a specific IP SW configuration ?
+>>>
+
+I will have to ask for details to Cadence designers if needed but when I
+asked them about it, they explained me that AXI bus accesses in a small
+window (I guess 4KB width) were redirected to the APB bus where lay the
+registers for the root port PCI configuration space.
+
+I was some hardware trick which won't be included in the final design, so
+we can't enable or disable it by software.
+
+Actually, this is requirement from the Cadence's customer that the host
+driver can access the PCI config space of any device in sub ordinates
+buses through a small memory area on the AXI bus. For some reason, they
+don't want an ECAM compliant controller.
+
+I don't know the reason but my guess is that they don't want to waste to
+much space allocated to the PCIe controller on the AXI bus, likely on a
+32-bit platform. As I said, this is such an assumption.
+
+>>>> Also, we now want all initialisations to be done by the linux driver
+>>>> instead of the bootloader.
+>>>
+>>> That's a choice, I do not necessarily agree with it and I think we
+>>> should aim for more standardization on the PCI host bridge set-up
+>>> at firmware->kernel handover on DT platforms.
+>>>
+
+It was another requirement of Cadence's customer that the PCIe host
+controller initialization is done by the Linux driver rather than by
+some boot loader.
+
+Best regards,
+
+Cyrille
+
+>>
+>> Well, for one, it means this IP will never be supported by ACPI, which
+>> seems like a huge downside to me.
+> 
+> Yes it is - that's exactly where my comments were heading.
+> 
+> Thanks,
+> Lorenzo
+> 
+
+
+-- 
+Cyrille Pitchen, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
