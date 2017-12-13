@@ -1,16 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 12 Dec 2017 15:14:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jim Quinlan <jim2101024@gmail.com>
-Subject: Re: [PATCH v3 1/8] SOC: brcmstb: add memory API
-Message-ID: <20171212211404.GA95453@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
- <1510697532-32828-2-git-send-email-jim2101024@gmail.com>
- <20171205205926.GJ23510@bhelgaas-glaptop.roam.corp.google.com>
- <CANCKTBvoXpF-H8Pck5TsH+7tNM=di1-uoedqACE+kjNEAUodYg@mail.gmail.com>
+Subject: Re: [PATCH V3 09/29] drm/i915: deprecate pci_get_bus_and_slot()
+To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org
+References: <1511801886-6753-1-git-send-email-okaya@codeaurora.org>
+ <1511801886-6753-10-git-send-email-okaya@codeaurora.org>
+ <bd6c6365-c265-30f4-029b-3e19af3078f2@codeaurora.org>
+ <1513087456.3809.17.camel@linux.intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <055279d0-5e1b-621c-af8e-4c2704d54e8c@codeaurora.org>
+Date: Tue, 12 Dec 2017 19:07:07 -0500
 MIME-Version: 1.0
-In-Reply-To: <CANCKTBvoXpF-H8Pck5TsH+7tNM=di1-uoedqACE+kjNEAUodYg@mail.gmail.com>
+In-Reply-To: <1513087456.3809.17.camel@linux.intel.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,105 +19,39 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Florian Fainelli <f.fainelli@gmail.com>,
- Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
- Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
- Gregory Fong <gregory.0xf0@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Brian Norris <computersforpeace@gmail.com>,
- Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="iso-8859-1"
+Cc: David Airlie <airlied@linux.ie>, linux-arm-msm@vger.kernel.org,
+ intel-gfx@lists.freedesktop.org, open list <linux-kernel@vger.kernel.org>,
+ Jani Nikula <jani.nikula@linux.intel.com>,
+ "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo]
+On 12/12/2017 9:04 AM, Joonas Lahtinen wrote:
+> Hi,
+> 
+> I sent this individual i915 patch to our CI, and it is passing on all platforms:
+> 
+> https://patchwork.freedesktop.org/series/34822/
+> 
+> Is it ok if I merge this to drm-tip already?
 
-On Tue, Dec 12, 2017 at 03:53:28PM -0500, Jim Quinlan wrote:
-> On Tue, Dec 5, 2017 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Tue, Nov 14, 2017 at 05:12:05PM -0500, Jim Quinlan wrote:
-> >> From: Florian Fainelli <f.fainelli@gmail.com>
-> >>
-> >> This commit adds a memory API suitable for ascertaining the sizes of
-> >> each of the N memory controllers in a Broadcom STB chip.  Its first
-> >> user will be the Broadcom STB PCIe root complex driver, which needs
-> >> to know these sizes to properly set up DMA mappings for inbound
-> >> regions.
-> >>
-> >> We cannot use memblock here or anything like what Linux provides
-> >> because it collapses adjacent regions within a larger block, and here
-> >> we actually need per-memory controller addresses and sizes, which is
-> >> why we resort to manual DT parsing.
-> >>
-> >> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> >> ---
-> >>  drivers/soc/bcm/brcmstb/Makefile |   2 +-
-> >>  drivers/soc/bcm/brcmstb/memory.c | 172 ++++++++++++++++++++++++++++++=
-+++++++++
-> >>  include/soc/brcmstb/memory_api.h |  25 ++++++
-> >>  3 files changed, 198 insertions(+), 1 deletion(-)
-> >>  create mode 100644 drivers/soc/bcm/brcmstb/memory.c
-> >>  create mode 100644 include/soc/brcmstb/memory_api.h
-> >>
-> >> diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmst=
-b/Makefile
-> >> index 9120b27..4cea7b6 100644
-> >> --- a/drivers/soc/bcm/brcmstb/Makefile
-> >> +++ b/drivers/soc/bcm/brcmstb/Makefile
-> >> @@ -1 +1 @@
-> >> -obj-y                                +=3D common.o biuctrl.o
-> >> +obj-y                                +=3D common.o biuctrl.o memory.o
-> >> diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmst=
-b/memory.c
-> >> new file mode 100644
-> >> index 0000000..eb647ad9
-> >> --- /dev/null
-> >> +++ b/drivers/soc/bcm/brcmstb/memory.c
-> >
-> > I sort of assume based on [1] that every new file should have an SPDX
-> > identifier ("The Linux kernel requires the precise SPDX identifier in
-> > all source files") and that the actual text of the GPL can be omitted.
-> >
-> > Only a few files in drivers/pci currently have an SPDX identifier.  I
-> > don't know if that's oversight or work-in-progress or what.
-> >
-> > [1] https://lkml.kernel.org/r/20171204212120.484179273@linutronix.de
-> >
-> =
+As long as you have this change in your tree, it should be safe.
 
-> Bjorn, Did you get a chance to review the other commits of this
-> submission (V3)?  I would like any additional feedback before I send
-> out a V4 with SPDX fixes.  Thanks, JimQ
+https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/include/linux/pci.h?id=7912af5c835bd86f2b0347a480e0f40e2fab30d0
 
-Lorenzo is taking over drivers/pci/host/* and he'll no doubt have some
-comments when he gets to this.  I'll point out a few quick formatting
-things in the meantime.
 
-> >> @@ -0,0 +1,172 @@
-> >> +/*
-> >> + * Copyright =A9 2015-2017 Broadcom
-> >> + *
-> >> + * This program is free software; you can redistribute it and/or modi=
-fy
-> >> + * it under the terms of the GNU General Public License version 2 as
-> >> + * published by the Free Software Foundation.
-> >> + *
-> >> + * This program is distributed in the hope that it will be useful,
-> >> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> >> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-> >> + * GNU General Public License for more details.
-> >> + *
-> >> + * A copy of the GPL is available at
-> >> + * http://www.broadcom.com/licenses/GPLv2.php or from the Free Softwa=
-re
-> >> + * Foundation at https://www.gnu.org/licenses/ .
+> 
+> Regards, Joonas
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 _______________________________________________
 linux-arm-kernel mailing list
