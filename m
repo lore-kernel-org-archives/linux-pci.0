@@ -1,143 +1,152 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 11 Dec 2017 11:13:26 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Wang, Liang-min" <liang-min.wang@intel.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Duyck, Alexander H" <alexander.h.duyck@intel.com>
-Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
-Message-ID: <20171211111326.250f51cf@t450s.home>
-In-Reply-To: <B6CB929FEBC10D4FAC4BCA7EF2298E259DB707A8@FMSMSX110.amr.corp.intel.com>
-References: <20171208214758.6959-1-jeffrey.t.kirsher@intel.com>
-        <20171208155802.4d1159c5@t450s.home>
-        <CAKgT0Ue=Wa-gamGoJFnHigqh+g4L9BRFE7c4RtG5nug-4HtZSA@mail.gmail.com>
-        <20171208163459.00fc5b20@t450s.home>
-        <B6CB929FEBC10D4FAC4BCA7EF2298E259DB707A8@FMSMSX110.amr.corp.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:58006 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752936AbdLMOWY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Dec 2017 09:22:24 -0500
+Date: Wed, 13 Dec 2017 14:23:04 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+Subject: Re: [PATCH V3 02/12] PCI: tegra: Move REFCLK pad settings out of
+ phy_power_on()
+Message-ID: <20171213142304.GB1736@red-moon>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-3-git-send-email-mmaddireddy@nvidia.com>
+ <20171212114527.GB30799@e107981-ln.cambridge.arm.com>
+ <6a089c5a-7a79-fd9f-ff77-e08f16731241@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6a089c5a-7a79-fd9f-ff77-e08f16731241@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 11 Dec 2017 14:22:30 +0000
-"Wang, Liang-min" <liang-min.wang@intel.com> wrote:
-
-> > -----Original Message-----
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Friday, December 08, 2017 6:35 PM
-> > To: Alexander Duyck <alexander.duyck@gmail.com>
-> > Cc: Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>; Wang, Liang-min <liang-  
-> > min.wang@intel.com>; kvm@vger.kernel.org; linux-pci@vger.kernel.org; linux-  
-> > kernel@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>; Duyck,
-> > Alexander H <alexander.h.duyck@intel.com>
-> > Subject: Re: [PATCH v2] Enable SR-IOV instantiation through /sys file
-> > 
-> > On Fri, 8 Dec 2017 15:19:18 -0800
-> > Alexander Duyck <alexander.duyck@gmail.com> wrote:
-> >   
-> > > On Fri, Dec 8, 2017 at 2:58 PM, Alex Williamson
-> > > <alex.williamson@redhat.com> wrote:  
-> > > > On Fri,  8 Dec 2017 13:47:58 -0800
-> > > > Jeff Kirsher <jeffrey.t.kirsher@intel.com> wrote:
-> > > >  
-> > > >> From: Liang-Min Wang <liang-min.wang@intel.com>
-> > > >>
-> > > >> When a SR-IOV capable device is bound with vfio-pci, the
-> > > >> device loses capability of creating SR-IOV instances through /sy/bus/
-> > > >> pci/devices/.../sriov_numvfs. This patch re-activates this capability
-> > > >> for a PCIe device that is SR-IOV capable and is bound with vfio-pci.ko.
-> > > >> This patch also disables drivers_autoprobe attribute of SR-IOV devices
-> > > >> created from vfio-pci bound device by default, so user-space PF device
-> > > >> can coordinate the bring-up of SR-IOV devices
-> > > >>
-> > > >> Signed-off-by: Liang-Min Wang <liang-min.wang@intel.com>
-> > > >> ---
-> > > >>  drivers/pci/pci-driver.c    | 12 ++++++++++++
-> > > >>  drivers/vfio/pci/vfio_pci.c | 22 ++++++++++++++++++++++
-> > > >>  include/linux/pci.h         |  1 +
-> > > >>  3 files changed, 35 insertions(+)
-> > > >>
-> > > >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > > >> index 7f47bb7..19522fe 100644
-> > > >> --- a/drivers/pci/pci-driver.c
-> > > >> +++ b/drivers/pci/pci-driver.c
-> > > >> @@ -1467,6 +1467,18 @@ void pci_dev_put(struct pci_dev *dev)
-> > > >>  }
-> > > >>  EXPORT_SYMBOL(pci_dev_put);
-> > > >>
-> > > >> +/**
-> > > >> + * pci_dev_sriov_autoprobe_set - set device sriov driver autoprobe
-> > > >> + * @dev: device with which sriov autoprobe will be set
-> > > >> + *
-> > > >> + */
-> > > >> +void pci_dev_sriov_autoprobe_set(struct pci_dev *dev, bool autoprobe)
-> > > >> +{
-> > > >> +     if (dev && dev->sriov)
-> > > >> +             dev->sriov->drivers_autoprobe = autoprobe;
-> > > >> +}
-> > > >> +EXPORT_SYMBOL(pci_dev_sriov_autoprobe_set);  
-> > > >
-> > > > _GPL?
-> > > >
-> > > > It'd also be best to separate the pci and vfio changes into different
-> > > > patches.  Bjorn would need to at least ack this PCI interface.
-> > > >  
-> > > >> +
-> > > >>  static int pci_uevent(struct device *dev, struct kobj_uevent_env *env)
-> > > >>  {
-> > > >>       struct pci_dev *pdev;
-> > > >> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> > > >> index f041b1a..004836c 100644
-> > > >> --- a/drivers/vfio/pci/vfio_pci.c
-> > > >> +++ b/drivers/vfio/pci/vfio_pci.c
-> > > >> @@ -1213,6 +1213,8 @@ static int vfio_pci_probe(struct pci_dev *pdev,  
-> > const struct pci_device_id *id)  
-> > > >>               return -ENOMEM;
-> > > >>       }
-> > > >>
-> > > >> +     /* disable sriov automatic driver attachment */
-> > > >> +     pci_dev_sriov_autoprobe_set(pdev, false);  
-> > > >
-> > > > This looks stateful, VF autoprobe is not restored on release.  Also,
-> > > > how would we know the initial state to restore it to?  
-> > >
-> > > The initial state is whatever the user set it to. It is something that
-> > > can be toggled on and off via sysfs, and it defaults to true at
-> > > initialization. In this case we are opting to toggle it off when VFIO
-> > > is attached to the device. Restoring it after unloading the driver
-> > > might be even more confusing since it is something the user could
-> > > toggle at any time so a restore would end up overwriting that.  
-> > 
-> > I'm not really willing to sign up for the inevitable bug reports when
-> > users can't figure out how to make their VFs work again in the host
-> > after they've used the PF for userspace drivers with vfio-pci.  I
-> > agree, both options are confusing, how do we make it not confusing?
-> > Can PCI core reset the autoprobe attribute to the default at some
-> > obvious point?  Thanks,
-> >   
+On Wed, Dec 13, 2017 at 05:32:32PM +0530, Manikanta Maddireddy wrote:
 > 
-> I would like to confirm the scenario discussed here is to unload PF driver, right?
-> Since users need to release all SR-IOV from PF driver first before PF driver is
-> released, does it make sense to restore autoprobe when VFs are released?
+> 
+> On 12-Dec-17 5:15 PM, Lorenzo Pieralisi wrote:
+> > On Mon, Oct 30, 2017 at 07:27:13PM +0530, Manikanta Maddireddy wrote:
+> >> In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
+> > 
+> > It is time you defined what FW does and what the kernel does and stick
+> > to that SW initialization sequence for all Tegra PCI host bridges from
+> > now onwards. Those tegra_pcie_soc structures in the driver will end up
+> > with a gazillion hardcoded parameters if you do not take a stance from
+> > that perspective and I do not like that - at all.
+> > 
+> > You may want to use DT bindings to describe the FW<->OS handover - or
+> > just enforce firmware guidelines for Tegra systems - something has to be
+> > done.
+> > 
+> > This patch makes sense stand-alone but I wanted to get the message
+> > across.
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
+> 
+> In Tegra186 BPMP-FW will take care of programming the UPHY, this is
+> updated in commit log of "9cea513d8cbc ("PCI: tegra: Add Tegra186 PCIe support")".
+> I didn't put it in DT bindings because there is no DT property for this purpose.
+> Do you want me to add a comment in PCIe tegra driver, perhaps near program_uphy variable?
 
-We don't know that VFs will be created, but perhaps you mean the point
-at which SR-IOV would be disabled in the PF unbind process.  Still, I
-think you're left with userspace and kernel-space both trying to use
-the same control bit and they're going to step on each other and create
-corner cases that are inconsistent.  It's not necessarily even clear
-how using separate trackers solves it since the kernel isn't
-necessarily behaving in the way the user directed.  Maybe the user
-interface to autoprobe needs to be locked out if the PF driver disables
-it.
+I would like to see some consistency from now onwards on what's done
+in BPMP (or host) FW and what's done in the driver and that's something
+you should drive because, as I have already said, the current approch
+based on boolean flags per-SoC hardcoded in the kernel does not scale -
+I may tolerate it for now but that has to change.
 
-Didn't we also discuss whether or not it's safe for vfio to enable
-SR-IOV while the PF is in use by a user?  Does that all fall into the
-"Dr. it hurts when I do this..." category and contributes to tainting
-the kernel when enabled?  Definitely worth some comment words to
-describe the various considerations contributing to kernel tainting.
+Is it that hard to define a software programming model (to describe
+what's done in what piece of software/firmware) for tegra PCI host
+bridges ?
+
+> In current host driver, REFCLK pads settings are done in
+> tegra_pcie_port_phy_power_off() which is not apt. REFCLK pad settings
+> tunes the PCIe sideband signal REFCLK, it has nothing to do with UPHY.
+> So I am moving it out of tegra_pcie_port_phy_power_off().
+
+I gathered that, I was not complaining on this patch on his own.
+
 Thanks,
+Lorenzo
 
-Alex
+> Thanks,
+> Manikanta
+> 
+> 
+> >> in driver. REFCLK pad settings are independent of PHY and should be
+> >> programmed by driver. So move REFCLK pad settings out of phy_power_on().
+> >> These pad settings improve REFCLK peak to peak amplitude.
+> >>
+> >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> >> ---
+> >> V3:
+> >> * Corrected commit log
+> >> V2:
+> >> * no change in this patch
+> >>
+> >>  drivers/pci/host/pci-tegra.c | 20 +++++++++++++-------
+> >>  1 file changed, 13 insertions(+), 7 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> >> index b41c60c7414c..068510b40c1a 100644
+> >> --- a/drivers/pci/host/pci-tegra.c
+> >> +++ b/drivers/pci/host/pci-tegra.c
+> >> @@ -910,7 +910,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
+> >>  static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+> >>  {
+> >>  	struct device *dev = pcie->dev;
+> >> -	const struct tegra_pcie_soc *soc = pcie->soc;
+> >>  	struct tegra_pcie_port *port;
+> >>  	int err;
+> >>  
+> >> @@ -936,12 +935,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+> >>  		}
+> >>  	}
+> >>  
+> >> -	/* Configure the reference clock driver */
+> >> -	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+> >> -
+> >> -	if (soc->num_ports > 2)
+> >> -		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+> >> -
+> >>  	return 0;
+> >>  }
+> >>  
+> >> @@ -2049,6 +2042,17 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+> >>  	return 0;
+> >>  }
+> >>  
+> >> +static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
+> >> +{
+> >> +	const struct tegra_pcie_soc *soc = pcie->soc;
+> >> +
+> >> +	/* Configure the reference clock driver */
+> >> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+> >> +
+> >> +	if (soc->num_ports > 2)
+> >> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+> >> +}
+> >> +
+> >>  /*
+> >>   * FIXME: If there are no PCIe cards attached, then calling this function
+> >>   * can result in the increase of the bootup time as there are big timeout
+> >> @@ -2107,6 +2111,8 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+> >>  	struct device *dev = pcie->dev;
+> >>  	struct tegra_pcie_port *port, *tmp;
+> >>  
+> >> +	tegra_pcie_apply_pad_settings(pcie);
+> >> +
+> >>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> >>  		dev_info(dev, "probing port %u, using %u lanes\n",
+> >>  			 port->index, port->lanes);
+> >> -- 
+> >> 2.1.4
+> >>
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
