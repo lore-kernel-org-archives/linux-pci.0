@@ -1,90 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:43942 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754445AbdL1RuM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 12:50:12 -0500
-Date: Thu, 28 Dec 2017 12:50:09 -0500
-From: Alexandru Chirvasitu <achirvasub@gmail.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-Message-ID: <20171228175009.ucxr4to2nb42e3s4@D-69-91-141-110.dhcp4.washington.edu>
-References: <ec3a298b-27a3-f3fe-ea8d-a777669104ba@cn.fujitsu.com>
- <20171220131929.GC24638@arch-chirva.localdomain>
- <alpine.DEB.2.20.1712281145510.1688@nanos>
- <20171228142117.GA10658@chirva-slack.chirva-slack>
- <alpine.DEB.2.20.1712281531120.1899@nanos>
- <20171228154835.GB10658@chirva-slack.chirva-slack>
- <20171228160522.GC10658@chirva-slack.chirva-slack>
- <alpine.DEB.2.20.1712281706010.1899@nanos>
- <20171228172250.GD10658@chirva-slack.chirva-slack>
- <alpine.DEB.2.20.1712281823140.1899@nanos>
+Received: from mail.free-electrons.com ([62.4.15.54]:39303 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752860AbdLMQDg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 11:03:36 -0500
+Subject: Re: [PATCH 5/5] PCI: cadence: add EndPoint Controller driver for
+ Cadence PCIe controller
+To: Philippe Ombredanne <pombredanne@nexb.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, LKML <linux-kernel@vger.kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+        <devicetree@vger.kernel.org>
+References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <297fa17e12cf0f2fb223c05eeb18570707ff5bf1.1511439189.git.cyrille.pitchen@free-electrons.com>
+ <20171201122048.GB25010@red-moon>
+ <ed6d811e-608e-e6aa-7b07-2f2d2d68adbd@ti.com>
+ <CAOFm3uGQzAOrAmQLx7uJ0SJGQxMSB+oAniq9wd93tvupKWv=uA@mail.gmail.com>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Message-ID: <2885a27d-bd97-c436-b8aa-86faabf68ca3@free-electrons.com>
+Date: Wed, 13 Dec 2017 17:03:23 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1712281823140.1899@nanos>
+In-Reply-To: <CAOFm3uGQzAOrAmQLx7uJ0SJGQxMSB+oAniq9wd93tvupKWv=uA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No; it seems to be tied to this specific issue, and I was seeing even
-before getting logs just now, whenever I'd start one of the bad
-kernels in recovery mode.
+Hi Philippe,
 
-But no, I've never seen that in any other logs, or on any other
-screens outside of those popping up in relation to this problem.
+Le 07/12/2017 à 11:05, Philippe Ombredanne a écrit :
+> Cyrille,
+> 
+> 
+> On Tue, Dec 5, 2017 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>> Hi,
+>>
+>> On Friday 01 December 2017 05:50 PM, Lorenzo Pieralisi wrote:
+>>> On Thu, Nov 23, 2017 at 04:01:50PM +0100, Cyrille Pitchen wrote:
+>>>> This patch adds support to the Cadence PCIe controller in endpoint mode.
+>>>
+>>> Please add a brief description to the log to describe the most salient
+>>> features.
+>>>
+>>>> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+>>>> ---
+>>>>  drivers/pci/cadence/Kconfig           |   9 +
+>>>>  drivers/pci/cadence/Makefile          |   1 +
+>>>>  drivers/pci/cadence/pcie-cadence-ep.c | 553 ++++++++++++++++++++++++++++++++++
+>>>>  3 files changed, 563 insertions(+)
+>>>>  create mode 100644 drivers/pci/cadence/pcie-cadence-ep.c
+>>>>
+>>>> diff --git a/drivers/pci/cadence/Kconfig b/drivers/pci/cadence/Kconfig
+>>>> index 120306cae2aa..b2e6af71f39e 100644
+>>>> --- a/drivers/pci/cadence/Kconfig
+>>>> +++ b/drivers/pci/cadence/Kconfig
+>>>> @@ -21,4 +21,13 @@ config PCIE_CADENCE_HOST
+>>>>        mode. This PCIe controller may be embedded into many different vendors
+>>>>        SoCs.
+>>>>
+>>>> +config PCIE_CADENCE_EP
+>>>> +    bool "Cadence PCIe endpoint controller"
+>>>> +    depends on PCI_ENDPOINT
+>>>> +    select PCIE_CADENCE
+>>>> +    help
+>>>> +      Say Y here if you want to support the Cadence PCIe  controller in
+>>>> +      endpoint mode. This PCIe controller may be embedded into many
+>>>> +      different vendors SoCs.
+>>>> +
+>>>>  endif # PCI_CADENCE
+>>>> diff --git a/drivers/pci/cadence/Makefile b/drivers/pci/cadence/Makefile
+>>>> index d57d192d2595..61e9c8d6839d 100644
+>>>> --- a/drivers/pci/cadence/Makefile
+>>>> +++ b/drivers/pci/cadence/Makefile
+>>>> @@ -1,2 +1,3 @@
+>>>>  obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence.o
+>>>>  obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
+>>>> +obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep.o
+>>>> diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
+>>>> new file mode 100644
+>>>> index 000000000000..a1d761101a9c
+>>>> --- /dev/null
+>>>> +++ b/drivers/pci/cadence/pcie-cadence-ep.c
+>>>> @@ -0,0 +1,553 @@
+>>>> +/*
+>>>> + * Cadence PCIe host controller driver.
+>>>
+>>> You should update this comment.
+>>>
+>>>> + *
+>>>> + * Copyright (c) 2017 Cadence
+>>>> + *
+>>>> + * Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+>>>> + *
+>>>> + * This program is free software; you can redistribute it and/or modify
+>>>> + * it under the terms of the GNU General Public License version 2 as
+>>>> + * published by the Free Software Foundation.
+>>>> + *
+>>>> + * This program is distributed in the hope that it will be useful,
+>>>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>>>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>>>> + * GNU General Public License for more details.
+>>>> + *
+>>>> + * You should have received a copy of the GNU General Public License along with
+>>>> + * this program.  If not, see <http://www.gnu.org/licenses/>.
+>>>> + */
+> 
+> Would you consider using the new SPDX ids instead of this long legalese blurb?
+> You can  check tglx's doc patches for details and Linus comments on
+> why he wants it a certain way with C++ // comments.
+> 
+> Here this could come out much streamlined with this top level comment block:
+> 
+> // SPDX-License-Identifier: GPL-2.0
+> // Copyright (c) 2017 Cadence
+> // Cadence PCIe host controller driver.
+> // Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+> 
+> This is only a suggestion, but everyone kinda likes it when the
+> licensing boilerplate is minimal and out of the visual way in order to
+> focus is on what matters most: the code!
+> Thank you for your kind consideration.
+> 
 
-On Thu, Dec 28, 2017 at 06:29:05PM +0100, Thomas Gleixner wrote:
-> On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
-> > On Thu, Dec 28, 2017 at 05:10:28PM +0100, Thomas Gleixner wrote:
-> > > On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
-> > > > Actually, it decided to cooperate for just long enough for me to get
-> > > > the dmesg out. Attached.
-> > > > 
-> > > > This is from the kernel you asked about: Dou's patch + yours, i.e. the
-> > > > latest one in that git log I just sent, booted up with 'apic=debug'.
-> > > 
-> > > Ok. As I suspected that warning does not trigger. I would have been
-> > > massively surprised if that happened. So Dou's patch is just a red herring
-> > > and just might change the timing enough to make the problem 'hide'.
-> > > 
-> > > Can you try something completely different please?
-> > > 
-> > > Just use plain Linus tree without any additional patches on top and disable
-> > > CONFIG_NO_HZ_IDLE, i.e. select CONFIG_HZ_PERIODIC.
-> > > 
-> > > If that works, then reenable it and add 'nohz=off' to the kernel command
-> > > line.
-> > >
-> > 
-> > No go here I'm afraid:
-> > 
-> > Linus' clean 4.15-rc5 compiled with CONFIG_HZ_PERIODIC exhibits the
-> > familiar behaviour: lockups, sometimes instant upon trying to log in,
-> > sometimes logging me in and freaking out seconds later.
-> 
-> Ok. So it's not the issue I had in mind. 
-> 
-> Back to some of the interesting bits in the logs:
-> 
-> [   36.017942] spurious APIC interrupt through vector ff on CPU#0, should never happen.
-> 
-> Does that message ever show up in 4.14 or 4.9?
-> 
-> Thanks,
-> 
-> 	tglx
+I don't mind changing for your proposal if this is the preferred way.
+I'm updating the series.
+
+Best regards,
+
+Cyrille
+
+-- 
+Cyrille Pitchen, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
