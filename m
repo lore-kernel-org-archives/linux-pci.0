@@ -1,59 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH 3.18 15/64] x86/PCI: Make broadcom_postcore_init() check acpi_disabled
-Date: Fri, 15 Dec 2017 10:21:39 +0100
-Message-Id: <20171215092212.623199411@linuxfoundation.org>
-In-Reply-To: <20171215092212.018372669@linuxfoundation.org>
-References: <20171215092212.018372669@linuxfoundation.org>
+Return-Path: <SRS0=SB5a=DJ=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=SB5a=DJ=linutronix.de=tglx@kernel.org>
+Date: Wed, 13 Dec 2017 22:06:40 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
+    Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+    Andy Lutomirski <luto@kernel.org>,
+    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+    the arch/x86 maintainers <x86@kernel.org>,
+    Daniel Vetter <daniel.vetter@intel.com>,
+    Bjorn Helgaas <bhelgaas@google.com>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+In-Reply-To: <alpine.DEB.2.20.1712132149420.1885@nanos>
+Message-ID: <alpine.DEB.2.20.1712132201380.1885@nanos>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com> <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl> <alpine.DEB.2.20.1712061344560.1724@nanos>
+ <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl> <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl> <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
+ <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos>
+ <alpine.DEB.2.20.1712132149420.1885@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-3.18-stable review patch.  If anyone has any objections, please let me know.
+On Wed, 13 Dec 2017, Thomas Gleixner wrote:
+> On Wed, 13 Dec 2017, Thomas Gleixner wrote:
+> > On Wed, 13 Dec 2017, Linus Torvalds wrote:
+> > 
+> > > On Wed, Dec 13, 2017 at 8:41 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> > > >
+> > > > Definitely. That was fragile forever but puzzles me is that I can't figure
+> > > > out what now causes that spurious interrupt to surface out of the blue.
+> > > 
+> > > Perhaps just timing?
+> > 
+> > That's what I'm trying to figure out right now, because that is the only
+> > sensible explanation left. The whole machinery of suspend is exactly the
+> > same with and without the vector changes. I instrumented all functions
+> > involved and the picture is the same. I even do not see any fundamental
+> > timing differences where one would say: That's it.
+> > 
+> > What puzzles me even more is that in the range of commits I'm fiddling with
+> > there is no other change than the vector management stuff and the point
+> > where it breaks makes no sense at all. The point Maarten bisected it to
+> > works nicely here, so that might just point to a very subtle timing issue.
+> 
+> After doing more debugging on this it turns out that this looks like a
+> legacy interrupt coming in. The vector number is always 55, which is legacy
+> IRQ 7 as seen from the PIC. The corresponding IOAPIC interrupt pin is
+> masked and vector 55 is completely unused.
+> 
+> More questions than answers. Still investigating.
 
-------------------
+And it does not explain Maartens report which gets a spurious vector 33 on
+CPU4 after the non boot cpus have been brought online again. And that's the
+vector which was assigned before the affinity was moved by unplugging CPU4.
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hrmpf. Even more mystery to solve.
 
-commit ddec3bdee05b06f1dda20ded003c3e10e4184cab upstream.
+Thanks,
 
-acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
-is set, but the host bridge information from the ACPI tables is not going
-to be used in that case and the Broadcom host bridge initialization should
-not be skipped then, So make broadcom_postcore_init() check acpi_disabled
-too to avoid this issue.
-
-Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
-Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>
-Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- arch/x86/pci/broadcom_bus.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/arch/x86/pci/broadcom_bus.c
-+++ b/arch/x86/pci/broadcom_bus.c
-@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init
- 	 * We should get host bridge information from ACPI unless the BIOS
- 	 * doesn't support it.
- 	 */
--	if (acpi_os_get_root_pointer())
-+	if (!acpi_disabled && acpi_os_get_root_pointer())
- 		return 0;
- #endif
- 
+	tglx
