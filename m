@@ -1,177 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:22989 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754665AbdL2KGX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 05:06:23 -0500
-Subject: Re: Re-activate task to add MSI-X to pcie-designware
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
- <20171208110225.GC26816@red-moon>
- <9ede58a6-7c0d-ae66-4e15-147234cbad6d@ti.com>
- <69f78abd-f83e-b3a6-0daf-638f89d07f99@synopsys.com>
- <8771860f-babd-afcb-ed07-2642d2a4d6a8@ti.com>
- <0531c3e9-57e7-d531-1bee-a5a5bbff2a8c@synopsys.com>
- <2e04befd-9434-b3ec-0c18-96a80744e327@ti.com>
- <513e28db-924d-569c-b3ae-cbb949229cc9@ti.com>
- <cafeb5b6-4954-becf-0d30-8b6ee7e71efa@synopsys.com>
- <2b0ad2cb-735b-e847-4c23-862e35b2c596@ti.com>
- <aa4e1e2b-b88e-a7f8-ded1-6af411f03a82@synopsys.com>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "Nori, Sekhar" <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <68fe0782-8223-10c7-5d7c-863841fc1954@ti.com>
-Date: Fri, 29 Dec 2017 15:35:35 +0530
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:12589 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753650AbdLMQcR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 11:32:17 -0500
+Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
+ port
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
+        <mperttunen@nvidia.com>, <linux-tegra@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <kthota@nvidia.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
+ <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
+ <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
+ <20171213140848.GA1736@red-moon>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <b72dda91-5307-f024-9810-d6abadf7f337@nvidia.com>
+Date: Wed, 13 Dec 2017 22:02:02 +0530
 MIME-Version: 1.0
-In-Reply-To: <aa4e1e2b-b88e-a7f8-ded1-6af411f03a82@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20171213140848.GA1736@red-moon>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
 
-On Friday 29 December 2017 03:18 PM, Gustavo Pimentel wrote:
-> Hi Kishon,
-> 
-> On 28/12/2017 14:58, Kishon Vijay Abraham I wrote:
->> Hi Gustavo,
+
+On 13-Dec-17 7:38 PM, Lorenzo Pieralisi wrote:
+> On Wed, Dec 13, 2017 at 05:20:39PM +0530, Manikanta Maddireddy wrote:
 >>
->> On Wednesday 27 December 2017 07:55 PM, Gustavo Pimentel wrote:
->>> On 26/12/2017 12:57, Kishon Vijay Abraham I wrote:
->>>> Hi,
+>>
+>> On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
+>>> On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
+>>>> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
+>>>> after all the required root port register programming is completed.
 >>>>
->>>> On Saturday 23 December 2017 03:46 PM, Kishon Vijay Abraham I wrote:
->>>>> Hi Gustavo,
->>>>>
->>>>> On Thursday 21 December 2017 07:38 PM, Gustavo Pimentel wrote:
->>>>>> On 20/12/2017 13:03, Kishon Vijay Abraham I wrote:This is our most recent
->>>>>> version of the patches that are running on our equipment, please check with yours
->>>>>>> Hi,
->>>>>>>
->>>>>>> On Monday 18 December 2017 09:31 PM, Gustavo Pimentel wrote:
->>>>>>>> Hi Kishon,
->>>>>>>>
->>>>>>>> I would like to collaborate with you on this subject, I have on my side João's
->>>>>>>> patches updated to the Bjorn's latest kernel version.
->>>>>>>
->>>>>>> cool, do you have a branch so that I can check what breaks in keystone and debug?
->>>>>>>
->>>>>> Unfortunately not, however I'll mailed you the patches immediately.
->>>>>> Once again, thanks.
->>>>>
->>>>> Thanks.
->>>>>
->>>>> I tried raising MSI with pci_endpoint_test EP device (16 MSI interrupts). Here
->>>>> are some of my observations after applying your patch series.
->>>>>
->>>>> root@k2g-evm:~# cat /proc/interrupts
->>>>>            CPU0
->>>>>  17:          0     GICv2  29 Level     arch_timer
->>>>>  18:       1816     GICv2  30 Level     arch_timer
->>>>>  21:          0     GICv2  36 Edge      arm-pmu
->>>>>  22:        792     GICv2 196 Edge      ttyS0
->>>>>  23:          5     GICv2 120 Edge      2530000.i2c
->>>>>  24:          0     GICv2  33 Edge      soc:keystone_irq@26202a0
->>>>>  25:        901     GICv2 356 Level     2a00000.msgmgr rx_005_002
->>>>>  41:          0     GICv2 232 Edge      2700000.edma_ccint
->>>>>  43:          0     GICv2 249 Edge      2700000.edma_ccerrint
->>>>>  44:       2497     GICv2 240 Edge      2728000.edma_ccint
->>>>>  46:          0     GICv2 252 Edge      2728000.edma_ccerrint
->>>>>  47:       7551     GICv2 128 Edge      mmc0
->>>>>  48:          0     GICv2 160 Edge      2680000.keystone-dwc3, xhci-hcd:usb1
->>>>>  49:          0     GICv2 176 Edge      2580000.keystone-dwc3, xhci-hcd:usb3
->>>>>  50:          0     GICv2  96 Edge      21805400.spi
->>>>>  52:          0     GICv2 100 Edge      21805c00.spi
->>>>>  53:          0     GICv2 102 Edge      21806000.spi
->>>>>  54:          0     GICv2  92 Edge      pcie-error-irq
->>>>> 211:          0      GPIO  12 Edge    -davinci_gpio  23000000.mmc cd
->>>>> 280:          0   PCI-MSI   0 Edge      PCIe PME, aerdrv
->>>>> 281:          0   PCI-MSI 524288 Edge      pci-endpoint-test
->>>>> 282:          0   PCI-MSI 524289 Edge      pci-endpoint-test
->>>>> 283:          0   PCI-MSI 524290 Edge      pci-endpoint-test
->>>>> 284:          0   PCI-MSI 524291 Edge      pci-endpoint-test
->>>>> 285:          0   PCI-MSI 524292 Edge      pci-endpoint-test
->>>>> 286:          0   PCI-MSI 524293 Edge      pci-endpoint-test
->>>>> 287:          0   PCI-MSI 524294 Edge      pci-endpoint-test
->>>>> 288:          0   PCI-MSI 524295 Edge      pci-endpoint-test
->>>>> 289:          0   PCI-MSI 524296 Edge      pci-endpoint-test
->>>>> 290:          0   PCI-MSI 524297 Edge      pci-endpoint-test
->>>>> 291:          0   PCI-MSI 524298 Edge      pci-endpoint-test
->>>>> 292:          0   PCI-MSI 524299 Edge      pci-endpoint-test
->>>>> 293:          0   PCI-MSI 524300 Edge      pci-endpoint-test
->>>>> 294:          0   PCI-MSI 524301 Edge      pci-endpoint-test
->>>>> 295:          0   PCI-MSI 524302 Edge      pci-endpoint-test
->>>>> 296:          0   PCI-MSI 524303 Edge      pci-endpoint-test
->>>>> IPI0:          0  CPU wakeup interrupts
->>>>> IPI1:          0  Timer broadcast interrupts
->>>>> IPI2:          0  Rescheduling interrupts
->>>>> IPI3:          0  Function call interrupts
->>>>> IPI4:          0  CPU stop interrupts
->>>>> IPI5:          0  IRQ work interrupts
->>>>> IPI6:          0  completion interrupts
->>>>> Err:          0
->>>>>
->>>>> root@k2g-evm:~# pcitest -m 1
->>>>> [   45.966437] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 271
->>>>> [   45.973544] keystone-pcie 21801000.pcie: irq: bit 0, vector 0, virq 280
->>>>> MSI1:           NOT OKAY
->>>>>
->>>>> Here there is an off by one error. "pcitest -m 1" should ideally have raised an
->>>>> interrupt in 281 but from the above debug print it looks like it's raising an
->>>>> interrupt in 280.
+>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>>>> ---
+>>>> V3:
+>>>> * no change in this patch
+>>>> V2:
+>>>> * no change in this patch
 >>>>
->>>> The above error was due to an pci_endpoint bug. I'll send a patch to fix this
->>>> separately.
+>>>>  drivers/pci/host/pci-tegra.c | 9 +++++----
+>>>>  1 file changed, 5 insertions(+), 4 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>>>> index 96e8038c3019..b41c60c7414c 100644
+>>>> --- a/drivers/pci/host/pci-tegra.c
+>>>> +++ b/drivers/pci/host/pci-tegra.c
+>>>> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>>>>  		}
+>>>>  	}
+>>>>  
+>>>> -	/* take the PCIe interface module out of reset */
+>>>> -	reset_control_deassert(pcie->pcie_xrst);
+>>>> -
+>>>>  	/* finally enable PCIe */
+>>>>  	value = afi_readl(pcie, AFI_CONFIGURATION);
+>>>>  	value |= AFI_CONFIGURATION_EN_FPCI;
+>>>> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+>>>>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+>>>>  	}
+>>>>  
+>>>> -	reset_control_assert(pcie->pcie_xrst);
 >>>
->>> Ok great!
+>>> This does not look like it is part of the reset de-assertion code move.
+>>>
+>>> tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
+>>>
+>>> in other words, why are you removing it ?
+>>>
+>>> Lorenzo
 >>
->> This too looks like a bug with the new API. If the EP requests 16 interrupts,
->> the MSI vector (programmed in PCI_MSI_DATA) should be 0 and if 0 is not
->> available it should be 16
->> [From the spec: The Multiple Message Enable field (bits 6-4 of the Message
->> Control register) defines the number of low
->> order message data bits the function is permitted to modify to generate its
->> system software allocated vectors]. For 16 interrupts, Multiple Message Enable
->> will have a value of 4 which means the EP can modify the 4 low order bits to
->> raise the 16 interrupts.
+>> Hi Lorenzo,
 >>
->> With this series added, PCI_MSI_DATA is programmed to 0x1 which gets masked
->> while the EP tries to raise an interrupt and hence we are observing off by one
->> error.
+>> Host driver should start LTSSM after programming all controller registers.
+>> In tegra_pcie_enable_controller() bunch of AFI module programming is done and
+>> I am adding PCIe register programming in this series.
+>> So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
+>> which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
 > 
-> The EP (USB 3.1 PCIe board) that I usually use only have 2 interrupts. I didn't
-> perform the tests like you did. I typically plug the USB flash drive and observe
-> the number of interrupts and perform some basic file operations on the USB flash
-> drive (copy/move/delete/rename).
-
-Do you have PCIEPORTBUS enabled? That takes 1 interrupt (assuming your host has
-the required capabilities). You should be able to reproduce the issue with just
-PCIEPORTBUS enabled then. (With your series added msg_data on USB device will
-be 0x1 whereas it should be 0x2.
-
-Before the patch series order_base_2 below helped in taking care of that.
-pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
-order_base_2(no_irqs));
+> I asked why you removed the reset assertion in tegra_pcie_power_off(),
+> it is not clear to me. You still call tegra_pcie_power_off() in
+> the tegra_pcie_probe() error path and I see no reason why the reset
+> assertion - called through:
 > 
-> Can you provide me information (source code, how to compile, how to use, that
-> kind of info) about the pcitest tool that you mentioned? I would like to use it
-> if possible, please.
+> tegra_pcie_put_resources()
+> 	-> tegra_pcie_power_of()
+> 	
+> is removed, if it was needed previously.
+> 
+> Lorenzo
+> 
 
-Documentation/PCI/endpoint/ should have all the info..
+New sequence with this patch will be
+tegra_pcie_enable_controller() -> tegra_pcie_request_resources() -> tegra_pcie_enable_ports()
+                                   ->goto put_resources on fail        -> reset_control_deassert(pcie->pcie_xrst);
 
-Thanks
-Kishon
+Since pcie_xrst deassert happens after tegra_pcie_request_resources(), there is no need to assert pcie_xrst on put_resource failure.
+
+>>>>  	reset_control_assert(pcie->afi_rst);
+>>>>  	reset_control_assert(pcie->pex_rst);
+>>>>  
+>>>> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>>>>  			 port->index, port->lanes);
+>>>>  
+>>>>  		tegra_pcie_port_enable(port);
+>>>> +	}
+>>>>  
+>>>> +	/* take the PCIe interface module out of reset */
+>>>> +	reset_control_deassert(pcie->pcie_xrst);
+>>>> +
+>>>> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>>>>  		if (tegra_pcie_port_check_link(port))
+>>>>  			continue;
+>>>>  
+>>>> -- 
+>>>> 2.1.4
+>>>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
