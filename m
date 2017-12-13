@@ -1,67 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 06/26] edd: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:42 -0500
-Message-Id: <1513661883-28662-7-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 13 Dec 2017 10:23:37 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Maarten Lankhorst <dev@mblankhorst.nl>,
+        Michal Hocko <mhocko@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Andy Lutomirski <luto@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+Message-ID: <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan>
+ <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com>
+ <20171206121452.GA6320@dhcp22.suse.cz>
+ <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061344560.1724@nanos>
+ <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061514420.1724@nanos>
+ <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl>
+ <alpine.DEB.2.20.1712081129450.1840@nanos>
+ <alpine.DEB.2.20.1712131507160.1885@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1712131507160.1885@nanos>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+[+cc linux-pci, linux-pm]
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+On Wed, Dec 13, 2017 at 04:57:56PM +0100, Thomas Gleixner wrote:
+> So I was finally able to figure out what the hell is going on:
+> 
+> Suspend:
+> 
+>  - The device suspend code puts the graphics card into a power
+>    state != PCI_D0.
+> 
+>  - Offline non boot CPUs
+> 
+>  - Break interrupt affinity. Allocate new vector on CPU 0, compose and
+>    write MSI message which ends up in:
+> 
+>    __pci_write_msi_msg(entry, msg)
+>    {
+> 	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
+> 	   /* Don't touch the hardware now */
+> 	} else {
+> 	   ....
+> 	}
+> 	entry->msg = *msg;
+>    }
+>  
+>   So because the device is not in PCI_D0 the message is not written. It's
+>   written in the device resume path.
 
-Domain number is not available in struct edd_info. Hard-coding the domain
-number as 0.
+I'm not a PM guru, but this ordering seems fragile.  If we offline
+CPUs before re-targeting interrupts directed at those CPUs, aren't we
+always going to be at risk of sending interrupts to an offline CPU?
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/firmware/edd.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Even if the device is now asleep and therefore should not generate an
+interrupt, it seems like there's a window when the device returns to
+PCI_D0 where it could generate an interrupt before we have a chance to
+update the MSI message.
 
-diff --git a/drivers/firmware/edd.c b/drivers/firmware/edd.c
-index e229576..60a8f13 100644
---- a/drivers/firmware/edd.c
-+++ b/drivers/firmware/edd.c
-@@ -669,10 +669,10 @@ static void edd_release(struct kobject * kobj)
- 	struct edd_info *info = edd_dev_get_info(edev);
- 
- 	if (edd_dev_is_type(edev, "PCI") || edd_dev_is_type(edev, "XPRS")) {
--		return pci_get_bus_and_slot(info->params.interface_path.pci.bus,
--				     PCI_DEVFN(info->params.interface_path.pci.slot,
--					       info->params.interface_path.pci.
--					       function));
-+		return pci_get_domain_bus_and_slot(0,
-+				info->params.interface_path.pci.bus,
-+				PCI_DEVFN(info->params.interface_path.pci.slot,
-+				info->params.interface_path.pci.function));
- 	}
- 	return NULL;
- }
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Resume:
+> [  139.670446] ACPI: Low-level resume complete
+> [  139.670541] PM: Restoring platform NVS memory
+> [  139.672462] do_IRQ: 0.55 No irq handler for vector
+> [  139.672475] Enabling non-boot CPUs ...
+> 
+> So the spurious interrupt happens early and way before the device resume
+> code writes the new MSI message.
+> 
+> I checked the behaviour on 4.14. The MSI write is delayed there in the same
+> way, but there is no spurious interrupt. There is no interrupt coming in at
+> all _BEFORE_ the device is put out of PCI_D0.
+> 
+> And this has certainly nothing to do with the vector management changes,
+> but I can't figure yet what makes that spurious interrupt to be sent.
+> 
+> Any ideas welcome.
+> 
+> Thanks,
+> 
+> 	tglx
+> 
