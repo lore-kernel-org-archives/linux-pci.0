@@ -1,161 +1,261 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40496 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752059AbdLFWr3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Dec 2017 17:47:29 -0500
-Date: Wed, 6 Dec 2017 16:47:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: PCIe link not recovering
-Message-ID: <20171206224727.GQ23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <3d3c69b6dcc44963b1ad80120c69767b@AcuMS.aculab.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3d3c69b6dcc44963b1ad80120c69767b@AcuMS.aculab.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v1 7/7] pseries/setup: Add Initialization of VF Bars
+Date: Wed, 13 Dec 2017 09:32:42 -0600
+In-Reply-To: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171213153242.98015-8-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Dongdong]
+When enabling SR-IOV in pseries platform,
+the VF bar properties for a PF are reported on
+the device node in the device tree.
 
-On Wed, Dec 06, 2017 at 02:03:55PM +0000, David Laight wrote:
-> If I perform the following:
-> 1) echo 1 >/sys/devices/pcixxxx/xxx/remove
-> 2) completely reset the PCIe endpoint
-> 3) echo 1 >/sys/devices/pcixxxx/rescan
-> I expect the endpoint to be reprobed (provided the BARs are compatible).
+This patch adds the IOV Bar resources to Linux
+structures from the device tree for later use
+when configuring SR-IOV by PF driver.
 
-I expect that, too.  Even if the BARs are wrong (they should be
-cleared by the reset), we should at least discover the device.
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci.h         |   2 +
+ arch/powerpc/kernel/pci_of_scan.c      |   2 +-
+ arch/powerpc/platforms/pseries/setup.c | 183 +++++++++++++++++++++++++++++++++
+ 3 files changed, 186 insertions(+), 1 deletion(-)
 
-> However on a new motherboard (SkyLake) it looks as though the root bridge isn't
-> trying to bring the PCIe link back up.
-> (The same system disk works fine in a slighty older system.)
-> 
-> There are 2 bits different in the lspci output for the root port between
-> the 'link up' and 'link down states':
-> 
-> --- link_up     2017-12-06 13:37:37.523661300 +0000
-> +++ link_down   2017-12-06 13:37:37.509614300 +0000
-> @@ -21,7 +21,7 @@
->                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported-
->                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->                         MaxPayload 128 bytes, MaxReadReq 128 bytes
-> -               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-> +               DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
->                 LnkCap: Port #2, Speed 8GT/s, Width x8, ASPM L0s L1, Exit Latency L0s <256ns, L1 <8us
->                         ClockPM- Surprise- LLActRep- BwNot+ ASPMOptComp+
->                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-> @@ -51,7 +51,7 @@
->                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
->                         Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
->                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-> -                       Status: NegoPending- InProgress-
-> +                       Status: NegoPending+ InProgress-
->         Capabilities: [140 v1] Root Complex Link
->                 Desc:   PortNumber=02 ComponentID=01 EltType=Config
->                 Link0:  Desc:   TargetPort=00 TargetComponent=01 AssocRCRB- LinkType=MemMapped LinkValid+
-> 
-> The first just looks like a notification that there has been an error.
-> The last one might imply that it knows it needs to do something - but
-> needs to be 'kicked'.
-
-The second is in the Virtual Channel capability and is only relevant
-after the Link is up.  I don't think it's involved in *bringing* the
-Link up.
-
-> I believe that the endpoint is flipping between the 'Detect Active' and 'Detect Quiet'
-> states. Which would imply that the root port isn't trying to establish the link.
-
-I guess this refers to PCIe r3.1, sec 4.2.6.1.2, and Figure 4-23, the
-"Detect Substate Machine".  I'm not a hardware person, so still
-doesn't help me much :)  Out of curiosity, do you have an analyzer or
-other visibility into what the Endpoint is doing?
-
-> Does the kernel have to prod the root complex somehow?
-
-Nothing I'm aware of.
-
-> The full output (link_down) is:
-> 
-> 00:01.0 PCI bridge: Intel Corporation Skylake PCIe Controller (x16) (rev 05) (prog-if 00 [Normal decode])
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Interrupt: pin A routed to IRQ 122
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->         Memory behind bridge: df000000-df2fffff
->         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
->         BridgeCtl: Parity+ SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: [88] Subsystem: Super Micro Computer Inc Skylake PCIe Controller (x16)
->         Capabilities: [80] Power Management version 3
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
->                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
->                 Address: fee00218  Data: 0000
->         Capabilities: [a0] Express (v2) Root Port (Slot+), MSI 00
->                 DevCap: MaxPayload 256 bytes, PhantFunc 0
->                         ExtTag- RBE+
->                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported-
->                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->                         MaxPayload 128 bytes, MaxReadReq 128 bytes
->                 DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
->                 LnkCap: Port #2, Speed 8GT/s, Width x8, ASPM L0s L1, Exit Latency L0s <256ns, L1 <8us
->                         ClockPM- Surprise- LLActRep- BwNot+ ASPMOptComp+
->                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
->                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
->                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
->                         Slot #1, PowerLimit 75.000W; Interlock- NoCompl+
->                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
->                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
->                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
->                         Changed: MRL- PresDet+ LinkState-
->                 RootCtl: ErrCorrectable+ ErrNon-Fatal+ ErrFatal+ PMEIntEna+ CRSVisible-
->                 RootCap: CRSVisible-
->                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
->                 DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR+, OBFF Via WAKE# ARIFwd-
->                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Via WAKE# ARIFwd-
->                 LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
->                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
->                          Compliance De-emphasis: -6dB
->                 LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
->                          EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
->         Capabilities: [100 v1] Virtual Channel
->                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
->                 Arb:    Fixed- WRR32- WRR64- WRR128-
->                 Ctrl:   ArbSelect=Fixed
->                 Status: InProgress-
->                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
->                         Arb:    Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
->                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
->                         Status: NegoPending+ InProgress-
->         Capabilities: [140 v1] Root Complex Link
->                 Desc:   PortNumber=02 ComponentID=01 EltType=Config
->                 Link0:  Desc:   TargetPort=00 TargetComponent=01 AssocRCRB- LinkType=MemMapped LinkValid+
->                         Addr:   00000000fed19000
->         Capabilities: [d94 v1] #19
->         Kernel driver in use: pcieport
->         Kernel modules: shpchp
-
-I'm surprised there's no AER capability.  The Root Ports in my Sky Lake
-system advertise AER, Access Control Services, and L1 PM Substates
-capabilities, none of which are shown here.  Must be configurable via
-the BIOS or something.
-
-AER would be interesting because it should give more info about the
-error logged in the Device Status register.  Dongdong does have some
-patches that may be related [1].  We don't handle errors during
-enumeration very well, so the error logged here may be a normal
-consequence of probing.
-
-You could try clearing that corrected error in DevSta, e.g.,
-
-  # setpci -s00:01.0 0xaa.w=0x0001
-
-to see if the Link comes up.  I doubt that would make a difference,
-but maybe.
-
-[1] https://lkml.kernel.org/r/1512467438-42850-1-git-send-email-liudongdong3@huawei.com
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 8dc32eacc97c..d82802ff5088 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -121,6 +121,8 @@ extern int remove_phb_dynamic(struct pci_controller *phb);
+ extern struct pci_dev *of_create_pci_dev(struct device_node *node,
+ 					struct pci_bus *bus, int devfn);
+ 
++extern unsigned int pci_parse_of_flags(u32 addr0, int bridge);
++
+ extern void of_scan_pci_bridge(struct pci_dev *dev);
+ 
+ extern void of_scan_bus(struct device_node *node, struct pci_bus *bus);
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 0d790f8432d2..20ceec4a5f5e 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -38,7 +38,7 @@ static u32 get_int_prop(struct device_node *np, const char *name, u32 def)
+  * @addr0: value of 1st cell of a device tree PCI address.
+  * @bridge: Set this flag if the address is from a bridge 'ranges' property
+  */
+-static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
++unsigned int pci_parse_of_flags(u32 addr0, int bridge)
+ {
+ 	unsigned int flags = 0;
+ 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 5f1beb8367ac..ce28882cbde8 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -459,6 +459,181 @@ static void __init find_and_init_phbs(void)
+ 	of_pci_check_probe_only();
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++enum rtas_iov_fw_value_map {
++	NUM_RES_PROPERTY  = 0, ///< Number of Resources
++	LOW_INT           = 1, ///< Lowest 32 bits of Address
++	START_OF_ENTRIES  = 2, ///< Always start of entry
++	APERTURE_PROPERTY = 2, ///< Start of entry+ to  Aperture Size
++	WDW_SIZE_PROPERTY = 4, ///< Start of entry+ to Window Size
++	NEXT_ENTRY        = 7  ///< Go to next entry on array
++};
++
++enum get_iov_fw_value_index {
++	BAR_ADDRS     = 1,    ///<  Get Bar Address
++	APERTURE_SIZE = 2,    ///<  Get Aperture Size
++	WDW_SIZE      = 3     ///<  Get Window Size
++};
++
++resource_size_t pseries_get_iov_fw_values(struct pci_dev *dev, int resno,
++					  enum get_iov_fw_value_index value)
++{
++	struct vf_bar_wdw {
++		__be64  addr;
++		__be64  aperture_size;
++		__be64  wdw_size;
++	};
++
++	struct vf_bar_wdw window_avail[PCI_SRIOV_NUM_BARS];
++	const int *indexes;
++	struct device_node *dn = pci_device_to_OF_node(dev);
++	int i, r, num_res;
++	resource_size_t return_value;
++
++	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
++	if (!indexes)
++		return  0;
++
++	memset(window_avail,
++	       0, sizeof(struct vf_bar_wdw) * PCI_SRIOV_NUM_BARS);
++	return_value = 0;
++	/*
++	 * First element in the array is the number of Bars
++	 * returned.  Search through the list to find the matching
++	 * bar
++	 */
++	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
++	for (i = START_OF_ENTRIES, r = 0; r < num_res && r < PCI_SRIOV_NUM_BARS;
++	     i += NEXT_ENTRY, r++) {
++		window_avail[r].addr = of_read_number(&indexes[i], 2);
++		window_avail[r].aperture_size =
++			of_read_number(&indexes[i + APERTURE_PROPERTY], 2);
++		window_avail[r].wdw_size =
++			of_read_number(&indexes[i + WDW_SIZE_PROPERTY], 2);
++	}
++
++	switch (value) {
++	case BAR_ADDRS:
++		return_value = window_avail[resno].addr;
++		break;
++	case APERTURE_SIZE:
++		return_value = window_avail[resno].aperture_size;
++		break;
++	case WDW_SIZE:
++		return_value = window_avail[resno].wdw_size;
++		break;
++	default:
++		break;
++	}
++	return  return_value;
++}
++
++void of_pci_parse_vf_bar_size(struct pci_dev *dev, const int *indexes)
++{
++	struct resource *res;
++	resource_size_t base, size;
++	int i, r, num_res;
++
++	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
++	for (i = START_OF_ENTRIES, r = 0; r < num_res && r < PCI_SRIOV_NUM_BARS;
++	     i += NEXT_ENTRY, r++) {
++		res = &dev->resource[r + PCI_IOV_RESOURCES];
++		base = of_read_number(&indexes[i], 2);
++		size = of_read_number(&indexes[i + APERTURE_PROPERTY], 2);
++		res->flags = pci_parse_of_flags(of_read_number
++						(&indexes[i + LOW_INT], 1), 0);
++		res->flags |= (IORESOURCE_MEM_64 | IORESOURCE_PCI_FIXED);
++		res->name = pci_name(dev);
++		res->start = base;
++		res->end = base + size - 1;
++	}
++}
++
++void of_pci_parse_iov_addrs(struct pci_dev *dev, const int *indexes)
++{
++	struct resource *res, *root, *conflict;
++	resource_size_t base, size;
++	int i, r, num_res;
++
++	/*
++	 * First element in the array is the number of Bars
++	 * returned.  Search through the list to find the matching
++	 * bars assign them from firmware into resources structure.
++	 */
++	num_res = of_read_number(&indexes[NUM_RES_PROPERTY], 1);
++	for (i = START_OF_ENTRIES, r = 0; r < num_res && r < PCI_SRIOV_NUM_BARS;
++	     i += NEXT_ENTRY, r++) {
++		res = &dev->resource[r + PCI_IOV_RESOURCES];
++		base = of_read_number(&indexes[i], 2);
++		size = of_read_number(&indexes[i + WDW_SIZE_PROPERTY], 2);
++		res->name = pci_name(dev);
++		res->start = base;
++		res->end = base + size - 1;
++		root = pci_find_parent_resource(dev, res);
++
++		if (!root)
++			root = &iomem_resource;
++		dev_dbg(&dev->dev,
++			"Pseries IOV BAR %d: trying firmware assignment %pR\n",
++			 r + PCI_IOV_RESOURCES, res);
++		conflict = request_resource_conflict(root, res);
++		if (conflict) {
++			dev_info(&dev->dev,
++				 "BAR %d: %pR conflicts with %s %pR\n",
++				 r + PCI_IOV_RESOURCES, res,
++				 conflict->name, conflict);
++			res->flags |= IORESOURCE_UNSET;
++		}
++	}
++}
++
++static void pseries_pci_fixup_resources(struct pci_dev *pdev)
++{
++	const int *indexes;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++
++	/*Firmware must support open sriov otherwise dont configure*/
++	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
++	if (!indexes)
++		return;
++	/* Assign the addresses from device tree*/
++	of_pci_parse_vf_bar_size(pdev, indexes);
++}
++
++static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
++{
++	const int *indexes;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++
++	if (!pdev->is_physfn || pdev->is_added)
++		return;
++	/*Firmware must support open sriov otherwise dont configure*/
++	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
++	if (!indexes)
++		return;
++	/* Assign the addresses from device tree*/
++	of_pci_parse_iov_addrs(pdev, indexes);
++}
++
++static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
++							  int resno)
++{
++	const __be32 *reg;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++
++	/*Firmware must support open sriov otherwise report regular alignment*/
++	reg = of_get_property(dn, "ibm,is-open-sriov-pf", NULL);
++	if (!reg)
++		return pci_iov_resource_size(pdev, resno);
++
++	if (!pdev->is_physfn)
++		return 0;
++	return pseries_get_iov_fw_values(pdev,
++					 resno - PCI_IOV_RESOURCES,
++					 APERTURE_SIZE);
++}
++#endif
++
+ static void __init pSeries_setup_arch(void)
+ {
+ 	set_arch_panic_timeout(10, ARCH_PANIC_TIMEOUT);
+@@ -490,6 +665,14 @@ static void __init pSeries_setup_arch(void)
+ 		vpa_init(boot_cpuid);
+ 		ppc_md.power_save = pseries_lpar_idle;
+ 		ppc_md.enable_pmcs = pseries_lpar_enable_pmcs;
++#ifdef CONFIG_PCI_IOV
++		ppc_md.pcibios_fixup_resources =
++			pseries_pci_fixup_resources;
++		ppc_md.pcibios_fixup_sriov =
++			pseries_pci_fixup_iov_resources;
++		ppc_md.pcibios_iov_resource_alignment =
++			pseries_pci_iov_resource_alignment;
++#endif
+ 	} else {
+ 		/* No special idle routine */
+ 		ppc_md.enable_pmcs = power4_enable_pmcs;
+-- 
+2.14.3 (Apple Git-98)
