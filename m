@@ -1,66 +1,205 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 10/26] Drivers: ide: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:46 -0500
-Message-Id: <1513661883-28662-11-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>,
- "open list:IDE SUBSYSTEM" <linux-ide@vger.kernel.org>,
- "David S. Miller" <davem@davemloft.net>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v1 6/7] pseries/pci: Associate PEs to VFs in configure SR-IOV
+Date: Wed, 13 Dec 2017 09:32:41 -0600
+In-Reply-To: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171213153242.98015-7-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+After initial validation of SR-IOV resources, firmware will
+associate PEs to the dynamic VFs created within this call. This
+patch adds the association of PEs to the PF array of PE numbers
+indexed by VF.
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
-
-Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
-and extract the domain number from struct pci_dev.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
 ---
- drivers/ide/sl82c105.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ arch/powerpc/platforms/pseries/pci.c | 156 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 153 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ide/sl82c105.c b/drivers/ide/sl82c105.c
-index 8755df3..3300dac 100644
---- a/drivers/ide/sl82c105.c
-+++ b/drivers/ide/sl82c105.c
-@@ -239,8 +239,9 @@ static u8 sl82c105_bridge_revision(struct pci_dev *dev)
- 	/*
- 	 * The bridge should be part of the same device, but function 0.
- 	 */
--	bridge = pci_get_bus_and_slot(dev->bus->number,
--			       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-+	bridge = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
-+					dev->bus->number,
-+					PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
- 	if (!bridge)
- 		return -1;
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index 48d3af026f90..c90e7d1247a8 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -57,18 +57,168 @@ void pcibios_name_device(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
+ #endif
+-
+ #ifdef CONFIG_PCI_IOV
++#define MAX_VFS_FOR_MAP_PE 256
++struct pe_map_bar_entry {
++	__be64     bar;       ///< Input:  Virtual Function BAR
++	__be16     rid;       ///< Input:  Virtual Function Router ID
++	__be16     pe_num;    ///< Output: Virtual Function PE Number
++	__be32     reserved;  ///< Reserved Space
++};
++
++int pseries_send_map_pe(struct pci_dev *pdev,
++			u16 num_vfs,
++			struct pe_map_bar_entry *vf_pe_array)
++{
++	struct pci_dn *pdn;
++	int   rc;
++	unsigned long buid, addr;
++	int ibm_map_pes = rtas_token("ibm,open-sriov-map-pe-number");
++
++	if (ibm_map_pes == RTAS_UNKNOWN_SERVICE)
++		return -EINVAL;
++
++	pdn = pci_get_pdn(pdev);
++	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
++	buid = pdn->phb->buid;
++	spin_lock(&rtas_data_buf_lock);
++	memcpy(rtas_data_buf, vf_pe_array,
++	       RTAS_DATA_BUF_SIZE);
++	rc = rtas_call(ibm_map_pes, 5, 1, NULL, addr,
++		       BUID_HI(buid), BUID_LO(buid),
++		       rtas_data_buf,
++		       num_vfs * sizeof(struct pe_map_bar_entry));
++	memcpy(vf_pe_array, rtas_data_buf,
++	       RTAS_DATA_BUF_SIZE);
++	spin_unlock(&rtas_data_buf_lock);
++
++	if (rc)
++		dev_err(&pdev->dev,
++			"%s: Failed to associate pes PE#%lx, rc=%x\n",
++			__func__,  addr, rc);
++
++	return rc;
++}
++
++void pseries_set_pe_num(struct pci_dev         *pdev,
++			u16 vf_index, __be16 pe_num)
++{
++	struct pci_dn *pdn;
++
++	pdn = pci_get_pdn(pdev);
++	pdn->pe_num_map[vf_index] = be16_to_cpu(pe_num);
++	dev_dbg(&pdev->dev, "VF %04x:%02x:%02x.%x associated with PE#%x\n",
++		pci_domain_nr(pdev->bus),
++		pdev->bus->number,
++		PCI_SLOT(pci_iov_virtfn_devfn(pdev, vf_index)),
++		PCI_FUNC(pci_iov_virtfn_devfn(pdev, vf_index)),
++		pdn->pe_num_map[vf_index]);
++}
++
++int pseries_associate_pes(struct pci_dev *pdev, u16 num_vfs)
++{
++	struct pci_dn *pdn;
++	int i,  rc,  vf_index;
++	struct pe_map_bar_entry *vf_pe_array;
++	struct resource *res;
++	u64 size;
++
++	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
++	if (!vf_pe_array)
++		return -ENOMEM;
++
++	memset(vf_pe_array, 0, RTAS_DATA_BUF_SIZE);
++	pdn = pci_get_pdn(pdev);
++	/* create firmware structure to associate pes */
++	for (vf_index = 0; vf_index < num_vfs && vf_index < MAX_VFS_FOR_MAP_PE;
++	     vf_index++) {
++		pdn->pe_num_map[vf_index] = IODA_INVALID_PE;
++		for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
++			res = &pdev->resource[i + PCI_IOV_RESOURCES];
++			if (!res->parent)
++				continue;
++			size = pcibios_iov_resource_alignment(pdev, i +
++							      PCI_IOV_RESOURCES
++							      );
++			vf_pe_array[vf_index].bar =
++				be64_to_cpu(res->start + size * vf_index);
++			vf_pe_array[vf_index].rid =
++				be16_to_cpu((pci_iov_virtfn_bus(pdev, vf_index)
++					    << 8) | pci_iov_virtfn_devfn(pdev,
++					    vf_index));
++			vf_pe_array[vf_index].pe_num =
++				be16_to_cpu(IODA_INVALID_PE);
++		}
++	}
++
++	rc = pseries_send_map_pe(pdev, num_vfs, vf_pe_array);
++	/* Only zero is success */
++	if (!rc)
++		for (vf_index = 0; vf_index < num_vfs && vf_index <
++		     MAX_VFS_FOR_MAP_PE; vf_index++)
++			pseries_set_pe_num(pdev, vf_index,
++					   vf_pe_array[vf_index].pe_num);
++
++	kfree(vf_pe_array);
++	return rc;
++}
++
++int pseries_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
++{
++	struct pci_dn         *pdn;
++	int                    rc;
++	const int *max_vfs;
++	int max_config_vfs;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++
++	max_vfs = of_get_property(dn, "ibm,number-of-configurable-vfs", NULL);
++
++	if (!max_vfs)
++		return -EINVAL;
++
++	/* First integer stores max config */
++	max_config_vfs = of_read_number(&max_vfs[0], 1);
++	if (max_config_vfs < num_vfs) {
++		dev_err(&pdev->dev,
++			"Num VFs %x > %x Configurable VFs\n",
++			num_vfs, max_config_vfs);
++		return -EINVAL;
++	}
++
++	pdn = pci_get_pdn(pdev);
++	pdn->pe_num_map = kmalloc_array(num_vfs,
++					sizeof(*pdn->pe_num_map),
++					GFP_KERNEL);
++	if (!pdn->pe_num_map)
++		return -ENOMEM;
++
++	rc = pseries_associate_pes(pdev, num_vfs);
++
++	/* Anything other than zero is failure */
++	if (rc) {
++		dev_err(&pdev->dev, "Failure to enable sriov: %x\n", rc);
++		kfree(pdn->pe_num_map);
++	} else {
++		pci_vf_drivers_autoprobe(pdev, false);
++	}
++
++	return rc;
++}
++
+ int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ {
+ 	/* Allocate PCI data */
+ 	add_dev_pci_data(pdev);
+-	pci_vf_drivers_autoprobe(pdev, false);
+-	return 0;
++	return pseries_pci_sriov_enable(pdev, num_vfs);
+ }
  
+ int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
+ {
++	struct pci_dn         *pdn;
++
++	pdn = pci_get_pdn(pdev);
++	/* Releasing pe_num_map */
++	kfree(pdn->pe_num_map);
+ 	/* Release PCI data */
+ 	remove_dev_pci_data(pdev);
+ 	pci_vf_drivers_autoprobe(pdev, true);
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.3 (Apple Git-98)
