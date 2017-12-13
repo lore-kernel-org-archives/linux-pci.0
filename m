@@ -1,70 +1,134 @@
-Return-Path: <SRS0=hqxK=DI=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=hqxK=DI=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 12 Dec 2017 18:07:31 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Johan Hovold <johan@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2] PCI: keystone: fix interrupt-controller-node lookup
-Message-ID: <20171212180731.GA22805@red-moon>
-References: <20171117133831.1300-1-johan@kernel.org>
- <20171211102955.GK5672@localhost>
- <20171211104233.GB3225@red-moon>
- <20171212172537.GB53955@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:3872 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752848AbdLMMCr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 07:02:47 -0500
+Subject: Re: [PATCH V3 02/12] PCI: tegra: Move REFCLK pad settings out of
+ phy_power_on()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
+        <mperttunen@nvidia.com>, <linux-tegra@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <kthota@nvidia.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-3-git-send-email-mmaddireddy@nvidia.com>
+ <20171212114527.GB30799@e107981-ln.cambridge.arm.com>
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <6a089c5a-7a79-fd9f-ff77-e08f16731241@nvidia.com>
+Date: Wed, 13 Dec 2017 17:32:32 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171212172537.GB53955@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171212114527.GB30799@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 12, 2017 at 11:25:37AM -0600, Bjorn Helgaas wrote:
-> On Mon, Dec 11, 2017 at 10:42:33AM +0000, Lorenzo Pieralisi wrote:
-> > On Mon, Dec 11, 2017 at 11:29:55AM +0100, Johan Hovold wrote:
-> > > On Fri, Nov 17, 2017 at 02:38:31PM +0100, Johan Hovold wrote:
-> > > > Fix child-node lookup during initialisation which was using the wrong
-> > > > OF-helper and ended up searching the whole device tree depth-first
-> > > > starting at the parent rather than just matching on its children.
-> > > > 
-> > > > To make things worse, the parent pci node could end up being prematurely
-> > > > freed as of_find_node_by_name() drops a reference to its first argument.
-> > > > Any matching child interrupt-controller node was also leaked.
-> > > > 
-> > > > Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
-> > > > Cc: stable <stable@vger.kernel.org>     # 3.18
-> > > > Acked-by: Murali Karicheri <m-karicheri2@ti.com>
-> > > > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > > Signed-off-by: Johan Hovold <johan@kernel.org>
-> > > > ---
-> > > > 
-> > > > v2
-> > > >  - amend commit message and mention explicitly that of_find_node_by_name()
-> > > >    drops a reference to the start node
-> > > >  - add Murali's and Lorenzo's acks
-> > > 
-> > > This one hasn't shown up in linux-next, so sending a reminder to make
-> > > sure it doesn't fall between the cracks.
-> > 
-> > Hi Johan,
-> > 
-> > yes it is in the list of fixes to be sent upstream - I was about to
-> > ask Bjorn to apply it.
-> 
-> Is this something that needs to be merged for v4.15?  If so, I need to
-> be able to defend it to Linus as being a critical fix.  If the issue
-> been around for 3 years (v3.18 was tagged Dec 7 2014), that requires
-> pretty "clear and present danger."
-> 
-> From the commit log, I see a sub-optimal search (not critical), a
-> possible use-after-free (could conceivably be critical if people are
-> tripping over this, but would need more specifics about that), and a
-> leak (not critical).
-> 
-> Given what I can see now, my inclination would be for Lorenzo to queue
-> it for v4.16, which would still get in linux-next soonish.
 
-It is fine by me and I think, as already mentioned, that the stable
-tag is dubious so I will probably drop it.
 
-Lorenzo
+On 12-Dec-17 5:15 PM, Lorenzo Pieralisi wrote:
+> On Mon, Oct 30, 2017 at 07:27:13PM +0530, Manikanta Maddireddy wrote:
+>> In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
+> 
+> It is time you defined what FW does and what the kernel does and stick
+> to that SW initialization sequence for all Tegra PCI host bridges from
+> now onwards. Those tegra_pcie_soc structures in the driver will end up
+> with a gazillion hardcoded parameters if you do not take a stance from
+> that perspective and I do not like that - at all.
+> 
+> You may want to use DT bindings to describe the FW<->OS handover - or
+> just enforce firmware guidelines for Tegra systems - something has to be
+> done.
+> 
+> This patch makes sense stand-alone but I wanted to get the message
+> across.
+> 
+> Thanks,
+> Lorenzo
+> 
+
+In Tegra186 BPMP-FW will take care of programming the UPHY, this is
+updated in commit log of "9cea513d8cbc ("PCI: tegra: Add Tegra186 PCIe support")".
+I didn't put it in DT bindings because there is no DT property for this purpose.
+Do you want me to add a comment in PCIe tegra driver, perhaps near program_uphy variable?
+
+In current host driver, REFCLK pads settings are done in tegra_pcie_port_phy_power_off()
+which is not apt. REFCLK pad settings tunes the PCIe sideband signal REFCLK, it has
+nothing to do with UPHY. So I am moving it out of tegra_pcie_port_phy_power_off().
+
+Thanks,
+Manikanta
+
+
+>> in driver. REFCLK pad settings are independent of PHY and should be
+>> programmed by driver. So move REFCLK pad settings out of phy_power_on().
+>> These pad settings improve REFCLK peak to peak amplitude.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>> V3:
+>> * Corrected commit log
+>> V2:
+>> * no change in this patch
+>>
+>>  drivers/pci/host/pci-tegra.c | 20 +++++++++++++-------
+>>  1 file changed, 13 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index b41c60c7414c..068510b40c1a 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -910,7 +910,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
+>>  static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+>>  {
+>>  	struct device *dev = pcie->dev;
+>> -	const struct tegra_pcie_soc *soc = pcie->soc;
+>>  	struct tegra_pcie_port *port;
+>>  	int err;
+>>  
+>> @@ -936,12 +935,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+>>  		}
+>>  	}
+>>  
+>> -	/* Configure the reference clock driver */
+>> -	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+>> -
+>> -	if (soc->num_ports > 2)
+>> -		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+>> -
+>>  	return 0;
+>>  }
+>>  
+>> @@ -2049,6 +2042,17 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>>  	return 0;
+>>  }
+>>  
+>> +static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
+>> +{
+>> +	const struct tegra_pcie_soc *soc = pcie->soc;
+>> +
+>> +	/* Configure the reference clock driver */
+>> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+>> +
+>> +	if (soc->num_ports > 2)
+>> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+>> +}
+>> +
+>>  /*
+>>   * FIXME: If there are no PCIe cards attached, then calling this function
+>>   * can result in the increase of the bootup time as there are big timeout
+>> @@ -2107,6 +2111,8 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>>  	struct device *dev = pcie->dev;
+>>  	struct tegra_pcie_port *port, *tmp;
+>>  
+>> +	tegra_pcie_apply_pad_settings(pcie);
+>> +
+>>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>>  		dev_info(dev, "probing port %u, using %u lanes\n",
+>>  			 port->index, port->lanes);
+>> -- 
+>> 2.1.4
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
