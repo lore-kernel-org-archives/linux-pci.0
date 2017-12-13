@@ -1,126 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45966 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752029AbdL1XW6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 28 Dec 2017 18:22:58 -0500
-Date: Thu, 28 Dec 2017 17:22:53 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, paulus@samba.org,
-        mpe@ellerman.id.au, seroyer@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, aik@ozlabs.ru, ruscur@russell.cc,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Subject: Re: [PATCH v2 2/7] powerpc/kernel: Add uevents in EEH error/resume
-Message-ID: <20171228232253.GC19819@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
- <20171218223808.83928-3-bryantly@linux.vnet.ibm.com>
- <20171219045009.GC14941@bhelgaas-glaptop.roam.corp.google.com>
- <1513664878.2743.8.camel@kernel.crashing.org>
- <952dac4e-cf22-ed68-1a29-58ac7ed3515a@linux.vnet.ibm.com>
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:40543 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751129AbdLMWMg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 17:12:36 -0500
+Received: by mail-wr0-f174.google.com with SMTP id q9so3471446wre.7
+        for <linux-pci@vger.kernel.org>; Wed, 13 Dec 2017 14:12:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <952dac4e-cf22-ed68-1a29-58ac7ed3515a@linux.vnet.ibm.com>
+In-Reply-To: <CANn89iJ2UmDTianzVV-c=oyefovOqg_-R9=Hg5hOG9pprKqwmw@mail.gmail.com>
+References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <20171017133702.1b0e35bc@t450s.home> <MWHPR12MB16008EEBF251F321E9B48D41C84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAB=NE6U-1ytEbL9A2FeVjcOfN3VSNAJUa9JbsQH9UfjRfANKxw@mail.gmail.com>
+ <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAB=NE6Xwj20hwX3XzW_bYEby+24c=gY_nQtXPOu1J_c7uRHRjA@mail.gmail.com>
+ <MWHPR12MB16004ED0D14F6531DDDD1692C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <SN1PR12MB03524AF87997DFAC404CD514C8350@SN1PR12MB0352.namprd12.prod.outlook.com>
+ <CAKdAkRRuX-NcWB_fwWr6XHV61t+L2MCjedfZgaiAD-xpVB-mMQ@mail.gmail.com>
+ <CANn89iJ1O+a9-ZUhZK94npGwURpWv8u1aHhVsd0-xEad_+_p8w@mail.gmail.com>
+ <CAKdAkRSiVkTo84W7_eDwoLL0UH0jYE7Nbb5D9VEBQS3+UPLXEg@mail.gmail.com> <CANn89iJ2UmDTianzVV-c=oyefovOqg_-R9=Hg5hOG9pprKqwmw@mail.gmail.com>
+From: Eric Dumazet <edumazet@google.com>
+Date: Wed, 13 Dec 2017 14:12:34 -0800
+Message-ID: <CANn89iL4D7jKAX8Q9tzxPsO+eNdoUqwAJmwTA-hYnqe2=Hd3rQ@mail.gmail.com>
+Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
+ drivers when VFs are attached to VMs ...
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Casey Leedom <leedom@chelsio.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
+        Komali Katari <komali@chelsio.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 20, 2017 at 09:04:27PM -0600, Juan Alvarez wrote:
-> On 12/19/17 12:27 AM, Benjamin Herrenschmidt wrote:
-> 
-> > On Mon, 2017-12-18 at 22:50 -0600, Bjorn Helgaas wrote:
-> >> [+cc Keith, Gabriele, Dongdong]
-> >>
-> >> On Mon, Dec 18, 2017 at 04:38:03PM -0600, Bryant G. Ly wrote:
-> >>> Devices can go offline when EEH is reported. This patch adds
-> >>> a change to the kernel object and lets udev know of error.
-> >>> When device resumes a change is also set reporting device as
-> >>> online. Therefore, EEH events are better propagated to user
-> >>> space for devices in powerpc arch.
-> >> I'm on vacation and can't review this in detail, but I wonder if you
-> >> can compare this with the uevents we emit for DPC, AER, and hotplug
-> >> events (if any).  I hope we don't end up with userspace having to be
-> >> aware of the differences between EEH, DPC, AER, etc.
-> >>
-> >>> From a very quick look, I only see a few uevents even mentioned in
-> >> drivers/pci: KOBJ_ADD in __pci_hp_register() and KOBJ_CHANGE in the
-> >> SR-IOV code.  I'm worried that we're missing some important uevents in
-> >> the PCI core.  That's not an argument against what you're doing here;
-> >> it just would be nice to fill in any missing pieces in the core also,
-> >> and hopefully make them consistent with these EEH events.
-> > We also need to be careful about what specific EEH activity we are
-> > talking about, and if we bring into the picture things like DPDK, it
-> > gets even more murky...
-> >
-> > The basic way EEH is supposed to work for recovery (minus all sort of
-> > implementation nasties which hopefully Russell and Sam are trying to
-> > cleanup and fix) is that either:
-> >
-> > 	- The driver of the device has recovery callbacks, in which
-> > case the driver participates in the recovery process, the device
-> > doesn't "go away" (though it shouldn't be accessed during that process
-> > by other entities, userspace originated config space could be a problem
-> > and needs to be blocked...). The recovery typically involves a reset of
-> > the device but in sync with the driver.
-> >
-> > 	- The driver doesn't have the callbacks. In this case, we
-> > simulate an unplug, reset the device, and replug.
-> >
-> > So it makes sense for the second case to emit the same uevents as a
-> > normal PCI(e) hotplug.
-> >
-> > For the former case I'm less sure.... Do we really need userspace to be
-> > notified ? If yes, what for precisely ?
-> 
-> In pSeries SR-IOV environment the management console might need to apply
-> certain configuration changes to the PF driver after it has been recovered
-> and before the VF drivers are allowed to resume their recovery path.
-> I could not think of another way to notify user space of these events.
-> I made this assumption because I saw there were no uevents added when 
-> the device goes offline and come back online in EEH code. It was my 
-> intention to make the event as generic as possible in EEH component,
-> therefore, making this change independent of pSeries SR-IOV.
+On Wed, Dec 13, 2017 at 2:06 PM, Eric Dumazet <edumazet@google.com> wrote:
+>> Don't you need to update individual pointers if you are altering the buffer?
+>>
+>
+> Possibly...
 
-I don't know what your plan for this is, but we do have two different
-paths that use the struct pci_error_handlers hooks that drivers may
-supply.  There's this AER path that may be used on all arches:
+I am packing my stuff, before a long flight.
 
-  aer_isr
-    get_e_source              # remove from rpc->e_sources[] queue
-    aer_isr_one_error
-      aer_process_err_devices
-        handle_error_source   # or aer_recover_work_func
-          do_recovery         # for uncorrectable (fatal/nonfatal) only
-            broadcast_error_message(dev, ..., report_error_detected)
-              pci_walk_bus(..., report_error_detected)
-                report_error_detected
-                  dev->driver->err_handler->error_detected
+I wont be able to fix this before at least a day, so feel free to fix
+this patch ;)
 
-And there's this powerpc path where you're adding a uevent:
-
-  eeh_event_handler
-    eeh_handle_event
-      eeh_handle_normal_event
-        eeh_pe_dev_traverse(pe, eeh_report_error, &result)
-          eeh_report_error
-            driver->err_handler->error_detected(dev, pci_channel_io_frozen)
- +          kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
-
-Both paths end up calling the pci_error_handlers.error_detected()
-hook.
-
-Drivers are not supposed to care what arch they're running on.  If the
-driver supplies an .error_detected() entry point, it's up to the PCI
-core and powerpc code to use it consistently across arches.  That
-means the same uevents (if any) should be emitted from both paths.
-
-The best way would be to unify the call of .error_detected() so the
-AER path and the powerpc path do it via the same function.  The AER
-report_error_detected() and the powerpc eeh_report_error() do look
-fairly similar, so this seems possible in principle, but I'm not
-holding my breath.
-
-Bjorn
+Thanks.
