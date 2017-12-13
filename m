@@ -1,225 +1,155 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 24/26] video: fbdev: riva: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:38:00 -0500
-Message-Id: <1513661883-28662-25-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "open list:NVIDIA rivafb and nvidiafb FRAMEBUFFER DRIVER"
- <linux-fbdev@vger.kernel.org>, Antonino Daplas <adaplas@gmail.com>,
- Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
- Sinan Kaya <okaya@codeaurora.org>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:33610 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753144AbdLMSdh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Dec 2017 13:33:37 -0500
+Date: Wed, 13 Dec 2017 18:34:17 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
+ port
+Message-ID: <20171213183417.GD4060@red-moon>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
+ <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
+ <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
+ <20171213140848.GA1736@red-moon>
+ <b72dda91-5307-f024-9810-d6abadf7f337@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b72dda91-5307-f024-9810-d6abadf7f337@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Wed, Dec 13, 2017 at 10:02:02PM +0530, Manikanta Maddireddy wrote:
+> 
+> 
+> On 13-Dec-17 7:38 PM, Lorenzo Pieralisi wrote:
+> > On Wed, Dec 13, 2017 at 05:20:39PM +0530, Manikanta Maddireddy wrote:
+> >>
+> >>
+> >> On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
+> >>> On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
+> >>>> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
+> >>>> after all the required root port register programming is completed.
+> >>>>
+> >>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> >>>> ---
+> >>>> V3:
+> >>>> * no change in this patch
+> >>>> V2:
+> >>>> * no change in this patch
+> >>>>
+> >>>>  drivers/pci/host/pci-tegra.c | 9 +++++----
+> >>>>  1 file changed, 5 insertions(+), 4 deletions(-)
+> >>>>
+> >>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> >>>> index 96e8038c3019..b41c60c7414c 100644
+> >>>> --- a/drivers/pci/host/pci-tegra.c
+> >>>> +++ b/drivers/pci/host/pci-tegra.c
+> >>>> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+> >>>>  		}
+> >>>>  	}
+> >>>>  
+> >>>> -	/* take the PCIe interface module out of reset */
+> >>>> -	reset_control_deassert(pcie->pcie_xrst);
+> >>>> -
+> >>>>  	/* finally enable PCIe */
+> >>>>  	value = afi_readl(pcie, AFI_CONFIGURATION);
+> >>>>  	value |= AFI_CONFIGURATION_EN_FPCI;
+> >>>> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+> >>>>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+> >>>>  	}
+> >>>>  
+> >>>> -	reset_control_assert(pcie->pcie_xrst);
+> >>>
+> >>> This does not look like it is part of the reset de-assertion code move.
+> >>>
+> >>> tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
+> >>>
+> >>> in other words, why are you removing it ?
+> >>>
+> >>> Lorenzo
+> >>
+> >> Hi Lorenzo,
+> >>
+> >> Host driver should start LTSSM after programming all controller registers.
+> >> In tegra_pcie_enable_controller() bunch of AFI module programming is done and
+> >> I am adding PCIe register programming in this series.
+> >> So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
+> >> which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
+> > 
+> > I asked why you removed the reset assertion in tegra_pcie_power_off(),
+> > it is not clear to me. You still call tegra_pcie_power_off() in
+> > the tegra_pcie_probe() error path and I see no reason why the reset
+> > assertion - called through:
+> > 
+> > tegra_pcie_put_resources()
+> > 	-> tegra_pcie_power_of()
+> > 	
+> > is removed, if it was needed previously.
+> > 
+> > Lorenzo
+> > 
+> 
+> New sequence with this patch will be
+> tegra_pcie_enable_controller() -> tegra_pcie_request_resources() -> tegra_pcie_enable_ports()
+>                                    ->goto put_resources on fail        -> reset_control_deassert(pcie->pcie_xrst);
+> 
+> Since pcie_xrst deassert happens after tegra_pcie_request_resources(), there is no need to assert pcie_xrst on put_resource failure.
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+I do not understand you, sorry for being blunt.
 
-struct riva_par has a pointer to struct pci_dev. Use the pci_dev member
-to extract the domain information.
+What has tegra_pcie_request_resources() to do with the reset
+assertion/deassertion ?
 
-Change the function signature for CalcStateExt and RivaGetConfig to pass
-in struct pci_dev in addition to RIVA_HW_INST so that code inside the
-riva_hw.c can also calculate domain number and pass it to
-pci_get_domain_bus_and_slot().
+This patch moves:
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/video/fbdev/riva/fbdev.c     |  2 +-
- drivers/video/fbdev/riva/nv_driver.c |  7 ++++---
- drivers/video/fbdev/riva/riva_hw.c   | 20 +++++++++++++-------
- drivers/video/fbdev/riva/riva_hw.h   |  3 ++-
- 4 files changed, 20 insertions(+), 12 deletions(-)
+reset_control_deassert(pcie->pcie_xrst);
 
-diff --git a/drivers/video/fbdev/riva/fbdev.c b/drivers/video/fbdev/riva/fbdev.c
-index 1ea78bb..ff82823 100644
---- a/drivers/video/fbdev/riva/fbdev.c
-+++ b/drivers/video/fbdev/riva/fbdev.c
-@@ -780,7 +780,7 @@ static int riva_load_video_mode(struct fb_info *info)
- 	else
- 		newmode.misc_output |= 0x80;	
- 
--	rc = CalcStateExt(&par->riva, &newmode.ext, bpp, width,
-+	rc = CalcStateExt(&par->riva, &newmode.ext, par->pdev, bpp, width,
- 			  hDisplaySize, height, dotClock);
- 	if (rc)
- 		goto out;
-diff --git a/drivers/video/fbdev/riva/nv_driver.c b/drivers/video/fbdev/riva/nv_driver.c
-index f3694cf..a3d9c66 100644
---- a/drivers/video/fbdev/riva/nv_driver.c
-+++ b/drivers/video/fbdev/riva/nv_driver.c
-@@ -159,6 +159,7 @@ unsigned long riva_get_memlen(struct riva_par *par)
- 	unsigned int chipset = par->Chipset;
- 	struct pci_dev* dev;
- 	u32 amt;
-+	int domain = pci_domain_nr(par->pdev->bus);
- 
- 	switch (chip->Architecture) {
- 	case NV_ARCH_03:
-@@ -226,12 +227,12 @@ unsigned long riva_get_memlen(struct riva_par *par)
- 	case NV_ARCH_30:
- 		if(chipset == NV_CHIP_IGEFORCE2) {
- 
--			dev = pci_get_bus_and_slot(0, 1);
-+			dev = pci_get_domain_bus_and_slot(domain, 0, 1);
- 			pci_read_config_dword(dev, 0x7C, &amt);
- 			pci_dev_put(dev);
- 			memlen = (((amt >> 6) & 31) + 1) * 1024;
- 		} else if (chipset == NV_CHIP_0x01F0) {
--			dev = pci_get_bus_and_slot(0, 1);
-+			dev = pci_get_domain_bus_and_slot(domain, 0, 1);
- 			pci_read_config_dword(dev, 0x84, &amt);
- 			pci_dev_put(dev);
- 			memlen = (((amt >> 4) & 127) + 1) * 1024;
-@@ -417,6 +418,6 @@ unsigned long riva_get_maxdclk(struct riva_par *par)
- 	}
- 	par->riva.flatPanel = (par->FlatPanel > 0) ? TRUE : FALSE;
- 
--	RivaGetConfig(&par->riva, par->Chipset);
-+	RivaGetConfig(&par->riva, par->pdev, par->Chipset);
- }
- 
-diff --git a/drivers/video/fbdev/riva/riva_hw.c b/drivers/video/fbdev/riva/riva_hw.c
-index 8bdf37f..0601c13 100644
---- a/drivers/video/fbdev/riva/riva_hw.c
-+++ b/drivers/video/fbdev/riva/riva_hw.c
-@@ -1108,7 +1108,8 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
-     unsigned      pixelDepth,
-     unsigned     *burst,
-     unsigned     *lwm,
--    RIVA_HW_INST *chip
-+    RIVA_HW_INST *chip,
-+    struct pci_dev *pdev
- )
- {
-     nv10_fifo_info fifo_data;
-@@ -1116,8 +1117,9 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
-     unsigned int M, N, P, pll, MClk, NVClk;
-     unsigned int uMClkPostDiv;
-     struct pci_dev *dev;
-+    int domain = pci_domain_nr(pdev->bus);
- 
--    dev = pci_get_bus_and_slot(0, 3);
-+    dev = pci_get_domain_bus_and_slot(domain, 0, 3);
-     pci_read_config_dword(dev, 0x6C, &uMClkPostDiv);
-     pci_dev_put(dev);
-     uMClkPostDiv = (uMClkPostDiv >> 8) & 0xf;
-@@ -1132,7 +1134,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
-     sim_data.enable_video   = 0;
-     sim_data.enable_mp      = 0;
- 
--    dev = pci_get_bus_and_slot(0, 1);
-+    dev = pci_get_domain_bus_and_slot(domain, 0, 1);
-     pci_read_config_dword(dev, 0x7C, &sim_data.memory_type);
-     pci_dev_put(dev);
-     sim_data.memory_type    = (sim_data.memory_type >> 12) & 1;
-@@ -1234,6 +1236,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
- (
-     RIVA_HW_INST  *chip,
-     RIVA_HW_STATE *state,
-+    struct pci_dev *pdev,
-     int            bpp,
-     int            width,
-     int            hDisplaySize,
-@@ -1300,7 +1303,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
-                                           pixelDepth * 8,
-                                          &(state->arbitration0),
-                                          &(state->arbitration1),
--                                          chip);
-+                                          chip, pdev);
-             } else {
-                 nv10UpdateArbitrationSettings(VClk, 
-                                           pixelDepth * 8, 
-@@ -2102,10 +2105,12 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
- static void nv10GetConfig
- (
-     RIVA_HW_INST *chip,
-+    struct pci_dev *pdev,
-     unsigned int chipset
- )
- {
-     struct pci_dev* dev;
-+    int domain = pci_domain_nr(pdev->bus);
-     u32 amt;
- 
- #ifdef __BIG_ENDIAN
-@@ -2118,12 +2123,12 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
-      * Fill in chip configuration.
-      */
-     if(chipset == NV_CHIP_IGEFORCE2) {
--        dev = pci_get_bus_and_slot(0, 1);
-+        dev = pci_get_domain_bus_and_slot(domain, 0, 1);
-         pci_read_config_dword(dev, 0x7C, &amt);
-         pci_dev_put(dev);
-         chip->RamAmountKBytes = (((amt >> 6) & 31) + 1) * 1024;
-     } else if(chipset == NV_CHIP_0x01F0) {
--        dev = pci_get_bus_and_slot(0, 1);
-+        dev = pci_get_domain_bus_and_slot(domain, 0, 1);
-         pci_read_config_dword(dev, 0x84, &amt);
-         pci_dev_put(dev);
-         chip->RamAmountKBytes = (((amt >> 4) & 127) + 1) * 1024;
-@@ -2224,6 +2229,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
- int RivaGetConfig
- (
-     RIVA_HW_INST *chip,
-+    struct pci_dev *pdev,
-     unsigned int chipset
- )
- {
-@@ -2245,7 +2251,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
-         case NV_ARCH_10:
-         case NV_ARCH_20:
-         case NV_ARCH_30:
--            nv10GetConfig(chip, chipset);
-+            nv10GetConfig(chip, pdev, chipset);
-             break;
-         default:
-             return (-1);
-diff --git a/drivers/video/fbdev/riva/riva_hw.h b/drivers/video/fbdev/riva/riva_hw.h
-index c2769f7..5e7b354 100644
---- a/drivers/video/fbdev/riva/riva_hw.h
-+++ b/drivers/video/fbdev/riva/riva_hw.h
-@@ -536,6 +536,7 @@
- (
-     RIVA_HW_INST  *chip,
-     RIVA_HW_STATE *state,
-+    struct pci_dev *pdev,
-     int            bpp,
-     int            width,
-     int            hDisplaySize,
-@@ -546,7 +547,7 @@
- /*
-  * External routines.
-  */
--int RivaGetConfig(RIVA_HW_INST *, unsigned int);
-+int RivaGetConfig(RIVA_HW_INST *chip, struct pci_dev *pdev, unsigned int c);
- /*
-  * FIFO Free Count. Should attempt to yield processor if RIVA is busy.
-  */
--- 
-1.9.1
+from:
 
+tegra_pcie_enable_controller()
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+to
+
+tegra_pcie_enable_ports()
+
+if:
+
+reset_control_assert(pcie->pcie_xrst);
+
+was needed before this patch in tegra_pcie_power_off()
+
+why it is not needed there after this patch is applied ?
+
+Lorenzo
+
+> >>>>  	reset_control_assert(pcie->afi_rst);
+> >>>>  	reset_control_assert(pcie->pex_rst);
+> >>>>  
+> >>>> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+> >>>>  			 port->index, port->lanes);
+> >>>>  
+> >>>>  		tegra_pcie_port_enable(port);
+> >>>> +	}
+> >>>>  
+> >>>> +	/* take the PCIe interface module out of reset */
+> >>>> +	reset_control_deassert(pcie->pcie_xrst);
+> >>>> +
+> >>>> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> >>>>  		if (tegra_pcie_port_check_link(port))
+> >>>>  			continue;
+> >>>>  
+> >>>> -- 
+> >>>> 2.1.4
+> >>>>
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
