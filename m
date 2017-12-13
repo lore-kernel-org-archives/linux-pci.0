@@ -1,89 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:46786 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753478AbdLNQO5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 11:14:57 -0500
-Date: Thu, 14 Dec 2017 17:14:54 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: bhelgaas@google.com, jonathanh@nvidia.com, vidyas@nvidia.com,
-        mperttunen@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, kthota@nvidia.com
-Subject: Re: [PATCH V3 12/12] PCI: tegra: Update flow control threshold in
- Tegra210
-Message-ID: <20171214161454.GN13733@ulmo>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-13-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="0aF+6pWUK5w8WdCh"
-In-Reply-To: <1509371843-22931-13-git-send-email-mmaddireddy@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v1 1/7] platform/pseries: Update VF config space after EEH
+Date: Wed, 13 Dec 2017 09:32:36 -0600
+In-Reply-To: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171213153242.98015-2-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+Add EEH platform operations for pseries to update VF
+config space. With this change after EEH, the VF
+will have updated config space for pseries platform.
 
---0aF+6pWUK5w8WdCh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 85 +++++++++++++++++++++++++++-
+ 1 file changed, 84 insertions(+), 1 deletion(-)
 
-On Mon, Oct 30, 2017 at 07:27:23PM +0530, Manikanta Maddireddy wrote:
-> Recommended update FC threshold in Tegra210 is 0x60 for best performance
-> of x1 link. Setting this to 0x60 provides the best balance between number
-> of UpdateFC and read data sent over the link.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V3:
-> * changed soc parameter name
-> V2:
-> * no change in this patch
->=20
->  drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
->=20
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index b29329226e3d..812d32cfdd0e 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -223,6 +223,7 @@
->  #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
->  #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
->  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
-> +#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
-> =20
->  #define RP_VEND_CTL0	0xf44
->  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
-> @@ -323,6 +324,7 @@ struct tegra_pcie_soc {
->  	bool update_clamp_threshold;
->  	bool raw_violation_fixup;
->  	bool program_deskew_time;
-> +	bool update_fc_threshold;
->  };
-
-I agree with Lorenzo here that the threshold value should be a separate
-field in struct tegra_pcie_soc.
-
-Thierry
-
---0aF+6pWUK5w8WdCh
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloyo34ACgkQ3SOs138+
-s6Gf0g//Wq8k8pIUrDn3dj8VHfRQCOV1ZX1t08yrQ5X8DQLeeIYXl1wBTxnqHiSa
-duBkY+ewzKuN/HEp3ctN/at7Zq/H03pPLOKGmPgtcRSy/smOjgO+qVUel1RbDQwb
-jE1kkQqrevCfs9kz3ngdhsVwYBM2DjSKa/AjUIaVMN5Gg4ROgEf/xBT8jNtFzsjk
-SCjsZxGsRNKjnhSBzFd9mPdMM9RODPhW84ABq9X0tUsqglVw/7PdqwhGDItDSqct
-ifnnTNFFu5lKf4zdUBl9An5FXkCc4maHw+B/FpJSW+N1R7ufpiz3hqRu2pDNBvU4
-oxAEw+xnxnu/PM6HczqCuerLW39G3SBUufjyfMfSLfXPXtgKDYIF9oN2cBGEMpdR
-tPoLlcqIuO4w18Rr7vVb6T/Gff2HbyAT0lrRgMVUT0vVKgnXZQi8C7dNcxWq0uV9
-TpSOireA9uIG9seyzNJTlF+y+5Kk12Xl7V1+W3RgfWiJnWyc3liCNxZ8GGfOa5E+
-a4Ub1BWcNZ1xmeptO/BcZu9+rgZG4BpLJg0Vp4o+JjCGJQxWkjJCiBYIHnkNdnsf
-LR3xxWR3J7ZL7FVRYm8qvxvd1JihxA1f1zutzFwIgLaHMDbI+RG4qYHeq14L+OvB
-dmxdU4Bug5Wy3i99R59Oc2QcubzC+KWDsVbRqlqCGfWD8xv9WuU=
-=e5b3
------END PGP SIGNATURE-----
-
---0aF+6pWUK5w8WdCh--
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index 2295f117e2d3..1a9a6fa91151 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -708,6 +708,89 @@ static int pseries_eeh_write_config(struct pci_dn *pdn, int where, int size, u32
+ 	return rtas_write_config(pdn, where, size, val);
+ }
+ 
++static int pseries_eeh_restore_vf_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
++
++	if (edev->pcie_cap) {
++		/* Restore MPS */
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++
++		/* Disable Completion Timeout */
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					     edev->pcie_cap + PCI_EXP_DEVCTL2,
++					     4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					      edev->pcie_cap + PCI_EXP_DEVCTL2,
++					      4, cap2);
++		}
++	}
++
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				     4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				      4, aer_capctl);
++	}
++
++	return 0;
++}
++
++static int pseries_eeh_restore_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	s64 ret;
++
++	if (!edev)
++		return -EEXIST;
++
++	/*
++	 * FIXME: The MPS, error routing rules, timeout setting are worthy
++	 * to be exported by firmware in extendible way.
++	 */
++	if (edev->physfn)
++		ret = pseries_eeh_restore_vf_config(pdn);
++
++	if (ret) {
++		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
++			__func__, edev->pe_config_addr, ret);
++		return -EIO;
++	}
++
++	return 0;
++}
++
+ static struct eeh_ops pseries_eeh_ops = {
+ 	.name			= "pseries",
+ 	.init			= pseries_eeh_init,
+@@ -723,7 +806,7 @@ static struct eeh_ops pseries_eeh_ops = {
+ 	.read_config		= pseries_eeh_read_config,
+ 	.write_config		= pseries_eeh_write_config,
+ 	.next_error		= NULL,
+-	.restore_config		= NULL
++	.restore_config		= pseries_eeh_restore_config
+ };
+ 
+ /**
+-- 
+2.14.3 (Apple Git-98)
