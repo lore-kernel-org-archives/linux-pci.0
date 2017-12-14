@@ -1,127 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:36203 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759542AbdLSBQX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Dec 2017 20:16:23 -0500
-Received: by mail-io0-f196.google.com with SMTP id l10so11830050ioc.3
-        for <linux-pci@vger.kernel.org>; Mon, 18 Dec 2017 17:16:23 -0800 (PST)
-From: Frederick Lawler <fred@fredlawl.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Frederick Lawler <fred@fredlawl.com>
-Subject: [PATCH 1/2] PCI: Create  minor pci_dev log wrapper functions
-Date: Mon, 18 Dec 2017 19:16:13 -0600
-Message-Id: <1513646174-2269-2-git-send-email-fred@fredlawl.com>
-In-Reply-To: <1513646174-2269-1-git-send-email-fred@fredlawl.com>
-References: <1513646174-2269-1-git-send-email-fred@fredlawl.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=zLRQ=DK=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=zLRQ=DK=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 14 Dec 2017 10:37:22 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	kthota@nvidia.com, mmaddireddy@nvidia.com, robh+dt@kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH V3 0/2] Tegra PCIe end point config space map code
+ refactoring
+Message-ID: <20171214103722.GC697@e107981-ln.cambridge.arm.com>
+References: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
+ <20171211105431.GI10671@ulmo>
+ <20171211175452.GC16032@bhelgaas-glaptop.roam.corp.google.com>
+ <20171212110158.GA30601@e107981-ln.cambridge.arm.com>
+ <20171212122252.GA29883@ulmo>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171212122252.GA29883@ulmo>
 List-ID: <linux-pci.vger.kernel.org>
 
-Create minor pci_dev log wrapper functions
+On Tue, Dec 12, 2017 at 01:22:52PM +0100, Thierry Reding wrote:
 
-Signed-off-by: Frederick Lawler <fred@fredlawl.com>
----
- include/linux/pci.h | 91 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 91 insertions(+)
+[...]
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0403894..3d0e939 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2278,4 +2278,95 @@ static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
- /* provide the legacy pci_dma_* API */
- #include <linux/pci-dma-compat.h>
- 
-+static inline void pci_printk(const char *level,
-+			      const struct pci_dev *pdev,
-+			      const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_printk(level, &(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
-+static inline void pci_emerg(const struct pci_dev *pdev,
-+			     const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_emerg(&(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
-+static inline void pci_crit(const struct pci_dev *pdev,
-+			    const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_crit(&(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
-+static inline void pci_alert(const struct pci_dev *pdev,
-+			     const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_alert(&(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
-+static inline void pci_err(const struct pci_dev *pdev,
-+			   const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_err(&(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
-+static inline void pci_notice(const struct pci_dev *pdev,
-+			      const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_notice(&(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
-+static inline void pci_warn(const struct pci_dev *pdev,
-+			    const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_warn(&(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
-+static inline void pci_info(const struct pci_dev *pdev,
-+			    const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_info(&(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
-+static inline void pci_dbg(const struct pci_dev *pdev,
-+			   const char *fmt, ...)
-+{
-+	va_list argptr;
-+
-+	va_start(argptr, fmt);
-+	dev_dbg(&(pdev)->dev, fmt, argptr);
-+	va_end(argptr);
-+}
-+
- #endif /* LINUX_PCI_H */
--- 
-2.7.4
+> > > > Hi Bjorn,
+> > > > 
+> > > > there's a bunch of PCI related patches for Tegra floating around on the
+> > > > lists. I'm wondering if you'd be okay if I pick those up into the Tegra
+> > > > tree after they've been reviewed and send you a pull request later on
+> > > > (say around v4.15-rc6). That would allow me to get things cooking in
+> > > > linux-next for a bit and get broader testing in addition to the
+> > > > flexibility to patch things up if they break.
+> > > 
+> > > Lorenzo will be merging the Tegra stuff, so this is more a question
+> > > for him.
+> > > 
+> > > Just to clarify, I think your questions is about putting those patches
+> > > in
+> > > git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git#for-next.
+> > > If you put them there they will show up in linux-next, and then when
+> > > Lorenzo merges them, you'll have to coordinate so they don't get
+> > > merged into linux-next twice (once via the usual PCI tree route and
+> > > again via the Tegra tree).
+> > > 
+> > > If you wait until after they've been reviewed to put them into the
+> > > Tegra tree, I'm not sure what the gain is, because I assume Lorenzo
+> > > would merge them at about that same point.
+> > 
+> > I think that after the review, the Tegra patches that are considered for
+> > upstream they should go to -next via the PCI tree as any other platform PCI
+> > patches; the relevant patches need ACKs from the respective platform
+> > maintainer - I am getting to them as fast as I can.
+> 
+> Just to clarify: I wasn't suggesting that these patches are merged for
+> v4.16 via the Tegra tree, only that I carry them in the Tegra tree for a
+> little while so that we can get broader testing and fix things up in
+> case they break. My proposal was to then send a pull request for
+> inclusion in the PCI tree. linux-next can deal with this type of
+> scenario just fine because it will simply see the same branch twice and
+> ignore the second one.
+> 
+> If you prefer to merge directly via the PCI tree that works for me too.
+
+We would end up merging the patches into -next at the same time, so there
+is not much point in queuing them via Tegra if they go via the PCI tree
+eventually; we should not add to -next patches that are not ready to
+be merged anyway.
+
+I need your help (ACKs) though to queue them up - I review the patches
+but I can neither test them nor get access to HW TRMs so for some of them
+there is not much I can do.
+
+Thanks,
+Lorenzo
