@@ -1,77 +1,60 @@
-Return-Path: <SRS0=zLRQ=DK=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=zLRQ=DK=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 14 Dec 2017 10:37:22 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	kthota@nvidia.com, mmaddireddy@nvidia.com, robh+dt@kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH V3 0/2] Tegra PCIe end point config space map code
- refactoring
-Message-ID: <20171214103722.GC697@e107981-ln.cambridge.arm.com>
-References: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
- <20171211105431.GI10671@ulmo>
- <20171211175452.GC16032@bhelgaas-glaptop.roam.corp.google.com>
- <20171212110158.GA30601@e107981-ln.cambridge.arm.com>
- <20171212122252.GA29883@ulmo>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:22263 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752547AbdLNNOU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:14:20 -0500
+Subject: Re: [PATCH v5 3/3] PCI: endpoint: Fix find_first_zero_bit() usage
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20171214130147.1790-1-niklas.cassel@axis.com>
+ <20171214130147.1790-4-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <a34e50a0-b018-d3fd-51fe-4f416c629a44@ti.com>
+Date: Thu, 14 Dec 2017 18:43:26 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171212122252.GA29883@ulmo>
+In-Reply-To: <20171214130147.1790-4-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 12, 2017 at 01:22:52PM +0100, Thierry Reding wrote:
 
-[...]
 
-> > > > Hi Bjorn,
-> > > > 
-> > > > there's a bunch of PCI related patches for Tegra floating around on the
-> > > > lists. I'm wondering if you'd be okay if I pick those up into the Tegra
-> > > > tree after they've been reviewed and send you a pull request later on
-> > > > (say around v4.15-rc6). That would allow me to get things cooking in
-> > > > linux-next for a bit and get broader testing in addition to the
-> > > > flexibility to patch things up if they break.
-> > > 
-> > > Lorenzo will be merging the Tegra stuff, so this is more a question
-> > > for him.
-> > > 
-> > > Just to clarify, I think your questions is about putting those patches
-> > > in
-> > > git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git#for-next.
-> > > If you put them there they will show up in linux-next, and then when
-> > > Lorenzo merges them, you'll have to coordinate so they don't get
-> > > merged into linux-next twice (once via the usual PCI tree route and
-> > > again via the Tegra tree).
-> > > 
-> > > If you wait until after they've been reviewed to put them into the
-> > > Tegra tree, I'm not sure what the gain is, because I assume Lorenzo
-> > > would merge them at about that same point.
-> > 
-> > I think that after the review, the Tegra patches that are considered for
-> > upstream they should go to -next via the PCI tree as any other platform PCI
-> > patches; the relevant patches need ACKs from the respective platform
-> > maintainer - I am getting to them as fast as I can.
+On Thursday 14 December 2017 06:31 PM, Niklas Cassel wrote:
+> find_first_zero_bit()'s parameter 'size' is defined in bits,
+> not in bytes.
 > 
-> Just to clarify: I wasn't suggesting that these patches are merged for
-> v4.16 via the Tegra tree, only that I carry them in the Tegra tree for a
-> little while so that we can get broader testing and fix things up in
-> case they break. My proposal was to then send a pull request for
-> inclusion in the PCI tree. linux-next can deal with this type of
-> scenario just fine because it will simply see the same branch twice and
-> ignore the second one.
+> Calling find_first_zero_bit() with the wrong size unit
+> will lead to insidious bugs.
 > 
-> If you prefer to merge directly via the PCI tree that works for me too.
+> Fix this by calling find_first_zero_bit() with size BITS_PER_LONG,
+> rather than sizeof() and add missing find_first_zero_bit() return
+> handling.
+> 
+> Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 
-We would end up merging the patches into -next at the same time, so there
-is not much point in queuing them via Tegra if they go via the PCI tree
-eventually; we should not add to -next patches that are not ready to
-be merged anyway.
-
-I need your help (ACKs) though to queue them up - I review the patches
-but I can neither test them nor get access to HW TRMs so for some of them
-there is not much I can do.
-
-Thanks,
-Lorenzo
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/endpoint/pci-ep-cfs.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> index e8f65eb51c1a..c9a2fb9dd49d 100644
+> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -103,7 +103,10 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+>  	struct pci_epf *epf = epf_group->epf;
+>  
+>  	func_no = find_first_zero_bit(&epc_group->function_num_map,
+> -				      sizeof(epc_group->function_num_map));
+> +				      BITS_PER_LONG);
+> +	if (func_no >= BITS_PER_LONG)
+> +		return -EINVAL;
+> +
+>  	set_bit(func_no, &epc_group->function_num_map);
+>  	epf->func_no = func_no;
+>  
+> 
