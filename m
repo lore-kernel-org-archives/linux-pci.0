@@ -1,91 +1,164 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 05/26] agp: nvidia: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:41 -0500
-Message-Id: <1513661883-28662-6-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arnd Bergmann <arnd@arndb.de>, David Airlie <airlied@linux.ie>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:44424 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751084AbdLNN4Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:56:24 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>,
+        Vidya Saga <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH v2] PCI: tegra: Do not allocate MSI target memory
+Date: Thu, 14 Dec 2017 14:56:20 +0100
+Message-Id: <20171214135620.13564-1-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+From: Thierry Reding <treding@nvidia.com>
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+The PCI host bridge found on Tegra SoCs doesn't require the MSI target
+address to be backed by physical system memory. Writes are intercepted
+within the controller and never make it to the memory pointed to.
 
-Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
-and extract the domain number from struct pci_dev.
+Since no actual system memory is required, remove the allocation of a
+single page and hardcode the MSI target address with a special address
+on a per-SoC basis. Ideally this would be an address to an MMIO memory
+region (such as where the controller's register are located). However,
+those addresses don't work reliably across all Tegra generations. The
+only set of addresses that work consistently are those that point to
+external memory.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+This is not ideal, since those addresses could technically be used for
+DMA and hence be confusing. However, the first page of external memory
+is unlikely to be used and special enough to avoid confusion.
+
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/char/agp/nvidia-agp.c | 12 +++++++++---
- drivers/char/agp/sworks-agp.c |  3 ++-
- 2 files changed, 11 insertions(+), 4 deletions(-)
+Changes in v2:
+- use physical base address of system memory as MSI target address
 
-diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
-index 828b344..623205b 100644
---- a/drivers/char/agp/nvidia-agp.c
-+++ b/drivers/char/agp/nvidia-agp.c
-@@ -340,11 +340,17 @@ static int agp_nvidia_probe(struct pci_dev *pdev,
- 	u8 cap_ptr;
- 
- 	nvidia_private.dev_1 =
--		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 1));
-+		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+					    (unsigned int)pdev->bus->number,
-+					    PCI_DEVFN(0, 1));
- 	nvidia_private.dev_2 =
--		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 2));
-+		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+					    (unsigned int)pdev->bus->number,
-+					    PCI_DEVFN(0, 2));
- 	nvidia_private.dev_3 =
--		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(30, 0));
-+		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+					    (unsigned int)pdev->bus->number,
-+					    PCI_DEVFN(30, 0));
- 
- 	if (!nvidia_private.dev_1 || !nvidia_private.dev_2 || !nvidia_private.dev_3) {
- 		printk(KERN_INFO PFX "Detected an NVIDIA nForce/nForce2 "
-diff --git a/drivers/char/agp/sworks-agp.c b/drivers/char/agp/sworks-agp.c
-index 03be4ac..4dbdd3b 100644
---- a/drivers/char/agp/sworks-agp.c
-+++ b/drivers/char/agp/sworks-agp.c
-@@ -474,7 +474,8 @@ static int agp_serverworks_probe(struct pci_dev *pdev,
+Vidya, Manikanta,
+
+I've tested this on all of Tegra20, Tegra30, Tegra124, Tegra210 and
+Tegra186, so I'm confident that this is finally a good set of addresses.
+However, it'd be good to get confirmation from you since we had
+conflicting test results the last time around.
+
+Thanks,
+Thierry
+
+ drivers/pci/host/pci-tegra.c | 41 +++++++++++++++++++++++++++++++++++------
+ 1 file changed, 35 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index ee193767f77b..f2214ca1ad17 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -236,7 +236,6 @@ struct tegra_msi {
+ 	struct msi_controller chip;
+ 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+ 	struct irq_domain *domain;
+-	unsigned long pages;
+ 	struct mutex lock;
+ 	u64 phys;
+ 	int irq;
+@@ -246,6 +245,7 @@ struct tegra_msi {
+ struct tegra_pcie_soc {
+ 	unsigned int num_ports;
+ 	unsigned int msi_base_shift;
++	u64 msi_target;
+ 	u32 pads_pll_ctl;
+ 	u32 tx_ref_sel;
+ 	u32 pads_refclk_cfg0;
+@@ -1576,9 +1576,35 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+ 		goto err;
  	}
  
- 	/* Everything is on func 1 here so we are hardcoding function one */
--	bridge_dev = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
-+	bridge_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+			(unsigned int)pdev->bus->number,
- 			PCI_DEVFN(0, 1));
- 	if (!bridge_dev) {
- 		dev_info(&pdev->dev, "can't find secondary device\n");
+-	/* setup AFI/FPCI range */
+-	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+-	msi->phys = virt_to_phys((void *)msi->pages);
++	/*
++	 * The PCI host bridge on Tegra contains some logic that intercepts
++	 * MSI writes, which means that the MSI target address doesn't have
++	 * to point to actual physical memory. Rather than allocating one 4
++	 * KiB page of system memory that's never used, we can simply pick
++	 * an arbitrary address within a reserved area in the FPCI address
++	 * map.
++	 *
++	 * Note that MSI writes are never committed to memory, so it doesn't
++	 * really matter which address we pick. However, since the address
++	 * may show up at some point and potentially confuse users, the best
++	 * solution would be to pick an address that is obviously not within
++	 * system memory. The FPCI address map contains a range that cannot
++	 * be accessed by any Tegra CPU, but unfortunately that excludes the
++	 * usage for 32-bit MSI capable devices.
++	 *
++	 * A good choice that supports both 32-bit and 64-bit MSI would be to
++	 * pick a memory address within the PCI MMIO region that is currently
++	 * not used for configuration space, downstream I/O, prefetchable or
++	 * non prefetchable memory. However, it seems like not all chips will
++	 * be able to intercept MSI writes to those addresses.
++	 *
++	 * The only reliable addresses that seem to work point to external
++	 * memory. Pick the physical base address of system memory as the MSI
++	 * target address. This is slightly less than ideal because it could
++	 * technically, though unlikely, be used for DMA. However, since the
++	 * MSI writes will be intercepted, this should be of little concern.
++	 */
++	msi->phys = soc->msi_target;
+ 
+ 	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+ 	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
+@@ -1630,8 +1656,6 @@ static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
+ 	afi_writel(pcie, 0, AFI_MSI_EN_VEC6);
+ 	afi_writel(pcie, 0, AFI_MSI_EN_VEC7);
+ 
+-	free_pages(msi->pages, 0);
+-
+ 	if (msi->irq > 0)
+ 		free_irq(msi->irq, pcie);
+ 
+@@ -2140,6 +2164,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.num_ports = 2,
+ 	.msi_base_shift = 0,
++	.msi_target = 0x00000000,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
+ 	.pads_refclk_cfg0 = 0xfa5cfa5c,
+@@ -2155,6 +2180,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.num_ports = 3,
+ 	.msi_base_shift = 8,
++	.msi_target = 0x80000000,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+ 	.pads_refclk_cfg0 = 0xfa5cfa5c,
+@@ -2171,6 +2197,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.num_ports = 2,
+ 	.msi_base_shift = 8,
++	.msi_target = 0x80000000,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+ 	.pads_refclk_cfg0 = 0x44ac44ac,
+@@ -2186,6 +2213,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.num_ports = 2,
+ 	.msi_base_shift = 8,
++	.msi_target = 0x80000000,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+ 	.pads_refclk_cfg0 = 0x90b890b8,
+@@ -2201,6 +2229,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.num_ports = 3,
+ 	.msi_base_shift = 8,
++	.msi_target = 0x80000000,
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+ 	.pads_refclk_cfg0 = 0x80b880b8,
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.15.1
