@@ -1,54 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v3 2/2] PCI: mediatek: Fixup class type for MT7622
-Date: Thu, 21 Dec 2017 19:38:45 +0800
-Message-ID: <1513856325-28813-3-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1513856325-28813-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1513856325-28813-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:11582 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752563AbdLNOqt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Dec 2017 09:46:49 -0500
+Date: Thu, 14 Dec 2017 07:50:31 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        liudongdong3@huawei.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/DPC: Fix shared interrupt handling
+Message-ID: <20171214145030.GA25329@localhost.localdomain>
+References: <20171214000051.30999.6989.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171214000051.30999.6989.stgit@gimli.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Wed, Dec 13, 2017 at 05:01:58PM -0700, Alex Williamson wrote:
+> @@ -109,6 +109,7 @@ static void interrupt_event_handler(struct work_struct *work)
+>  	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
+>  	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
+>  	struct pci_bus *parent = pdev->subordinate;
+> +	u16 ctl;
+>  
+>  	pci_lock_rescan_remove();
+>  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+> @@ -135,6 +136,10 @@ static void interrupt_event_handler(struct work_struct *work)
+>  
+>  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+>  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+> +
+> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+> +	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
+> +			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);
 
-The host bridge of MT7622 has hardware code the class code to an
-arbitrary, meaningless value, fix that.
-
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index fc29a9a..dcafeac 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -1175,3 +1175,15 @@ static struct platform_driver mtk_pcie_driver = {
- 	},
- };
- builtin_platform_driver(mtk_pcie_driver);
-+
-+/* The host bridge of MT7622 advertises the wrong device class. */
-+static void mtk_fixup_class(struct pci_dev *dev)
-+{
-+	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-+}
-+
-+/*
-+ * The HW default value of vendor id and device id for mt7622 are 0x0e8d,
-+ * 0x3258, which are arbitrary, meaningless values.
-+ */
-+DECLARE_PCI_FIXUP_EARLY(0x0e8d, 0x3258, mtk_fixup_class);
--- 
-2.6.4
+Did you mean to re-enable the interrupt here rather than mask it off?
