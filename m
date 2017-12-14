@@ -1,59 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33413 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751293AbdL1XTZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 18:19:25 -0500
-Date: Fri, 29 Dec 2017 00:19:19 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Alexandru Chirvasitu <achirvasub@gmail.com>
-cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-In-Reply-To: <alpine.DEB.2.20.1712282357380.1899@nanos>
-Message-ID: <alpine.DEB.2.20.1712290018210.1899@nanos>
-References: <20171228142117.GA10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281531120.1899@nanos> <20171228154835.GB10658@chirva-slack.chirva-slack> <20171228160522.GC10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281706010.1899@nanos>
- <20171228172250.GD10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281823140.1899@nanos> <20171228175009.ucxr4to2nb42e3s4@D-69-91-141-110.dhcp4.washington.edu> <alpine.DEB.2.20.1712281930590.1899@nanos> <alpine.DEB.2.20.1712282253180.1899@nanos>
- <20171228225014.GE10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712282357380.1899@nanos>
+Received: from mail.windriver.com ([147.11.1.11]:54827 "EHLO
+        mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751101AbdLNCWT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 21:22:19 -0500
+From: <cao.zou@windriver.com>
+To: <jingoohan1@gmail.com>
+CC: <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: designware: add a check of msi_desc in irqchip
+Date: Thu, 14 Dec 2017 10:21:22 +0800
+Message-ID: <1513218083-5461-1-git-send-email-cao.zou@windriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 28 Dec 2017, Thomas Gleixner wrote:
+----------------------------------------------------
+Summary:  PCI: designware: add a check of msi_desc in irqchip
+Reviewers: paul
+----------------------------------------------------
 
-> On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
-> 
-> > Attached.
-> > 
-> > I don't have a 4.14 family kernel available at the moment on that
-> > machine. What I'm attaching comes from the 4.13 one I was playing with
-> > yesterday, what with kexec and all.
-> 
-> Good enough. Thanks !
+Upstream Project Name: linux-kernel
+Upstream Project URL: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/
+Applies to: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/
+Brief Description: Incorrect mask bits leave device stalled after flood ping.
+Will Submit to: shan lai <jiangshanlai@gmail.com>, linux-kernel@vger.kernel.org
+Origin of patch: Discovered by me while working on common_pc
+IP content: None, trivial obvious fix.
 
-Spoke too fast. Could you please run that command as root?
+Comments:
+---------
 
-And while at it please provide the output of
+this issue is reproduced in imx7d-sdb when running the kdump with pluging Intel 1030 PCI,
+the root caused is machine_kexec_mask_interrupts will force to mask every exist irq_desc
+include msi irq.
 
-    cat /proc/interrupts
-
-as well.
-
-Thanks,
-
-	tglx
+background:
+msi irq mask is based on msi_desc, it is bound only in msi irq setup by pci driver.
+for others not request msi irqs by pci driver, its msi_desc is null, so crash in
+machine_kexec_mask_interrupts. 
