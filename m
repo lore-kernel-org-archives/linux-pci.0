@@ -1,48 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 19 Dec 2017 09:13:41 -0500 (EST)
-Message-Id: <20171219.091341.2071264832581893092.davem@davemloft.net>
-To: okaya@codeaurora.org
-Subject: Re: [PATCH V4 14/26] pch_gbe: deprecate pci_get_bus_and_slot()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1513661883-28662-15-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
- <1513661883-28662-15-git-send-email-okaya@codeaurora.org>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: keescook@chromium.org, linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, edumazet@google.com, netdev@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, tklauser@distanz.ch,
- andriy.shevchenko@linux.intel.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:41464 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753129AbdLNNpz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:45:55 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>,
+        Vidya Saga <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 2/4] PCI: tegra: Reorder parameters in offset computations
+Date: Thu, 14 Dec 2017 14:45:43 +0100
+Message-Id: <20171214134545.11143-3-thierry.reding@gmail.com>
+In-Reply-To: <20171214134545.11143-1-thierry.reding@gmail.com>
+References: <20171214134545.11143-1-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sinan Kaya <okaya@codeaurora.org>
-Date: Tue, 19 Dec 2017 00:37:50 -0500
+From: Thierry Reding <treding@nvidia.com>
 
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> pci_get_domain_bus_and_slot().
-> 
-> Use the domain information from pdev while calling into
-> pci_get_domain_bus_and_slot() function.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+The current computation of the configuration space offset is slightly
+difficult to read because the fields aren't naturally ordered. This is
+no doubt done to put extended register and register fields together,
+but that's confusing because they are separate in the address mapping
+given in the comment above the computations.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 8a07c6f9e1b0..26b734c84850 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -372,11 +372,11 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
+  * address (access to which generates correct config transaction) falls in
+  * this 4 KiB region.
+  */
+-static unsigned long tegra_pcie_conf_offset(unsigned char b, unsigned int devfn,
+-					    int where)
++static unsigned int tegra_pcie_conf_offset(u8 bus, unsigned int devfn,
++					   unsigned int where)
+ {
+-	return (b << 16) | (PCI_SLOT(devfn) << 11) | (PCI_FUNC(devfn) << 8) |
+-	       (((where & 0xf00) >> 8) << 24) | (where & 0xff);
++	return ((where & 0xf00) << 16) | (bus << 16) | (PCI_SLOT(devfn) << 11) |
++	       (PCI_FUNC(devfn) << 8) | (where & 0xff);
+ }
+ 
+ static int tegra_pcie_add_bus(struct pci_bus *bus)
+-- 
+2.15.1
