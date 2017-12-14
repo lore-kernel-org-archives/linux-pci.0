@@ -1,260 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:17401 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752303AbdLHI65 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Dec 2017 03:58:57 -0500
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <cyndis@kapsi.fi>, <thierry.reding@gmail.com>,
-        <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
-CC: <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <frowand.list@gmail.com>, <rjw@rjwysocki.net>,
-        <tglx@linutronix.de>, <vidyas@nvidia.com>, <kthota@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-pm@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V4 4/7] PCI: tegra: Free resources on probe failure
-Date: Fri, 8 Dec 2017 14:28:10 +0530
-Message-ID: <1512723493-865-5-git-send-email-mmaddireddy@nvidia.com>
-In-Reply-To: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+Return-Path: <SRS0=RDL9=DK=gmail.com=linus971@kernel.org>
+Return-Path: <SRS0=RDL9=DK=gmail.com=linus971@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linus971@gmail.com
+In-Reply-To: <alpine.DEB.2.20.1712132211570.1885@nanos>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com>
+ <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061344560.1724@nanos> <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl>
+ <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
+ <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com>
+ <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos>
+ <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 14 Dec 2017 11:03:27 -0800
+Message-ID: <CA+55aFwQBV9J1zxbBPLC5dOK-ebd1zcN6BaoB897AaKhc_tDtA@mail.gmail.com>
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
+	Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Andy Lutomirski <luto@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "the arch/x86 maintainers" <x86@kernel.org>,
+	Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-tegra_pcie_probe() can fail in multiple instances, this patch takes care
-of freeing the resources which are allocated before probe fail.
+On Thu, Dec 14, 2017 at 3:54 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>
+> So the old scheme silently consumed the spurious vector. I added debug code
+> to that effect to 4.14 and on that machine IRQ7 is triggered at the same
+> point post resume and the core code drops it silently because the interrupt
+> is marked masked and no action assigned.
+>
+> So the only difference to today is that the new code complains, while the
+> old one does an extra mask of the already masked IOAPIC pin and silently
+> returns.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2:
-* no change in this patch
-V3:
-* change 'if check' to 'legacy_phy is true' for tegra_pcie_phys_put_legacy()
-* commit log correction
-V4:
-* no change in this patch
+Great debugging, and it looks like Rafael has a patch that already got
+positive testing.
 
- drivers/pci/host/pci-tegra.c | 100 ++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 84 insertions(+), 16 deletions(-)
+I just wanted to pipe up about that "irq7", because judging from your
+email it seems like you think it's a real irq:
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 0d91f1a3a6b4..596dbe06d911 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -662,14 +662,25 @@ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- 	pci_add_resource(windows, &pcie->busn);
- 
- 	err = devm_request_pci_bus_resources(dev, windows);
--	if (err < 0)
-+	if (err < 0) {
-+		pci_free_resource_list(windows);
- 		return err;
-+	}
- 
- 	pci_remap_iospace(&pcie->pio, pcie->io.start);
- 
- 	return 0;
- }
- 
-+static void tegra_pcie_free_resources(struct tegra_pcie *pcie)
-+{
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct list_head *windows = &host->windows;
-+
-+	pci_unmap_iospace(&pcie->pio);
-+	pci_free_resource_list(windows);
-+}
-+
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
- {
- 	struct tegra_pcie *pcie = pdev->bus->sysdata;
-@@ -1069,29 +1080,40 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
--static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
- 	int err;
- 
--	/* TODO: disable and unprepare clocks? */
--
- 	if (soc->program_uphy) {
- 		err = tegra_pcie_phy_power_off(pcie);
- 		if (err < 0)
- 			dev_err(dev, "failed to power off PHY(s): %d\n", err);
- 	}
-+}
-+
-+static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-+{
-+	struct device *dev = pcie->dev;
-+	const struct tegra_pcie_soc *soc = pcie->soc;
-+	int err;
- 
- 	reset_control_assert(pcie->afi_rst);
- 	reset_control_assert(pcie->pex_rst);
- 
--	if (!dev->pm_domain)
--		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-+	clk_disable_unprepare(pcie->pll_e);
-+	if (soc->has_cml_clk)
-+		clk_disable_unprepare(pcie->cml_clk);
-+	clk_disable_unprepare(pcie->afi_clk);
-+	clk_disable_unprepare(pcie->pex_clk);
- 
- 	err = regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
- 	if (err < 0)
- 		dev_warn(dev, "failed to disable regulators: %d\n", err);
-+
-+	if (!dev->pm_domain)
-+		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
- }
- 
- static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-@@ -1222,6 +1244,15 @@ static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_phys_put_legacy(struct tegra_pcie *pcie)
-+{
-+	int err;
-+
-+	err = phy_exit(pcie->phy);
-+	if (err < 0)
-+		dev_err(pcie->dev, "failed to teardown PHY: %d\n", err);
-+}
-+
- static struct phy *devm_of_phy_optional_get_index(struct device *dev,
- 						  struct device_node *np,
- 						  const char *consumer,
-@@ -1275,6 +1306,19 @@ static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
- 	return 0;
- }
- 
-+static void tegra_pcie_port_put_phys(struct tegra_pcie_port *port)
-+{
-+	struct device *dev = port->pcie->dev;
-+	unsigned int i;
-+	int err;
-+
-+	for (i = 0; i < port->lanes; i++) {
-+		err = phy_exit(port->phys[i]);
-+		if (err < 0)
-+			dev_err(dev, "failed to teardown PHY#%u: %d\n", i, err);
-+	}
-+}
-+
- static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- {
- 	const struct tegra_pcie_soc *soc = pcie->soc;
-@@ -1294,6 +1338,17 @@ static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static void tegra_pcie_phys_put(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port;
-+
-+	if (pcie->legacy_phy)
-+		tegra_pcie_phys_put_legacy(pcie);
-+
-+	list_for_each_entry(port, &pcie->ports, list)
-+		tegra_pcie_port_put_phys(port);
-+}
-+
- static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -1326,7 +1381,7 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 	err = tegra_pcie_power_on(pcie);
- 	if (err) {
- 		dev_err(dev, "failed to power up: %d\n", err);
--		return err;
-+		goto phys_put;
- 	}
- 
- 	pads = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pads");
-@@ -1384,25 +1439,23 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 
- poweroff:
- 	tegra_pcie_power_off(pcie);
-+phys_put:
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- 	return err;
- }
- 
- static int tegra_pcie_put_resources(struct tegra_pcie *pcie)
- {
--	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
--	int err;
- 
- 	if (pcie->irq > 0)
- 		free_irq(pcie->irq, pcie);
- 
- 	tegra_pcie_power_off(pcie);
- 
--	if (soc->program_uphy) {
--		err = phy_exit(pcie->phy);
--		if (err < 0)
--			dev_err(dev, "failed to teardown PHY: %d\n", err);
--	}
-+	if (soc->program_uphy)
-+		tegra_pcie_phys_put(pcie);
- 
- 	return 0;
- }
-@@ -2283,6 +2336,16 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- 	}
- }
- 
-+static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port, *tmp;
-+
-+	reset_control_assert(pcie->pcie_xrst);
-+
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		tegra_pcie_port_disable(port);
-+}
-+
- static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie,
- 					 struct pci_dev *pci_dev)
- {
-@@ -2589,7 +2652,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 
- 	err = tegra_pcie_request_resources(pcie);
- 	if (err)
--		goto put_resources;
-+		goto disable_controller;
- 
- 	/* setup the AFI address translations */
- 	tegra_pcie_setup_translations(pcie);
-@@ -2598,7 +2661,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		err = tegra_pcie_enable_msi(pcie);
- 		if (err < 0) {
- 			dev_err(dev, "failed to enable MSI support: %d\n", err);
--			goto put_resources;
-+			goto free_resources;
- 		}
- 	}
- 
-@@ -2638,6 +2701,11 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- disable_msi:
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		tegra_pcie_disable_msi(pcie);
-+	tegra_pcie_disable_ports(pcie);
-+free_resources:
-+	tegra_pcie_free_resources(pcie);
-+disable_controller:
-+	tegra_pcie_disable_controller(pcie);
- put_resources:
- 	tegra_pcie_put_resources(pcie);
- 	return err;
--- 
-2.1.4
+>        Now there is a race
+> whether the kernel resume path manages to mask the PIC again early enough
+> before something triggers IRQ7 or not.
+
+..and that's not how the PIC works.
+
+In fact, "legacy irq 7" is the _normal_ and very traditional spurious
+interrupt, and it's documented. If the PIC gets an interrupt from
+_any_ source, but the interrupt goes away before the PIC gets an
+acknowledge from the CPU (and by "acknowledge", I'm not talking about
+the explicit software IRQ ACK, I'm talking about the hardware
+protocol, between the PIC and the CPU), the PIC will then report irq 7
+as the interrupt - regardless of what the original was.
+
+The reason is almost always something like
+
+ - CPU interrupts are disabled or masked
+
+ - driver does a write to the external hardware that causes an
+interrupt to be raised
+
+ - CPU doesn't react to the irq due to the disabled/masked nature
+
+ - but the driver then does something that masks the interrupt again
+
+ - interrupts are enabled/unmasked on the CPU
+
+ - CPU now acks the interrupt, but the PIC no longer sees any
+interrupt source, so the PIC (that has to reply with *something*)
+replies with that documented spurious irq7.
+
+To confuse things further, irq7 is not _exclusively_ the spurious
+interrupt, You can definitely put real hardware and connect it to pin7
+of the PIC, and get real irq7 reports.
+
+And to confuse things even *more*, this "irq7" thing is per-PIC, and
+the PC model obviously has the whole "nested PIC" thing where the
+second PIC is connected to irq2 of the first PIC. So there are *two*
+different "spurious interrupt" reports, one for each PIC.
+
+Anyway, to avoid this issue, drivers should strive to
+
+ (a) actually take the interrupt when doing things that can cause
+them, and have the interrupt handler do whatever it is that causes the
+interrupt to go away (ie: "normal operation")
+
+ (b) if you play games with clearing the source of the interrupt
+_without_ taking the interrupt, you should strive to basically mask
+the interrupt first.
+
+So to do (b) you can do something like
+
+      mask_device_interrupt(dev);
+      read_from_device_to_synchronize(dev);
+
+instead of (or perhaps _before_) disabling interrupts at a CPU level.
+Suspend/resume obviously does tend to play games with these kinds of
+things where you are no longer in "normal operation" and you do setup
+without having interrupts actually enabled.
+
+Or you can just decide that spurious interrupts are ok, and ignore the
+issue. But they *can* be very confusing, and obviously in this case
+that confusion then seems to have caused actual problems.
+
+            Linus
