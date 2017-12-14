@@ -1,150 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0114.outbound.protection.outlook.com ([104.47.33.114]:14147
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752222AbdLUTPs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Dec 2017 14:15:48 -0500
-From: Casey Leedom <leedom@chelsio.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Does anyone know of a problem with Write Combined Buffer support
- CentaurHauls?
-Date: Thu, 21 Dec 2017 19:15:46 +0000
-Message-ID: <SN1PR12MB03527687B2D1DC3DD12E8FEBC80D0@SN1PR12MB0352.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <SRS0=yptj=DK=nvidia.com=vidyas@kernel.org>
+Return-Path: <SRS0=yptj=DK=nvidia.com=vidyas@kernel.org>
+Subject: Re: [PATCH V3 3/3] PCI: tegra: Enable ASPM-L1 capability
+ advertisement
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <treding@nvidia.com>, <bhelgaas@google.com>,
+	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<kthota@nvidia.com>, <swarren@nvidia.com>, <mmaddireddy@nvidia.com>
+References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+ <1510492674-12786-4-git-send-email-vidyas@nvidia.com>
+ <20171120213710.GE16362@bhelgaas-glaptop.roam.corp.google.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <595470ab-9627-8dd6-3008-10ca15040633@nvidia.com>
+Date: Thu, 14 Dec 2017 22:01:57 +0530
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171120213710.GE16362@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-    We have a problem with a system which ~seems~ to be pointing at a broke=
-n Write
-Combined Buffer implementation.  Our chip seems to be getting garbage data
-instead of incomplete Write Combined Merging Transaction Layer Packets.
-We'll go ahead and put the beast on a PCIe Analyzer to verify this, but I
-thought I'd ask if anyone else had already stumbled across this.
 
-/proc/cpuinfo:
-processor       : 0
-vendor_id       : CentaurHauls
-cpu family      : 6
-model           : 15
-model name      : C-QuadCore C4600@2.0GHz
-stepping        : 14
-cpu MHz         : 1332.000
-cache size      : 2048 KB
-physical id     : 0
-siblings        : 4
-core id         : 0
-cpu cores       : 1
-apicid          : 0
-initial apicid  : 0
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 13
-wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca =
-cmov pat pse36 clflush acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1=
-gb rdtscp lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq monitor vmx =
-est tm2 ssse3 cx16 xtpr pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c =
-rdrand rng rng_en ace ace_en ace2 phe phe_en pmm pmm_en lahf_lm abm 3dnowpr=
-efetch ida dtherm fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid rdseed ad=
-x xsaveopt
-bogomips        : 3990.44
-clflush size    : 64
-cache_alignment : 128
-address sizes   : 36 bits physical, 48 bits virtual
-power management:
 
-processor       : 1
-vendor_id       : CentaurHauls
-cpu family      : 6
-model           : 15
-model name      : C-QuadCore C4600@2.0GHz
-stepping        : 14
-cpu MHz         : 1332.000
-cache size      : 2048 KB
-physical id     : 0
-siblings        : 4
-core id         : 0
-cpu cores       : 1
-apicid          : 1
-initial apicid  : 1
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 13
-wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca =
-cmov pat pse36 clflush acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1=
-gb rdtscp lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq monitor vmx =
-est tm2 ssse3 cx16 xtpr pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c =
-rdrand rng rng_en ace ace_en ace2 phe phe_en pmm pmm_en lahf_lm abm 3dnowpr=
-efetch ida dtherm fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid rdseed ad=
-x xsaveopt
-bogomips        : 3990.44
-clflush size    : 64
-cache_alignment : 128
-address sizes   : 36 bits physical, 48 bits virtual
-power management:
-
-processor       : 2
-vendor_id       : CentaurHauls
-cpu family      : 6
-model           : 15
-model name      : C-QuadCore C4600@2.0GHz
-stepping        : 14
-cpu MHz         : 1332.000
-cache size      : 2048 KB
-physical id     : 0
-siblings        : 4
-core id         : 0
-cpu cores       : 1
-apicid          : 2
-initial apicid  : 2
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 13
-wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca =
-cmov pat pse36 clflush acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1=
-gb rdtscp lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq monitor vmx =
-est tm2 ssse3 cx16 xtpr pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c =
-rdrand rng rng_en ace ace_en ace2 phe phe_en pmm pmm_en lahf_lm abm 3dnowpr=
-efetch ida dtherm fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid rdseed ad=
-x xsaveopt
-bogomips        : 3990.44
-clflush size    : 64
-cache_alignment : 128
-address sizes   : 36 bits physical, 48 bits virtual
-power management:
-
-processor       : 3
-vendor_id       : CentaurHauls
-cpu family      : 6
-model           : 15
-model name      : C-QuadCore C4600@2.0GHz
-stepping        : 14
-cpu MHz         : 1332.000
-cache size      : 2048 KB
-physical id     : 0
-siblings        : 4
-core id         : 0
-cpu cores       : 1
-apicid          : 3
-initial apicid  : 3
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 13
-wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca =
-cmov pat pse36 clflush acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1=
-gb rdtscp lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq monitor vmx =
-est tm2 ssse3 cx16 xtpr pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c =
-rdrand rng rng_en ace ace_en ace2 phe phe_en pmm pmm_en lahf_lm abm 3dnowpr=
-efetch ida dtherm fsgsbase tsc_adjust bmi1 avx2 smep bmi2 invpcid rdseed ad=
-x xsaveopt
-bogomips        : 3990.44
-clflush size    : 64
-cache_alignment : 128
-address sizes   : 36 bits physical, 48 bits virtual
-power management:
-
-Casey
+On Tuesday 21 November 2017 03:07 AM, Bjorn Helgaas wrote:
+> s/Enable ASPM-L1 capability advertisement/
+>   /Advertise ASPM L1 PM Substates support/
+This patch controls advertisement of ASPM-L1 capability (not ASPM-L1 
+Substates)
+>
+> On Sun, Nov 12, 2017 at 06:47:54PM +0530, Vidya Sagar wrote:
+>> Enables advertisement of ASPM-L1 support in capability
+>> registers of applicable Tegra chips
+> Actually, I'm a little confused about whether this has to do with ASPM
+> L1 support (which would be advertised in the Link Capabilities
+> register) or the ASPM L1 Substates support (which would be advertised
+> in the L1 PM Substates Capabilities register)?
+This is to do with ASPM L1 support (and not ASPM L1 Substates)
+But, since ASPM-L1SS needs ASPM-L1 anyway, I think it is ok to enable
+advertisement of ASPM-L1 in the last patch of the series.
+>
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>> V2:
+>> * no change in this patch
+>>
+>> V3:
+>> * no change in this patch
+>>
+>>   drivers/pci/host/pci-tegra.c | 16 ++++++++++++++++
+>>   1 file changed, 16 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index 29ee4bb0b7c6..fb61202ee60f 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -250,6 +250,9 @@
+>>   #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+>>   #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
+>>   
+>> +#define RP_VEND_XP1	0xf04
+>> +#define RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT	BIT(21)
+>> +
+>>   #define RP_VEND_CTL0	0xf44
+>>   #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+>>   #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
+>> @@ -351,6 +354,7 @@ struct tegra_pcie_soc {
+>>   	bool RAW_violation_fixup;
+>>   	bool program_deskew_time;
+>>   	bool updateFC_threshold;
+>> +	bool has_aspm_l1;
+>>   	bool has_aspm_l1ss;
+>>   	bool l1ss_rp_wake_fixup;
+>>   };
+>> @@ -2214,6 +2218,13 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+>>   	value = readl(port->base + RP_VEND_CTL1);
+>>   	value |= RP_VEND_CTL1_ERPT;
+>>   	writel(value, port->base + RP_VEND_CTL1);
+>> +
+>> +	if (port->pcie->soc->has_aspm_l1) {
+>> +		/* Advertise ASPM-L1 state capability*/
+>> +		value = readl(port->base + RP_VEND_XP1);
+>> +		value |= RP_VEND_XP1_LINK_PVT_CTL_L1_ASPM_SUPPORT;
+>> +		writel(value, port->base + RP_VEND_XP1);
+>> +	}
+>>   }
+>>   
+>>   static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>> @@ -2458,6 +2469,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>>   	.RAW_violation_fixup = false,
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>> +	.has_aspm_l1 = false,
+>>   	.has_aspm_l1ss = false,
+>>   	.l1ss_rp_wake_fixup = false,
+>>   };
+>> @@ -2481,6 +2493,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>>   	.RAW_violation_fixup = false,
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>> +	.has_aspm_l1 = true,
+>>   	.has_aspm_l1ss = false,
+>>   	.l1ss_rp_wake_fixup = false,
+>>   };
+>> @@ -2503,6 +2516,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>>   	.RAW_violation_fixup = true,
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>> +	.has_aspm_l1 = true,
+>>   	.has_aspm_l1ss = false,
+>>   	.l1ss_rp_wake_fixup = false,
+>>   };
+>> @@ -2533,6 +2547,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>>   	.RAW_violation_fixup = false,
+>>   	.program_deskew_time = true,
+>>   	.updateFC_threshold = true,
+>> +	.has_aspm_l1 = true,
+>>   	.has_aspm_l1ss = true,
+>>   	.l1ss_rp_wake_fixup = true,
+>>   };
+>> @@ -2556,6 +2571,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>>   	.RAW_violation_fixup = false,
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>> +	.has_aspm_l1 = true,
+>>   	.has_aspm_l1ss = true,
+>>   	.l1ss_rp_wake_fixup = false,
+>>   };
+>> -- 
+>> 2.7.4
+>>
