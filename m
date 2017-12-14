@@ -1,94 +1,171 @@
-Return-Path: <SRS0=hqxK=DI=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=hqxK=DI=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 12 Dec 2017 11:01:58 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Vidya Sagar <vidyas@nvidia.com>, treding@nvidia.com,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	kthota@nvidia.com, mmaddireddy@nvidia.com, robh+dt@kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH V3 0/2] Tegra PCIe end point config space map code
- refactoring
-Message-ID: <20171212110158.GA30601@e107981-ln.cambridge.arm.com>
-References: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
- <20171211105431.GI10671@ulmo>
- <20171211175452.GC16032@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171211175452.GC16032@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:44706 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752909AbdLNNqA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:46:00 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>,
+        Vidya Saga <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 4/4] PCI: tegra: Remove artificial mapping restriction
+Date: Thu, 14 Dec 2017 14:45:45 +0100
+Message-Id: <20171214134545.11143-5-thierry.reding@gmail.com>
+In-Reply-To: <20171214134545.11143-1-thierry.reding@gmail.com>
+References: <20171214134545.11143-1-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Dec 11, 2017 at 11:54:53AM -0600, Bjorn Helgaas wrote:
-> [+cc Lorenzo]
-> 
-> On Mon, Dec 11, 2017 at 11:54:31AM +0100, Thierry Reding wrote:
-> > On Mon, Dec 04, 2017 at 11:23:48PM +0530, Vidya Sagar wrote:
-> > > PCIe host controller in Tegra SoCs has 1GB of aperture available
-> > > for mapping end points config space, IO and BARs. In that, currently
-> > > 256MB is being reserved for mapping end points configuration space
-> > > which leaves less memory space available for mapping end points BARs
-> > > on some of the platforms.
-> > > This patch series attempts to map only 4K space from 1GB aperture to
-> > > access end points configuration space.
-> > > 
-> > > Currently, this change can benefit T20 and T186 in saving (i.e. repurposed
-> > > to use for BAR mapping) physical space as well as kernel virtual mapping space,
-> > > it saves only kernel virtual address space in T30, T124, T132 and T210.
-> > > 
-> > > NOTE: Since T186 PCIe DT entry is not yet present in main line (it is currently
-> > > merged to 'for-4.15/arm64/dt' branch), nothing gets broken with this change for T186.
-> > > For older platforms (T20, T30, T124, T132, T210), this change works fine without any
-> > > DT modifications
-> > > 
-> > > Testing Done on T124, T210 & T186:
-> > >  Enumeration and basic functionality of immediate devices
-> > >  Enumeration of devices behind a PCIe switch
-> > >  Complete 4K configuration space access
-> > > 
-> > > Vidya Sagar (2):
-> > >   PCI: tegra: refactor config space mapping code
-> > >   ARM64: tegra: limit PCIe config space mapping to 4K for T186
-> > > 
-> > >  arch/arm64/boot/dts/nvidia/tegra186.dtsi |   8 +-
-> > >  drivers/pci/host/pci-tegra.c             | 125 ++++++++++---------------------
-> > >  2 files changed, 44 insertions(+), 89 deletions(-)
-> > 
-> > Hi Bjorn,
-> > 
-> > there's a bunch of PCI related patches for Tegra floating around on the
-> > lists. I'm wondering if you'd be okay if I pick those up into the Tegra
-> > tree after they've been reviewed and send you a pull request later on
-> > (say around v4.15-rc6). That would allow me to get things cooking in
-> > linux-next for a bit and get broader testing in addition to the
-> > flexibility to patch things up if they break.
-> 
-> Lorenzo will be merging the Tegra stuff, so this is more a question
-> for him.
-> 
-> Just to clarify, I think your questions is about putting those patches
-> in
-> git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git#for-next.
-> If you put them there they will show up in linux-next, and then when
-> Lorenzo merges them, you'll have to coordinate so they don't get
-> merged into linux-next twice (once via the usual PCI tree route and
-> again via the Tegra tree).
-> 
-> If you wait until after they've been reviewed to put them into the
-> Tegra tree, I'm not sure what the gain is, because I assume Lorenzo
-> would merge them at about that same point.
+From: Thierry Reding <treding@nvidia.com>
 
-I think that after the review, the Tegra patches that are considered for
-upstream they should go to -next via the PCI tree as any other platform PCI
-patches; the relevant patches need ACKs from the respective platform
-maintainer - I am getting to them as fast as I can.
+The current code restricts the location of the 4 KiB configuration space
+mapping region. This is unnecessary if the AFI_FPCI_BAR0 register is
+used to move the 4 KiB window into the FPCI address map. Doing this will
+allow all generations of Tegra to be handled in a unified way.
 
-> This cycle isn't going to be ideal timing with all the holidays
-> coming up.  I know I'm going to be traveling and on vacation quite a
-> bit in the rc5, 6, 7 timeframe.
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 46 +++++++++++++++++++-------------------------
+ 1 file changed, 20 insertions(+), 26 deletions(-)
 
-Yes timing is not ideal - I won't be able to review anything in the -rc5
-week either but apart from that I should be online.
-
-Lorenzo
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 7f8a81e17db6..2e7bea127120 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -257,7 +257,6 @@ struct tegra_pcie_soc {
+ 	bool has_gen2;
+ 	bool force_pca_enable;
+ 	bool program_uphy;
+-	bool use_4k_conf_space;
+ };
+ 
+ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+@@ -274,7 +273,7 @@ struct tegra_pcie {
+ 	int irq;
+ 
+ 	struct list_head buses;
+-	struct resource *cs;
++	struct resource cs;
+ 
+ 	struct resource io;
+ 	struct resource pio;
+@@ -418,8 +417,6 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+ 	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+ 	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+ 	void __iomem *addr = NULL;
+-	u32 val = 0;
+-	u32 offset = 0;
+ 
+ 	if (bus->number == 0) {
+ 		unsigned int slot = PCI_SLOT(devfn);
+@@ -432,11 +429,17 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+ 			}
+ 		}
+ 	} else {
++		unsigned int offset;
++		u32 base;
++
+ 		offset = tegra_pcie_conf_offset(bus->number, devfn, where);
++
++		/* move 4 KiB window to offset within the FPCI region */
++		base = 0xfe100000 + ((offset & ~(SZ_4K - 1)) >> 8);
++		afi_writel(pcie, base, AFI_FPCI_BAR0);
++
++		/* move to correct offset within the 4 KiB page */
+ 		addr = pcie->cfg + (offset & (SZ_4K - 1));
+-		val = offset & ~(SZ_4K - 1);
+-		afi_writel(pcie, pcie->cs->start - val, AFI_AXI_BAR0_START);
+-		afi_writel(pcie, (val + SZ_4K) >> 12, AFI_AXI_BAR0_SZ);
+ 	}
+ 
+ 	return addr;
+@@ -689,8 +692,9 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
+ 	u32 fpci_bar, size, axi_address;
+ 
+ 	/* Bar 0: type 1 extended configuration space */
+-	fpci_bar = 0xfe100000;
+-	afi_writel(pcie, fpci_bar, AFI_FPCI_BAR0);
++	size = resource_size(&pcie->cs);
++	afi_writel(pcie, pcie->cs.start, AFI_AXI_BAR0_START);
++	afi_writel(pcie, size >> 12, AFI_AXI_BAR0_SZ);
+ 
+ 	/* Bar 1: downstream IO bar */
+ 	fpci_bar = 0xfdfc0000;
+@@ -1246,7 +1250,6 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct resource *pads, *afi, *res;
+ 	const struct tegra_pcie_soc *soc = pcie->soc;
+-	u32 axi_addr = 0;
+ 	int err;
+ 
+ 	err = tegra_pcie_clocks_get(pcie);
+@@ -1296,18 +1299,14 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 		goto poweroff;
+ 	}
+ 
+-	axi_addr = pcie->soc->use_4k_conf_space ?
+-		   res->start : res->end - SZ_4K + 1;
+-	pcie->cs = devm_request_mem_region(dev, axi_addr, SZ_4K, res->name);
+-	if (!pcie->cs) {
+-		err = -EADDRNOTAVAIL;
+-		goto poweroff;
+-	}
++	pcie->cs = *res;
+ 
+-	pcie->cfg = devm_ioremap(dev, pcie->cs.start, SZ_4K);
+-	if (!pcie->cfg) {
+-		dev_err(pcie->dev, "failed to ioremap config space\n");
+-		err = -EADDRNOTAVAIL;
++	/* constrain configuration space to 4 KiB */
++	pcie->cs.end = pcie->cs.start + SZ_4K - 1;
++
++	pcie->cfg = devm_ioremap_resource(dev, &pcie->cs);
++	if (IS_ERR(pcie->cfg)) {
++		err = PTR_ERR(pcie->cfg);
+ 		goto poweroff;
+ 	}
+ 
+@@ -2120,7 +2119,6 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.has_gen2 = false,
+ 	.force_pca_enable = false,
+ 	.program_uphy = true,
+-	.use_4k_conf_space = true,
+ };
+ 
+ static const struct tegra_pcie_soc tegra30_pcie = {
+@@ -2138,7 +2136,6 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.has_gen2 = false,
+ 	.force_pca_enable = false,
+ 	.program_uphy = true,
+-	.use_4k_conf_space = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra124_pcie = {
+@@ -2155,7 +2152,6 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.has_gen2 = true,
+ 	.force_pca_enable = false,
+ 	.program_uphy = true,
+-	.use_4k_conf_space = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra210_pcie = {
+@@ -2172,7 +2168,6 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.has_gen2 = true,
+ 	.force_pca_enable = true,
+ 	.program_uphy = true,
+-	.use_4k_conf_space = false,
+ };
+ 
+ static const struct tegra_pcie_soc tegra186_pcie = {
+@@ -2190,7 +2185,6 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.has_gen2 = true,
+ 	.force_pca_enable = false,
+ 	.program_uphy = false,
+-	.use_4k_conf_space = true,
+ };
+ 
+ static const struct of_device_id tegra_pcie_of_match[] = {
+-- 
+2.15.1
