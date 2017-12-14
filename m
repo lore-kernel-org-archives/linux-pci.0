@@ -1,60 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:42082 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750852AbdLWMXg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 07:23:36 -0500
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:35613 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753158AbdLNQCE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 11:02:04 -0500
+Date: Thu, 14 Dec 2017 17:02:00 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, jonathanh@nvidia.com, vidyas@nvidia.com,
+        mperttunen@nvidia.com, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, kthota@nvidia.com
+Subject: Re: [PATCH V3 11/12] PCI: tegra: Increase the deskew retry time
+Message-ID: <20171214160200.GL13733@ulmo>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-12-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1514026724-32962-1-git-send-email-xieyisheng1@huawei.com>
-References: <1514026724-32962-1-git-send-email-xieyisheng1@huawei.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Sat, 23 Dec 2017 10:23:34 -0200
-Message-ID: <CAOMZO5AyC5wMgowLfwdA7fc8UNV9YORjdS09aUhekk01KYge0g@mail.gmail.com>
-Subject: Re: [PATCH v3 08/27] PCI: replace devm_ioremap_nocache with devm_ioremap
-To: Yisheng Xie <xieyisheng1@huawei.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        ysxie@foxmail.com, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="NPWyolIJAVLYbHY6"
+In-Reply-To: <1509371843-22931-12-git-send-email-mmaddireddy@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 23, 2017 at 8:58 AM, Yisheng Xie <xieyisheng1@huawei.com> wrote:
-> Default ioremap is ioremap_nocache, so devm_ioremap has the same
-> function with devm_ioremap_nocache, which can just be killed to
-> save the size of devres.o
->
-> This patch is to use use devm_ioremap instead of devm_ioremap_nocache,
-> which should not have any function change but prepare for killing
-> devm_ioremap_nocache.
->
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+
+--NPWyolIJAVLYbHY6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, Oct 30, 2017 at 07:27:22PM +0530, Manikanta Maddireddy wrote:
+> Some times Gen2 to Gen1 link speed switching fails due to instability in
+> deskew logic on lane0 in Tegra210. Increase the deskew retry time to
+> resolve this issue.
+>=20
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
->  drivers/pci/dwc/pci-dra7xx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index e77a4cee..3f3712a 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -637,7 +637,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->         }
->
->         res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
-> -       base = devm_ioremap_nocache(dev, res->start, resource_size(res));
-> +       base = devm_ioremap(dev, res->start, resource_size(res));
+> V3:
+> * no change in this patch
+> V2:
+> * no change in this patch
+>=20
+>  drivers/pci/host/pci-tegra.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+>=20
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 3993e9221c96..b29329226e3d 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -224,6 +224,10 @@
+>  #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+>  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
+> =20
+> +#define RP_VEND_CTL0	0xf44
+> +#define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
+> +#define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH	(0x9 << 12)
+> +
+>  #define RP_VEND_CTL1	0xf48
+>  #define  RP_VEND_CTL1_ERPT	(1 << 13)
+> =20
+> @@ -318,6 +322,7 @@ struct tegra_pcie_soc {
+>  	bool program_ectl_settings;
+>  	bool update_clamp_threshold;
+>  	bool raw_violation_fixup;
+> +	bool program_deskew_time;
+>  };
+> =20
+>  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+> @@ -2216,6 +2221,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra=
+_pcie_port *port)
+>  		value |=3D RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
+>  		writel(value, port->base + RP_VEND_XP);
+>  	}
+> +
+> +	/* Tune deskew retry time to take care of Gen2 -> Gen1
+> +	 * link speed change error in corner cases
+> +	 */
 
-You could also consider using devm_ioremap_resource(), which checks
-whether the resource is NULL and it is a bit shorter:
+Wrong block comment style. With that fixed:
 
-base = devm_ioremap_resource(dev, res);
-if (IS_ERR(base))
-   return PTR_ERR(base);
+Acked-by: Thierry Reding <treding@nvidia.com>
 
+--NPWyolIJAVLYbHY6
+Content-Type: application/pgp-signature; name="signature.asc"
 
->
-> --
-> 1.8.3.1
->
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloyoHgACgkQ3SOs138+
+s6EgPA/+JaCCu5eHSpac5xMhgrbFQf3ynFrgPZHuIHKPHHLK4q2aTqfPgsw95miM
+2ieVIdJXFpJx0v9rCZVVCIjLTiTzf7bVqmcbheYjntDa8lImtnyxDtp/n1J6kyu8
+ER1P9Frl5NfWRWFKABAe4+iE0XYHXnDEC1XgH6nRtRFDDtJPxcOKst9HGfowxxtN
+oOsHjdhmTx4v/8feYawkjpe8Yd5X6TQq6WeNxqGjvD28v6c9EOAPnoJsol0S1cz4
+gXfUbt58X7AcXcbmtrGOd2+ZKCrquxltzdMNLJEhxODaZdHdnaQqshEdRsvCxJDJ
+b//49DBxCPaUDBK279H5kRVq9sBOioD4Lo4qzBnC3z+NgPe06jaBLhY314CY7cM6
+uacmpHW6cPQfhpGwn4nFfEwcKvAjKulu7V3iFhoKklrwnqqV6yubhhZFwPhQ58xm
+pobGRcRkZI4Uv1GPlfNyXf7oA4Mgy48vXBYrdcRfKmhmp68eWLcC0DKZy+t/X0+1
+f+bJlmH/NIyK6ssz+x4aLkg5nu01yH7/x1kyxe3BJXgdl/E/dqnlldHg9oMIZcut
+Ssosu3sNZJxfkdywFUTv2MEpNNu5WignJlMSXYB8b6Y1qZ3FloHRHB4nb/fu4pQC
+F8UpIAP2lo1aIL2PPUBNoiJ9RmEpPhNb5oRcr2YyNMEbjsp0HPY=
+=1wAV
+-----END PGP SIGNATURE-----
+
+--NPWyolIJAVLYbHY6--
