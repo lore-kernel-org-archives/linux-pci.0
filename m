@@ -1,97 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Romain Perier <romain.perier@gmail.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Vinod Koul <vinod.koul@intel.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Romain Perier <romain.perier@collabora.com>
-Subject: [PATCH v16 3/4] hinic: Replace PCI pool old API
-Date: Fri, 15 Dec 2017 20:31:22 +0100
-Message-Id: <20171215193123.13395-4-romain.perier@gmail.com>
-In-Reply-To: <20171215193123.13395-1-romain.perier@gmail.com>
-References: <20171215193123.13395-1-romain.perier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:33259 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752903AbdLNP3R (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 10:29:17 -0500
+Date: Thu, 14 Dec 2017 16:29:13 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, jonathanh@nvidia.com, vidyas@nvidia.com,
+        mperttunen@nvidia.com, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, kthota@nvidia.com
+Subject: Re: [PATCH V3 04/12] PCI: tegra: Advertise PCIe Advanced Error
+ Reporting (AER) capability
+Message-ID: <20171214152913.GF13733@ulmo>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-5-git-send-email-mmaddireddy@nvidia.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="K/NRh952CO+2tg14"
+In-Reply-To: <1509371843-22931-5-git-send-email-mmaddireddy@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Romain Perier <romain.perier@collabora.com>
 
-The PCI pool API is deprecated. This commit replaces the PCI pool old
-API by the appropriate function with the DMA pool API.
+--K/NRh952CO+2tg14
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Romain Perier <romain.perier@collabora.com>
----
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++++-----
- drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+On Mon, Oct 30, 2017 at 07:27:15PM +0530, Manikanta Maddireddy wrote:
+> Default root port settings hide AER capability. This patch enables the
+> advertisement of AER capability by root port.
+>=20
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V3:
+> * updated commit log
+> V2:
+> * no change in this patch
+>=20
+>  drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+>=20
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index ed5e8acfdc32..46896aaab81d 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -187,6 +187,9 @@
+>  #define RP_VEND_XP	0x00000f00
+>  #define  RP_VEND_XP_DL_UP	(1 << 30)
+> =20
+> +#define RP_VEND_CTL1	0xf48
+> +#define  RP_VEND_CTL1_ERPT	(1 << 13)
+> +
+>  #define RP_VEND_CTL2 0x00000fa8
+>  #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
+> =20
+> @@ -2055,6 +2058,16 @@ static void tegra_pcie_apply_pad_settings(struct t=
+egra_pcie *pcie)
+>  		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+>  }
+> =20
+> +static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+> +{
+> +	unsigned long value;
+> +
+> +	/* Enable AER capability */
+> +	value =3D readl(port->base + RP_VEND_CTL1);
+> +	value |=3D RP_VEND_CTL1_ERPT;
+> +	writel(value, port->base + RP_VEND_CTL1);
+> +}
+> +
+>  /*
+>   * FIXME: If there are no PCIe cards attached, then calling this function
+>   * can result in the increase of the bootup time as there are big timeout
+> @@ -2120,6 +2133,7 @@ static void tegra_pcie_enable_ports(struct tegra_pc=
+ie *pcie)
+>  			 port->index, port->lanes);
+> =20
+>  		tegra_pcie_port_enable(port);
+> +		tegra_pcie_enable_rp_features(port);
 
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-index 7d95f0866fb0..28a81ac97af5 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
-@@ -143,7 +143,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
- 	struct hinic_hwif *hwif = cmdqs->hwif;
- 	struct pci_dev *pdev = hwif->pdev;
- 
--	cmdq_buf->buf = pci_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
-+	cmdq_buf->buf = dma_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
- 				       &cmdq_buf->dma_addr);
- 	if (!cmdq_buf->buf) {
- 		dev_err(&pdev->dev, "Failed to allocate cmd from the pool\n");
-@@ -161,7 +161,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
- void hinic_free_cmdq_buf(struct hinic_cmdqs *cmdqs,
- 			 struct hinic_cmdq_buf *cmdq_buf)
- {
--	pci_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
-+	dma_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
- }
- 
- static unsigned int cmdq_wqe_size_from_bdlen(enum bufdesc_len len)
-@@ -875,7 +875,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
- 	int err;
- 
- 	cmdqs->hwif = hwif;
--	cmdqs->cmdq_buf_pool = pci_pool_create("hinic_cmdq", pdev,
-+	cmdqs->cmdq_buf_pool = dma_pool_create("hinic_cmdq", &pdev->dev,
- 					       HINIC_CMDQ_BUF_SIZE,
- 					       HINIC_CMDQ_BUF_SIZE, 0);
- 	if (!cmdqs->cmdq_buf_pool)
-@@ -916,7 +916,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
- 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
- 
- err_saved_wqs:
--	pci_pool_destroy(cmdqs->cmdq_buf_pool);
-+	dma_pool_destroy(cmdqs->cmdq_buf_pool);
- 	return err;
- }
- 
-@@ -942,5 +942,5 @@ void hinic_free_cmdqs(struct hinic_cmdqs *cmdqs)
- 
- 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
- 
--	pci_pool_destroy(cmdqs->cmdq_buf_pool);
-+	dma_pool_destroy(cmdqs->cmdq_buf_pool);
- }
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-index b35583400cb6..23f8d39eab68 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
-@@ -157,7 +157,7 @@ struct hinic_cmdq {
- struct hinic_cmdqs {
- 	struct hinic_hwif       *hwif;
- 
--	struct pci_pool         *cmdq_buf_pool;
-+	struct dma_pool         *cmdq_buf_pool;
- 
- 	struct hinic_wq         *saved_wqs;
- 
--- 
-2.14.1
+Same as for patch 5: move this into tegra_pcie_port_enable()?
+
+Thierry
+
+--K/NRh952CO+2tg14
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloymMkACgkQ3SOs138+
+s6G2IQ/7BTWfnyY6zcb/ukTLQsFMA3VK1P+eDHYQ4k2vbITad+8dO7MAJf2uADvT
+vGk+F8skYqGJaPnTQp1urH3+WiUyHyOXYlhJ/VeJ9hzG1gsWpOK7LhSi8N/T0oXc
+NAgHcrb0q2hgPNq1cpYguS8sE+X4AytyGkp6dv9Wr2u2snZBfq0ohdWjtWHkjzb2
+eyQWhnL1LeIhlj7fFMvUw5vO4Z933BGFXNVW9++v/bW3BLFYDcf4TtYJGPcjaDNu
+qklQ8ibBjNQ/aPSe32y5q/gCCf4tYBECJOMzwT45POvo2ESXLzUkjZofzHIb1Ack
+CjsYdQSV/KOQF8skA1OA2ELNYyGj8kiGBKuqMdQAWLk7hNj4flGRDSXZowxVYDEL
+j8FDDp20+6MixcSQYqZIczDTNyLgdJgEr/TBtLzuNr0cHImNAay7nzOalS4VWseg
+Uskl11nTk09TRI+Q4j8+DcByIjgAAiTRf2J2a0EkKeLdnq8gf6qqzD0bfTpUBkSy
+nV+oR5K+MCC55xAznK02Mjos6pBCpgtjh/WQgsl/vABgKxBQYcYIZ1xiKSZ45gK7
+yB6pw0rcwW4vfeVt8omIbXs9nZmhJdpf9wDsbByMpwNS3vdLVeUNLp3IX0w2mMTK
+nma6Z4M8TxTF7KL/JPTLgjnykXeeOGrNbOssOypRSpml1/YJQc8=
+=MfJ5
+-----END PGP SIGNATURE-----
+
+--K/NRh952CO+2tg14--
