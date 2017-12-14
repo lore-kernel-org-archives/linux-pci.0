@@ -1,145 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:33419 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753195AbdLNQNz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 11:13:55 -0500
-Date: Thu, 14 Dec 2017 17:13:51 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-Subject: Re: [PATCH V3 12/12] PCI: tegra: Update flow control threshold in
- Tegra210
-Message-ID: <20171214161351.GM13733@ulmo>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-13-git-send-email-mmaddireddy@nvidia.com>
- <20171212174329.GA22418@red-moon>
+Return-Path: <SRS0=Jvse=DK=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=Jvse=DK=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>, Andy Lutomirski <luto@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, the arch/x86 maintainers <x86@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+Date: Thu, 14 Dec 2017 16:30:39 +0100
+Message-ID: <5115041.vUGA3IjvdM@aspire.rjw.lan>
+In-Reply-To: <alpine.DEB.2.20.1712141329040.4998@nanos>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <3265333.8krWOQvcRi@aspire.rjw.lan> <alpine.DEB.2.20.1712141329040.4998@nanos>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="c8UbHMnQwI7BF+TB"
-In-Reply-To: <20171212174329.GA22418@red-moon>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thursday, December 14, 2017 1:30:37 PM CET Thomas Gleixner wrote:
+> On Thu, 14 Dec 2017, Rafael J. Wysocki wrote:
+> > On Thursday, December 14, 2017 12:54:05 PM CET Thomas Gleixner wrote:
+> > > Now the graphics issue is a different story. That only happens on
+> > > hibernation after doing the snapshot. There all non boot cpus are onlined
+> > > again and after that the devices are 'thawed'. The following reenable of
+> > > interrupts fails because i915 is not in PCI_D0 state.
+> > > 
+> > > Suspend:
+> > > 
+> > >    irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
+> > >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
+> > >    __pci_write_msi_msg: Not written <- Device not in PCI_D0
+> > >    ....
+> > >    device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [resume]
+> > >    pci_pm_resume_noirq <-dpm_run_callback
+> > >    pci_pm_resume_noirq <-dpm_run_callback
+> > >    pci_pm_default_resume_early <-pci_pm_resume_noirq
+> > >    pci_pm_default_resume_early <-pci_pm_resume_noirq
+> > >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a  <-- Set the new affinity
+> > >    device_pm_callback_end: i915 0000:00:02.0, err=0
+> > 
+> > So this works, because we power up the device during resume even if it
+> > had been suspended (via runtime PM) before the suspend started.
+> > 
+> > > Hibernate:
+> > > 
+> > >    irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
+> > >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
+> > >    __pci_write_msi_msg: Not written <- Device not in PCI_D0
+> > >    ....
+> > >    device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [thaw]
+> > >    pci_pm_thaw_noirq <-dpm_run_callback
+> > >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
+> > >    __pci_write_msi_msg: Not written  <--- Device is not in PCI_D0
+> > >    device_pm_callback_end: i915 0000:00:02.0, err=0
+> > 
+> > And here we try to leave the device alone which is OK for devices in D0,
+> > but not for suspended ones.
+> > 
+> > It looks like we need to power up them at the "thaw" time too or at least
+> > I don't see how to address that differently.
+> 
+> The question is whether the code which brings the device out of D0 should
+> write the message unconditionally. That would be sufficient I think.
 
---c8UbHMnQwI7BF+TB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It doesn't have to do that.
 
-On Tue, Dec 12, 2017 at 05:43:29PM +0000, Lorenzo Pieralisi wrote:
-> On Mon, Oct 30, 2017 at 07:27:23PM +0530, Manikanta Maddireddy wrote:
-> > Recommended update FC threshold in Tegra210 is 0x60 for best performance
-> > of x1 link. Setting this to 0x60 provides the best balance between numb=
-er
-> > of UpdateFC and read data sent over the link.
-> >=20
-> > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> > ---
-> > V3:
-> > * changed soc parameter name
-> > V2:
-> > * no change in this patch
-> >=20
-> >  drivers/pci/host/pci-tegra.c | 14 ++++++++++++++
-> >  1 file changed, 14 insertions(+)
-> >=20
-> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> > index b29329226e3d..812d32cfdd0e 100644
-> > --- a/drivers/pci/host/pci-tegra.c
-> > +++ b/drivers/pci/host/pci-tegra.c
-> > @@ -223,6 +223,7 @@
-> >  #define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
-> >  #define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
-> >  #define  RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK	(0xff << 18)
-> > +#define  RP_VEND_XP_UPDATE_FC_THRESHOLD_T210	(0x60 << 18)
->=20
-> You define a SOC specific threshold and a update_fc_threshold bool
-> variable to update it ? And what are you going to do if that's needed
-> on something that it is not a T210 ? Should not this be a(nother)
-> struct tegra_pcie_soc parameter instead than a macro ?
->=20
-> Not that I am happy about it but this deviates from the current
-> approach.
->=20
-> >  #define RP_VEND_CTL0	0xf44
-> >  #define  RP_VEND_CTL0_DSK_RST_PULSE_WIDTH_MASK	(0xf << 12)
-> > @@ -323,6 +324,7 @@ struct tegra_pcie_soc {
-> >  	bool update_clamp_threshold;
-> >  	bool raw_violation_fixup;
-> >  	bool program_deskew_time;
-> > +	bool update_fc_threshold;
-> >  };
-> > =20
-> >  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *ch=
-ip)
-> > @@ -2231,6 +2233,13 @@ static void tegra_pcie_apply_sw_fixup(struct teg=
-ra_pcie_port *port)
-> >  		value |=3D RP_VEND_CTL0_DSK_RST_PULSE_WIDTH;
-> >  		writel(value, port->base + RP_VEND_CTL0);
-> >  	}
-> > +
-> > +	if (soc->update_fc_threshold) {
-> > +		value =3D readl(port->base + RP_VEND_XP);
-> > +		value &=3D ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
-> > +		value |=3D RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
-> > +		writel(value, port->base + RP_VEND_XP);
-> > +	}
->=20
-> If, say, a platform requires update_fc_threshold and raw_violation_fixup
-> what takes precedence (ie they required programming the _same_
-> registers) ? update_fc_threshold takes precedence, since it is applied
-> last - but I would like you to think about this and realize that this
-> per-SoC mechanism does not scale anymore.
->=20
-> You should a) enforce some firmware initialization - most of the
-> parameters in struct tegra_pcie_soc could have been pre-programmed
-> by FW and
+The problem here is that pci_pm_thaw_noirq() calls pci_restore_state() which
+in fact requires the device to be in D0, so the caller should put it into
+D0 instead of trying to "update" its power state.
 
-I don't think that's going to work. We reset the hardware during probe
-(and a subsequent patchset will make it possible for this driver to be
-a loadable module, which will power down the unit on driver removal or
-even runtime PM suspend), so any firmware initialization will be lost
-after that point and the driver has to reprogram all the registers.
+[Note that the PCI layer doesn't put devices into low-power states during the
+hibernation's "freeze" transition, but drivers can legitimately do that in
+their "freeze" callbacks which was overlooked in that code and that's what
+i915 does.]
 
-> b) think about adding some DT properties to handle the PCI host bridge
-> set-up.
+So IMO what we need is the change below.  I'm going to test it shortly,
+but please give it a go too.
 
-That isn't going to solve the problem of precedence that you bring up
-above. Where the data is coming from doesn't change that the order of
-execution needs to be defined in the code.
+---
+ drivers/pci/pci-driver.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Also, all of the parameters that we have in the struct tegra_pcie_soc
-are SoC specific and therefore implied by the compatible string, which
-is also why the current approach was chosen back at the time. The
-reasoning was that if the property defines the programming model, then
-it will be implied by the compatible string. If we moved that data out
-into the device tree, we essentially wind up with the same problem, in
-a different location. We'd still need to specify the data on a per-SoC
-basis in device tree.
-
-Thierry
-
---c8UbHMnQwI7BF+TB
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloyozwACgkQ3SOs138+
-s6GmzRAAi0olcwEdCKRBxi0BZN/+RviMx5LuSMx+6Tt8g8ZYF4wJuB2Rpq44brTN
-WfB/rLo5p/zLxvsEjoWSof00TfJl1K3lxVqqTYWUczimQDBDNVVyGOUpRdkClFu5
-MoYclm1vd/wc72PgCLIqJfNd9IhGM7IF2Nx06/GrpLwI5inBI5K/pdjxf5d13jFZ
-m9eu19n1rOjYlBAcAlDyygEKnwJnvaHLLwhOl9iS1fExOAhlzi/Sw4Uj9uqjJzQJ
-EI3ahtf5khKaLzLMFpFvyRRbjdPu9IMP+FIbysdqR7FuXBq39XbR4J380p5L3Kmc
-AxgisYzrB0BrrDt7WFxwVOhq9aSqGVuNTirkzx4R6/qwUJA3//OFJnFxdYbmIVYC
-X+ilee+LubKw5WPpqTJgc5JEMy4RpSatjkWeeIgUemx2vjooCi0GjmsBgRCov8tp
-MugoCRkbeEdomK61g8xHForHiR7lYCL98I50WEO/D0uAp5BvAYo1LunhlKnvuaHw
-ngZnzSJink8QyeX7mjN75ShxAyHHq7f3hFqr0RAjxj+rxw7BrvaBlsuKO8s+v2tz
-FupYzW1mUgxUtt3Q+vr65A8rSeW2PuNLE3tectevUIG0uQ7Jw6x5nAg1PEWJG/PE
-1cLDYC8PogpMk1Wob1II8Ax1d/mwwkVnkhDz152b6/Uo8uQ3fyU=
-=S5VR
------END PGP SIGNATURE-----
-
---c8UbHMnQwI7BF+TB--
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -1027,7 +1027,12 @@ static int pci_pm_thaw_noirq(struct devi
+ 	if (pci_has_legacy_pm_support(pci_dev))
+ 		return pci_legacy_resume_early(dev);
+ 
+-	pci_update_current_state(pci_dev, PCI_D0);
++	/*
++	 * pci_restore_state() requires the device to be in D0 (because of MSI
++	 * restoration among other things), so force it into D0 in case the
++	 * driver's "freeze" callbacks put it into a low-power state directly.
++	 */
++	pci_set_power_state(pci_dev, PCI_D0);
+ 	pci_restore_state(pci_dev);
+ 
+ 	if (drv && drv->pm && drv->pm->thaw_noirq)
