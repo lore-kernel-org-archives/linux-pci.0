@@ -1,71 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:52704 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751719AbdLNMQl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 07:16:41 -0500
+Subject: Re: [PATCH v5 01/18] PCI: dwc: Use the DMA-API to get the MSI address
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kishon@ti.com" <kishon@ti.com>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+ <20171120133222.27771-2-niklas.cassel@axis.com>
+ <20171130152843.GC12096@red-moon> <20171213135953.GA30833@axis.com>
+ <ff784f40-a629-b9cb-0d85-d1356eb69a38@synopsys.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <ac5ceb21-b547-427c-f5fc-a3deb6398c99@synopsys.com>
+Date: Thu, 14 Dec 2017 12:16:38 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sat, 30 Dec 2017 09:27:48 +0530
-From: poza@codeaurora.org
-To: Keith Busch <keith.busch@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Wei Zhang <wzhang@fb.com>, Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: Re: [PATCH v2 2/4] PCI/DPC/AER: Address Concurrency between AER and
- DPC
-In-Reply-To: <20171229181340.GG16407@localhost.localdomain>
-References: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
- <1514532259-19383-3-git-send-email-poza@codeaurora.org>
- <20171229172324.GF16407@localhost.localdomain>
- <481784bb38707839493fc04e6a2b4068@codeaurora.org>
- <20171229181340.GG16407@localhost.localdomain>
-Message-ID: <c080079a21b839e4d755184429486da8@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <ff784f40-a629-b9cb-0d85-d1356eb69a38@synopsys.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-12-29 23:43, Keith Busch wrote:
-> On Fri, Dec 29, 2017 at 11:30:02PM +0530, poza@codeaurora.org wrote:
->> On 2017-12-29 22:53, Keith Busch wrote:
->> 
->> > 2. A DPC event suppresses the error message required for the Linux
->> > AER driver to run. How can AER and DPC run concurrently?
->> 
->> I afraid I could not grasp the first line completely.
-> 
-> A DPC capable and enabled port discards error messages; the ERR_FATAL
-> or ERR_NONFATAL message required to trigger AER handling won't exist in
-> such a setup.
-> 
-> This behavior is defined in the specification 6.2.10 for Downstream
-> Port Containment:
-> 
->   When DPC is triggered due to receipt of an uncorrectable error 
-> Message,
->   the Requester ID from the Message is recorded in the DPC Error
->   Source ID register and that Message is discarded and not forwarded
->   Upstream. When DPC is triggered by an unmasked uncorrectable error,
->   that error will not be signaled with an uncorrectable error Message,
->   even if otherwise enabled.
+Hi Niklas and Lorenzo,
 
-In my understanding, thiis talks about DPC enabled switch. this case is 
-taken care as well.
-if you look at patchset-3, when AER is triggered, AER's pci_dev is of 
-endpoint
-will traverse all the way up until it finds associated DPC service 
-enabled.
-pdev = pcie_port_upstream_bridge(dev);
+I'm going to work on PCI software development now as told by João and I will
+test your code now.
 
-if AER is not triggered, then at switch level DPC will take 
-care/suppress the msg
-and entire SW will not come into picture then.
+I was retrieving the patches through the patchwork
+https://patchwork.ozlabs.org/project/linux-pci/list/?submitter=65580 and I
+notice that its missing the patch 13 and 17, is this right?
 
-But specifically the patches attempts to bring in some sort of 
-coordination and understanding between AER and DPC.
-as I mentioned in my previous mail.
+If not, can you give me both patches location?
 
-Regards,
-Oza.
+Thanks.
+
+
+On 13/12/2017 17:21, Joao Pinto wrote:
+> Hi Niklas,
+>
+> Às 1:59 PM de 12/13/2017, Niklas Cassel escreveu:
+>> On Thu, Nov 30, 2017 at 03:28:43PM +0000, Lorenzo Pieralisi wrote:
+>>> Jingoo, Joao,
+>>>
+>>> I am expecting your testing on the series and ACKs on the dwc related
+>>> patches please, according to v4 review - I will mark them as needs
+>>> review/ACK waiting for you to chime in.
+>>>
+>>> v4 thread:
+>>>
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_833882_&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=mqyDi45qm4qE0jcm0KviYAoLHmMXMMIWEW-gAR0RKOw&e=
+>>>
+>> Hello Lorenzo, Jingoo, Joao,
+>>
+>> Tomorrow another 2 weeks has passed.
+>> V1 of this patch series was posted on 2017-10-13.
+> Sorry, I have been tight up with a debug session and not able to check this out.
+> Adding Gustavo in CC that is now also working in PCI software development.
+> I am going to check the code ASAP and we will test it as soon as the debug is
+> finished.
+>
+> Thanks.
+>
+>> I'm a bit worried that this patch series will not make it to linux-next
+>> in time for this patch series to be included in the 4.16 pull request.
+>>
+>> Here is the V5 patch series:
+>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_project_linux-2Dpci_list_-3Fseries-3D14364&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=qXtUHFXK7_nCndQob0I0qDByBdJsL7rRjZ9cx7c847U&e=
+>>
+>> Perhaps any maintainer of a designware based PCIe driver could
+>> help out and test this patch series?
+>>
+>> Regards,
+>> Niklas
+>>
