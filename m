@@ -1,67 +1,71 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 03/26] x86/PCI: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:39 -0500
-Message-Id: <1513661883-28662-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org,
- "maintainer:X86 ARCHITECTURE 32-BIT AND 64-BIT" <x86@kernel.org>,
- "open list:X86 ARCHITECTURE 32-BIT AND 64-BIT" <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, Ingo Molnar <mingo@redhat.com>,
- "H. Peter Anvin" <hpa@zytor.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:46714 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753158AbdLNNp5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:45:57 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>,
+        Vidya Saga <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 3/4] PCI: tegra: Consolidate I/O register variables
+Date: Thu, 14 Dec 2017 14:45:44 +0100
+Message-Id: <20171214134545.11143-4-thierry.reding@gmail.com>
+In-Reply-To: <20171214134545.11143-1-thierry.reding@gmail.com>
+References: <20171214134545.11143-1-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+From: Thierry Reding <treding@nvidia.com>
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+Move variables that store I/O register region mappings together for
+slightly better readability.
 
-Use domain number of 0 as the domain number is not available in struct
-irq_routing_table.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- arch/x86/pci/irq.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/host/pci-tegra.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 04526291..52e5510 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -839,7 +839,8 @@ static void __init pirq_find_router(struct irq_router *r)
- 	DBG(KERN_DEBUG "PCI: Attempting to find IRQ router for [%04x:%04x]\n",
- 	    rt->rtr_vendor, rt->rtr_device);
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 26b734c84850..7f8a81e17db6 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -270,13 +270,12 @@ struct tegra_pcie {
  
--	pirq_router_dev = pci_get_bus_and_slot(rt->rtr_bus, rt->rtr_devfn);
-+	pirq_router_dev = pci_get_domain_bus_and_slot(0, rt->rtr_bus,
-+						      rt->rtr_devfn);
- 	if (!pirq_router_dev) {
- 		DBG(KERN_DEBUG "PCI: Interrupt router not found at "
- 			"%02x:%02x\n", rt->rtr_bus, rt->rtr_devfn);
+ 	void __iomem *pads;
+ 	void __iomem *afi;
++	void __iomem *cfg;
+ 	int irq;
+ 
+ 	struct list_head buses;
+ 	struct resource *cs;
+ 
+-	void __iomem *cfg_va_base;
+-
+ 	struct resource io;
+ 	struct resource pio;
+ 	struct resource mem;
+@@ -434,7 +433,7 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+ 		}
+ 	} else {
+ 		offset = tegra_pcie_conf_offset(bus->number, devfn, where);
+-		addr = pcie->cfg_va_base + (offset & (SZ_4K - 1));
++		addr = pcie->cfg + (offset & (SZ_4K - 1));
+ 		val = offset & ~(SZ_4K - 1);
+ 		afi_writel(pcie, pcie->cs->start - val, AFI_AXI_BAR0_START);
+ 		afi_writel(pcie, (val + SZ_4K) >> 12, AFI_AXI_BAR0_SZ);
+@@ -1305,8 +1304,8 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 		goto poweroff;
+ 	}
+ 
+-	pcie->cfg_va_base = devm_ioremap(dev, pcie->cs->start, SZ_4K);
+-	if (!pcie->cfg_va_base) {
++	pcie->cfg = devm_ioremap(dev, pcie->cs.start, SZ_4K);
++	if (!pcie->cfg) {
+ 		dev_err(pcie->dev, "failed to ioremap config space\n");
+ 		err = -EADDRNOTAVAIL;
+ 		goto poweroff;
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.15.1
