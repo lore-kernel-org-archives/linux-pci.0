@@ -1,144 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:44285 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750781AbdLZAMX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 19:12:23 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE# signal for OF
-Date: Tue, 26 Dec 2017 01:11:25 +0100
-Message-ID: <9593014.U0c2JQdoEZ@aspire.rjw.lan>
-In-Reply-To: <20171225114742.18920-5-jeffy.chen@rock-chips.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com> <20171225114742.18920-5-jeffy.chen@rock-chips.com>
+Return-Path: <SRS0=1jow=DK=mm-sol.com=svarbanov@kernel.org>
+Return-Path: <SRS0=1jow=DK=mm-sol.com=svarbanov@kernel.org>
+Subject: Re: [PATCH] PCI: qcom: add missing supplies required for msm8996
+To: srinivas.kandagatla@linaro.org, stanimir.varbanov@linaro.org,
+ linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ robh+dt@kernel.org, devicetree@vger.kernel.org,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <4fd5f3e7-73f6-ad63-c961-47f1f0fac149@mm-sol.com>
+Date: Thu, 14 Dec 2017 12:06:02 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, December 25, 2017 12:47:41 PM CET Jeffy Chen wrote:
-> Add of_pci_setup_wake_irq() and of_pci_teardown_wake_irq() to handle
-> the PCIe WAKE# interrupt.
+Hi Srini,
+
+On 12/08/2017 11:20 AM, srinivas.kandagatla@linaro.org wrote:
+> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 > 
-> Also use the dedicated wakeirq infrastructure to simplify it.
+> This patch adds supplies that are required for msm8996. Two of them vdda
+> and vdda-1p8 are analog supplies that go in to controller, and the rest
+
+According to the msm8996 device specification there are two pins related
+to the PCIe power: VDD_PCIE_CORE (power for PCIe core circuitry) and
+VDD_PCIE_1P8 (power for PCIe I/O circuitry). Thus I think it is clear
+that VDD_PCIE_CORE is vdda and VDD_PCIE_1P8 should be part of PCIe phy
+driver DT binding (and this is the case currently [1]). So I don't think
+we need vdda-1p8 regulator DT binding for that in pcie-qcom.
+
+> of the two vddpe's are supplies to PCIe endpoints.
+
+For this part I'm still not sure. On first sight it looks that these
+vdd's should be part of endpoint drivers, on the other hand we have
+mPCIe connector (on db820c) which has two power rails 3p3v and 1p5v
+which should be controlled/enabled as well.
+
+So I'd like to hear more opinions on that, i.e. how this is solved by
+the other PCIe bridge drivers.
+
 > 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> Without these supplies PCIe endpoints which require power supplies are
+> not enumerated at all, as there is no one to power it up.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 > ---
+>  .../devicetree/bindings/pci/qcom,pcie.txt          | 16 +++++++++++++
+>  drivers/pci/dwc/pcie-qcom.c                        | 28 ++++++++++++++++++++--
+>  2 files changed, 42 insertions(+), 2 deletions(-)
 > 
-> Changes in v11:
-> Only support 1-per-device PCIe WAKE# pin as suggested.
-> 
-> Changes in v10:
-> Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-> since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
-> 
-> Changes in v9:
-> Fix check error in .cleanup().
-> Move dedicated wakeirq setup to setup() callback and use
-> device_set_wakeup_enable() to enable/disable.
-> 
-> Changes in v8:
-> Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-> 
-> Changes in v7:
-> Move PCIE_WAKE handling into pci core.
-> 
-> Changes in v6:
-> Fix device_init_wake error handling, and add some comments.
-> 
-> Changes in v5:
-> Rebase.
-> 
-> Changes in v3:
-> Fix error handling.
-> 
-> Changes in v2:
-> Use dev_pm_set_dedicated_wake_irq.
-> 
->  drivers/of/of_pci_irq.c  | 49 ++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pci-driver.c | 10 ++++++++++
->  include/linux/of_pci.h   |  9 +++++++++
->  3 files changed, 68 insertions(+)
-> 
-> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
-> index d39565d5477b..def884c1a37a 100644
-> --- a/drivers/of/of_pci_irq.c
-> +++ b/drivers/of/of_pci_irq.c
-> @@ -1,8 +1,57 @@
->  #include <linux/kernel.h>
->  #include <linux/of_pci.h>
->  #include <linux/of_irq.h>
-> +#include <linux/pm_wakeirq.h>
->  #include <linux/export.h>
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> index 3c9d321b3d3b..045102cb3e12 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> @@ -179,6 +179,11 @@
+>  	Value type: <phandle>
+>  	Definition: A phandle to the core analog power supply
 >  
-> +int of_pci_setup_wake_irq(struct pci_dev *pdev)
-> +{
-> +	struct pci_dev *ppdev;
-> +	struct device_node *dn;
-> +	int ret, irq;
+> +- vdda-1p8-supply:
+> +	Usage: required for msm8996
+> +	Value type: <phandle>
+> +	Definition: A phandle to the 1.8v analog power supply
 > +
-> +	/* Get the pci_dev of our parent. Hopefully it's a port. */
-> +	ppdev = pdev->bus->self;
-> +	/* Nope, it's a host bridge. */
-> +	if (!ppdev)
-> +		return 0;
+>  - vdda_phy-supply:
+>  	Usage: required for ipq/apq8064
+>  	Value type: <phandle>
+> @@ -189,6 +194,15 @@
+>  	Value type: <phandle>
+>  	Definition: A phandle to the analog power supply for IC which generates
+>  		    reference clock
+> +- vddpe-supply:
+> +	Usage: optional
+> +	Value type: <phandle>
+> +	Definition: A phandle to the PCIe endpoint power supply
 > +
-> +	dn = pci_device_to_OF_node(ppdev);
-> +	if (!dn)
-> +		return 0;
+> +- vddpe1-supply:
+> +	Usage: optional
+> +	Value type: <phandle>
+> +	Definition: A phandle to the PCIe endpoint power supply 1
+>  
+>  - phys:
+>  	Usage: required for apq8084
+> @@ -205,6 +219,8 @@
+>  	Value type: <prop-encoded-array>
+>  	Definition: List of phandle and GPIO specifier pairs. Should contain
+>  			- "perst-gpios"	PCIe endpoint reset signal line
+> +			- "pe_en-gpios"	PCIe endpoint enable signal line
+> +			- "pe_en1-gpios" PCIe endpoint enable1 signal line
+
+those two shouldn't be here, instead they should be part of regulator DT
+node, so please drop them.
+
+>  			- "wake-gpios"	PCIe endpoint wake signal line
+>  
+>  * Example for ipq/apq8064
+> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+> index 952a4fc4bf3c..01488f90da31 100644
+> --- a/drivers/pci/dwc/pcie-qcom.c
+> +++ b/drivers/pci/dwc/pcie-qcom.c
+> @@ -109,13 +109,15 @@ struct qcom_pcie_resources_1_0_0 {
+>  	struct reset_control *core;
+>  	struct regulator *vdda;
+>  };
+> -
+> +#define QCOM_PCIE_MAX_SUPPLY	4
+>  struct qcom_pcie_resources_2_3_2 {
+>  	struct clk *aux_clk;
+>  	struct clk *master_clk;
+>  	struct clk *slave_clk;
+>  	struct clk *cfg_clk;
+>  	struct clk *pipe_clk;
+> +	int num_supplies;
+> +	struct regulator_bulk_data supplies[QCOM_PCIE_MAX_SUPPLY];
+>  };
+>  
+>  struct qcom_pcie_resources_2_4_0 {
+> @@ -529,6 +531,17 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
+>  	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+>  	struct dw_pcie *pci = pcie->pci;
+>  	struct device *dev = pci->dev;
+> +	int ret;
 > +
-> +	irq = of_irq_get_byname(dn, "wakeup");
+> +	res->supplies[0].supply = "vdda";
+> +	res->supplies[1].supply = "vdda-1p8";
+> +	res->supplies[2].supply = "vddpe";
+> +	res->supplies[3].supply = "vddpe1";
+> +	res->num_supplies = QCOM_PCIE_MAX_SUPPLY;
+> +	ret = devm_regulator_bulk_get(dev, QCOM_PCIE_MAX_SUPPLY,
+> +				      res->supplies);
 
-Why is this a property of the bridge and not of the device itself?
+If we decide to go on this direction we need to replace this with
+devm_regulator_bulk_get_optional (yes I know there is no such regulator
+API yet) because they are optional in the DT binding.
 
-> +	if (irq == -EPROBE_DEFER)
+<snip>
 
-Braces here, please.
+-- 
+regards,
+Stan
 
-> +		return irq;
-> +	/* Ignore other errors, since a missing wakeup is non-fatal. */
-> +	else if (irq < 0) {
-> +		dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
-> +		return 0;
-> +	}
-> +
-> +	device_init_wakeup(&pdev->dev, true);
-
-Why do you call this before dev_pm_set_dedicated_wake_irq()?
-
-> +
-> +	ret = dev_pm_set_dedicated_wake_irq(&pdev->dev, irq);
-> +	if (ret < 0) {
-> +		dev_err(&pdev->dev, "failed to set wake IRQ: %d\n", ret);
-> +		device_init_wakeup(&pdev->dev, false);
-> +		return ret;
-> +	}
-> +
-
-It would be more straightforward to call device_init_wakeup() here.
-
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(of_pci_setup_wake_irq);
-> +
-> +void of_pci_teardown_wake_irq(struct pci_dev *pdev)
-> +{
-> +	if (!pdev->dev.power.wakeirq)
-> +		return;
-> +
-> +	dev_pm_clear_wake_irq(&pdev->dev);
-> +	device_init_wakeup(&pdev->dev, false);
-> +}
-> +EXPORT_SYMBOL_GPL(of_pci_teardown_wake_irq);
-> +
->  /**
->   * of_irq_parse_pci - Resolve the interrupt for a PCI device
->   * @pdev:       the device whose interrupt is to be resolved
-
-Thanks,
-Rafael
+[1]
+https://elixir.free-electrons.com/linux/latest/source/arch/arm64/boot/dts/qcom/msm8996.dtsi#L638
