@@ -1,57 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:46704 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752888AbdLNNpw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:45:52 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:22245 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752255AbdLNNN4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:13:56 -0500
+Subject: Re: [PATCH v5 2/3] PCI: endpoint: Populate func_no before calling
+ pci_epc_add_epf()
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>,
-        Vidya Saga <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH 1/4] PCI: tegra: Clarify configuration space address computations
-Date: Thu, 14 Dec 2017 14:45:42 +0100
-Message-Id: <20171214134545.11143-2-thierry.reding@gmail.com>
-In-Reply-To: <20171214134545.11143-1-thierry.reding@gmail.com>
-References: <20171214134545.11143-1-thierry.reding@gmail.com>
+References: <20171214130147.1790-1-niklas.cassel@axis.com>
+ <20171214130147.1790-3-niklas.cassel@axis.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <9c3a6048-1f1f-55c8-6c42-75392365e12c@ti.com>
+Date: Thu, 14 Dec 2017 18:43:00 +0530
+MIME-Version: 1.0
+In-Reply-To: <20171214130147.1790-3-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
 
-Tegra uses a non-compatible variant of ECAM where the extended register
-field is separate from the register field. Clarify that the register
-offset also factors into the computation of the configuration space
-addresses.
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+On Thursday 14 December 2017 06:31 PM, Niklas Cassel wrote:
+> func_no is a member of struct pci_epf.
+> struct pci_epf is used as an argument to pci_epc_add_epf(),
+> therefore func_no should be populated before calling pci_epc_add_epf().
+> 
+> Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> Suggested-by: Kishon Vijay Abraham I <kishon@ti.com>
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index f6d0430e6704..8a07c6f9e1b0 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -364,11 +364,13 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
-  *
-  * Mapping the whole extended configuration space would require 256 MiB of
-  * virtual address space, only a small part of which will actually be used.
-- * To work around this, a 4K of region is used to generate required
-- * configuration transaction with relevant B:D:F values. This is achieved by
-- * dynamically programming base address and size of AFI_AXI_BAR used for
-- * end point config space mapping to make sure that the address (access to
-- * which generates correct config transaction) falls in this 4K region
-+ *
-+ * To work around this, a 4 KiB region is used to generate the required
-+ * configuration transaction with relevant B:D:F and register offset values.
-+ * This is achieved by dynamically programming base address and size of
-+ * AFI_AXI_BAR used for end point config space mapping to make sure that the
-+ * address (access to which generates correct config transaction) falls in
-+ * this 4 KiB region.
-  */
- static unsigned long tegra_pcie_conf_offset(unsigned char b, unsigned int devfn,
- 					    int where)
--- 
-2.15.1
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/endpoint/pci-ep-cfs.c | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> index 4f74386c1ced..e8f65eb51c1a 100644
+> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -97,22 +97,20 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+>  {
+>  	int ret;
+>  	u32 func_no = 0;
+> -	struct pci_epc *epc;
+> -	struct pci_epf *epf;
+>  	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item);
+>  	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
+> -
+> -	epc = epc_group->epc;
+> -	epf = epf_group->epf;
+> -	ret = pci_epc_add_epf(epc, epf);
+> -	if (ret)
+> -		goto err_add_epf;
+> +	struct pci_epc *epc = epc_group->epc;
+> +	struct pci_epf *epf = epf_group->epf;
+>  
+>  	func_no = find_first_zero_bit(&epc_group->function_num_map,
+>  				      sizeof(epc_group->function_num_map));
+>  	set_bit(func_no, &epc_group->function_num_map);
+>  	epf->func_no = func_no;
+>  
+> +	ret = pci_epc_add_epf(epc, epf);
+> +	if (ret)
+> +		goto err_add_epf;
+> +
+>  	ret = pci_epf_bind(epf);
+>  	if (ret)
+>  		goto err_epf_bind;
+> 
