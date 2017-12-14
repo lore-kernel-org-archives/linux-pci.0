@@ -1,13 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 04/26] ata: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:40 -0500
-Message-Id: <1513661883-28662-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+Date: Thu, 14 Dec 2017 16:51:33 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jim Quinlan <jim2101024@gmail.com>
+Subject: Re: [PATCH v3 3/8] PCI: brcmstb: Add Broadcom STB PCIe host
+ controller driver
+Message-ID: <20171214225133.GM30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+ <1510697532-32828-4-git-send-email-jim2101024@gmail.com>
+ <20171212221642.GB95453@bhelgaas-glaptop.roam.corp.google.com>
+ <CANCKTBvtqNWZYXpLdUnEWwA2=14XhJ6adR5muOAYubY_1SxZWw@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CANCKTBvtqNWZYXpLdUnEWwA2=14XhJ6adR5muOAYubY_1SxZWw@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,50 +19,127 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>,
- "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>,
- Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Wed, Dec 13, 2017 at 06:53:53PM -0500, Jim Quinlan wrote:
+> On Tue, Dec 12, 2017 at 5:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Nov 14, 2017 at 05:12:07PM -0500, Jim Quinlan wrote:
+> >> This commit adds the basic Broadcom STB PCIe controller.  Missing is
+> >> the ability to process MSI and also handle dma-ranges for inbound
+> >> memory accesses.  These two functionalities are added in subsequent
+> >> commits.
+> >>
+> >> The PCIe block contains an MDIO interface.  This is a local interface
+> >> only accessible by the PCIe controller.  It cannot be used or shared
+> >> by any other HW.  As such, the small amount of code for this
+> >> controller is included in this driver as there is little upside to put
+> >> it elsewhere.
+> ...
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+> >> +static bool brcm_pcie_valid_device(struct brcm_pcie *pcie, struct pci_bus *bus,
+> >> +                                int dev)
+> >> +{
+> >> +     if (pci_is_root_bus(bus)) {
+> >> +             if (dev > 0)
+> >> +                     return false;
+> >> +     } else {
+> >> +             /* If there is no link, then there is no device */
+> >> +             if (!brcm_pcie_link_up(pcie))
+> >> +                     return false;
+> >
+> > This is racy, since the link can go down after you check but before
+> > you do the config access.  I assume your hardware can deal with a
+> > config access that targets a link that is down?
+> 
+> Yes, that can happen but there is really nothing that can be done if
+> the link goes down in that vulnerability window.  What do you suggest
+> doing?
 
-Use pci_get_domain_bus_and_slot() and extract the actual domain number
-from the pdev passed in.
+Most hardware drops writes and returns ~0 on reads if the link is
+down.  I assume your hardware does something similar, and that should
+be enough.  You shouldn't have to check whether the link is up.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/pata_ali.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The hardware might report errors, e.g., via AER, if the link is down.
+And we might not not handle those nicely.  If we have issues there, we
+should find out and fix them.
 
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index d19cd88..0b122f9 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -466,7 +466,8 @@ static void ali_init_chipset(struct pci_dev *pdev)
- 			tmp |= 0x01;	/* CD_ROM enable for DMA */
- 		pci_write_config_byte(pdev, 0x53, tmp);
- 	}
--	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
-+	north = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus), 0,
-+					    PCI_DEVFN(0, 0));
- 	if (north && north->vendor == PCI_VENDOR_ID_AL && ali_isa_bridge) {
- 		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
- 		   Set the south bridge enable bit */
--- 
-1.9.1
+I see that dwc, altera, rockchip, and xilinx all do check for link up
+there, too.  I can't remember if they had a legitimate reason, or if I
+just missed it.
 
+> >> +static void brcm_pcie_remove_controller(struct brcm_pcie *pcie)
+> >> +{
+> >> +     struct list_head *pos, *q;
+> >> +     struct brcm_pcie *tmp;
+> >> +
+> >> +     mutex_lock(&brcm_pcie_lock);
+> >> +     list_for_each_safe(pos, q, &brcm_pcie) {
+> >> +             tmp = list_entry(pos, struct brcm_pcie, list);
+> >> +             if (tmp == pcie) {
+> >> +                     list_del(pos);
+> >> +                     if (list_empty(&brcm_pcie))
+> >> +                             num_memc = 0;
+> >> +                     break;
+> >> +             }
+> >> +     }
+> >> +     mutex_unlock(&brcm_pcie_lock);
+> >
+> > I'm missing something.  I don't see that num_memc is ever set to
+> > anything *other* than zero.
+> The num_memc is set and used in the dma commit.  I will remove its
+> declaration from this commit.
+
+Thanks, that will make the patches much easier to read.
+
+> >> +     pcie->id = of_get_pci_domain_nr(dn);
+> >
+> > Why do you call of_get_pci_domain_nr() directly?  No other driver
+> > does.
+> 
+> We use the domain as the controller number (id).  We use the id to
+> identify and fix a HW bug that only affects the 2nd controller; see
+> the clause
+> " } else if (of_machine_is_compatible("brcm,bcm7278a0")) {".
+
+pci_register_host_bridge() already sets bus->domain_nr for every host
+bridge.  That path calls of_get_pci_domain_nr() eventually.   But I
+guess that's too late for your use case, because you have this:
+
+  brcm_pcie_probe
+    brcm_pcie_setup
+      brcm_pcie_bridge_sw_init_set
+        if (of_machine_is_compatible("brcm,bcm7278a0")) {
+          offset = pcie->id ? ...                    <--- use
+    pci_scan_root_bus_bridge
+      pci_register_host_bridge
+        bus->domain_nr = pci_bus_find_domain_nr      <--- available
+
+I guess you haven't added a binding for brcm,bcm7278a0 yet?
+
+I'm not really sure that using the linux,pci-domain DT property is the
+best way to distinguish the two controllers.  Maybe Rob has an
+opinion?
+
+> >> +     if (pcie->id < 0)
+> >> +             return pcie->id;
+
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
