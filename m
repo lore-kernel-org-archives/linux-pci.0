@@ -1,55 +1,96 @@
-Return-Path: <SRS0=2Oyo=DB=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=2Oyo=DB=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH -next] pci: add function stub for
- pci_get_domain_bus_and_slot()
-To: Bjorn Helgaas <helgaas@kernel.org>, Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Guenter Roeck <linux@roeck-us.net>,
- LKML <linux-kernel@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
-References: <80e3c9bb-fb65-4d87-76f9-db7c1273cef3@infradead.org>
- <20171205203920.GI23510@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <919704f8-5b26-0f45-c8df-53154de470b6@codeaurora.org>
-Date: Tue, 5 Dec 2017 15:50:03 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:52945 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751957AbdLNMiH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 07:38:07 -0500
+Subject: Re: [PATCH v5 01/18] PCI: dwc: Use the DMA-API to get the MSI address
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kishon@ti.com" <kishon@ti.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+ <20171120133222.27771-2-niklas.cassel@axis.com>
+ <20171130152843.GC12096@red-moon> <20171213135953.GA30833@axis.com>
+ <ff784f40-a629-b9cb-0d85-d1356eb69a38@synopsys.com>
+ <ac5ceb21-b547-427c-f5fc-a3deb6398c99@synopsys.com>
+ <20171214122229.GB27348@e107981-ln.cambridge.arm.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <816956be-90ff-be0e-748f-39c64e4e7833@synopsys.com>
+Date: Thu, 14 Dec 2017 12:38:04 +0000
 MIME-Version: 1.0
-In-Reply-To: <20171205203920.GI23510@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171214122229.GB27348@e107981-ln.cambridge.arm.com>
 Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/5/2017 3:39 PM, Bjorn Helgaas wrote:
-> [+cc Sinan]
-> 
-> On Tue, Nov 28, 2017 at 02:31:21PM -0800, Randy Dunlap wrote:
->> From: Randy Dunlap <rdunlap@infradead.org>
->>
->> The coretemp driver build fails when CONFIG_PCI is not enabled
->> because it uses a function that does not have a stub for that
->> config case, so add the function stub.
->>
->> ../drivers/hwmon/coretemp.c: In function 'adjust_tjmax':
->> ../drivers/hwmon/coretemp.c:250:9: error: implicit declaration of function 'pci_get_domain_bus_and_slot' [-Werror=implicit-function-declaration]
->>   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
->> ../drivers/hwmon/coretemp.c:250:32: warning: initialization makes pointer from integer without a cast [enabled by default]
->>   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
->>
->> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Applied with Guenter's ack to pci/enumeration for v4.16, thanks!
-> 
-> Apparently no other code calls pci_get_domain_bus_and_slot() when
-> CONFIG_PCI isn't enabled.
-> 
-> 15ab6790f628 ("hwmon: (coretemp) deprecate pci_get_bus_and_slot()") is
-> already in linux-next via hwmon-staging.
-> 
-> The pci tree is merged into next slightly before hwmon-staging, so
-> this should be resolved as soon as the 0-day builder builds my
-> pci/enumeration branch and I merge it into my next branch.
-> 
+Ok. I will compile and test it now.
 
-Thanks for catching this. I assumed we do have a stub. It turns out we
-don't.
+Thanks.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+On 14/12/2017 12:22, Lorenzo Pieralisi wrote:
+> On Thu, Dec 14, 2017 at 12:16:38PM +0000, Gustavo Pimentel wrote:
+>> Hi Niklas and Lorenzo,
+>>
+>> I'm going to work on PCI software development now as told by Joao and I will
+>> test your code now.
+>>
+>> I was retrieving the patches through the patchwork
+>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_project_linux-2Dpci_list_-3Fsubmitter-3D65580&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=paO6WYeoTil-HWIJVBhwaWcIZP7r95MZNRzKMN6kprU&s=yjtNhJKPJdsHD_A52xWSD2g_YNHuLhO1YADKsPaPsio&e= and I
+>> notice that its missing the patch 13 and 17, is this right?
+> No, you just have to refine the filter, I marked the DT bindings as
+> ready to be applied that's why they do not show up (and by the way
+> you can test the series even without those two patches - that are just
+> DT bindings).
+>
+> Thanks,
+> Lorenzo
+>
+>> If not, can you give me both patches location?
+>>
+>> Thanks.
+>>
+>>
+>> On 13/12/2017 17:21, Joao Pinto wrote:
+>>> Hi Niklas,
+>>>
+>>> ??s 1:59 PM de 12/13/2017, Niklas Cassel escreveu:
+>>>> On Thu, Nov 30, 2017 at 03:28:43PM +0000, Lorenzo Pieralisi wrote:
+>>>>> Jingoo, Joao,
+>>>>>
+>>>>> I am expecting your testing on the series and ACKs on the dwc related
+>>>>> patches please, according to v4 review - I will mark them as needs
+>>>>> review/ACK waiting for you to chime in.
+>>>>>
+>>>>> v4 thread:
+>>>>>
+>>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_833882_&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=mqyDi45qm4qE0jcm0KviYAoLHmMXMMIWEW-gAR0RKOw&e=
+>>>>>
+>>>> Hello Lorenzo, Jingoo, Joao,
+>>>>
+>>>> Tomorrow another 2 weeks has passed.
+>>>> V1 of this patch series was posted on 2017-10-13.
+>>> Sorry, I have been tight up with a debug session and not able to check this out.
+>>> Adding Gustavo in CC that is now also working in PCI software development.
+>>> I am going to check the code ASAP and we will test it as soon as the debug is
+>>> finished.
+>>>
+>>> Thanks.
+>>>
+>>>> I'm a bit worried that this patch series will not make it to linux-next
+>>>> in time for this patch series to be included in the 4.16 pull request.
+>>>>
+>>>> Here is the V5 patch series:
+>>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_project_linux-2Dpci_list_-3Fseries-3D14364&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=qXtUHFXK7_nCndQob0I0qDByBdJsL7rRjZ9cx7c847U&e=
+>>>>
+>>>> Perhaps any maintainer of a designware based PCIe driver could
+>>>> help out and test this patch series?
+>>>>
+>>>> Regards,
+>>>> Niklas
+>>>>
+>>
