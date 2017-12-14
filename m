@@ -1,72 +1,153 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v6 00/18] dwc MSI fixes, ARTPEC-6 EP mode support,
- ARTPEC-7 SoC support
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>, <linux-arm-kernel@axis.com>,
-        <linux-pci@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <gustavo.pimentel@synopsys.com>, <kishon@ti.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171220173416.GD1709@red-moon>
- <32f6e02c-4230-9222-0ee1-54a045e78bd5@synopsys.com>
- <20171220232251.GA27011@axis.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <3aa8d7db-375b-051d-6a9e-16a1d19a7e67@synopsys.com>
-Date: Thu, 21 Dec 2017 09:23:44 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:38630 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751459AbdLNJ5b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Dec 2017 04:57:31 -0500
+Date: Thu, 14 Dec 2017 09:57:24 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: thierry.reding@gmail.com, bhelgaas@google.com,
+        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com
+Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
+ port
+Message-ID: <20171214095724.GA697@e107981-ln.cambridge.arm.com>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
+ <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
+ <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
+ <20171213140848.GA1736@red-moon>
+ <b72dda91-5307-f024-9810-d6abadf7f337@nvidia.com>
+ <20171213183417.GD4060@red-moon>
+ <a9bc0f46-69e1-d7ca-8cd3-e54259c4a92d@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20171220232251.GA27011@axis.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a9bc0f46-69e1-d7ca-8cd3-e54259c4a92d@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
+On Thu, Dec 14, 2017 at 12:57:28AM +0530, Manikanta Maddireddy wrote:
+> 
+> 
+> On 14-Dec-17 12:04 AM, Lorenzo Pieralisi wrote:
+> > On Wed, Dec 13, 2017 at 10:02:02PM +0530, Manikanta Maddireddy wrote:
+> >>
+> >>
+> >> On 13-Dec-17 7:38 PM, Lorenzo Pieralisi wrote:
+> >>> On Wed, Dec 13, 2017 at 05:20:39PM +0530, Manikanta Maddireddy wrote:
+> >>>>
+> >>>>
+> >>>> On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
+> >>>>> On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
+> >>>>>> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
+> >>>>>> after all the required root port register programming is completed.
+> >>>>>>
+> >>>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> >>>>>> ---
+> >>>>>> V3:
+> >>>>>> * no change in this patch
+> >>>>>> V2:
+> >>>>>> * no change in this patch
+> >>>>>>
+> >>>>>>  drivers/pci/host/pci-tegra.c | 9 +++++----
+> >>>>>>  1 file changed, 5 insertions(+), 4 deletions(-)
+> >>>>>>
+> >>>>>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> >>>>>> index 96e8038c3019..b41c60c7414c 100644
+> >>>>>> --- a/drivers/pci/host/pci-tegra.c
+> >>>>>> +++ b/drivers/pci/host/pci-tegra.c
+> >>>>>> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+> >>>>>>  		}
+> >>>>>>  	}
+> >>>>>>  
+> >>>>>> -	/* take the PCIe interface module out of reset */
+> >>>>>> -	reset_control_deassert(pcie->pcie_xrst);
+> >>>>>> -
+> >>>>>>  	/* finally enable PCIe */
+> >>>>>>  	value = afi_readl(pcie, AFI_CONFIGURATION);
+> >>>>>>  	value |= AFI_CONFIGURATION_EN_FPCI;
+> >>>>>> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+> >>>>>>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+> >>>>>>  	}
+> >>>>>>  
+> >>>>>> -	reset_control_assert(pcie->pcie_xrst);
+> >>>>>
+> >>>>> This does not look like it is part of the reset de-assertion code move.
+> >>>>>
+> >>>>> tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
+> >>>>>
+> >>>>> in other words, why are you removing it ?
+> >>>>>
+> >>>>> Lorenzo
+> >>>>
+> >>>> Hi Lorenzo,
+> >>>>
+> >>>> Host driver should start LTSSM after programming all controller registers.
+> >>>> In tegra_pcie_enable_controller() bunch of AFI module programming is done and
+> >>>> I am adding PCIe register programming in this series.
+> >>>> So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
+> >>>> which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
+> >>>
+> >>> I asked why you removed the reset assertion in tegra_pcie_power_off(),
+> >>> it is not clear to me. You still call tegra_pcie_power_off() in
+> >>> the tegra_pcie_probe() error path and I see no reason why the reset
+> >>> assertion - called through:
+> >>>
+> >>> tegra_pcie_put_resources()
+> >>> 	-> tegra_pcie_power_of()
+> >>> 	
+> >>> is removed, if it was needed previously.
+> >>>
+> >>> Lorenzo
+> >>>
+> >>
+> >> New sequence with this patch will be
+> >> tegra_pcie_enable_controller() -> tegra_pcie_request_resources() -> tegra_pcie_enable_ports()
+> >>                                    ->goto put_resources on fail        -> reset_control_deassert(pcie->pcie_xrst);
+> >>
+> >> Since pcie_xrst deassert happens after tegra_pcie_request_resources(), there is no need to assert pcie_xrst on put_resource failure.
+> > 
+> > I do not understand you, sorry for being blunt.
+> > 
+> > What has tegra_pcie_request_resources() to do with the reset
+> > assertion/deassertion ?
+> > 
+> > This patch moves:
+> > 
+> > reset_control_deassert(pcie->pcie_xrst);
+> > 
+> > from:
+> > 
+> > tegra_pcie_enable_controller()
+> > 
+> > to
+> > 
+> > tegra_pcie_enable_ports()
+> > 
+> > if:
+> > 
+> > reset_control_assert(pcie->pcie_xrst);
+> > 
+> > was needed before this patch in tegra_pcie_power_off()
+> > 
+> > why it is not needed there after this patch is applied ?
+> > 
+> > Lorenzo
+> > 
+> Opposite of tegra_pcie_enable_ports() is missing on disable_msi
+> failure in current driver. So I took care of assert pcie_xrst
+> in https://patchwork.ozlabs.org/patch/846043/ along with other
+> resources.
 
-Às 11:22 PM de 12/20/2017, Niklas Cassel escreveu:
-> On Wed, Dec 20, 2017 at 07:47:41PM +0000, Joao Pinto wrote:
->>
->> Hello to all,
->>
->> Às 5:34 PM de 12/20/2017, Lorenzo Pieralisi escreveu:
->>> On Wed, Dec 20, 2017 at 12:29:21AM +0100, Niklas Cassel wrote:
->>>> This is a series that adds:
->>>> - PCI endpoint mode support in the ARTPEC-6 driver.
->>>> - ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
->>>> - Small fixes for MSI in designware-ep and designware-host,
->>>>   needed to get endpoint mode support working for ARTPEC-6.
->>>> - Cleanups in pci-dra7xx to better prepare for endpoint mode in other
->>>>   DWC based PCIe drivers.
->>>
->>> Joao, Jingoo,
->>>
->>> Gustavo tested the series and Kishon ACK'ed the relevant patches,
->>> I need your ACKs on designware patches to queue this series for
->>> v4.16.
->>>
->>> I am away from tomorrow (noon) till beginning of January which means
->>> that either I queue this series tomorrow or at -rc6, please do
->>> chime in if you can.
->>
->> Sorry, I have been a bit tied up! Already checked each patch related to DWC.
->> Could anyone from artpec finish the revision, since there are some patches
->> related to that SoC?
-> 
-> Thanks for looking at the patches.
-> 
-> Thanks to everyone that has helped in any way.
-> 
-> Since I am the maintainer for pcie-artpec6.c
-> (at least according to MAINTAINERS ;)),
-> I'm supposing that my sign-off will suffice.
+Which is in another series. This patch has to be self-contained with a
+single logical change that is applicable on its own. Even if we end up
+merging the series above every patch has to make sense on its own. This
+does not.
 
-You're right :), I didn't remember you were the maintainer.
-Have a Merry Christmas.
+So I would start with re-posting this series as a self contained one,
+addressing all review comments; we will get to other series later when
+this is sorted.
 
 Thanks,
-Joao
-
-> 
-> Regards,
-> Niklas
-> 
+Lorenzo
