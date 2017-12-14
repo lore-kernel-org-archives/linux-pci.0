@@ -1,56 +1,71 @@
-Return-Path: <SRS0=tYxu=DB=seznam.cz=rayer@kernel.org>
-Return-Path: <SRS0=tYxu=DB=seznam.cz=rayer@kernel.org>
-Subject: Re: PCI VGA 0x3b0/0x3C0 aliases handling in Linux
-To: Bjorn Helgaas <helgaas@kernel.org>, Rudolf Marek <r.marek@assembler.cz>
-Cc: linux-pci@vger.kernel.org
-References: <098b7b02-90f8-636e-37b8-665c32aab96e@assembler.cz>
- <20171205190755.GB23510@bhelgaas-glaptop.roam.corp.google.com>
-From: rayer <rayer@seznam.cz>
-Message-ID: <5A26F4E3.9030901@seznam.cz>
-Date: Tue, 5 Dec 2017 20:34:59 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Thomas Gleixner <tglx@linutronix.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan>
+ <5115041.vUGA3IjvdM@aspire.rjw.lan>
+ <alpine.DEB.2.20.1712141648190.4998@nanos>
+ <11146834.AWaDHrVcmB@aspire.rjw.lan>
+From: Maarten Lankhorst <dev@mblankhorst.nl>
+Message-ID: <2b0e471b-db62-831e-5264-8fcb41169cce@mblankhorst.nl>
+Date: Thu, 14 Dec 2017 17:17:52 +0100
 MIME-Version: 1.0
-In-Reply-To: <20171205190755.GB23510@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <11146834.AWaDHrVcmB@aspire.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas wrote:
-> So if I understand correctly, you have
->    - A bridge with PCI_BRIDGE_CTL_VGA set but VGA_16BIT_EN is clear
->    - A peer of the bridge with an I/O BAR set to some alias of
->      0x3c0-0x3df
-Yes. The tested card is SB Audigy that was assigned to IO base address 
-CFC0h with 32 Bytes window by PnP BIOS mechanism. The VGA registers are 
-aliasing every 400h over enite 16bit IO space and come into colision 
-with SB registers. It may shoot down any other PCI card that got mapped 
-to "wrong" IO base. This may then result to bugs that tlookl like IRQ 
-was not assigned properly but the primary issue is IO colision.
-> In this case I think both the bridge and the peer device will claim
-> accesses to 0x3c0-0x3df, which is a bad thing.
+Op 14-12-17 om 16:54 schreef Rafael J. Wysocki:
+> On Thursday, December 14, 2017 4:52:22 PM CET Thomas Gleixner wrote:
+>> On Thu, 14 Dec 2017, Rafael J. Wysocki wrote:
+>>> The problem here is that pci_pm_thaw_noirq() calls pci_restore_state() which
+>>> in fact requires the device to be in D0, so the caller should put it into
+>>> D0 instead of trying to "update" its power state.
+>>>
+>>> [Note that the PCI layer doesn't put devices into low-power states during the
+>>> hibernation's "freeze" transition, but drivers can legitimately do that in
+>>> their "freeze" callbacks which was overlooked in that code and that's what
+>>> i915 does.]
+>>>
+>>> So IMO what we need is the change below.  I'm going to test it shortly,
+>>> but please give it a go too.
+>> So now this looks more reasonable:
+>>
+>>   irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
+>>   __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a 
+>>   __pci_write_msi_msg: Not written
+>>   ...
+>>   device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [thaw]
+>>   pci_pm_thaw_noirq <-dpm_run_callback
+>>   __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a 
+>>   device_pm_callback_end: i915 0000:00:02.0, err=0
+>>   ...
+>>   resume_irqs: Resume 125
+>>   ...
+>>   irq_handler_entry: irq=125 name=i915
+> Cool.
 >
-> And your proposal is that Linux should either
+> Let me respin it with a changelog etc then.
 >
->    - Turn on VGA_16BIT_EN (if supported by the bridge), or
+> Thanks,
+> Rafael
 >
->    - If VGA_16BIT_EN is not supported by the bridge, try to reassign
->      the peer I/O BAR so it doesn't conflict with the 0x3c0-0x3df
->      aliases
-Yes, it's a question if is safe to do as implicit action or do it only 
-if specific kernel parameter is given. I belive it is safe to enable 
-VGA_16BIT_EN when supported.
-> To help understand and document this better, it would be nice to see a
-> complete dmesg log and "lspci -vv" output (as root) showing the
-> problem.  A kernel.org bugzilla would be a good place to store this.
-OK, I have a lot of logs, I'll send later.
-> It would also be great to collect up the other reports you've found
-> and see if we can definitively tie them to this issue and potentially
-> test a fix.
-I guess this problem is fixed on most of current motherboards but there 
-still may be people running old PCH 6x with preUEFI BIOS. I observed 
-this behavior on Gigabyte GA-P67-DS3-B3 MB with latest official BIOS F5.
-There are also other PCI issues esp. on intel motherboards with smae ITE 
-PCIe2PCI bridge but different manner - I saw they had some wrong ACPI 
-table but it had similar symptoms - a PCI card worked in Windows but 
-observed IRQ error mapping under Linux. So that are very different kind 
-of bug that needs to be separated from this case.
+>
+The machine I was using for reproducing the bug appears to be fixed with this patch, so I now sent
+it to intel's trybot for results.
 
-RayeR
+https://patchwork.freedesktop.org/series/35367/
+
+Thanks for looking at the bug!
+
+~Maarten
