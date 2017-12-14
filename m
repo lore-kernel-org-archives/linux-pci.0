@@ -1,85 +1,138 @@
-Return-Path: <SRS0=WhFh=DE=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=WhFh=DE=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
-To: Alexey Kardashevskiy <aik@ozlabs.ru>, helgaas@kernel.org,
-        bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com
-References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
- <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
- <3a49b44e-833a-8440-aa3c-a4984ac47147@linux.vnet.ibm.com>
- <466ac4c0-6503-a2eb-e352-d2bdfca10cb5@ozlabs.ru>
- <9777301b-3807-2b1d-fbd5-ffa62b78d8f5@linux.vnet.ibm.com>
- <e4b660df-f23d-9f4f-6b1b-d681e4ff8bae@ozlabs.ru>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Fri, 8 Dec 2017 08:52:57 -0600
+Return-Path: <SRS0=yptj=DK=nvidia.com=vidyas@kernel.org>
+Return-Path: <SRS0=yptj=DK=nvidia.com=vidyas@kernel.org>
+Subject: Re: [PATCH V3 2/3] PCI: tegra: fixups to avoid unnecessary wakeup
+ from ASPM-L1.2
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <treding@nvidia.com>, <bhelgaas@google.com>,
+	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<kthota@nvidia.com>, <swarren@nvidia.com>, <mmaddireddy@nvidia.com>
+References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+ <1510492674-12786-3-git-send-email-vidyas@nvidia.com>
+ <20171120213052.GD16362@bhelgaas-glaptop.roam.corp.google.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <0bb6aa5e-5482-bb7e-619c-d3065b07de86@nvidia.com>
+Date: Thu, 14 Dec 2017 22:02:06 +0530
 MIME-Version: 1.0
-In-Reply-To: <e4b660df-f23d-9f4f-6b1b-d681e4ff8bae@ozlabs.ru>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <daf93824-1f46-a4ab-050d-180cd3765816@linux.vnet.ibm.com>
+In-Reply-To: <20171120213052.GD16362@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/8/17 12:03 AM, Alexey Kardashevskiy wrote:
 
-> On 06/12/17 02:13, Bryant G. Ly wrote:
+
+On Tuesday 21 November 2017 03:00 AM, Bjorn Helgaas wrote:
+> s/PCI: tegra: fixups to avoid unnecessary .../
+>   /PCI: tegra: <Capitalized verb> .../
+I'll take care of this in next patch
+> On Sun, Nov 12, 2017 at 06:47:53PM +0530, Vidya Sagar wrote:
+>> sets CLKREQ asserted delay to a higher value to avoid
+>> unnecessary wake up from L1.2_ENTRY state for Tegra210
+> "L1.2.Entry" to match the spec sec 5.5.3.1 (at least I assume that's
+> what this refers to).
+I'll take care of this in next patch
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>> V2:
+>> * no change in this patch
 >>
->> On 12/4/17 7:24 PM, Alexey Kardashevskiy wrote:
->>> On 05/12/17 02:08, Bryant G. Ly wrote:
->>>> On 12/2/17 7:45 PM, Alexey Kardashevskiy wrote:
->>>>> On 10/11/17 01:00, Bryant G. Ly wrote:
->>>>>> v1 - Initial patch
->>>>>> v2 - Addressed Bjorn's comment on creating a highly platform
->>>>>>      dependent global exported symbol.
->>>>>> v3 - Based patch off linux-ppc/master
->>>>>> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
->>>>>> v5 - Fixed comments and commit message
->>>>> What is this made against of? I'd like to give it a try but it does not
->>>>> apply to Linus'es tree or powerpc/next. Thanks.
->>>>>
->>>> This was made against powerpc/next back when it was still under 4.14-rc6.
->>>> It has been in review for awhile... 
->>> Sure, sha1 or github tree would be enough though to try.
->> 6cff0a118f23b98c604a3604ea9de11338e24fbe
+>> V3:
+>> * no change in this patch
 >>
->> or if you want to just use the github tree its:
+>>   drivers/pci/host/pci-tegra.c | 18 ++++++++++++++++++
+>>   1 file changed, 18 insertions(+)
 >>
->> https://github.com/powervm/sriov-ppc/tree/upstream
->
-> Thanks! Looks good, works fine (tried MLX5 wit hpowernv - works, pseries
-> under KVM - prints a nice error instead of crashing),
->
-> Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->
->
-Thanks for the review/testing. I will drop the full patch that enables SRIOV on PowerVM next week.
-The patch will require unreleased PHYP and PFW firmware to fully function.
-
-I will include you and Russell to those patches. 
-
--Bryant
-
->
->>>> -Bryant
->>>>
->>>>>> Bryant G. Ly (3):
->>>>>>   powerpc/kernel: Separate SR-IOV Calls
->>>>>>   pseries: Add PSeries SR-IOV Machine dependent calls
->>>>>>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
->>>>>>
->>>>>>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
->>>>>>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
->>>>>>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
->>>>>>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
->>>>>>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
->>>>>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
->>>>>>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
->>>>>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
->>>>>>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
->>>>>>  drivers/pci/iov.c                            | 11 ++++++++++
->>>>>>  include/linux/pci.h                          |  2 ++
->>>>>>  11 files changed, 118 insertions(+), 33 deletions(-)
->>>>>>
->
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index 6d68f49f152e..29ee4bb0b7c6 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -204,6 +204,8 @@
+>>   #define RP_L1_PM_SUBSTATES_1_CTL			0xC04
+>>   #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
+>>   #define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
+>> +#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK		(0x1FF << 13)
+>> +#define RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY		(0x27 << 13)
+>>   
+>>   #define RP_L1_PM_SUBSTATES_2_CTL			0xC08
+>>   #define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
+>> @@ -350,6 +352,7 @@ struct tegra_pcie_soc {
+>>   	bool program_deskew_time;
+>>   	bool updateFC_threshold;
+>>   	bool has_aspm_l1ss;
+>> +	bool l1ss_rp_wake_fixup;
+>>   };
+>>   
+>>   static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+>> @@ -2290,6 +2293,16 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>>   			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
+>>   		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+>>   
+>> +		if (soc->l1ss_rp_wake_fixup) {
+>> +			/* Set CLKREQ asserted delay greater than Power_Off
+>> +			 * time (2us) to avoid RP wakeup in L1.2_ENTRY
+>> +			 */
+> Use standard multi-line comment formatting (and "L1.2.Entry" as above).
+I'll take care of it in next patch
+> I assume "CLKREQ asserted delay" is a Tegra-internal thing, since it
+> doesn't obviously correspond to a timing parameter in the spec.
+Yes. Its Tegra's internal thing
+> And I assume it doesn't depend on any of the OS-writable things in the
+> L1 PM Substates control registers, since this fixup isn't executed
+> during config writes to those registers?
+Yes. It doesn't depend on any OS-writable value in L1 PM Substates 
+control registers.
+Its a one time programmable value to be written before root port's LTSSM 
+starts.
+> Does this depend on any circuit details outside of Tegra, i.e., should
+> it be described via DT?	
+Nope. It doesn't depend on any external (to Tegra) circuitry.
+>> +			value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
+>> +			value &= ~RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY_MASK;
+>> +			value |= RP_L1SS_1_CTL_CLKREQ_ASSERTED_DLY;
+>> +			writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
+>> +		}
+>> +
+>>   		/* Following is based on clk_m being 19.2 MHz */
+>>   		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
+>>   		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
+>> @@ -2446,6 +2459,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>>   	.has_aspm_l1ss = false,
+>> +	.l1ss_rp_wake_fixup = false,
+>>   };
+>>   
+>>   static const struct tegra_pcie_soc tegra30_pcie = {
+>> @@ -2468,6 +2482,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>>   	.has_aspm_l1ss = false,
+>> +	.l1ss_rp_wake_fixup = false,
+>>   };
+>>   
+>>   static const struct tegra_pcie_soc tegra124_pcie = {
+>> @@ -2489,6 +2504,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>>   	.has_aspm_l1ss = false,
+>> +	.l1ss_rp_wake_fixup = false,
+>>   };
+>>   
+>>   static const struct tegra_pcie_soc tegra210_pcie = {
+>> @@ -2518,6 +2534,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>>   	.program_deskew_time = true,
+>>   	.updateFC_threshold = true,
+>>   	.has_aspm_l1ss = true,
+>> +	.l1ss_rp_wake_fixup = true,
+>>   };
+>>   
+>>   static const struct tegra_pcie_soc tegra186_pcie = {
+>> @@ -2540,6 +2557,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>>   	.has_aspm_l1ss = true,
+>> +	.l1ss_rp_wake_fixup = false,
+>>   };
+>>   
+>>   static const struct of_device_id tegra_pcie_of_match[] = {
+>> -- 
+>> 2.7.4
+>>
