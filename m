@@ -1,66 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34320 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:33088 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756074AbdLOXBx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 18:01:53 -0500
-Subject: [PATCH] cxgb4: Simplify PCIe Completion Timeout setting
+        id S1754246AbdLNXeR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Dec 2017 18:34:17 -0500
+Date: Thu, 14 Dec 2017 17:34:08 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: netdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, Ganesh Goudar <ganeshgr@chelsio.com>
-Date: Fri, 15 Dec 2017 17:01:50 -0600
-Message-ID: <20171215230150.177674.9821.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Ingo Molnar <mingo@kernel.org>
+Subject: [GIT PULL] PCI fixes for v4.15
+Message-ID: <20171214233408.GA68544@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+PCI fixes:
 
-Simplify PCIe Completion Timeout setting by using the
-pcie_capability_clear_and_set_word() interface.  No functional change
-intended.
+  - add a pci_get_domain_bus_and_slot() stub for the CONFIG_PCI=n case to
+    avoid build breakage in the v4.16 merge window if a
+    pci_get_bus_and_slot() -> pci_get_domain_bus_and_slot() patch gets
+    merged before the PCI tree (Randy Dunlap)
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.c |   21 +++------------------
- 1 file changed, 3 insertions(+), 18 deletions(-)
+  - fix an AMD boot regression in the 64bit BAR support added in v4.15
+    (Christian König)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-index f63210f15579..4c99fdb2e13b 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-@@ -8492,22 +8492,6 @@ static int t4_get_flash_params(struct adapter *adap)
- 	return 0;
- }
- 
--static void set_pcie_completion_timeout(struct adapter *adapter, u8 range)
--{
--	u16 val;
--	u32 pcie_cap;
--
--	pcie_cap = pci_find_capability(adapter->pdev, PCI_CAP_ID_EXP);
--	if (pcie_cap) {
--		pci_read_config_word(adapter->pdev,
--				     pcie_cap + PCI_EXP_DEVCTL2, &val);
--		val &= ~PCI_EXP_DEVCTL2_COMP_TIMEOUT;
--		val |= range;
--		pci_write_config_word(adapter->pdev,
--				      pcie_cap + PCI_EXP_DEVCTL2, val);
--	}
--}
--
- /**
-  *	t4_prep_adapter - prepare SW and HW for operation
-  *	@adapter: the adapter
-@@ -8593,8 +8577,9 @@ int t4_prep_adapter(struct adapter *adapter)
- 	adapter->params.portvec = 1;
- 	adapter->params.vpd.cclk = 50000;
- 
--	/* Set pci completion timeout value to 4 seconds. */
--	set_pcie_completion_timeout(adapter, 0xd);
-+	/* Set PCIe completion timeout to 4 seconds. */
-+	pcie_capability_clear_and_set_word(adapter->pdev, PCI_EXP_DEVCTL2,
-+					   PCI_EXP_DEVCTL2_COMP_TIMEOUT, 0xd);
- 	return 0;
- }
- 
+  - fix an R-Car use-after-free that causes a crash if no PCIe card is
+    present (Geert Uytterhoeven)
+
+
+The following changes since commit 4fbd8d194f06c8a3fd2af1ce560ddb31f7ec8323:
+
+  Linux 4.15-rc1 (2017-11-26 16:01:47 -0800)
+
+are available in the Git repository at:
+
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.15-fixes-1
+
+for you to fetch changes up to 0c31f1d7be1b5c4858b1d714dcefa25f41428cab:
+
+  PCI: rcar: Fix use-after-free in probe error path (2017-12-12 11:01:47 -0600)
+
+----------------------------------------------------------------
+pci-v4.15-fixes-1
+
+----------------------------------------------------------------
+Christian König (2):
+      x86/PCI: Fix infinite loop in search for 64bit BAR placement
+      x86/PCI: Only enable a 64bit BAR on single-socket AMD Family 15h
+
+Geert Uytterhoeven (1):
+      PCI: rcar: Fix use-after-free in probe error path
+
+Randy Dunlap (1):
+      PCI: Add pci_get_domain_bus_and_slot() stub
+
+ arch/x86/pci/fixup.c         | 27 +++++++++++++++++++++------
+ drivers/pci/host/pcie-rcar.c |  8 ++++----
+ include/linux/pci.h          |  3 +++
+ 3 files changed, 28 insertions(+), 10 deletions(-)
