@@ -1,79 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:48458 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751211AbdL0A6F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Dec 2017 19:58:05 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: JeffyChen <jeffy.chen@rock-chips.com>, tony@atomide.com
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        linux-pm@vger.kernel.org, shawn.lin@rock-chips.com,
-        briannorris@chromium.org, dianders@chromium.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE# signal for OF
-Date: Wed, 27 Dec 2017 01:57:07 +0100
-Message-ID: <5491520.JsEYlZiECc@aspire.rjw.lan>
-In-Reply-To: <5A41A0A7.5070605@rock-chips.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com> <9593014.U0c2JQdoEZ@aspire.rjw.lan> <5A41A0A7.5070605@rock-chips.com>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:20521 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751729AbdLNMO2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 07:14:28 -0500
+Subject: Re: [PATCH v4 2/3] PCI: endpoint: Fix error handling in
+ pci_epc_epf_link()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20171212141634.5985-1-niklas.cassel@axis.com>
+ <20171212141634.5985-3-niklas.cassel@axis.com>
+ <691e3693-9f18-6546-29d0-4cb155ef5bf6@ti.com>
+ <20171214120757.GB27147@e107981-ln.cambridge.arm.com>
+CC: Niklas Cassel <niklas.cassel@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <8eda75e3-f4e4-151e-5104-69ba2e40a31f@ti.com>
+Date: Thu, 14 Dec 2017 17:43:33 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20171214120757.GB27147@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, December 26, 2017 2:06:47 AM CET JeffyChen wrote:
-> Hi Rafael,
-> 
-> Thanks for your reply :)
-> 
-> On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
-> >> >+
-> >> >+	dn = pci_device_to_OF_node(ppdev);
-> >> >+	if (!dn)
-> >> >+		return 0;
-> >> >+
-> >> >+	irq = of_irq_get_byname(dn, "wakeup");
-> > Why is this a property of the bridge and not of the device itself?
->
-> That is suggested by Brian, because in that way, the wakeup pin would 
-> not "tied to what exact device is installed (or no device, if it's a slot)."
 
-But I don't think it works when there are two devices using different WAKE#
-interrupt lines under the same bridge.  Or how does it work then?
 
-> >> >+	if (irq == -EPROBE_DEFER)
-> > Braces here, please.
-> ok, will fix in the next version.
+On Thursday 14 December 2017 05:37 PM, Lorenzo Pieralisi wrote:
+> On Thu, Dec 14, 2017 at 04:37:22PM +0530, Kishon Vijay Abraham I wrote:
+>> Hi Niklas,
+>>
+>> On Tuesday 12 December 2017 07:46 PM, Niklas Cassel wrote:
+>>> The error handling in pci_epc_epf_link() is broken,
+>>> since the clean up code for pci_epc_add_epf() calls clear_bit(),
+>>> even though the matching set_bit() is done after pci_epc_add_epf().
+>>>
+>>> Also, clear_bit() should be done before pci_epc_remove_epf(),
+>>> since clean up code should normally do things in the reverse order.
+>>>
+>>> Fixes: d74679911610 ("PCI: endpoint: Introduce configfs entry for configuring EP functions")
+>>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+>>> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>> ---
+>>>  drivers/pci/endpoint/pci-ep-cfs.c | 6 ++----
+>>>  1 file changed, 2 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+>>> index 4f74386c1ced..e1f5adc9e113 100644
+>>> --- a/drivers/pci/endpoint/pci-ep-cfs.c
+>>> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+>>> @@ -106,7 +106,7 @@ static int pci_epc_epf_link(struct config_item *epc_item,
+>>>  	epf = epf_group->epf;
+>>>  	ret = pci_epc_add_epf(epc, epf);
+>>>  	if (ret)
+>>> -		goto err_add_epf;
+>>> +		return ret;
+>>
+>> Actually the func_no should be populated before invoking pci_epc_add_epf. Once
+>> that is done, the error handling should be fine.
 > 
-> >
-> >> >+		return irq;
-> >> >+	/* Ignore other errors, since a missing wakeup is non-fatal. */
-> >> >+	else if (irq < 0) {
-> >> >+		dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
-> >> >+		return 0;
-> >> >+	}
-> >> >+
-> >> >+	device_init_wakeup(&pdev->dev, true);
-> > Why do you call this before dev_pm_set_dedicated_wake_irq()?
->
-> hmmm, i thought so too, but it turns out the dedicated wake irq 
-> framework requires device_init_wakeup(dev, true) before attach the wake irq:
-> 
-> int device_wakeup_attach_irq(struct device *dev,
->                               struct wake_irq *wakeirq)
-> {
->          struct wakeup_source *ws;
-> 
->          ws = dev->power.wakeup;
->          if (!ws) {
->                  dev_err(dev, "forgot to call device_init_wakeup?\n");
->                  return -EINVAL;
-> 
+> Which means that current code works because pci_epc_add_epf() is called
+> with epf->func_no == 0 right ? I agree that the correct fix consists in
 
-Well, that's a framework issue, fair enough.
+that's right Lorenzo.
 
-That said, what if user space removes the wakeup source from under you
-concurrently via sysfs?  Tony?
-
-Thanks,
-Rafael
+Thanks
+Kishon
