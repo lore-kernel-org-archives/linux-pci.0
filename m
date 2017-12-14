@@ -1,79 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:32958 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751260AbdLKWTB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Dec 2017 17:19:01 -0500
-Subject: Patch "x86/PCI: Make broadcom_postcore_init() check acpi_disabled" has been added to the 4.4-stable tree
-To: rafael.j.wysocki@intel.com, bhelgaas@google.com,
-        dave.hansen@linux.intel.com, gregkh@linuxfoundation.org,
-        linux-pci@vger.kernel.org, mingo@kernel.org, tglx@linutronix.de
-Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@linuxfoundation.org>
-Date: Mon, 11 Dec 2017 23:17:48 +0100
-Message-ID: <151303066823062@kroah.com>
+Return-Path: <SRS0=RDL9=DK=gmail.com=linus971@kernel.org>
+Return-Path: <SRS0=RDL9=DK=gmail.com=linus971@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linus971@gmail.com
+In-Reply-To: <alpine.DEB.2.20.1712142331030.2257@nanos>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com>
+ <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061344560.1724@nanos> <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl>
+ <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
+ <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com>
+ <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos>
+ <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos>
+ <CA+55aFwQBV9J1zxbBPLC5dOK-ebd1zcN6BaoB897AaKhc_tDtA@mail.gmail.com> <alpine.DEB.2.20.1712142331030.2257@nanos>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 14 Dec 2017 14:47:33 -0800
+Message-ID: <CA+55aFzEt3hspSXgA28emi7aka0wQc8SaC=wdVKp=DtmbptQTQ@mail.gmail.com>
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
+	Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Andy Lutomirski <luto@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "the arch/x86 maintainers" <x86@kernel.org>,
+	Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Dec 14, 2017 at 2:36 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>
+> But, because the silly firmware comes out of suspend with all PIC lines
+> unmasked for whatever reason, the PIC can observe that IRQ being raised and
+> the CPU not handling it. So yes, I forgot about 7 being magic, but I still
+> think it's the firmware which causes it by unmasking the PIC irqs.
 
-This is a note to let you know that I've just added the patch titled
+Yes, that sounds quite likely.
 
-    x86/PCI: Make broadcom_postcore_init() check acpi_disabled
-
-to the 4.4-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-The filename of the patch is:
-     x86-pci-make-broadcom_postcore_init-check-acpi_disabled.patch
-and it can be found in the queue-4.4 subdirectory.
-
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
->From ddec3bdee05b06f1dda20ded003c3e10e4184cab Mon Sep 17 00:00:00 2001
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Date: Fri, 1 Dec 2017 15:08:12 +0100
-Subject: x86/PCI: Make broadcom_postcore_init() check acpi_disabled
-
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-commit ddec3bdee05b06f1dda20ded003c3e10e4184cab upstream.
-
-acpi_os_get_root_pointer() may return a valid address even if acpi_disabled
-is set, but the host bridge information from the ACPI tables is not going
-to be used in that case and the Broadcom host bridge initialization should
-not be skipped then, So make broadcom_postcore_init() check acpi_disabled
-too to avoid this issue.
-
-Fixes: 6361d72b04d1 (x86/PCI: read Broadcom CNB20LE host bridge info before PCI scan)
-Reported-by: Dave Hansen <dave.hansen@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>
-Link: https://lkml.kernel.org/r/3186627.pxZj1QbYNg@aspire.rjw.lan
-Signed-off-by: Ingo Molnar <mingo@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- arch/x86/pci/broadcom_bus.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/arch/x86/pci/broadcom_bus.c
-+++ b/arch/x86/pci/broadcom_bus.c
-@@ -97,7 +97,7 @@ static int __init broadcom_postcore_init
- 	 * We should get host bridge information from ACPI unless the BIOS
- 	 * doesn't support it.
- 	 */
--	if (acpi_os_get_root_pointer())
-+	if (!acpi_disabled && acpi_os_get_root_pointer())
- 		return 0;
- #endif
- 
-
-
-Patches currently in stable-queue which might be from rafael.j.wysocki@intel.com are
-
-queue-4.4/x86-pci-make-broadcom_postcore_init-check-acpi_disabled.patch
+            Linus
