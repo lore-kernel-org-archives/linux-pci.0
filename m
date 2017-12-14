@@ -1,166 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51920 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752771AbdLAO5T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Dec 2017 09:57:19 -0500
-Date: Fri, 1 Dec 2017 08:57:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>
-Subject: Re: [Question] Unsupported Request During PCI Enumeration
-Message-ID: <20171201145717.GF19640@bhelgaas-glaptop.roam.corp.google.com>
-References: <26340670-2744-b2e0-eed7-eb8e0ad2bc84@huawei.com>
- <20171128003208.GB11228@bhelgaas-glaptop.roam.corp.google.com>
- <c1235398-9a80-b4f3-94c9-3686651259fc@huawei.com>
- <20171128145748.GD11228@bhelgaas-glaptop.roam.corp.google.com>
- <12079a9c-9018-b1be-1596-8a2f6746677b@huawei.com>
- <20171130231558.GD19640@bhelgaas-glaptop.roam.corp.google.com>
- <b6b7e255-b7c1-d4dc-ba76-fd6ae494befb@huawei.com>
+Return-Path: <SRS0=yptj=DK=nvidia.com=vidyas@kernel.org>
+Return-Path: <SRS0=yptj=DK=nvidia.com=vidyas@kernel.org>
+Subject: Re: [PATCH V3 1/3] PCI: tegra: Apply sw fixups to support ASPM-L1
+ Sub-States
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <treding@nvidia.com>, <bhelgaas@google.com>,
+	<linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<kthota@nvidia.com>, <swarren@nvidia.com>, <mmaddireddy@nvidia.com>
+References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
+ <1510492674-12786-2-git-send-email-vidyas@nvidia.com>
+ <20171120212151.GC16362@bhelgaas-glaptop.roam.corp.google.com>
+From: Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <42e1cd97-c886-4e21-c13d-8861238b9644@nvidia.com>
+Date: Thu, 14 Dec 2017 22:02:15 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <b6b7e255-b7c1-d4dc-ba76-fd6ae494befb@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171120212151.GC16362@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 01, 2017 at 05:30:48PM +0800, Dongdong Liu wrote:
-> 
-> 在 2017/12/1 7:15, Bjorn Helgaas 写道:
-> >On Thu, Nov 30, 2017 at 08:47:38PM +0800, Dongdong Liu wrote:
-> >>
-> >>>I do not think drivers should be calling
-> >>>pci_enable_pcie_error_reporting() directly.  And I don't think we
-> >>>should depend on _HPX.  _HPX is intended for *platform-specific*
-> >>>things, and I don't think this is platform-specific.  And of course,
-> >>>_HPX only works on ACPI systems, and we want this to work everywhere.
-> >>>
-> >>>So I think we need a more comprehensive generic solution in Linux.  I
-> >>>think we need several pieces:
-> >>>
-> >>> - Disable UR reporting during enumeration, similar to how we disable
-> >>>   Master Abort reporting.
-> >>>
-> >>> - Restore original UR reporting setting after enumeration.
-> >>>
-> >>> - Clear any logged UR errors after enumeration.
-> >>
-> >>Agree.
-> >>
-> >>>
-> >>> - Enable UR reporting as part of configuring every device, e.g., in
-> >>>   pci_configure_device() or pci_init_capabilities().
-> >>
-> >>Enable UR reporting in pci_configure_device() or pci_init_capabilities() is
-> >>not ok. It will still report UR as it is still in enumeration.
-> >
-> >True.  For bridges, it needs to be after we've enumerated children of
-> >the bridge.
-> >
-> >>>I don't know whether we should enable UR reporting if AER is not
-> >>>present; we'll have to think about that.  We may also have to
-> >>>restructure how the AER driver works, because I think it currently
-> >>>comes into play *after* we call pci_init_capabilities().  There are
-> >>>probably some ordering issues there.
-> >>
-> >>I write a sample code as below, it can avoid report UR during
-> >>enumeration. What do you think about the code ?
-> >
-> >Can you do it the same place we disable and restore Master-Abort Mode,
-> >in pci_scan_bridge_extend()?  That's done for the same reason, so it
-> >would be nice to keep it together.
-> >
-> >Maybe we could have a "pci_disable_enumeration_errors()" that would
-> >disable both Master-Abort Mode and UR reporting, and a corresponding
-> >"pci_restore_enumeration_errors()" that would clear any logged errors
-> >and restore the original settings?
-> 
-> Set devctl to disable UR in pci_scan_bridge_extend() can resolve
-> bridge devices UR reporting issue. But for EP devices may still
-> reprot UR, like non-ARI EP devices. So it's better to disable UR
-> reporting in pci_device_add() after calling
-> pci_configure_device(dev) and restore in pci_bus_add_device().  As
-> in pci_configure_device() may parse _HPX to enable UR, disable UR
-> reporting should call after pci_configure_device().
 
-Help me understand this issue with Endpoints and how ARI is involved.
 
-Is this an issue with multi-function devices, where function 0 exists
-and then we try to read the Vendor ID of function 1, 2, ..., until one
-fails to respond?  And when one fails to respond, the Endpoint logs a
-UR error?
-
-And I guess the ARI connection is that with ARI, we use the ARI
-Capability to find the next function, so we should never try to read
-the Vendor ID of a non-existent function?
-
-pci_device_add() and pci_bus_add_device() don't have any obvious
-connection to enumeration, so I don't really like those places.  If
-I'm understanding the issue correctly, I'd rather do the error
-disable/restore in pci_scan_slot(), where it's right next to the
-enumeration of additional functions.
-
-> >>diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> >>index bc56cf1..1a46026 100644
-> >>--- a/drivers/pci/bus.c
-> >>+++ b/drivers/pci/bus.c
-> >>@@ -14,6 +14,7 @@
-> >> #include <linux/ioport.h>
-> >> #include <linux/proc_fs.h>
-> >> #include <linux/slab.h>
-> >>+#include <linux/aer.h>
-> >>
-> >> #include "pci.h"
-> >>
-> >>@@ -311,6 +312,16 @@ void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
-> >> void pci_bus_add_device(struct pci_dev *dev)
-> >> {
-> >>        int retval;
-> >>+       u16 reg16;
-> >>+
-> >>+       /* Clear PCIe Capability's Device Status */
-> >>+       pcie_capability_read_word(dev, PCI_EXP_DEVSTA, &reg16);
-> >>+       pcie_capability_write_word(dev, PCI_EXP_DEVSTA, reg16);
-> >>+       pci_cleanup_aer_error_status_regs(dev);
-> >>+
-> >>+       /* Restore UR reporting */
-> >>+       if (dev->devctl_ur)
-> >>+               pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_URRE);
-> >>
-> >>        /*
-> >>         * Can not put in pci_device_add yet because resources
-> >>diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >>index 14e0ea1..7b34083 100644
-> >>--- a/drivers/pci/probe.c
-> >>+++ b/drivers/pci/probe.c
-> >>@@ -2119,9 +2119,21 @@ static void pci_set_msi_domain(struct pci_dev *dev)
-> >> void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
-> >> {
-> >>        int ret;
-> >>+       u16 reg16;
-> >>
-> >>        pci_configure_device(dev);
-> >>
-> >>+       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &reg16);
-> >>+       dev->devctl_ur = reg16 & PCI_EXP_DEVCTL_URRE;
-> >>+       if (dev->devctl_ur) {
-> >>+               /*
-> >>+                * Turn off UR reporting, later restore UR reporting
-> >>+                * after enumeration.
-> >>+                */
-> >>+               reg16 = reg16 & (~PCI_EXP_DEVCTL_URRE);
-> >>+               pcie_capability_write_word(dev, PCI_EXP_DEVCTL, reg16);
-> >>+       }
-> >>+
-> >>        device_initialize(&dev->dev);
-> >>        dev->dev.release = pci_release_dev;
-> >>
-> >>diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >>index ae8d2b4..c2a90f1 100644
-> >>--- a/include/linux/pci.h
-> >>+++ b/include/linux/pci.h
-> >>@@ -440,6 +440,7 @@ struct pci_dev {
-> >>        char *driver_override; /* Driver name to force a match */
-> >>
-> >>        unsigned long priv_flags; /* Private flags for the pci driver */
-> >>+       u16 devctl_ur;
-> >> };
+On Tuesday 21 November 2017 02:51 AM, Bjorn Helgaas wrote:
+> On Sun, Nov 12, 2017 at 06:47:52PM +0530, Vidya Sagar wrote:
+>> Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
+> Please use the exact names used in the spec.  In this case, I think
+> that would be "Port Common_Mode_Restore_Time" and "Port T_POWER_ON"
+> (from the L1 PM Substates Capabilities Register, sec 7.33.2).
+> Searching the spec for "T_cmrt" isn't going to find anything useful.
+I'll take care of this in next patch
+> These look like things that maybe should be in the DT because they
+> depend on external component values, so you might need different
+> values depending on what board the Tegra is on?  Same for clk_m?
+I'm afraid not. These are fixed for Tegra including clk_m.
+>
+>> values to get them reflected in ASPM-L1 Sub-States capability registers
+>> Also adjusts internal counter values according to 19.2 MHz clk_m value
+>>
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>> V2:
+>> * no change in this patch
+>>
+>> V3:
+>> * no change in this patch
+>>
+>>   drivers/pci/host/pci-tegra.c | 59 ++++++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 59 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>> index adae03d671ab..6d68f49f152e 100644
+>> --- a/drivers/pci/host/pci-tegra.c
+>> +++ b/drivers/pci/host/pci-tegra.c
+>> @@ -40,6 +40,7 @@
+>>   #include <linux/of_pci.h>
+>>   #include <linux/of_platform.h>
+>>   #include <linux/pci.h>
+>> +#include <linux/pci-aspm.h>
+>>   #include <linux/phy/phy.h>
+>>   #include <linux/platform_device.h>
+>>   #include <linux/reset.h>
+>> @@ -191,6 +192,27 @@
+>>   #define RP_PRIV_XP_DL	0x494
+>>   #define  RP_PRIV_XP_DL_GEN2_UPD_FC_TSHOLD	(0x1ff << 1)
+>>   
+>> +#define RP_L1_PM_SUBSTATES_CTL				0xC00
+>> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK		(0xFF << 8)
+>> +#define RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT		8
+>> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK		(0x3 << 16)
+>> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT		16
+>> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK		(0x1F << 19)
+>> +#define RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT		19
+>> +#define RP_L1_PM_SUBSTATES_CTL_HIDE_CAP			(0x1 << 24)
+>> +
+>> +#define RP_L1_PM_SUBSTATES_1_CTL			0xC04
+>> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK	0x1FFF
+>> +#define RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY		0x26
+>> +
+>> +#define RP_L1_PM_SUBSTATES_2_CTL			0xC08
+>> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK	0x1FFF
+>> +#define RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY		0x4D
+>> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK	(0xFF << 13)
+>> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND		(0x13 << 13)
+>> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK	(0xF << 21)
+>> +#define RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP	(0x2 << 21)
+>> +
+>>   #define RP_RX_HDR_LIMIT	0xe00
+>>   #define  RP_RX_HDR_LIMIT_PW_MASK	(0xff << 8)
+>>   #define  RP_RX_HDR_LIMIT_PW		(0x0e << 8)
+>> @@ -327,6 +349,7 @@ struct tegra_pcie_soc {
+>>   	bool RAW_violation_fixup;
+>>   	bool program_deskew_time;
+>>   	bool updateFC_threshold;
+>> +	bool has_aspm_l1ss;
+>>   };
+>>   
+>>   static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+>> @@ -2251,6 +2274,37 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+>>   		value |= RP_VEND_XP_UPDATE_FC_THRESHOLD_T210;
+>>   		writel(value, port->base + RP_VEND_XP);
+>>   	}
+>> +
+>> +	if (soc->has_aspm_l1ss) {
+>> +		/* Set Common Mode Restore Time to 30us */
+>> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
+>> +		value &= ~RP_L1_PM_SUBSTATES_CTL_CM_RTIME_MASK;
+>> +		value |= (0x1E << RP_L1_PM_SUBSTATES_CTL_CM_RTIME_SHIFT);
+>> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+>> +
+>> +		/* set T_Power_On to 70us */
+>> +		value = readl(port->base + RP_L1_PM_SUBSTATES_CTL);
+>> +		value &= ~(RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_MASK |
+>> +			RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_MASK);
+>> +		value |= (1 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_SCL_SHIFT) |
+>> +			(7 << RP_L1_PM_SUBSTATES_CTL_T_PWRN_VAL_SHIFT);
+>> +		writel(value, port->base + RP_L1_PM_SUBSTATES_CTL);
+>> +
+>> +		/* Following is based on clk_m being 19.2 MHz */
+>> +		value = readl(port->base + RP_L1_PM_SUBSTATES_1_CTL);
+>> +		value &= ~RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY_MASK;
+>> +		value |= RP_L1_PM_SUBSTATES_1_CTL_PWR_OFF_DLY;
+>> +		writel(value, port->base + RP_L1_PM_SUBSTATES_1_CTL);
+>> +
+>> +		value = readl(port->base + RP_L1_PM_SUBSTATES_2_CTL);
+>> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY_MASK;
+>> +		value |= RP_L1_PM_SUBSTATES_2_CTL_T_L1_2_DLY;
+>> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_MASK;
+>> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND;
+>> +		value &= ~RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP_MASK;
+>> +		value |= RP_L1_PM_SUBSTATES_2_CTL_MICROSECOND_COMP;
+>> +		writel(value, port->base + RP_L1_PM_SUBSTATES_2_CTL);
+>> +	}
+>>   }
+>>   /*
+>>    * FIXME: If there are no PCIe cards attached, then calling this function
+>> @@ -2391,6 +2445,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>>   	.RAW_violation_fixup = false,
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>> +	.has_aspm_l1ss = false,
+>>   };
+>>   
+>>   static const struct tegra_pcie_soc tegra30_pcie = {
+>> @@ -2412,6 +2467,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>>   	.RAW_violation_fixup = false,
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>> +	.has_aspm_l1ss = false,
+>>   };
+>>   
+>>   static const struct tegra_pcie_soc tegra124_pcie = {
+>> @@ -2432,6 +2488,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>>   	.RAW_violation_fixup = true,
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>> +	.has_aspm_l1ss = false,
+>>   };
+>>   
+>>   static const struct tegra_pcie_soc tegra210_pcie = {
+>> @@ -2460,6 +2517,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>>   	.RAW_violation_fixup = false,
+>>   	.program_deskew_time = true,
+>>   	.updateFC_threshold = true,
+>> +	.has_aspm_l1ss = true,
+>>   };
+>>   
+>>   static const struct tegra_pcie_soc tegra186_pcie = {
+>> @@ -2481,6 +2539,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>>   	.RAW_violation_fixup = false,
+>>   	.program_deskew_time = false,
+>>   	.updateFC_threshold = false,
+>> +	.has_aspm_l1ss = true,
+>>   };
+>>   
+>>   static const struct of_device_id tegra_pcie_of_match[] = {
+>> -- 
+>> 2.7.4
+>>
