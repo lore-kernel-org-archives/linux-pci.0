@@ -1,41 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:39614 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752690AbdLMWNr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 17:13:47 -0500
-Received: by mail-wr0-f173.google.com with SMTP id a41so3461281wra.6
-        for <linux-pci@vger.kernel.org>; Wed, 13 Dec 2017 14:13:47 -0800 (PST)
+Return-Path: <SRS0=zLRQ=DK=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=zLRQ=DK=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 14 Dec 2017 13:47:07 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	kishon@ti.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 0/3] Fix find_first_zero_bit() usage
+Message-ID: <20171214134707.GE27348@e107981-ln.cambridge.arm.com>
+References: <20171212141634.5985-1-niklas.cassel@axis.com>
+ <20171213215925.GJ30595@bhelgaas-glaptop.roam.corp.google.com>
+ <20171214133230.GA25307@axis.com>
 MIME-Version: 1.0
-In-Reply-To: <CAKdAkRSiVkTo84W7_eDwoLL0UH0jYE7Nbb5D9VEBQS3+UPLXEg@mail.gmail.com>
-References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20171017133702.1b0e35bc@t450s.home> <MWHPR12MB16008EEBF251F321E9B48D41C84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAB=NE6U-1ytEbL9A2FeVjcOfN3VSNAJUa9JbsQH9UfjRfANKxw@mail.gmail.com>
- <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAB=NE6Xwj20hwX3XzW_bYEby+24c=gY_nQtXPOu1J_c7uRHRjA@mail.gmail.com>
- <MWHPR12MB16004ED0D14F6531DDDD1692C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <SN1PR12MB03524AF87997DFAC404CD514C8350@SN1PR12MB0352.namprd12.prod.outlook.com>
- <CAKdAkRRuX-NcWB_fwWr6XHV61t+L2MCjedfZgaiAD-xpVB-mMQ@mail.gmail.com>
- <CANn89iJ1O+a9-ZUhZK94npGwURpWv8u1aHhVsd0-xEad_+_p8w@mail.gmail.com> <CAKdAkRSiVkTo84W7_eDwoLL0UH0jYE7Nbb5D9VEBQS3+UPLXEg@mail.gmail.com>
-From: Eric Dumazet <edumazet@google.com>
-Date: Wed, 13 Dec 2017 14:06:46 -0800
-Message-ID: <CANn89iJ2UmDTianzVV-c=oyefovOqg_-R9=Hg5hOG9pprKqwmw@mail.gmail.com>
-Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
- drivers when VFs are attached to VMs ...
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Casey Leedom <leedom@chelsio.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
-        Komali Katari <komali@chelsio.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171214133230.GA25307@axis.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> Don't you need to update individual pointers if you are altering the buffer?
->
+On Thu, Dec 14, 2017 at 02:32:30PM +0100, Niklas Cassel wrote:
+> On Wed, Dec 13, 2017 at 03:59:25PM -0600, Bjorn Helgaas wrote:
+> > On Tue, Dec 12, 2017 at 03:16:31PM +0100, Niklas Cassel wrote:
+> > > find_first_zero_bit()'s parameter 'size' is defined in bits,
+> > > not in bytes.
+> > > 
+> > > Calling find_first_zero_bit() with the wrong size unit
+> > > will lead to insidious bugs.
+> > > 
+> > > Fix all uses of find_first_zero_bit() called with
+> > > sizeof() as size argument in drivers/pci.
+> > > 
+> > > Also had to fix broken error handling in pci_epc_epf_link()
+> > > in order to do proper error handling for find_first_zero_bit().
+> > > 
+> > > Niklas Cassel (3):
+> > >   PCI: designware-ep: Fix find_first_zero_bit() usage
+> > >   PCI: endpoint: Fix error handling in pci_epc_epf_link()
+> > >   PCI: endpoint: Fix find_first_zero_bit() usage
+> > > 
+> > >  drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
+> > >  drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
+> > >  drivers/pci/endpoint/pci-ep-cfs.c    | 13 ++++++++-----
+> > >  3 files changed, 40 insertions(+), 15 deletions(-)
+> > 
+> > In the interest of making forward progress, I applied these to
+> > for-linus for v4.15.
+> > 
+> > The issues apparently have been there since v4.12-rc1, but I guess
+> > this is proposed for for-linus because (a) it fixes insidious bugs
+> > and (b) the endpoint framework is relatively little-used yet so
+> > low-risk.  Right?
+> > 
+> 
+> Hello Bjorn,
+> 
+> As far as I know, dra7xx is the only in-tree user of the endpoint
+> framework. Therefore, I see no real need to rush these patches.
+> 
+> One benefit of sending them to v4.15 would be if anyone starts
+> developing endpoint support for their driver (with v4.15 as a base),
+> we eliminate the risk that they might get hit by these bugs, and
+> potentially waste time finding bugs that have already been found.
+> 
+> Please note that Kishon had some last minute review comments,
+> so I had to submit a V5 of the patch series.
 
-Possibly...
+I missed this message (please CC me on the cover letter too next time) I
+hope Bjorn can drop v4 and replace it with v5 - or I can just queue v5
+for v4.16 - just let me know please how you want to handle it.
+
+Thanks,
+Lorenzo
