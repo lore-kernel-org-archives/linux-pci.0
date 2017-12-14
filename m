@@ -1,144 +1,69 @@
-Return-Path: <SRS0=1jow=DK=mm-sol.com=svarbanov@kernel.org>
-Return-Path: <SRS0=1jow=DK=mm-sol.com=svarbanov@kernel.org>
-Subject: Re: [PATCH] PCI: qcom: add missing supplies required for msm8996
-To: srinivas.kandagatla@linaro.org, stanimir.varbanov@linaro.org,
- linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
- robh+dt@kernel.org, devicetree@vger.kernel.org,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <4fd5f3e7-73f6-ad63-c961-47f1f0fac149@mm-sol.com>
-Date: Thu, 14 Dec 2017 12:06:02 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:43350 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753226AbdLNOFI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 09:05:08 -0500
+Date: Thu, 14 Dec 2017 15:05:03 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: cyndis@kapsi.fi, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
+        jonathanh@nvidia.com, robh+dt@kernel.org, frowand.list@gmail.com,
+        rjw@rjwysocki.net, tglx@linutronix.de, vidyas@nvidia.com,
+        kthota@nvidia.com, linux-tegra@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH V4 2/7] PCI: tegra: Use bus->sysdata to store and get
+ host private data
+Message-ID: <20171214140503.GB13733@ulmo>
+References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+ <1512723493-865-3-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="A6N2fC+uXW/VQSAv"
+In-Reply-To: <1512723493-865-3-git-send-email-mmaddireddy@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Srini,
 
-On 12/08/2017 11:20 AM, srinivas.kandagatla@linaro.org wrote:
-> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> 
-> This patch adds supplies that are required for msm8996. Two of them vdda
-> and vdda-1p8 are analog supplies that go in to controller, and the rest
+--A6N2fC+uXW/VQSAv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-According to the msm8996 device specification there are two pins related
-to the PCIe power: VDD_PCIE_CORE (power for PCIe core circuitry) and
-VDD_PCIE_1P8 (power for PCIe I/O circuitry). Thus I think it is clear
-that VDD_PCIE_CORE is vdda and VDD_PCIE_1P8 should be part of PCIe phy
-driver DT binding (and this is the case currently [1]). So I don't think
-we need vdda-1p8 regulator DT binding for that in pcie-qcom.
-
-> of the two vddpe's are supplies to PCIe endpoints.
-
-For this part I'm still not sure. On first sight it looks that these
-vdd's should be part of endpoint drivers, on the other hand we have
-mPCIe connector (on db820c) which has two power rails 3p3v and 1p5v
-which should be controlled/enabled as well.
-
-So I'd like to hear more opinions on that, i.e. how this is solved by
-the other PCIe bridge drivers.
-
-> 
-> Without these supplies PCIe endpoints which require power supplies are
-> not enumerated at all, as there is no one to power it up.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+On Fri, Dec 08, 2017 at 02:28:08PM +0530, Manikanta Maddireddy wrote:
+> Tegra host driver is using pci_find_host_bridge() to get private data,
+> however pci_find_host_bridge() is causing module build failure because
+> it is not exported. pci_find_host_bridge() can be avoided by using
+> bus->sysdata to store and get private data.
+>=20
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
->  .../devicetree/bindings/pci/qcom,pcie.txt          | 16 +++++++++++++
->  drivers/pci/dwc/pcie-qcom.c                        | 28 ++++++++++++++++++++--
->  2 files changed, 42 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> index 3c9d321b3d3b..045102cb3e12 100644
-> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-> @@ -179,6 +179,11 @@
->  	Value type: <phandle>
->  	Definition: A phandle to the core analog power supply
->  
-> +- vdda-1p8-supply:
-> +	Usage: required for msm8996
-> +	Value type: <phandle>
-> +	Definition: A phandle to the 1.8v analog power supply
-> +
->  - vdda_phy-supply:
->  	Usage: required for ipq/apq8064
->  	Value type: <phandle>
-> @@ -189,6 +194,15 @@
->  	Value type: <phandle>
->  	Definition: A phandle to the analog power supply for IC which generates
->  		    reference clock
-> +- vddpe-supply:
-> +	Usage: optional
-> +	Value type: <phandle>
-> +	Definition: A phandle to the PCIe endpoint power supply
-> +
-> +- vddpe1-supply:
-> +	Usage: optional
-> +	Value type: <phandle>
-> +	Definition: A phandle to the PCIe endpoint power supply 1
->  
->  - phys:
->  	Usage: required for apq8084
-> @@ -205,6 +219,8 @@
->  	Value type: <prop-encoded-array>
->  	Definition: List of phandle and GPIO specifier pairs. Should contain
->  			- "perst-gpios"	PCIe endpoint reset signal line
-> +			- "pe_en-gpios"	PCIe endpoint enable signal line
-> +			- "pe_en1-gpios" PCIe endpoint enable1 signal line
+> V4:
+> * new patch in V4
+>=20
+>  drivers/pci/host/pci-tegra.c | 13 +++++--------
+>  1 file changed, 5 insertions(+), 8 deletions(-)
 
-those two shouldn't be here, instead they should be part of regulator DT
-node, so please drop them.
+Acked-by: Thierry Reding <treding@nvidia.com>
 
->  			- "wake-gpios"	PCIe endpoint wake signal line
->  
->  * Example for ipq/apq8064
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 952a4fc4bf3c..01488f90da31 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -109,13 +109,15 @@ struct qcom_pcie_resources_1_0_0 {
->  	struct reset_control *core;
->  	struct regulator *vdda;
->  };
-> -
-> +#define QCOM_PCIE_MAX_SUPPLY	4
->  struct qcom_pcie_resources_2_3_2 {
->  	struct clk *aux_clk;
->  	struct clk *master_clk;
->  	struct clk *slave_clk;
->  	struct clk *cfg_clk;
->  	struct clk *pipe_clk;
-> +	int num_supplies;
-> +	struct regulator_bulk_data supplies[QCOM_PCIE_MAX_SUPPLY];
->  };
->  
->  struct qcom_pcie_resources_2_4_0 {
-> @@ -529,6 +531,17 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
->  	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
->  	struct dw_pcie *pci = pcie->pci;
->  	struct device *dev = pci->dev;
-> +	int ret;
-> +
-> +	res->supplies[0].supply = "vdda";
-> +	res->supplies[1].supply = "vdda-1p8";
-> +	res->supplies[2].supply = "vddpe";
-> +	res->supplies[3].supply = "vddpe1";
-> +	res->num_supplies = QCOM_PCIE_MAX_SUPPLY;
-> +	ret = devm_regulator_bulk_get(dev, QCOM_PCIE_MAX_SUPPLY,
-> +				      res->supplies);
+--A6N2fC+uXW/VQSAv
+Content-Type: application/pgp-signature; name="signature.asc"
 
-If we decide to go on this direction we need to replace this with
-devm_regulator_bulk_get_optional (yes I know there is no such regulator
-API yet) because they are optional in the DT binding.
+-----BEGIN PGP SIGNATURE-----
 
-<snip>
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloyhQ8ACgkQ3SOs138+
+s6ElJhAAiEQCEKBp1Z0BYGO9V+vTORnsJ39ocNeUtwhcROH56OPJQLQBHKKRmXaf
+Aqjd5tyHbhLuIAoXeyngrn6EfuhNHA1JfUOWDmKFauCYoP5ei9M0cJilXNTLxDGh
+RjtcNM1AA9ajsmkIMeNYUs32OIkwNBvOaPjeiMWodKLvi9JFEZFRZbFAZnyKpnS2
+coVFK2l0FSoUPCn2uSoeth6udbTkH7kGD2FYPZ3vPLpFBbl4lgZW+I+4UjnIG6Is
+0Z6wU/ssElSg7zpDmVKWZi/A1llFYZbs72pmqKBpGEhm1440hKU1W5sdGfIY9T/K
+eFDI/A/DwIuwP2Tn0olRiFw+8Rxm24lQaSnX4u4ZcgVJTWCig9u0py71lJ1MGw+y
+GAdUPnLCFv6rQfAVNklmGkb2p/6lzwQvDOyVAAbWIwFyk2QKOU75rIBxnwL/o3v1
+jE3nFQ4lyz+UxqYXlfnx709UoxIxSb/Vx23iG8LGPqxxBxczK6XnYYugyy8RQ6nw
+6IslmGgu20QqBKLFZFHZFUGo46/wjB7tGrHQSbsHJNA8GkZbcdp0tKEgoRCizoCT
+uPf0Appm+uMUKG2bKPBOL269J6NIhg6Xz/sSeKZkVbzYc327whyJVsWiyFUzk5Ai
+QXlYMyyGk5b56Hdx8d55sEUSKA0JmgxTzuqF6ywu1nJBtyL7wu4=
+=LwAw
+-----END PGP SIGNATURE-----
 
--- 
-regards,
-Stan
-
-[1]
-https://elixir.free-electrons.com/linux/latest/source/arch/arm64/boot/dts/qcom/msm8996.dtsi#L638
+--A6N2fC+uXW/VQSAv--
