@@ -1,71 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
+Date: Thu, 14 Dec 2017 13:30:37 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+cc: Linus Torvalds <torvalds@linux-foundation.org>,
+    Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
+    Michal Hocko <mhocko@kernel.org>, Andy Lutomirski <luto@kernel.org>,
+    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+    the arch/x86 maintainers <x86@kernel.org>,
+    Daniel Vetter <daniel.vetter@intel.com>,
+    Bjorn Helgaas <bhelgaas@google.com>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+In-Reply-To: <3265333.8krWOQvcRi@aspire.rjw.lan>
+Message-ID: <alpine.DEB.2.20.1712141329040.4998@nanos>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos> <3265333.8krWOQvcRi@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20171208163710.GB24344@atomide.com>
-References: <20171027072612.26565-1-jeffy.chen@rock-chips.com>
- <1894178.xtK0vD2N4H@aspire.rjw.lan> <20171114025109.GA43048@google.com>
- <1882670.s3LR2t44nD@aspire.rjw.lan> <20171206193421.GA143886@google.com>
- <20171207001754.GB28152@atomide.com> <20171207002955.GA40447@google.com> <20171208163710.GB24344@atomide.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 8 Dec 2017 18:12:42 +0100
-Message-ID: <CAJZ5v0jSOG-dQ27wSA9DXaBj2ae_KSC21VUhsBdxQc68EEOcKg@mail.gmail.com>
-Subject: Re: [RFC PATCH v10 6/7] PCI / PM: Move acpi wakeup code to pci core
-To: Tony Lindgren <tony@atomide.com>
-Cc: Brian Norris <briannorris@chromium.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PM <linux-pm@vger.kernel.org>, shawn.lin@rock-chips.com,
-        Doug Anderson <dianders@chromium.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Len Brown <lenb@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 8, 2017 at 5:37 PM, Tony Lindgren <tony@atomide.com> wrote:
-> * Brian Norris <briannorris@chromium.org> [171207 00:32]:
->> On Wed, Dec 06, 2017 at 04:17:54PM -0800, Tony Lindgren wrote:
->> > * Brian Norris <briannorris@chromium.org> [171206 19:36]:
->> > > By the way, it seems pretty ambiguous how we want to handle things like
->> > > (a) multiple devices sharing the same WAKE#
->> > > (b) systems where a slot is swappable
->> > >
->> > > For (a), the main problem is that if we have to repeat the interrupt
->> > > definition in multiple devices, then we have to deal with something like
->> > > IRQF_SHARED. That can be done, but it makes it much harder to use the
->> > > dedicated wakeirq helpers.
->> >
->> > This will get messy, let's not go there :) That is unless the hardware
->> > really has a single interrupt wired to multiple devices. And in that
->> > case almost certainly a custom interrupt handler is needed.
->>
->> As Rafael mentioned, the spec doesn't clearly delineate a required
->> hierarchy to the WAKE# pin, and it's certainly possible to share it. I'm
->> fine dodging that question for now, and only writing said custom
->> interrupt handler if/when needed.
->
-> OK if the WAKE# pin is shared then PCI (or hardware specific?) code needs
-> to figure out from where it came from.
+On Thu, 14 Dec 2017, Rafael J. Wysocki wrote:
+> On Thursday, December 14, 2017 12:54:05 PM CET Thomas Gleixner wrote:
+> > Now the graphics issue is a different story. That only happens on
+> > hibernation after doing the snapshot. There all non boot cpus are onlined
+> > again and after that the devices are 'thawed'. The following reenable of
+> > interrupts fails because i915 is not in PCI_D0 state.
+> > 
+> > Suspend:
+> > 
+> >    irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
+> >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
+> >    __pci_write_msi_msg: Not written <- Device not in PCI_D0
+> >    ....
+> >    device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [resume]
+> >    pci_pm_resume_noirq <-dpm_run_callback
+> >    pci_pm_resume_noirq <-dpm_run_callback
+> >    pci_pm_default_resume_early <-pci_pm_resume_noirq
+> >    pci_pm_default_resume_early <-pci_pm_resume_noirq
+> >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a  <-- Set the new affinity
+> >    device_pm_callback_end: i915 0000:00:02.0, err=0
+> 
+> So this works, because we power up the device during resume even if it
+> had been suspended (via runtime PM) before the suspend started.
+> 
+> > Hibernate:
+> > 
+> >    irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
+> >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
+> >    __pci_write_msi_msg: Not written <- Device not in PCI_D0
+> >    ....
+> >    device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [thaw]
+> >    pci_pm_thaw_noirq <-dpm_run_callback
+> >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
+> >    __pci_write_msi_msg: Not written  <--- Device is not in PCI_D0
+> >    device_pm_callback_end: i915 0000:00:02.0, err=0
+> 
+> And here we try to leave the device alone which is OK for devices in D0,
+> but not for suspended ones.
+> 
+> It looks like we need to power up them at the "thaw" time too or at least
+> I don't see how to address that differently.
 
-Right.
+The question is whether the code which brings the device out of D0 should
+write the message unconditionally. That would be sufficient I think.
 
-Basically, that would need a list (or equivalent) of devices sharing
-the wakeup IRQ and if that triggers, it needs to walk the list and
-call pci_pme_wakeup() for all devices in it.
+Thanks,
 
->> But device tree bindings are "forever", so it seems reasonable to at
->> least agree how it should be defined.
->
-> Well that's why we're just using the existing interrupts-extended
-> binding there :) It does not leave out the option for shared interrupts,
-> it's just that drivers/base/power/wakeirq.c can't deal with them in a
-> sane way or at least we'd have to add a flag to not enable/disable the
-> wakeirq automatically.
-
-I think that the binding needs to be sort-of PCI-specific to cover the
-shared case.
-
-I'm not sure if there are any other buses needing that (they would
-need to define standard PM registers as PCI does).
+	tglx
