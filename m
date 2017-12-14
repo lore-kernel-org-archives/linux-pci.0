@@ -1,298 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.pl ([79.96.170.134]:59643 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754338AbdL1RaX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 12:30:23 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Tony Lindgren <tony@atomide.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-        JeffyChen <jeffy.chen@rock-chips.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Doug Anderson <dianders@chromium.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE# signal for OF
-Date: Thu, 28 Dec 2017 18:29:21 +0100
-Message-ID: <6120485.xubBpvge6h@aspire.rjw.lan>
-In-Reply-To: <20171228165134.GH3875@atomide.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com> <CAJZ5v0hpK0_vjX3HinCpsFuKffVUn3d5EnqXdz0P893aRZgnRw@mail.gmail.com> <20171228165134.GH3875@atomide.com>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:38292 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753099AbdLNPaZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 10:30:25 -0500
+Date: Thu, 14 Dec 2017 16:30:22 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: bhelgaas@google.com, jonathanh@nvidia.com, vidyas@nvidia.com,
+        mperttunen@nvidia.com, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, kthota@nvidia.com
+Subject: Re: [PATCH V3 06/12] PCI: tegra: Enable opportunistic update FC and
+ ACK
+Message-ID: <20171214153022.GG13733@ulmo>
+References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
+ <1509371843-22931-7-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="KIzF6Cje4W/osXrF"
+In-Reply-To: <1509371843-22931-7-git-send-email-mmaddireddy@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 28, 2017 5:51:34 PM CET Tony Lindgren wrote:
-> * Rafael J. Wysocki <rafael@kernel.org> [171228 12:21]:
-> > On Thu, Dec 28, 2017 at 5:22 AM, Tony Lindgren <tony@atomide.com> wrote:
-> > > * Rafael J. Wysocki <rafael@kernel.org> [171228 00:51]:
-> > >> On Wed, Dec 27, 2017 at 4:08 PM, Tony Lindgren <tony@atomide.com> wrote:
-> > >> > * Rafael J. Wysocki <rjw@rjwysocki.net> [171227 01:00]:
-> > >> >> On Tuesday, December 26, 2017 2:06:47 AM CET JeffyChen wrote:
-> > >> >> > Hi Rafael,
-> > >> >> >
-> > >> >> > Thanks for your reply :)
-> > >> >> >
-> > >> >> > On 12/26/2017 08:11 AM, Rafael J. Wysocki wrote:
-> > >> >> > >> >+
-> > >> >> > >> >+       dn = pci_device_to_OF_node(ppdev);
-> > >> >> > >> >+       if (!dn)
-> > >> >> > >> >+               return 0;
-> > >> >> > >> >+
-> > >> >> > >> >+       irq = of_irq_get_byname(dn, "wakeup");
-> > >> >> > > Why is this a property of the bridge and not of the device itself?
-> > >> >> >
-> > >> >> > That is suggested by Brian, because in that way, the wakeup pin would
-> > >> >> > not "tied to what exact device is installed (or no device, if it's a slot)."
-> > >> >>
-> > >> >> But I don't think it works when there are two devices using different WAKE#
-> > >> >> interrupt lines under the same bridge.  Or how does it work then?
-> > >> >
-> > >> > It won't work currently for multiple devices but adding more than
-> > >> > one wakeriq per device is doable. And I think we will have other
-> > >> > cases where multiple wakeirqs are connected to a single device, so
-> > >> > that issue should be sorted out sooner or later.
-> > >> >
-> > >> > And if requesting wakeirq for the PCI WAKE# lines at the PCI
-> > >> > controller does the job, then maybe that's all we need to start with.
-> > >>
-> > >> These are expected to be out-of-band, so not having anything to do
-> > >> with the Root Complex.
-> > >>
-> > >> In-band PME Messages go through the PCIe hierarchy, but that is a
-> > >> standard mechanism and it is supported already.
-> > >>
-> > >> WAKE# are platform-specific, pretty much by definition and I guess
-> > >> that on most ARM boards they are just going to be some kind of GPIO
-> > >> pins.
-> > >
-> > > OK. So probably supporting the following two configurations
-> > > should be enough then:
-> > >
-> > > 1. One or more WAKE# lines configured as a wakeirq for the PCI
-> > >    controller
-> > >
-> > >    When the wakeirq calls pm_wakeup_event() for the PCI controller
-> > >    device driver, the PCI controller wakes up and can deal with
-> > >    it's child devices
-> > 
-> > But this shouldn't be necessary at all.  Or if it is, I wonder why
-> > that's the case.
-> 
-> Well Brian had a concern where we would have to implement PM runtime
-> for all device drivers for PCI devices.
 
-Why would we?
+--KIzF6Cje4W/osXrF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> > I'm assuming that we're talking about PCI Express here, which has two
-> > wakeup mechanisms defined, one of which is based on using PME Messages
-> > (Beacon) and the second one is WAKE#:
-> > 
-> > "The WAKE# mechanism uses sideband signaling to implement wakeup
-> > functionality. WAKE# is
-> > an “open drain” signal asserted by components requesting wakeup and
-> > observed by the associated
-> > power controller."
-> > 
-> > (from PCIe Base Spec 3.0).  [And there's a diagram showing the routing
-> > of WAKE# in two cases in Figure 5-4: Conceptual Diagrams Showing Two
-> > Example Cases of WAKE# Routing.]
-> 
-> Thanks for the pointer, I had not seen that :) So the use cases
-> I was trying to describe above are similar to the wiring in the
-> PCIe Base Spec 3.0 "Figure 5-4" , but numbered the other way around.
-> 
-> > Note that WAKE# is defined to be "observed by the associated power
-> > controller", so I'm not sure what the PCI controller's role in the
-> > handing of it is at all.
-> 
-> To me it seems the "switch" part stays at least partially powered
-> and then in-band PME messages are used after host is woken up to
-> figure out which WAKE# triggered?
+On Mon, Oct 30, 2017 at 07:27:17PM +0530, Manikanta Maddireddy wrote:
+> This patch ensures that DL sends pending ACKs and update FC packets when
+> link is idle instead of waiting for timers to expire which improves PCIe
+> bandwidth.
+>=20
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V3:
+> * no change in this patch
+> V2:
+> * no change in this patch
+>=20
+>  drivers/pci/host/pci-tegra.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index c862facfd6e9..4562b0c113a8 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -211,7 +211,9 @@
+>  #define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+> =20
+>  #define RP_VEND_XP	0x00000f00
+> -#define  RP_VEND_XP_DL_UP	(1 << 30)
+> +#define  RP_VEND_XP_DL_UP			(1 << 30)
+> +#define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
+> +#define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+> =20
+>  #define RP_VEND_CTL1	0xf48
+>  #define  RP_VEND_CTL1_ERPT	(1 << 13)
+> @@ -2149,6 +2151,16 @@ static void tegra_pcie_enable_rp_features(struct t=
+egra_pcie_port *port)
+>  	writel(value, port->base + RP_VEND_CTL1);
+>  }
+> =20
+> +static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
 
-Yes, that's my understanding too.
+Why not make the name reflect what the function does?
 
-> > > 2. Optionally a WAKE# line from a PCI device configured as wakeirq
-> > >    for the PCI device driver
-> > >
-> > >    In this case calling the PM runtime resume in the child
-> > >    PCI device will also wake up the parent PCI controller,
-> > >    and then the PCI controller can deal with it's children
-> > >
-> > > Seems like this series is pretty close to 1 above except
-> > > we need to have a list of wakeirqs per device instead of
-> > > just one. And option 2 should already work as long as the
-> > > PCI device driver parses and configures the wakeirq.
-> > 
-> > Well, this is confusing, because as I said above, option 1 doesn't
-> > look relevant even.
-> 
-> So isn't my option 1 above similar to the PCIe spec "Figure 5-4"
-> case 2?
+Thierry
 
-No, it isn't, because in that case there is no practical difference
-between WAKE# and an in-band PME message sent by the device (Beacon)
-from the software perspective.
+--KIzF6Cje4W/osXrF
+Content-Type: application/pgp-signature; name="signature.asc"
 
-WAKE# causes the switch to send a PME message upstream and that is
-handled by the Root Complex through the standard mechanism already
-supported by our existing PME driver (drivers/pci/pcie/pme.c).
+-----BEGIN PGP SIGNATURE-----
 
-> Anyways, let's standardize on the "Figure 5-4" naming
-> from now to avoid confusion :)
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloymQ0ACgkQ3SOs138+
+s6GIGxAAkCXkJFnCEXzX+3rgTUCbMMjHh6WBgqt+kBM1HoQ+7LIpmxV22WEt9wwG
+ixv7DSnat9/HGqqAXqo0cQ2poKu6X/s/6vzRh40Mx6yLROmZGsm/OMOtAXlD6jv/
+cV0W1uGufgclQU7JIij1FikND8rQ847FVwZpPddtb62cVll3UFRYq5ypTCFlzju0
+qgu75ElwVTq04/2PFZIrX/Z/h6aqWofCYHYCffSiYK+bJTIvR2OYFd6gwBoRFO6B
+xuTA8PmZsdX5kd1taqjy1Av4F4cFZe39g5/GFseG0CdZm8SBbpYfOz8jWfL2buVA
+HBNsbVkAly224oP4Zc/a//OZEV3+fONDS4gOYJ3tvgUvb4r/KGn3u6vO9ALHl1bq
+hITEcHQWjSHCMcHM4ZJP32Qw5zxTmHu8eynIfK27VPTJEpXL/1XOIU0f94LUQjle
+P24UGqtgjXh2zsnzy3Z1aBKtMbMfiNyET0SU5emW35sB/b8hwlPCRxDR7uJ/21TC
++lmgihXRZONhYaSrVOix1IIZ6Ja33cKH+bnqwMLzm3/OnZW8zYL3kvqhIOsgOkLh
+RDdV7srfb6XIBni7ZCjYqL8+FYolpRMgOn2xWOBsyi5ha6wBd2IwF6UmJdfTNlPq
+Lk+OHI5jRSbkS12CnN4WPsN2vbVJ3Y8nC2MGrmjBNel4WvEUj7o=
+=mHWE
+-----END PGP SIGNATURE-----
 
-OK
-
-> > >> > Then in addition to that, we could do the following to allow
-> > >> > PCI devices to request the wakeirq from the PCI controller:
-> > >> >
-> > >> > 1. PCI controller or framework implements a chained irq for
-> > >> >    the WAKE# lines assuming it can mask/unmask the WAKE# lines
-> > >> >
-> > >> > 2. PCI devices then can just request the wakeirq from the PCI
-> > >> >    controller
-> > >> >
-> > >> > And that's about it. Optionally we could leave out the dependency
-> > >> > to having PCI devices implement PM runtime and just resume the
-> > >> > parent (PCI controller) if PCI devices has not implemented
-> > >> > PM runtime.
-> > >>
-> > >> So if my understanding is correct, DT should give you the WAKE# IRQ
-> > >> for the given endpoint PCI device and you only are expected to request
-> > >> it.   The rest should just follow from the other pieces of information
-> > >> in the DT.
-> > >
-> > > Yeah and it seems that we should allow configuring both cases
-> > > 1 and 2 above.
-> > >
-> > >> With the quite obvious caveat that the same IRQ may be used as WAKE#
-> > >> for multiple endpoint devices (which BTW need not be under the same
-> > >> bridge even).
-> > >
-> > > And with the shared interrupts we can't do the masking/unmasking
-> > > automatically..
-> > 
-> > Or we need to use reference counting (so actually the wakeup IRQs are
-> > not dedicated).
-> 
-> Yeah. FYI, for the dedicated wakeirq cases I have, we need to keep
-> them masked during runtime to avoid tons of interrupts as they
-> are often wired to the RX pins.
-
-OK
-
-BTW, enable_irq_wake() should take care of the sharing, shouldn't it?
-
-But the WAKE# thing is not just for waking up the system from sleep states,
-it is for runtime PM's wakeup signaling too.
-
-> > >> >> > >> >+       if (irq == -EPROBE_DEFER)
-> > >> >> > > Braces here, please.
-> > >> >> > ok, will fix in the next version.
-> > >> >> >
-> > >> >> > >
-> > >> >> > >> >+               return irq;
-> > >> >> > >> >+       /* Ignore other errors, since a missing wakeup is non-fatal. */
-> > >> >> > >> >+       else if (irq < 0) {
-> > >> >> > >> >+               dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
-> > >> >> > >> >+               return 0;
-> > >> >> > >> >+       }
-> > >> >> > >> >+
-> > >> >> > >> >+       device_init_wakeup(&pdev->dev, true);
-> > >> >> > > Why do you call this before dev_pm_set_dedicated_wake_irq()?
-> > >> >> >
-> > >> >> > hmmm, i thought so too, but it turns out the dedicated wake irq
-> > >> >> > framework requires device_init_wakeup(dev, true) before attach the wake irq:
-> > >> >> >
-> > >> >> > int device_wakeup_attach_irq(struct device *dev,
-> > >> >> >                               struct wake_irq *wakeirq)
-> > >> >> > {
-> > >> >> >          struct wakeup_source *ws;
-> > >> >> >
-> > >> >> >          ws = dev->power.wakeup;
-> > >> >> >          if (!ws) {
-> > >> >> >                  dev_err(dev, "forgot to call device_init_wakeup?\n");
-> > >> >> >                  return -EINVAL;
-> > >> >> >
-> > >> >>
-> > >> >> Well, that's a framework issue, fair enough.
-> > >> >>
-> > >> >> That said, what if user space removes the wakeup source from under you
-> > >> >> concurrently via sysfs?  Tony?
-> > >> >
-> > >> > Hmm sounds racy, need to take a look.
-> > >>
-> > >> Not only racy, as I don't see anything to prevent user space from
-> > >> making the dev->power.wakeup wakeup source go away via sysfs at any
-> > >> time *after* the IRQ has been requested.
-> > >
-> > > Currently nothing happens with wakeirqs if there's no struct
-> > > wakeup_source. On device_wakeup_enable() we call device_wakeup_attach()
-> > > that just copies dev->power.wakeirq to ws->wakeirq. And when struct
-> > > wake_source is freed the device should be active and wakeirq
-> > > disabled. Or are you seeing other issues here?
-> > 
-> > I'm suspicious about one thing, but I need to look deeper into the code. :-)
-
-So we are fine except for the race and we need the wakeirq field in wakeup
-sources to automatically arm the wakeup IRQs during suspend.
-
-If I'm not mistaken, we only need something like the patch below (untested).
-
-> OK. My response time will be laggy this week in case you find
-> something that needs urgent fixing :)
-
-No worries. :-)
-
----
- drivers/base/power/wakeirq.c |    9 ++++-----
- drivers/base/power/wakeup.c  |    2 +-
- 2 files changed, 5 insertions(+), 6 deletions(-)
-
-Index: linux-pm/drivers/base/power/wakeirq.c
-===================================================================
---- linux-pm.orig/drivers/base/power/wakeirq.c
-+++ linux-pm/drivers/base/power/wakeirq.c
-@@ -33,7 +33,6 @@ static int dev_pm_attach_wake_irq(struct
- 				  struct wake_irq *wirq)
- {
- 	unsigned long flags;
--	int err;
- 
- 	if (!dev || !wirq)
- 		return -EINVAL;
-@@ -45,12 +44,12 @@ static int dev_pm_attach_wake_irq(struct
- 		return -EEXIST;
- 	}
- 
--	err = device_wakeup_attach_irq(dev, wirq);
--	if (!err)
--		dev->power.wakeirq = wirq;
-+	dev->power.wakeirq = wirq;
-+	if (dev->power.wakeup)
-+		device_wakeup_attach_irq(dev, wirq);
- 
- 	spin_unlock_irqrestore(&dev->power.lock, flags);
--	return err;
-+	return 0;
- }
- 
- /**
-Index: linux-pm/drivers/base/power/wakeup.c
-===================================================================
---- linux-pm.orig/drivers/base/power/wakeup.c
-+++ linux-pm/drivers/base/power/wakeup.c
-@@ -303,7 +303,7 @@ int device_wakeup_attach_irq(struct devi
- 	}
- 
- 	if (ws->wakeirq)
--		return -EEXIST;
-+		dev_err(dev, "Leftover wakeup IRQ found, overriding\n");
- 
- 	ws->wakeirq = wakeirq;
- 	return 0;
+--KIzF6Cje4W/osXrF--
