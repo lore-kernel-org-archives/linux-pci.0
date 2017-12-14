@@ -1,73 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:56494 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754093AbdLDPJp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 10:09:45 -0500
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-sh@vger.kernel.org, linux-pci@vger.kernel.org,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 8/8] arch/sh: pcie-sh7786: handle non-zero DMA offset
-Date: Mon,  4 Dec 2017 16:09:07 +0100
-Message-Id: <20171204150907.24345-9-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
-References: <20171204150907.24345-1-thomas.petazzoni@free-electrons.com>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:24262 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751875AbdLNL0F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 06:26:05 -0500
+Subject: Re: [PATCH v4 0/3] Fix find_first_zero_bit() usage
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Niklas Cassel <niklas.cassel@axis.com>
+References: <20171212141634.5985-1-niklas.cassel@axis.com>
+ <20171214105116.GA1442@e107981-ln.cambridge.arm.com>
+CC: <linux-pci@vger.kernel.org>, Niklas Cassel <niklass@axis.com>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <6b9203a8-7182-e8ab-6d81-bfa7ceba6005@ti.com>
+Date: Thu, 14 Dec 2017 16:55:55 +0530
+MIME-Version: 1.0
+In-Reply-To: <20171214105116.GA1442@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On SuperH, the base of the physical memory might be different from
-zero. In this case, PCI address zero will map to a non-zero physical
-address. In order to make sure that the DMA mapping API takes care of
-this DMA offset, we must fill in the dev->dma_pfn_offset field for PCI
-devices. This gets done in the pcibios_bus_add_device() hook, called
-for each new PCI device detected.
+Hi Lorenzo,
 
-The dma_pfn_offset global variable is re-calculated for every PCI
-controller available on the platform, but that's not an issue because
-its value will each time be exactly the same, as it only depends on
-the memory start address and memory size.
+On Thursday 14 December 2017 04:21 PM, Lorenzo Pieralisi wrote:
+> Hi Kishon,
+> 
+> On Tue, Dec 12, 2017 at 03:16:31PM +0100, Niklas Cassel wrote:
+>> find_first_zero_bit()'s parameter 'size' is defined in bits,
+>> not in bytes.
+>>
+>> Calling find_first_zero_bit() with the wrong size unit
+>> will lead to insidious bugs.
+>>
+>> Fix all uses of find_first_zero_bit() called with
+>> sizeof() as size argument in drivers/pci.
+>>
+>> Also had to fix broken error handling in pci_epc_epf_link()
+>> in order to do proper error handling for find_first_zero_bit().
+>>
+>> Niklas Cassel (3):
+>>   PCI: designware-ep: Fix find_first_zero_bit() usage
+>>   PCI: endpoint: Fix error handling in pci_epc_epf_link()
+>>   PCI: endpoint: Fix find_first_zero_bit() usage
+>>
+>>  drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
+>>  drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
+>>  drivers/pci/endpoint/pci-ep-cfs.c    | 13 ++++++++-----
+>>  3 files changed, 40 insertions(+), 15 deletions(-)
+> 
+> I would need your ACK asap to queue this series.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- arch/sh/drivers/pci/pcie-sh7786.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Sorry for the delay. I had a comment on the 2nd patch.
 
-diff --git a/arch/sh/drivers/pci/pcie-sh7786.c b/arch/sh/drivers/pci/pcie-sh7786.c
-index 224bcad24dca..95f9a3536a93 100644
---- a/arch/sh/drivers/pci/pcie-sh7786.c
-+++ b/arch/sh/drivers/pci/pcie-sh7786.c
-@@ -33,6 +33,7 @@ struct sh7786_pcie_port {
- 
- static struct sh7786_pcie_port *sh7786_pcie_ports;
- static unsigned int nr_ports;
-+static unsigned long dma_pfn_offset;
- 
- static struct sh7786_pcie_hwops {
- 	int (*core_init)(void);
-@@ -351,6 +352,8 @@ static int __init pcie_init(struct sh7786_pcie_port *port)
- 	memstart = ALIGN_DOWN(memstart, memsize);
- 	memsize = roundup_pow_of_two(memend - memstart);
- 
-+	dma_pfn_offset = memstart >> PAGE_SHIFT;
-+
- 	/*
- 	 * If there's more than 512MB of memory, we need to roll over to
- 	 * LAR1/LAMR1.
-@@ -466,6 +469,11 @@ int pcibios_map_platform_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
-         return evt2irq(0xae0);
- }
- 
-+void pcibios_bus_add_device(struct pci_dev *pdev)
-+{
-+	pdev->dev.dma_pfn_offset = dma_pfn_offset;
-+}
-+
- static int __init sh7786_pcie_core_init(void)
- {
- 	/* Return the number of ports */
--- 
-2.13.6
+Thanks
+Kishon
