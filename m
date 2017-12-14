@@ -1,96 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:33501 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756304AbdLTTaP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 14:30:15 -0500
-Date: Wed, 20 Dec 2017 20:30:11 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Manikanta Maddireddy <mmaddireddy@nvidia.com>, cyndis@kapsi.fi,
-        bhelgaas@google.com, jonathanh@nvidia.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, rjw@rjwysocki.net, tglx@linutronix.de,
-        vidyas@nvidia.com, kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-Subject: Re: [PATCH V4 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for
- Tegra PCIe
-Message-ID: <20171220193011.GA31757@ulmo>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
- <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
- <20171215173643.GA1050@red-moon>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:56737 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752479AbdLNNNB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:13:01 -0500
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
+        by mailout.nyi.internal (Postfix) with ESMTP id 5500C20994
+        for <linux-pci@vger.kernel.org>; Thu, 14 Dec 2017 08:13:00 -0500 (EST)
+Received: from [10.0.16.1] (c-73-19-34-176.hsd1.wa.comcast.net [73.19.34.176])
+        by mail.messagingengine.com (Postfix) with ESMTPA id D5A632450C
+        for <linux-pci@vger.kernel.org>; Thu, 14 Dec 2017 08:12:59 -0500 (EST)
+To: linux-pci@vger.kernel.org
+From: John Strader <strader.john@code.jackst.com>
+Subject: Quirk - broken_intx_masking - Ceton InfiniTV4
+Message-ID: <92a65068-60b2-c1a8-9e17-ac41fe3c5c93@code.jackst.com>
+Date: Thu, 14 Dec 2017 05:12:59 -0800
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
-In-Reply-To: <20171215173643.GA1050@red-moon>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Submitting a device for quirk_broken_intx_masking, as requested by
+modinfo for vfio-pci "nointxmask" parameter.
 
---G4iJoqBmSsgzjUCe
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The device is a Ceton InfiniTV4 [1b7c:0004].  I can confirm that this
+device operates correctly with vfio when passed the nointxmask
+parameter.  I can also confirm that applying quirk_broken_intx_masking
+via drivers/pci/quirks.c in a custom compiled kernel also works.  I no
+longer compile the custom kernel and seem to have misplaced the patch,
+so I won't bother remaking a one-liner, but it was of the standard form:
 
-On Fri, Dec 15, 2017 at 05:36:43PM +0000, Lorenzo Pieralisi wrote:
-> On Fri, Dec 08, 2017 at 02:28:09PM +0530, Manikanta Maddireddy wrote:
-> > Primary, secondary and subordinate default bus numbers are 0 in Tegra a=
-nd
-> > it is expecting SW to program these numbers in configration space.
-> >=20
-> > pci_scan_bridge_extend() function programs these numbers in configurati=
-on
-> > space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_=
-BUS
-> > flag is set. Since secondary & subordinate default bus numbers are 0,
-> > PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
-> >=20
-> > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> > ---
-> > V3:
-> > * new patch in V3
-> > V4:
-> > * no change in this patch
-> >=20
-> >  drivers/pci/host/pci-tegra.c | 1 -
-> >  1 file changed, 1 deletion(-)
-> >=20
-> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> > index a549c5899e26..0d91f1a3a6b4 100644
-> > --- a/drivers/pci/host/pci-tegra.c
-> > +++ b/drivers/pci/host/pci-tegra.c
-> > @@ -2604,7 +2604,6 @@ static int tegra_pcie_probe(struct platform_devic=
-e *pdev)
-> > =20
-> >  	tegra_pcie_enable_ports(pcie);
-> > =20
-> > -	pci_add_flags(PCI_REASSIGN_ALL_BUS);
->=20
-> This looks obviously OK to me but I need Thierry's ACK to queue it.
+DECLARE_PCI_FIXUP_FINAL(0x1b7c, 0x0004,
+                         quirk_broken_intx_masking);
 
-Just as an additional note: I think the real reason why this is okay to
-do is because we reset the PCI host controller in the kernel driver, so
-any bus assignments done by the firmware are reset as well.
+The driver for this device also specifies that 0x1b7c is a Ceton PCI
+vendor ID, but I have not done any digging to confirm this beyond
+looking at the driver source:
 
-Acked-by: Thierry Reding <treding@nvidia.com>
+https://github.com/ceton/infinitv_pcie/blob/eb7fbf983f47bfaf236e49555e5a846e6f35e505/ctn91xx_registers.h#L13
 
---G4iJoqBmSsgzjUCe
-Content-Type: application/pgp-signature; name="signature.asc"
 
------BEGIN PGP SIGNATURE-----
+lspci -vvvxxx as per instructions:
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlo6ukAACgkQ3SOs138+
-s6Ew+g/+PHBkSe3TxzC9Pdrm/EKZiam0Z1GYXX4vjAymJ8BgLhwOl8EwsCsuuWRa
-Xvj+SKHvuZcUcUmb7/laPNzKP9rQ2yRwBwTuojfgUVmA5+mMa/ymL/k+qnDfKcm8
-vKRf5gg1ZGxBw71EbrqbOh0nsjRX7LkZ/IeN/wL3pXNPv4gmfEQLxh5TP6D0MyOi
-jPD80JAxNsHmOVfVj6zLcQmSR3F7c3TGR59k0jMlIa94+nzcPw1cWV4f3dYd38C0
-D/GC8HUxdEx2GTD/DSFLjoIy4b86VSTwJEBaMQfIzXPt9TVGKcEqJqvfTZr5qQKl
-0byniN9Uyoz6JIO21YxWmV0S70c36vWImR2A0TwvmBnCjAAhDfJ0NnOE3HLWaw48
-2h6CdYM8AXPKAd5vNmdX6fEodU7WIzKUPBPiTRqnqv/ZkHY8hchSYdV2QrCWtT2e
-hX+o2K0bxpJWXkoS1ScPr7QKfesrG9CoVeZUj3sNPaF5sEdIAjb/7/xeGbf5gkJO
-H49O/BeIdIGu1IBe6fLe9PzadUsVPvNMTE0jPIjLwDU1pOZTo7ED1vAJ4tAf+ajI
-VRiTv/QhQgyJr1jp+s2FPRQWxhzu6vTHvoOh3/eo+XY58Fydb1RxxrM83mYRH5+7
-3tZheKD6MYxVqNYs8PzyRICphlb3vqrToZiEo/+NKms/Q2lXjNM=
-=f6iP
------END PGP SIGNATURE-----
+03:08.0 Non-VGA unclassified device: Device 1b7c:0004 (rev 01)
+     Subsystem: Device 1b7c:0004
+     Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+     Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+     Latency: 32 (2000ns min), Cache Line Size: 64 bytes
+     Interrupt: pin A routed to IRQ 17
+     Region 0: Memory at f8100000 (32-bit, non-prefetchable) [size=128K]
+     Region 1: Memory at f8120000 (32-bit, non-prefetchable) [size=64K]
+     Kernel driver in use: vfio-pci
+00: 7c 1b 04 00 06 00 00 04 01 00 00 00 10 20 00 00
+10: 00 00 10 f8 00 00 12 f8 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 7c 1b 04 00
+30: 00 00 00 00 00 00 00 00 00 00 00 00 0a 01 08 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
---G4iJoqBmSsgzjUCe--
+
+The PCIe device also includes an integrated PCI bridge, lspci is
+included for completeness:
+
+02:00.0 PCI bridge: Tundra Semiconductor Corp. Device 8111 (rev 02) 
+(prog-if 00 [Normal decode])
+     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+     Latency: 0
+     Region 0: Memory at f8200000 (32-bit, non-prefetchable) [size=4K]
+     Bus: primary=02, secondary=03, subordinate=03, sec-latency=32
+     I/O behind bridge: 0000f000-00000fff
+     Memory behind bridge: f8100000-f81fffff
+     Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+     Secondary status: 66MHz+ FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort+ <SERR- <PERR-
+     BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+         PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+     Capabilities: [80] MSI: Enable- Count=1/8 Maskable+ 64bit+
+         Address: 0000000000000000  Data: 0000
+         Masking: 00000000  Pending: 00000000
+     Capabilities: [a0] Power Management version 3
+         Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
+PME(D0+,D1+,D2+,D3hot+,D3cold-)
+         Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+     Capabilities: [c0] Express (v1) PCI-Express to PCI/PCI-X Bridge, MSI 00
+         DevCap:    MaxPayload 128 bytes, PhantFunc 0
+             ExtTag- AttnBtn- AttnInd- PwrInd- RBE+
+         DevCtl:    Report errors: Correctable+ Non-Fatal+ Fatal+ 
+Unsupported-
+             RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop- BrConfRtry-
+             MaxPayload 128 bytes, MaxReadReq 512 bytes
+         DevSta:    CorrErr+ UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- 
+TransPend-
+         LnkCap:    Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Exit 
+Latency L0s <512ns, L1 <1us
+             ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+         LnkCtl:    ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+             ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+         LnkSta:    Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk- 
+DLActive- BWMgmt- ABWMgmt-
+     Capabilities: [100 v1] Advanced Error Reporting
+         UESta:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+         UEMsk:    DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+         UESvrt:    DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+         CESta:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+         CEMsk:    RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+         AERCap:    First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+     Kernel modules: shpchp
+00: e3 10 11 81 07 00 10 00 02 00 04 06 00 00 01 00
+10: 00 00 20 f8 00 00 00 00 02 03 03 20 f1 01 a0 22
+20: 10 f8 10 f8 f1 ff 01 00 00 00 00 00 00 00 00 00
+30: 00 00 00 00 80 00 00 00 00 00 00 00 ff 00 10 00
+40: 00 00 00 00 00 19 10 7d 00 01 00 00 07 03 00 00
+50: 68 89 09 80 00 1f 00 00 00 01 00 00 01 00 01 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 05 a0 86 01 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 01 c0 03 78 08 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 40 00 00 00 00 00 00 00 41 00 00 03
+c0: 10 00 71 00 00 80 00 00 07 20 0b 00 11 34 00 00
+d0: 00 00 11 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
