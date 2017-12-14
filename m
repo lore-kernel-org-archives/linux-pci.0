@@ -1,72 +1,164 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.139]:59855 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752027AbdLYLtY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 06:49:24 -0500
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: [RFC PATCH v11 1/5] dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-Date: Mon, 25 Dec 2017 19:47:38 +0800
-Message-Id: <20171225114742.18920-2-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:58979 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752453AbdLNNCF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:02:05 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: kishon@ti.com, Niklas Cassel <niklass@axis.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 1/3] PCI: designware-ep: Fix find_first_zero_bit() usage
+Date: Thu, 14 Dec 2017 14:01:44 +0100
+Message-Id: <20171214130147.1790-2-niklas.cassel@axis.com>
+In-Reply-To: <20171214130147.1790-1-niklas.cassel@axis.com>
+References: <20171214130147.1790-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We are going to handle PCIe WAKE# pin for PCI devices in the pci core,
-so add definitions of the optional PCIe WAKE# pin for PCI devices.
+find_first_zero_bit()'s parameter 'size' is defined in bits,
+not in bytes.
 
-Also add an definition of the optional PCI interrupt pin for PCI
-devices to distinguish it from the PCIe WAKE# pin.
+find_first_zero_bit() is called with size in bytes rather than bits,
+which thus defines a too low upper limit, causing
+dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
+and bar 5, which makes bar 5 overwrite the settings set by bar 4.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Since the sizes of the bitmaps are known, dynamically allocate the
+bitmaps, and use the correct size when calling find_first_zero_bit().
+
+Additionally, make sure that ep->num_ob_windows and ep->num_ib_windows,
+which are obtained from device tree, are smaller than the maximum number
+of iATUs (MAX_IATU_IN/MAX_IATU_OUT).
+
+Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
+ drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
+ drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
+ 2 files changed, 32 insertions(+), 10 deletions(-)
 
-Changes in v11:
-Only add irq definitions for PCI devices and rewrite the commit message.
-
-Changes in v10: None
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-
-Changes in v7: None
-Changes in v6: None
-Changes in v5:
-Move to pci.txt
-
-Changes in v3: None
-Changes in v2: None
-
- Documentation/devicetree/bindings/pci/pci.txt | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index c77981c5dd18..3045ac452f27 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,3 +24,13 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
+diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+index d53d5f168363..d5eb143040e3 100644
+--- a/drivers/pci/dwc/pcie-designware-ep.c
++++ b/drivers/pci/dwc/pcie-designware-ep.c
+@@ -70,8 +70,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 	u32 free_win;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	free_win = find_first_zero_bit(&ep->ib_window_map,
+-				       sizeof(ep->ib_window_map));
++	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
+ 	if (free_win >= ep->num_ib_windows) {
+ 		dev_err(pci->dev, "no free inbound window\n");
+ 		return -EINVAL;
+@@ -85,7 +84,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
+ 	}
+ 
+ 	ep->bar_to_atu[bar] = free_win;
+-	set_bit(free_win, &ep->ib_window_map);
++	set_bit(free_win, ep->ib_window_map);
+ 
+ 	return 0;
+ }
+@@ -96,8 +95,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 	u32 free_win;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	free_win = find_first_zero_bit(&ep->ob_window_map,
+-				       sizeof(ep->ob_window_map));
++	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
+ 	if (free_win >= ep->num_ob_windows) {
+ 		dev_err(pci->dev, "no free outbound window\n");
+ 		return -EINVAL;
+@@ -106,7 +104,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
+ 	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
+ 				  phys_addr, pci_addr, size);
+ 
+-	set_bit(free_win, &ep->ob_window_map);
++	set_bit(free_win, ep->ob_window_map);
+ 	ep->outbound_addr[free_win] = phys_addr;
+ 
+ 	return 0;
+@@ -121,7 +119,7 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
+ 	dw_pcie_ep_reset_bar(pci, bar);
+ 
+ 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
+-	clear_bit(atu_index, &ep->ib_window_map);
++	clear_bit(atu_index, ep->ib_window_map);
+ }
+ 
+ static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
+@@ -175,7 +173,7 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
+ 		return;
+ 
+ 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
+-	clear_bit(atu_index, &ep->ob_window_map);
++	clear_bit(atu_index, ep->ob_window_map);
+ }
+ 
+ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
+@@ -298,12 +296,32 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		dev_err(dev, "unable to read *num-ib-windows* property\n");
+ 		return ret;
+ 	}
++	if (ep->num_ib_windows > MAX_IATU_IN) {
++		dev_err(dev, "invalid *num-ib-windows*\n");
++		return -EINVAL;
++	}
+ 
+ 	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
+ 	if (ret < 0) {
+ 		dev_err(dev, "unable to read *num-ob-windows* property\n");
+ 		return ret;
+ 	}
++	if (ep->num_ob_windows > MAX_IATU_OUT) {
++		dev_err(dev, "invalid *num-ob-windows*\n");
++		return -EINVAL;
++	}
 +
-+PCI devices may support the following properties:
++	ep->ib_window_map = devm_kzalloc(dev, sizeof(long) *
++					 BITS_TO_LONGS(ep->num_ib_windows),
++					 GFP_KERNEL);
++	if (!ep->ib_window_map)
++		return -ENOMEM;
 +
-+- interrupts: Interrupt specifier for each name in interrupt-names.
-+- interrupt-names:
-+    May contain "wakeup" for PCIe WAKE# interrupt and "pci" for PCI interrupt.
-+    The PCI devices may optionally include an 'interrupts' property that
-+    represents the legacy PCI interrupt. And when we try to specify the PCIe
-+    WAKE# pin, a corresponding 'interrupt-names' property is required to
-+    distinguish them.
++	ep->ob_window_map = devm_kzalloc(dev, sizeof(long) *
++					 BITS_TO_LONGS(ep->num_ob_windows),
++					 GFP_KERNEL);
++	if (!ep->ob_window_map)
++		return -ENOMEM;
+ 
+ 	addr = devm_kzalloc(dev, sizeof(phys_addr_t) * ep->num_ob_windows,
+ 			    GFP_KERNEL);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index e5d9d77b778e..e6fd0b024b21 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -113,6 +113,10 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
++/* Maximum number of inbound/outbound iATUs */
++#define MAX_IATU_IN			256
++#define MAX_IATU_OUT			256
++
+ struct pcie_port;
+ struct dw_pcie;
+ struct dw_pcie_ep;
+@@ -192,8 +196,8 @@ struct dw_pcie_ep {
+ 	size_t			page_size;
+ 	u8			bar_to_atu[6];
+ 	phys_addr_t		*outbound_addr;
+-	unsigned long		ib_window_map;
+-	unsigned long		ob_window_map;
++	unsigned long		*ib_window_map;
++	unsigned long		*ob_window_map;
+ 	u32			num_ib_windows;
+ 	u32			num_ob_windows;
+ };
 -- 
-2.11.0
+2.14.2
