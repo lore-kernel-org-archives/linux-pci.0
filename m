@@ -1,139 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:39303 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752860AbdLMQDg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 11:03:36 -0500
-Subject: Re: [PATCH 5/5] PCI: cadence: add EndPoint Controller driver for
- Cadence PCIe controller
-To: Philippe Ombredanne <pombredanne@nexb.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, LKML <linux-kernel@vger.kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
-        <devicetree@vger.kernel.org>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <297fa17e12cf0f2fb223c05eeb18570707ff5bf1.1511439189.git.cyrille.pitchen@free-electrons.com>
- <20171201122048.GB25010@red-moon>
- <ed6d811e-608e-e6aa-7b07-2f2d2d68adbd@ti.com>
- <CAOFm3uGQzAOrAmQLx7uJ0SJGQxMSB+oAniq9wd93tvupKWv=uA@mail.gmail.com>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Message-ID: <2885a27d-bd97-c436-b8aa-86faabf68ca3@free-electrons.com>
-Date: Wed, 13 Dec 2017 17:03:23 +0100
+Received: from mail.kernel.org ([198.145.29.99]:41460 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756256AbdLOVaF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Dec 2017 16:30:05 -0500
+Subject: [PATCH] PCI/ASPM: Unexport internal ASPM interfaces
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Date: Fri, 15 Dec 2017 15:30:02 -0600
+Message-ID: <20171215213001.163656.66285.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOFm3uGQzAOrAmQLx7uJ0SJGQxMSB+oAniq9wd93tvupKWv=uA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Philippe,
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Le 07/12/2017 à 11:05, Philippe Ombredanne a écrit :
-> Cyrille,
-> 
-> 
-> On Tue, Dec 5, 2017 at 10:19 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->> Hi,
->>
->> On Friday 01 December 2017 05:50 PM, Lorenzo Pieralisi wrote:
->>> On Thu, Nov 23, 2017 at 04:01:50PM +0100, Cyrille Pitchen wrote:
->>>> This patch adds support to the Cadence PCIe controller in endpoint mode.
->>>
->>> Please add a brief description to the log to describe the most salient
->>> features.
->>>
->>>> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
->>>> ---
->>>>  drivers/pci/cadence/Kconfig           |   9 +
->>>>  drivers/pci/cadence/Makefile          |   1 +
->>>>  drivers/pci/cadence/pcie-cadence-ep.c | 553 ++++++++++++++++++++++++++++++++++
->>>>  3 files changed, 563 insertions(+)
->>>>  create mode 100644 drivers/pci/cadence/pcie-cadence-ep.c
->>>>
->>>> diff --git a/drivers/pci/cadence/Kconfig b/drivers/pci/cadence/Kconfig
->>>> index 120306cae2aa..b2e6af71f39e 100644
->>>> --- a/drivers/pci/cadence/Kconfig
->>>> +++ b/drivers/pci/cadence/Kconfig
->>>> @@ -21,4 +21,13 @@ config PCIE_CADENCE_HOST
->>>>        mode. This PCIe controller may be embedded into many different vendors
->>>>        SoCs.
->>>>
->>>> +config PCIE_CADENCE_EP
->>>> +    bool "Cadence PCIe endpoint controller"
->>>> +    depends on PCI_ENDPOINT
->>>> +    select PCIE_CADENCE
->>>> +    help
->>>> +      Say Y here if you want to support the Cadence PCIe  controller in
->>>> +      endpoint mode. This PCIe controller may be embedded into many
->>>> +      different vendors SoCs.
->>>> +
->>>>  endif # PCI_CADENCE
->>>> diff --git a/drivers/pci/cadence/Makefile b/drivers/pci/cadence/Makefile
->>>> index d57d192d2595..61e9c8d6839d 100644
->>>> --- a/drivers/pci/cadence/Makefile
->>>> +++ b/drivers/pci/cadence/Makefile
->>>> @@ -1,2 +1,3 @@
->>>>  obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence.o
->>>>  obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
->>>> +obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep.o
->>>> diff --git a/drivers/pci/cadence/pcie-cadence-ep.c b/drivers/pci/cadence/pcie-cadence-ep.c
->>>> new file mode 100644
->>>> index 000000000000..a1d761101a9c
->>>> --- /dev/null
->>>> +++ b/drivers/pci/cadence/pcie-cadence-ep.c
->>>> @@ -0,0 +1,553 @@
->>>> +/*
->>>> + * Cadence PCIe host controller driver.
->>>
->>> You should update this comment.
->>>
->>>> + *
->>>> + * Copyright (c) 2017 Cadence
->>>> + *
->>>> + * Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
->>>> + *
->>>> + * This program is free software; you can redistribute it and/or modify
->>>> + * it under the terms of the GNU General Public License version 2 as
->>>> + * published by the Free Software Foundation.
->>>> + *
->>>> + * This program is distributed in the hope that it will be useful,
->>>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->>>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->>>> + * GNU General Public License for more details.
->>>> + *
->>>> + * You should have received a copy of the GNU General Public License along with
->>>> + * this program.  If not, see <http://www.gnu.org/licenses/>.
->>>> + */
-> 
-> Would you consider using the new SPDX ids instead of this long legalese blurb?
-> You can  check tglx's doc patches for details and Linus comments on
-> why he wants it a certain way with C++ // comments.
-> 
-> Here this could come out much streamlined with this top level comment block:
-> 
-> // SPDX-License-Identifier: GPL-2.0
-> // Copyright (c) 2017 Cadence
-> // Cadence PCIe host controller driver.
-> // Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-> 
-> This is only a suggestion, but everyone kinda likes it when the
-> licensing boilerplate is minimal and out of the visual way in order to
-> focus is on what matters most: the code!
-> Thank you for your kind consideration.
-> 
+Several of the interfaces defined in include/linux/pci-aspm.h are used only
+internally from the PCI core:
 
-I don't mind changing for your proposal if this is the preferred way.
-I'm updating the series.
+  pcie_aspm_init_link_state()
+  pcie_aspm_exit_link_state()
+  pcie_aspm_pm_state_change()
+  pcie_aspm_powersave_config_link()
+  pcie_aspm_create_sysfs_dev_files()
+  pcie_aspm_remove_sysfs_dev_files()
 
-Best regards,
+Move these to the internal drivers/pci/pci.h header so they don't clutter
+the driver interface.
 
-Cyrille
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.h        |   20 ++++++++++++++++++++
+ include/linux/pci-aspm.h |   35 ++---------------------------------
+ 2 files changed, 22 insertions(+), 33 deletions(-)
 
--- 
-Cyrille Pitchen, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f6b58b32a67c..e90009fff1a9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -342,6 +342,26 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ 
+ void pci_enable_acs(struct pci_dev *dev);
+ 
++#ifdef CONFIG_PCIEASPM
++void pcie_aspm_init_link_state(struct pci_dev *pdev);
++void pcie_aspm_exit_link_state(struct pci_dev *pdev);
++void pcie_aspm_pm_state_change(struct pci_dev *pdev);
++void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
++#else
++static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
++static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
++static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev) { }
++static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
++#endif
++
++#ifdef CONFIG_PCIEASPM_DEBUG
++void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
++void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
++#else
++static inline void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev) { }
++static inline void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev) { }
++#endif
++
+ #ifdef CONFIG_PCIE_PTM
+ void pci_ptm_init(struct pci_dev *dev);
+ #else
+diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
+index 3cc06b059017..df28af5cef21 100644
+--- a/include/linux/pci-aspm.h
++++ b/include/linux/pci-aspm.h
+@@ -24,43 +24,12 @@
+ #define PCIE_LINK_STATE_CLKPM	4
+ 
+ #ifdef CONFIG_PCIEASPM
+-void pcie_aspm_init_link_state(struct pci_dev *pdev);
+-void pcie_aspm_exit_link_state(struct pci_dev *pdev);
+-void pcie_aspm_pm_state_change(struct pci_dev *pdev);
+-void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+ void pci_disable_link_state(struct pci_dev *pdev, int state);
+ void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+ void pcie_no_aspm(void);
+ #else
+-static inline void pcie_aspm_init_link_state(struct pci_dev *pdev)
+-{
+-}
+-static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+-{
+-}
+-static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev)
+-{
+-}
+-static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
+-{
+-}
+-static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
+-{
+-}
+-static inline void pcie_no_aspm(void)
+-{
+-}
++static inline void pci_disable_link_state(struct pci_dev *pdev, int state) { }
++static inline void pcie_no_aspm(void) { }
+ #endif
+ 
+-#ifdef CONFIG_PCIEASPM_DEBUG /* this depends on CONFIG_PCIEASPM */
+-void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
+-void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
+-#else
+-static inline void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev)
+-{
+-}
+-static inline void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev)
+-{
+-}
+-#endif
+ #endif /* LINUX_ASPM_H */
