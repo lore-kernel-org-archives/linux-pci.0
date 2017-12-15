@@ -1,105 +1,179 @@
-Return-Path: <SRS0=t6io=DL=gmail.com=jim2101024@kernel.org>
-Return-Path: <SRS0=t6io=DL=gmail.com=jim2101024@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:56838 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755691AbdLOUZN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Dec 2017 15:25:13 -0500
+Date: Fri, 15 Dec 2017 14:25:10 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian Zigotzky <chzigotzky@xenosoft.de>
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+        Darren Stevens <darren@stevens-zone.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Olof Johansson <olof@lixom.net>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH] SB600 for the Nemo board has non-zero devices on
+ non-root bus
+Message-ID: <20171215202509.GZ30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171202230052.34y2ivxgpgr3osct@localhost>
+ <CAOesGMhfMpt+xG1vhVHU+O5o4W5y2S5mZyn9tp+CPn9G6XrNVA@mail.gmail.com>
+ <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de>
+ <1d5276c3-1d29-114a-c868-6f022eee58e7@xenosoft.de>
+ <99f78122-cd53-100f-4f58-be5bf7927d4e@xenosoft.de>
+ <87fu8odnfk.fsf@concordia.ellerman.id.au>
+ <20171206210637.GO23510@bhelgaas-glaptop.roam.corp.google.com>
+ <877etxh1lf.fsf@concordia.ellerman.id.au>
+ <f5fe03d3-87f8-2a2d-2d83-fbefcd489a77@xenosoft.de>
+ <98c7e034-b523-a703-e637-957e2857ab32@xenosoft.de>
 MIME-Version: 1.0
-In-Reply-To: <20171215171440.GB32131@red-moon>
-References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
- <1510697532-32828-2-git-send-email-jim2101024@gmail.com> <20171205205926.GJ23510@bhelgaas-glaptop.roam.corp.google.com>
- <CANCKTBvoXpF-H8Pck5TsH+7tNM=di1-uoedqACE+kjNEAUodYg@mail.gmail.com>
- <20171212211404.GA95453@bhelgaas-glaptop.roam.corp.google.com> <20171215171440.GB32131@red-moon>
-From: Jim Quinlan <jim2101024@gmail.com>
-Date: Fri, 15 Dec 2017 14:50:41 -0500
-Message-ID: <CANCKTBsFQ7iTeaJ9GjELhYrY-e1C12-+b=EMy=p7npZutFVvvQ@mail.gmail.com>
-Subject: Re: [PATCH v3 1/8] SOC: brcmstb: add memory API
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
-	Brian Norris <computersforpeace@gmail.com>, Russell King <rmk+kernel@armlinux.org.uk>,
-	Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
-	Florian Fainelli <f.fainelli@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
-	Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
-	Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <98c7e034-b523-a703-e637-957e2857ab32@xenosoft.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 15, 2017 at 12:14 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Tue, Dec 12, 2017 at 03:14:04PM -0600, Bjorn Helgaas wrote:
->> [+cc Lorenzo]
->>
->> On Tue, Dec 12, 2017 at 03:53:28PM -0500, Jim Quinlan wrote:
->> > On Tue, Dec 5, 2017 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > > On Tue, Nov 14, 2017 at 05:12:05PM -0500, Jim Quinlan wrote:
->> > >> From: Florian Fainelli <f.fainelli@gmail.com>
->> > >>
->> > >> This commit adds a memory API suitable for ascertaining the sizes of
->> > >> each of the N memory controllers in a Broadcom STB chip.  Its first
->> > >> user will be the Broadcom STB PCIe root complex driver, which needs
->> > >> to know these sizes to properly set up DMA mappings for inbound
->> > >> regions.
->> > >>
->> > >> We cannot use memblock here or anything like what Linux provides
->> > >> because it collapses adjacent regions within a larger block, and here
->> > >> we actually need per-memory controller addresses and sizes, which is
->> > >> why we resort to manual DT parsing.
->> > >>
->> > >> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
->> > >> ---
->> > >>  drivers/soc/bcm/brcmstb/Makefile |   2 +-
->> > >>  drivers/soc/bcm/brcmstb/memory.c | 172 +++++++++++++++++++++++++++++++++++++++
->> > >>  include/soc/brcmstb/memory_api.h |  25 ++++++
->> > >>  3 files changed, 198 insertions(+), 1 deletion(-)
->> > >>  create mode 100644 drivers/soc/bcm/brcmstb/memory.c
->> > >>  create mode 100644 include/soc/brcmstb/memory_api.h
->> > >>
->> > >> diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmstb/Makefile
->> > >> index 9120b27..4cea7b6 100644
->> > >> --- a/drivers/soc/bcm/brcmstb/Makefile
->> > >> +++ b/drivers/soc/bcm/brcmstb/Makefile
->> > >> @@ -1 +1 @@
->> > >> -obj-y                                += common.o biuctrl.o
->> > >> +obj-y                                += common.o biuctrl.o memory.o
->> > >> diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmstb/memory.c
->> > >> new file mode 100644
->> > >> index 0000000..eb647ad9
->> > >> --- /dev/null
->> > >> +++ b/drivers/soc/bcm/brcmstb/memory.c
->> > >
->> > > I sort of assume based on [1] that every new file should have an SPDX
->> > > identifier ("The Linux kernel requires the precise SPDX identifier in
->> > > all source files") and that the actual text of the GPL can be omitted.
->> > >
->> > > Only a few files in drivers/pci currently have an SPDX identifier.  I
->> > > don't know if that's oversight or work-in-progress or what.
->> > >
->> > > [1] https://lkml.kernel.org/r/20171204212120.484179273@linutronix.de
->> > >
->> >
->> > Bjorn, Did you get a chance to review the other commits of this
->> > submission (V3)?  I would like any additional feedback before I send
->> > out a V4 with SPDX fixes.  Thanks, JimQ
->>
->> Lorenzo is taking over drivers/pci/host/* and he'll no doubt have some
->> comments when he gets to this.  I'll point out a few quick formatting
->> things in the meantime.
->
-> I need some time to review the code but overall I am quite worried about
-> patches 1 and 4 in particular, it is ok to have platform host bridge
-> drivers but we can't rewrite a DMA layer for a specific host bridge, I
-> really do not like that - it is just not manageable from a maintenance
-> perspective for the mainline kernel.
->
-> Lorenzo
-Hi Lorenzo,
-First I note that the file drivers/pci/host/vmd.c appears to do the
-same thing -- rewrite a layer over the DMA ops.  Secondly, there seems
-to be no other way to accomplish what we need to do, especially that
-will work with ARM, ARM64, and MIPs.  Someone raised the same point
-you did and suggested I involve ARM/ARM64 maintainers, so I expanded
-my "--to" list to include Russell.  I'm open to ideas.  I've asked the
-HW PCIe folks to redesign the controller to accommodate an
-identity-map for inbound memory, but it will be a while if that
-happens, if ever. --Jim
+On Fri, Dec 15, 2017 at 09:04:51AM +0100, Christian Zigotzky wrote:
+> On 09 December 2017 at 7:03PM, Christian Zigotzky wrote:
+> > On 08 December 2017 at 12:59PM, Michael Ellerman wrote:
+> > >
+> > >> Darren's idea of doing it at the same time you tweak the SB600 "relax
+> > >> pci-e" bit is ideal because then the two pieces are obviously
+> > >> connected and it wouldn't affect any other systems at all.
+> > >
+> > > Yes that would be ideal. That patch is currently out-of-tree I gather,
+> > > but I guess everyone who's using these machines must have that patch
+> > > anyway.
+> > >
+> > > Darren what does that code look like? Can we get it upstream and close
+> > > the loop on this?
+> > >
+> > > cheers
+> > >
+> >
+> > Hi Michael,
+> >
+> > Please find attached the code.
+> >
+> > Thanks,
+> > Christian
+> 
+> Hi All,
+> 
+> I haven't received any response yet. Is this the correct patch you
+> are looking for?
+
+This is a powerpc patch that doesn't affect the PCI core, so I would
+say this is Michael's bailiwick.
+
+I guess you're only looking for a hint about whether this is the right
+approach, because it's obviously fully baked yet (no changelog,
+signed-off-by, etc, not a "safe for all powerpc" run-time solution,
+not in Linux indentation style, etc).
+
+It looks like the "pasemi,1682m-iob" DT property is required and
+possibly sufficient to identify this system at run-time.
+
+My advice is to finish that stuff up, post it to the powerpc
+maintainers and the linuxppc-dev@lists.ozlabs.org list, and go from
+there.
+
+> diff -rupN a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+> --- a/arch/powerpc/platforms/pasemi/pci.c	2017-11-16 08:18:35.078874462 +0100
+> +++ b/arch/powerpc/platforms/pasemi/pci.c	2017-11-16 08:17:22.034367975 +0100
+> @@ -27,6 +27,7 @@
+>  #include <linux/pci.h>
+>  
+>  #include <asm/pci-bridge.h>
+> +#include <asm/isa-bridge.h>
+>  #include <asm/machdep.h>
+>  
+>  #include <asm/ppc-pci.h>
+> @@ -108,6 +109,69 @@ static int workaround_5945(struct pci_bu
+>  	return 1;
+>  }
+>  
+> +#ifdef CONFIG_PPC_PASEMI_NEMO
+> +static int sb600_bus = 5;
+> +static void __iomem *iob_mapbase = NULL;
+> +
+> +static int pa_pxp_read_config(struct pci_bus *bus, unsigned int devfn,
+> +                             int offset, int len, u32 *val);
+> +
+> +static void sb600_set_flag(int bus)
+> +{
+> +    struct resource res;
+> +    struct device_node *dn;
+> +       struct pci_bus *busp;
+> +       u32 val;
+> +       int err;
+> +
+> +       if (sb600_bus == -1)
+> +       {
+> +               busp = pci_find_bus(0, 0);
+> +               pa_pxp_read_config(busp, PCI_DEVFN(17,0), PCI_SECONDARY_BUS, 1, &val);
+> +
+> +               sb600_bus = val;
+> +
+> +               printk(KERN_CRIT "NEMO SB600 on bus %d.\n",sb600_bus);
+> +       }
+> +
+> +       if (iob_mapbase == NULL)
+> +       {
+> +        dn = of_find_compatible_node(NULL, "isa", "pasemi,1682m-iob");
+> +        if (!dn)
+> +        {
+> +               printk(KERN_CRIT "NEMO SB600 missing iob node\n");
+> +                       return;
+> +               }
+> +
+> +               err = of_address_to_resource(dn, 0, &res);
+> +        of_node_put(dn);
+> +
+> +               if (err)
+> +               {
+> +               printk(KERN_CRIT "NEMO SB600 missing resource\n");
+> +                       return;
+> +               }
+> +
+> +               printk(KERN_CRIT "NEMO SB600 IOB base %08lx\n",res.start);
+> +
+> +               iob_mapbase = ioremap(res.start + 0x100, 0x94);
+> +       }
+> +
+> +       if (iob_mapbase != NULL)
+> +       {
+> +               if (bus == sb600_bus)
+> +               {
+> +                       out_le32(iob_mapbase + 4, in_le32(iob_mapbase + 4) | 0x800);
+> +               }
+> +               else
+> +               {
+> +                       out_le32(iob_mapbase + 4, in_le32(iob_mapbase + 4) & ~0x800);
+> +               }
+> +       }
+> +}
+> +#endif
+> +
+> +
+>  static int pa_pxp_read_config(struct pci_bus *bus, unsigned int devfn,
+>  			      int offset, int len, u32 *val)
+>  {
+> @@ -126,6 +190,10 @@ static int pa_pxp_read_config(struct pci
+>  
+>  	addr = pa_pxp_cfg_addr(hose, bus->number, devfn, offset);
+>  
+> +#ifdef CONFIG_PPC_PASEMI_NEMO
+> +       sb600_set_flag(bus->number);
+> +#endif
+> +
+>  	/*
+>  	 * Note: the caller has already checked that offset is
+>  	 * suitably aligned and that len is 1, 2 or 4.
+> @@ -210,6 +278,9 @@ static int __init pas_add_bridge(struct
+>  	/* Interpret the "ranges" property */
+>  	pci_process_bridge_OF_ranges(hose, dev, 1);
+>  
+> +	/* Scan for an isa bridge. */
+> +	isa_bridge_find_early(hose);
+> +
+>  	return 0;
+>  }
