@@ -1,155 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55356 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933767AbdLRSKP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Dec 2017 13:10:15 -0500
-Date: Mon, 18 Dec 2017 18:10:58 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
-Subject: Re: [PATCH v5 15/18] PCI: dwc: Make cpu_addr_fixup take struct
- dw_pcie as argument
-Message-ID: <20171218181058.GC8157@red-moon>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
- <20171120133222.27771-16-niklas.cassel@axis.com>
+Return-Path: <SRS0=0oLo=DL=Oracle.COM=Govinda.Tatti@kernel.org>
+Return-Path: <SRS0=0oLo=DL=Oracle.COM=Govinda.Tatti@kernel.org>
+Subject: Re: [Xen-devel] [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr()
+ interface
+To: Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@infradead.org>
+Cc: jgross@suse.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        JBeulich@suse.com, bhelgaas@google.com, xen-devel@lists.xenproject.org,
+        boris.ostrovsky@Oracle.COM, roger.pau@citrix.com
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
+ <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+ <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
+ <20171212005919.GB30595@bhelgaas-glaptop.roam.corp.google.com>
+ <49956aaf-5fd5-939d-5fc7-231ffdb98b70@Oracle.COM>
+ <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
+From: Govinda Tatti <Govinda.Tatti@Oracle.COM>
+Message-ID: <fea075cf-fe6f-0d0b-11e4-4279fbfc280a@Oracle.COM>
+Date: Fri, 15 Dec 2017 09:48:02 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171120133222.27771-16-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 20, 2017 at 02:32:18PM +0100, Niklas Cassel wrote:
-> There is no need to hard code the cpu to bus address fixup mask.
 
-There is no need or hardcoding it is broken ? There is a difference
-between those two.
+Thanks Bjorn and Christophfor your response. Please see below for my 
+comments.
 
-> The PCIe controller has a global address on the AXI bus, however,
-> from the perspective of the PCIe controller, its base starts at 0x0,
-> so the local address is 0x0. To get the bus address, simply subtract
-> the global address from the cpu address. The global address is taken
-> from device tree.
+On 12/13/2017 3:24 PM, Bjorn Helgaas wrote:
+> [+cc Christoph]
+>
+> On Wed, Dec 13, 2017 at 02:46:57PM -0600, Govinda Tatti wrote:
+>>>>>> -static bool pcie_has_flr(struct pci_dev *dev)
+>>>>>> +bool pcie_has_flr(struct pci_dev *dev)
+>>>>>>   {
+>>>>>>   	u32 cap;
+>>>>>> @@ -3882,6 +3882,7 @@ static bool pcie_has_flr(struct pci_dev *dev)
+>>>>>>   	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+>>>>>>   	return cap & PCI_EXP_DEVCAP_FLR;
+>>>>>>   }
+>>>>>> +EXPORT_SYMBOL_GPL(pcie_has_flr);
+>>>>> I'd rather change pcie_flr() so you could *always* call it, and it
+>>>>> would return 0, -ENOTTY, or whatever, based on whether FLR is
+>>>>> supported.  Is that feasible?
+>>>> Sure, I will add pcie_has_flr() logic inside pcie_flr() and return
+>>>> appropriate
+>>>> values as suggested by you. Do we still want to retain pcie_has_flr() and
+>>>> its usage inside pci.c?.Otherwise, I will remove it and do required cleanup.
+>>> If you can restructure the code and remove pcie_has_flr() while
+>>> retaining the existing behavior of its callers, that would be great.
+>> I checked the current usage of pcie_has_flr() and pcie_flr(). I have
+>> a couple
+>> of questions or need some clarification.
+>>
+>> 1. pcie_has_flr() usage inside pci_probe_reset_function().
+>>
+>>     This function is only calling pcie_has_flr() but not pcie_flr().
+>>     Rest of the code is trying to do specific type of reset except
+>> pcie_flr().
+>>
+>>          rc = pci_dev_specific_reset(dev, 1);
+>>          if (rc != -ENOTTY)
+>>                  return rc;
+>>          if (pcie_has_flr(dev))
+>>                  return 0;
+>>          rc = pci_af_flr(dev, 1);
+>>          if (rc != -ENOTTY)
+>>                  return rc;
+>>
+>>     In other-words, I can remove usage of pcie_has_flr() in all other places
+>>     in pci.c except in above function.
+> I think we should keep the EXPORT_SYMBOL_GPL() part of a60a2b73ba69
+> ("PCI: Export pcie_flr()"), but revert the restructuring part.
+>
+> Prior to a60a2b73ba69, we had
+>
+>    int pcie_flr(struct pci_dev *dev, int probe);
+>
+> like all the other reset methods.  AFAICT, the addition of
+> pcie_has_flr() was to optimize the path slightly because when drivers
+> call pcie_flr(), they should already know that their hardware supports
+> FLR.  But I don't think that optimization is worth the extra code
+> complexity.  If we do need to optimize it, we can check this in the
+> core during enumeration and set PCI_DEV_FLAGS_NO_FLR_RESET
+> accordingly.
+>
+> Christoph, chime in if I'm missing something here.
+Not all code paths are aware of FLR capability and also, not
+using pcie_flr().  For example,
 
-I do not understand this paragraph, I would kindly ask you and Kishon to
-explain please this patch and
+arch/powerpc/platforms/powernv/eeh-powernv.c
+drivers/crypto/cavium/nitrox/nitrox_main.c
+drivers/net/ethernet/cavium/liquidio/octeon_mailbox.c
 
-commit a660083eb06c ("PCI: dwc: designware: Add new *ops* for CPU addr
-fixup")
+So, we should consider one of these options.
 
-What the cpu_addr_fixup() hook is supposed to do ? And what does the
-"addr_space" property represent ?
+- set PCI_DEV_FLAGS_NO_FLR_RESET if it is not supported.
+- pcie_flr() should return if it is not supported
 
-> Also for ARTPEC-7, hard coding the cpu to bus address fixup mask is
-> not possible, since it uses a High Address Bits Look Up Table, which
-> means that it can, at runtime, map the PCIe window to an arbitrary
-> address in the 32-bit address space.
+If we modify pcie_flr() to return error codes, then we need to modify
+all existing modules that are calling this function.
 
-But you are not changing the ARTPEC-7 mechanism, are you ? I do not
-understand this paragraph - I see no change for ARTPEC-7 in this patch.
+Please let me know your preference, so that I can move accordingly. Thanks.
 
-> This also fixes a bug for ARTPEC-6, where the cpu to bus address
-> fixup mask previously was off by one (GENMASK(27, 0), rather than
-> GENMASK(28, 0)). This is another reason to calculate the mask by
-> using values from device tree.
-
-What this patch does (and how the cpu_addr_fixup() mechanism works)
-is not clear to me, please explain, we can rewrite the commit log
-with a clear explanation then.
-
-Thanks,
-Lorenzo
-
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c      |  2 +-
->  drivers/pci/dwc/pcie-artpec6.c    | 18 ++++++++++++++----
->  drivers/pci/dwc/pcie-designware.c |  2 +-
->  drivers/pci/dwc/pcie-designware.h |  2 +-
->  4 files changed, 17 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 224ff8affdce..89d87844abb3 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -110,7 +110,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
->  	writel(value, pcie->base + offset);
->  }
->  
-> -static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-> +static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
->  {
->  	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
->  }
-> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> index e7de4e4649eb..318a2bd0d97e 100644
-> --- a/drivers/pci/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> @@ -67,8 +67,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
->  #define PHY_STATUS			0x118
->  #define  PHY_COSPLLLOCK			BIT(0)
->  
-> -#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
-> -
->  static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
->  {
->  	u32 val;
-> @@ -82,9 +80,21 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
->  	regmap_write(artpec6_pcie->regmap, offset, val);
->  }
->  
-> -static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
-> +static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
->  {
-> -	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
-> +	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-> +	struct pcie_port *pp = &pci->pp;
-> +	struct dw_pcie_ep *ep = &pci->ep;
-> +
-> +	switch (artpec6_pcie->mode) {
-> +	case DW_PCIE_RC_TYPE:
-> +		return pci_addr - pp->cfg0_base;
-> +	case DW_PCIE_EP_TYPE:
-> +		return pci_addr - ep->phys_base;
-> +	default:
-> +		dev_err(pci->dev, "UNKNOWN device type\n");
-> +	}
-> +	return pci_addr;
->  }
->  
->  static int artpec6_pcie_establish_link(struct dw_pcie *pci)
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> index 88abdddee2ad..800be7a4f087 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
->  	u32 retries, val;
->  
->  	if (pci->ops->cpu_addr_fixup)
-> -		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
-> +		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
->  
->  	if (pci->iatu_unroll_enabled) {
->  		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index 24edac035160..cca5a81c1c74 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -205,7 +205,7 @@ struct dw_pcie_ep {
->  };
->  
->  struct dw_pcie_ops {
-> -	u64	(*cpu_addr_fixup)(u64 cpu_addr);
-> +	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
->  	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
->  			    size_t size);
->  	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
-> -- 
-> 2.14.2
-> 
+Cheers
+GOVINDA
