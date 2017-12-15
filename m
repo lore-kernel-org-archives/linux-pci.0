@@ -1,72 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:43504 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932186AbdLTF7u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 00:59:50 -0500
-Subject: Re: [PATCH v6 09/18] PCI: dwc: dra7xx: Help compiler to remove unused
- code
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171219232940.659-10-niklas.cassel@axis.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <d6d663b1-c76e-5b1d-8bd0-95e712b690ea@ti.com>
-Date: Wed, 20 Dec 2017 11:28:55 +0530
+Return-Path: <SRS0=O0X+=DL=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=O0X+=DL=linutronix.de=tglx@kernel.org>
+Date: Fri, 15 Dec 2017 10:05:23 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
+    Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+    Andy Lutomirski <luto@kernel.org>,
+    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+    the arch/x86 maintainers <x86@kernel.org>,
+    Daniel Vetter <daniel.vetter@intel.com>,
+    Bjorn Helgaas <bhelgaas@google.com>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+In-Reply-To: <CA+55aFzEt3hspSXgA28emi7aka0wQc8SaC=wdVKp=DtmbptQTQ@mail.gmail.com>
+Message-ID: <alpine.DEB.2.20.1712151000260.1702@nanos>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl> <alpine.DEB.2.20.1712061344560.1724@nanos> <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl> <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos> <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos> <alpine.DEB.2.20.1712132201380.1885@nanos>
+ <alpine.DEB.2.20.1712132211570.1885@nanos> <CA+55aFwQBV9J1zxbBPLC5dOK-ebd1zcN6BaoB897AaKhc_tDtA@mail.gmail.com> <alpine.DEB.2.20.1712142331030.2257@nanos> <CA+55aFzEt3hspSXgA28emi7aka0wQc8SaC=wdVKp=DtmbptQTQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20171219232940.659-10-niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, 14 Dec 2017, Linus Torvalds wrote:
 
+> On Thu, Dec 14, 2017 at 2:36 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> >
+> > But, because the silly firmware comes out of suspend with all PIC lines
+> > unmasked for whatever reason, the PIC can observe that IRQ being raised and
+> > the CPU not handling it. So yes, I forgot about 7 being magic, but I still
+> > think it's the firmware which causes it by unmasking the PIC irqs.
+> 
+> Yes, that sounds quite likely.
 
-On Wednesday 20 December 2017 04:59 AM, Niklas Cassel wrote:
-> The dra7xx driver supports both host and ep mode.
-> When enabling support for only one of the modes, help the compiler
-> to remove code for the mode that we have not enabled in the driver.
-> 
-> By adding if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) return -ENODEV;
-> anything after that statement will get silently dropped by the compiler,
-> including static functions and structures that are referenced indirectly
-> from there.
-> 
-> Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+And just for the record I was able to figure out which interrupt comes in
+and goes away again. It's the only level triggered interrupt, which is the
+ACPI interrupt.....
 
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 07c74ae3614e..224ff8affdce 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -694,6 +694,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  
->  	switch (mode) {
->  	case DW_PCIE_RC_TYPE:
-> +		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_HOST)) {
-> +			ret = -ENODEV;
-> +			goto err_gpio;
-> +		}
-> +
->  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
->  				   DEVICE_TYPE_RC);
->  		ret = dra7xx_add_pcie_port(dra7xx, pdev);
-> @@ -701,6 +706,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  			goto err_gpio;
->  		break;
->  	case DW_PCIE_EP_TYPE:
-> +		if (!IS_ENABLED(CONFIG_PCI_DRA7XX_EP)) {
-> +			ret = -ENODEV;
-> +			goto err_gpio;
-> +		}
-> +
->  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
->  				   DEVICE_TYPE_EP);
->  
-> 
+Thanks,
+
+	tglx
