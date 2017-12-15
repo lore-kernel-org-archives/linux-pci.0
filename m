@@ -1,155 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:38555 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751881AbdL0W3N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Dec 2017 17:29:13 -0500
-Date: Wed, 27 Dec 2017 23:29:09 +0100
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 06/18] PCI: designware-ep: Add generic function for
- raising MSI irq
-Message-ID: <20171227222909.GA14106@axis.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171219232940.659-7-niklas.cassel@axis.com>
- <5fc44bf0-9d0e-e905-32fb-449d9ed1b01a@ti.com>
+Return-Path: <SRS0=t6io=DL=gmail.com=jim2101024@kernel.org>
+Return-Path: <SRS0=t6io=DL=gmail.com=jim2101024@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5fc44bf0-9d0e-e905-32fb-449d9ed1b01a@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171215171440.GB32131@red-moon>
+References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+ <1510697532-32828-2-git-send-email-jim2101024@gmail.com> <20171205205926.GJ23510@bhelgaas-glaptop.roam.corp.google.com>
+ <CANCKTBvoXpF-H8Pck5TsH+7tNM=di1-uoedqACE+kjNEAUodYg@mail.gmail.com>
+ <20171212211404.GA95453@bhelgaas-glaptop.roam.corp.google.com> <20171215171440.GB32131@red-moon>
+From: Jim Quinlan <jim2101024@gmail.com>
+Date: Fri, 15 Dec 2017 14:50:41 -0500
+Message-ID: <CANCKTBsFQ7iTeaJ9GjELhYrY-e1C12-+b=EMy=p7npZutFVvvQ@mail.gmail.com>
+Subject: Re: [PATCH v3 1/8] SOC: brcmstb: add memory API
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>, Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>, Rob Herring <robh+dt@kernel.org>,
+	Brian Norris <computersforpeace@gmail.com>, Russell King <rmk+kernel@armlinux.org.uk>,
+	Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+	Florian Fainelli <f.fainelli@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
+	Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+	Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
+	Kevin Cernekee <cernekee@gmail.com>, Ralf Baechle <ralf@linux-mips.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+	Gregory Fong <gregory.0xf0@gmail.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 26, 2017 at 06:20:54PM +0530, Kishon Vijay Abraham I wrote:
-> Hi Niklas,
-
-Hello Kishon
-
-> 
-> On Wednesday 20 December 2017 04:59 AM, Niklas Cassel wrote:
-> > Add a generic function for raising MSI irqs that can be used by all
-> > DWC based controllers.
-> > 
-> > Note that certain controllers, like DRA7xx, have a special convenience
-> > register for raising MSI irqs that doesn't require you to explicitly map
-> > the MSI address. Therefore, it is likely that certain drivers will
-> > not use this generic function, even if they can.
-> > 
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > ---
-> >  drivers/pci/dwc/pcie-designware-ep.c | 35 +++++++++++++++++++++++++++++++++++
-> >  drivers/pci/dwc/pcie-designware.h    |  9 +++++++++
-> >  2 files changed, 44 insertions(+)
-> > 
-> > diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-> > index 700ed2f4becf..c5aa1cac5041 100644
-> > --- a/drivers/pci/dwc/pcie-designware-ep.c
-> > +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> > @@ -282,6 +282,41 @@ static const struct pci_epc_ops epc_ops = {
-> >  	.stop			= dw_pcie_ep_stop,
-> >  };
-> >  
-> > +int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep,
-> > +			     u8 interrupt_num)
-> > +{
-> > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> > +	struct pci_epc *epc = ep->epc;
-> > +	u16 msg_ctrl, msg_data;
-> > +	u32 msg_addr_lower, msg_addr_upper;
-> > +	u64 msg_addr;
-> > +	bool has_upper;
-> > +	int ret;
-> > +
-> > +	/* Raise MSI per the PCI Local Bus Specification Revision 3.0, 6.8.1. */
-> > +	msg_ctrl = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-> > +	has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
-> > +	msg_addr_lower = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-> > +	if (has_upper) {
-> > +		msg_addr_upper = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
-> > +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_64);
-> > +	} else {
-> > +		msg_addr_upper = 0;
-> > +		msg_data = dw_pcie_readw_dbi(pci, MSI_MESSAGE_DATA_32);
-> > +	}
-> > +	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-> > +	ret = dw_pcie_ep_map_addr(epc, ep->msi_mem_phys, msg_addr,
-> > +				  epc->mem->page_size);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
-> 
-> Shouldn't this be msg_data + (interrupt_num - 1)?
-
-I'm not quite sure about this, but if there is a pending irq,
-not yet processed by the RC, the msg_data we read out in this
-function should have a bit set, matching the pending irq.
-
-If that irq is the same as the irq we are trying to raise,
-doing an addition will produce a bogus vector number,
-but a bitwise or should work.
-
-For that reason, I think that doing bitwise or seems safer.
-However, other than this case, I don't see why it should
-matter if we do an addition or a bitwise or.
-
-Are you having some problem with the code?
-It seems to be working fine on ARTPEC-6:
-
-# ./pcitest -m 1
-MSI1:           OKAY
-# ./pcitest -m 2
-MSI2:           OKAY
-# ./pcitest -m 3
-MSI3:           OKAY
-# ./pcitest -m 4
-MSI4:           OKAY
-# ./pcitest -m 5
-MSI5:           OKAY
-# ./pcitest -m 6
-MSI6:           OKAY
-# ./pcitest -m 7
-MSI7:           OKAY
-# ./pcitest -m 8
-MSI8:           OKAY
-# ./pcitest -m 9
-MSI9:           OKAY
-# cat /proc/interrupts | grep -i msi
- 82:          9          0     GIC-0 180 Level     artpec6-pcie-msi
-188:          1          0   PCI-MSI  16 Edge      pci-endpoint-test
-189:          1          0   PCI-MSI  17 Edge      pci-endpoint-test
-190:          1          0   PCI-MSI  18 Edge      pci-endpoint-test
-191:          1          0   PCI-MSI  19 Edge      pci-endpoint-test
-192:          1          0   PCI-MSI  20 Edge      pci-endpoint-test
-193:          1          0   PCI-MSI  21 Edge      pci-endpoint-test
-194:          1          0   PCI-MSI  22 Edge      pci-endpoint-test
-195:          1          0   PCI-MSI  23 Edge      pci-endpoint-test
-196:          1          0   PCI-MSI  24 Edge      pci-endpoint-test
-197:          0          0   PCI-MSI  25 Edge      pci-endpoint-test
-198:          0          0   PCI-MSI  26 Edge      pci-endpoint-test
-199:          0          0   PCI-MSI  27 Edge      pci-endpoint-test
-200:          0          0   PCI-MSI  28 Edge      pci-endpoint-test
-201:          0          0   PCI-MSI  29 Edge      pci-endpoint-test
-202:          0          0   PCI-MSI  30 Edge      pci-endpoint-test
-203:          0          0   PCI-MSI  31 Edge      pci-endpoint-test
-
->From EP:
-irq: 1 read msg_data: 0x10 writing: 0x10
-irq: 2 read msg_data: 0x10 writing: 0x11
-irq: 3 read msg_data: 0x10 writing: 0x12
-irq: 4 read msg_data: 0x10 writing: 0x13
-irq: 5 read msg_data: 0x10 writing: 0x14
-irq: 6 read msg_data: 0x10 writing: 0x15
-irq: 7 read msg_data: 0x10 writing: 0x16
-irq: 8 read msg_data: 0x10 writing: 0x17
-irq: 9 read msg_data: 0x10 writing: 0x18
-
-This also looks correct, since I enabled 16 irqs,
-I'm only allowed to modify bits 0-3.
-
-
-Regards,
-Niklas
+On Fri, Dec 15, 2017 at 12:14 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Tue, Dec 12, 2017 at 03:14:04PM -0600, Bjorn Helgaas wrote:
+>> [+cc Lorenzo]
+>>
+>> On Tue, Dec 12, 2017 at 03:53:28PM -0500, Jim Quinlan wrote:
+>> > On Tue, Dec 5, 2017 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > > On Tue, Nov 14, 2017 at 05:12:05PM -0500, Jim Quinlan wrote:
+>> > >> From: Florian Fainelli <f.fainelli@gmail.com>
+>> > >>
+>> > >> This commit adds a memory API suitable for ascertaining the sizes of
+>> > >> each of the N memory controllers in a Broadcom STB chip.  Its first
+>> > >> user will be the Broadcom STB PCIe root complex driver, which needs
+>> > >> to know these sizes to properly set up DMA mappings for inbound
+>> > >> regions.
+>> > >>
+>> > >> We cannot use memblock here or anything like what Linux provides
+>> > >> because it collapses adjacent regions within a larger block, and here
+>> > >> we actually need per-memory controller addresses and sizes, which is
+>> > >> why we resort to manual DT parsing.
+>> > >>
+>> > >> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+>> > >> ---
+>> > >>  drivers/soc/bcm/brcmstb/Makefile |   2 +-
+>> > >>  drivers/soc/bcm/brcmstb/memory.c | 172 +++++++++++++++++++++++++++++++++++++++
+>> > >>  include/soc/brcmstb/memory_api.h |  25 ++++++
+>> > >>  3 files changed, 198 insertions(+), 1 deletion(-)
+>> > >>  create mode 100644 drivers/soc/bcm/brcmstb/memory.c
+>> > >>  create mode 100644 include/soc/brcmstb/memory_api.h
+>> > >>
+>> > >> diff --git a/drivers/soc/bcm/brcmstb/Makefile b/drivers/soc/bcm/brcmstb/Makefile
+>> > >> index 9120b27..4cea7b6 100644
+>> > >> --- a/drivers/soc/bcm/brcmstb/Makefile
+>> > >> +++ b/drivers/soc/bcm/brcmstb/Makefile
+>> > >> @@ -1 +1 @@
+>> > >> -obj-y                                += common.o biuctrl.o
+>> > >> +obj-y                                += common.o biuctrl.o memory.o
+>> > >> diff --git a/drivers/soc/bcm/brcmstb/memory.c b/drivers/soc/bcm/brcmstb/memory.c
+>> > >> new file mode 100644
+>> > >> index 0000000..eb647ad9
+>> > >> --- /dev/null
+>> > >> +++ b/drivers/soc/bcm/brcmstb/memory.c
+>> > >
+>> > > I sort of assume based on [1] that every new file should have an SPDX
+>> > > identifier ("The Linux kernel requires the precise SPDX identifier in
+>> > > all source files") and that the actual text of the GPL can be omitted.
+>> > >
+>> > > Only a few files in drivers/pci currently have an SPDX identifier.  I
+>> > > don't know if that's oversight or work-in-progress or what.
+>> > >
+>> > > [1] https://lkml.kernel.org/r/20171204212120.484179273@linutronix.de
+>> > >
+>> >
+>> > Bjorn, Did you get a chance to review the other commits of this
+>> > submission (V3)?  I would like any additional feedback before I send
+>> > out a V4 with SPDX fixes.  Thanks, JimQ
+>>
+>> Lorenzo is taking over drivers/pci/host/* and he'll no doubt have some
+>> comments when he gets to this.  I'll point out a few quick formatting
+>> things in the meantime.
+>
+> I need some time to review the code but overall I am quite worried about
+> patches 1 and 4 in particular, it is ok to have platform host bridge
+> drivers but we can't rewrite a DMA layer for a specific host bridge, I
+> really do not like that - it is just not manageable from a maintenance
+> perspective for the mainline kernel.
+>
+> Lorenzo
+Hi Lorenzo,
+First I note that the file drivers/pci/host/vmd.c appears to do the
+same thing -- rewrite a layer over the DMA ops.  Secondly, there seems
+to be no other way to accomplish what we need to do, especially that
+will work with ARM, ARM64, and MIPs.  Someone raised the same point
+you did and suggested I involve ARM/ARM64 maintainers, so I expanded
+my "--to" list to include Russell.  I'm open to ideas.  I've asked the
+HW PCIe folks to redesign the controller to accommodate an
+identity-map for inbound memory, but it will be a while if that
+happens, if ever. --Jim
