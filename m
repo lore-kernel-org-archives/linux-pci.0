@@ -1,63 +1,84 @@
-Return-Path: <SRS0=SB5a=DJ=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=SB5a=DJ=linutronix.de=tglx@kernel.org>
-Date: Wed, 13 Dec 2017 22:06:40 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
-    Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-    Andy Lutomirski <luto@kernel.org>,
-    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-    the arch/x86 maintainers <x86@kernel.org>,
-    Daniel Vetter <daniel.vetter@intel.com>,
-    Bjorn Helgaas <bhelgaas@google.com>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-In-Reply-To: <alpine.DEB.2.20.1712132149420.1885@nanos>
-Message-ID: <alpine.DEB.2.20.1712132201380.1885@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com> <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl> <alpine.DEB.2.20.1712061344560.1724@nanos>
- <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl> <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl> <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
- <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos>
- <alpine.DEB.2.20.1712132149420.1885@nanos>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:56020 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756191AbdLONWM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Dec 2017 08:22:12 -0500
+Date: Fri, 15 Dec 2017 13:22:52 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Johan Hovold <johan@kernel.org>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        stable <stable@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: keystone: fix interrupt-controller-node lookup
+Message-ID: <20171215132252.GA30737@red-moon>
+References: <20171117133831.1300-1-johan@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171117133831.1300-1-johan@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 13 Dec 2017, Thomas Gleixner wrote:
-> On Wed, 13 Dec 2017, Thomas Gleixner wrote:
-> > On Wed, 13 Dec 2017, Linus Torvalds wrote:
-> > 
-> > > On Wed, Dec 13, 2017 at 8:41 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > > >
-> > > > Definitely. That was fragile forever but puzzles me is that I can't figure
-> > > > out what now causes that spurious interrupt to surface out of the blue.
-> > > 
-> > > Perhaps just timing?
-> > 
-> > That's what I'm trying to figure out right now, because that is the only
-> > sensible explanation left. The whole machinery of suspend is exactly the
-> > same with and without the vector changes. I instrumented all functions
-> > involved and the picture is the same. I even do not see any fundamental
-> > timing differences where one would say: That's it.
-> > 
-> > What puzzles me even more is that in the range of commits I'm fiddling with
-> > there is no other change than the vector management stuff and the point
-> > where it breaks makes no sense at all. The point Maarten bisected it to
-> > works nicely here, so that might just point to a very subtle timing issue.
+On Fri, Nov 17, 2017 at 02:38:31PM +0100, Johan Hovold wrote:
+> Fix child-node lookup during initialisation which was using the wrong
+> OF-helper and ended up searching the whole device tree depth-first
+> starting at the parent rather than just matching on its children.
 > 
-> After doing more debugging on this it turns out that this looks like a
-> legacy interrupt coming in. The vector number is always 55, which is legacy
-> IRQ 7 as seen from the PIC. The corresponding IOAPIC interrupt pin is
-> masked and vector 55 is completely unused.
+> To make things worse, the parent pci node could end up being prematurely
+> freed as of_find_node_by_name() drops a reference to its first argument.
+> Any matching child interrupt-controller node was also leaked.
 > 
-> More questions than answers. Still investigating.
+> Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+> Cc: stable <stable@vger.kernel.org>     # 3.18
+> Acked-by: Murali Karicheri <m-karicheri2@ti.com>
+> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Johan Hovold <johan@kernel.org>
+> ---
 
-And it does not explain Maartens report which gets a spurious vector 33 on
-CPU4 after the non boot cpus have been brought online again. And that's the
-vector which was assigned before the affinity was moved by unplugging CPU4.
-
-Hrmpf. Even more mystery to solve.
+Applied to pci/keystone for v4.16.
 
 Thanks,
+Lorenzo
 
-	tglx
+> v2
+>  - amend commit message and mention explicitly that of_find_node_by_name()
+>    drops a reference to the start node
+>  - add Murali's and Lorenzo's acks
+> 
+> 
+>  drivers/pci/dwc/pci-keystone.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+> index 5bee3af47588..39405598b22d 100644
+> --- a/drivers/pci/dwc/pci-keystone.c
+> +++ b/drivers/pci/dwc/pci-keystone.c
+> @@ -178,7 +178,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  	}
+>  
+>  	/* interrupt controller is in a child node */
+> -	*np_temp = of_find_node_by_name(np_pcie, controller);
+> +	*np_temp = of_get_child_by_name(np_pcie, controller);
+>  	if (!(*np_temp)) {
+>  		dev_err(dev, "Node for %s is absent\n", controller);
+>  		return -EINVAL;
+> @@ -187,6 +187,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  	temp = of_irq_count(*np_temp);
+>  	if (!temp) {
+>  		dev_err(dev, "No IRQ entries in %s\n", controller);
+> +		of_node_put(*np_temp);
+>  		return -EINVAL;
+>  	}
+>  
+> @@ -204,6 +205,8 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  			break;
+>  	}
+>  
+> +	of_node_put(*np_temp);
+> +
+>  	if (temp) {
+>  		*num_irqs = temp;
+>  		return 0;
+> -- 
+> 2.15.0
+> 
