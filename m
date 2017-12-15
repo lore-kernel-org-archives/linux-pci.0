@@ -1,115 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pegase1.c-s.fr ([93.17.236.30]:11200 "EHLO pegase1.c-s.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750860AbdLXJFR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 24 Dec 2017 04:05:17 -0500
-Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-To: Greg KH <gregkh@linuxfoundation.org>,
-        Yisheng Xie <xieyisheng1@huawei.com>
-Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com,
-        ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
-        boris.brezillon@free-electrons.com, richard@nod.at,
-        marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr,
-        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
-        wim@iguana.be, linux@roeck-us.net, linux-watchdog@vger.kernel.org,
-        b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org,
-        linus.walleij@linaro.org, linux-gpio@vger.kernel.org,
-        ralf@linux-mips.org, linux-mips@linux-mips.org,
-        lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de,
-        jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de,
-        andriy.shevchenko@linux.intel.com,
-        industrypack-devel@lists.sourceforge.net, wg@grandegger.com,
-        mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org,
-        linux-media@vger.kernel.org, a.zummo@towertech.it,
-        alexandre.belloni@free-electrons.com, linux-rtc@vger.kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie,
-        dri-devel@lists.freedesktop.org, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, linux-spi@vger.kernel.org,
-        tj@kernel.org, linux-ide@vger.kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, devel@driverdev.osuosl.org,
-        dvhart@infradead.org, andy@infradead.org,
-        platform-driver-x86@vger.kernel.org, jakub.kicinski@netronome.com,
-        davem@davemloft.net, nios2-dev@lists.rocketboards.org,
-        netdev@vger.kernel.org, vinod.koul@intel.com,
-        dan.j.williams@intel.com, dmaengine@vger.kernel.org,
-        jslaby@suse.com
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134831.GB10103@kroah.com>
-From: christophe leroy <christophe.leroy@c-s.fr>
-Message-ID: <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
-Date: Sun, 24 Dec 2017 10:05:08 +0100
+Return-Path: <SRS0=w4Pv=DL=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=w4Pv=DL=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20171223134831.GB10103@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20171215183058.GV30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <alpine.DEB.2.20.1712141648190.4998@nanos>
+ <11146834.AWaDHrVcmB@aspire.rjw.lan> <2582328.YfNXS1jHhG@aspire.rjw.lan> <20171215183058.GV30595@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 16 Dec 2017 00:44:03 +0100
+Message-ID: <CAJZ5v0jQbD+A+i5o_HPBKZgz2Z8pUA4iARY+SR-s6TN0grBvPg@mail.gmail.com>
+Subject: Re: [PATCH] PCI / PM: Force devices to D0 in pci_pm_thaw_noirq()
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Thomas Gleixner <tglx@linutronix.de>,
+	Linux PCI <linux-pci@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>,
+	Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>,
+	Andy Lutomirski <luto@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"the arch/x86 maintainers" <x86@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Linux PM <linux-pm@vger.kernel.org>, Chen Yu <y.c.chen@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-Le 23/12/2017 à 14:48, Greg KH a écrit :
-> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->> Hi all,
+On Fri, Dec 15, 2017 at 7:30 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Dec 15, 2017 at 03:07:18AM +0100, Rafael J. Wysocki wrote:
+>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 >>
->> When I tried to use devm_ioremap function and review related code, I found
->> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->> except one use ioremap while the other use ioremap_nocache.
-> 
-> For all arches?  Really?  Look at MIPS, and x86, they have different
-> functions.
-> 
->> While ioremap's
->> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->> same function with devm_ioremap, which can just be killed to reduce the size
->> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
+>> It is incorrect to call pci_restore_state() for devices in low-power
+>> states (D1-D3), as that involves the restoration of MSI setup which
+>> requires MMIO to be operational and that is only the case in D0.
 >>
->> I have posted two versions, which use macro instead of function for
->> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->> thing. So here comes v3 and please help to review.
-> 
-> I don't think this can be done, what am I missing?  These functions are
-> not identical, sorry for missing that before.
+>> However, pci_pm_thaw_noirq() may do that if the driver's "freeze"
+>> callbacks put the device into a low-power state, so fix it by making
+>> it force devices into D0 via pci_set_power_state() instead of trying
+>> to "update" their power state which is pointless.
+>>
+>> Fixes: e60514bd4485 (PCI/PM: Restore the status of PCI devices across hibernation)
+>> Cc: 4.13+ <stable@vger.kernel.org> # 4.13+
+>> Reported-by: Thomas Gleixner <tglx@linutronix.de>
+>> Reported-by: Maarten Lankhorst <dev@mblankhorst.nl>
+>> Tested-by: Thomas Gleixner <tglx@linutronix.de>
+>> Tested-by: Maarten Lankhorst <dev@mblankhorst.nl>
+>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Let me know if you want me to take this.  I don't have anything
+> currently queued up that touches pci-driver.c, so I'm happy if you
+> take it yourself.
 
-devm_ioremap() and devm_ioremap_nocache() are quite similar, both use 
-devm_ioremap_release() for the release, why not just defining:
+I will take it.
 
-static void __iomem *__devm_ioremap(struct device *dev, resource_size_t 
-offset,
-			   resource_size_t size, bool nocache)
-{
-[...]
-	if (nocache)
-		addr = ioremap_nocache(offset, size);
-	else
-		addr = ioremap(offset, size);
-[...]
-}
+Depending of what Yu finds, we may need an additional fix to make the
+Purley system work.
 
-then in include/linux/io.h
-
-static inline void __iomem *devm_ioremap(struct device *dev, 
-resource_size_t offset,
-			   resource_size_t size)
-{return __devm_ioremap(dev, offset, size, false);}
-
-static inline void __iomem *devm_ioremap_nocache(struct device *dev, 
-resource_size_t offset,
-				   resource_size_t size);
-{return __devm_ioremap(dev, offset, size, true);}
-
-Christophe
-
-> 
-> thanks,
-> 
-> greg k-h
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
----
-L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
+>> ---
+>>
+>> The bug is not as old as I thought, actually.
+>>
+>> Yes, we did the pci_update_current_state() in pci_pm_thaw_noirq()
+>> forever, but it started to be problematic in 4.13, when we started
+>> to call pci_restore_state() in addition to it to fix another issue.
+>>
+>> ---
+>>  drivers/pci/pci-driver.c |    7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> Index: linux-pm/drivers/pci/pci-driver.c
+>> ===================================================================
+>> --- linux-pm.orig/drivers/pci/pci-driver.c
+>> +++ linux-pm/drivers/pci/pci-driver.c
+>> @@ -1027,7 +1027,12 @@ static int pci_pm_thaw_noirq(struct devi
+>>       if (pci_has_legacy_pm_support(pci_dev))
+>>               return pci_legacy_resume_early(dev);
+>>
+>> -     pci_update_current_state(pci_dev, PCI_D0);
+>> +     /*
+>> +      * pci_restore_state() requires the device to be in D0 (because of MSI
+>> +      * restoration among other things), so force it into D0 in case the
+>> +      * driver's "freeze" callbacks put it into a low-power state directly.
+>> +      */
+>> +     pci_set_power_state(pci_dev, PCI_D0);
+>>       pci_restore_state(pci_dev);
+>>
+>>       if (drv && drv->pm && drv->pm->thaw_noirq)
+>>
