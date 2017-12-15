@@ -1,88 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58274 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:48568 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751746AbdLETkw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Dec 2017 14:40:52 -0500
-Date: Tue, 5 Dec 2017 13:40:50 -0600
+        id S1754526AbdLOAWB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Dec 2017 19:22:01 -0500
+Date: Thu, 14 Dec 2017 18:21:55 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Kenji Chen <kenji.chen@intel.com>,
-        Thierry Reding <treding@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        David Daney <david.daney@cavium.com>,
-        Krishna Kishore <kthota@nvidia.com>,
-        linux-kernel@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        linux-tegra@vger.kernel.org, Patrick Georgi <pgeorgi@chromium.org>,
+To: Maik Broemme <mbroemme@libmpq.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
         Rajat Jain <rajatja@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Stefan Reinauer <stefan.reinauer@coreboot.org>,
-        Duncan Laurie <dlaurie@chromium.org>
-Subject: Re: [PATCH v1 0/2] PCI/ASPM: Refine L1 PM Substates support
-Message-ID: <20171205194050.GD23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+        Keith Busch <keith.busch@intel.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: ASPM powersupersave change NVMe SSD Samsung 960 PRO capacity to
+ 0 and read-only
+Message-ID: <20171215002155.GR30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171214184701.GA6322@libmpq.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171214184701.GA6322@libmpq.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 02, 2017 at 03:45:38PM -0600, Bjorn Helgaas wrote:
-> The PCIe active link power state is L0.  ASPM defines two low-power
-> states: L0s and L1.  The L1 PM Substates feature defines two
-> additional low-power states: L1.1 and L2.2.
-> 
-> The L1.2 state may have substantial entry/exit latency.  Downstream
-> devices can use the Latency Tolerance Reporting (LTR) feature to
-> report how much latency they can tolerate.  The L1 PM Substates
-> capability includes a programmable L1.2 threshold register.  If the
-> downstream devices can tolerate the latency indicated by the
-> threshold, L1.2 may be used.
-> 
-> If LTR is not enabled, the L1.2 threshold is ignored and L1.2 can be
-> used whenever it is enabled and CLKREQ# is de-asserted.  Linux
-> currently never enables LTR, but firmware may have done so.
-> 
-> The current L1 PM substates support in Linux sets the L1.2 threshold
-> to a fixed value (163.84us) copied from coreboot [1].  I don't know
-> where that value came from, and it is incorrect for some platforms,
-> e.g., Tegra [2].
-> 
-> These patches change that so we calculate the L1.2 threshold based on
-> values reported by the hardware, and we enable LTR whenever possible.
-> 
-> This is all just my understanding from reading the spec.  I'd be glad
-> to be corrected if I'm going wrong.
-> 
-> I'm particularly puzzled about the coreboot code in
-> pciexp_L1_substate_commit() that sets LTR_L1.2_THRESHOLD:
-> 
-> +	pcie_update_cfg(root, root_cap + 0x08, ~0xe3ff0000,
-> +		(1 << 21) | (1 << 23) | (1 << 30));
-> 
-> This is writing the L1 PM Substates Control 1 register, but the shifts
-> don't match up with any of the fields in the register, so this is an
-> awfully funny way to write the threshold.
-> 
-> [1] https://mail.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.html
-> [2] https://lkml.kernel.org/r/1510492674-12786-1-git-send-email-vidyas@nvidia.com
-> 
-> ---
-> 
-> Bjorn Helgaas (2):
->       PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
->       PCI/ASPM: Enable Latency Tolerance Reporting when supported
-> 
-> 
->  drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++----------------
->  drivers/pci/probe.c     |   33 ++++++++++++++++++++++
->  include/linux/pci.h     |    2 +
->  3 files changed, 82 insertions(+), 24 deletions(-)
+[+cc Rajat, Keith, linux-kernel]
 
-I applied these with Vidya's Reviewed-by to pci/aspm for v4.16.
+On Thu, Dec 14, 2017 at 07:47:01PM +0100, Maik Broemme wrote:
+> I have a Samsung 960 PRO NVMe SSD (Non-Volatile memory controller:
+> Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961). It
+> works fine until I enable powersupersave via
+> /sys/module/pcie_aspm/parameters/policy
+> 
+> ASPM is enabled in BIOS and works fine for all devices and in
+> powersave mode. I'm able to reproduce this always at any time while
+> the system is up and running via:
+> 
+> $> echo powersupersave > /sys/module/pcie_aspm/parameters/policy
+> 
+> The Linux kernel is 4.14.4 and APST for my device is working with
+> powersave. As soon as I enable powersupersave I get:
+> 
+> [11535.142755] dpc 0000:00:10.0:pcie010: DPC containment event, status:0x1f09 source:0x0000
+> [11535.142760] dpc 0000:00:10.0:pcie010: DPC unmasked uncorrectable error detected, remove downstream devices
+> [11535.159999] nvme0n1: detected capacity change from 1024209543168 to 0
+> ...
 
-I'd still really like to hear from the coreboot folks about the
-rationale for the current coreboot code.  You folks are in a much
-better position to actually understand the hardware details.
+Can you start by opening a bug report at https://bugzilla.kernel.org,
+category Drivers/PCI, and attaching the complete "lspci -vv" output
+(as root) and the complete dmesg log?  Make sure you have a new enough
+lspci to decode the ASPM L1 Substates capability and the LTR bits.
+Source is at git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git
+
+powersupersave enables ASPM L1 Substates.  Rajat, do you have any
+ideas about this or how we might debug it?
+
+Keith, is this really all the information about the event that we can
+get out of DPC?  Is there some AER logging we might be able to get via
+"lspci -vv"?  Sounds like this is the boot disk, so Maik may not be
+able to run lspci after the DPC event.  If there *is* any AER info,
+can we connect up the DPC event so we can print the AER info from the
+kernel?
+
+I wonder if there's some way improper L1 Substate configuration could
+cause a DPC event.  There are lots of knobs there that seem to depend
+on devices, and I'm not sure we have them all correct yet.
+
+There are some recent changes in that area that are in linux-next:
+
+  PCI/ASPM: Enable Latency Tolerance Reporting when supported
+  PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
+  PCI/ASPM: Use correct capability pointer to program LTR_L1.2_THRESHOLD
+  PCI/ASPM: Account for downstream device's Port Common_Mode_Restore_Time
+
+It's conceivable that they could have some bearing on this problem.
+If you could give this a whirl on linux-next, that would be
+interesting.  If you do this, please also collect the "lspci -vv"
+output there so we can compare it with the v4.14 configuration.
+
+> It looks like APST feature cannot be set anymore after enabling
+> powersupersave. Also the PCIe device disappears completely
+> from lspci output.
+
+My guess is this is to be expected after the DPC event.  That
+basically disconnects the PCIe device from the system.
+
+> Any idea why the device is failing with powersupersave and how to avoid
+> it? Especially how to enable it but skip certain broken devices as this
+> is my boot device.
+
+We could conceivably add a quirk if we find that L1SS is broken on
+this particular device.  But L1SS is so new that I'd be more
+suspicious of the Linux code than the device.
 
 Bjorn
