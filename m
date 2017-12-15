@@ -1,13 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 09/26] drm/nouveau: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:45 -0500
-Message-Id: <1513661883-28662-10-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+Date: Fri, 15 Dec 2017 14:14:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jim Quinlan <jim2101024@gmail.com>
+Subject: Re: [PATCH v3 3/8] PCI: brcmstb: Add Broadcom STB PCIe host
+ controller driver
+Message-ID: <20171215201434.GY30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <1510697532-32828-1-git-send-email-jim2101024@gmail.com>
+ <1510697532-32828-4-git-send-email-jim2101024@gmail.com>
+ <20171212221642.GB95453@bhelgaas-glaptop.roam.corp.google.com>
+ <CANCKTBvtqNWZYXpLdUnEWwA2=14XhJ6adR5muOAYubY_1SxZWw@mail.gmail.com>
+ <20171214225133.GM30595@bhelgaas-glaptop.roam.corp.google.com>
+ <CANCKTBvFhHb57JdG01aiSypBAcUeLzY3Dhuh5xP-_F5k_NcAhA@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CANCKTBvFhHb57JdG01aiSypBAcUeLzY3Dhuh5xP-_F5k_NcAhA@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,127 +21,80 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, David Airlie <airlied@linux.ie>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS"
- <dri-devel@lists.freedesktop.org>, Sinan Kaya <okaya@codeaurora.org>,
- Ben Skeggs <bskeggs@redhat.com>,
- "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS"
- <nouveau@lists.freedesktop.org>, Ilia Mirkin <imirkin@alum.mit.edu>
-MIME-Version: 1.0
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Linux-MIPS <linux-mips@linux-mips.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Kevin Cernekee <cernekee@gmail.com>,
+ Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Russell King <rmk+kernel@armlinux.org.uk>,
+ Rob Herring <robh+dt@kernel.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Gregory Fong <gregory.0xf0@gmail.com>, Jonas Gorski <jonas.gorski@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Brian Norris <computersforpeace@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On Fri, Dec 15, 2017 at 02:53:57PM -0500, Jim Quinlan wrote:
+> On Thu, Dec 14, 2017 at 5:51 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Wed, Dec 13, 2017 at 06:53:53PM -0500, Jim Quinlan wrote:
+> >> On Tue, Dec 12, 2017 at 5:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >> > On Tue, Nov 14, 2017 at 05:12:07PM -0500, Jim Quinlan wrote:
+> >> >> This commit adds the basic Broadcom STB PCIe controller.  Missing is
+> >> >> the ability to process MSI and also handle dma-ranges for inbound
+> >> >> memory accesses.  These two functionalities are added in subsequent
+> >> >> commits.
+> >> >>
+> >> >> The PCIe block contains an MDIO interface.  This is a local interface
+> >> >> only accessible by the PCIe controller.  It cannot be used or shared
+> >> >> by any other HW.  As such, the small amount of code for this
+> >> >> controller is included in this driver as there is little upside to put
+> >> >> it elsewhere.
+> >> ...
+> >
+> >> >> +static bool brcm_pcie_valid_device(struct brcm_pcie *pcie, struct pci_bus *bus,
+> >> >> +                                int dev)
+> >> >> +{
+> >> >> +     if (pci_is_root_bus(bus)) {
+> >> >> +             if (dev > 0)
+> >> >> +                     return false;
+> >> >> +     } else {
+> >> >> +             /* If there is no link, then there is no device */
+> >> >> +             if (!brcm_pcie_link_up(pcie))
+> >> >> +                     return false;
+> >> >
+> >> > This is racy, since the link can go down after you check but before
+> >> > you do the config access.  I assume your hardware can deal with a
+> >> > config access that targets a link that is down?
+> >>
+> >> Yes, that can happen but there is really nothing that can be done if
+> >> the link goes down in that vulnerability window.  What do you suggest
+> >> doing?
+> >
+> > Most hardware drops writes and returns ~0 on reads if the link is
+> > down.  I assume your hardware does something similar, and that should
+> > be enough.  You shouldn't have to check whether the link is up.
+> Unfortunately our HW is quite unforgiving and effects a synchronous or
+> asynchronous abort when doing a config access when the link or power
+> has gone down on the EP.  I will open a discussion with the PCIe HW
+> folks regarding why our controller does not behave like "most
+> hardware".  Thanks, Jim
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+I mentioned in the other thread [1] that I think the best way to
+handle this is to figure out how to deal with the abort cleanly.
+Using a test like *_pcie_link_up() to try to avoid it is a 99%
+solution that means we'll see rare failures that are very difficult to
+reproduce and debug.
 
-Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
-and extract the domain number from
-1. struct pci_dev
-2. struct pci_dev through drm_device->pdev
-3. struct pci_dev through fb->subdev->drm_device->pdev
+> > The hardware might report errors, e.g., via AER, if the link is down.
+> > And we might not not handle those nicely.  If we have issues there, we
+> > should find out and fix them.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/gpu/drm/nouveau/dispnv04/arb.c           |  4 +++-
- drivers/gpu/drm/nouveau/dispnv04/hw.c            | 10 +++++++---
- drivers/gpu/drm/nouveau/nouveau_drm.c            |  3 ++-
- drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c | 10 +++++++++-
- 4 files changed, 21 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/gpu/drm/nouveau/dispnv04/arb.c b/drivers/gpu/drm/nouveau/dispnv04/arb.c
-index 90075b6..c79160c 100644
---- a/drivers/gpu/drm/nouveau/dispnv04/arb.c
-+++ b/drivers/gpu/drm/nouveau/dispnv04/arb.c
-@@ -213,8 +213,10 @@ struct nv_sim_state {
- 	if ((dev->pdev->device & 0xffff) == 0x01a0 /*CHIPSET_NFORCE*/ ||
- 	    (dev->pdev->device & 0xffff) == 0x01f0 /*CHIPSET_NFORCE2*/) {
- 		uint32_t type;
-+		int domain = pci_domain_nr(dev->pdev->bus);
- 
--		pci_read_config_dword(pci_get_bus_and_slot(0, 1), 0x7c, &type);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 1),
-+				      0x7c, &type);
- 
- 		sim_data.memory_type = (type >> 12) & 1;
- 		sim_data.memory_width = 64;
-diff --git a/drivers/gpu/drm/nouveau/dispnv04/hw.c b/drivers/gpu/drm/nouveau/dispnv04/hw.c
-index b985990..0c9bdf0 100644
---- a/drivers/gpu/drm/nouveau/dispnv04/hw.c
-+++ b/drivers/gpu/drm/nouveau/dispnv04/hw.c
-@@ -216,12 +216,15 @@
- {
- 	struct nvkm_pll_vals pllvals;
- 	int ret;
-+	int domain;
-+
-+	domain = pci_domain_nr(dev->pdev->bus);
- 
- 	if (plltype == PLL_MEMORY &&
- 	    (dev->pdev->device & 0x0ff0) == CHIPSET_NFORCE) {
- 		uint32_t mpllP;
--
--		pci_read_config_dword(pci_get_bus_and_slot(0, 3), 0x6c, &mpllP);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 3),
-+				      0x6c, &mpllP);
- 		mpllP = (mpllP >> 8) & 0xf;
- 		if (!mpllP)
- 			mpllP = 4;
-@@ -232,7 +235,8 @@
- 	    (dev->pdev->device & 0xff0) == CHIPSET_NFORCE2) {
- 		uint32_t clock;
- 
--		pci_read_config_dword(pci_get_bus_and_slot(0, 5), 0x4c, &clock);
-+		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 5),
-+				      0x4c, &clock);
- 		return clock / 1000;
- 	}
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
-index 8d4a5be..33b6139 100644
---- a/drivers/gpu/drm/nouveau/nouveau_drm.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
-@@ -524,7 +524,8 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
- 	}
- 
- 	/* subfunction one is a hdmi audio device? */
--	drm->hdmi_device = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
-+	drm->hdmi_device = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
-+						(unsigned int)pdev->bus->number,
- 						PCI_DEVFN(PCI_SLOT(pdev->devfn), 1));
- 
- 	if (!drm->hdmi_device) {
-diff --git a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-index 4c07d10..18241c6 100644
---- a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-+++ b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
-@@ -28,8 +28,16 @@
- {
- 	struct pci_dev *bridge;
- 	u32 mem, mib;
-+	int domain = 0;
-+	struct pci_dev *pdev = NULL;
- 
--	bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 1));
-+	if (dev_is_pci(fb->subdev.device->dev))
-+		pdev = to_pci_dev(fb->subdev.device->dev);
-+
-+	if (pdev)
-+		domain = pci_domain_nr(pdev->bus);
-+
-+	bridge = pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 1));
- 	if (!bridge) {
- 		nvkm_error(&fb->subdev, "no bridge device\n");
- 		return -ENODEV;
--- 
-1.9.1
-
+[1] https://lkml.kernel.org/r/20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com
 
 _______________________________________________
 linux-arm-kernel mailing list
