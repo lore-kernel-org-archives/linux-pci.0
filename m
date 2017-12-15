@@ -1,221 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:38179 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751799AbdLLGlN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 01:41:13 -0500
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH v2 2/3] r8169: switch to device-managed functions in probe
-To: Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <36fa928b-e974-c023-de3e-c2bd05f53df2@gmail.com>
-Message-ID: <59cef452-8991-2ddf-896c-a250622584f5@gmail.com>
-Date: Tue, 12 Dec 2017 07:41:02 +0100
+Return-Path: <SRS0=9AXQ=DL=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=9AXQ=DL=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Fri, 15 Dec 2017 09:42:55 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Niklas Cassel <niklas.cassel@axis.com>, linux-pci@vger.kernel.org,
+	kishon@ti.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 0/3] Fix find_first_zero_bit() usage
+Message-ID: <20171215094255.GA27435@red-moon>
+References: <20171212141634.5985-1-niklas.cassel@axis.com>
+ <20171213215925.GJ30595@bhelgaas-glaptop.roam.corp.google.com>
+ <20171214133230.GA25307@axis.com>
+ <20171214134707.GE27348@e107981-ln.cambridge.arm.com>
+ <20171214232138.GO30595@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <36fa928b-e974-c023-de3e-c2bd05f53df2@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171214232138.GO30595@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify probe error path and remove callback by using device-managed
-functions.
+On Thu, Dec 14, 2017 at 05:21:38PM -0600, Bjorn Helgaas wrote:
+> On Thu, Dec 14, 2017 at 01:47:07PM +0000, Lorenzo Pieralisi wrote:
+> > On Thu, Dec 14, 2017 at 02:32:30PM +0100, Niklas Cassel wrote:
+> > > On Wed, Dec 13, 2017 at 03:59:25PM -0600, Bjorn Helgaas wrote:
+> > > > On Tue, Dec 12, 2017 at 03:16:31PM +0100, Niklas Cassel wrote:
+> > > > > find_first_zero_bit()'s parameter 'size' is defined in bits,
+> > > > > not in bytes.
+> > > > > 
+> > > > > Calling find_first_zero_bit() with the wrong size unit
+> > > > > will lead to insidious bugs.
+> > > > > 
+> > > > > Fix all uses of find_first_zero_bit() called with
+> > > > > sizeof() as size argument in drivers/pci.
+> > > > > 
+> > > > > Also had to fix broken error handling in pci_epc_epf_link()
+> > > > > in order to do proper error handling for find_first_zero_bit().
+> > > > > 
+> > > > > Niklas Cassel (3):
+> > > > >   PCI: designware-ep: Fix find_first_zero_bit() usage
+> > > > >   PCI: endpoint: Fix error handling in pci_epc_epf_link()
+> > > > >   PCI: endpoint: Fix find_first_zero_bit() usage
+> > > > > 
+> > > > >  drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
+> > > > >  drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
+> > > > >  drivers/pci/endpoint/pci-ep-cfs.c    | 13 ++++++++-----
+> > > > >  3 files changed, 40 insertions(+), 15 deletions(-)
+> > > > 
+> > > > In the interest of making forward progress, I applied these to
+> > > > for-linus for v4.15.
+> > > > 
+> > > > The issues apparently have been there since v4.12-rc1, but I guess
+> > > > this is proposed for for-linus because (a) it fixes insidious bugs
+> > > > and (b) the endpoint framework is relatively little-used yet so
+> > > > low-risk.  Right?
+> > > > 
+> > > 
+> > > Hello Bjorn,
+> > > 
+> > > As far as I know, dra7xx is the only in-tree user of the endpoint
+> > > framework. Therefore, I see no real need to rush these patches.
+> > > 
+> > > One benefit of sending them to v4.15 would be if anyone starts
+> > > developing endpoint support for their driver (with v4.15 as a base),
+> > > we eliminate the risk that they might get hit by these bugs, and
+> > > potentially waste time finding bugs that have already been found.
+> > > 
+> > > Please note that Kishon had some last minute review comments,
+> > > so I had to submit a V5 of the patch series.
+> > 
+> > I missed this message (please CC me on the cover letter too next time) I
+> > hope Bjorn can drop v4 and replace it with v5 - or I can just queue v5
+> > for v4.16 - just let me know please how you want to handle it.
+> 
+> I dropped them from my for-linus tree.  Lorenzo, can you take care of
+> v5 for v4.16?
 
-rtl_disable_msi isn't needed any longer because the release callback
-of pcim_enable_device does this implicitely.
+Yes sure, I will queue it straight away.
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
-v2:
-- no changes
----
- drivers/net/ethernet/realtek/r8169.c | 80 +++++++++---------------------------
- 1 file changed, 20 insertions(+), 60 deletions(-)
-
-diff --git a/drivers/net/ethernet/realtek/r8169.c b/drivers/net/ethernet/realtek/r8169.c
-index fc0d5fa65..3c7d90d3a 100644
---- a/drivers/net/ethernet/realtek/r8169.c
-+++ b/drivers/net/ethernet/realtek/r8169.c
-@@ -4643,16 +4643,6 @@ static void rtl8169_phy_timer(struct timer_list *t)
- 	rtl_schedule_task(tp, RTL_FLAG_TASK_PHY_PENDING);
- }
- 
--static void rtl8169_release_board(struct pci_dev *pdev, struct net_device *dev,
--				  void __iomem *ioaddr)
--{
--	iounmap(ioaddr);
--	pci_release_regions(pdev);
--	pci_clear_mwi(pdev);
--	pci_disable_device(pdev);
--	free_netdev(dev);
--}
--
- DECLARE_RTL_COND(rtl_phy_reset_cond)
- {
- 	return tp->phy_reset_pending(tp);
-@@ -4784,14 +4774,6 @@ static int rtl_tbi_ioctl(struct rtl8169_private *tp, struct mii_ioctl_data *data
- 	return -EOPNOTSUPP;
- }
- 
--static void rtl_disable_msi(struct pci_dev *pdev, struct rtl8169_private *tp)
--{
--	if (tp->features & RTL_FEATURE_MSI) {
--		pci_disable_msi(pdev);
--		tp->features &= ~RTL_FEATURE_MSI;
--	}
--}
--
- static void rtl_init_mdio_ops(struct rtl8169_private *tp)
- {
- 	struct mdio_ops *ops = &tp->mdio_ops;
-@@ -8256,9 +8238,6 @@ static void rtl_remove_one(struct pci_dev *pdev)
- 
- 	unregister_netdev(dev);
- 
--	dma_free_coherent(&tp->pci_dev->dev, sizeof(*tp->counters),
--			  tp->counters, tp->counters_phys_addr);
--
- 	rtl_release_firmware(tp);
- 
- 	if (pci_dev_run_wake(pdev))
-@@ -8266,9 +8245,6 @@ static void rtl_remove_one(struct pci_dev *pdev)
- 
- 	/* restore original MAC address */
- 	rtl_rar_set(tp, dev->perm_addr);
--
--	rtl_disable_msi(pdev, tp);
--	rtl8169_release_board(pdev, dev, tp->mmio_addr);
- }
- 
- static const struct net_device_ops rtl_netdev_ops = {
-@@ -8445,11 +8421,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		       MODULENAME, RTL8169_VERSION);
- 	}
- 
--	dev = alloc_etherdev(sizeof (*tp));
--	if (!dev) {
--		rc = -ENOMEM;
--		goto out;
--	}
-+	dev = devm_alloc_etherdev(&pdev->dev, sizeof (*tp));
-+	if (!dev)
-+		return -ENOMEM;
- 
- 	SET_NETDEV_DEV(dev, &pdev->dev);
- 	dev->netdev_ops = &rtl_netdev_ops;
-@@ -8472,13 +8446,13 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 				     PCIE_LINK_STATE_CLKPM);
- 
- 	/* enable device (incl. PCI PM wakeup and hotplug setup) */
--	rc = pci_enable_device(pdev);
-+	rc = pcim_enable_device(pdev);
- 	if (rc < 0) {
- 		netif_err(tp, probe, dev, "enable failure\n");
--		goto err_out_free_dev_1;
-+		return rc;
- 	}
- 
--	if (pci_set_mwi(pdev) < 0)
-+	if (pcim_set_mwi(pdev) < 0)
- 		netif_info(tp, probe, dev, "Mem-Wr-Inval unavailable\n");
- 
- 	/* make sure PCI base addr 1 is MMIO */
-@@ -8486,30 +8460,28 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		netif_err(tp, probe, dev,
- 			  "region #%d not an MMIO resource, aborting\n",
- 			  region);
--		rc = -ENODEV;
--		goto err_out_mwi_2;
-+		return -ENODEV;
- 	}
- 
- 	/* check for weird/broken PCI region reporting */
- 	if (pci_resource_len(pdev, region) < R8169_REGS_SIZE) {
- 		netif_err(tp, probe, dev,
- 			  "Invalid PCI region size(s), aborting\n");
--		rc = -ENODEV;
--		goto err_out_mwi_2;
-+		return -ENODEV;
- 	}
- 
- 	rc = pci_request_regions(pdev, MODULENAME);
- 	if (rc < 0) {
- 		netif_err(tp, probe, dev, "could not request regions\n");
--		goto err_out_mwi_2;
-+		return rc;
- 	}
- 
- 	/* ioremap MMIO region */
--	ioaddr = ioremap(pci_resource_start(pdev, region), R8169_REGS_SIZE);
-+	ioaddr = devm_ioremap(&pdev->dev, pci_resource_start(pdev, region),
-+			      R8169_REGS_SIZE);
- 	if (!ioaddr) {
- 		netif_err(tp, probe, dev, "cannot remap MMIO, aborting\n");
--		rc = -EIO;
--		goto err_out_free_res_3;
-+		return -EIO;
- 	}
- 	tp->mmio_addr = ioaddr;
- 
-@@ -8535,7 +8507,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
- 		if (rc < 0) {
- 			netif_err(tp, probe, dev, "DMA configuration failed\n");
--			goto err_out_unmap_4;
-+			return rc;
- 		}
- 	}
- 
-@@ -8697,8 +8669,9 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	tp->rtl_fw = RTL_FIRMWARE_UNKNOWN;
- 
--	tp->counters = dma_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
--					   &tp->counters_phys_addr, GFP_KERNEL);
-+	tp->counters = dmam_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
-+					    &tp->counters_phys_addr,
-+					    GFP_KERNEL);
- 	if (!tp->counters) {
- 		rc = -ENOMEM;
- 		goto err_out_msi_5;
-@@ -8706,7 +8679,7 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	rc = register_netdev(dev);
- 	if (rc < 0)
--		goto err_out_cnt_6;
-+		goto err_out_msi_5;
- 
- 	pci_set_drvdata(pdev, dev);
- 
-@@ -8735,25 +8708,12 @@ static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	netif_carrier_off(dev);
- 
--out:
--	return rc;
-+	return 0;
- 
--err_out_cnt_6:
--	dma_free_coherent(&pdev->dev, sizeof(*tp->counters), tp->counters,
--			  tp->counters_phys_addr);
- err_out_msi_5:
- 	netif_napi_del(&tp->napi);
--	rtl_disable_msi(pdev, tp);
--err_out_unmap_4:
--	iounmap(ioaddr);
--err_out_free_res_3:
--	pci_release_regions(pdev);
--err_out_mwi_2:
--	pci_clear_mwi(pdev);
--	pci_disable_device(pdev);
--err_out_free_dev_1:
--	free_netdev(dev);
--	goto out;
-+
-+	return rc;
- }
- 
- static struct pci_driver rtl8169_pci_driver = {
--- 
-2.15.1
+Thanks,
+Lorenzo
