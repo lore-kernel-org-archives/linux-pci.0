@@ -1,130 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from libmpq.org ([85.25.94.4]:43178 "EHLO mail.libmpq.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755889AbdLOTB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 14:01:29 -0500
-Date: Fri, 15 Dec 2017 20:01:26 +0100
-From: Maik Broemme <mbroemme@libmpq.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ASPM powersupersave change NVMe SSD Samsung 960 PRO capacity to
- 0 and read-only
-Message-ID: <20171215190126.GI19904@libmpq.org>
-References: <20171214184701.GA6322@libmpq.org>
- <20171215002155.GR30595@bhelgaas-glaptop.roam.corp.google.com>
- <CACK8Z6HyBgNdav_Atzpxe1RGvpviJF2vsLhkgATjL2B7GnYnwg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACK8Z6HyBgNdav_Atzpxe1RGvpviJF2vsLhkgATjL2B7GnYnwg@mail.gmail.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:44511 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756323AbdLOTbm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Dec 2017 14:31:42 -0500
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v16 4/4] PCI: Remove PCI pool macro functions
+Date: Fri, 15 Dec 2017 20:31:23 +0100
+Message-Id: <20171215193123.13395-5-romain.perier@gmail.com>
+In-Reply-To: <20171215193123.13395-1-romain.perier@gmail.com>
+References: <20171215193123.13395-1-romain.perier@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rajat,
+From: Romain Perier <romain.perier@collabora.com>
 
-On Dec 15, 2017, at 18:33, Rajat Jain <rajatja@google.com> wrote:
-> On Thu, Dec 14, 2017 at 4:21 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > [+cc Rajat, Keith, linux-kernel]
-> >
-> > On Thu, Dec 14, 2017 at 07:47:01PM +0100, Maik Broemme wrote:
-> >> I have a Samsung 960 PRO NVMe SSD (Non-Volatile memory controller:
-> >> Samsung Electronics Co Ltd NVMe SSD Controller SM961/PM961). It
-> >> works fine until I enable powersupersave via
-> >> /sys/module/pcie_aspm/parameters/policy
-> >>
-> >> ASPM is enabled in BIOS and works fine for all devices and in
-> >> powersave mode. I'm able to reproduce this always at any time while
-> >> the system is up and running via:
-> >>
-> >> $> echo powersupersave > /sys/module/pcie_aspm/parameters/policy
-> >>
-> >> The Linux kernel is 4.14.4 and APST for my device is working with
-> >> powersave. As soon as I enable powersupersave I get:
-> >>
-> >> [11535.142755] dpc 0000:00:10.0:pcie010: DPC containment event, status:0x1f09 source:0x0000
-> >> [11535.142760] dpc 0000:00:10.0:pcie010: DPC unmasked uncorrectable error detected, remove downstream devices
-> >> [11535.159999] nvme0n1: detected capacity change from 1024209543168 to 0
-> >> ...
-> >
-> > Can you start by opening a bug report at https://bugzilla.kernel.org,
-> > category Drivers/PCI, and attaching the complete "lspci -vv" output
-> > (as root) and the complete dmesg log?  Make sure you have a new enough
-> > lspci to decode the ASPM L1 Substates capability and the LTR bits.
-> > Source is at git://git.kernel.org/pub/scm/utils/pciutils/pciutils.git
-> >
-> > powersupersave enables ASPM L1 Substates.  Rajat, do you have any
-> > ideas about this or how we might debug it?
-> 
-> 
-> I know Maik mentioned that this is the boot device. Maik, is it
-> possible to boot off something else so that we can do some more
-> experiments on this port? If so,
-> - can you try to see if the device comes back if you switch the ASPM
-> policy back from "powersupersave" -> powersave, and potentially do a
-> rescan (echo 1 > /sys/bus/pci/rescan)?
+Now that all the drivers use dma pool API, we can remove the macro
+functions for PCI pool.
 
-Yes it is possible, will do later today.
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
+Reviewed-by: Peter Senna Tschudin <peter.senna@collabora.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/linux/pci.h | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-> - It would be good to get the complete lspci -vv for the root port
-> (assuming device is connected to root port i.e. no switch).
-> Specifically what does the Link status show?
-> - Also, do you know if your root port provides any debug registers
-> that could tell the current L1 substate of the link (My system's root
-> port had such register).
-> - I had usually resorted to a PCIe analyzer to peak at the packets
-> when I was debugging it. Not sure if that is an option here.
-> 
-> I don't see any debug prints in aspm.c that we could enable. Even if I
-> provide a patch, I suspect that the problem will start at the last
-> step of the pcie_config_aspm_l1ss() i.e. as soon as we really enable
-> it in HW. Maik, would you be open to take a debug patch that adds some
-> debug prints and try it out (compile your kernel with that patch)?
-> 
-
-Sure that is fine. I will also re-run later today with 4.15rc3.
-
-> >
-> > Keith, is this really all the information about the event that we can
-> > get out of DPC?  Is there some AER logging we might be able to get via
-> > "lspci -vv"?  Sounds like this is the boot disk, so Maik may not be
-> > able to run lspci after the DPC event.  If there *is* any AER info,
-> > can we connect up the DPC event so we can print the AER info from the
-> > kernel?
-> >
-> > I wonder if there's some way improper L1 Substate configuration could
-> > cause a DPC event.  There are lots of knobs there that seem to depend
-> > on devices, and I'm not sure we have them all correct yet.
-> >
-> > There are some recent changes in that area that are in linux-next:
-> >
-> >   PCI/ASPM: Enable Latency Tolerance Reporting when supported
-> >   PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device characteristics
-> >   PCI/ASPM: Use correct capability pointer to program LTR_L1.2_THRESHOLD
-> >   PCI/ASPM: Account for downstream device's Port Common_Mode_Restore_Time
-> >
-> > It's conceivable that they could have some bearing on this problem.
-> > If you could give this a whirl on linux-next, that would be
-> > interesting.  If you do this, please also collect the "lspci -vv"
-> > output there so we can compare it with the v4.14 configuration.
-> >
-> >> It looks like APST feature cannot be set anymore after enabling
-> >> powersupersave. Also the PCIe device disappears completely
-> >> from lspci output.
-> >
-> > My guess is this is to be expected after the DPC event.  That
-> > basically disconnects the PCIe device from the system.
-> >
-> >> Any idea why the device is failing with powersupersave and how to avoid
-> >> it? Especially how to enable it but skip certain broken devices as this
-> >> is my boot device.
-> >
-> > We could conceivably add a quirk if we find that L1SS is broken on
-> > this particular device.  But L1SS is so new that I'd be more
-> > suspicious of the Linux code than the device.
-> >
-> > Bjorn
-> 
-
---Maik
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 66cca1c6f742..c5dd05021b14 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1314,15 +1314,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ #include <linux/pci-dma.h>
+ #include <linux/dmapool.h>
+ 
+-#define	pci_pool dma_pool
+-#define pci_pool_create(name, pdev, size, align, allocation) \
+-		dma_pool_create(name, &pdev->dev, size, align, allocation)
+-#define	pci_pool_destroy(pool) dma_pool_destroy(pool)
+-#define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
+-#define	pci_pool_zalloc(pool, flags, handle) \
+-		dma_pool_zalloc(pool, flags, handle)
+-#define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
+-
+ struct msix_entry {
+ 	u32	vector;	/* Kernel uses to write allocated vector */
+ 	u16	entry;	/* Driver uses to specify entry, OS writes */
+-- 
+2.14.1
