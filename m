@@ -1,47 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 20 Dec 2017 11:11:34 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vignesh R <vigneshr@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: dwc: pci-dra7xx: Make shutdown handler static
-Message-ID: <20171220111134.GA1709@red-moon>
-References: <20171201050652.13998-1-vigneshr@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH] MAINTAINERS: Include more PCI files
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>
+Date: Fri, 15 Dec 2017 16:53:07 -0600
+Message-ID: <20171215225307.175987.4972.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171201050652.13998-1-vigneshr@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 01, 2017 at 10:36:52AM +0530, Vignesh R wrote:
-> Declare dra7xx_pcie_shutdown() as a static function as its not used
-> elsewhere.
-> 
-> Signed-off-by: Vignesh R <vigneshr@ti.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Applied to pci/dwc for v4.16.
+Add more PCI files to the PCI subsystem.
 
-Thanks,
-Lorenzo
+I expect Rafael to continue merging things in drivers/acpi/pci*, but it's
+nice to have linux-pci included on patches.
 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 59e8de34cec6..b9db442af793 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -815,7 +815,7 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
->  }
->  #endif
->  
-> -void dra7xx_pcie_shutdown(struct platform_device *pdev)
-> +static void dra7xx_pcie_shutdown(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
->  	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-> -- 
-> 2.15.0
-> 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ MAINTAINERS |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index aa71ab52fd76..6fcc9b8bab52 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10551,8 +10551,12 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/
+ F:	Documentation/PCI/
++F:	drivers/acpi/pci*
+ F:	drivers/pci/
++F:	include/asm-generic/pci*
+ F:	include/linux/pci*
++F:	include/uapi/linux/pci*
++F:	lib/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
+ 
+
