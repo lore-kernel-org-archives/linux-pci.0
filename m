@@ -1,60 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3917 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751756AbdLDRyF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Dec 2017 12:54:05 -0500
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <treding@nvidia.com>, <bhelgaas@google.com>
-CC: <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <robh+dt@kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH V3 2/2] ARM64: tegra: limit PCIe config space mapping to 4K for T186
-Date: Mon, 4 Dec 2017 23:23:50 +0530
-Message-ID: <1512410030-21038-3-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
-References: <1512410030-21038-1-git-send-email-vidyas@nvidia.com>
+Return-Path: <SRS0=v6DO=DL=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=v6DO=DL=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Thomas Gleixner <tglx@linutronix.de>, linux-pci@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>, Andy Lutomirski <luto@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, the arch/x86 maintainers <x86@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org, Chen Yu <y.c.chen@intel.com>
+Subject: [PATCH] PCI / PM: Force devices to D0 in pci_pm_thaw_noirq()
+Date: Fri, 15 Dec 2017 03:07:18 +0100
+Message-ID: <2582328.YfNXS1jHhG@aspire.rjw.lan>
+In-Reply-To: <11146834.AWaDHrVcmB@aspire.rjw.lan>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <alpine.DEB.2.20.1712141648190.4998@nanos> <11146834.AWaDHrVcmB@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-reduces PCIe config space mapping size from its current 256MB
-to 4K to have only 4K of virtual memory mapping and to be
-in line with driver implementation
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+It is incorrect to call pci_restore_state() for devices in low-power
+states (D1-D3), as that involves the restoration of MSI setup which
+requires MMIO to be operational and that is only the case in D0.
+
+However, pci_pm_thaw_noirq() may do that if the driver's "freeze"
+callbacks put the device into a low-power state, so fix it by making
+it force devices into D0 via pci_set_power_state() instead of trying
+to "update" their power state which is pointless.
+
+Fixes: e60514bd4485 (PCI/PM: Restore the status of PCI devices across hibernation)
+Cc: 4.13+ <stable@vger.kernel.org> # 4.13+
+Reported-by: Thomas Gleixner <tglx@linutronix.de>
+Reported-by: Maarten Lankhorst <dev@mblankhorst.nl>
+Tested-by: Thomas Gleixner <tglx@linutronix.de>
+Tested-by: Maarten Lankhorst <dev@mblankhorst.nl>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
-V3:
-* no change in this patch
 
- arch/arm64/boot/dts/nvidia/tegra186.dtsi | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+The bug is not as old as I thought, actually.
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra186.dtsi b/arch/arm64/boot/dts/nvidia/tegra186.dtsi
-index 46d1f287fb0f..62fa3bef3e18 100644
---- a/arch/arm64/boot/dts/nvidia/tegra186.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra186.dtsi
-@@ -363,7 +363,7 @@
- 		device_type = "pci";
- 		reg = <0x0 0x10003000 0x0 0x00000800   /* PADS registers */
- 		       0x0 0x10003800 0x0 0x00000800   /* AFI registers */
--		       0x0 0x40000000 0x0 0x10000000>; /* configuration space */
-+		       0x0 0x40000000 0x0 0x00001000>; /* configuration space */
- 		reg-names = "pads", "afi", "cs";
+Yes, we did the pci_update_current_state() in pci_pm_thaw_noirq()
+forever, but it started to be problematic in 4.13, when we started
+to call pci_restore_state() in addition to it to fix another issue.
+
+---
+ drivers/pci/pci-driver.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -1027,7 +1027,12 @@ static int pci_pm_thaw_noirq(struct devi
+ 	if (pci_has_legacy_pm_support(pci_dev))
+ 		return pci_legacy_resume_early(dev);
  
- 		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
-@@ -381,9 +381,9 @@
- 		ranges = <0x82000000 0 0x10000000 0x0 0x10000000 0 0x00001000   /* port 0 configuration space */
- 			  0x82000000 0 0x10001000 0x0 0x10001000 0 0x00001000   /* port 1 configuration space */
- 			  0x82000000 0 0x10004000 0x0 0x10004000 0 0x00001000   /* port 2 configuration space */
--			  0x81000000 0 0x0        0x0 0x50000000 0 0x00010000   /* downstream I/O (64 KiB) */
--			  0x82000000 0 0x50100000 0x0 0x50100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
--			  0xc2000000 0 0x58000000 0x0 0x58000000 0 0x28000000>; /* prefetchable memory (640 MiB) */
-+			  0x81000000 0 0x0        0x0 0x40001000 0 0x00010000   /* downstream I/O (64 KiB) */
-+			  0x82000000 0 0x40100000 0x0 0x40100000 0 0x07F00000   /* non-prefetchable memory (127 MiB) */
-+			  0xc2000000 0 0x48000000 0x0 0x48000000 0 0x38000000>; /* prefetchable memory (896 MiB) */
+-	pci_update_current_state(pci_dev, PCI_D0);
++	/*
++	 * pci_restore_state() requires the device to be in D0 (because of MSI
++	 * restoration among other things), so force it into D0 in case the
++	 * driver's "freeze" callbacks put it into a low-power state directly.
++	 */
++	pci_set_power_state(pci_dev, PCI_D0);
+ 	pci_restore_state(pci_dev);
  
- 		clocks = <&bpmp TEGRA186_CLK_AFI>,
- 			 <&bpmp TEGRA186_CLK_PCIE>,
--- 
-2.7.4
+ 	if (drv && drv->pm && drv->pm->thaw_noirq)
