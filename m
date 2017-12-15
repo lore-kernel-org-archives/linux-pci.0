@@ -1,61 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:51465 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753382AbdLSXa0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 18:30:26 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v6 02/18] PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
-Date: Wed, 20 Dec 2017 00:29:23 +0100
-Message-Id: <20171219232940.659-3-niklas.cassel@axis.com>
-In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@collabora.com>
+Subject: [PATCH v16 3/4] hinic: Replace PCI pool old API
+Date: Fri, 15 Dec 2017 20:31:22 +0100
+Message-Id: <20171215193123.13395-4-romain.perier@gmail.com>
+In-Reply-To: <20171215193123.13395-1-romain.perier@gmail.com>
+References: <20171215193123.13395-1-romain.perier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, dw_pcie_ep_set_msi() wrote all bits in the Message Control
-register, thus overwriting the PCI_MSI_FLAGS_64BIT bit.
-By clearing the PCI_MSI_FLAGS_64BIT bit, we break MSI
-on systems where the RC has set a 64 bit MSI address.
-Fix dw_pcie_ep_set_msi() so that it only sets MMC bits.
+From: Romain Perier <romain.perier@collabora.com>
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+The PCI pool API is deprecated. This commit replaces the PCI pool old
+API by the appropriate function with the DMA pool API.
+
+Signed-off-by: Romain Perier <romain.perier@collabora.com>
 ---
- drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
- drivers/pci/dwc/pcie-designware.h    | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++++-----
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index d53d5f168363..c92ab87fd660 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -220,7 +220,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
+index 7d95f0866fb0..28a81ac97af5 100644
+--- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
++++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c
+@@ -143,7 +143,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ 	struct hinic_hwif *hwif = cmdqs->hwif;
+ 	struct pci_dev *pdev = hwif->pdev;
  
--	val = (encode_int << MSI_CAP_MMC_SHIFT);
-+	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	val &= ~MSI_CAP_MMC_MASK;
-+	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
- 	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
+-	cmdq_buf->buf = pci_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
++	cmdq_buf->buf = dma_pool_alloc(cmdqs->cmdq_buf_pool, GFP_KERNEL,
+ 				       &cmdq_buf->dma_addr);
+ 	if (!cmdq_buf->buf) {
+ 		dev_err(&pdev->dev, "Failed to allocate cmd from the pool\n");
+@@ -161,7 +161,7 @@ int hinic_alloc_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ void hinic_free_cmdq_buf(struct hinic_cmdqs *cmdqs,
+ 			 struct hinic_cmdq_buf *cmdq_buf)
+ {
+-	pci_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
++	dma_pool_free(cmdqs->cmdq_buf_pool, cmdq_buf->buf, cmdq_buf->dma_addr);
+ }
  
- 	return 0;
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index ecdede68522a..9aaf0cd04dd6 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -101,6 +101,7 @@
+ static unsigned int cmdq_wqe_size_from_bdlen(enum bufdesc_len len)
+@@ -875,7 +875,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
+ 	int err;
  
- #define MSI_MESSAGE_CONTROL		0x52
- #define MSI_CAP_MMC_SHIFT		1
-+#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
- #define MSI_CAP_MME_SHIFT		4
- #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
- #define MSI_MESSAGE_ADDR_L32		0x54
+ 	cmdqs->hwif = hwif;
+-	cmdqs->cmdq_buf_pool = pci_pool_create("hinic_cmdq", pdev,
++	cmdqs->cmdq_buf_pool = dma_pool_create("hinic_cmdq", &pdev->dev,
+ 					       HINIC_CMDQ_BUF_SIZE,
+ 					       HINIC_CMDQ_BUF_SIZE, 0);
+ 	if (!cmdqs->cmdq_buf_pool)
+@@ -916,7 +916,7 @@ int hinic_init_cmdqs(struct hinic_cmdqs *cmdqs, struct hinic_hwif *hwif,
+ 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
+ 
+ err_saved_wqs:
+-	pci_pool_destroy(cmdqs->cmdq_buf_pool);
++	dma_pool_destroy(cmdqs->cmdq_buf_pool);
+ 	return err;
+ }
+ 
+@@ -942,5 +942,5 @@ void hinic_free_cmdqs(struct hinic_cmdqs *cmdqs)
+ 
+ 	devm_kfree(&pdev->dev, cmdqs->saved_wqs);
+ 
+-	pci_pool_destroy(cmdqs->cmdq_buf_pool);
++	dma_pool_destroy(cmdqs->cmdq_buf_pool);
+ }
+diff --git a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
+index b35583400cb6..23f8d39eab68 100644
+--- a/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
++++ b/drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h
+@@ -157,7 +157,7 @@ struct hinic_cmdq {
+ struct hinic_cmdqs {
+ 	struct hinic_hwif       *hwif;
+ 
+-	struct pci_pool         *cmdq_buf_pool;
++	struct dma_pool         *cmdq_buf_pool;
+ 
+ 	struct hinic_wq         *saved_wqs;
+ 
 -- 
-2.14.2
+2.14.1
