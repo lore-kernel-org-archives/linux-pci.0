@@ -1,63 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:35685 "EHLO mga14.intel.com"
+Received: from mail.kernel.org ([198.145.29.99]:34320 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751298AbdLSVDk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Dec 2017 16:03:40 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Maik Broemme <mbroemme@libmpq.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
-Date: Tue, 19 Dec 2017 14:06:43 -0700
-Message-Id: <20171219210643.24615-4-keith.busch@intel.com>
-In-Reply-To: <20171219210643.24615-1-keith.busch@intel.com>
-References: <20171219210643.24615-1-keith.busch@intel.com>
+        id S1756074AbdLOXBx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Dec 2017 18:01:53 -0500
+Subject: [PATCH] cxgb4: Simplify PCIe Completion Timeout setting
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: netdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, Ganesh Goudar <ganeshgr@chelsio.com>
+Date: Fri, 15 Dec 2017 17:01:50 -0600
+Message-ID: <20171215230150.177674.9821.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A DPC enabled device will suppress sending ERR_FATAL and ERR_NONFATAL,
-which prevents the AER handler from reporting the details of the
-error. This patch will have the DPC driver get the AER status registers
-from the downstream port that detected the uncorrectable error, and
-print out additional information.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Simplify PCIe Completion Timeout setting by using the
+pcie_capability_clear_and_set_word() interface.  No functional change
+intended.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pcie/pcie-dpc.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c |   21 +++------------------
+ 1 file changed, 3 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index ef71a472592c..aefc4fbdcef0 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -44,6 +44,7 @@ struct dpc_dev {
- 	int			cap_pos;
- 	bool			rp;
- 	u32			rp_pio_status;
-+	struct aer_err_info	info;
- };
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+index f63210f15579..4c99fdb2e13b 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+@@ -8492,22 +8492,6 @@ static int t4_get_flash_params(struct adapter *adap)
+ 	return 0;
+ }
  
- static const char * const rp_pio_error_string[] = {
-@@ -111,6 +112,9 @@ static void interrupt_event_handler(struct work_struct *work)
- 	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
- 	struct pci_bus *parent = pdev->subordinate;
+-static void set_pcie_completion_timeout(struct adapter *adapter, u8 range)
+-{
+-	u16 val;
+-	u32 pcie_cap;
+-
+-	pcie_cap = pci_find_capability(adapter->pdev, PCI_CAP_ID_EXP);
+-	if (pcie_cap) {
+-		pci_read_config_word(adapter->pdev,
+-				     pcie_cap + PCI_EXP_DEVCTL2, &val);
+-		val &= ~PCI_EXP_DEVCTL2_COMP_TIMEOUT;
+-		val |= range;
+-		pci_write_config_word(adapter->pdev,
+-				      pcie_cap + PCI_EXP_DEVCTL2, val);
+-	}
+-}
+-
+ /**
+  *	t4_prep_adapter - prepare SW and HW for operation
+  *	@adapter: the adapter
+@@ -8593,8 +8577,9 @@ int t4_prep_adapter(struct adapter *adapter)
+ 	adapter->params.portvec = 1;
+ 	adapter->params.vpd.cclk = 50000;
  
-+	if (aer_get_device_error_info(pdev, &dpc->info))
-+		aer_print_error(pdev, &dpc->info);
-+
- 	pci_lock_rescan_remove();
- 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
- 					 bus_list) {
-@@ -275,6 +279,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
- 		/* show RP PIO error detail information */
- 		if (reason == 3 && ext_reason == 0)
- 			dpc_process_rp_pio_error(dpc);
-+		if (reason == 2)
-+			dpc->info.severity = AER_FATAL;
-+		else
-+			dpc->info.severity = AER_NONFATAL;
+-	/* Set pci completion timeout value to 4 seconds. */
+-	set_pcie_completion_timeout(adapter, 0xd);
++	/* Set PCIe completion timeout to 4 seconds. */
++	pcie_capability_clear_and_set_word(adapter->pdev, PCI_EXP_DEVCTL2,
++					   PCI_EXP_DEVCTL2_COMP_TIMEOUT, 0xd);
+ 	return 0;
+ }
  
- 		schedule_work(&dpc->work);
- 	}
--- 
-2.13.6
