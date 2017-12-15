@@ -1,69 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>
-Subject: Re: [PATCH 3/9] power: remove unneeded kallsyms include
-Date: Sun, 17 Dec 2017 19:04:16 +0100
-Message-ID: <4033333.ijW7uRe5gx@aspire.rjw.lan>
-In-Reply-To: <20171208144844.GA489@tigerII.localdomain>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com> <CAJZ5v0g1CBhKTYi=CzYPcBXdH=yZ3iJcKzZ6TaftNWoq+X5wnQ@mail.gmail.com> <20171208144844.GA489@tigerII.localdomain>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:34020 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755834AbdLOW7z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Dec 2017 17:59:55 -0500
+Subject: [PATCH] rapidio/tsi721: use PCI_EXP_DEVCTL2_COMP_TIMEOUT macro
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexandre Bounine <alexandre.bounine@idt.com>,
+        Matt Porter <mporter@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 15 Dec 2017 16:59:52 -0600
+Message-ID: <20171215225952.177299.86044.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, December 8, 2017 3:48:44 PM CET Sergey Senozhatsky wrote:
-> On (12/08/17 15:01), Rafael J. Wysocki wrote:
-> > On Fri, Dec 8, 2017 at 3:56 AM, Sergey Senozhatsky
-> > <sergey.senozhatsky.work@gmail.com> wrote:
-> > > The file was converted from print_fn_descriptor_symbol()
-> > > to %pF some time ago (c80cfb0406c01bb "vsprintf: use new
-> > > vsprintf symbolic function pointer format"). kallsyms does
-> > > not seem to be needed anymore.
-> > >
-> > > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-> > > Cc: Rafael Wysocki <rjw@rjwysocki.net>
-> > > Cc: Len Brown <len.brown@intel.com>
-> > > ---
-> > >  drivers/base/power/main.c | 1 -
-> > >  1 file changed, 1 deletion(-)
-> > >
-> > > diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
-> > > index 5bc2cf1f812c..e2539d8423f7 100644
-> > > --- a/drivers/base/power/main.c
-> > > +++ b/drivers/base/power/main.c
-> > > @@ -18,7 +18,6 @@
-> > >   */
-> > >
-> > >  #include <linux/device.h>
-> > > -#include <linux/kallsyms.h>
-> > >  #include <linux/export.h>
-> > >  #include <linux/mutex.h>
-> > >  #include <linux/pm.h>
-> > > --
-> > 
-> > Do you want me to apply this or do you want to route it differently?
-> 
-> Hello Rafael,
-> 
-> don't mind if you'll pick it up.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-OK, applied now.
+Use the existing PCI_EXP_DEVCTL2_COMP_TIMEOUT macro instead of hard-coding
+the PCIe Completion Timeout Value mask.  No functional change intended.
 
-Thanks!
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/rapidio/devices/tsi721.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/rapidio/devices/tsi721.c b/drivers/rapidio/devices/tsi721.c
+index 9a68914100ad..bb655854713d 100644
+--- a/drivers/rapidio/devices/tsi721.c
++++ b/drivers/rapidio/devices/tsi721.c
+@@ -2880,8 +2880,9 @@ static int tsi721_probe(struct pci_dev *pdev,
+ 				 "Invalid MRRS override value %d", pcie_mrrs);
+ 	}
+ 
+-	/* Adjust PCIe completion timeout. */
+-	pcie_capability_clear_and_set_word(pdev, PCI_EXP_DEVCTL2, 0xf, 0x2);
++	/* Set PCIe completion timeout to 1-10ms */
++	pcie_capability_clear_and_set_word(pdev, PCI_EXP_DEVCTL2,
++					   PCI_EXP_DEVCTL2_COMP_TIMEOUT, 0x2);
+ 
+ 	/*
+ 	 * FIXUP: correct offsets of MSI-X tables in the MSI-X Capability Block
