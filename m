@@ -1,126 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:42843 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751655AbdLUQnq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Dec 2017 11:43:46 -0500
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
-        "'Niklas Cassel'" <niklas.cassel@axis.com>,
-        "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>
-Cc: "'Niklas Cassel'" <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20171219232940.659-1-niklas.cassel@axis.com> <20171219232940.659-2-niklas.cassel@axis.com> <b7f66e90-1fc2-a957-831d-32881df98ba9@synopsys.com>
-In-Reply-To: <b7f66e90-1fc2-a957-831d-32881df98ba9@synopsys.com>
-Subject: Re: [PATCH v6 01/18] PCI: dwc: Use the DMA-API to get the MSI address
-Date: Thu, 21 Dec 2017 11:43:44 -0500
-Message-ID: <000001d37a7a$ddc3c5b0$994b5110$@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:38186 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756600AbdLOPPZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Dec 2017 10:15:25 -0500
+Date: Fri, 15 Dec 2017 09:15:22 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?5Yav6ZSQ?= <rui_feng@realsil.com.cn>
+Cc: "lee.jones@linaro.org" <lee.jones@linaro.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: =?utf-8?B?562U5aSN?= =?utf-8?Q?=3A?= [PATCH v6] mfd: Add support
+ for RTS5250S power saving
+Message-ID: <20171215151522.GT30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <1504772799-15173-1-git-send-email-rui_feng@realsil.com.cn>
+ <20171214222522.GL30595@bhelgaas-glaptop.roam.corp.google.com>
+ <2A308283684ECD4B896628E09AF5361E01A8150B@RS-MBS01.realsil.com.cn>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2A308283684ECD4B896628E09AF5361E01A8150B@RS-MBS01.realsil.com.cn>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 20, 2017 2:10 PM, Joao Pinto wrote:
->=20
-> Hi Niklas,
->=20
-> =C3=80s 11:29 PM de 12/19/2017, Niklas Cassel escreveu:
-> > Use the DMA-API to get the MSI address. This address will be written =
-to
-> > our PCI config space and to the register which determines which AXI
-> > address the DWC IP will spoof for incoming MSI irqs.
-> >
-> > Since it is a PCIe endpoint device, rather than the CPU, that is
-> supposed
-> > to write to the MSI address, the proper way to get the MSI address =
-is by
-> > using the DMA API, not by using virt_to_phys().
-> >
-> > Using virt_to_phys() might work on some systems, but using the DMA =
-API
-> > should work on all systems.
-> >
-> > This is essentially the same thing as allocating a buffer in a =
-driver
-> > to which the endpoint will write to. To do this, we use the DMA API.
-> >
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > ---
-> >  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
-> >  drivers/pci/dwc/pcie-designware.h      |  3 ++-
-> >  2 files changed, 14 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/pci/dwc/pcie-designware-host.c
-> b/drivers/pci/dwc/pcie-designware-host.c
-> > index 81e2157a7cfb..bf558df5b7b3 100644
-> > --- a/drivers/pci/dwc/pcie-designware-host.c
-> > +++ b/drivers/pci/dwc/pcie-designware-host.c
-> > @@ -83,10 +83,19 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port =
-*pp)
-> >
-> >  void dw_pcie_msi_init(struct pcie_port *pp)
-> >  {
-> > +	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
-> > +	struct device *dev =3D pci->dev;
-> > +	struct page *page;
-> >  	u64 msi_target;
-> >
-> > -	pp->msi_data =3D __get_free_pages(GFP_KERNEL, 0);
-> > -	msi_target =3D virt_to_phys((void *)pp->msi_data);
-> > +	page =3D alloc_page(GFP_KERNEL);
-> > +	pp->msi_data =3D dma_map_page(dev, page, 0, PAGE_SIZE,
-> DMA_FROM_DEVICE);
-> > +	if (dma_mapping_error(dev, pp->msi_data)) {
-> > +		dev_err(dev, "failed to map MSI data\n");
-> > +		__free_page(page);
-> > +		return;
-> > +	}
-> > +	msi_target =3D (u64)pp->msi_data;
-> >
-> >  	/* program the msi_data */
-> >  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-> > @@ -187,7 +196,7 @@ static void dw_msi_setup_msg(struct pcie_port =
-*pp,
-> unsigned int irq, u32 pos)
-> >  	if (pp->ops->get_msi_addr)
-> >  		msi_target =3D pp->ops->get_msi_addr(pp);
-> >  	else
-> > -		msi_target =3D virt_to_phys((void *)pp->msi_data);
-> > +		msi_target =3D (u64)pp->msi_data;
-> >
-> >  	msg.address_lo =3D (u32)(msi_target & 0xffffffff);
-> >  	msg.address_hi =3D (u32)(msi_target >> 32 & 0xffffffff);
-> > diff --git a/drivers/pci/dwc/pcie-designware.h =
-b/drivers/pci/dwc/pcie-
-> designware.h
-> > index e5d9d77b778e..ecdede68522a 100644
-> > --- a/drivers/pci/dwc/pcie-designware.h
-> > +++ b/drivers/pci/dwc/pcie-designware.h
-> > @@ -14,6 +14,7 @@
-> >  #ifndef _PCIE_DESIGNWARE_H
-> >  #define _PCIE_DESIGNWARE_H
-> >
-> > +#include <linux/dma-mapping.h>
-> >  #include <linux/irq.h>
-> >  #include <linux/msi.h>
-> >  #include <linux/pci.h>
-> > @@ -168,7 +169,7 @@ struct pcie_port {
-> >  	const struct dw_pcie_host_ops *ops;
-> >  	int			msi_irq;
-> >  	struct irq_domain	*irq_domain;
-> > -	unsigned long		msi_data;
-> > +	dma_addr_t		msi_data;
-> >  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-> >  };
-> >
-> >
->=20
-> Makes total sense! Thanks.
->=20
-> Acked-by: Joao Pinto <jpinto@synopsys.com>
+On Fri, Dec 15, 2017 at 09:42:45AM +0000, 冯锐 wrote:
+> > [+cc Hans, Dave, linux-pci]
+> > 
+> > On Thu, Sep 07, 2017 at 04:26:39PM +0800, rui_feng@realsil.com.cn wrote:
+> > > From: Rui Feng <rui_feng@realsil.com.cn>
+> > 
+> > I wish this had been posted to linux-pci before being merged.
+> > 
+> > I'm concerned because some of this appears to overlap and conflict with PCI
+> > core management of ASPM.
+> > 
+> > I assume these devices advertise ASPM support in their Link Capabilites
+> > registers, right?  If so, why isn't the existing PCI core ASPM support
+> > sufficient?
+> > 
+> When L1SS is configured, the device(hardware) can't enter L1SS status automatically,
+> it need driver(software) to do some work to achieve the function.
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+So this is a hardware defect in the device?  As far as I know, ASPM
+and L1SS are specified such that they should work without special
+driver support.
 
-Best regards,
-Jingoo Han
+> > > Enable power saving for RTS5250S as following steps:
+> > > 1.Set 0xFE58 to enable clock power management.
+> > 
+> > Is this clock power management something specific to RTS5250S, or is it
+> > standard PCIe architected stuff?
+> > 
+> 0xFE58 is specific register to RTS5250S not standard PCIe architected stuff.
+
+OK.  I asked because devices often mirror architected PCIe config
+things in device-specific MMIO space, and if I squint just right, I
+can sort of match up the register bits you used with things in the
+PCIe spec.
+
+> > > 2.Check cfg space whether support L1SS or not.
+> > 
+> > This sounds like standard PCIe ASPM L1 Substates, right?
+> > 
+> Yes.
+> 
+> > > 3.If support L1SS, set 0xFF03 to free clkreq.
+> > > 4.When entering idle status, enable aspm
+> > >   and set parameters for L1SS and LTR.
+> > > 5.Wnen entering run status, disable aspm
+> > >   and set parameters for L1SS and LTR.
+> > 
+> > In general, drivers should not configure ASPM, L1SS, and LTR themselves; the
+> > PCI core should do that.
+> > 
+> > If a driver needs to tweak ASPM at run-time, it should use interfaces exported
+> > by the PCI core to do so.
+> > 
+> Which interface I can use to set ASPM? I use "pci_write_config_byte" now.
+
+What do you need to do?  include/linux/pci-aspm.h exports
+pci_disable_link_state(), which is mainly used to avoid ASPM states
+that have hardware errata.
+
+If you need to do something beyond that, we can talk about adding
+something new.
+
+There are quite a few other things in include/linux/pci-aspm.h, but
+they're all for internal use in the PCI core.  I'll move them to
+drivers/pci/pci.h to avoid confusion.
+
+> > > +static void rts5249_set_aspm(struct rtsx_pcr *pcr, bool enable) {
+> > > +	struct rtsx_cr_option *option = &pcr->option;
+> > > +	u8 val = 0;
+> > > +
+> > > +	if (pcr->aspm_enabled == enable)
+> > > +		return;
+> > > +
+> > > +	if (option->dev_aspm_mode == DEV_ASPM_DYNAMIC) {
+> > > +		if (enable)
+> > > +			val = pcr->aspm_en;
+> > > +		rtsx_pci_update_cfg_byte(pcr,
+> > > +			pcr->pcie_cap + PCI_EXP_LNKCTL,
+> > > +			ASPM_MASK_NEG, val);
+> > 
+> > This stomps on whatever ASPM configuration the PCI core did.
+> We disable/enable aspm dynamic in order to improve read/write performance and more stable,
+> so we don't allow PCI core do it.
+
+This is pretty vague.  Can you be any more specific?  If there are
+performance or stability problems in the PCI core ASPM support, I'd
+prefer to fix those instead of working around them in every driver.
+
+Bjorn
