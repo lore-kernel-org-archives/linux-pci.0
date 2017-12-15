@@ -1,110 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:57854 "EHLO
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:59958 "EHLO
         foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752786AbdLMOIY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Dec 2017 09:08:24 -0500
-Date: Wed, 13 Dec 2017 14:08:57 +0000
+        id S1755534AbdLORgE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Dec 2017 12:36:04 -0500
+Date: Fri, 15 Dec 2017 17:36:43 +0000
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-Subject: Re: [PATCH V3 01/12] PCI: tegra: Start LTSSM after programming root
- port
-Message-ID: <20171213140848.GA1736@red-moon>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-2-git-send-email-mmaddireddy@nvidia.com>
- <20171212113248.GA30799@e107981-ln.cambridge.arm.com>
- <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        thierry.reding@gmail.com
+Cc: cyndis@kapsi.fi, bhelgaas@google.com, jonathanh@nvidia.com,
+        robh+dt@kernel.org, frowand.list@gmail.com, rjw@rjwysocki.net,
+        tglx@linutronix.de, vidyas@nvidia.com, kthota@nvidia.com,
+        linux-tegra@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH V4 3/7] PCI: tegra: Remove PCI_REASSIGN_ALL_BUS flag for
+ Tegra PCIe
+Message-ID: <20171215173643.GA1050@red-moon>
+References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
+ <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7d3396dc-b133-5645-24da-a20fd9db6286@nvidia.com>
+In-Reply-To: <1512723493-865-4-git-send-email-mmaddireddy@nvidia.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 05:20:39PM +0530, Manikanta Maddireddy wrote:
+On Fri, Dec 08, 2017 at 02:28:09PM +0530, Manikanta Maddireddy wrote:
+> Primary, secondary and subordinate default bus numbers are 0 in Tegra and
+> it is expecting SW to program these numbers in configration space.
 > 
+> pci_scan_bridge_extend() function programs these numbers in configuration
+> space if secondary & subordinate bus numbers are 0 or PCI_REASSIGN_ALL_BUS
+> flag is set. Since secondary & subordinate default bus numbers are 0,
+> PCI_REASSIGN_ALL_BUS flag can be removed for Tegra PCIe.
 > 
-> On 12-Dec-17 5:02 PM, Lorenzo Pieralisi wrote:
-> > On Mon, Oct 30, 2017 at 07:27:12PM +0530, Manikanta Maddireddy wrote:
-> >> This patch ensures that LTSSM is started (by deasserting pcie_xrst) only
-> >> after all the required root port register programming is completed.
-> >>
-> >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> >> ---
-> >> V3:
-> >> * no change in this patch
-> >> V2:
-> >> * no change in this patch
-> >>
-> >>  drivers/pci/host/pci-tegra.c | 9 +++++----
-> >>  1 file changed, 5 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> >> index 96e8038c3019..b41c60c7414c 100644
-> >> --- a/drivers/pci/host/pci-tegra.c
-> >> +++ b/drivers/pci/host/pci-tegra.c
-> >> @@ -1024,9 +1024,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
-> >>  		}
-> >>  	}
-> >>  
-> >> -	/* take the PCIe interface module out of reset */
-> >> -	reset_control_deassert(pcie->pcie_xrst);
-> >> -
-> >>  	/* finally enable PCIe */
-> >>  	value = afi_readl(pcie, AFI_CONFIGURATION);
-> >>  	value |= AFI_CONFIGURATION_EN_FPCI;
-> >> @@ -1065,7 +1062,6 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-> >>  			dev_err(dev, "failed to power off PHY(s): %d\n", err);
-> >>  	}
-> >>  
-> >> -	reset_control_assert(pcie->pcie_xrst);
-> > 
-> > This does not look like it is part of the reset de-assertion code move.
-> > 
-> > tegra_pcie_enable_controller() -> tegra_pcie_enable_ports()
-> > 
-> > in other words, why are you removing it ?
-> > 
-> > Lorenzo
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V3:
+> * new patch in V3
+> V4:
+> * no change in this patch
 > 
-> Hi Lorenzo,
+>  drivers/pci/host/pci-tegra.c | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> Host driver should start LTSSM after programming all controller registers.
-> In tegra_pcie_enable_controller() bunch of AFI module programming is done and
-> I am adding PCIe register programming in this series.
-> So I moved deasserting of pcie_xrst(which starts LTSSM) to tegra_pcie_enable_ports(),
-> which is right after sending RST pulse(tegra_pcie_port_reset()) to endpoint.
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index a549c5899e26..0d91f1a3a6b4 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -2604,7 +2604,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+>  
+>  	tegra_pcie_enable_ports(pcie);
+>  
+> -	pci_add_flags(PCI_REASSIGN_ALL_BUS);
 
-I asked why you removed the reset assertion in tegra_pcie_power_off(),
-it is not clear to me. You still call tegra_pcie_power_off() in
-the tegra_pcie_probe() error path and I see no reason why the reset
-assertion - called through:
-
-tegra_pcie_put_resources()
-	-> tegra_pcie_power_of()
-	
-is removed, if it was needed previously.
+This looks obviously OK to me but I need Thierry's ACK to queue it.
 
 Lorenzo
 
-> >>  	reset_control_assert(pcie->afi_rst);
-> >>  	reset_control_assert(pcie->pex_rst);
-> >>  
-> >> @@ -2116,7 +2112,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
-> >>  			 port->index, port->lanes);
-> >>  
-> >>  		tegra_pcie_port_enable(port);
-> >> +	}
-> >>  
-> >> +	/* take the PCIe interface module out of reset */
-> >> +	reset_control_deassert(pcie->pcie_xrst);
-> >> +
-> >> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> >>  		if (tegra_pcie_port_check_link(port))
-> >>  			continue;
-> >>  
-> >> -- 
-> >> 2.1.4
-> >>
+>  	host->busnr = pcie->busn.start;
+>  	host->dev.parent = &pdev->dev;
+>  	host->ops = &tegra_pcie_ops;
+> -- 
+> 2.1.4
+> 
