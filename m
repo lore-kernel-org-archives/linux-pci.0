@@ -1,105 +1,118 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V1 0/1] Fix kernel panic caused by device ID duplication
- presented to the IOMMU
-To: Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>, joro@8bytes.org,
- will.deacon@arm.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com
-References: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <7f7fca76-88f8-6ee7-c402-fe4300c62253@arm.com>
-Date: Tue, 19 Dec 2017 16:34:46 +0000
-MIME-Version: 1.0
-In-Reply-To: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jayachandran.Nair@cavium.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- Ganapatrao.Kulkarni@cavium.com, mw@semihalf.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:43966 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755554AbdLOTbg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Dec 2017 14:31:36 -0500
+From: Romain Perier <romain.perier@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vinod.koul@intel.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Aviad Krawczyk <aviad.krawczyk@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Cc: dmaengine@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Romain Perier <romain.perier@gmail.com>
+Subject: [PATCH v16 0/4] Replace PCI pool by DMA pool API
+Date: Fri, 15 Dec 2017 20:31:19 +0100
+Message-Id: <20171215193123.13395-1-romain.perier@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
+The current PCI pool API are simple macro functions direct expanded to
+the appropriate dma pool functions. The prototypes are almost the same
+and semantically, they are very similar. I propose to use the DMA pool
+API directly and get rid of the old API.
 
-On 19/12/17 15:13, Tomasz Nowicki wrote:
-> Here is my lspci output of ThunderX2 for which I am observing kernel panic coming from
-> SMMUv3 driver -> arm_smmu_write_strtab_ent() -> BUG_ON(ste_live):
-> 
-> # lspci -vt
-> -[0000:00]-+-00.0-[01-1f]--+ [...]
->                             + [...]
->                             \-00.0-[1e-1f]----00.0-[1f]----00.0  ASPEED Technology, Inc. ASPEED Graphics Family
-> 
-> ASP device -> 1f:00.0 VGA compatible controller: ASPEED Technology, Inc. ASPEED Graphics Family
-> PCI-Express to PCI/PCI-X Bridge -> 1e:00.0 PCI bridge: ASPEED Technology, Inc. AST1150 PCI-to-PCI Bridge
->                             
-> While setting up ASP device SID in IORT dirver:
-> iort_iommu_configure() -> pci_for_each_dma_alias()
-> we need to walk up and iterate over each device which alias transaction from
-> downstream devices.
-> 
-> AST device (1f:00.0) gets BDF=0x1f00 and corresponding SID=0x1f00 from IORT.
-> Bridge (1e:00.0) is the first alias. Following PCI Express to PCI/PCI-X Bridge
-> spec: PCIe-to-PCI/X bridges alias transactions from downstream devices using
-> the subordinate bus number. For bridge (1e:00.0), the subordinate is equal
-> to 0x1f. This gives BDF=0x1f00 and SID=1f00 which is the same as downstream
-> device. So it is possible to have two identical SIDs. The question is what we
-> should do about such case. Presented patch prevents from registering the same
-> ID so that SMMUv3 is not complaining later on.
+This set of patches, replaces the old API by the dma pool API
+and remove the defines.
 
-Ooh, subtle :( There is logic in arm_smmu_attach_device() to tolerate
-grouped devices aliasing to the same ID, but I guess I overlooked the
-distinction of a device sharing an alias ID with itself. I'm not sure
-I really like trying to work around this in generic code, since
-fwspec->ids is essentially opaque data in a driver-specific format - in
-theory a driver is free to encode a single logical ID into multiple
-fwspec elements (I think I did that in an early draft of SMMUv2 SMR
-support), at which point this approach might corrupt things massively.
+Changes in v16:
+- Rebased series onto next-20171215
+- I have fixed patch 04/04, so it can be applied
+- Added Acked-by for Bjorn Helgaas on patch 04/04
 
-Does the (untested) diff below suffice?
+Changes in v15:
+- Rebased series onto next-20171120
+- Added patch 04/05 for mpt3sas scsi driver
 
-Robin.
+Changes in v14:
+- Rebased series onto next-20171018
+- Rebased patch 03/05 on latest driver
 
------>8-----diff --git a/drivers/iommu/arm-smmu-v3.c 
-b/drivers/iommu/arm-smmu-v3.c
-index f122071688fd..d8a730d83401 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -1731,7 +1731,7 @@ static __le64 *arm_smmu_get_step_for_sid(struct 
-arm_smmu_device *smmu, u32 sid)
+Changes in v13:
+- Rebased series onto next-20170906
+- Added a new commit for the hinic ethernet driver
+- Remove previously merged patches
 
-  static void arm_smmu_install_ste_for_dev(struct iommu_fwspec *fwspec)
-  {
--	int i;
-+	int i, j;
-  	struct arm_smmu_master_data *master = fwspec->iommu_priv;
-  	struct arm_smmu_device *smmu = master->smmu;
+Changes in v12:
+- Rebased series onto next-20170822
 
-@@ -1739,6 +1739,13 @@ static void arm_smmu_install_ste_for_dev(struct 
-iommu_fwspec *fwspec)
-  		u32 sid = fwspec->ids[i];
-  		__le64 *step = arm_smmu_get_step_for_sid(smmu, sid);
+Changes in v11:
+- Rebased series onto next-20170809
+- Removed patches 08-14, these have been merged.
 
-+		/* Bridged PCI devices may end up with duplicated IDs */
-+		for (j = 0; j < i; j++)
-+			if (fwspec->ids[j] == sid)
-+				break;
-+		if (j < i)
-+			continue;
-+
-  		arm_smmu_write_strtab_ent(smmu, sid, step, &master->ste);
-  	}
-  }
+Changes in v10:
+- Rebased series onto next-20170706
+- I have fixed and improved patch "scsi: megaraid: Replace PCI pool old API"
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Changes in v9:
+- Rebased series onto next-20170522
+- I have fixed and improved the patch for lpfc driver
+
+Changes in v8:
+- Rebased series onto next-20170428
+
+Changes in v7:
+- Rebased series onto next-20170416
+- Added Acked-by, Tested-by and Reviwed-by tags
+
+Changes in v6:
+- Fixed an issue reported by kbuild test robot about changes in DAC960
+- Removed patches 15/19,16/19,17/19,18/19. They have been merged by Greg
+- Added Acked-by Tags
+
+Changes in v5:
+- Re-worded the cover letter (remove sentence about checkpatch.pl)
+- Rebased series onto next-20170308
+- Fix typos in commit message
+- Added Acked-by Tags
+
+Changes in v4:
+- Rebased series onto next-20170301
+- Removed patch 20/20: checks done by checkpath.pl, no longer required.
+  Thanks to Peter and Joe for their feedbacks.
+- Added Reviewed-by tags
+
+Changes in v3:
+- Rebased series onto next-20170224
+- Fix checkpath.pl reports for patch 11/20 and patch 12/20
+- Remove prefix RFC
+Changes in v2:
+- Introduced patch 18/20
+- Fixed cosmetic changes: spaces before brace, live over 80 characters
+- Removed some of the check for NULL pointers before calling dma_pool_destroy
+- Improved the regexp in checkpatch for pci_pool, thanks to Joe Perches
+- Added Tested-by and Acked-by tags
+
+Romain Perier (4):
+  block: DAC960: Replace PCI pool old API
+  net: e100: Replace PCI pool old API
+  hinic: Replace PCI pool old API
+  PCI: Remove PCI pool macro functions
+
+ drivers/block/DAC960.c                            | 38 +++++++++++------------
+ drivers/block/DAC960.h                            |  4 +--
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.c | 10 +++---
+ drivers/net/ethernet/huawei/hinic/hinic_hw_cmdq.h |  2 +-
+ drivers/net/ethernet/intel/e100.c                 | 12 +++----
+ include/linux/pci.h                               |  9 ------
+ 6 files changed, 32 insertions(+), 43 deletions(-)
+
+-- 
+2.14.1
