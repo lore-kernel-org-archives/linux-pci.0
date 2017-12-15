@@ -1,113 +1,84 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-Subject: [RFC PATCH v12 0/5] PCI: rockchip: Move PCIe WAKE# handling into pci
- core
-Date: Tue, 26 Dec 2017 10:08:01 +0800
-Message-Id: <20171226020806.32710-1-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-wireless@vger.kernel.org,
- Heiko Stuebner <heiko@sntech.de>, tony@atomide.com, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, Will Deacon <will.deacon@arm.com>,
- Amitkumar Karwar <amitkarwar@gmail.com>,
- Klaus Goger <klaus.goger@theobroma-systems.com>,
- Frank Rowand <frowand.list@gmail.com>, briannorris@chromium.org,
- linux-rockchip@lists.infradead.org, Matthias Kaehlcke <mka@chromium.org>,
- linux-arm-kernel@lists.infradead.org,
- Catalin Marinas <catalin.marinas@arm.com>, Caesar Wang <wxt@rock-chips.com>,
- devicetree@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
- linux-pm@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
- Nishant Sarmukadam <nishants@marvell.com>, Rob Herring <robh+dt@kernel.org>,
- Kalle Valo <kvalo@codeaurora.org>, Ganapathi Bhat <gbhat@marvell.com>,
- netdev@vger.kernel.org, rjw@rjwysocki.net, dianders@chromium.org,
- Enric Balletbo i Serra <enric.balletbo@collabora.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 15 Dec 2017 12:30:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Thomas Gleixner <tglx@linutronix.de>, linux-pci@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Maarten Lankhorst <dev@mblankhorst.nl>,
+        Michal Hocko <mhocko@kernel.org>,
+        Andy Lutomirski <luto@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pm@vger.kernel.org, Chen Yu <y.c.chen@intel.com>
+Subject: Re: [PATCH] PCI / PM: Force devices to D0 in pci_pm_thaw_noirq()
+Message-ID: <20171215183058.GV30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan>
+ <alpine.DEB.2.20.1712141648190.4998@nanos>
+ <11146834.AWaDHrVcmB@aspire.rjw.lan>
+ <2582328.YfNXS1jHhG@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2582328.YfNXS1jHhG@aspire.rjw.lan>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Dec 15, 2017 at 03:07:18AM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> It is incorrect to call pci_restore_state() for devices in low-power
+> states (D1-D3), as that involves the restoration of MSI setup which
+> requires MMIO to be operational and that is only the case in D0.
+> 
+> However, pci_pm_thaw_noirq() may do that if the driver's "freeze"
+> callbacks put the device into a low-power state, so fix it by making
+> it force devices into D0 via pci_set_power_state() instead of trying
+> to "update" their power state which is pointless.
+> 
+> Fixes: e60514bd4485 (PCI/PM: Restore the status of PCI devices across hibernation)
+> Cc: 4.13+ <stable@vger.kernel.org> # 4.13+
+> Reported-by: Thomas Gleixner <tglx@linutronix.de>
+> Reported-by: Maarten Lankhorst <dev@mblankhorst.nl>
+> Tested-by: Thomas Gleixner <tglx@linutronix.de>
+> Tested-by: Maarten Lankhorst <dev@mblankhorst.nl>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
+Let me know if you want me to take this.  I don't have anything
+currently queued up that touches pci-driver.c, so I'm happy if you
+take it yourself.
 
-
-Changes in v12:
-Enable the wake irq in noirq stage to avoid possible irq storm.
-
-Changes in v11:
-Only add irq definitions for PCI devices and rewrite the commit message.
-Address Brian's comments.
-Only support 1-per-device PCIe WAKE# pin as suggested.
-Move to pcie port as Brian suggested.
-
-Changes in v10:
-Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
-
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-Fix check error in .cleanup().
-Move dedicated wakeirq setup to setup() callback and use
-device_set_wakeup_enable() to enable/disable.
-Rewrite the commit message.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-Rewrite the commit message.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Rebase.
-Use "wakeup" instead of "wake"
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (5):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  of/irq: Adjust of_pci_irq parsing for multiple interrupts
-  mwifiex: Disable wakeup irq handling for pcie
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie port for Gru
-
- Documentation/devicetree/bindings/pci/pci.txt | 10 ++++
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 11 ++--
- drivers/net/wireless/marvell/mwifiex/main.c   |  4 ++
- drivers/of/of_pci_irq.c                       | 74 ++++++++++++++++++++++++--
- drivers/pci/Makefile                          |  1 +
- drivers/pci/pci-driver.c                      | 10 ++++
- drivers/pci/pci-of.c                          | 75 +++++++++++++++++++++++++++
- include/linux/of_pci.h                        |  9 ++++
- 8 files changed, 186 insertions(+), 8 deletions(-)
- create mode 100644 drivers/pci/pci-of.c
-
--- 
-2.11.0
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+> 
+> The bug is not as old as I thought, actually.
+> 
+> Yes, we did the pci_update_current_state() in pci_pm_thaw_noirq()
+> forever, but it started to be problematic in 4.13, when we started
+> to call pci_restore_state() in addition to it to fix another issue.
+> 
+> ---
+>  drivers/pci/pci-driver.c |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> Index: linux-pm/drivers/pci/pci-driver.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-driver.c
+> +++ linux-pm/drivers/pci/pci-driver.c
+> @@ -1027,7 +1027,12 @@ static int pci_pm_thaw_noirq(struct devi
+>  	if (pci_has_legacy_pm_support(pci_dev))
+>  		return pci_legacy_resume_early(dev);
+>  
+> -	pci_update_current_state(pci_dev, PCI_D0);
+> +	/*
+> +	 * pci_restore_state() requires the device to be in D0 (because of MSI
+> +	 * restoration among other things), so force it into D0 in case the
+> +	 * driver's "freeze" callbacks put it into a low-power state directly.
+> +	 */
+> +	pci_set_power_state(pci_dev, PCI_D0);
+>  	pci_restore_state(pci_dev);
+>  
+>  	if (drv && drv->pm && drv->pm->thaw_noirq)
+> 
