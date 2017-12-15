@@ -1,50 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39357 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752142AbdLHI55 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Dec 2017 03:57:57 -0500
-Date: Fri, 8 Dec 2017 09:57:55 +0100
-From: Petr Mladek <pmladek@suse.com>
-To: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH] sched/autogroup: move sched.h include
-Message-ID: <20171208085755.GA3148@linux.suse>
-References: <20171208025616.16267-2-sergey.senozhatsky@gmail.com>
- <20171208082422.5021-1-sergey.senozhatsky@gmail.com>
+Return-Path: <SRS0=w4Pv=DL=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=w4Pv=DL=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171208082422.5021-1-sergey.senozhatsky@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20171215225307.175987.4972.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171215225307.175987.4972.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 16 Dec 2017 00:30:51 +0100
+Message-ID: <CAJZ5v0hssHzZW2m_+sD3b5XJw8BbwwYnixqc-bKLNzRK8ewb6w@mail.gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Include more PCI files
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Len Brown <lenb@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri 2017-12-08 17:24:22, Sergey Senozhatsky wrote:
-> Move local "sched.h" include to the bottom. sched.h defines
-> several macros that are getting redefined in ARCH-specific
-> code, for instance, finish_arch_post_lock_switch() and
-> prepare_arch_switch(), so we need ARCH-specific definitions
-> to come in first.
+On Fri, Dec 15, 2017 at 11:53 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Add more PCI files to the PCI subsystem.
+>
+> I expect Rafael to continue merging things in drivers/acpi/pci*, but it's
+> nice to have linux-pci included on patches.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-This patch is needed to fix compilation error [1] caused by a patchset
-that deprecates %pf/%pF printk modifiers[2].
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-IMHO, we should make sure that this fix goes into Linus' tree
-before the printk-related patchset. What is the best practice,
-please?
-
-I see two reasonable possibilities. Either sched people could
-push this for-4.15-rcX. Or I could put it into printk.git for-4.16
-in the right order.
-
-What do you think?
-
-Referece:
-[0] http://lkml.kernel.org/r/201712080259.tvO64XfA%fengguang.wu@intel.com
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/pmladek/printk.git/commit/?h=for-next&id=98fff2c57b7e88d643cb42ffd910fe9905b33176
-
-Best Regards,
-Petr
+> ---
+>  MAINTAINERS |    4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index aa71ab52fd76..6fcc9b8bab52 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -10551,8 +10551,12 @@ T:     git git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+>  S:     Supported
+>  F:     Documentation/devicetree/bindings/pci/
+>  F:     Documentation/PCI/
+> +F:     drivers/acpi/pci*
+>  F:     drivers/pci/
+> +F:     include/asm-generic/pci*
+>  F:     include/linux/pci*
+> +F:     include/uapi/linux/pci*
+> +F:     lib/pci*
+>  F:     arch/x86/pci/
+>  F:     arch/x86/kernel/quirks.c
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
