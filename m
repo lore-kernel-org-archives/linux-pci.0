@@ -1,54 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:33441 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751199AbdL1Xgn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 18:36:43 -0500
-Date: Fri, 29 Dec 2017 00:36:37 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Alexandru Chirvasitu <achirvasub@gmail.com>
-cc: Dou Liyang <douly.fnst@cn.fujitsu.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        Mihai Costache <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org, KY Srinivasan <kys@microsoft.com>
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-In-Reply-To: <20171228233058.c76a4upqbx6elmvg@D-69-91-141-110.dhcp4.washington.edu>
-Message-ID: <alpine.DEB.2.20.1712290034420.1899@nanos>
-References: <20171228160522.GC10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281706010.1899@nanos> <20171228172250.GD10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712281823140.1899@nanos> <20171228175009.ucxr4to2nb42e3s4@D-69-91-141-110.dhcp4.washington.edu>
- <alpine.DEB.2.20.1712281930590.1899@nanos> <alpine.DEB.2.20.1712282253180.1899@nanos> <20171228225014.GE10658@chirva-slack.chirva-slack> <alpine.DEB.2.20.1712282357380.1899@nanos> <alpine.DEB.2.20.1712290018210.1899@nanos>
- <20171228233058.c76a4upqbx6elmvg@D-69-91-141-110.dhcp4.washington.edu>
+Return-Path: <SRS0=w4Pv=DL=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=w4Pv=DL=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <alpine.DEB.2.20.1712142331030.2257@nanos>
+References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com>
+ <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061344560.1724@nanos> <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
+ <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl>
+ <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
+ <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com>
+ <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos>
+ <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos>
+ <CA+55aFwQBV9J1zxbBPLC5dOK-ebd1zcN6BaoB897AaKhc_tDtA@mail.gmail.com> <alpine.DEB.2.20.1712142331030.2257@nanos>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 15 Dec 2017 01:34:42 +0100
+Message-ID: <CAJZ5v0g5+N4s_jKWcz8bYMj-OYtUF-kufcod05ruwnVvXegX+A@mail.gmail.com>
+Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Andy Lutomirski <luto@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "the arch/x86 maintainers" <x86@kernel.org>,
+	Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 28 Dec 2017, Alexandru Chirvasitu wrote:
+On Thu, Dec 14, 2017 at 11:36 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> On Thu, 14 Dec 2017, Linus Torvalds wrote:
+>> On Thu, Dec 14, 2017 at 3:54 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>> I just wanted to pipe up about that "irq7", because judging from your
+>> email it seems like you think it's a real irq:
+>>
+>> >        Now there is a race
+>> > whether the kernel resume path manages to mask the PIC again early enough
+>> > before something triggers IRQ7 or not.
+>>
+>> ..and that's not how the PIC works.
+>>
+>> In fact, "legacy irq 7" is the _normal_ and very traditional spurious
+>> interrupt, and it's documented. If the PIC gets an interrupt from
+>> _any_ source, but the interrupt goes away before the PIC gets an
+>> acknowledge from the CPU (and by "acknowledge", I'm not talking about
+>> the explicit software IRQ ACK, I'm talking about the hardware
+>> protocol, between the PIC and the CPU), the PIC will then report irq 7
+>> as the interrupt - regardless of what the original was.
+>>
+>> The reason is almost always something like
+>>
+>>  - CPU interrupts are disabled or masked
+>>
+>>  - driver does a write to the external hardware that causes an
+>> interrupt to be raised
+>
+> Which should be a non issue because _ALL_ PIC irq lines are masked at the
+> PIC itself. All interrupts are routed through IOAPIC. So unless the IOAPIC
+> sports similar behaviour the PIC should not ever observe that scenario.
+>
+> But, because the silly firmware comes out of suspend with all PIC lines
+> unmasked for whatever reason, the PIC can observe that IRQ being raised and
+> the CPU not handling it. So yes, I forgot about 7 being magic, but I still
+> think it's the firmware which causes it by unmasking the PIC irqs.
 
-> Attached, but heads up on this: when redirecting the output of lspci
-> -vvv to a text file as root I get
-> 
-> pcilib: sysfs_read_vpd: read failed: Input/output error
-> 
-> I can find bugs filed for various distros to this same effect, but
-> haven't tracked down any explanations.
-
-Weird, but the info looks complete.
-
-Can you please add 'pci=nomsi' to the 4.15 kernel command line and see
-whether that works?
+That's my understanding too.
 
 Thanks,
-
-	tglx
+Rafael
