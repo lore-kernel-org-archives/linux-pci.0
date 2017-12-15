@@ -1,75 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:38670 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753301AbdL1L5r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 06:57:47 -0500
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-To: marc.zyngier@arm.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, nsekhar@ti.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v3 6/9] pci: qcom SoC driver adapted to new irq API
-Date: Thu, 28 Dec 2017 11:56:44 +0000
-Message-Id: <dc33384b3a98ac4b628258e97ec8188fe646e533.1514455857.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
-References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
-In-Reply-To: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
-References: <cover.1514455857.git.gustavo.pimentel@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=4Rv2=DL=xenosoft.de=chzigotzky@kernel.org>
+Return-Path: <SRS0=4Rv2=DL=xenosoft.de=chzigotzky@kernel.org>
+Subject: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
+From: Christian Zigotzky <chzigotzky@xenosoft.de>
+To: Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas
+ <helgaas@kernel.org>, Darren Stevens <darren@stevens-zone.net>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Olof Johansson <olof@lixom.net>,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+References: <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
+ <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
+ <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
+ <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de>
+ <20171202230052.34y2ivxgpgr3osct@localhost>
+ <CAOesGMhfMpt+xG1vhVHU+O5o4W5y2S5mZyn9tp+CPn9G6XrNVA@mail.gmail.com>
+ <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de>
+ <1d5276c3-1d29-114a-c868-6f022eee58e7@xenosoft.de>
+ <99f78122-cd53-100f-4f58-be5bf7927d4e@xenosoft.de>
+ <87fu8odnfk.fsf@concordia.ellerman.id.au>
+ <20171206210637.GO23510@bhelgaas-glaptop.roam.corp.google.com>
+ <877etxh1lf.fsf@concordia.ellerman.id.au>
+ <f5fe03d3-87f8-2a2d-2d83-fbefcd489a77@xenosoft.de>
+Message-ID: <98c7e034-b523-a703-e637-957e2857ab32@xenosoft.de>
+Date: Fri, 15 Dec 2017 09:04:51 +0100
+MIME-Version: 1.0
+In-Reply-To: <f5fe03d3-87f8-2a2d-2d83-fbefcd489a77@xenosoft.de>
+Content-Type: multipart/mixed;
+ boundary="------------E08C0AD0991F6B3C48E43A89"
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts Qcom SoC specific driver to use the new interrupt api
-available in pcie-designware.
+This is a multi-part message in MIME format.
+--------------E08C0AD0991F6B3C48E43A89
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
-Change v2->v3:
-- Nothing changed, just to follow the patch set version.
+On 09 December 2017 at 7:03PM, Christian Zigotzky wrote:
+ > On 08 December 2017 at 12:59PM, Michael Ellerman wrote:
+ > >
+ > >> Darren's idea of doing it at the same time you tweak the SB600 "relax
+ > >> pci-e" bit is ideal because then the two pieces are obviously
+ > >> connected and it wouldn't affect any other systems at all.
+ > >
+ > > Yes that would be ideal. That patch is currently out-of-tree I gather,
+ > > but I guess everyone who's using these machines must have that patch
+ > > anyway.
+ > >
+ > > Darren what does that code look like? Can we get it upstream and close
+ > > the loop on this?
+ > >
+ > > cheers
+ > >
+ >
+ > Hi Michael,
+ >
+ > Please find attached the code.
+ >
+ > Thanks,
+ > Christian
 
- drivers/pci/dwc/pcie-qcom.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+Hi All,
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index ce7ba5b..3cc1a42 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -188,13 +188,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
- 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+I haven't received any response yet. Is this the correct patch you are 
+looking for?
+
+Thanks,
+Christian
+
+--------------E08C0AD0991F6B3C48E43A89
+Content-Type: text/x-patch;
+ name="sb600.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="sb600.patch"
+
+diff -rupN a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+--- a/arch/powerpc/platforms/pasemi/pci.c	2017-11-16 08:18:35.078874462 +0100
++++ b/arch/powerpc/platforms/pasemi/pci.c	2017-11-16 08:17:22.034367975 +0100
+@@ -27,6 +27,7 @@
+ #include <linux/pci.h>
+ 
+ #include <asm/pci-bridge.h>
++#include <asm/isa-bridge.h>
+ #include <asm/machdep.h>
+ 
+ #include <asm/ppc-pci.h>
+@@ -108,6 +109,69 @@ static int workaround_5945(struct pci_bu
+ 	return 1;
  }
  
--static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct pcie_port *pp = arg;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
++#ifdef CONFIG_PPC_PASEMI_NEMO
++static int sb600_bus = 5;
++static void __iomem *iob_mapbase = NULL;
++
++static int pa_pxp_read_config(struct pci_bus *bus, unsigned int devfn,
++                             int offset, int len, u32 *val);
++
++static void sb600_set_flag(int bus)
++{
++    struct resource res;
++    struct device_node *dn;
++       struct pci_bus *busp;
++       u32 val;
++       int err;
++
++       if (sb600_bus == -1)
++       {
++               busp = pci_find_bus(0, 0);
++               pa_pxp_read_config(busp, PCI_DEVFN(17,0), PCI_SECONDARY_BUS, 1, &val);
++
++               sb600_bus = val;
++
++               printk(KERN_CRIT "NEMO SB600 on bus %d.\n",sb600_bus);
++       }
++
++       if (iob_mapbase == NULL)
++       {
++        dn = of_find_compatible_node(NULL, "isa", "pasemi,1682m-iob");
++        if (!dn)
++        {
++               printk(KERN_CRIT "NEMO SB600 missing iob node\n");
++                       return;
++               }
++
++               err = of_address_to_resource(dn, 0, &res);
++        of_node_put(dn);
++
++               if (err)
++               {
++               printk(KERN_CRIT "NEMO SB600 missing resource\n");
++                       return;
++               }
++
++               printk(KERN_CRIT "NEMO SB600 IOB base %08lx\n",res.start);
++
++               iob_mapbase = ioremap(res.start + 0x100, 0x94);
++       }
++
++       if (iob_mapbase != NULL)
++       {
++               if (bus == sb600_bus)
++               {
++                       out_le32(iob_mapbase + 4, in_le32(iob_mapbase + 4) | 0x800);
++               }
++               else
++               {
++                       out_le32(iob_mapbase + 4, in_le32(iob_mapbase + 4) & ~0x800);
++               }
++       }
++}
++#endif
++
++
+ static int pa_pxp_read_config(struct pci_bus *bus, unsigned int devfn,
+ 			      int offset, int len, u32 *val)
  {
- 	struct dw_pcie *pci = pcie->pci;
-@@ -1270,15 +1263,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       qcom_pcie_msi_irq_handler,
--				       IRQF_SHARED | IRQF_NO_THREAD,
--				       "qcom-pcie-msi", pp);
--		if (ret) {
--			dev_err(dev, "cannot request msi irq\n");
--			return ret;
--		}
- 	}
+@@ -126,6 +190,10 @@ static int pa_pxp_read_config(struct pci
  
- 	ret = phy_init(pcie->phy);
--- 
-2.7.4
+ 	addr = pa_pxp_cfg_addr(hose, bus->number, devfn, offset);
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       sb600_set_flag(bus->number);
++#endif
++
+ 	/*
+ 	 * Note: the caller has already checked that offset is
+ 	 * suitably aligned and that len is 1, 2 or 4.
+@@ -210,6 +278,9 @@ static int __init pas_add_bridge(struct
+ 	/* Interpret the "ranges" property */
+ 	pci_process_bridge_OF_ranges(hose, dev, 1);
+ 
++	/* Scan for an isa bridge. */
++	isa_bridge_find_early(hose);
++
+ 	return 0;
+ }
+
+--------------E08C0AD0991F6B3C48E43A89--
