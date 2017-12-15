@@ -1,81 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:52704 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751719AbdLNMQl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 07:16:41 -0500
-Subject: Re: [PATCH v5 01/18] PCI: dwc: Use the DMA-API to get the MSI address
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kishon@ti.com" <kishon@ti.com>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
- <20171120133222.27771-2-niklas.cassel@axis.com>
- <20171130152843.GC12096@red-moon> <20171213135953.GA30833@axis.com>
- <ff784f40-a629-b9cb-0d85-d1356eb69a38@synopsys.com>
-From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <ac5ceb21-b547-427c-f5fc-a3deb6398c99@synopsys.com>
-Date: Thu, 14 Dec 2017 12:16:38 +0000
+Received: from mail.kernel.org ([198.145.29.99]:35556 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756066AbdLOTEa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Dec 2017 14:04:30 -0500
+Date: Fri, 15 Dec 2017 13:04:26 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jingoo Han <jingoohan1@gmail.com>
+Cc: 'Joao Pinto' <Joao.Pinto@synopsys.com>,
+        'Ley Foon Tan' <lftan@altera.com>,
+        'Shawn Lin' <shawn.lin@rock-chips.com>,
+        'Michal Simek' <michal.simek@xilinx.com>,
+        'Jim Quinlan' <jim2101024@gmail.com>,
+        'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, rfi@lists.rocketboards.org,
+        linux-rockchip@lists.infradead.org
+Subject: Re: Why do we check for "link-up" in *_pcie_valid_device()?
+Message-ID: <20171215190426.GW30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
+ <000f01d375d4$17e9c830$47bd5890$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <ff784f40-a629-b9cb-0d85-d1356eb69a38@synopsys.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <000f01d375d4$17e9c830$47bd5890$@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas and Lorenzo,
+On Fri, Dec 15, 2017 at 01:39:50PM -0500, Jingoo Han wrote:
+> On Thursday, December 14, 2017 5:58 PM, Bjorn Helgaas wrote:
+> > In the PCI config access path, the *_pcie_valid_device() functions in
+> > the dwc, altera, rockchip, and xilinx drivers all check whether the
+> > link is up.
+> > 
+> > I think this is racy because the link may go down after we check but
+> > before we perform the config access.
+> > 
+> > What would blow up if we removed the *_pcie_link_up() checks?
+> 
+> The original intention is to avoid config access before link up.
+> 
+> Also, I did not find any racy condition as you mentioned.
+> However, if you think that we need to prevent the racy condition,
+> someone can send a patch or add comments.
 
-I'm going to work on PCI software development now as told by João and I will
-test your code now.
+Here's the race:
 
-I was retrieving the patches through the patchwork
-https://patchwork.ozlabs.org/project/linux-pci/list/?submitter=65580 and I
-notice that its missing the patch 13 and 17, is this right?
+  pci_read_config_word
+    ...
+      dw_pcie_rd_conf
+        dw_pcie_valid_device
+          dw_pcie_link_up        # returns true; link currently up
+                                 <-- link goes down for unrelated reason
+        dw_pcie_rd_other_conf
+          dw_pcie_read
+            readl                # issue config read
 
-If not, can you give me both patches location?
+The readl() that issues the config read in the PCIe domain races with
+the link-down event.  If the readl() completes first, everything works
+as expected.  If the link-down happens first, I don't know what
+happens.  This is the core of my question.
 
-Thanks.
+The hardware *should* do something sane because link-down is an
+asynchronous event that is unrelated to the config read and may happen
+at any time.  It's just part of the PCIe environment and the spec
+defines mechanisms for dealing with and reporting the situation.
 
-
-On 13/12/2017 17:21, Joao Pinto wrote:
-> Hi Niklas,
->
-> Às 1:59 PM de 12/13/2017, Niklas Cassel escreveu:
->> On Thu, Nov 30, 2017 at 03:28:43PM +0000, Lorenzo Pieralisi wrote:
->>> Jingoo, Joao,
->>>
->>> I am expecting your testing on the series and ACKs on the dwc related
->>> patches please, according to v4 review - I will mark them as needs
->>> review/ACK waiting for you to chime in.
->>>
->>> v4 thread:
->>>
->>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_833882_&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=mqyDi45qm4qE0jcm0KviYAoLHmMXMMIWEW-gAR0RKOw&e=
->>>
->> Hello Lorenzo, Jingoo, Joao,
->>
->> Tomorrow another 2 weeks has passed.
->> V1 of this patch series was posted on 2017-10-13.
-> Sorry, I have been tight up with a debug session and not able to check this out.
-> Adding Gustavo in CC that is now also working in PCI software development.
-> I am going to check the code ASAP and we will test it as soon as the debug is
-> finished.
->
-> Thanks.
->
->> I'm a bit worried that this patch series will not make it to linux-next
->> in time for this patch series to be included in the 4.16 pull request.
->>
->> Here is the V5 patch series:
->> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_project_linux-2Dpci_list_-3Fseries-3D14364&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=qXtUHFXK7_nCndQob0I0qDByBdJsL7rRjZ9cx7c847U&e=
->>
->> Perhaps any maintainer of a designware based PCIe driver could
->> help out and test this patch series?
->>
->> Regards,
->> Niklas
->>
+> > I'd like to either remove the checks or add comments about why the
+> > race is acceptable.  If we've covered this before, I apologize.
+> > Adding a comment will keep me from pestering you about this again in
+> > the future.
+> > 
+> > Bjorn
+> 
