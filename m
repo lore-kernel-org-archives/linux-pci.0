@@ -1,66 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:35989 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753266AbdLMRV2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 12:21:28 -0500
-Subject: Re: [PATCH v5 01/18] PCI: dwc: Use the DMA-API to get the MSI address
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kishon@ti.com>, <Gustavo.Pimentel@synopsys.com>
-References: <20171120133222.27771-1-niklas.cassel@axis.com>
- <20171120133222.27771-2-niklas.cassel@axis.com>
- <20171130152843.GC12096@red-moon> <20171213135953.GA30833@axis.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <ff784f40-a629-b9cb-0d85-d1356eb69a38@synopsys.com>
-Date: Wed, 13 Dec 2017 17:21:22 +0000
+Received: from mail.kernel.org ([198.145.29.99]:49282 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754459AbdLOAYg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Dec 2017 19:24:36 -0500
+Date: Thu, 14 Dec 2017 18:24:30 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Govinda Tatti <Govinda.Tatti@Oracle.COM>, jgross@suse.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        JBeulich@suse.com, bhelgaas@google.com,
+        xen-devel@lists.xenproject.org, boris.ostrovsky@Oracle.COM,
+        roger.pau@citrix.com
+Subject: Re: [Xen-devel] [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr()
+ interface
+Message-ID: <20171215002430.GS30595@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
+ <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+ <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
+ <20171212005919.GB30595@bhelgaas-glaptop.roam.corp.google.com>
+ <49956aaf-5fd5-939d-5fc7-231ffdb98b70@Oracle.COM>
+ <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
+ <20171214125206.GA24958@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20171213135953.GA30833@axis.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171214125206.GA24958@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Dec 14, 2017 at 04:52:06AM -0800, Christoph Hellwig wrote:
+> On Wed, Dec 13, 2017 at 03:24:21PM -0600, Bjorn Helgaas wrote:
+> > Prior to a60a2b73ba69, we had
+> > 
+> >   int pcie_flr(struct pci_dev *dev, int probe);
+> > 
+> > like all the other reset methods.  AFAICT, the addition of
+> > pcie_has_flr() was to optimize the path slightly because when drivers
+> > call pcie_flr(), they should already know that their hardware supports
+> > FLR.  But I don't think that optimization is worth the extra code
+> > complexity.  If we do need to optimize it, we can check this in the
+> > core during enumeration and set PCI_DEV_FLAGS_NO_FLR_RESET
+> > accordingly.
+> > 
+> > Christoph, chime in if I'm missing something here.
+> 
+> Didn't we just have that discussion in another thread a few days
+> ago?
 
-Hi Niklas,
+Probably, but I didn't have a clear picture of what you were suggesting.
 
-Às 1:59 PM de 12/13/2017, Niklas Cassel escreveu:
-> On Thu, Nov 30, 2017 at 03:28:43PM +0000, Lorenzo Pieralisi wrote:
->> Jingoo, Joao,
->>
->> I am expecting your testing on the series and ACKs on the dwc related
->> patches please, according to v4 review - I will mark them as needs
->> review/ACK waiting for you to chime in.
->>
->> v4 thread:
->>
->> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_833882_&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=mqyDi45qm4qE0jcm0KviYAoLHmMXMMIWEW-gAR0RKOw&e=
->>
+> I think that the pcie_has_flr was a mistake in retrospective but I
+> think the bool probe API was an even bigger mistake.  The only use
+> of it is to hide the reset attribute in sysfs.  I'd much rather always
+> have it and have it return EOPNOTSUPP if no reset method is supported.
 > 
-> Hello Lorenzo, Jingoo, Joao,
-> 
-> Tomorrow another 2 weeks has passed.
-> V1 of this patch series was posted on 2017-10-13.
+> I can send a patch for that if it sounds fine to you.
 
-Sorry, I have been tight up with a debug session and not able to check this out.
-Adding Gustavo in CC that is now also working in PCI software development.
-I am going to check the code ASAP and we will test it as soon as the debug is
-finished.
+If you can get rid of the whole probe infrastructure, that sounds
+good to me.
 
-Thanks.
-
-> 
-> I'm a bit worried that this patch series will not make it to linux-next
-> in time for this patch series to be included in the 4.16 pull request.
-> 
-> Here is the V5 patch series:
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_project_linux-2Dpci_list_-3Fseries-3D14364&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=qXtUHFXK7_nCndQob0I0qDByBdJsL7rRjZ9cx7c847U&e=
-> 
-> Perhaps any maintainer of a designware based PCIe driver could
-> help out and test this patch series?
-> 
-> Regards,
-> Niklas
-> 
+Bjorn
