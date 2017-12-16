@@ -1,415 +1,468 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI: designware: add a check of msi_desc in irqchip
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>, <jingoohan1@gmail.com>,
-        <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <1513218083-5461-1-git-send-email-cao.zou@windriver.com>
- <1513218083-5461-2-git-send-email-cao.zou@windriver.com>
- <20171215161742.GA32131@red-moon>
- <ce3cd3e3-61df-2d09-b47e-95c23765e7da@arm.com>
- <23c45e02-e421-d27f-88ea-152cc17b8d2c@windriver.com>
- <20171219162027.GC21501@red-moon>
- <9f0e2186-08e3-3ef1-87d5-83589f960b4f@windriver.com>
-From: Cao Zou <cao.zou@windriver.com>
-Message-ID: <591b95bb-edbc-6a57-2da0-17f831cb98f1@windriver.com>
-Date: Fri, 22 Dec 2017 15:38:08 +0800
+Return-Path: <SRS0=g3TD=DM=xenosoft.de=chzigotzky@kernel.org>
+Return-Path: <SRS0=g3TD=DM=xenosoft.de=chzigotzky@kernel.org>
+Subject: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
+To: Bjorn Helgaas <helgaas@kernel.org>, Michael Ellerman
+ <mpe@ellerman.id.au>, Darren Stevens <darren@stevens-zone.net>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Olof Johansson <olof@lixom.net>,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+References: <20171202230052.34y2ivxgpgr3osct@localhost>
+ <CAOesGMhfMpt+xG1vhVHU+O5o4W5y2S5mZyn9tp+CPn9G6XrNVA@mail.gmail.com>
+ <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de>
+ <1d5276c3-1d29-114a-c868-6f022eee58e7@xenosoft.de>
+ <99f78122-cd53-100f-4f58-be5bf7927d4e@xenosoft.de>
+ <87fu8odnfk.fsf@concordia.ellerman.id.au>
+ <20171206210637.GO23510@bhelgaas-glaptop.roam.corp.google.com>
+ <877etxh1lf.fsf@concordia.ellerman.id.au>
+ <f5fe03d3-87f8-2a2d-2d83-fbefcd489a77@xenosoft.de>
+ <98c7e034-b523-a703-e637-957e2857ab32@xenosoft.de>
+ <20171215202509.GZ30595@bhelgaas-glaptop.roam.corp.google.com>
+From: Christian Zigotzky <chzigotzky@xenosoft.de>
+Message-ID: <6326d79e-405b-2ae8-5295-97bf11219b81@xenosoft.de>
+Date: Sat, 16 Dec 2017 08:18:56 +0100
 MIME-Version: 1.0
-In-Reply-To: <9f0e2186-08e3-3ef1-87d5-83589f960b4f@windriver.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171215202509.GZ30595@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/mixed;
+ boundary="------------3DB08A6DD8A4ACC3E91EA54C"
 List-ID: <linux-pci.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------3DB08A6DD8A4ACC3E91EA54C
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+
+On 04 December 2017 at 12:40PM, Darren Stevens wrote:
+ > Hello Bjorn
+ >
+ > Firstly sorry for not being able to join in this discussion, I have been
+ > moving house and only got my X1000 set up again yesterday..
+ >
+ > On 30/11/2017, Bjorn Helgaas wrote:
+ >> I *think* something like the patch below should make this work if you
+ >> use the "pci=pcie_scan_all" parameter.  We have some x86 DMI quirks
+ >> that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
+ >> something similar on powerpc, but maybe you do?
+ >
+ > Actually the root ports on the Nemo's PA6T processor don't respond to the
+ > SB600 unless we turn on a special 'relax pci-e' bit in one of its control
+ > registers. We use a small out of tree init routine to do this, and there
+ > would be the ideal place to put a call to
+ > pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS).
+ >
+ > This patch fixes the last major hurdle to getting the X1000 fully 
+supported in
+ > the linux kernel, so thanks very much for that.
+ >
+ > Regards
+ > Darren
+ >
+ >
 
 
-On 12/22/2017 11:04 AM, Cao Zou wrote:
->
->
-> On 12/20/2017 12:20 AM, Lorenzo Pieralisi wrote:
->> On Mon, Dec 18, 2017 at 10:02:20AM +0800, Cao Zou wrote:
->>>
->>> On 12/16/2017 01:20 AM, Marc Zyngier wrote:
->>>> On 15/12/17 16:17, Lorenzo Pieralisi wrote:
->>>>> [+Marc]
->>>>>
->>>>> On Thu, Dec 14, 2017 at 10:21:23AM +0800, cao.zou@windriver.com 
->>>>> wrote:
->>>>>> From: Zou Cao <cao.zou@windriver.com>
->>>>>>
->>>>>> When PCIE host setup, 32 MSI irq descriptions are created, but its
->>>>>> msi_desc is NULL, msi_desc is bound in MSI irq requested by PCI 
->>>>>> device,
->>>>>> normally just part of MSI are used, for others not used MSI irqs, 
->>>>>> its
->>>>>> msi_desc is NULL, it is dangerous for MSI irq mask when MSI irq 
->>>>>> mask use
->>>>>> the msi_desc to mask irq without checking, normally not used MSI 
->>>>>> irqs are
->>>>>> never masked, it looks fine, but in some specified case, such as 
->>>>>> kdump,
->>>>>> machine_kexec_mask_interrupts will force to mask these not used 
->>>>>> MSI irqs,
->>>>>> than a crash will happen with NULL msi_desc. it is necessary to 
->>>>>> add check
->>>>>> of msi_desc in irqchip, if we still bind the msi_desc only in 
->>>>>> irqs request
->>>>>> and mask MSI irq by msi_desc.
->>>>>>
->>>>>> Add dwc_pci_msi_mask/unmask_irq, so we can get a chance to check the
->>>>>> msi_desc.
->>>>>>
->>>>>> here is reproduced crash log in IMX7-SABER board with Intel 1030 
->>>>>> PCI,
->>>>>> when running kdump by "echo c > /proc/sysrq-trigger":
->>>>>>
->>>>>> sysrq: SysRq : Trigger a crash
->>>>>> Unable to handle kernel NULL pointer dereference at virtual 
->>>>>> address 00000000
->>>>>> pgd = 98ee1839
->>>>>> [00000000] *pgd=00000000
->>>>>> Internal error: Oops: 805 [#1] SMP ARM
->>>>>> Modules linked in:
->>>>>> CPU: 0 PID: 1370 Comm: sh Not tainted 4.15.0-rc3-00033-ga638349 #1
->>>>>> Hardware name: Freescale i.MX7 Dual (Device Tree)
->>>>>> PC is at sysrq_handle_crash+0x50/0x98
->>>>>> LR is at sysrq_handle_crash+0x50/0x98
->>>>>> <snip>
->>>>>> Backtrace:
->>>>>> [<c047a15c>] (msi_set_mask_bit) from [<c047a1f0>] 
->>>>>> (pci_msi_mask_irq+0x14/0x18)
->>>>>> [<c047a1dc>] (pci_msi_mask_irq) from [<c011142c>] 
->>>>>> (machine_crash_shutdown+0xd8/0x190)
->>>>>> [<c0111354>] (machine_crash_shutdown) from [<c01b2924>] 
->>>>>> (__crash_kexec+0x5c/0xa0)
->>>>>> [<c01b28c8>] (__crash_kexec) from [<c01b29dc>] 
->>>>>> (crash_kexec+0x74/0x80)
->>>>>> [<c01b2968>] (crash_kexec) from [<c010cfa4>] (die+0x220/0x358)
->>>>>> [<c010cd84>] (die) from [<c01169f0>] 
->>>>>> (__do_kernel_fault.part.0+0x5c/0x7c)
->>>>>> [<c0116994>] (__do_kernel_fault.part.0) from [<c0116784>] 
->>>>>> (do_page_fault+0x2cc/0x37c)
->>>>>> [<c01164b8>] (do_page_fault) from [<c0116970>] 
->>>>>> (do_translation_fault+0xb0/0xbc)
->>>>>> [<c01168c0>] (do_translation_fault) from [<c010138c>] 
->>>>>> (do_DataAbort+0x3c/0xbc)
->>>>>> [<c0101350>] (do_DataAbort) from [<c010d944>] (__dabt_svc+0x64/0xa0)
->>>>>> Exception stack(0xec08bdf8 to 0xec08be40)
->>>>>> bde0:                                                       
->>>>>> 00000000 ec08be10
->>>>>> be00: 00000000 00000000 00000000 00000001 00000063 00000000 
->>>>>> 00000007 ec08a000
->>>>>> be20: 00000000 ec08be5c ec08be48 ec08be48 c04c46b8 c04c46b8 
->>>>>> 60060013 ffffffff
->>>>>> [<c04c4668>] (sysrq_handle_crash) from [<c04c4900>] 
->>>>>> (__handle_sysrq+0xe0/0x254)
->>>>>> [<c04c4820>] (__handle_sysrq) from [<c04c4aec>] 
->>>>>> (write_sysrq_trigger+0x78/0x90)
->>>>>> [<c04c4a74>] (write_sysrq_trigger) from [<c029148c>] 
->>>>>> (proc_reg_write+0x68/0x90)
->>>>>> [<c0291424>] (proc_reg_write) from [<c0229ef8>] 
->>>>>> (__vfs_write+0x34/0x12c)
->>>>>> [<c0229ec4>] (__vfs_write) from [<c022a16c>] (vfs_write+0xa8/0x16c)
->>>>>> [<c022a0c4>] (vfs_write) from [<c022a340>] (SyS_write+0x44/0x90)
->>>>>> [<c022a2fc>] (SyS_write) from [<c0108220>] 
->>>>>> (ret_fast_syscall+0x0/0x28)
->>>>>>
->>>>>> Signed-off-by: Zou Cao <cao.zou@windriver.com>
->>>>>> ---
->>>>>>   drivers/pci/dwc/pcie-designware-host.c | 24 
->>>>>> ++++++++++++++++++++----
->>>>>>   1 file changed, 20 insertions(+), 4 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/pci/dwc/pcie-designware-host.c 
->>>>>> b/drivers/pci/dwc/pcie-designware-host.c
->>>>>> index 81e2157..485c4df 100644
->>>>>> --- a/drivers/pci/dwc/pcie-designware-host.c
->>>>>> +++ b/drivers/pci/dwc/pcie-designware-host.c
->>>>>> @@ -45,12 +45,28 @@ static int dw_pcie_wr_own_conf(struct 
->>>>>> pcie_port *pp, int where, int size,
->>>>>>       return dw_pcie_write(pci->dbi_base + where, size, val);
->>>>>>   }
->>>>>> +static void dwc_pci_msi_mask_irq(struct irq_data *data)
->>>>>> +{
->>>>>> +    struct msi_desc *desc = irq_data_get_msi_desc(data);
->>>>>> +
->>>>>> +    if (desc)
->>>>>> +        pci_msi_mask_irq(data);
->>>>>> +}
->>>>>> +
->>>>>> +static void dwc_pci_msi_unmask_irq(struct irq_data *data)
->>>>>> +{
->>>>>> +    struct msi_desc *desc = irq_data_get_msi_desc(data);
->>>>>> +
->>>>>> +    if (desc)
->>>>>> +        pci_msi_unmask_irq(data);
->>>>>> +}
->>>>>> +
->>>>>>   static struct irq_chip dw_msi_irq_chip = {
->>>>>>       .name = "PCI-MSI",
->>>>>> -    .irq_enable = pci_msi_unmask_irq,
->>>>>> -    .irq_disable = pci_msi_mask_irq,
->>>>>> -    .irq_mask = pci_msi_mask_irq,
->>>>>> -    .irq_unmask = pci_msi_unmask_irq,
->>>>>> +    .irq_enable = dwc_pci_msi_unmask_irq,
->>>>>> +    .irq_disable = dwc_pci_msi_mask_irq,
->>>>>> +    .irq_mask = dwc_pci_msi_mask_irq,
->>>>>> +    .irq_unmask = dwc_pci_msi_unmask_irq,
->>>>>>   };
->>>>> You have to CC me next time please.
->>>>>
->>>>> CC'ed Marc since he knows this code ways better than me and will
->>>>> help us find the right way of fixing it.
->>>>>
->>>>> I do not think that's a DWC-only problem - I see no reason why this
->>>>> would not affect other host bridges still relying on
->>>>> struct msi_controller (that we have to remove from the kernel).
->>>>>
->>>>> I do not think that this code is an actual fix but a plaster to
->>>>> paper over the issue - I will have a look into this as soon as
->>>>> possible to come up with an actual fix.
->>>> Yeah, this looks mad. The problem is that this seems to allocate
->>>> interrupts upfront, without being bound to an MSI. What could possibly
->>>> go wrong? And that's definitely not the only one (pci-tegra.c is one
->>>> fine example too).
->>>>
->>>> Until we take msi_controller and co to the backyard, how about the
->>>> following:
->>>>
->>>> >From b4aa5d20ee7b716795ac875e180f564fe0f52de6 Mon Sep 17 00:00:00 
->>>> 2001
->>>> From: Marc Zyngier <marc.zyngier@arm.com>
->>>> Date: Fri, 15 Dec 2017 17:10:14 +0000
->>>> Subject: [PATCH] PCI/MSI: Don't try to mask/unmask an MSI that 
->>>> doesn't have an
->>>>   msi_desc
->>>>
->>>> There are a lot of MSI drivers out there that preallocate their
->>>> interrupts but not the corresponding MSIs. That's a prettty
->>>> naughty behaviour. On a kexec crash, we try to shut down all
->>>> the interrupts by calling the disable/mask methods.
->>>>
->>>> On these drivers, pci_msi_mask_irq() is unconditionnaly called,
->>>> leading to a crash. You wanted a crash kernel, right?
->>>>
->>>> So let's paper over the issue for the time being by detecting
->>>> the NULL msi_desc in msi_set_mask_bit(). Eventually, these drivers
->>>> will have to be fixed...
->>>>
->>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->>>> ---
->>>>   drivers/pci/msi.c | 3 +++
->>>>   1 file changed, 3 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->>>> index e06607167858..a5042cc8f3fc 100644
->>>> --- a/drivers/pci/msi.c
->>>> +++ b/drivers/pci/msi.c
->>>> @@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data 
->>>> *data, u32 flag)
->>>>   {
->>>>       struct msi_desc *desc = irq_data_get_msi_desc(data);
->>>> +    if (WARN_ONCE(!desc, "NULL MSI descriptor!"))
->>>> +        return;
->>>> +
->>>>       if (desc->msi_attrib.is_msix) {
->>>>           msix_mask_irq(desc, flag);
->>>>           readl(desc->mask_base);        /* Flush write to device */
->>> For "if (WARN_ONCE(!desc, "NULL MSI descriptor!")",  it is a good way,
->>> just one problem. how to fix the kexec/kdump?  this WARN_ONCE can tell
->>> the pci dirver to fix the MIS bound problem, but in kexec/kdump, it
->>> will force to mask all MSI,  it means that there are a lot of WARNINGS
->>> when running kexec/kdump.
->> There will be one warning as Marc said. Mind testing Marc's patch
->> and reporting the result on the mailing list please if you want
->> the issue fixed ?
->>
->> Thanks,
->> Lorenzo
->>
-> Hi Lorenzo:
->   Of course it can fix this issue, but  warning will be seen in every  
-> time when running kdump
->
->
-> root@nxp-imx7:~# echo c > /proc/sysrandom: crng init done
->
-> sys/           sysrq-trigger  sysvipc/
-> root@nxp-imx7:~# echo c > /proc/sysrq-trigger
-> sysrq: SysRq : Trigger a crash
-> Unable to handle kernel NULL pointer dereference at virtual address 
-> 00000000
-> pgd = a9470000
-> [00000000] *pgd=a9474835, *pte=00000000, *ppte=00000000
-> Internal error: Oops: 817 [#1] PREEMPT SMP ARM
-> Modules linked in:
-> CPU: 0 PID: 369 Comm: sh Not tainted 4.12.14-yocto-standard+ #98
-> Hardware name: Freescale i.MX7 Dual (Device Tree)
-> task: a86e5400 task.stack: a9438000
-> PC is at sysrq_handle_crash+0x30/0x3c
-> LR is at sysrq_handle_crash+0x2c/0x3c
-> pc : [<8059576c>]    lr : [<80595768>]    psr: 600e0013
-> sp : a9439eb8  ip : a9439eb8  fp : a9439ecc
-> r10: 00000000  r9 : a9438000  r8 : 00000001
-> r7 : 00000000  r6 : 00000063  r5 : 00000007  r4 : 00000001
-> r3 : 00000000  r2 : a9439ea0  r1 : ab615434  r0 : 00000063
-> Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
-> Control: 10c5387d  Table: a947006a  DAC: 00000051
-> Process sh (pid: 369, stack limit = 0xa9438210)
-> Stack: (0xa9439eb8 to 0xa943a000)
-> 9ea0: 8059573c 8106f41c
-> 9ec0: a9439eec a9439ed0 80595968 80595748 00000002 a8451444 a8451400 
-> 00000000
-> 9ee0: a9439f04 a9439ef0 80595a78 805958c4 a9439f78 a8451444 a9439f2c 
-> a9439f08
-> 9f00: 802c570c 80595a1c 802c5698 00000000 00000002 001042a8 a9439f78 
-> 001042a8
-> 9f20: a9439f44 a9439f30 80268078 802c56a4 a9439f78 a901d6c0 a9439f74 
-> a9439f48
-> 9f40: 80269598 8026805c 80286cac 80286c1c 00000000 00000000 a901d6c0 
-> a901d6c0
-> 9f60: 00000002 001042a8 a9439fa4 a9439f78 8026982c 802694e4 00000000 
-> 00000000
-> 9f80: 00000002 001042a8 76f19da8 00000004 80107f68 00000000 00000000 
-> a9439fa8
-> 9fa0: 80107d60 802697ec 00000002 001042a8 00000001 001042a8 00000002 
-> 00000000
-> 9fc0: 00000002 001042a8 76f19da8 00000004 00000002 00000002 00000000 
-> 00000000
-> 9fe0: 00000444 7e9d4980 76e466f0 76e9e41c 600e0010 00000001 3dbfa0e8 
-> a39746c6
-> [<8059576c>] (sysrq_handle_crash) from [<80595968>] 
-> (__handle_sysrq+0xb0/0x158)
-> [<80595968>] (__handle_sysrq) from [<80595a78>] 
-> (write_sysrq_trigger+0x68/0x78)
-> [<80595a78>] (write_sysrq_trigger) from [<802c570c>] 
-> (proc_reg_write+0x74/0xa4)
-> [<802c570c>] (proc_reg_write) from [<80268078>] (__vfs_write+0x28/0x48)
-> [<80268078>] (__vfs_write) from [<80269598>] (vfs_write+0xc0/0x164)
-> [<80269598>] (vfs_write) from [<8026982c>] (SyS_write+0x4c/0x8c)
-> [<8026982c>] (SyS_write) from [<80107d60>] (ret_fast_syscall+0x0/0x3c)
-> Code: e5834000 f57ff04e ebee0bee e3a03000 (e5c34000)
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 369 at 
-> /export/disk1T/linux-yocto-4.12/drivers/pci/msi.c:230 
-> msi_set_mask_bit+0x50/0xb0
-> NULL MSI descriptor!
-> Modules linked in:
-> CPU: 0 PID: 369 Comm: sh Not tainted 4.12.14-yocto-standard+ #98
-> Hardware name: Freescale i.MX7 Dual (Device Tree)
-> [<80111a50>] (unwind_backtrace) from [<8010c110>] (show_stack+0x20/0x24)
-> [<8010c110>] (show_stack) from [<804cb3dc>] (dump_stack+0x80/0xa0)
-> [<804cb3dc>] (dump_stack) from [<8012a2f4>] (__warn+0xe4/0x114)
-> [<8012a2f4>] (__warn) from [<8012a3f4>] (warn_slowpath_fmt+0x48/0x50)
-> [<8012a3f4>] (warn_slowpath_fmt) from [<8052f380>] 
-> (msi_set_mask_bit+0x50/0xb0)
-> [<8052f380>] (msi_set_mask_bit) from [<8052f41c>] 
-> (pci_msi_mask_irq+0x1c/0x20)
-> [<8052f41c>] (pci_msi_mask_irq) from [<80110224>] 
-> (machine_crash_shutdown+0x108/0x174)
-> [<80110224>] (machine_crash_shutdown) from [<801a7244>] 
-> (__crash_kexec+0x88/0xac)
-> [<801a7244>] (__crash_kexec) from [<801a72d0>] (crash_kexec+0x68/0x78)
-> [<801a72d0>] (crash_kexec) from [<8010c46c>] (die+0x358/0x47c)
-> [<8010c46c>] (die) from [<8011ccbc>] 
-> (__do_kernel_fault.part.0+0x64/0x1f4)
-> [<8011ccbc>] (__do_kernel_fault.part.0) from [<80ade250>] 
-> (do_page_fault+0x348/0x3d4)
-> [<80ade250>] (do_page_fault) from [<801011f8>] (do_DataAbort+0x44/0xc4)
-> [<801011f8>] (do_DataAbort) from [<80add5b8>] (__dabt_svc+0x58/0x80)
-> Exception stack(0xa9439e68 to 0xa9439eb0)
-> 9e60:                   00000063 ab615434 a9439ea0 00000000 00000001 
-> 00000007
-> 9e80: 00000063 00000000 00000001 a9438000 00000000 a9439ecc a9439eb8 
-> a9439eb8
-> 9ea0: 80595768 8059576c 600e0013 ffffffff
-> [<80add5b8>] (__dabt_svc) from [<8059576c>] 
-> (sysrq_handle_crash+0x30/0x3c)
-> [<8059576c>] (sysrq_handle_crash) from [<80595968>] 
-> (__handle_sysrq+0xb0/0x158)
-> [<80595968>] (__handle_sysrq) from [<80595a78>] 
-> (write_sysrq_trigger+0x68/0x78)
-> [<80595a78>] (write_sysrq_trigger) from [<802c570c>] 
-> (proc_reg_write+0x74/0xa4)
-> [<802c570c>] (proc_reg_write) from [<80268078>] (__vfs_write+0x28/0x48)
-> [<80268078>] (__vfs_write) from [<80269598>] (vfs_write+0xc0/0x164)
-> [<80269598>] (vfs_write) from [<8026982c>] (SyS_write+0x4c/0x8c)
-> [<8026982c>] (SyS_write) from [<80107d60>] (ret_fast_syscall+0x0/0x3c)
-> ---[ end trace 7a853bb920d02801 ]---
-> Loading crashdump kernel...
-> Bye!
-> Booting Linux on physical CPU 0x0
-> Linux version 4.12.14-yocto-standard+ (czou@pek-czou-u14) (gcc version 
-> 4.7.3 20130226 (prerelease) (crosstool-NG 
-> linaro-1.13.1-4.7-2013.03-20130313 - Linaro GCC 2013.03) ) #98 SMP 
-> PREEMPT Fri Dec 22 10:59:43 CST7
-> CPU: ARMv7 Processor [410fc075] revision 5 (ARMv7), cr=10c5387d
-> CPU: div instructions available: patching division code
-> CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
-> OF: fdt: Machine model: Freescale i.MX7 SabreSD Board
-> OF: fdt: Ignoring memory range 0x80000000 - 0x88000000
-> Memory policy: Data cache writealloc
-> OF: reserved mem: failed to allocate memory for node 'linux,cma'
-> cma: Failed to reserve 320 MiB
-> percpu: Embedded 17 pages/cpu @8fc75000 s38016 r8192 d23424 u69632
-> Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 
-> 64706
-> Kernel command line: console=ttymxc0,115200 root=/dev/nfs ip=dhcp 
-> nfsroot=128.224.162.234:/var/lib/tftp/nfs/rootfs_imx7wrl10,v3 
-> maxcpus=1 elfcorehdr=0x9cf00000 mem=261120K
-> PID hash table entries: 1024 (order: 0, 4096 bytes)
-> Dentry cache hash table entries: 32768 (order: 5, 131072 bytes)
-> Inode-cache hash table entries: 16384 (order: 4, 65536 bytes)
-> Memory: 241716K/261120K available (10240K kernel code, 778K rwdata, 
-> 2388K rodata, 1024K init, 364K bss, 19404K reserved, 0K cma-reserved, 
-> 0K highmem)
-> Virtual kernel memory layout:
->     vector  : 0xffff0000 - 0xffff1000   (   4 kB)
->     fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)
->     vmalloc : 0x90000000 - 0xff800000   (1784 MB)
->     lowmem  : 0x80000000 - 0x8ff00000   ( 255 MB)
->     pkmap   : 0x7fe00000 - 0x80000000   (   2 MB)
->
-> Regards,
-> czou
->
-Hi Marc:
-   I have a better way to fix it, just use dynamic allocate the irq_desc 
-in MSI irq setup,
-remove the irq_desc allocate in dw_pcie_host_init, how do you think
+On 15 December 2017 at 09:25PM, Bjorn Helgaas wrote:
+ > On Fri, Dec 15, 2017 at 09:04:51AM +0100, Christian Zigotzky wrote:
+ >> On 09 December 2017 at 7:03PM, Christian Zigotzky wrote:
+ >>> On 08 December 2017 at 12:59PM, Michael Ellerman wrote:
+ >>>>
+ >>>>> Darren's idea of doing it at the same time you tweak the SB600 "relax
+ >>>>> pci-e" bit is ideal because then the two pieces are obviously
+ >>>>> connected and it wouldn't affect any other systems at all.
+ >>>>
+ >>>> Yes that would be ideal. That patch is currently out-of-tree I gather,
+ >>>> but I guess everyone who's using these machines must have that patch
+ >>>> anyway.
+ >>>>
+ >>>> Darren what does that code look like? Can we get it upstream and close
+ >>>> the loop on this?
+ >>>>
+ >>>> cheers
+ >>>>
+ >>>
+ >>> Hi Michael,
+ >>>
+ >>> Please find attached the code.
+ >>>
+ >>> Thanks,
+ >>> Christian
+ >>
+ >> Hi All,
+ >>
+ >> I haven't received any response yet. Is this the correct patch you
+ >> are looking for?
+ >
+ > This is a powerpc patch that doesn't affect the PCI core, so I would
+ > say this is Michael's bailiwick.
+ >
+ > I guess you're only looking for a hint about whether this is the right
+ > approach, because it's obviously fully baked yet (no changelog,
+ > signed-off-by, etc, not a "safe for all powerpc" run-time solution,
+ > not in Linux indentation style, etc).
+ >
+ > It looks like the "pasemi,1682m-iob" DT property is required and
+ > possibly sufficient to identify this system at run-time.
+ >
+ > My advice is to finish that stuff up, post it to the powerpc
+ > maintainers and the linuxppc-dev@lists.ozlabs.org list, and go from
+ > there.
+ >
 
-patch as follow:
-diff --git a/drivers/pci/dwc/pcie-designware-host.c 
-b/drivers/pci/dwc/pcie-designware-host.c
-index 5006d55..0426120 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -168,8 +168,12 @@ static int assign_irq(int no_irqs, struct msi_desc 
-*desc, int *pos)
-                 goto no_valid_irq;
+Darren,
 
-         irq = irq_find_mapping(pp->irq_domain, pos0);
--       if (!irq)
--               goto no_valid_irq;
+Where is this small out of tree init routine in our patch? I haven't 
+found it yet. Please post this routine here. Please find attached our 
+latest Nemo patch.
+
+Thanks,
+Christian
+
+--------------3DB08A6DD8A4ACC3E91EA54C
+Content-Type: text/x-patch;
+ name="nemo_4.15-2.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="nemo_4.15-2.patch"
+
+diff -rupN a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+--- a/arch/powerpc/platforms/pasemi/pci.c	2017-11-16 08:18:35.078874462 +0100
++++ b/arch/powerpc/platforms/pasemi/pci.c	2017-11-16 08:17:22.034367975 +0100
+@@ -27,6 +27,7 @@
+ #include <linux/pci.h>
+ 
+ #include <asm/pci-bridge.h>
++#include <asm/isa-bridge.h>
+ #include <asm/machdep.h>
+ 
+ #include <asm/ppc-pci.h>
+@@ -108,6 +109,69 @@ static int workaround_5945(struct pci_bu
+ 	return 1;
+ }
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++static int sb600_bus = 5;
++static void __iomem *iob_mapbase = NULL;
 +
-+       if (!irq) {
-+               irq = irq_create_mapping(pp->irq_domain, pos0);
-+               if (!irq)
-+                       goto no_valid_irq;
-+       }
++static int pa_pxp_read_config(struct pci_bus *bus, unsigned int devfn,
++                             int offset, int len, u32 *val);
++
++static void sb600_set_flag(int bus)
++{
++    struct resource res;
++    struct device_node *dn;
++       struct pci_bus *busp;
++       u32 val;
++       int err;
++
++       if (sb600_bus == -1)
++       {
++               busp = pci_find_bus(0, 0);
++               pa_pxp_read_config(busp, PCI_DEVFN(17,0), PCI_SECONDARY_BUS, 1, &val);
++
++               sb600_bus = val;
++
++               printk(KERN_CRIT "NEMO SB600 on bus %d.\n",sb600_bus);
++       }
++
++       if (iob_mapbase == NULL)
++       {
++        dn = of_find_compatible_node(NULL, "isa", "pasemi,1682m-iob");
++        if (!dn)
++        {
++               printk(KERN_CRIT "NEMO SB600 missing iob node\n");
++                       return;
++               }
++
++               err = of_address_to_resource(dn, 0, &res);
++        of_node_put(dn);
++
++               if (err)
++               {
++               printk(KERN_CRIT "NEMO SB600 missing resource\n");
++                       return;
++               }
++
++               printk(KERN_CRIT "NEMO SB600 IOB base %08lx\n",res.start);
++
++               iob_mapbase = ioremap(res.start + 0x100, 0x94);
++       }
++
++       if (iob_mapbase != NULL)
++       {
++               if (bus == sb600_bus)
++               {
++                       out_le32(iob_mapbase + 4, in_le32(iob_mapbase + 4) | 0x800);
++               }
++               else
++               {
++                       out_le32(iob_mapbase + 4, in_le32(iob_mapbase + 4) & ~0x800);
++               }
++       }
++}
++#endif
++
++
+ static int pa_pxp_read_config(struct pci_bus *bus, unsigned int devfn,
+ 			      int offset, int len, u32 *val)
+ {
+@@ -126,6 +190,10 @@ static int pa_pxp_read_config(struct pci
+ 
+ 	addr = pa_pxp_cfg_addr(hose, bus->number, devfn, offset);
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       sb600_set_flag(bus->number);
++#endif
++
+ 	/*
+ 	 * Note: the caller has already checked that offset is
+ 	 * suitably aligned and that len is 1, 2 or 4.
+@@ -210,6 +278,9 @@ static int __init pas_add_bridge(struct
+ 	/* Interpret the "ranges" property */
+ 	pci_process_bridge_OF_ranges(hose, dev, 1);
+ 
++	/* Scan for an isa bridge. */
++	isa_bridge_find_early(hose);
++
+ 	return 0;
+ }
+ 
+diff -rupN a/arch/powerpc/platforms/pasemi/setup.c b/arch/powerpc/platforms/pasemi/setup.c
+--- a/arch/powerpc/platforms/pasemi/setup.c	2017-11-16 08:18:35.078874462 +0100
++++ b/arch/powerpc/platforms/pasemi/setup.c	2017-11-16 08:17:22.036368061 +0100
+@@ -34,6 +34,7 @@
+ #include <asm/prom.h>
+ #include <asm/iommu.h>
+ #include <asm/machdep.h>
++#include <asm/i8259.h>
+ #include <asm/mpic.h>
+ #include <asm/smp.h>
+ #include <asm/time.h>
+@@ -72,6 +73,17 @@ static void __noreturn pas_restart(char
+ 		out_le32(reset_reg, 0x6000000);
+ }
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++void pas_shutdown(void)
++{
++       /* (added by DStevens 19/06/13)
++          Set the PLD bit that makes the SB600 think the power button is being pressed */
++       void __iomem *pld_map = ioremap(0xf5000000,4096);
++       while (1)
++               out_8(pld_map+7,0x01);
++}
++#endif
++
+ #ifdef CONFIG_SMP
+ static arch_spinlock_t timebase_lock;
+ static unsigned long timebase;
+@@ -183,16 +195,30 @@ static int __init pas_setup_mce_regs(voi
+ }
+ machine_device_initcall(pasemi, pas_setup_mce_regs);
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++static void sb600_8259_cascade(struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	unsigned int cascade_irq = i8259_irq();
++
++	if (cascade_irq !=NO_IRQ)
++               generic_handle_irq(cascade_irq);
++
++	chip->irq_eoi(&desc->irq_data);
++}
++#endif
++
+ static __init void pas_init_IRQ(void)
+ {
+ 	struct device_node *np;
+-	struct device_node *root, *mpic_node;
++	struct device_node *root, *mpic_node, *i8259_node;
+ 	unsigned long openpic_addr;
+ 	const unsigned int *opprop;
+ 	int naddr, opplen;
+ 	int mpic_flags;
+ 	const unsigned int *nmiprop;
+ 	struct mpic *mpic;
++	int gpio_virq;
+ 
+ 	mpic_node = NULL;
+ 
+@@ -244,6 +270,22 @@ static __init void pas_init_IRQ(void)
+ 		mpic_unmask_irq(irq_get_irq_data(nmi_virq));
+ 	}
+ 
++
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       // Connect legacy i8259 controller in SB600
++	i8259_node = of_find_node_by_path("/pxp@0,e0000000");
++	printk("Init i8259\n");
++	i8259_init(i8259_node, 0);
++	of_node_put(i8259_node);
++
++	gpio_virq = irq_create_mapping(NULL, 3);
++	irq_set_irq_type(gpio_virq, IRQ_TYPE_LEVEL_HIGH);
++	irq_set_chained_handler(gpio_virq, sb600_8259_cascade);
++	mpic_unmask_irq(irq_get_irq_data(gpio_virq));
++
++	irq_set_default_host(mpic->irqhost);
++
++#endif
+ 	of_node_put(mpic_node);
+ 	of_node_put(root);
+ }
+@@ -398,6 +440,18 @@ static const struct of_device_id pasemi_
+ 	{},
+ };
+ 
++static struct resource rtc_resource[] = {{
++	.name = "rtc",
++	.start = 0x70,
++	.end = 0x71,
++	.flags = IORESOURCE_IO,
++}, {
++	.name = "rtc",
++	.start = 8,
++	.end = 8,
++	.flags = IORESOURCE_IRQ,
++}};
++
+ static int __init pasemi_publish_devices(void)
+ {
+ 	pasemi_pcmcia_init();
+@@ -405,6 +459,10 @@ static int __init pasemi_publish_devices
+ 	/* Publish OF platform devices for SDC and other non-PCI devices */
+ 	of_platform_bus_probe(NULL, pasemi_bus_ids, NULL);
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++	platform_device_register_simple("rtc_cmos", -1, rtc_resource, 2);
++#endif
++
+ 	return 0;
+ }
+ machine_device_initcall(pasemi, pasemi_publish_devices);
+@@ -421,9 +479,13 @@ static int __init pas_probe(void)
+ 
+ 	iommu_init_early_pasemi();
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       pm_power_off              = pas_shutdown;         // Varisys provided a way to turn us off
++#endif
+ 	return 1;
+ }
+ 
++
+ define_machine(pasemi) {
+ 	.name			= "PA Semi PWRficient",
+ 	.probe			= pas_probe,
+@@ -435,4 +497,7 @@ define_machine(pasemi) {
+ 	.calibrate_decr		= generic_calibrate_decr,
+ 	.progress		= pas_progress,
+ 	.machine_check_exception = pas_machine_check_handler,
++#if 0 // def CONFIG_PPC_PASEMI_NEMO
++       .pci_probe_mode = sb600_pci_probe_mode,
++#endif
+ };
+diff -rupN a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+--- a/drivers/ata/pata_atiixp.c	2017-11-16 08:18:43.932095778 +0100
++++ b/drivers/ata/pata_atiixp.c	2017-11-16 08:17:22.036368061 +0100
+@@ -278,6 +278,12 @@ static int atiixp_init_one(struct pci_de
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, &info };
+ 
++        /* SB600 on the Nemo board doesn't have secondary port wired */
++        #ifdef CONFIG_PPC_PASEMI_NEMO
++        if((pdev->device == PCI_DEVICE_ID_ATI_IXP600_IDE))
++            ppi[1] = &ata_dummy_port_info;
++        #endif
++
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &atiixp_sht, NULL,
+ 				      ATA_HOST_PARALLEL_SCAN);
+ }
+diff -rupN a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+--- a/drivers/ata/pata_of_platform.c	2017-11-16 08:18:43.906095154 +0100
++++ b/drivers/ata/pata_of_platform.c	2017-11-16 08:17:22.040368233 +0100
+@@ -40,14 +40,36 @@ static int pata_of_platform_probe(struct
+ 		return -EINVAL;
+ 	}
+ 
+-	ret = of_address_to_resource(dn, 1, &ctl_res);
+-	if (ret) {
+-		dev_err(&ofdev->dev, "can't get CTL address from "
+-			"device tree\n");
+-		return -EINVAL;
++	if (of_device_is_compatible(dn, "electra-ide")) {
++		/* Altstatus is really at offset 0x3f6 from the primary window
++		 * on electra-ide. Adjust ctl_res and io_res accordingly.
++		 */
++		ctl_res = io_res;
++		ctl_res.start = ctl_res.start+0x3f6;
++		io_res.end = ctl_res.start-1;
++
++#ifdef CONFIG_PPC_PASEMI_NEMO
++	} else if (of_device_is_compatible(dn, "electra-cf")) {
++		/* Task regs are at 0x800, with alt status @ 0x80e in the primary window
++		* on electra-cf. Adjust ctl_res and io_res accordingly.
++		*/
++		ctl_res = io_res;
++		io_res.start += 0x800;
++		ctl_res.start = ctl_res.start + 0x80e;
++		io_res.end = ctl_res.start-1;
++#endif
++	} else {
++		ret = of_address_to_resource(dn, 1, &ctl_res);
++		if (ret) {
++			dev_err(&ofdev->dev, "can't get CTL address from "
++				"device tree\n");
++			return -EINVAL;
++		}
+ 	}
+ 
+ 	irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
++	if (irq_res)
++		irq_res->flags = 0;
+ 
+ 	of_property_read_u32(dn, "reg-shift", &reg_shift);
+ 
+@@ -60,6 +82,11 @@ static int pata_of_platform_probe(struct
+ 		dev_info(&ofdev->dev, "pio-mode unspecified, assuming PIO0\n");
+ 	}
+ 
++#ifdef CONFIG_PPC_PASEMI_NEMO
++       irq_res = 0;                    // force irq off (doesn't seem to work)
++#endif
++
++
+ 	pio_mask = 1 << pio_mode;
+ 	pio_mask |= (1 << pio_mode) - 1;
+ 
+@@ -69,6 +96,10 @@ static int pata_of_platform_probe(struct
+ 
+ static const struct of_device_id pata_of_platform_match[] = {
+ 	{ .compatible = "ata-generic", },
++	{ .compatible = "electra-ide", },
++#ifdef CONFIG_PPC_PASEMI_NEMO
++	{ .compatible = "electra-cf",},
++#endif
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, pata_of_platform_match);
+diff -rupN a/drivers/i2c/busses/i2c-pasemi.c b/drivers/i2c/busses/i2c-pasemi.c
+--- a/drivers/i2c/busses/i2c-pasemi.c	2017-11-16 08:18:40.088001610 +0100
++++ b/drivers/i2c/busses/i2c-pasemi.c	2017-11-16 08:17:22.041368276 +0100
+@@ -365,7 +365,6 @@ static int pasemi_smb_probe(struct pci_d
+ 	smbus->adapter.class = I2C_CLASS_HWMON | I2C_CLASS_SPD;
+ 	smbus->adapter.algo = &smbus_algorithm;
+ 	smbus->adapter.algo_data = smbus;
+-	smbus->adapter.nr = PCI_FUNC(dev->devfn);
+ 
+ 	/* set up the sysfs linkage to our parent device */
+ 	smbus->adapter.dev.parent = &dev->dev;
+@@ -373,7 +372,7 @@ static int pasemi_smb_probe(struct pci_d
+ 	reg_write(smbus, REG_CTL, (CTL_MTR | CTL_MRR |
+ 		  (CLK_100K_DIV & CTL_CLK_M)));
+ 
+-	error = i2c_add_numbered_adapter(&smbus->adapter);
++	error = i2c_add_adapter(&smbus->adapter);
+ 	if (error)
+ 		goto out_release_region;
+ 
 
-         /*
-          * irq_create_mapping (called from dw_pcie_host_init) pre-allocates
-@@ -408,9 +412,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
-                                 ret = -ENXIO;
-                                 goto error;
-                         }
--
--                       for (i = 0; i < MAX_MSI_IRQS; i++)
-- irq_create_mapping(pp->irq_domain, i);
-                 } else {
-                         ret = pp->ops->msi_host_init(pp, 
-&dw_pcie_msi_chip);
-                         if (ret < 0)
-
-Regards,
-czou
+--------------3DB08A6DD8A4ACC3E91EA54C--
