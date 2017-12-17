@@ -1,55 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:41464 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753129AbdLNNpz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 08:45:55 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>,
-        Vidya Saga <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH 2/4] PCI: tegra: Reorder parameters in offset computations
-Date: Thu, 14 Dec 2017 14:45:43 +0100
-Message-Id: <20171214134545.11143-3-thierry.reding@gmail.com>
-In-Reply-To: <20171214134545.11143-1-thierry.reding@gmail.com>
-References: <20171214134545.11143-1-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@suse.com>,
+        Len Brown <len.brown@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: Re: [PATCH 5/9] pnp: remove unneeded kallsyms include
+Date: Sun, 17 Dec 2017 19:04:37 +0100
+Message-ID: <2204687.eed4zNc3av@aspire.rjw.lan>
+In-Reply-To: <20171208144909.GB489@tigerII.localdomain>
+References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com> <CAJZ5v0hQ+QyJZ_bw9AGaSByvckpK5MeU=jkuy-MYg4Qdzoxrrw@mail.gmail.com> <20171208144909.GB489@tigerII.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Friday, December 8, 2017 3:49:09 PM CET Sergey Senozhatsky wrote:
+> On (12/08/17 15:02), Rafael J. Wysocki wrote:
+> > On Fri, Dec 8, 2017 at 3:56 AM, Sergey Senozhatsky
+> > <sergey.senozhatsky.work@gmail.com> wrote:
+> > > The file was converted from print_fn_descriptor_symbol()
+> > > to %pF some time ago (2e532d68a2b3e2aa {pci,pnp} quirks.c:
+> > > don't use deprecated print_fn_descriptor_symbol()). kallsyms
+> > > does not seem to be needed anymore.
+> > >
+> > > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > ---
+> > >  drivers/pnp/quirks.c | 1 -
+> > >  1 file changed, 1 deletion(-)
+> > >
+> > > diff --git a/drivers/pnp/quirks.c b/drivers/pnp/quirks.c
+> > > index f054cdddfef8..803666ae3635 100644
+> > > --- a/drivers/pnp/quirks.c
+> > > +++ b/drivers/pnp/quirks.c
+> > > @@ -21,7 +21,6 @@
+> > >  #include <linux/slab.h>
+> > >  #include <linux/pnp.h>
+> > >  #include <linux/io.h>
+> > > -#include <linux/kallsyms.h>
+> > >  #include "base.h"
+> > >
+> > >  static void quirk_awe32_add_ports(struct pnp_dev *dev,
+> > > --
+> > 
+> > Do you want me to apply this or do you want to route it differently?
+> 
+> please pick it up.
 
-The current computation of the configuration space offset is slightly
-difficult to read because the fields aren't naturally ordered. This is
-no doubt done to put extended register and register fields together,
-but that's confusing because they are separate in the address mapping
-given in the comment above the computations.
-
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 8a07c6f9e1b0..26b734c84850 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -372,11 +372,11 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
-  * address (access to which generates correct config transaction) falls in
-  * this 4 KiB region.
-  */
--static unsigned long tegra_pcie_conf_offset(unsigned char b, unsigned int devfn,
--					    int where)
-+static unsigned int tegra_pcie_conf_offset(u8 bus, unsigned int devfn,
-+					   unsigned int where)
- {
--	return (b << 16) | (PCI_SLOT(devfn) << 11) | (PCI_FUNC(devfn) << 8) |
--	       (((where & 0xf00) >> 8) << 24) | (where & 0xff);
-+	return ((where & 0xf00) << 16) | (bus << 16) | (PCI_SLOT(devfn) << 11) |
-+	       (PCI_FUNC(devfn) << 8) | (where & 0xff);
- }
- 
- static int tegra_pcie_add_bus(struct pci_bus *bus)
--- 
-2.15.1
+Applied, thanks!
