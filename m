@@ -1,92 +1,69 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 13 Dec 2017 10:23:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Maarten Lankhorst <dev@mblankhorst.nl>,
-        Michal Hocko <mhocko@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Andy Lutomirski <luto@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        the arch/x86 maintainers <x86@kernel.org>,
-        Daniel Vetter <daniel.vetter@intel.com>,
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@suse.com>,
+        Len Brown <len.brown@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-Message-ID: <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan>
- <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com>
- <20171206121452.GA6320@dhcp22.suse.cz>
- <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl>
- <alpine.DEB.2.20.1712061344560.1724@nanos>
- <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
- <alpine.DEB.2.20.1712061514420.1724@nanos>
- <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl>
- <alpine.DEB.2.20.1712081129450.1840@nanos>
- <alpine.DEB.2.20.1712131507160.1885@nanos>
+        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: Re: [PATCH 3/9] power: remove unneeded kallsyms include
+Date: Sun, 17 Dec 2017 19:04:16 +0100
+Message-ID: <4033333.ijW7uRe5gx@aspire.rjw.lan>
+In-Reply-To: <20171208144844.GA489@tigerII.localdomain>
+References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com> <CAJZ5v0g1CBhKTYi=CzYPcBXdH=yZ3iJcKzZ6TaftNWoq+X5wnQ@mail.gmail.com> <20171208144844.GA489@tigerII.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1712131507160.1885@nanos>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci, linux-pm]
+On Friday, December 8, 2017 3:48:44 PM CET Sergey Senozhatsky wrote:
+> On (12/08/17 15:01), Rafael J. Wysocki wrote:
+> > On Fri, Dec 8, 2017 at 3:56 AM, Sergey Senozhatsky
+> > <sergey.senozhatsky.work@gmail.com> wrote:
+> > > The file was converted from print_fn_descriptor_symbol()
+> > > to %pF some time ago (c80cfb0406c01bb "vsprintf: use new
+> > > vsprintf symbolic function pointer format"). kallsyms does
+> > > not seem to be needed anymore.
+> > >
+> > > Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+> > > Cc: Rafael Wysocki <rjw@rjwysocki.net>
+> > > Cc: Len Brown <len.brown@intel.com>
+> > > ---
+> > >  drivers/base/power/main.c | 1 -
+> > >  1 file changed, 1 deletion(-)
+> > >
+> > > diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
+> > > index 5bc2cf1f812c..e2539d8423f7 100644
+> > > --- a/drivers/base/power/main.c
+> > > +++ b/drivers/base/power/main.c
+> > > @@ -18,7 +18,6 @@
+> > >   */
+> > >
+> > >  #include <linux/device.h>
+> > > -#include <linux/kallsyms.h>
+> > >  #include <linux/export.h>
+> > >  #include <linux/mutex.h>
+> > >  #include <linux/pm.h>
+> > > --
+> > 
+> > Do you want me to apply this or do you want to route it differently?
+> 
+> Hello Rafael,
+> 
+> don't mind if you'll pick it up.
 
-On Wed, Dec 13, 2017 at 04:57:56PM +0100, Thomas Gleixner wrote:
-> So I was finally able to figure out what the hell is going on:
-> 
-> Suspend:
-> 
->  - The device suspend code puts the graphics card into a power
->    state != PCI_D0.
-> 
->  - Offline non boot CPUs
-> 
->  - Break interrupt affinity. Allocate new vector on CPU 0, compose and
->    write MSI message which ends up in:
-> 
->    __pci_write_msi_msg(entry, msg)
->    {
-> 	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
-> 	   /* Don't touch the hardware now */
-> 	} else {
-> 	   ....
-> 	}
-> 	entry->msg = *msg;
->    }
->  
->   So because the device is not in PCI_D0 the message is not written. It's
->   written in the device resume path.
+OK, applied now.
 
-I'm not a PM guru, but this ordering seems fragile.  If we offline
-CPUs before re-targeting interrupts directed at those CPUs, aren't we
-always going to be at risk of sending interrupts to an offline CPU?
-
-Even if the device is now asleep and therefore should not generate an
-interrupt, it seems like there's a window when the device returns to
-PCI_D0 where it could generate an interrupt before we have a chance to
-update the MSI message.
-
-> Resume:
-> [  139.670446] ACPI: Low-level resume complete
-> [  139.670541] PM: Restoring platform NVS memory
-> [  139.672462] do_IRQ: 0.55 No irq handler for vector
-> [  139.672475] Enabling non-boot CPUs ...
-> 
-> So the spurious interrupt happens early and way before the device resume
-> code writes the new MSI message.
-> 
-> I checked the behaviour on 4.14. The MSI write is delayed there in the same
-> way, but there is no spurious interrupt. There is no interrupt coming in at
-> all _BEFORE_ the device is put out of PCI_D0.
-> 
-> And this has certainly nothing to do with the vector management changes,
-> but I can't figure yet what makes that spurious interrupt to be sent.
-> 
-> Any ideas welcome.
-> 
-> Thanks,
-> 
-> 	tglx
-> 
+Thanks!
