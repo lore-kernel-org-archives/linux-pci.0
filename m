@@ -1,134 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3872 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752848AbdLMMCr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 07:02:47 -0500
-Subject: Re: [PATCH V3 02/12] PCI: tegra: Move REFCLK pad settings out of
- phy_power_on()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <jonathanh@nvidia.com>, <vidyas@nvidia.com>,
-        <mperttunen@nvidia.com>, <linux-tegra@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <kthota@nvidia.com>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-3-git-send-email-mmaddireddy@nvidia.com>
- <20171212114527.GB30799@e107981-ln.cambridge.arm.com>
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <6a089c5a-7a79-fd9f-ff77-e08f16731241@nvidia.com>
-Date: Wed, 13 Dec 2017 17:32:32 +0530
-MIME-Version: 1.0
-In-Reply-To: <20171212114527.GB30799@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v2 5/9] dt-bindings: PCI: cadence: Add DT bindings for Cadence PCIe host controller
+Date: Mon, 18 Dec 2017 19:16:05 +0100
+Message-Id: <ee768eb717027e335d51313ef95bdd0399e54468.1513620412.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Scott Telford <stelford@cadence.com>
 
+This patch adds documentation for the DT bindings of the Cadence PCIe
+controller when configured in host (Root Complex) mode.
 
-On 12-Dec-17 5:15 PM, Lorenzo Pieralisi wrote:
-> On Mon, Oct 30, 2017 at 07:27:13PM +0530, Manikanta Maddireddy wrote:
->> In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
-> 
-> It is time you defined what FW does and what the kernel does and stick
-> to that SW initialization sequence for all Tegra PCI host bridges from
-> now onwards. Those tegra_pcie_soc structures in the driver will end up
-> with a gazillion hardcoded parameters if you do not take a stance from
-> that perspective and I do not like that - at all.
-> 
-> You may want to use DT bindings to describe the FW<->OS handover - or
-> just enforce firmware guidelines for Tegra systems - something has to be
-> done.
-> 
-> This patch makes sense stand-alone but I wanted to get the message
-> across.
-> 
-> Thanks,
-> Lorenzo
-> 
+Signed-off-by: Scott Telford <stelford@cadence.com>
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ .../bindings/pci/cdns,cdns-pcie-host.txt           | 60 ++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
 
-In Tegra186 BPMP-FW will take care of programming the UPHY, this is
-updated in commit log of "9cea513d8cbc ("PCI: tegra: Add Tegra186 PCIe support")".
-I didn't put it in DT bindings because there is no DT property for this purpose.
-Do you want me to add a comment in PCIe tegra driver, perhaps near program_uphy variable?
-
-In current host driver, REFCLK pads settings are done in tegra_pcie_port_phy_power_off()
-which is not apt. REFCLK pad settings tunes the PCIe sideband signal REFCLK, it has
-nothing to do with UPHY. So I am moving it out of tegra_pcie_port_phy_power_off().
-
-Thanks,
-Manikanta
-
-
->> in driver. REFCLK pad settings are independent of PHY and should be
->> programmed by driver. So move REFCLK pad settings out of phy_power_on().
->> These pad settings improve REFCLK peak to peak amplitude.
->>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->> V3:
->> * Corrected commit log
->> V2:
->> * no change in this patch
->>
->>  drivers/pci/host/pci-tegra.c | 20 +++++++++++++-------
->>  1 file changed, 13 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->> index b41c60c7414c..068510b40c1a 100644
->> --- a/drivers/pci/host/pci-tegra.c
->> +++ b/drivers/pci/host/pci-tegra.c
->> @@ -910,7 +910,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
->>  static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
->>  {
->>  	struct device *dev = pcie->dev;
->> -	const struct tegra_pcie_soc *soc = pcie->soc;
->>  	struct tegra_pcie_port *port;
->>  	int err;
->>  
->> @@ -936,12 +935,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
->>  		}
->>  	}
->>  
->> -	/* Configure the reference clock driver */
->> -	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
->> -
->> -	if (soc->num_ports > 2)
->> -		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
->> -
->>  	return 0;
->>  }
->>  
->> @@ -2049,6 +2042,17 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
->>  	return 0;
->>  }
->>  
->> +static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
->> +{
->> +	const struct tegra_pcie_soc *soc = pcie->soc;
->> +
->> +	/* Configure the reference clock driver */
->> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
->> +
->> +	if (soc->num_ports > 2)
->> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
->> +}
->> +
->>  /*
->>   * FIXME: If there are no PCIe cards attached, then calling this function
->>   * can result in the increase of the bootup time as there are big timeout
->> @@ -2107,6 +2111,8 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->>  	struct device *dev = pcie->dev;
->>  	struct tegra_pcie_port *port, *tmp;
->>  
->> +	tegra_pcie_apply_pad_settings(pcie);
->> +
->>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
->>  		dev_info(dev, "probing port %u, using %u lanes\n",
->>  			 port->index, port->lanes);
->> -- 
->> 2.1.4
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+new file mode 100644
+index 000000000000..20a33f38f69d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.txt
+@@ -0,0 +1,60 @@
++* Cadence PCIe host controller
++
++This PCIe controller inherits the base properties defined in
++host-generic-pci.txt.
++
++Required properties:
++- compatible: Should contain "cdns,cdns-pcie-host" to identify the IP used.
++- reg: Should contain the controller register base address, PCIe configuration
++  window base address, and AXI interface region base address respectively.
++- reg-names: Must be "reg", "cfg" and "mem" respectively.
++- #address-cells: Set to <3>
++- #size-cells: Set to <2>
++- device_type: Set to "pci"
++- ranges: Ranges for the PCI memory and I/O regions
++- #interrupt-cells: Set to <1>
++- interrupt-map-mask and interrupt-map: Standard PCI properties to define the
++  mapping of the PCIe interface to interrupt numbers.
++
++Optional properties:
++- cdns,max-outbound-regions: Set to maximum number of outbound regions
++  (default 32)
++- cdns,no-bar-match-nbits: Set into the no BAR match register to configure the
++  number of least significant bits kept during inbound (PCIe -> AXI) address
++  translations (default 32)
++- vendor-id: The PCI vendor ID (16 bits, default is design dependent)
++- device-id: The PCI device ID (16 bits, default is design dependent)
++
++Example:
++
++pcie@fb000000 {
++	compatible = "cdns,cdns-pcie-host";
++	device_type = "pci";
++	#address-cells = <3>;
++	#size-cells = <2>;
++	bus-range = <0x0 0xff>;
++	linux,pci-domain = <0>;
++	cdns,max-outbound-regions = <16>;
++	cdns,no-bar-match-nbits = <32>;
++	vendor-id = /bits/ 16 <0x17cd>;
++	device-id = /bits/ 16 <0x0200>;
++
++	reg = <0x0 0xfb000000  0x0 0x01000000>,
++	      <0x0 0x41000000  0x0 0x00001000>,
++	      <0x0 0x40000000  0x0 0x04000000>;
++	reg-names = "reg", "cfg", "mem";
++
++	ranges = <0x02000000 0x0 0x42000000  0x0 0x42000000  0x0 0x1000000>,
++		 <0x01000000 0x0 0x43000000  0x0 0x43000000  0x0 0x0010000>;
++
++	#interrupt-cells = <0x1>;
++
++	interrupt-map = <0x0 0x0 0x0  0x1  &gic  0x0 0x0 0x0 14 0x1
++			 0x0 0x0 0x0  0x2  &gic  0x0 0x0 0x0 15 0x1
++			 0x0 0x0 0x0  0x3  &gic  0x0 0x0 0x0 16 0x1
++			 0x0 0x0 0x0  0x4  &gic  0x0 0x0 0x0 17 0x1>;
++
++	interrupt-map-mask = <0x0 0x0 0x0  0x7>;
++
++	msi-parent = <&its_pci>;
++};
+-- 
+2.11.0
