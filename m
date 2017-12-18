@@ -1,81 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:36149 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752156AbdLUQog (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Dec 2017 11:44:36 -0500
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
-        "'Niklas Cassel'" <niklas.cassel@axis.com>,
-        "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>
-Cc: "'Niklas Cassel'" <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20171219232940.659-1-niklas.cassel@axis.com> <20171219232940.659-3-niklas.cassel@axis.com> <7308951d-5123-2ebf-1d11-27b4467625d9@synopsys.com>
-In-Reply-To: <7308951d-5123-2ebf-1d11-27b4467625d9@synopsys.com>
-Subject: Re: [PATCH v6 02/18] PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
-Date: Thu, 21 Dec 2017 11:44:33 -0500
-Message-ID: <000101d37a7a$fb7209f0$f2561dd0$@gmail.com>
+Return-Path: <SRS0=PtP5=DO=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=PtP5=DO=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH V2 1/2] PCI/portdrv: Fix switch devctrl error report
+ enable
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
+ <1512467438-42850-2-git-send-email-liudongdong3@huawei.com>
+ <20171213162931.GD30595@bhelgaas-glaptop.roam.corp.google.com>
+CC: <rjw@sisk.pl>, <linux-pci@vger.kernel.org>, <stable@vger.kernel.org>,
+	<linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <b98b20fc-daac-f8e0-ba80-28ea66c53fdf@huawei.com>
+Date: Mon, 18 Dec 2017 20:55:12 +0800
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171213162931.GD30595@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, December 20, 2017 2:18 PM, Joao Pinto wrote:
->=20
-> Hi,
->=20
-> =C3=80s 11:29 PM de 12/19/2017, Niklas Cassel escreveu:
-> > Previously, dw_pcie_ep_set_msi() wrote all bits in the Message =
-Control
-> > register, thus overwriting the PCI_MSI_FLAGS_64BIT bit.
-> > By clearing the PCI_MSI_FLAGS_64BIT bit, we break MSI
-> > on systems where the RC has set a 64 bit MSI address.
-> > Fix dw_pcie_ep_set_msi() so that it only sets MMC bits.
-> >
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > ---
-> >  drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
-> >  drivers/pci/dwc/pcie-designware.h    | 1 +
-> >  2 files changed, 4 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/dwc/pcie-designware-ep.c
-> b/drivers/pci/dwc/pcie-designware-ep.c
-> > index d53d5f168363..c92ab87fd660 100644
-> > --- a/drivers/pci/dwc/pcie-designware-ep.c
-> > +++ b/drivers/pci/dwc/pcie-designware-ep.c
-> > @@ -220,7 +220,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc =
-*epc,
-> u8 encode_int)
-> >  	struct dw_pcie_ep *ep =3D epc_get_drvdata(epc);
-> >  	struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
-> >
-> > -	val =3D (encode_int << MSI_CAP_MMC_SHIFT);
-> > +	val =3D dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-> > +	val &=3D ~MSI_CAP_MMC_MASK;
-> > +	val |=3D (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
-> >  	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-> >
-> >  	return 0;
-> > diff --git a/drivers/pci/dwc/pcie-designware.h =
-b/drivers/pci/dwc/pcie-
-> designware.h
-> > index ecdede68522a..9aaf0cd04dd6 100644
-> > --- a/drivers/pci/dwc/pcie-designware.h
-> > +++ b/drivers/pci/dwc/pcie-designware.h
-> > @@ -101,6 +101,7 @@
-> >
-> >  #define MSI_MESSAGE_CONTROL		0x52
-> >  #define MSI_CAP_MMC_SHIFT		1
-> > +#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
-> >  #define MSI_CAP_MME_SHIFT		4
-> >  #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
-> >  #define MSI_MESSAGE_ADDR_L32		0x54
-> >
->=20
-> Acked-by: Joao Pinto <jpinto@synopsys.com>
+Hi Bjorn
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Many thanks for your review.
+在 2017/12/14 0:29, Bjorn Helgaas 写道:
+> On Tue, Dec 05, 2017 at 05:50:37PM +0800, Dongdong Liu wrote:
+>> Current code has a bug, switch upstream/downstream port error report
+>> is disabled.
+>> DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>>
+>> We call aer_probe() for a root port, and it enables AER reporting for
+>> the root port and any downstream devices:
+>>
+>> aer_probe(root port)                        # only binds to root ports
+>>   aer_enable_rootport
+>>     set_downstream_devices_error_reporting(root, true)
+>>       set_device_error_reporting(root, true)
+>>         pci_enable_pcie_error_reporting
+>>           pcie_capability_set_word(root, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
+>>         pci_walk_bus(root->subordinate set_device_error_reporting, true)
+>>           set_device_error_reporting(dev, true)
+>>             pci_enable_pcie_error_reporting
+>>               pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+>> PCI_EXP_AER_FLAGS)
+>>
+>> We later call pcie_portdrv_probe() for every downstream bridge (it
+>> matches PCI_CLASS_BRIDGE_PCI devices, then discards any non-PCIe
+>> devices), and it *disables* AER reporting:
+>>
+>> pcie_portdrv_probe(switch port)
+>>   pcie_port_device_register
+>>     get_port_device_capability
+>>       pci_disable_pcie_error_reporting
+>>         pcie_capability_clear_word(dev, PCI_EXP_DEVCTL, PCI_EXP_AER_FLAGS)
+>>
+>> The result is that we first enable AER for the downstream switch
+>> ports, then we disable it again.
+>>
+>> It does not need to disable AER for upstream/downstream ports as
+>> AER driver only binds to root ports.
+>>
+>> Fixes: 2bd50dd800b5(PCI: PCIe: Disable PCIe port services during port
+>> initialization)
+>
+> While you're correcting nits, use the conventional style here:
+>
+>   Fixes: 2bd50dd800b5 ("PCI: PCIe: Disable PCIe port services during port initialization")
+>
+> all on one line for greppability.
+Thanks for pointing out that, will fix.
+>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> CC: stable@vger.kernel.org
+>> ---
+>>  drivers/pci/pcie/portdrv_core.c | 4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+>> index a592103..a0dff44 100644
+>> --- a/drivers/pci/pcie/portdrv_core.c
+>> +++ b/drivers/pci/pcie/portdrv_core.c
+>> @@ -241,7 +241,9 @@ static int get_port_device_capability(struct pci_dev *dev)
+>>  		 * Disable AER on this port in case it's been enabled by the
+>>  		 * BIOS (the AER service driver will enable it when necessary).
+>>  		 */
+>> -		pci_disable_pcie_error_reporting(dev);
+>> +		if ((pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
+>> +		    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
+>> +			pci_disable_pcie_error_reporting(dev);
+>
+> I'm not sure this code is in the right place.  This is
+> get_port_device_capability(); we should be *getting* information, not
+> *configuring* the device here.
+>
+> If we're not prepared to handle AER events, I think it's probably
+> a good idea to disable them, but I'd rather do it in the
+> pci_init_capabilities() path, e.g., in pci_aer_init().
+So disable them in pci_aer_init(), enable them in aer_enable_rootport().
+>
+> pciehp is not a capability, but I think we should also move the
+> disabling of PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE interrupts out
+> of get_port_device_capability().  Maybe to pci_configure_device()?
+>
+> I also do not think we should check for upstream/downstream ports.  If
+> we're going to disable AER (and I think that probably does make
+> sense), we should do it for every device until we're ready to handle
+> AER events.
 
-Best regards,
-Jingoo Han
+It seems good to me.
+
+Thanks,
+Dongdong
+
+>
+>>  	}
+>>  	/* VC support */
+>>  	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_VC))
+>> --
+>> 1.9.1
+>>
+>
+> .
+>
