@@ -1,103 +1,200 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:44612 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755929AbdLTTrs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 14:47:48 -0500
-Subject: Re: [PATCH v6 00/18] dwc MSI fixes, ARTPEC-6 EP mode support,
- ARTPEC-7 SoC support
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>, Niklas Cassel <niklass@axis.com>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
- <20171220173416.GD1709@red-moon>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <32f6e02c-4230-9222-0ee1-54a045e78bd5@synopsys.com>
-Date: Wed, 20 Dec 2017 19:47:41 +0000
-MIME-Version: 1.0
-In-Reply-To: <20171220173416.GD1709@red-moon>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v2 6/7] pseries/pci: Associate PEs to VFs in configure SR-IOV
+Date: Mon, 18 Dec 2017 16:38:07 -0600
+In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171218223808.83928-7-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+After initial validation of SR-IOV resources, firmware will
+associate PEs to the dynamic VFs created within this call. This
+patch adds the association of PEs to the PF array of PE numbers
+indexed by VF.
 
-Hello to all,
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/pseries/pci.c | 151 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 148 insertions(+), 3 deletions(-)
 
-Às 5:34 PM de 12/20/2017, Lorenzo Pieralisi escreveu:
-> On Wed, Dec 20, 2017 at 12:29:21AM +0100, Niklas Cassel wrote:
->> This is a series that adds:
->> - PCI endpoint mode support in the ARTPEC-6 driver.
->> - ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
->> - Small fixes for MSI in designware-ep and designware-host,
->>   needed to get endpoint mode support working for ARTPEC-6.
->> - Cleanups in pci-dra7xx to better prepare for endpoint mode in other
->>   DWC based PCIe drivers.
-> 
-> Joao, Jingoo,
-> 
-> Gustavo tested the series and Kishon ACK'ed the relevant patches,
-> I need your ACKs on designware patches to queue this series for
-> v4.16.
-> 
-> I am away from tomorrow (noon) till beginning of January which means
-> that either I queue this series tomorrow or at -rc6, please do
-> chime in if you can.
-
-Sorry, I have been a bit tied up! Already checked each patch related to DWC.
-Could anyone from artpec finish the revision, since there are some patches
-related to that SoC?
-
-Thanks,
-Joao
-
-> 
-> Thanks,
-> Lorenzo
-> 
->> Changes since V5:
->> -Dropped GFP_DMA32 from "PCI: dwc: Use the DMA-API to get the MSI address"
->>  so that we use the exact same GFP flags as before.
->> -Rewrote commit message for "PCI: dwc: Make cpu_addr_fixup take struct
->> dw_pcie as argument" to be more detailed.
->>
->> Niklas Cassel (18):
->>   PCI: dwc: Use the DMA-API to get the MSI address
->>   PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
->>   PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be
->>     writable
->>   PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
->>   PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
->>   PCI: designware-ep: Add generic function for raising MSI irq
->>   PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep
->>     mode
->>   PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than
->>     in probe
->>   PCI: dwc: dra7xx: Help compiler to remove unused code
->>   PCI: dwc: artpec6: Remove unused defines
->>   PCI: dwc: artpec6: Use BIT and GENMASK macros
->>   PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller
->>     functions
->>   bindings: PCI: artpec: Add support for endpoint mode
->>   PCI: dwc: artpec6: Add support for endpoint mode
->>   PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
->>   PCI: dwc: artpec6: Deassert the core before waiting for PHY
->>   bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
->>   PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
->>
->>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   5 +-
->>  drivers/pci/dwc/Kconfig                            |  68 +--
->>  drivers/pci/dwc/Makefile                           |   4 +-
->>  drivers/pci/dwc/pci-dra7xx.c                       |  27 +-
->>  drivers/pci/dwc/pcie-artpec6.c                     | 470 ++++++++++++++++++---
->>  drivers/pci/dwc/pcie-designware-ep.c               |  59 ++-
->>  drivers/pci/dwc/pcie-designware-host.c             |  15 +-
->>  drivers/pci/dwc/pcie-designware.c                  |   2 +-
->>  drivers/pci/dwc/pcie-designware.h                  |  22 +-
->>  9 files changed, 554 insertions(+), 118 deletions(-)
->>
->> -- 
->> 2.14.2
->>
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index 48d3af026f90..00e6475004ff 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -57,18 +57,163 @@ void pcibios_name_device(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
+ #endif
+-
+ #ifdef CONFIG_PCI_IOV
++#define MAX_VFS_FOR_MAP_PE 256
++struct pe_map_bar_entry {
++	__be64     bar;       /* Input:  Virtual Function BAR */
++	__be16     rid;       /* Input:  Virtual Function Router ID */
++	__be16     pe_num;    /* Output: Virtual Function PE Number */
++	__be32     reserved;  /* Reserved Space */
++};
++
++int pseries_send_map_pe(struct pci_dev *pdev,
++			u16 num_vfs,
++			struct pe_map_bar_entry *vf_pe_array)
++{
++	struct pci_dn *pdn;
++	int rc;
++	unsigned long buid, addr;
++	int ibm_map_pes = rtas_token("ibm,open-sriov-map-pe-number");
++
++	if (ibm_map_pes == RTAS_UNKNOWN_SERVICE)
++		return -EINVAL;
++
++	pdn = pci_get_pdn(pdev);
++	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
++	buid = pdn->phb->buid;
++	spin_lock(&rtas_data_buf_lock);
++	memcpy(rtas_data_buf, vf_pe_array,
++	       RTAS_DATA_BUF_SIZE);
++	rc = rtas_call(ibm_map_pes, 5, 1, NULL, addr,
++		       BUID_HI(buid), BUID_LO(buid),
++		       rtas_data_buf,
++		       num_vfs * sizeof(struct pe_map_bar_entry));
++	memcpy(vf_pe_array, rtas_data_buf, RTAS_DATA_BUF_SIZE);
++	spin_unlock(&rtas_data_buf_lock);
++
++	if (rc)
++		dev_err(&pdev->dev,
++			"%s: Failed to associate pes PE#%lx, rc=%x\n",
++			__func__,  addr, rc);
++
++	return rc;
++}
++
++void pseries_set_pe_num(struct pci_dev *pdev, u16 vf_index, __be16 pe_num)
++{
++	struct pci_dn *pdn;
++
++	pdn = pci_get_pdn(pdev);
++	pdn->pe_num_map[vf_index] = be16_to_cpu(pe_num);
++	dev_dbg(&pdev->dev, "VF %04x:%02x:%02x.%x associated with PE#%x\n",
++		pci_domain_nr(pdev->bus),
++		pdev->bus->number,
++		PCI_SLOT(pci_iov_virtfn_devfn(pdev, vf_index)),
++		PCI_FUNC(pci_iov_virtfn_devfn(pdev, vf_index)),
++		pdn->pe_num_map[vf_index]);
++}
++
++int pseries_associate_pes(struct pci_dev *pdev, u16 num_vfs)
++{
++	struct pci_dn *pdn;
++	int i, rc, vf_index;
++	struct pe_map_bar_entry *vf_pe_array;
++	struct resource *res;
++	u64 size;
++
++	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
++	if (!vf_pe_array)
++		return -ENOMEM;
++
++	pdn = pci_get_pdn(pdev);
++	/* create firmware structure to associate pes */
++	for (vf_index = 0; vf_index < num_vfs; vf_index++) {
++		pdn->pe_num_map[vf_index] = IODA_INVALID_PE;
++		for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
++			res = &pdev->resource[i + PCI_IOV_RESOURCES];
++			if (!res->parent)
++				continue;
++			size = pcibios_iov_resource_alignment(pdev, i +
++					PCI_IOV_RESOURCES);
++			vf_pe_array[vf_index].bar =
++				cpu_to_be64(res->start + size * vf_index);
++			vf_pe_array[vf_index].rid =
++				cpu_to_be16((pci_iov_virtfn_bus(pdev, vf_index)
++					    << 8) | pci_iov_virtfn_devfn(pdev,
++					    vf_index));
++			vf_pe_array[vf_index].pe_num =
++				cpu_to_be16(IODA_INVALID_PE);
++		}
++	}
++
++	rc = pseries_send_map_pe(pdev, num_vfs, vf_pe_array);
++	/* Only zero is success */
++	if (!rc)
++		for (vf_index = 0; vf_index < num_vfs; vf_index++)
++			pseries_set_pe_num(pdev, vf_index,
++					   vf_pe_array[vf_index].pe_num);
++
++	kfree(vf_pe_array);
++	return rc;
++}
++
++int pseries_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
++{
++	struct pci_dn         *pdn;
++	int                    rc;
++	const int *max_vfs;
++	int max_config_vfs;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++
++	max_vfs = of_get_property(dn, "ibm,number-of-configurable-vfs", NULL);
++
++	if (!max_vfs)
++		return -EINVAL;
++
++	/* First integer stores max config */
++	max_config_vfs = of_read_number(&max_vfs[0], 1);
++	if (max_config_vfs < num_vfs && num_vfs > MAX_VFS_FOR_MAP_PE) {
++		dev_err(&pdev->dev,
++			"Num VFs %x > %x Configurable VFs\n",
++			num_vfs, (num_vfs > MAX_VFS_FOR_MAP_PE) ?
++			MAX_VFS_FOR_MAP_PE : max_config_vfs);
++		return -EINVAL;
++	}
++
++	pdn = pci_get_pdn(pdev);
++	pdn->pe_num_map = kmalloc_array(num_vfs,
++					sizeof(*pdn->pe_num_map),
++					GFP_KERNEL);
++	if (!pdn->pe_num_map)
++		return -ENOMEM;
++
++	rc = pseries_associate_pes(pdev, num_vfs);
++
++	/* Anything other than zero is failure */
++	if (rc) {
++		dev_err(&pdev->dev, "Failure to enable sriov: %x\n", rc);
++		kfree(pdn->pe_num_map);
++	} else {
++		pci_vf_drivers_autoprobe(pdev, false);
++	}
++
++	return rc;
++}
++
+ int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ {
+ 	/* Allocate PCI data */
+ 	add_dev_pci_data(pdev);
+-	pci_vf_drivers_autoprobe(pdev, false);
+-	return 0;
++	return pseries_pci_sriov_enable(pdev, num_vfs);
+ }
+ 
+ int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
+ {
++	struct pci_dn         *pdn;
++
++	pdn = pci_get_pdn(pdev);
++	/* Releasing pe_num_map */
++	kfree(pdn->pe_num_map);
+ 	/* Release PCI data */
+ 	remove_dev_pci_data(pdev);
+ 	pci_vf_drivers_autoprobe(pdev, true);
+-- 
+2.14.3 (Apple Git-98)
