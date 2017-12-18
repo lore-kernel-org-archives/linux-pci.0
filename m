@@ -1,79 +1,116 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFCv2 PATCH 26/36] iommu/arm-smmu-v3: Add support for Hardware
- Translation Table Update
-To: Yisheng Xie <xieyisheng1@huawei.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Cc: "joro@8bytes.org" <joro@8bytes.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Catalin Marinas <Catalin.Marinas@arm.com>,
-        Will Deacon <Will.Deacon@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        Sudeep Holla <Sudeep.Holla@arm.com>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "lenb@kernel.org" <lenb@kernel.org>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "liubo95@huawei.com" <liubo95@huawei.com>,
-        "thunder.leizhen@huawei.com" <thunder.leizhen@huawei.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        "nwatters@codeaurora.org" <nwatters@codeaurora.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "rfranz@cavium.com" <rfranz@cavium.com>,
-        "dwmw2@infradead.org" <dwmw2@infradead.org>,
-        "jacob.jun.pan@linux.intel.com" <jacob.jun.pan@linux.intel.com>,
-        "yi.l.liu@intel.com" <yi.l.liu@intel.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "robdclark@gmail.com" <robdclark@gmail.com>
-References: <20171006133203.22803-1-jean-philippe.brucker@arm.com>
- <20171006133203.22803-27-jean-philippe.brucker@arm.com>
- <d2ec2e61-f758-0394-41d2-555ae65feb0d@huawei.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <8bdba799-49ec-edc9-dbcf-9277424dea57@arm.com>
-Date: Wed, 6 Dec 2017 11:06:59 +0000
-MIME-Version: 1.0
-In-Reply-To: <d2ec2e61-f758-0394-41d2-555ae65feb0d@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+To: bhelgaas@google.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org
+Cc: adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
+        kgopi@cadence.com, eandrews@cadence.com,
+        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
+        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
+        devicetree@vger.kernel.org,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: [PATCH v2 1/9] PCI: Regroup all PCI related entries into drivers/pci/Makefile
+Date: Mon, 18 Dec 2017 19:16:01 +0100
+Message-Id: <49f5a733e05a46521340e913876332f3804e2042.1513620412.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+In-Reply-To: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+References: <cover.1513620412.git.cyrille.pitchen@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/12/17 06:51, Yisheng Xie wrote:
-> Hi Jean,
-> 
-> On 2017/10/6 21:31, Jean-Philippe Brucker wrote:
->> If the SMMU supports it and the kernel was built with HTTU support, enable
->> +	if (IS_ENABLED(CONFIG_ARM64_HW_AFDBM) && (reg & (IDR0_HA | IDR0_HD))) {
->> +		smmu->features |= ARM_SMMU_FEAT_HA;
->> +		if (reg & IDR0_HD)
->> +			smmu->features |= ARM_SMMU_FEAT_HD;
->> +	}
-> 
-> What is relationship of armv8.1 HW_AFDBM and SMMUv3 HTTU? I mean why we need
-> IS_ENABLED(CONFIG_ARM64_HW_AFDBM) ?
+This patch cleans drivers/Makefile up by moving the pci/endpoint and
+pci/dwc entries from drivers/Makefile into drivers/pci/Makefile.
 
-I think the reason we needed this was that, without CONFIG_ARM64_HW_AFDBM,
-the CPU wouldn't update the pte atomically and pte_dirty() wouldn't check
-the DBM bit 51 (only the SW dirty bit 55).
+Since we don't want to introduce any dependency between CONFIG_PCI and
+CONFIG_PCI_ENDPOINT, we now always execute drivers/pci/Makefile.
 
-Since af29678fe785 ("arm64: Remove the !CONFIG_ARM64_HW_AFDBM alternative
-code paths") removed lots of #ifdefs, I'll see if we can remove the above
-IS_ENABLED as well.
+Hence all Makefiles in drivers/pci/ were updated accordingly so no file is
+compiled when CONFIG_PCI is not defined.
 
-> If CONFIG_ARM64_HW_AFDBM=y but the process do not support ARMv8.1, should it also
-> enable related feature for SMMUv3?
+Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+ drivers/Makefile          |  5 +----
+ drivers/pci/Kconfig       |  1 +
+ drivers/pci/Makefile      | 11 ++++++++---
+ drivers/pci/host/Makefile |  2 ++
+ 4 files changed, 12 insertions(+), 7 deletions(-)
 
-Yes I think we can enable HTTU in the SMMU even if the CPU doesn't support
-it (though HTTU is only useful when sharing process address spaces). The
-mm code checks for both HW and SW bits even when the CPU doesn't support
-ARMv8.1
-
-Thanks,
-Jean
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 1d034b680431..9757199b9a65 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -16,10 +16,7 @@ obj-$(CONFIG_PINCTRL)		+= pinctrl/
+ obj-$(CONFIG_GPIOLIB)		+= gpio/
+ obj-y				+= pwm/
+ 
+-obj-$(CONFIG_PCI)		+= pci/
+-obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
+-# PCI dwc controller drivers
+-obj-y				+= pci/dwc/
++obj-y				+= pci/
+ 
+ obj-$(CONFIG_PARISC)		+= parisc/
+ obj-$(CONFIG_RAPIDIO)		+= rapidio/
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index bda151788f3f..7eeb969ab86a 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -125,6 +125,7 @@ config PCI_PASID
+ 
+ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
++	depends on PCI
+ 	select NLS
+ 
+ config PCI_HYPERV
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index c7819b973df7..7284a7f6ad1e 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -3,12 +3,15 @@
+ # Makefile for the PCI bus specific drivers.
+ #
+ 
+-obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
++obj-$(CONFIG_PCI)	+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
+ 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+ 			irq.o vpd.o setup-bus.o vc.o mmap.o setup-irq.o
+ 
++ifdef CONFIG_PCI
+ obj-$(CONFIG_PROC_FS) += proc.o
+ obj-$(CONFIG_SYSFS) += slot.o
++obj-$(CONFIG_OF) += of.o
++endif
+ 
+ obj-$(CONFIG_PCI_QUIRKS) += quirks.o
+ 
+@@ -44,10 +47,12 @@ obj-$(CONFIG_PCI_ECAM) += ecam.o
+ 
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ 
+-obj-$(CONFIG_OF) += of.o
+-
+ ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
+ 
+ # PCI host controller drivers
+ obj-y += host/
+ obj-y += switch/
++
++obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
++# PCI dwc controller drivers
++obj-y				+= dwc/
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 34ec1d88f961..3b1059190867 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -34,6 +34,8 @@ obj-$(CONFIG_VMD) += vmd.o
+ # ARM64 and use internal ifdefs to only build the pieces we need
+ # depending on whether ACPI, the DT driver, or both are enabled.
+ 
++ifdef CONFIG_PCI
+ obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
+ obj-$(CONFIG_ARM64) += pci-thunder-pem.o
+ obj-$(CONFIG_ARM64) += pci-xgene.o
++endif
+-- 
+2.11.0
