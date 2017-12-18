@@ -1,70 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 14/26] pch_gbe: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:50 -0500
-Message-Id: <1513661883-28662-15-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Kees Cook <keescook@chromium.org>, linux-arm-msm@vger.kernel.org,
- open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
- Eric Dumazet <edumazet@google.com>,
- "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
- Tobias Klauser <tklauser@distanz.ch>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- "David S. Miller" <davem@davemloft.net>, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 18 Dec 2017 23:37:51 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@suse.com>,
+        Len Brown <len.brown@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Petr Mladek <pmladek@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Memory Management List <linux-mm@kvack.org>
+Subject: Re: [PATCH 3/9] power: remove unneeded kallsyms include
+Message-ID: <20171218143751.GA5053@tigerII.localdomain>
+References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
+ <CAJZ5v0g1CBhKTYi=CzYPcBXdH=yZ3iJcKzZ6TaftNWoq+X5wnQ@mail.gmail.com>
+ <20171208144844.GA489@tigerII.localdomain>
+ <4033333.ijW7uRe5gx@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4033333.ijW7uRe5gx@aspire.rjw.lan>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+On (12/17/17 19:04), Rafael J. Wysocki wrote:
+[..]
+> > > Do you want me to apply this or do you want to route it differently?
+> > 
+> > Hello Rafael,
+> > 
+> > don't mind if you'll pick it up.
+> 
+> OK, applied now.
+> 
+> Thanks!
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+thanks!
 
-Use the domain information from pdev while calling into
-pci_get_domain_bus_and_slot() function.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-index 40e52ff..7cd4946 100644
---- a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-+++ b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-@@ -2594,8 +2594,10 @@ static int pch_gbe_probe(struct pci_dev *pdev,
- 	if (adapter->pdata && adapter->pdata->platform_init)
- 		adapter->pdata->platform_init(pdev);
- 
--	adapter->ptp_pdev = pci_get_bus_and_slot(adapter->pdev->bus->number,
--					       PCI_DEVFN(12, 4));
-+	adapter->ptp_pdev =
-+		pci_get_domain_bus_and_slot(pci_domain_nr(adapter->pdev->bus),
-+					    adapter->pdev->bus->number,
-+					    PCI_DEVFN(12, 4));
- 
- 	netdev->netdev_ops = &pch_gbe_netdev_ops;
- 	netdev->watchdog_timeo = PCH_GBE_WATCHDOG_PERIOD;
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	-ss
