@@ -1,69 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:43350 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753226AbdLNOFI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 09:05:08 -0500
-Date: Thu, 14 Dec 2017 15:05:03 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: cyndis@kapsi.fi, bhelgaas@google.com, lorenzo.pieralisi@arm.com,
-        jonathanh@nvidia.com, robh+dt@kernel.org, frowand.list@gmail.com,
-        rjw@rjwysocki.net, tglx@linutronix.de, vidyas@nvidia.com,
-        kthota@nvidia.com, linux-tegra@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org
-Subject: Re: [PATCH V4 2/7] PCI: tegra: Use bus->sysdata to store and get
- host private data
-Message-ID: <20171214140503.GB13733@ulmo>
-References: <1512723493-865-1-git-send-email-mmaddireddy@nvidia.com>
- <1512723493-865-3-git-send-email-mmaddireddy@nvidia.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="A6N2fC+uXW/VQSAv"
-In-Reply-To: <1512723493-865-3-git-send-email-mmaddireddy@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v2 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
+Date: Mon, 18 Dec 2017 16:38:04 -0600
+In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171218223808.83928-4-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+To correctly use EEH code one has to make
+sure that the EEH_PE_VF is set for dynamic created
+VFs. Therefore this patch allocates an eeh_pe of
+eeh type EEH_PE_VF and associates PE with parent.
 
---A6N2fC+uXW/VQSAv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h        |  5 ++++-
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 13 ++++++++++++-
+ 2 files changed, 16 insertions(+), 2 deletions(-)
 
-On Fri, Dec 08, 2017 at 02:28:08PM +0530, Manikanta Maddireddy wrote:
-> Tegra host driver is using pci_find_host_bridge() to get private data,
-> however pci_find_host_bridge() is causing module build failure because
-> it is not exported. pci_find_host_bridge() can be avoided by using
-> bus->sysdata to store and get private data.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
-> V4:
-> * new patch in V4
->=20
->  drivers/pci/host/pci-tegra.c | 13 +++++--------
->  1 file changed, 5 insertions(+), 8 deletions(-)
-
-Acked-by: Thierry Reding <treding@nvidia.com>
-
---A6N2fC+uXW/VQSAv
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAloyhQ8ACgkQ3SOs138+
-s6ElJhAAiEQCEKBp1Z0BYGO9V+vTORnsJ39ocNeUtwhcROH56OPJQLQBHKKRmXaf
-Aqjd5tyHbhLuIAoXeyngrn6EfuhNHA1JfUOWDmKFauCYoP5ei9M0cJilXNTLxDGh
-RjtcNM1AA9ajsmkIMeNYUs32OIkwNBvOaPjeiMWodKLvi9JFEZFRZbFAZnyKpnS2
-coVFK2l0FSoUPCn2uSoeth6udbTkH7kGD2FYPZ3vPLpFBbl4lgZW+I+4UjnIG6Is
-0Z6wU/ssElSg7zpDmVKWZi/A1llFYZbs72pmqKBpGEhm1440hKU1W5sdGfIY9T/K
-eFDI/A/DwIuwP2Tn0olRiFw+8Rxm24lQaSnX4u4ZcgVJTWCig9u0py71lJ1MGw+y
-GAdUPnLCFv6rQfAVNklmGkb2p/6lzwQvDOyVAAbWIwFyk2QKOU75rIBxnwL/o3v1
-jE3nFQ4lyz+UxqYXlfnx709UoxIxSb/Vx23iG8LGPqxxBxczK6XnYYugyy8RQ6nw
-6IslmGgu20QqBKLFZFHZFUGo46/wjB7tGrHQSbsHJNA8GkZbcdp0tKEgoRCizoCT
-uPf0Appm+uMUKG2bKPBOL269J6NIhg6Xz/sSeKZkVbzYc327whyJVsWiyFUzk5Ai
-QXlYMyyGk5b56Hdx8d55sEUSKA0JmgxTzuqF6ywu1nJBtyL7wu4=
-=LwAw
------END PGP SIGNATURE-----
-
---A6N2fC+uXW/VQSAv--
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 9f66ddebb799..16d70740a76f 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -211,7 +211,10 @@ struct pci_dn {
+ 	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
+ 	bool    m64_single_mode;	/* Use M64 BAR in Single Mode */
+ #define IODA_INVALID_M64        (-1)
+-	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
++	union {
++		int     (*m64_map)[PCI_SRIOV_NUM_BARS]; /*Only used in powernv */
++		int     last_allow_rc;	/* Only used in pSeries */
++	};
+ #endif /* CONFIG_PCI_IOV */
+ 	int	mps;			/* Maximum Payload Size */
+ 	struct list_head child_list;
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index a671ef4f57f5..c4bc5dd0c6ec 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -58,6 +58,8 @@ static int ibm_configure_pe;
+ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+ {
+ 	struct pci_dn *pdn = pci_get_pdn(pdev);
++	struct pci_dn *physfn_pdn;
++	struct eeh_dev *edev;
+ 
+ 	if (!pdev->is_virtfn)
+ 		return;
+@@ -65,6 +67,14 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+ 	pdn->device_id  =  pdev->device;
+ 	pdn->vendor_id  =  pdev->vendor;
+ 	pdn->class_code =  pdev->class;
++	/* Last allow unfreeze return code used for retrieval
++	 * by user space in eeh-sysfs to show the last command
++	 * completion from platform
++	 */
++	pdn->last_allow_rc =  0;
++	physfn_pdn      =  pci_get_pdn(pdev->physfn);
++	pdn->pe_number  =  physfn_pdn->pe_num_map[pdn->vf_index];
++	edev = pdn_to_eeh_dev(pdn);
+ 
+ 	/*
+ 	 * The following operations will fail if VF's sysfs files
+@@ -72,8 +82,9 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+ 	 */
+ 	eeh_add_device_early(pdn);
+ 	eeh_add_device_late(pdev);
++	edev->pe_config_addr =  (pdn->busno << 16) | (pdn->devfn << 8);
++	eeh_add_to_parent_pe(edev);
+ 	eeh_sysfs_add_device(pdev);
+-
+ }
+ 
+ /*
+-- 
+2.14.3 (Apple Git-98)
