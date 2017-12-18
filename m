@@ -1,46 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jabberwock.ucw.cz ([46.255.230.98]:59208 "EHLO
-        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750984AbdLaR2f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 31 Dec 2017 12:28:35 -0500
-Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
-        by jabberwock.ucw.cz (Postfix) with ESMTPS id 727A01C00DF
-        for <linux-pci@vger.kernel.org>; Sun, 31 Dec 2017 18:19:16 +0100 (CET)
-Date: Sun, 31 Dec 2017 18:19:16 +0100
-From: Martin Mares <mj@ucw.cz>
-To: Rudolf Marek <r.marek@assembler.cz>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pciutils: Add the support for a DOS/DJGPP environment
-Message-ID: <mj+md-20171231.171835.6705.albireo@ucw.cz>
-References: <13afd9a4-3b56-b60d-19fc-1bad7b96e0ee@assembler.cz>
+Return-Path: <SRS0=1wOV=DO=bombadil.srs.infradead.org=BATV+fb56882d68e01a86ab56+5230+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=1wOV=DO=bombadil.srs.infradead.org=BATV+fb56882d68e01a86ab56+5230+infradead.org+hch@kernel.org>
+Date: Mon, 18 Dec 2017 04:26:30 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Govinda Tatti <Govinda.Tatti@Oracle.COM>,
+	Christoph Hellwig <hch@infradead.org>, jgross@suse.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	JBeulich@suse.com, bhelgaas@google.com,
+	xen-devel@lists.xenproject.org, boris.ostrovsky@Oracle.COM,
+	roger.pau@citrix.com, Russell Currey <ruscur@russell.cc>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Srikanth Jampala <Jampala.Srikanth@cavium.com>,
+	Derek Chickles <derek.chickles@caviumnetworks.com>,
+	Satanand Burla <satananda.burla@caviumnetworks.com>,
+	Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+	Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>
+Subject: Re: [Xen-devel] [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr()
+ interface
+Message-ID: <20171218122629.GA18423@infradead.org>
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
+ <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+ <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
+ <20171212005919.GB30595@bhelgaas-glaptop.roam.corp.google.com>
+ <49956aaf-5fd5-939d-5fc7-231ffdb98b70@Oracle.COM>
+ <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
+ <fea075cf-fe6f-0d0b-11e4-4279fbfc280a@Oracle.COM>
+ <20171215181801.GU30595@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <13afd9a4-3b56-b60d-19fc-1bad7b96e0ee@assembler.cz>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171215181801.GU30595@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
+On Fri, Dec 15, 2017 at 12:18:02PM -0600, Bjorn Helgaas wrote:
+> I think Christoph volunteered to do some restructuring, but I don't
+> know his timeframe.  If you can, I would probably wait for that
+> because there's so much overlap here.
 
-> Here is bit a blast from the past. The flashrom still supports the DOS/DJGPP environment, which requires
-> pciutils to be compiled with DJGPP. I originally developed this patch in 2010,
-> and I respun it for latest pciutils.
-> 
-> * Add DJGPP as an OS target
-> * Stop if endianess macros are not defined
-> * Introduce new intel_io_lock/unclock function to synchronize
->   I/O operations.
-> 
-> There is a small issue left that "lspci" and "lspci.exe" are created. The ".exe" variants
-> are not installed and also not cleaned. No idea if you want to fix that or not.
-> 
-> Signed-off-by: Rudolf Marek <r.marek@assembler.cz>
-
-Thanks, applied.
-
-				Have a nice fortnight
--- 
-Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
-Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
-Every program in development at MIT expands until it can read mail.
+I'll have some time over the holidays.  If you need it more urgent
+than that feel free to take over.
