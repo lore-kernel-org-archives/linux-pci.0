@@ -1,134 +1,184 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-To: <linux-kernel@vger.kernel.org>, <gregkh@linuxfoundation.org>
-CC: <ysxie@foxmail.com>, <ulf.hansson@linaro.org>,
-        <linux-mmc@vger.kernel.org>, <boris.brezillon@free-electrons.com>,
-        <richard@nod.at>, <marek.vasut@gmail.com>,
-        <cyrille.pitchen@wedev4u.fr>, <linux-mtd@lists.infradead.org>,
-        <alsa-devel@alsa-project.org>, <wim@iguana.be>,
-        <linux@roeck-us.net>, <linux-watchdog@vger.kernel.org>,
-        <b.zolnierkie@samsung.com>, <linux-fbdev@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <linux-gpio@vger.kernel.org>,
-        <ralf@linux-mips.org>, <linux-mips@linux-mips.org>,
-        <lgirdwood@gmail.com>, <broonie@kernel.org>, <tglx@linutronix.de>,
-        <jason@lakedaemon.net>, <marc.zyngier@arm.com>, <arnd@arndb.de>,
-        <andriy.shevchenko@linux.intel.com>,
-        <industrypack-devel@lists.sourceforge.net>, <wg@grandegger.com>,
-        <mkl@pengutronix.de>, <linux-can@vger.kernel.org>,
-        <mchehab@kernel.org>, <linux-media@vger.kernel.org>,
-        <a.zummo@towertech.it>, <alexandre.belloni@free-electrons.com>,
-        <linux-rtc@vger.kernel.org>, <daniel.vetter@intel.com>,
-        <jani.nikula@linux.intel.com>, <seanpaul@chromium.org>,
-        <airlied@linux.ie>, <dri-devel@lists.freedesktop.org>,
-        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        <linux-spi@vger.kernel.org>, <tj@kernel.org>,
-        <linux-ide@vger.kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <dvhart@infradead.org>, <andy@infradead.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <jakub.kicinski@netronome.com>, <davem@davemloft.net>,
-        <nios2-dev@lists.rocketboards.org>, <netdev@vger.kernel.org>,
-        <vinod.koul@intel.com>, <dan.j.williams@intel.com>,
-        <dmaengine@vger.kernel.org>, <jslaby@suse.com>,
-        Yisheng Xie <xieyisheng1@huawei.com>
-Subject: [PATCH v3 27/27] devres: kill devm_ioremap_nocache
-Date: Sat, 23 Dec 2017 19:02:59 +0800
-Message-ID: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v2 4/7] powerpc/kernel Add EEH operations to notify resume
+Date: Mon, 18 Dec 2017 16:38:05 -0600
+In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171218223808.83928-5-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Now, nobody use devm_ioremap_nocache anymore, can it can just be
-removed. After this patch the size of devres.o will be reduced from
-20304 bytes to 18992 bytes.
+When pseries SR-IOV is enabled and after a PF driver
+has resumed from EEH, platform has to be notified
+of the event so the child VFs can be allowed to
+resume their normal recovery path.
 
-Suggested-by: Greg KH <gregkh@linuxfoundation.org>
-Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
+This patch makes the EEH operation allow unfreeze
+platform dependent code and adds the call to
+pseries EEH code.
+
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
 ---
- Documentation/driver-model/devres.txt   |  1 -
- include/linux/io.h                      |  2 --
- lib/devres.c                            | 29 -----------------------------
- scripts/coccinelle/free/devm_free.cocci |  2 --
- 4 files changed, 34 deletions(-)
+ arch/powerpc/include/asm/eeh.h               |  1 +
+ arch/powerpc/kernel/eeh_driver.c             |  3 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  3 +-
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 90 +++++++++++++++++++++++++++-
+ 4 files changed, 95 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-index c180045..c3fddb5 100644
---- a/Documentation/driver-model/devres.txt
-+++ b/Documentation/driver-model/devres.txt
-@@ -292,7 +292,6 @@ IOMAP
-   devm_ioport_map()
-   devm_ioport_unmap()
-   devm_ioremap()
--  devm_ioremap_nocache()
-   devm_ioremap_wc()
-   devm_ioremap_resource() : checks resource, requests memory region, ioremaps
-   devm_iounmap()
-diff --git a/include/linux/io.h b/include/linux/io.h
-index 32e30e8..a9c7270 100644
---- a/include/linux/io.h
-+++ b/include/linux/io.h
-@@ -75,8 +75,6 @@ static inline void devm_ioport_unmap(struct device *dev, void __iomem *addr)
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 82829c65f31a..fd37cc101f4f 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -214,6 +214,7 @@ struct eeh_ops {
+ 	int (*write_config)(struct pci_dn *pdn, int where, int size, u32 val);
+ 	int (*next_error)(struct eeh_pe **pe);
+ 	int (*restore_config)(struct pci_dn *pdn);
++	int (*notify_resume)(struct pci_dn *pdn);
+ };
  
- void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
- 			   resource_size_t size);
--void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
--				   resource_size_t size);
- void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
- 				   resource_size_t size);
- void devm_iounmap(struct device *dev, void __iomem *addr);
-diff --git a/lib/devres.c b/lib/devres.c
-index 5f2aedd..f818fcf 100644
---- a/lib/devres.c
-+++ b/lib/devres.c
-@@ -44,35 +44,6 @@ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
- EXPORT_SYMBOL(devm_ioremap);
+ extern int eeh_subsystem_flags;
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index 9d4e8177c2e0..ed710076b042 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -385,6 +385,9 @@ static void *eeh_report_resume(void *data, void *userdata)
+ 
+ 	eeh_pcid_put(dev);
+ 	kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
++#ifdef CONFIG_PCI_IOV
++	eeh_ops->notify_resume(eeh_dev_to_pdn(edev));
++#endif
+ 	return NULL;
+ }
+ 
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 0665b6d03cb3..33c86c1a1720 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1704,7 +1704,8 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.read_config            = pnv_eeh_read_config,
+ 	.write_config           = pnv_eeh_write_config,
+ 	.next_error		= pnv_eeh_next_error,
+-	.restore_config		= pnv_eeh_restore_config
++	.restore_config		= pnv_eeh_restore_config,
++	.notify_resume		= NULL
+ };
+ 
+ #ifdef CONFIG_PCI_IOV
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index c4bc5dd0c6ec..1bae44f30b73 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -743,6 +743,93 @@ static int pseries_eeh_restore_config(struct pci_dn *pdn)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_PCI_IOV
++int pseries_send_allow_unfreeze(struct pci_dn *pdn,
++				u16 *vf_pe_array, int cur_vfs)
++{
++	int rc;
++	int ibm_allow_unfreeze = rtas_token("ibm,open-sriov-allow-unfreeze");
++	unsigned long buid, addr;
++
++	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
++	buid = pdn->phb->buid;
++	spin_lock(&rtas_data_buf_lock);
++	memcpy(rtas_data_buf, vf_pe_array, RTAS_DATA_BUF_SIZE);
++	rc = rtas_call(ibm_allow_unfreeze, 5, 1, NULL,
++		       addr,
++		       BUID_HI(buid),
++		       BUID_LO(buid),
++		       rtas_data_buf, cur_vfs * sizeof(u16));
++	spin_unlock(&rtas_data_buf_lock);
++	if (rc)
++		pr_warn("%s: Failed to allow unfreeze for PHB#%x-PE#%lx, rc=%x\n",
++			__func__,
++			pdn->phb->global_number, addr, rc);
++	return rc;
++}
++
++static int pseries_call_allow_unfreeze(struct eeh_dev *edev)
++{
++	struct pci_dn *pdn, *tmp, *parent, *physfn_pdn;
++	int cur_vfs = 0, rc = 0, vf_index, bus, devfn;
++	u16 *vf_pe_array;
++
++	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
++	if (!vf_pe_array)
++		return -ENOMEM;
++
++	if (edev->pdev->is_physfn) {
++		cur_vfs = pci_num_vf(edev->pdev);
++		pdn = eeh_dev_to_pdn(edev);
++		parent = pdn->parent;
++
++		for (vf_index = 0; vf_index < cur_vfs; vf_index++)
++			vf_pe_array[vf_index] =
++				cpu_to_be16(pdn->pe_num_map[vf_index]);
++		rc = pseries_send_allow_unfreeze(pdn, vf_pe_array, cur_vfs);
++		pdn->last_allow_rc = rc;
++		for (vf_index = 0; vf_index < cur_vfs; vf_index++) {
++			list_for_each_entry_safe(pdn, tmp, &parent->child_list,
++						 list) {
++				bus = pci_iov_virtfn_bus(edev->pdev, vf_index);
++				devfn = pci_iov_virtfn_devfn(edev->pdev,
++							     vf_index);
++				if (pdn->busno != bus ||
++				    pdn->devfn != devfn)
++					continue;
++				pdn->last_allow_rc = rc;
++			}
++		}
++	} else {
++		pdn = pci_get_pdn(edev->pdev);
++		vf_pe_array[0] = cpu_to_be16(pdn->pe_number);
++		physfn_pdn = pci_get_pdn(edev->physfn);
++		rc = pseries_send_allow_unfreeze(physfn_pdn, vf_pe_array, 1);
++		pdn->last_allow_rc = rc;
++	}
++
++	kfree(vf_pe_array);
++	return rc;
++}
++
++static int pseries_notify_resume(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++
++	if (!edev)
++		return -EEXIST;
++
++	if (rtas_token("ibm,open-sriov-allow-unfreeze")
++	    == RTAS_UNKNOWN_SERVICE)
++		return -EINVAL;
++
++	if (edev->pdev->is_physfn || edev->pdev->is_virtfn)
++		return pseries_call_allow_unfreeze(edev);
++
++	return 0;
++}
++#endif
++
+ static struct eeh_ops pseries_eeh_ops = {
+ 	.name			= "pseries",
+ 	.init			= pseries_eeh_init,
+@@ -758,7 +845,8 @@ static struct eeh_ops pseries_eeh_ops = {
+ 	.read_config		= pseries_eeh_read_config,
+ 	.write_config		= pseries_eeh_write_config,
+ 	.next_error		= NULL,
+-	.restore_config		= pseries_eeh_restore_config
++	.restore_config		= pseries_eeh_restore_config,
++	.notify_resume		= pseries_notify_resume
+ };
  
  /**
-- * devm_ioremap_nocache - Managed ioremap_nocache()
-- * @dev: Generic device to remap IO address for
-- * @offset: Resource address to map
-- * @size: Size of map
-- *
-- * Managed ioremap_nocache().  Map is automatically unmapped on driver
-- * detach.
-- */
--void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
--				   resource_size_t size)
--{
--	void __iomem **ptr, *addr;
--
--	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
--	if (!ptr)
--		return NULL;
--
--	addr = ioremap_nocache(offset, size);
--	if (addr) {
--		*ptr = addr;
--		devres_add(dev, ptr);
--	} else
--		devres_free(ptr);
--
--	return addr;
--}
--EXPORT_SYMBOL(devm_ioremap_nocache);
--
--/**
-  * devm_ioremap_wc - Managed ioremap_wc()
-  * @dev: Generic device to remap IO address for
-  * @offset: Resource address to map
-diff --git a/scripts/coccinelle/free/devm_free.cocci b/scripts/coccinelle/free/devm_free.cocci
-index c990d2c..36b8752 100644
---- a/scripts/coccinelle/free/devm_free.cocci
-+++ b/scripts/coccinelle/free/devm_free.cocci
-@@ -51,8 +51,6 @@ expression x;
- |
-  x = devm_ioremap(...)
- |
-- x = devm_ioremap_nocache(...)
--|
-  x = devm_ioport_map(...)
- )
- 
 -- 
-1.8.3.1
+2.14.3 (Apple Git-98)
