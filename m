@@ -1,70 +1,263 @@
-Return-Path: <SRS0=w4Pv=DL=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=w4Pv=DL=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=Tqmx=DO=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=Tqmx=DO=ozlabs.ru=aik@kernel.org>
+Subject: Re: [PATCH v1 4/7] powerpc/kernel Add EEH operations to notify resume
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
+ paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+ alex.williamson@redhat.com, helgaas@kernel.org, ruscur@russell.cc,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+ <20171213153242.98015-5-bryantly@linux.vnet.ibm.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <b2d30341-1945-0331-fb36-d441efc89109@ozlabs.ru>
+Date: Mon, 18 Dec 2017 16:02:56 +1100
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <alpine.DEB.2.20.1712142331030.2257@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com>
- <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl>
- <alpine.DEB.2.20.1712061344560.1724@nanos> <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl>
- <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl>
- <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
- <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com>
- <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos>
- <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos>
- <CA+55aFwQBV9J1zxbBPLC5dOK-ebd1zcN6BaoB897AaKhc_tDtA@mail.gmail.com> <alpine.DEB.2.20.1712142331030.2257@nanos>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 15 Dec 2017 01:34:42 +0100
-Message-ID: <CAJZ5v0g5+N4s_jKWcz8bYMj-OYtUF-kufcod05ruwnVvXegX+A@mail.gmail.com>
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Andy Lutomirski <luto@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "the arch/x86 maintainers" <x86@kernel.org>,
-	Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20171213153242.98015-5-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 14, 2017 at 11:36 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> On Thu, 14 Dec 2017, Linus Torvalds wrote:
->> On Thu, Dec 14, 2017 at 3:54 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
->> I just wanted to pipe up about that "irq7", because judging from your
->> email it seems like you think it's a real irq:
->>
->> >        Now there is a race
->> > whether the kernel resume path manages to mask the PIC again early enough
->> > before something triggers IRQ7 or not.
->>
->> ..and that's not how the PIC works.
->>
->> In fact, "legacy irq 7" is the _normal_ and very traditional spurious
->> interrupt, and it's documented. If the PIC gets an interrupt from
->> _any_ source, but the interrupt goes away before the PIC gets an
->> acknowledge from the CPU (and by "acknowledge", I'm not talking about
->> the explicit software IRQ ACK, I'm talking about the hardware
->> protocol, between the PIC and the CPU), the PIC will then report irq 7
->> as the interrupt - regardless of what the original was.
->>
->> The reason is almost always something like
->>
->>  - CPU interrupts are disabled or masked
->>
->>  - driver does a write to the external hardware that causes an
->> interrupt to be raised
->
-> Which should be a non issue because _ALL_ PIC irq lines are masked at the
-> PIC itself. All interrupts are routed through IOAPIC. So unless the IOAPIC
-> sports similar behaviour the PIC should not ever observe that scenario.
->
-> But, because the silly firmware comes out of suspend with all PIC lines
-> unmasked for whatever reason, the PIC can observe that IRQ being raised and
-> the CPU not handling it. So yes, I forgot about 7 being magic, but I still
-> think it's the firmware which causes it by unmasking the PIC irqs.
+On 14/12/17 02:32, Bryant G. Ly wrote:
+> When pseries SR-IOV is enabled and after a PF driver
+> has resumed from EEH, platform has to be notified
+> of the event so the child VFs can be allowed to
+> resume their normal recovery path.
+> 
+> This patch makes the EEH operation allow unfreeze
+> platform dependent code and adds the call to
+> pseries EEH code.
+> 
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/eeh.h               |   1 +
+>  arch/powerpc/kernel/eeh_driver.c             |   4 ++
+>  arch/powerpc/platforms/powernv/eeh-powernv.c |   3 +-
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 100 ++++++++++++++++++++++++++-
+>  4 files changed, 106 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+> index 5161c37dd039..12d52a0cd447 100644
+> --- a/arch/powerpc/include/asm/eeh.h
+> +++ b/arch/powerpc/include/asm/eeh.h
+> @@ -214,6 +214,7 @@ struct eeh_ops {
+>  	int (*write_config)(struct pci_dn *pdn, int where, int size, u32 val);
+>  	int (*next_error)(struct eeh_pe **pe);
+>  	int (*restore_config)(struct pci_dn *pdn);
+> +	int (*notify_resume)(struct pci_dn *pdn);
+>  };
+>  
+>  extern int eeh_subsystem_flags;
+> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+> index c61bf770282b..dbda0cda559b 100644
+> --- a/arch/powerpc/kernel/eeh_driver.c
+> +++ b/arch/powerpc/kernel/eeh_driver.c
+> @@ -361,6 +361,7 @@ static void *eeh_report_resume(void *data, void *userdata)
+>  	bool was_in_error;
+>  	struct pci_driver *driver;
+>  	char *envp[] = {"EVENT=EEH_RESUME", "ONLINE=1", NULL};
+> +	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+>  
+>  	if (!dev || eeh_dev_removed(edev) || eeh_pe_passed(edev->pe))
+>  		return NULL;
+> @@ -384,6 +385,9 @@ static void *eeh_report_resume(void *data, void *userdata)
+>  	driver->err_handler->resume(dev);
+>  	eeh_pcid_put(dev);
+>  	kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
+> +#ifdef CONFIG_PCI_IOV
+> +	eeh_ops->notify_resume(pdn);
 
-That's my understanding too.
+eeh_ops->notify_resume(eeh_dev_to_pdn(edev));
 
-Thanks,
-Rafael
+otherwise the compiler will complain at @pdn declaration if
+!defined(CONFIG_PCI_IOV). Just try compiling without CONFIG_PCI_IOV.
+
+
+> +#endif
+>  	return NULL;
+>  }
+>  
+> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> index 961e64115d92..8575b3a29e7c 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> @@ -1763,7 +1763,8 @@ static struct eeh_ops pnv_eeh_ops = {
+>  	.read_config            = pnv_eeh_read_config,
+>  	.write_config           = pnv_eeh_write_config,
+>  	.next_error		= pnv_eeh_next_error,
+> -	.restore_config		= pnv_eeh_restore_config
+> +	.restore_config		= pnv_eeh_restore_config,
+> +	.notify_resume		= NULL
+
+
+.notify_resume is NULL already.
+
+
+>  };
+>  
+>  #ifdef CONFIG_PCI_IOV
+> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> index 5bdd1678a9ff..2b36fbf4ce74 100644
+> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
+> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> @@ -798,6 +798,103 @@ static int pseries_eeh_restore_config(struct pci_dn *pdn)
+>  	return 0;
+>  }
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +int pseries_send_allow_unfreeze(struct eeh_pe *pe,
+> +				u16 *vf_pe_array, int cur_vfs)
+> +{
+> +	int  rc, config_addr;
+> +	int ibm_allow_unfreeze = rtas_token("ibm,open-sriov-allow-unfreeze");
+> +
+> +	config_addr = pe->config_addr;
+
+@config_addr is pointless - it is used just once, even pr_warn few lines
+below uses pe->config_addr.
+
+
+
+> +	spin_lock(&rtas_data_buf_lock);
+> +	memcpy(rtas_data_buf, vf_pe_array, RTAS_DATA_BUF_SIZE);
+> +	rc = rtas_call(ibm_allow_unfreeze, 5, 1, NULL,
+> +		       config_addr,
+> +		       BUID_HI(pe->phb->buid),
+> +		       BUID_LO(pe->phb->buid),
+> +		       rtas_data_buf, cur_vfs * sizeof(u16));
+> +	spin_unlock(&rtas_data_buf_lock);
+> +	if (rc)
+> +		pr_warn("%s: Failed to allow unfreeze for PHB#%x-PE#%x, rc=%x\n",
+> +			__func__,
+> +			pe->phb->global_number,
+> +			pe->config_addr, rc);
+> +	return rc;
+> +}
+> +
+> +static int pseries_call_allow_unfreeze(struct eeh_dev *edev)
+> +{
+> +	struct eeh_pe *pe;
+> +	struct pci_dn *pdn, *tmp, *parent, *physfn_pdn;
+> +	int cur_vfs, rc, vf_index;
+> +	u16 *vf_pe_array;
+> +
+> +	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
+> +	if (!vf_pe_array)
+> +		return -ENOMEM;
+> +
+> +	memset(vf_pe_array, 0, RTAS_DATA_BUF_SIZE);
+
+
+"z" from kzalloc says it reset the memory.
+
+
+> +	cur_vfs = 0;
+> +	rc = 0;
+> +	if (edev->pdev->is_physfn) {
+> +		pe = eeh_dev_to_pe(edev);
+> +		cur_vfs = pci_num_vf(edev->pdev);
+> +		pdn = eeh_dev_to_pdn(edev);
+> +		parent  = pdn->parent;
+> +		/* For each of its VF
+> +		 * call allow unfreeze
+> +		 */
+> +		for (vf_index = 0; vf_index < cur_vfs; vf_index++)
+> +			vf_pe_array[vf_index] =
+> +				be16_to_cpu(pdn->pe_num_map[vf_index]);
+
+It is kind of assumed that the number of VFs is always less than 2048 minus
+rtas call parameters (RTAS_DATA_BUF_SIZE==4096 now)?
+
+Is the upper limit of cur_vfs checked anywhere?
+
+We can afford 4K on stack if we know for sure this is all we n
+
+
+> +
+> +		rc = pseries_send_allow_unfreeze(pe, vf_pe_array, cur_vfs);
+> +		pdn->last_allow_rc = rc;
+
+
+Is this PF or VF pdn (I assume PF)?
+
+
+> +		for (vf_index = 0; vf_index < cur_vfs; vf_index++) {
+> +			list_for_each_entry_safe(pdn, tmp, &parent->child_list,
+> +						 list) {
+> +				if (pdn->busno
+> +				    != pci_iov_virtfn_bus(edev->pdev,
+> +							  vf_index) ||
+> +				    pdn->devfn
+> +				    != pci_iov_virtfn_devfn(edev->pdev,
+> +							    vf_index))
+> +					continue;
+> +				pdn->last_allow_rc = rc;
+
+
+I am missing the point of copying last_allow_rc - cannot
+eeh_notify_resume_show() just return it from the PF?
+
+May be just add another flag to eeh_pe::state for last_allow_rc? How many
+different @rc do we expect here?
+
+
+> +			}
+> +		}
+> +	} else {
+> +		pdn = pci_get_pdn(edev->pdev);
+> +		vf_pe_array[0] = be16_to_cpu(pdn->pe_number);
+> +		physfn_pdn      =  pci_get_pdn(edev->physfn);
+
+Way too many spaces, why? :)
+
+
+> +		edev = pdn_to_eeh_dev(physfn_pdn);
+> +		pe = eeh_dev_to_pe(edev);
+> +		rc = pseries_send_allow_unfreeze(pe, vf_pe_array, 1);
+> +		pdn->last_allow_rc = rc;
+> +	}
+> +
+> +	kfree(vf_pe_array);
+> +	return rc;
+> +}
+> +
+> +static int pseries_notify_resume(struct pci_dn *pdn)
+> +{
+> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+> +
+> +	if (!edev)
+> +		return -EEXIST;
+> +
+> +	if (rtas_token("ibm,open-sriov-allow-unfreeze")
+> +	    == RTAS_UNKNOWN_SERVICE)
+> +		return -EINVAL;
+
+Is this the only possible error code?
+
+
+> +
+> +	if (edev->pdev->is_physfn  || edev->pdev->is_virtfn)
+> +		return pseries_call_allow_unfreeze(edev);
+> +
+> +	return 0;
+> +}
+> +#endif
+> +
+>  static struct eeh_ops pseries_eeh_ops = {
+>  	.name			= "pseries",
+>  	.init			= pseries_eeh_init,
+> @@ -813,7 +910,8 @@ static struct eeh_ops pseries_eeh_ops = {
+>  	.read_config		= pseries_eeh_read_config,
+>  	.write_config		= pseries_eeh_write_config,
+>  	.next_error		= NULL,
+> -	.restore_config		= pseries_eeh_restore_config
+> +	.restore_config		= pseries_eeh_restore_config,
+> +	.notify_resume		= pseries_notify_resume
+>  };
+>  
+>  /**
+> 
+
+
+-- 
+Alexey
