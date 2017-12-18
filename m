@@ -1,67 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:51460 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753359AbdLSXa0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 18:30:26 -0500
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Cc: lorenzo.pieralisi@arm.com, Niklas Cassel <niklass@axis.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v6 00/18] dwc MSI fixes, ARTPEC-6 EP mode support, ARTPEC-7 SoC support
-Date: Wed, 20 Dec 2017 00:29:21 +0100
-Message-Id: <20171219232940.659-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v2 5/7] powerpc/kernel: Add EEH notify resume sysfs
+Date: Mon, 18 Dec 2017 16:38:06 -0600
+In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171218223808.83928-6-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a series that adds:
-- PCI endpoint mode support in the ARTPEC-6 driver.
-- ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
-- Small fixes for MSI in designware-ep and designware-host,
-  needed to get endpoint mode support working for ARTPEC-6.
-- Cleanups in pci-dra7xx to better prepare for endpoint mode in other
-  DWC based PCIe drivers.
+Introduce a method for notify resume to be
+called from sysfs. In this patch one can
+now call notify resume from sysfs when
+is supported by platform.
 
-Changes since V5:
--Dropped GFP_DMA32 from "PCI: dwc: Use the DMA-API to get the MSI address"
- so that we use the exact same GFP flags as before.
--Rewrote commit message for "PCI: dwc: Make cpu_addr_fixup take struct
-dw_pcie as argument" to be more detailed.
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/eeh_sysfs.c | 46 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 45 insertions(+), 1 deletion(-)
 
-Niklas Cassel (18):
-  PCI: dwc: Use the DMA-API to get the MSI address
-  PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
-  PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be
-    writable
-  PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
-  PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
-  PCI: designware-ep: Add generic function for raising MSI irq
-  PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep
-    mode
-  PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than
-    in probe
-  PCI: dwc: dra7xx: Help compiler to remove unused code
-  PCI: dwc: artpec6: Remove unused defines
-  PCI: dwc: artpec6: Use BIT and GENMASK macros
-  PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller
-    functions
-  bindings: PCI: artpec: Add support for endpoint mode
-  PCI: dwc: artpec6: Add support for endpoint mode
-  PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
-  PCI: dwc: artpec6: Deassert the core before waiting for PHY
-  bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
-  PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
-
- .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   5 +-
- drivers/pci/dwc/Kconfig                            |  68 +--
- drivers/pci/dwc/Makefile                           |   4 +-
- drivers/pci/dwc/pci-dra7xx.c                       |  27 +-
- drivers/pci/dwc/pcie-artpec6.c                     | 470 ++++++++++++++++++---
- drivers/pci/dwc/pcie-designware-ep.c               |  59 ++-
- drivers/pci/dwc/pcie-designware-host.c             |  15 +-
- drivers/pci/dwc/pcie-designware.c                  |   2 +-
- drivers/pci/dwc/pcie-designware.h                  |  22 +-
- 9 files changed, 554 insertions(+), 118 deletions(-)
-
+diff --git a/arch/powerpc/kernel/eeh_sysfs.c b/arch/powerpc/kernel/eeh_sysfs.c
+index 797549289798..344e7607f2e0 100644
+--- a/arch/powerpc/kernel/eeh_sysfs.c
++++ b/arch/powerpc/kernel/eeh_sysfs.c
+@@ -90,6 +90,38 @@ static ssize_t eeh_pe_state_store(struct device *dev,
+ 
+ static DEVICE_ATTR_RW(eeh_pe_state);
+ 
++#ifdef CONFIG_PCI_IOV
++static ssize_t eeh_notify_resume_show(struct device *dev,
++				      struct device_attribute *attr, char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct eeh_dev *edev = pci_dev_to_eeh_dev(pdev);
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++
++	if (!edev || !edev->pe)
++		return -ENODEV;
++
++	pdn = pci_get_pdn(pdev);
++	return sprintf(buf, "%d\n", pdn->last_allow_rc);
++}
++
++static ssize_t eeh_notify_resume_store(struct device *dev,
++				       struct device_attribute *attr,
++				       const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct eeh_dev *edev = pci_dev_to_eeh_dev(pdev);
++
++	if (!edev || !edev->pe)
++		return -ENODEV;
++
++	if (eeh_ops->notify_resume(pci_get_pdn(pdev)))
++		return -EIO;
++	return count;
++}
++static DEVICE_ATTR_RW(eeh_notify_resume);
++#endif
++
+ void eeh_sysfs_add_device(struct pci_dev *pdev)
+ {
+ 	struct eeh_dev *edev = pci_dev_to_eeh_dev(pdev);
+@@ -104,7 +136,13 @@ void eeh_sysfs_add_device(struct pci_dev *pdev)
+ 	rc += device_create_file(&pdev->dev, &dev_attr_eeh_mode);
+ 	rc += device_create_file(&pdev->dev, &dev_attr_eeh_pe_config_addr);
+ 	rc += device_create_file(&pdev->dev, &dev_attr_eeh_pe_state);
+-
++#ifdef CONFIG_PCI_IOV
++	if (of_get_property(pci_device_to_OF_node
++			    ((pdev->is_physfn ? pdev : pdev->physfn)),
++			    "ibm,is-open-sriov-pf", NULL))
++		rc += device_create_file(&pdev->dev,
++					 &dev_attr_eeh_notify_resume);
++#endif
+ 	if (rc)
+ 		pr_warn("EEH: Unable to create sysfs entries\n");
+ 	else if (edev)
+@@ -128,6 +166,12 @@ void eeh_sysfs_remove_device(struct pci_dev *pdev)
+ 	device_remove_file(&pdev->dev, &dev_attr_eeh_mode);
+ 	device_remove_file(&pdev->dev, &dev_attr_eeh_pe_config_addr);
+ 	device_remove_file(&pdev->dev, &dev_attr_eeh_pe_state);
++#ifdef CONFIG_PCI_IOV
++	if (of_get_property(pci_device_to_OF_node
++			    ((pdev->is_physfn ? pdev : pdev->physfn)),
++			    "ibm,is-open-sriov-pf", NULL))
++		device_remove_file(&pdev->dev, &dev_attr_eeh_notify_resume);
++#endif
+ 
+ 	if (edev)
+ 		edev->mode &= ~EEH_DEV_SYSFS;
 -- 
-2.14.2
+2.14.3 (Apple Git-98)
