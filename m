@@ -1,148 +1,271 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: srinivas.kandagatla@linaro.org
-To: stanimir.varbanov@linaro.org,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh+dt@kernel.org, devicetree@vger.kernel.org,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: [PATCH] PCI: qcom: add missing supplies required for msm8996
-Date: Fri,  8 Dec 2017 09:20:53 +0000
-Message-Id: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=Tqmx=DO=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=Tqmx=DO=ozlabs.ru=aik@kernel.org>
+Subject: Re: [PATCH v1 6/7] pseries/pci: Associate PEs to VFs in configure
+ SR-IOV
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
+ paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+ alex.williamson@redhat.com, helgaas@kernel.org, ruscur@russell.cc,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+ <20171213153242.98015-7-bryantly@linux.vnet.ibm.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <f3fae65e-eac7-140a-788a-70a43495f4fe@ozlabs.ru>
+Date: Mon, 18 Dec 2017 17:16:21 +1100
+MIME-Version: 1.0
+In-Reply-To: <20171213153242.98015-7-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+On 14/12/17 02:32, Bryant G. Ly wrote:
+> After initial validation of SR-IOV resources, firmware will
+> associate PEs to the dynamic VFs created within this call. This
+> patch adds the association of PEs to the PF array of PE numbers
+> indexed by VF.
+> 
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/platforms/pseries/pci.c | 156 ++++++++++++++++++++++++++++++++++-
+>  1 file changed, 153 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+> index 48d3af026f90..c90e7d1247a8 100644
+> --- a/arch/powerpc/platforms/pseries/pci.c
+> +++ b/arch/powerpc/platforms/pseries/pci.c
+> @@ -57,18 +57,168 @@ void pcibios_name_device(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_name_device);
+>  #endif
+> -
+>  #ifdef CONFIG_PCI_IOV
+> +#define MAX_VFS_FOR_MAP_PE 256
+> +struct pe_map_bar_entry {
+> +	__be64     bar;       ///< Input:  Virtual Function BAR
+> +	__be16     rid;       ///< Input:  Virtual Function Router ID
+> +	__be16     pe_num;    ///< Output: Virtual Function PE Number
+> +	__be32     reserved;  ///< Reserved Space
 
-This patch adds supplies that are required for msm8996. Two of them vdda
-and vdda-1p8 are analog supplies that go in to controller, and the rest
-of the two vddpe's are supplies to PCIe endpoints.
 
-Without these supplies PCIe endpoints which require power supplies are
-not enumerated at all, as there is no one to power it up.
+'///<' is a very unusual commenting style...
 
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
----
- .../devicetree/bindings/pci/qcom,pcie.txt          | 16 +++++++++++++
- drivers/pci/dwc/pcie-qcom.c                        | 28 ++++++++++++++++++++--
- 2 files changed, 42 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 3c9d321b3d3b..045102cb3e12 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -179,6 +179,11 @@
- 	Value type: <phandle>
- 	Definition: A phandle to the core analog power supply
- 
-+- vdda-1p8-supply:
-+	Usage: required for msm8996
-+	Value type: <phandle>
-+	Definition: A phandle to the 1.8v analog power supply
-+
- - vdda_phy-supply:
- 	Usage: required for ipq/apq8064
- 	Value type: <phandle>
-@@ -189,6 +194,15 @@
- 	Value type: <phandle>
- 	Definition: A phandle to the analog power supply for IC which generates
- 		    reference clock
-+- vddpe-supply:
-+	Usage: optional
-+	Value type: <phandle>
-+	Definition: A phandle to the PCIe endpoint power supply
-+
-+- vddpe1-supply:
-+	Usage: optional
-+	Value type: <phandle>
-+	Definition: A phandle to the PCIe endpoint power supply 1
- 
- - phys:
- 	Usage: required for apq8084
-@@ -205,6 +219,8 @@
- 	Value type: <prop-encoded-array>
- 	Definition: List of phandle and GPIO specifier pairs. Should contain
- 			- "perst-gpios"	PCIe endpoint reset signal line
-+			- "pe_en-gpios"	PCIe endpoint enable signal line
-+			- "pe_en1-gpios" PCIe endpoint enable1 signal line
- 			- "wake-gpios"	PCIe endpoint wake signal line
- 
- * Example for ipq/apq8064
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 952a4fc4bf3c..01488f90da31 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -109,13 +109,15 @@ struct qcom_pcie_resources_1_0_0 {
- 	struct reset_control *core;
- 	struct regulator *vdda;
- };
--
-+#define QCOM_PCIE_MAX_SUPPLY	4
- struct qcom_pcie_resources_2_3_2 {
- 	struct clk *aux_clk;
- 	struct clk *master_clk;
- 	struct clk *slave_clk;
- 	struct clk *cfg_clk;
- 	struct clk *pipe_clk;
-+	int num_supplies;
-+	struct regulator_bulk_data supplies[QCOM_PCIE_MAX_SUPPLY];
- };
- 
- struct qcom_pcie_resources_2_4_0 {
-@@ -529,6 +531,17 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
-+	int ret;
-+
-+	res->supplies[0].supply = "vdda";
-+	res->supplies[1].supply = "vdda-1p8";
-+	res->supplies[2].supply = "vddpe";
-+	res->supplies[3].supply = "vddpe1";
-+	res->num_supplies = QCOM_PCIE_MAX_SUPPLY;
-+	ret = devm_regulator_bulk_get(dev, QCOM_PCIE_MAX_SUPPLY,
-+				      res->supplies);
-+	if (ret)
-+		return ret;
- 
- 	res->aux_clk = devm_clk_get(dev, "aux");
- 	if (IS_ERR(res->aux_clk))
-@@ -558,6 +571,8 @@ static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
- 	clk_disable_unprepare(res->master_clk);
- 	clk_disable_unprepare(res->cfg_clk);
- 	clk_disable_unprepare(res->aux_clk);
-+
-+	regulator_bulk_disable(res->num_supplies, res->supplies);
- }
- 
- static void qcom_pcie_post_deinit_2_3_2(struct qcom_pcie *pcie)
-@@ -575,10 +590,16 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
- 	u32 val;
- 	int ret;
- 
-+	ret = regulator_bulk_enable(res->num_supplies, res->supplies);
-+	if (ret < 0) {
-+		dev_err(dev, "cannot enable regulators\n");
-+		return ret;
-+	}
-+
- 	ret = clk_prepare_enable(res->aux_clk);
- 	if (ret) {
- 		dev_err(dev, "cannot prepare/enable aux clock\n");
--		return ret;
-+		goto err_aux_clk;
- 	}
- 
- 	ret = clk_prepare_enable(res->cfg_clk);
-@@ -629,6 +650,9 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
- err_cfg_clk:
- 	clk_disable_unprepare(res->aux_clk);
- 
-+err_aux_clk:
-+	regulator_bulk_disable(res->num_supplies, res->supplies);
-+
- 	return ret;
- }
- 
+> +};
+> +
+> +int pseries_send_map_pe(struct pci_dev *pdev,
+> +			u16 num_vfs,
+> +			struct pe_map_bar_entry *vf_pe_array)
+> +{
+> +	struct pci_dn *pdn;
+> +	int   rc;
+
+Spaces?
+
+
+> +	unsigned long buid, addr;
+> +	int ibm_map_pes = rtas_token("ibm,open-sriov-map-pe-number");
+> +
+> +	if (ibm_map_pes == RTAS_UNKNOWN_SERVICE)
+> +		return -EINVAL;
+> +
+> +	pdn = pci_get_pdn(pdev);
+> +	addr = rtas_config_addr(pdn->busno, pdn->devfn, 0);
+> +	buid = pdn->phb->buid;
+> +	spin_lock(&rtas_data_buf_lock);
+> +	memcpy(rtas_data_buf, vf_pe_array,
+> +	       RTAS_DATA_BUF_SIZE);
+> +	rc = rtas_call(ibm_map_pes, 5, 1, NULL, addr,
+> +		       BUID_HI(buid), BUID_LO(buid),
+> +		       rtas_data_buf,
+> +		       num_vfs * sizeof(struct pe_map_bar_entry));
+> +	memcpy(vf_pe_array, rtas_data_buf,
+> +	       RTAS_DATA_BUF_SIZE);
+
+
+Can easily be a single line.
+
+> +	spin_unlock(&rtas_data_buf_lock);
+> +
+> +	if (rc)
+> +		dev_err(&pdev->dev,
+> +			"%s: Failed to associate pes PE#%lx, rc=%x\n",
+> +			__func__,  addr, rc);
+> +
+> +	return rc;
+> +}
+> +
+> +void pseries_set_pe_num(struct pci_dev         *pdev,
+
+Spaces again :)
+
+
+> +			u16 vf_index, __be16 pe_num)
+> +{
+> +	struct pci_dn *pdn;
+> +
+> +	pdn = pci_get_pdn(pdev);
+> +	pdn->pe_num_map[vf_index] = be16_to_cpu(pe_num);
+> +	dev_dbg(&pdev->dev, "VF %04x:%02x:%02x.%x associated with PE#%x\n",
+> +		pci_domain_nr(pdev->bus),
+> +		pdev->bus->number,
+> +		PCI_SLOT(pci_iov_virtfn_devfn(pdev, vf_index)),
+> +		PCI_FUNC(pci_iov_virtfn_devfn(pdev, vf_index)),
+> +		pdn->pe_num_map[vf_index]);
+> +}
+> +
+> +int pseries_associate_pes(struct pci_dev *pdev, u16 num_vfs)
+> +{
+> +	struct pci_dn *pdn;
+> +	int i,  rc,  vf_index;
+
+Spaces.
+
+
+> +	struct pe_map_bar_entry *vf_pe_array;
+> +	struct resource *res;
+> +	u64 size;
+> +
+> +	vf_pe_array = kzalloc(RTAS_DATA_BUF_SIZE, GFP_KERNEL);
+> +	if (!vf_pe_array)
+> +		return -ENOMEM;
+> +
+> +	memset(vf_pe_array, 0, RTAS_DATA_BUF_SIZE);
+
+
+As mentioned elsewhere, kzalloc() above resets memory.
+
+
+> +	pdn = pci_get_pdn(pdev);
+> +	/* create firmware structure to associate pes */
+> +	for (vf_index = 0; vf_index < num_vfs && vf_index < MAX_VFS_FOR_MAP_PE;
+
+
+It would make the code and your life easier if you check for
+num_vfs<=MAX_VFS_FOR_MAP_PE in pseries_pci_sriov_enable() and then you
+won't have to check for MAX_VFS_FOR_MAP_PE. As for now, if
+num_vfs>=MAX_VFS_FOR_MAP_PE, all VFs above MAX_VFS_FOR_MAP_PE will be ignored.
+
+
+> +	     vf_index++) {
+> +		pdn->pe_num_map[vf_index] = IODA_INVALID_PE;
+> +		for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> +			res = &pdev->resource[i + PCI_IOV_RESOURCES];
+> +			if (!res->parent)
+> +				continue;
+> +			size = pcibios_iov_resource_alignment(pdev, i +
+> +							      PCI_IOV_RESOURCES
+> +							      );
+
+afaik the kernel coding style is tolerant to 2 tabs indents so it is not
+necessary to align under the opening bracket and you can do:
+
+> +			size = pcibios_iov_resource_alignment(pdev,
+					i + PCI_IOV_RESOURCES);
+
+
+
+
+> +			vf_pe_array[vf_index].bar =
+> +				be64_to_cpu(res->start + size * vf_index);
+
+cpu_to_be64?
+
+
+> +			vf_pe_array[vf_index].rid =
+> +				be16_to_cpu((pci_iov_virtfn_bus(pdev, vf_index)
+> +					    << 8) | pci_iov_virtfn_devfn(pdev,
+> +					    vf_index));
+
+
+cpu_to_be16?
+
+
+> +			vf_pe_array[vf_index].pe_num =
+> +				be16_to_cpu(IODA_INVALID_PE);
+
+
+cpu_to_be16?
+
+
+> +		}
+> +	}
+> +
+> +	rc = pseries_send_map_pe(pdev, num_vfs, vf_pe_array);
+> +	/* Only zero is success */
+> +	if (!rc)
+> +		for (vf_index = 0; vf_index < num_vfs && vf_index <
+> +		     MAX_VFS_FOR_MAP_PE; vf_index++)
+> +			pseries_set_pe_num(pdev, vf_index,
+> +					   vf_pe_array[vf_index].pe_num);
+> +
+> +	kfree(vf_pe_array);
+> +	return rc;
+> +}
+> +
+> +int pseries_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+> +{
+> +	struct pci_dn         *pdn;
+> +	int                    rc;
+> +	const int *max_vfs;
+> +	int max_config_vfs;
+> +	struct device_node *dn = pci_device_to_OF_node(pdev);
+> +
+> +	max_vfs = of_get_property(dn, "ibm,number-of-configurable-vfs", NULL);
+> +
+> +	if (!max_vfs)
+> +		return -EINVAL;
+> +
+> +	/* First integer stores max config */
+> +	max_config_vfs = of_read_number(&max_vfs[0], 1);
+> +	if (max_config_vfs < num_vfs) {
+> +		dev_err(&pdev->dev,
+> +			"Num VFs %x > %x Configurable VFs\n",
+> +			num_vfs, max_config_vfs);
+> +		return -EINVAL;
+> +	}
+> +
+> +	pdn = pci_get_pdn(pdev);
+> +	pdn->pe_num_map = kmalloc_array(num_vfs,
+> +					sizeof(*pdn->pe_num_map),
+> +					GFP_KERNEL);
+> +	if (!pdn->pe_num_map)
+> +		return -ENOMEM;
+> +
+> +	rc = pseries_associate_pes(pdev, num_vfs);
+> +
+> +	/* Anything other than zero is failure */
+> +	if (rc) {
+> +		dev_err(&pdev->dev, "Failure to enable sriov: %x\n", rc);
+> +		kfree(pdn->pe_num_map);
+> +	} else {
+> +		pci_vf_drivers_autoprobe(pdev, false);
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+>  int pseries_pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>  {
+>  	/* Allocate PCI data */
+>  	add_dev_pci_data(pdev);
+> -	pci_vf_drivers_autoprobe(pdev, false);
+> -	return 0;
+> +	return pseries_pci_sriov_enable(pdev, num_vfs);
+>  }
+>  
+>  int pseries_pcibios_sriov_disable(struct pci_dev *pdev)
+>  {
+> +	struct pci_dn         *pdn;
+> +
+> +	pdn = pci_get_pdn(pdev);
+> +	/* Releasing pe_num_map */
+> +	kfree(pdn->pe_num_map);
+>  	/* Release PCI data */
+>  	remove_dev_pci_data(pdev);
+>  	pci_vf_drivers_autoprobe(pdev, true);
+> 
+
+
 -- 
-2.15.0
+Alexey
