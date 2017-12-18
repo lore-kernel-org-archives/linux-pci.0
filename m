@@ -1,152 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58006 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752936AbdLMOWY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Dec 2017 09:22:24 -0500
-Date: Wed, 13 Dec 2017 14:23:04 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc: thierry.reding@gmail.com, bhelgaas@google.com,
-        jonathanh@nvidia.com, vidyas@nvidia.com, mperttunen@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com
-Subject: Re: [PATCH V3 02/12] PCI: tegra: Move REFCLK pad settings out of
- phy_power_on()
-Message-ID: <20171213142304.GB1736@red-moon>
-References: <1509371843-22931-1-git-send-email-mmaddireddy@nvidia.com>
- <1509371843-22931-3-git-send-email-mmaddireddy@nvidia.com>
- <20171212114527.GB30799@e107981-ln.cambridge.arm.com>
- <6a089c5a-7a79-fd9f-ff77-e08f16731241@nvidia.com>
+Return-Path: <SRS0=Tqmx=DO=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=Tqmx=DO=ozlabs.ru=aik@kernel.org>
+Subject: Re: [Xen-devel] [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr()
+ interface
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Govinda Tatti <Govinda.Tatti@Oracle.COM>
+Cc: Christoph Hellwig <hch@infradead.org>, jgross@suse.com,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, JBeulich@suse.com,
+ bhelgaas@google.com, xen-devel@lists.xenproject.org,
+ boris.ostrovsky@Oracle.COM, roger.pau@citrix.com,
+ Russell Currey <ruscur@russell.cc>, Sinan Kaya <okaya@codeaurora.org>,
+ Herbert Xu <herbert@gondor.apana.org.au>,
+ Srikanth Jampala <Jampala.Srikanth@cavium.com>,
+ Derek Chickles <derek.chickles@caviumnetworks.com>,
+ Satanand Burla <satananda.burla@caviumnetworks.com>,
+ Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+ Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
+ <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
+ <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
+ <20171212005919.GB30595@bhelgaas-glaptop.roam.corp.google.com>
+ <49956aaf-5fd5-939d-5fc7-231ffdb98b70@Oracle.COM>
+ <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
+ <fea075cf-fe6f-0d0b-11e4-4279fbfc280a@Oracle.COM>
+ <20171215181801.GU30595@bhelgaas-glaptop.roam.corp.google.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <b2f02cfa-bcb7-706d-d9a1-b86abacfb3ab@ozlabs.ru>
+Date: Mon, 18 Dec 2017 14:09:43 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6a089c5a-7a79-fd9f-ff77-e08f16731241@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171215181801.GU30595@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 05:32:32PM +0530, Manikanta Maddireddy wrote:
+On 16/12/17 05:18, Bjorn Helgaas wrote:
+> [+cc Russell, Sinan, Herbert, Srikanth, Derek, Satanand, Felix, Raghu]
 > 
+> On Fri, Dec 15, 2017 at 09:48:02AM -0600, Govinda Tatti wrote:
+>> On 12/13/2017 3:24 PM, Bjorn Helgaas wrote:
+>>> On Wed, Dec 13, 2017 at 02:46:57PM -0600, Govinda Tatti wrote:
 > 
-> On 12-Dec-17 5:15 PM, Lorenzo Pieralisi wrote:
-> > On Mon, Oct 30, 2017 at 07:27:13PM +0530, Manikanta Maddireddy wrote:
-> >> In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
-> > 
-> > It is time you defined what FW does and what the kernel does and stick
-> > to that SW initialization sequence for all Tegra PCI host bridges from
-> > now onwards. Those tegra_pcie_soc structures in the driver will end up
-> > with a gazillion hardcoded parameters if you do not take a stance from
-> > that perspective and I do not like that - at all.
-> > 
-> > You may want to use DT bindings to describe the FW<->OS handover - or
-> > just enforce firmware guidelines for Tegra systems - something has to be
-> > done.
-> > 
-> > This patch makes sense stand-alone but I wanted to get the message
-> > across.
-> > 
-> > Thanks,
-> > Lorenzo
-> > 
+>>>>>>>> -static bool pcie_has_flr(struct pci_dev *dev)
+>>>>>>>> +bool pcie_has_flr(struct pci_dev *dev)
+>>>>>>>>  {
+>>>>>>>>  	u32 cap;
+>>>>>>>> @@ -3882,6 +3882,7 @@ static bool pcie_has_flr(struct pci_dev *dev)
+>>>>>>>>  	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+>>>>>>>>  	return cap & PCI_EXP_DEVCAP_FLR;
+>>>>>>>>  }
+>>>>>>>> +EXPORT_SYMBOL_GPL(pcie_has_flr);
 > 
-> In Tegra186 BPMP-FW will take care of programming the UPHY, this is
-> updated in commit log of "9cea513d8cbc ("PCI: tegra: Add Tegra186 PCIe support")".
-> I didn't put it in DT bindings because there is no DT property for this purpose.
-> Do you want me to add a comment in PCIe tegra driver, perhaps near program_uphy variable?
-
-I would like to see some consistency from now onwards on what's done
-in BPMP (or host) FW and what's done in the driver and that's something
-you should drive because, as I have already said, the current approch
-based on boolean flags per-SoC hardcoded in the kernel does not scale -
-I may tolerate it for now but that has to change.
-
-Is it that hard to define a software programming model (to describe
-what's done in what piece of software/firmware) for tegra PCI host
-bridges ?
-
-> In current host driver, REFCLK pads settings are done in
-> tegra_pcie_port_phy_power_off() which is not apt. REFCLK pad settings
-> tunes the PCIe sideband signal REFCLK, it has nothing to do with UPHY.
-> So I am moving it out of tegra_pcie_port_phy_power_off().
-
-I gathered that, I was not complaining on this patch on his own.
-
-Thanks,
-Lorenzo
-
-> Thanks,
-> Manikanta
+>>>>>>> I'd rather change pcie_flr() so you could *always* call it, and
+>>>>>>> it would return 0, -ENOTTY, or whatever, based on whether FLR
+>>>>>>> is supported.  Is that feasible?
 > 
+>>>>>> Sure, I will add pcie_has_flr() logic inside pcie_flr() and
+>>>>>> return appropriate values as suggested by you. Do we still want
+>>>>>> to retain pcie_has_flr() and its usage inside pci.c?.Otherwise,
+>>>>>> I will remove it and do required cleanup.
 > 
-> >> in driver. REFCLK pad settings are independent of PHY and should be
-> >> programmed by driver. So move REFCLK pad settings out of phy_power_on().
-> >> These pad settings improve REFCLK peak to peak amplitude.
-> >>
-> >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> >> ---
-> >> V3:
-> >> * Corrected commit log
-> >> V2:
-> >> * no change in this patch
-> >>
-> >>  drivers/pci/host/pci-tegra.c | 20 +++++++++++++-------
-> >>  1 file changed, 13 insertions(+), 7 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> >> index b41c60c7414c..068510b40c1a 100644
-> >> --- a/drivers/pci/host/pci-tegra.c
-> >> +++ b/drivers/pci/host/pci-tegra.c
-> >> @@ -910,7 +910,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
-> >>  static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
-> >>  {
-> >>  	struct device *dev = pcie->dev;
-> >> -	const struct tegra_pcie_soc *soc = pcie->soc;
-> >>  	struct tegra_pcie_port *port;
-> >>  	int err;
-> >>  
-> >> @@ -936,12 +935,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
-> >>  		}
-> >>  	}
-> >>  
-> >> -	/* Configure the reference clock driver */
-> >> -	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
-> >> -
-> >> -	if (soc->num_ports > 2)
-> >> -		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
-> >> -
-> >>  	return 0;
-> >>  }
-> >>  
-> >> @@ -2049,6 +2042,17 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
-> >>  	return 0;
-> >>  }
-> >>  
-> >> +static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
-> >> +{
-> >> +	const struct tegra_pcie_soc *soc = pcie->soc;
-> >> +
-> >> +	/* Configure the reference clock driver */
-> >> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
-> >> +
-> >> +	if (soc->num_ports > 2)
-> >> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
-> >> +}
-> >> +
-> >>  /*
-> >>   * FIXME: If there are no PCIe cards attached, then calling this function
-> >>   * can result in the increase of the bootup time as there are big timeout
-> >> @@ -2107,6 +2111,8 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
-> >>  	struct device *dev = pcie->dev;
-> >>  	struct tegra_pcie_port *port, *tmp;
-> >>  
-> >> +	tegra_pcie_apply_pad_settings(pcie);
-> >> +
-> >>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> >>  		dev_info(dev, "probing port %u, using %u lanes\n",
-> >>  			 port->index, port->lanes);
-> >> -- 
-> >> 2.1.4
-> >>
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
+>>>>> If you can restructure the code and remove pcie_has_flr() while
+>>>>> retaining the existing behavior of its callers, that would be
+>>>>> great.
+> 
+>>>> I checked the current usage of pcie_has_flr() and pcie_flr(). I
+>>>> have a couple of questions or need some clarification.
+>>>>
+>>>> 1. pcie_has_flr() usage inside pci_probe_reset_function().
+>>>>
+>>>>    This function is only calling pcie_has_flr() but not pcie_flr().
+>>>>    Rest of the code is trying to do specific type of reset except
+>>>>    pcie_flr().
+>>>>
+>>>>         rc = pci_dev_specific_reset(dev, 1);
+>>>>         if (rc != -ENOTTY)
+>>>>                 return rc;
+>>>>         if (pcie_has_flr(dev))
+>>>>                 return 0;
+>>>>         rc = pci_af_flr(dev, 1);
+>>>>         if (rc != -ENOTTY)
+>>>>                 return rc;
+>>>>
+>>>>    In other-words, I can remove usage of pcie_has_flr() in all
+>>>>    other places in pci.c except in above function.
+> 
+>>> I think we should keep the EXPORT_SYMBOL_GPL() part of a60a2b73ba69
+>>> ("PCI: Export pcie_flr()"), but revert the restructuring part.
+>>>
+>>> Prior to a60a2b73ba69, we had
+>>>
+>>>   int pcie_flr(struct pci_dev *dev, int probe);
+>>>
+>>> like all the other reset methods.  AFAICT, the addition of
+>>> pcie_has_flr() was to optimize the path slightly because when
+>>> drivers call pcie_flr(), they should already know that their
+>>> hardware supports FLR.  But I don't think that optimization is
+>>> worth the extra code complexity.  If we do need to optimize it, we
+>>> can check this in the core during enumeration and set
+>>> PCI_DEV_FLAGS_NO_FLR_RESET accordingly.
+> 
+>> Not all code paths are aware of FLR capability and also, not
+>> using pcie_flr().  For example,
+>>
+>> arch/powerpc/platforms/powernv/eeh-powernv.c
+> 
+> I assume you're referring to pnv_eeh_do_flr() (which contains code similar
+> to pcie_flr()) and pnv_eeh_do_af_flr() (which has code similar to
+> pci_af_flr()).  I agree that those are problematic and would ideally be
+> unified with the PCI core implementations.
+> 
+> Powerpc has quite a bit of this sort of special-case code for several
+> reasons, some just historical and some more concrete, so I don't know how
+> feasible this is.
+
+It would be lovely if pnv-eeh code used pci_af_flr() but since
+pnv_eeh_do_flr() uses different config space accessors (not sure why
+exactly, probably to avoid freezing the entire PHB), it is harder than just
+trivial change. I'll try and have a deeper look though.
+
+
+-- 
+Alexey
