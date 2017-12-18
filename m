@@ -1,52 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51026 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754785AbdLTMNw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Dec 2017 07:13:52 -0500
-Date: Wed, 20 Dec 2017 12:14:38 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Fabio Estevam <festevam@gmail.com>, kdinh@apm.com
-Cc: bhelgaas@google.com, dhdang@apm.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: xgene: Fix the error return code
-Message-ID: <20171220121438.GB1709@red-moon>
-References: <1513730309-18831-1-git-send-email-festevam@gmail.com>
+Return-Path: <SRS0=Imzn=DO=idt.com=Alexandre.Bounine@kernel.org>
+Return-Path: <SRS0=Imzn=DO=idt.com=Alexandre.Bounine@kernel.org>
+From: "Bounine, Alexandre" <Alexandre.Bounine@idt.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Matt Porter
+	<mporter@kernel.crashing.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Andrew Morton
+	<akpm@linux-foundation.org>
+Subject: RE: [PATCH] rapidio/tsi721: use PCI_EXP_DEVCTL2_COMP_TIMEOUT macro
+Date: Mon, 18 Dec 2017 15:25:19 +0000
+Message-ID: <8D983423E7EDF846BB3056827B8CC5D161B3B7F7@corpmail1>
+References: <20171215225952.177299.86044.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20171215225952.177299.86044.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1513730309-18831-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+ Khuong Dinh]
-
-On Tue, Dec 19, 2017 at 10:38:29PM -0200, Fabio Estevam wrote:
-> In the case of IS_ERR() error, we should return PTR_ERR().
-> 
-> Fix the error return code.
-> 
-> Signed-off-by: Fabio Estevam <festevam@gmail.com>
-> ---
->  drivers/pci/host/pci-xgene-msi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-
-I am about to apply this patch, please let me know if you see
-any issue with that.
-
-Thanks,
-Lorenzo
-
-> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> index 1f42a20..4a1fb01 100644
-> --- a/drivers/pci/host/pci-xgene-msi.c
-> +++ b/drivers/pci/host/pci-xgene-msi.c
-> @@ -465,7 +465,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  	xgene_msi->msi_regs = devm_ioremap_resource(&pdev->dev, res);
->  	if (IS_ERR(xgene_msi->msi_regs)) {
->  		dev_err(&pdev->dev, "no reg space\n");
-> -		rc = -EINVAL;
-> +		rc = PTR_ERR(xgene_msi->msi_regs);
->  		goto error;
->  	}
->  	xgene_msi->msi_addr = res->start;
-> -- 
-> 2.7.4
-> 
+QWNrZWQtYnk6IEFsZXhhbmRyZSBCb3VuaW5lIDxhbGV4YW5kcmUuYm91bmluZUBpZHQuY29tPg0K
+DQpIaSBBbmRyZXcsDQoNClBsZWFzZSBhcHBseSB0aGUgcGF0Y2ggYmVsb3cuDQogDQpUaGFuayB5
+b3UsICANCg0KQWxleC4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEJqb3Ju
+IEhlbGdhYXMgW21haWx0bzpoZWxnYWFzQGtlcm5lbC5vcmddIA0KU2VudDogRnJpZGF5LCBEZWNl
+bWJlciAxNSwgMjAxNyA2OjAwIFBNDQpUbzogQm91bmluZSwgQWxleGFuZHJlIDxBbGV4YW5kcmUu
+Qm91bmluZUBpZHQuY29tPjsgTWF0dCBQb3J0ZXIgPG1wb3J0ZXJAa2VybmVsLmNyYXNoaW5nLm9y
+Zz4NCkNjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBbUEFUQ0hdIHJhcGlk
+aW8vdHNpNzIxOiB1c2UgUENJX0VYUF9ERVZDVEwyX0NPTVBfVElNRU9VVCBtYWNybw0KDQpGcm9t
+OiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPg0KDQpVc2UgdGhlIGV4aXN0aW5n
+IFBDSV9FWFBfREVWQ1RMMl9DT01QX1RJTUVPVVQgbWFjcm8gaW5zdGVhZCBvZiBoYXJkLWNvZGlu
+Zw0KdGhlIFBDSWUgQ29tcGxldGlvbiBUaW1lb3V0IFZhbHVlIG1hc2suICBObyBmdW5jdGlvbmFs
+IGNoYW5nZSBpbnRlbmRlZC4NCg0KU2lnbmVkLW9mZi1ieTogQmpvcm4gSGVsZ2FhcyA8YmhlbGdh
+YXNAZ29vZ2xlLmNvbT4NCi0tLQ0KIGRyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jIHwg
+ICAgNSArKystLQ0KIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25z
+KC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3JhcGlkaW8vZGV2aWNlcy90c2k3MjEuYyBiL2Ry
+aXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jDQppbmRleCA5YTY4OTE0MTAwYWQuLmJiNjU1
+ODU0NzEzZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvcmFwaWRpby9kZXZpY2VzL3RzaTcyMS5jDQor
+KysgYi9kcml2ZXJzL3JhcGlkaW8vZGV2aWNlcy90c2k3MjEuYw0KQEAgLTI4ODAsOCArMjg4MCw5
+IEBAIHN0YXRpYyBpbnQgdHNpNzIxX3Byb2JlKHN0cnVjdCBwY2lfZGV2ICpwZGV2LA0KIAkJCQkg
+IkludmFsaWQgTVJSUyBvdmVycmlkZSB2YWx1ZSAlZCIsIHBjaWVfbXJycyk7DQogCX0NCiANCi0J
+LyogQWRqdXN0IFBDSWUgY29tcGxldGlvbiB0aW1lb3V0LiAqLw0KLQlwY2llX2NhcGFiaWxpdHlf
+Y2xlYXJfYW5kX3NldF93b3JkKHBkZXYsIFBDSV9FWFBfREVWQ1RMMiwgMHhmLCAweDIpOw0KKwkv
+KiBTZXQgUENJZSBjb21wbGV0aW9uIHRpbWVvdXQgdG8gMS0xMG1zICovDQorCXBjaWVfY2FwYWJp
+bGl0eV9jbGVhcl9hbmRfc2V0X3dvcmQocGRldiwgUENJX0VYUF9ERVZDVEwyLA0KKwkJCQkJICAg
+UENJX0VYUF9ERVZDVEwyX0NPTVBfVElNRU9VVCwgMHgyKTsNCiANCiAJLyoNCiAJICogRklYVVA6
+IGNvcnJlY3Qgb2Zmc2V0cyBvZiBNU0ktWCB0YWJsZXMgaW4gdGhlIE1TSS1YIENhcGFiaWxpdHkg
+QmxvY2sNCg0K
