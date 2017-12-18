@@ -1,195 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.135]:60078 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752656AbdLYLtq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Dec 2017 06:49:46 -0500
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: linux-pm@vger.kernel.org, tony@atomide.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        rjw@rjwysocki.net, dianders@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: [RFC PATCH v11 4/5] PCI / PM: Add support for the PCIe WAKE# signal for OF
-Date: Mon, 25 Dec 2017 19:47:41 +0800
-Message-Id: <20171225114742.18920-5-jeffy.chen@rock-chips.com>
-In-Reply-To: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
-References: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 18 Dec 2017 22:15:43 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
+Subject: Re: [PATCH v5 15/18] PCI: dwc: Make cpu_addr_fixup take struct
+ dw_pcie as argument
+Message-ID: <20171218211542.GA17166@axis.com>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+ <20171120133222.27771-16-niklas.cassel@axis.com>
+ <20171218181058.GC8157@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171218181058.GC8157@red-moon>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add of_pci_setup_wake_irq() and of_pci_teardown_wake_irq() to handle
-the PCIe WAKE# interrupt.
+On Mon, Dec 18, 2017 at 06:10:58PM +0000, Lorenzo Pieralisi wrote:
+> On Mon, Nov 20, 2017 at 02:32:18PM +0100, Niklas Cassel wrote:
+> > There is no need to hard code the cpu to bus address fixup mask.
+> 
+> There is no need or hardcoding it is broken ? There is a difference
+> between those two.
 
-Also use the dedicated wakeirq infrastructure to simplify it.
+Well, both :P
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+The current hardcoding for ARTPEC-6: GENMASK(27, 0), is wrong.
+Hardcoding the correct mask GENMASK(28, 0) would be sufficient
+for ARTPEC-6.
 
-Changes in v11:
-Only support 1-per-device PCIe WAKE# pin as suggested.
+However, the ARTPEC-7 is a 32-bit CPU (without LPAE), but has
+a 64-bit bus. So the ARTPEC-7 can have more devices than fits
+in the 32-bit range, therefore a lookup table is placed between
+the bus and the CPU, so you can choose what devices to map.
+This mapping, which decides what devices to map, is currently
+done at boot via devicetree.
+So, on ARTPEC-7, it is not possible to hardcode a CPU_TO_BUS
+mask, since the PCIe controller's address is only known via DT.
 
-Changes in v10:
-Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
+Having a hardcoded value is arguably wrong. It should probably
+have been a DT property called something like "cpu-bus-fixup-mask".
+However, this property is not needed since we already have
+pp->cfg0_base and ep->phys_base, which is derived from already
+existing DT properties.
 
-Changes in v9:
-Fix check error in .cleanup().
-Move dedicated wakeirq setup to setup() callback and use
-device_set_wakeup_enable() to enable/disable.
+By using pp->cfg0_base and ep->phys_base, we avoid hardcoding a mask
+in the driver. This should work for ARTPEC-6, DRA7xx and ARTPEC-7.
+I have not changed the code in DRA7xx though, since their existing
+code works, but if they want, they could use the same logic as
+artpec6_pcie_cpu_addr_fixup, and thus remove their hardcoded mask.
 
-Changes in v8:
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
+> 
+> > The PCIe controller has a global address on the AXI bus, however,
+> > from the perspective of the PCIe controller, its base starts at 0x0,
+> > so the local address is 0x0. To get the bus address, simply subtract
+> > the global address from the cpu address. The global address is taken
+> > from device tree.
+> 
+> I do not understand this paragraph, I would kindly ask you and Kishon to
+> explain please this patch and
+> 
+> commit a660083eb06c ("PCI: dwc: designware: Add new *ops* for CPU addr
+> fixup")
+> 
+> What the cpu_addr_fixup() hook is supposed to do ? And what does the
+> "addr_space" property represent ?
 
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
+The ARTPEC-6 and DRA7xx SoCs both has an interconnect configured is a way
+where the local address of the PCIe controller is 0x0.
 
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
+For ARTPEC-6 the global address of the PCIe controller is 0xf8050000,
+so if the CPU writes to address 0xf8050008, from the perspective of the
+PCIe controller, it will see a write to address 0x8.
 
-Changes in v5:
-Rebase.
+This is normally not a problem, but when reading/writing from an endpoint,
+we go via the outbound iATU. The outbound iATU has to be programmed with
+a base address (reads/writes in the range [base address + limit] will be
+subject to translation).
 
-Changes in v3:
-Fix error handling.
+However, since the address the PCIe controller sees, in reality is
+"0xf8050000 + the address the PCIe controller sees", we need to subtract
+the global address before programming the base address in the outbound
+iATU.
 
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
+Kishon explains the same thing in commit f4c55c5a3f7f68c0.
 
- drivers/of/of_pci_irq.c  | 49 ++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci-driver.c | 10 ++++++++++
- include/linux/of_pci.h   |  9 +++++++++
- 3 files changed, 68 insertions(+)
+For this patch, I tried make the commit message understandable,
+without going into too much detail, but there is probably still
+room for improvement.
 
-diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
-index d39565d5477b..def884c1a37a 100644
---- a/drivers/of/of_pci_irq.c
-+++ b/drivers/of/of_pci_irq.c
-@@ -1,8 +1,57 @@
- #include <linux/kernel.h>
- #include <linux/of_pci.h>
- #include <linux/of_irq.h>
-+#include <linux/pm_wakeirq.h>
- #include <linux/export.h>
- 
-+int of_pci_setup_wake_irq(struct pci_dev *pdev)
-+{
-+	struct pci_dev *ppdev;
-+	struct device_node *dn;
-+	int ret, irq;
-+
-+	/* Get the pci_dev of our parent. Hopefully it's a port. */
-+	ppdev = pdev->bus->self;
-+	/* Nope, it's a host bridge. */
-+	if (!ppdev)
-+		return 0;
-+
-+	dn = pci_device_to_OF_node(ppdev);
-+	if (!dn)
-+		return 0;
-+
-+	irq = of_irq_get_byname(dn, "wakeup");
-+	if (irq == -EPROBE_DEFER)
-+		return irq;
-+	/* Ignore other errors, since a missing wakeup is non-fatal. */
-+	else if (irq < 0) {
-+		dev_info(&pdev->dev, "cannot get wakeup interrupt: %d\n", irq);
-+		return 0;
-+	}
-+
-+	device_init_wakeup(&pdev->dev, true);
-+
-+	ret = dev_pm_set_dedicated_wake_irq(&pdev->dev, irq);
-+	if (ret < 0) {
-+		dev_err(&pdev->dev, "failed to set wake IRQ: %d\n", ret);
-+		device_init_wakeup(&pdev->dev, false);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(of_pci_setup_wake_irq);
-+
-+void of_pci_teardown_wake_irq(struct pci_dev *pdev)
-+{
-+	if (!pdev->dev.power.wakeirq)
-+		return;
-+
-+	dev_pm_clear_wake_irq(&pdev->dev);
-+	device_init_wakeup(&pdev->dev, false);
-+}
-+EXPORT_SYMBOL_GPL(of_pci_teardown_wake_irq);
-+
- /**
-  * of_irq_parse_pci - Resolve the interrupt for a PCI device
-  * @pdev:       the device whose interrupt is to be resolved
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index d79dbc377b9c..b4475ff35d97 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -17,6 +17,7 @@
- #include <linux/slab.h>
- #include <linux/sched.h>
- #include <linux/cpu.h>
-+#include <linux/of_pci.h>
- #include <linux/pm_runtime.h>
- #include <linux/suspend.h>
- #include <linux/kexec.h>
-@@ -421,10 +422,17 @@ static int pci_device_probe(struct device *dev)
- 	if (error < 0)
- 		return error;
- 
-+	error = of_pci_setup_wake_irq(pci_dev);
-+	if (error < 0) {
-+		pcibios_free_irq(pci_dev);
-+		return error;
-+	}
-+
- 	pci_dev_get(pci_dev);
- 	if (pci_device_can_probe(pci_dev)) {
- 		error = __pci_device_probe(drv, pci_dev);
- 		if (error) {
-+			of_pci_teardown_wake_irq(pci_dev);
- 			pcibios_free_irq(pci_dev);
- 			pci_dev_put(pci_dev);
- 		}
-@@ -438,6 +446,8 @@ static int pci_device_remove(struct device *dev)
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	struct pci_driver *drv = pci_dev->driver;
- 
-+	of_pci_teardown_wake_irq(pci_dev);
-+
- 	if (drv) {
- 		if (drv->remove) {
- 			pm_runtime_get_sync(dev);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index bf588a05d0d0..80fe8ae3393e 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -10,6 +10,8 @@ struct of_phandle_args;
- struct device_node;
- 
- #ifdef CONFIG_OF_PCI
-+int of_pci_setup_wake_irq(struct pci_dev *pdev);
-+void of_pci_teardown_wake_irq(struct pci_dev *pdev);
- int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq);
- struct device_node *of_pci_find_child_device(struct device_node *parent,
- 					     unsigned int devfn);
-@@ -23,6 +25,13 @@ int of_pci_map_rid(struct device_node *np, u32 rid,
- 		   const char *map_name, const char *map_mask_name,
- 		   struct device_node **target, u32 *id_out);
- #else
-+static inline int of_pci_setup_wake_irq(struct pci_dev *pdev)
-+{
-+	return 0;
-+}
-+
-+static void of_pci_teardown_wake_irq(struct pci_dev *pdev) { };
-+
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
- 	return 0;
--- 
-2.11.0
+> 
+> > Also for ARTPEC-7, hard coding the cpu to bus address fixup mask is
+> > not possible, since it uses a High Address Bits Look Up Table, which
+> > means that it can, at runtime, map the PCIe window to an arbitrary
+> > address in the 32-bit address space.
+> 
+> But you are not changing the ARTPEC-7 mechanism, are you ? I do not
+> understand this paragraph - I see no change for ARTPEC-7 in this patch.
+
+Hopefully this is clarified by the comments above.
+
+> 
+> > This also fixes a bug for ARTPEC-6, where the cpu to bus address
+> > fixup mask previously was off by one (GENMASK(27, 0), rather than
+> > GENMASK(28, 0)). This is another reason to calculate the mask by
+> > using values from device tree.
+> 
+> What this patch does (and how the cpu_addr_fixup() mechanism works)
+> is not clear to me, please explain, we can rewrite the commit log
+> with a clear explanation then.
+
+Hopefully this is clarified by the comments above.
+
+
+Regards,
+Niklas
