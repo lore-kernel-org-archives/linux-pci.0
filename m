@@ -1,105 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-Subject: [RFC PATCH v11 0/5] PCI: rockchip: Move PCIe WAKE# handling into pci
- core
-Date: Mon, 25 Dec 2017 19:47:37 +0800
-Message-Id: <20171225114742.18920-1-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-wireless@vger.kernel.org,
- Heiko Stuebner <heiko@sntech.de>, tony@atomide.com, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, Will Deacon <will.deacon@arm.com>,
- Amitkumar Karwar <amitkarwar@gmail.com>, Frank Rowand <frowand.list@gmail.com>,
- briannorris@chromium.org, linux-rockchip@lists.infradead.org,
- Matthias Kaehlcke <mka@chromium.org>, linux-arm-kernel@lists.infradead.org,
- Catalin Marinas <catalin.marinas@arm.com>, Caesar Wang <wxt@rock-chips.com>,
- devicetree@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
- linux-pm@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
- Nishant Sarmukadam <nishants@marvell.com>, Rob Herring <robh+dt@kernel.org>,
- Kalle Valo <kvalo@codeaurora.org>, Ganapathi Bhat <gbhat@marvell.com>,
- netdev@vger.kernel.org, rjw@rjwysocki.net, dianders@chromium.org,
- Enric Balletbo i Serra <enric.balletbo@collabora.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:58396 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934994AbdLRRc3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Dec 2017 12:32:29 -0500
+Subject: Re: [PATCH V3 2/2] Xen/PCIback: Implement PCI flr/slot/bus reset with
+ 'reset' SysFS attribute
+To: Jan Beulich <JBeulich@suse.com>,
+        Govinda Tatti <Govinda.Tatti@oracle.com>
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
+ <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
+ <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
+ <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
+ <5A377E020200007800197FFA@prv-mh.provo.novell.com>
+Cc: roger.pau@citrix.com, bhelgaas@google.com,
+        xen-devel@lists.xenproject.org, konrad.wilk@oracle.com,
+        Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <559ffd12-b541-8a69-60bd-fbe10e3dc159@oracle.com>
+Date: Mon, 18 Dec 2017 12:32:11 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <5A377E020200007800197FFA@prv-mh.provo.novell.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Currently we are handling wake irq in mrvl wifi driver. Move it into
-pci core.
-
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
-
-
-Changes in v11:
-Only add irq definitions for PCI devices and rewrite the commit message.
-Address Brian's comments.
-Only support 1-per-device PCIe WAKE# pin as suggested.
-Move to pcie port as Brian suggested.
-
-Changes in v10:
-Use device_set_wakeup_capable() instead of device_set_wakeup_enable(),
-since dedicated wakeirq will be lost in device_set_wakeup_enable(false).
-
-Changes in v9:
-Add section for PCI devices and rewrite the commit message.
-Fix check error in .cleanup().
-Move dedicated wakeirq setup to setup() callback and use
-device_set_wakeup_enable() to enable/disable.
-Rewrite the commit message.
-
-Changes in v8:
-Add optional "pci", and rewrite commit message.
-Add pci-of.c and use platform_pm_ops to handle the PCIe WAKE# signal.
-Rewrite the commit message.
-
-Changes in v7:
-Move PCIE_WAKE handling into pci core.
-
-Changes in v6:
-Fix device_init_wake error handling, and add some comments.
-
-Changes in v5:
-Move to pci.txt
-Rebase.
-Use "wakeup" instead of "wake"
-
-Changes in v3:
-Fix error handling.
-
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq.
-
-Jeffy Chen (5):
-  dt-bindings: PCI: Add definition of PCIe WAKE# irq and PCI irq
-  of/irq: Adjust of_pci_irq parsing for multiple interrupts
-  mwifiex: Disable wakeup irq handling for pcie
-  PCI / PM: Add support for the PCIe WAKE# signal for OF
-  arm64: dts: rockchip: Move PCIe WAKE# irq to pcie port for Gru
-
- Documentation/devicetree/bindings/pci/pci.txt | 10 ++++
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi  | 11 +++--
- drivers/net/wireless/marvell/mwifiex/main.c   |  4 ++
- drivers/of/of_pci_irq.c                       | 71 +++++++++++++++++++++++++--
- drivers/pci/pci-driver.c                      | 10 ++++
- include/linux/of_pci.h                        |  9 ++++
- 6 files changed, 107 insertions(+), 8 deletions(-)
-
--- 
-2.11.0
+On 12/18/2017 02:36 AM, Jan Beulich wrote:
+>>>> On 15.12.17 at 20:52, <Govinda.Tatti@Oracle.COM> wrote:
+>>>>> +static int pcistub_device_reset(struct pci_dev *dev)
+>>>>> +{
+>>>>> +	struct xen_pcibk_dev_data *dev_data;
+>>>>> +	bool slot = false, bus = false;
+>>>>> +	struct pcistub_args arg = {};
+>>>>> +
+>>>>> +	if (!dev)
+>>>>> +		return -EINVAL;
+>>>>> +
+>>>>> +	dev_dbg(&dev->dev, "[%s]\n", __func__);
+>>>>> +
+>>>>> +	/* First check and try FLR */
+>>>>> +	if (pcie_has_flr(dev)) {
+>>>>> +		dev_dbg(&dev->dev, "resetting %s device using FLR\n",
+>>>>> +			pci_name(dev));
+>>>>> +		pcie_flr(dev);
+>>>> The lack of error check here puzzled me, but I see the function
+>>>> indeed returns void right now. I think the prereq patch should
+>>>> change this along with exporting the function - you really don't
+>>>> want the device to be handed to a guest when the FLR timed
+>>>> out.
+>>> We will change pcie_flr() to return error code. I will make this change
+>>> in the next version of this patch.
+>> I exchanged some emails with Bjorn/Christoph and it looks like Christoph
+>> as some planto restructure pcie flr specific functions but I don't know
+>> the exact time-frame. For now,I am planning to use existing pcie_flr()
+>> after checking FLR capability. We will switchto revised pcie_flr() once
+>> it is available.
+>>
+>> I hope you are fine with this approach. Please let me know. Thanks.
+> I've seen that other discussion. I don't think the change here
+> should be done prior to the error reporting being put in place,
+> for security reasons. But in the end it'll be Konrad as the
+> maintainer to judge.
+>
+> Or wait, looks like there's some confusion in ./MAINTAINERS:
+> Konrad is listed as maintainer for "XEN PCI SUBSYSTEM", but the
+> list of files doesn't include pciback. So it would instead be Boris
+> or Jürgen to give you a final word.
 
 
+This is now 4.16 material so we can at least wait until closer to
+opening of the merge window when we may have the PCI updates. (And I
+just noticed that you responded to Christoph.)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Besides, we don't want to make kernel changes until the interface is
+settled (i.e the toolstack changes are accepted).
+
+-boris
