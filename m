@@ -1,62 +1,65 @@
-Return-Path: <SRS0=v6DO=DL=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=v6DO=DL=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>, linux-pci@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>, Andy Lutomirski <luto@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, the arch/x86 maintainers <x86@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org, Chen Yu <y.c.chen@intel.com>
-Subject: [PATCH] PCI / PM: Force devices to D0 in pci_pm_thaw_noirq()
-Date: Fri, 15 Dec 2017 03:07:18 +0100
-Message-ID: <2582328.YfNXS1jHhG@aspire.rjw.lan>
-In-Reply-To: <11146834.AWaDHrVcmB@aspire.rjw.lan>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <alpine.DEB.2.20.1712141648190.4998@nanos> <11146834.AWaDHrVcmB@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <5A377E020200007800197FFA@prv-mh.provo.novell.com>
+Date: Mon, 18 Dec 2017 00:36:18 -0700
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Govinda Tatti" <Govinda.Tatti@Oracle.COM>
+Cc: <roger.pau@citrix.com>, <bhelgaas@google.com>,
+        <xen-devel@lists.xenproject.org>, <boris.ostrovsky@Oracle.COM>,
+        <konrad.wilk@Oracle.COM>, "Juergen Gross" <jgross@suse.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH V3 2/2] Xen/PCIback: Implement PCI flr/slot/bus
+ reset with 'reset' SysFS attribute
+References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
+ <20171207222145.9769-3-Govinda.Tatti@Oracle.COM>
+ <5A2A6AB10200007800195D4F@prv-mh.provo.novell.com>
+ <8a3bc517-1255-4547-d244-5c400e44cc77@Oracle.COM>
+ <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
+In-Reply-To: <f19dbb09-ef22-2cf4-fb38-2a7c42b5dc48@Oracle.COM>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>> On 15.12.17 at 20:52, <Govinda.Tatti@Oracle.COM> wrote:
+>>>> +static int pcistub_device_reset(struct pci_dev *dev)
+>>>> +{
+>>>> +	struct xen_pcibk_dev_data *dev_data;
+>>>> +	bool slot = false, bus = false;
+>>>> +	struct pcistub_args arg = {};
+>>>> +
+>>>> +	if (!dev)
+>>>> +		return -EINVAL;
+>>>> +
+>>>> +	dev_dbg(&dev->dev, "[%s]\n", __func__);
+>>>> +
+>>>> +	/* First check and try FLR */
+>>>> +	if (pcie_has_flr(dev)) {
+>>>> +		dev_dbg(&dev->dev, "resetting %s device using FLR\n",
+>>>> +			pci_name(dev));
+>>>> +		pcie_flr(dev);
+>>> The lack of error check here puzzled me, but I see the function
+>>> indeed returns void right now. I think the prereq patch should
+>>> change this along with exporting the function - you really don't
+>>> want the device to be handed to a guest when the FLR timed
+>>> out.
+>> We will change pcie_flr() to return error code. I will make this change
+>> in the next version of this patch.
+> I exchanged some emails with Bjorn/Christoph and it looks like Christoph
+> as some planto restructure pcie flr specific functions but I don't know
+> the exact time-frame. For now,I am planning to use existing pcie_flr()
+> after checking FLR capability. We will switchto revised pcie_flr() once
+> it is available.
+> 
+> I hope you are fine with this approach. Please let me know. Thanks.
 
-It is incorrect to call pci_restore_state() for devices in low-power
-states (D1-D3), as that involves the restoration of MSI setup which
-requires MMIO to be operational and that is only the case in D0.
+I've seen that other discussion. I don't think the change here
+should be done prior to the error reporting being put in place,
+for security reasons. But in the end it'll be Konrad as the
+maintainer to judge.
 
-However, pci_pm_thaw_noirq() may do that if the driver's "freeze"
-callbacks put the device into a low-power state, so fix it by making
-it force devices into D0 via pci_set_power_state() instead of trying
-to "update" their power state which is pointless.
+Or wait, looks like there's some confusion in ./MAINTAINERS:
+Konrad is listed as maintainer for "XEN PCI SUBSYSTEM", but the
+list of files doesn't include pciback. So it would instead be Boris
+or Jürgen to give you a final word.
 
-Fixes: e60514bd4485 (PCI/PM: Restore the status of PCI devices across hibernation)
-Cc: 4.13+ <stable@vger.kernel.org> # 4.13+
-Reported-by: Thomas Gleixner <tglx@linutronix.de>
-Reported-by: Maarten Lankhorst <dev@mblankhorst.nl>
-Tested-by: Thomas Gleixner <tglx@linutronix.de>
-Tested-by: Maarten Lankhorst <dev@mblankhorst.nl>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
-The bug is not as old as I thought, actually.
-
-Yes, we did the pci_update_current_state() in pci_pm_thaw_noirq()
-forever, but it started to be problematic in 4.13, when we started
-to call pci_restore_state() in addition to it to fix another issue.
-
----
- drivers/pci/pci-driver.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1027,7 +1027,12 @@ static int pci_pm_thaw_noirq(struct devi
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume_early(dev);
- 
--	pci_update_current_state(pci_dev, PCI_D0);
-+	/*
-+	 * pci_restore_state() requires the device to be in D0 (because of MSI
-+	 * restoration among other things), so force it into D0 in case the
-+	 * driver's "freeze" callbacks put it into a low-power state directly.
-+	 */
-+	pci_set_power_state(pci_dev, PCI_D0);
- 	pci_restore_state(pci_dev);
- 
- 	if (drv && drv->pm && drv->pm->thaw_noirq)
+Jan
