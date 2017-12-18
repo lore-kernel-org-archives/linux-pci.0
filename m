@@ -1,84 +1,251 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55784 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751500AbdLFVCM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Dec 2017 16:02:12 -0500
-Date: Wed, 6 Dec 2017 15:02:09 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Matthew Minter <matt@masarand.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH -next] pci: add function stub for
- pci_get_domain_bus_and_slot()
-Message-ID: <20171206210209.GN23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <80e3c9bb-fb65-4d87-76f9-db7c1273cef3@infradead.org>
- <20171205203920.GI23510@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171205203920.GI23510@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v2 1/7] platform/pseries: Update VF config space after EEH
+Date: Mon, 18 Dec 2017 16:38:02 -0600
+In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+Message-Id: <20171218223808.83928-2-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Arnd, Rafael, Thomas, Matthew, Lorenzo]
+Add EEH platform operations for pseries to update VF
+config space. With this change after EEH, the VF
+will have updated config space for pseries platform.
 
-On Tue, Dec 05, 2017 at 02:39:20PM -0600, Bjorn Helgaas wrote:
-> [+cc Sinan]
-> 
-> On Tue, Nov 28, 2017 at 02:31:21PM -0800, Randy Dunlap wrote:
-> > From: Randy Dunlap <rdunlap@infradead.org>
-> > 
-> > The coretemp driver build fails when CONFIG_PCI is not enabled
-> > because it uses a function that does not have a stub for that
-> > config case, so add the function stub.
-> > 
-> > ../drivers/hwmon/coretemp.c: In function 'adjust_tjmax':
-> > ../drivers/hwmon/coretemp.c:250:9: error: implicit declaration of function 'pci_get_domain_bus_and_slot' [-Werror=implicit-function-declaration]
-> >   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
-> > ../drivers/hwmon/coretemp.c:250:32: warning: initialization makes pointer from integer without a cast [enabled by default]
-> >   struct pci_dev *host_bridge = pci_get_domain_bus_and_slot(0, 0, devfn);
-> > 
-> > Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> 
-> Applied with Guenter's ack to pci/enumeration for v4.16, thanks!
-> 
-> Apparently no other code calls pci_get_domain_bus_and_slot() when
-> CONFIG_PCI isn't enabled.
-> 
-> 15ab6790f628 ("hwmon: (coretemp) deprecate pci_get_bus_and_slot()") is
-> already in linux-next via hwmon-staging.
-> 
-> The pci tree is merged into next slightly before hwmon-staging, so
-> this should be resolved as soon as the 0-day builder builds my
-> pci/enumeration branch and I merge it into my next branch.
+Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h               |  1 +
+ arch/powerpc/kernel/eeh.c                    | 59 +++++++++++++++++++++++++
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 65 ++--------------------------
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 26 ++++++++++-
+ 4 files changed, 88 insertions(+), 63 deletions(-)
 
-On Arnd's advice, I moved this to for-linus for v4.15 in case any of
-the conversion patches get merged before PCI during the v4.16 merge
-window.
-
-> > ---
-> >  include/linux/pci.h |    3 +++
-> >  1 file changed, 3 insertions(+)
-> > 
-> > --- linux-next-20171128.orig/include/linux/pci.h
-> > +++ linux-next-20171128/include/linux/pci.h
-> > @@ -1660,6 +1660,9 @@ static inline struct pci_dev *pci_get_sl
-> >  static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
-> >  						unsigned int devfn)
-> >  { return NULL; }
-> > +static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
-> > +					unsigned int bus, unsigned int devfn)
-> > +{ return NULL; }
-> >  
-> >  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
-> >  static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
-> > 
-> > 
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 5161c37dd039..82829c65f31a 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -297,6 +297,7 @@ int eeh_pe_reset(struct eeh_pe *pe, int option);
+ int eeh_pe_configure(struct eeh_pe *pe);
+ int eeh_pe_inject_err(struct eeh_pe *pe, int type, int func,
+ 		      unsigned long addr, unsigned long mask);
++int eeh_restore_vf_config(struct pci_dn *pdn);
+ 
+ /**
+  * EEH_POSSIBLE_ERROR() -- test for possible MMIO failure.
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index cbca0a667682..cc649809885e 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -740,6 +740,65 @@ static void *eeh_restore_dev_state(void *data, void *userdata)
+ 	return NULL;
+ }
+ 
++int eeh_restore_vf_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
++
++	if (edev->pcie_cap) {
++		/* Restore MPS */
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++
++		/* Disable Completion Timeout */
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					     edev->pcie_cap + PCI_EXP_DEVCTL2,
++					     4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					      edev->pcie_cap + PCI_EXP_DEVCTL2,
++					      4, cap2);
++		}
++	}
++
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				     4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				      4, aer_capctl);
++	}
++
++	return 0;
++}
++
+ /**
+  * pcibios_set_pcie_reset_state - Set PCI-E reset state
+  * @dev: pci device struct
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 961e64115d92..0665b6d03cb3 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1655,70 +1655,11 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
+ }
+ 
+-static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
+-{
+-	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+-	u32 devctl, cmd, cap2, aer_capctl;
+-	int old_mps;
+-
+-	if (edev->pcie_cap) {
+-		/* Restore MPS */
+-		old_mps = (ffs(pdn->mps) - 8) << 5;
+-		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+-				     2, &devctl);
+-		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
+-		devctl |= old_mps;
+-		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+-				      2, devctl);
+-
+-		/* Disable Completion Timeout */
+-		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
+-				     4, &cap2);
+-		if (cap2 & 0x10) {
+-			eeh_ops->read_config(pdn,
+-					     edev->pcie_cap + PCI_EXP_DEVCTL2,
+-					     4, &cap2);
+-			cap2 |= 0x10;
+-			eeh_ops->write_config(pdn,
+-					      edev->pcie_cap + PCI_EXP_DEVCTL2,
+-					      4, cap2);
+-		}
+-	}
+-
+-	/* Enable SERR and parity checking */
+-	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
+-	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+-	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
+-
+-	/* Enable report various errors */
+-	if (edev->pcie_cap) {
+-		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+-				     2, &devctl);
+-		devctl &= ~PCI_EXP_DEVCTL_CERE;
+-		devctl |= (PCI_EXP_DEVCTL_NFERE |
+-			   PCI_EXP_DEVCTL_FERE |
+-			   PCI_EXP_DEVCTL_URRE);
+-		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+-				      2, devctl);
+-	}
+-
+-	/* Enable ECRC generation and check */
+-	if (edev->pcie_cap && edev->aer_cap) {
+-		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
+-				     4, &aer_capctl);
+-		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
+-		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
+-				      4, aer_capctl);
+-	}
+-
+-	return 0;
+-}
+-
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+ 	struct pnv_phb *phb;
+-	s64 ret;
++	s64 ret = 0;
+ 	int config_addr = (pdn->busno << 8) | (pdn->devfn);
+ 
+ 	if (!edev)
+@@ -1732,7 +1673,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 	 * to be exported by firmware in extendible way.
+ 	 */
+ 	if (edev->physfn) {
+-		ret = pnv_eeh_restore_vf_config(pdn);
++		ret = eeh_restore_vf_config(pdn);
+ 	} else {
+ 		phb = pdn->phb->private_data;
+ 		ret = opal_pci_reinit(phb->opal_id,
+@@ -1745,7 +1686,7 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EIO;
+ 	}
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static struct eeh_ops pnv_eeh_ops = {
+diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
+index 2295f117e2d3..a671ef4f57f5 100644
+--- a/arch/powerpc/platforms/pseries/eeh_pseries.c
++++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+@@ -708,6 +708,30 @@ static int pseries_eeh_write_config(struct pci_dn *pdn, int where, int size, u32
+ 	return rtas_write_config(pdn, where, size, val);
+ }
+ 
++static int pseries_eeh_restore_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	s64 ret = 0;
++
++	if (!edev)
++		return -EEXIST;
++
++	/*
++	 * FIXME: The MPS, error routing rules, timeout setting are worthy
++	 * to be exported by firmware in extendible way.
++	 */
++	if (edev->physfn)
++		ret = eeh_restore_vf_config(pdn);
++
++	if (ret) {
++		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
++			__func__, edev->pe_config_addr, ret);
++		return -EIO;
++	}
++
++	return ret;
++}
++
+ static struct eeh_ops pseries_eeh_ops = {
+ 	.name			= "pseries",
+ 	.init			= pseries_eeh_init,
+@@ -723,7 +747,7 @@ static struct eeh_ops pseries_eeh_ops = {
+ 	.read_config		= pseries_eeh_read_config,
+ 	.write_config		= pseries_eeh_write_config,
+ 	.next_error		= NULL,
+-	.restore_config		= NULL
++	.restore_config		= pseries_eeh_restore_config
+ };
+ 
+ /**
+-- 
+2.14.3 (Apple Git-98)
