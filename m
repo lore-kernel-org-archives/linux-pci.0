@@ -1,97 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:2726 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751112AbdLYBoG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 24 Dec 2017 20:44:06 -0500
-Subject: Re: [PATCH v3 27/27] devres: kill devm_ioremap_nocache
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <1514026979-33838-1-git-send-email-xieyisheng1@huawei.com>
- <20171223134532.GA10103@kroah.com>
-CC: <linux-kernel@vger.kernel.org>, <linux-mips@linux-mips.org>,
-        <ulf.hansson@linaro.org>, <jakub.kicinski@netronome.com>,
-        <airlied@linux.ie>, <linux-wireless@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <alsa-devel@alsa-project.org>,
-        <dri-devel@lists.freedesktop.org>,
-        <platform-driver-x86@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-mtd@lists.infradead.org>, <daniel.vetter@intel.com>,
-        <dan.j.williams@intel.com>, <jason@lakedaemon.net>,
-        <linux-rtc@vger.kernel.org>, <boris.brezillon@free-electrons.com>,
-        <mchehab@kernel.org>, <dmaengine@vger.kernel.org>,
-        <vinod.koul@intel.com>, <richard@nod.at>, <marek.vasut@gmail.com>,
-        <industrypack-devel@lists.sourceforge.net>,
-        <linux-pci@vger.kernel.org>, <dvhart@infradead.org>,
-        <linux@roeck-us.net>, <linux-media@vger.kernel.org>,
-        <seanpaul@chromium.org>, <devel@driverdev.osuosl.org>,
-        <linux-watchdog@vger.kernel.org>, <arnd@arndb.de>,
-        <b.zolnierkie@samsung.com>, <marc.zyngier@arm.com>,
-        <jslaby@suse.com>, <jani.nikula@linux.intel.com>,
-        <linux-can@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
-        <broonie@kernel.org>, <mkl@pengutronix.de>,
-        <linux-fbdev@vger.kernel.org>, <nios2-dev@lists.rocketboards.org>,
-        <bhelgaas@google.com>, <tglx@linutronix.de>,
-        <andriy.shevchenko@linux.intel.com>, <kvalo@codeaurora.org>,
-        <a.zummo@towertech.it>, <netdev@vger.kernel.org>,
-        <linux-mmc@vger.kernel.org>, <lgirdwood@gmail.com>,
-        <ralf@linux-mips.org>, <linux-spi@vger.kernel.org>,
-        <ysxie@foxmail.com>, <wg@grandegger.com>,
-        <cyrille.pitchen@wedev4u.fr>, <tj@kernel.org>,
-        <alexandre.belloni@free-electrons.com>, <davem@davemloft.net>,
-        <andy@infradead.org>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <4d0991ec-9cd4-0c33-5560-ae9c2c762765@huawei.com>
-Date: Mon, 25 Dec 2017 09:43:40 +0800
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55356 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933767AbdLRSKP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Dec 2017 13:10:15 -0500
+Date: Mon, 18 Dec 2017 18:10:58 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
+Subject: Re: [PATCH v5 15/18] PCI: dwc: Make cpu_addr_fixup take struct
+ dw_pcie as argument
+Message-ID: <20171218181058.GC8157@red-moon>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+ <20171120133222.27771-16-niklas.cassel@axis.com>
 MIME-Version: 1.0
-In-Reply-To: <20171223134532.GA10103@kroah.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171120133222.27771-16-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Nov 20, 2017 at 02:32:18PM +0100, Niklas Cassel wrote:
+> There is no need to hard code the cpu to bus address fixup mask.
 
+There is no need or hardcoding it is broken ? There is a difference
+between those two.
 
-On 2017/12/23 21:45, Greg KH wrote:
-> On Sat, Dec 23, 2017 at 07:02:59PM +0800, Yisheng Xie wrote:
->> --- a/lib/devres.c
->> +++ b/lib/devres.c
->> @@ -44,35 +44,6 @@ void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->>  EXPORT_SYMBOL(devm_ioremap);
->>  
->>  /**
->> - * devm_ioremap_nocache - Managed ioremap_nocache()
->> - * @dev: Generic device to remap IO address for
->> - * @offset: Resource address to map
->> - * @size: Size of map
->> - *
->> - * Managed ioremap_nocache().  Map is automatically unmapped on driver
->> - * detach.
->> - */
->> -void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
->> -				   resource_size_t size)
->> -{
->> -	void __iomem **ptr, *addr;
->> -
->> -	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
->> -	if (!ptr)
->> -		return NULL;
->> -
->> -	addr = ioremap_nocache(offset, size);
+> The PCIe controller has a global address on the AXI bus, however,
+> from the perspective of the PCIe controller, its base starts at 0x0,
+> so the local address is 0x0. To get the bus address, simply subtract
+> the global address from the cpu address. The global address is taken
+> from device tree.
+
+I do not understand this paragraph, I would kindly ask you and Kishon to
+explain please this patch and
+
+commit a660083eb06c ("PCI: dwc: designware: Add new *ops* for CPU addr
+fixup")
+
+What the cpu_addr_fixup() hook is supposed to do ? And what does the
+"addr_space" property represent ?
+
+> Also for ARTPEC-7, hard coding the cpu to bus address fixup mask is
+> not possible, since it uses a High Address Bits Look Up Table, which
+> means that it can, at runtime, map the PCIe window to an arbitrary
+> address in the 32-bit address space.
+
+But you are not changing the ARTPEC-7 mechanism, are you ? I do not
+understand this paragraph - I see no change for ARTPEC-7 in this patch.
+
+> This also fixes a bug for ARTPEC-6, where the cpu to bus address
+> fixup mask previously was off by one (GENMASK(27, 0), rather than
+> GENMASK(28, 0)). This is another reason to calculate the mask by
+> using values from device tree.
+
+What this patch does (and how the cpu_addr_fixup() mechanism works)
+is not clear to me, please explain, we can rewrite the commit log
+with a clear explanation then.
+
+Thanks,
+Lorenzo
+
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c      |  2 +-
+>  drivers/pci/dwc/pcie-artpec6.c    | 18 ++++++++++++++----
+>  drivers/pci/dwc/pcie-designware.c |  2 +-
+>  drivers/pci/dwc/pcie-designware.h |  2 +-
+>  4 files changed, 17 insertions(+), 7 deletions(-)
 > 
-> Wait, devm_ioremap() calls ioremap(), not ioremap_nocache(), are you
-> _SURE_ that these are all identical?  For all arches?  If so, then
-> ioremap_nocache() can also be removed, right?
-
-Yeah, As Christophe pointed out, that 4 archs do not have the same function.
-But I do not why they do not want do the same thing. Driver may no know about
-this? right?
-
-> 
-> In my quick glance, I don't think you can do this series at all :(
-
-Yes, maybe should take Christophe suggestion and use a bool or enum to distinguish them?
-
-Thanks
-Yisheng
-> 
-> greg k-h
-> 
-> .
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 224ff8affdce..89d87844abb3 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -110,7 +110,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
+>  	writel(value, pcie->base + offset);
+>  }
+>  
+> -static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
+> +static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
+>  {
+>  	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
+>  }
+> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+> index e7de4e4649eb..318a2bd0d97e 100644
+> --- a/drivers/pci/dwc/pcie-artpec6.c
+> +++ b/drivers/pci/dwc/pcie-artpec6.c
+> @@ -67,8 +67,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
+>  #define PHY_STATUS			0x118
+>  #define  PHY_COSPLLLOCK			BIT(0)
+>  
+> -#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
+> -
+>  static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+>  {
+>  	u32 val;
+> @@ -82,9 +80,21 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
+>  	regmap_write(artpec6_pcie->regmap, offset, val);
+>  }
+>  
+> -static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
+> +static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
+>  {
+> -	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
+> +	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+> +	struct pcie_port *pp = &pci->pp;
+> +	struct dw_pcie_ep *ep = &pci->ep;
+> +
+> +	switch (artpec6_pcie->mode) {
+> +	case DW_PCIE_RC_TYPE:
+> +		return pci_addr - pp->cfg0_base;
+> +	case DW_PCIE_EP_TYPE:
+> +		return pci_addr - ep->phys_base;
+> +	default:
+> +		dev_err(pci->dev, "UNKNOWN device type\n");
+> +	}
+> +	return pci_addr;
+>  }
+>  
+>  static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> index 88abdddee2ad..800be7a4f087 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+>  	u32 retries, val;
+>  
+>  	if (pci->ops->cpu_addr_fixup)
+> -		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
+> +		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
+>  
+>  	if (pci->iatu_unroll_enabled) {
+>  		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index 24edac035160..cca5a81c1c74 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -205,7 +205,7 @@ struct dw_pcie_ep {
+>  };
+>  
+>  struct dw_pcie_ops {
+> -	u64	(*cpu_addr_fixup)(u64 cpu_addr);
+> +	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
+>  	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+>  			    size_t size);
+>  	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+> -- 
+> 2.14.2
 > 
