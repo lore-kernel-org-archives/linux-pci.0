@@ -1,131 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Pankaj Dubey'" <pankaj.dubey@samsung.com>,
- "'Krzysztof Kozlowski'" <krzk@kernel.org>
-References: <CGME20171009141438epcas2p4ead7e2f2d1af7e0950f2c026e3a9943b@epcas2p4.samsung.com>	<1507558478-3218-1-git-send-email-pankaj.dubey@samsung.com>	<CAJKOXPeC=cS2cvAXHrKuK5F4tEqH6PppwYkxC+Z8+5D--48CAg@mail.gmail.com>	<000a01d3411a$82eea770$88cbf650$@gmail.com>
- <b81a09be-1873-ab81-dcb2-c3b29ff7e430@samsung.com>
-In-Reply-To: <b81a09be-1873-ab81-dcb2-c3b29ff7e430@samsung.com>
-Subject: Re: [PATCH] PCI: exynos: remove redundant code in
- exynos_pcie_establish_link
-Date: Thu, 21 Dec 2017 11:31:36 -0500
-Message-ID: <000101d37a79$2bdb4c20$8391e460$@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:61000 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935130AbdLRQBK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Dec 2017 11:01:10 -0500
+Subject: Re: Re-activate task to add MSI-X to pcie-designware
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
+ <20171208110225.GC26816@red-moon>
+ <9ede58a6-7c0d-ae66-4e15-147234cbad6d@ti.com>
+From: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <69f78abd-f83e-b3a6-0daf-638f89d07f99@synopsys.com>
+Date: Mon, 18 Dec 2017 16:01:05 +0000
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
- 'linux-pci' <linux-pci@vger.kernel.org>, linux-samsung-soc@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, 'Anvesh Salveru' <anvesh.s@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <9ede58a6-7c0d-ae66-4e15-147234cbad6d@ti.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, October 10, 2017 9:46 AM, Pankaj Dubey wrote:
-> 
-> Hi Jingoo,
-> 
-> 
-> On 10/09/2017 09:50 PM, Jingoo Han wrote:
-> > On Monday, October 9, 2017 10:44 AM, Krzysztof Kozlowski wrote:
-> >> On Mon, Oct 9, 2017 at 4:14 PM, Pankaj Dubey <pankaj.dubey@samsung.com>
-> >> wrote:
-> >>> From: Anvesh Salveru <anvesh.s@samsung.com>
-> >>>
-> >>> In exynos_pcie_establish_link if driver is not using generic phy,
-> >>> we are resetting PHY twice, which is redundant, so this patch removes
-> >> Hi Pankaj,
-> >>
-> >> This lacks the information why it is redundant.
-> > (I resend this mail, because email address of pci list was corrupted.)
-> Thanks, somehow I typed wrong email id.
-> > I think so, too.
-> >
-> > Did you test this code on some boards with Exynos PCIe?
-> > Or did hardware engineers confirm this?
-> > Please add more information on this patch.
-> I have replied reason behind this patch in reply to Krzysztof, hope I am
-> able to
-> explain logic behind this change.
-> 
-> I do not have access to Exynos5440 PCIe, and this PHY_COMMON_RESET is not
-> applicable to other Exynos SoC which I have with me, so I can't test
-> this change,
-> but if you see the change it is an obvious change, before introducing
-> generic phy
-> support to this driver PHY_COMMON_RESET was programmed only once, then
-> in case platform is not using PHY it suppose to be done only once during
-> linkup.
-> I am not sure when Jaehoon introduced this patch, he verified this on
-> Exynos5440 or
-> not. We are just trying to make the logic as it was before without
-> affecting anything.
-> 
-> Thanks,
-> Pankaj Dubey
-> > Best regards,
-> > Jingoo Han
-> >
-> >>> repeated lines of code for PHY reset.
-> >>>
-> >>> Signed-off-by: Anvesh Salveru <anvesh.s@samsung.com>
-> >> Your Signed-off-by is needed here.
+Hi Kishon,
 
-Sorry for being late.
-I checked that this patch is right.
+I would like to collaborate with you on this subject, I have on my side João's
+patches updated to the Bjorn's latest kernel version.
 
-Can you send this patch again with your Signed-off-by?
-Also, you can add my Acked-by to your new patch.
+Regards,
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
-> >>
-> >> Best regards,
-> >> Krzysztof
-> >>
-> >>> ---
-> >>>   drivers/pci/dwc/pci-exynos.c | 7 -------
-> >>>   1 file changed, 7 deletions(-)
-> >>>
-> >>> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-
-> exynos.c
-> >>> index 5596fde..85d2f4b 100644
-> >>> --- a/drivers/pci/dwc/pci-exynos.c
-> >>> +++ b/drivers/pci/dwc/pci-exynos.c
-> >>> @@ -423,13 +423,6 @@ static int exynos_pcie_establish_link(struct
-> >> exynos_pcie *ep)
-> >>>                  exynos_pcie_deassert_phy_reset(ep);
-> >>>                  exynos_pcie_power_on_phy(ep);
-> >>>                  exynos_pcie_init_phy(ep);
-> >>> -
-> >>> -               /* pulse for common reset */
-> >>> -               exynos_pcie_writel(ep->mem_res->block_base, 1,
-> >>> -                                       PCIE_PHY_COMMON_RESET);
-> >>> -               udelay(500);
-> >>> -               exynos_pcie_writel(ep->mem_res->block_base, 0,
-> >>> -                                       PCIE_PHY_COMMON_RESET);
-> >>>          }
-> >>>
-> >>>          /* pulse for common reset */
-> >>> --
-> >>> 2.7.4
-> >>>
-> >
-> >
-> >
-> >
+Gustavo
 
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 11/12/2017 13:23, Kishon Vijay Abraham I wrote:
+> Hi,
+>
+> On Friday 08 December 2017 04:32 PM, Lorenzo Pieralisi wrote:
+>> On Thu, Dec 07, 2017 at 03:14:22PM +0000, Joao Pinto wrote:
+>>> Hello to all,
+>>>
+>>> I am sending this e-mail to request your opinion about the tasks needed to add
+>>> support for MSI-X for pcie-designware based solutions.
+>>>
+>>> A few months ago I submited a patch-set that added support for MSI-X:
+>>>
+>>> [v2,9/9] pci: remove limitation of the number of the available IRQs
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771320_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=p3N21H26OSEMkCxG6P0d-nO2j8dsNTPY3vyU1QDWjT0&e=
+>>> [v2,8/9] pci: removing old irq api from pcie-designware
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771360_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=qQWZngqGOJ1ILhY65f3YL6xrgp_5UXRR0NrDlSaHSTQ&e=
+>>> [v2,7/9] pci: keystone SoC driver adapted to new irq API
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771361_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=4J5yDyNZ0Hp9AD75kGoIjfyT-dr7gWoj5B3XO4cx7Q0&e=
+>>> [v2,6/9] pci: qcom SoC driver adapted to new irq API
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771362_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=KpC3k1Y_c4guyLRzb-w5H_Kglt6KWYb8Xk7iWsZqkzY&e=
+>>> [v2,5/9] pci: generic PCIe DW driver adapted to new irq API
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771365_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=TNoIYF7RaBl7jXnmFrFSIJD1a_vNJL2IKTYPbaJEpww&e=
+>>> [v2,4/9] pci: artpec6 SoC driver adapted to new irq API
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771364_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=p9aOuvgKv8e74QNe5XxXiI7gfvkPeCeanhs6i3FBwnc&e=
+>>> [v2,3/9] pci: imx6 SoC driver adapted to new irq API
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771363_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=ibzCdKoVbLHn-0vo9tzAlnirwgZZsDpILRkTEowHwWs&e=
+>>> [v2,2/9] pci: exynos SoC driver adapted to new irq API
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771359_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=D0dvpjeXB-BTo69WreBpia6vlml1pBysJU6ta-9cLOM&e=
+>>> [v2,1/9] pci: adding new irq api to pci-designware
+>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771366_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=Wu_iKSHepvoDa3X5gU02AMMa9yzAgrT2jIfiu6jHgPs&e=
+>>>
+>>> The patch-set was globally accepted, but it broke the MSI mechanism for
+>>> Keystone, due to its specificity.
+>> Hi Joao,
+>>
+>> would you mind pointing me at the discussion where the breakage was
+>> explained please ? It is to understand what are the TI specific bits
+>> we are talking about here.
+>>
+>>> We are now going to resume this task and we would like to have your feedback
+>>> about our plan:
+>>>
+>>> Task 1: Help TI to create a keystone_msi driver to isolate its custom msi mechanism
+>>> Task 2: Port the existing patches to the new kernel version (except the keystone
+>>> one)
+>>>
+>>> If TI can do the keystone_msi implementation it would be easier. If it's not
+>>> possible, we volunteer to do it, but we will need testing & debug assistance.
+> sure, I should be able to help with at-least testing if not implementing.
+>
+> Thanks
+> Kishon
