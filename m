@@ -1,40 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:40475 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751219AbdLCN4g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 3 Dec 2017 08:56:36 -0500
-Subject: Invalidation in SMMU v3
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-References: <52a6fdbb-9a47-76c0-da59-89ac561b8ee3@gmail.com>
- <8fd78f56-43ed-e480-1c98-5d1162452674@arm.com>
- <e8effeac-bdfb-34dd-63e5-eb3fb08fd540@gmail.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>
-From: valmiki <valmikibow@gmail.com>
-Message-ID: <c2c2c5b0-7533-632b-f69e-050f125bef06@gmail.com>
-Date: Sun, 3 Dec 2017 19:26:31 +0530
-MIME-Version: 1.0
-In-Reply-To: <e8effeac-bdfb-34dd-63e5-eb3fb08fd540@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v1 0/7] SR-IOV Enablement on PowerVM
+Date: Mon, 18 Dec 2017 16:38:01 -0600
+Message-Id: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
+This patch series will enable SR-IOV on PowerVM. A specific set of
+lids for PFW/PHYP is required. They are planned to release with
+920 at the moment.
 
-In PASID flow arm_smmu_atc_inv_master_all is called where size and iova 
-of arm_smmu_atc_inv_to_cmd are zero and  no address is being filled in 
-struct arm_smmu_cmdq_ent->atc.addr.
-So how will smmu hardware know if there are any ats translations 
-requested or not ?
-How invalidation are carried out in PASID flow w.r.t address and size?
+For IBM internal testers let me know of a system you want to test on
+and we can put on the lids required or we can provide a system to run
+the tests.
 
+This patch depends on the three patches:
+988fc3ba5653278a8c14d6ccf687371775930d2b
+dae7253f9f78a731755ca20c66b2d2c40b86baea
+608c0d8804ef3ca4cda8ec6ad914e47deb283d7b
 
-Regards,
-Valmiki
+v1 - Initial Patch
+v2 - Addressed Alexey and Russell's comments
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+Bryant G. Ly (7):
+  platform/pseries: Update VF config space after EEH
+  powerpc/kernel: Add uevents in EEH error/resume
+  platforms/pseries: Set eeh_pe of EEH_PE_VF type
+  powerpc/kernel Add EEH operations to notify resume
+  powerpc/kernel: Add EEH notify resume sysfs
+  pseries/pci: Associate PEs to VFs in configure SR-IOV
+  pseries/setup: Add Initialization of VF Bars
+
+ arch/powerpc/include/asm/eeh.h               |   1 +
+ arch/powerpc/include/asm/pci-bridge.h        |   5 +-
+ arch/powerpc/include/asm/pci.h               |   2 +
+ arch/powerpc/kernel/eeh_driver.c             |   9 +-
+ arch/powerpc/kernel/eeh_sysfs.c              |  46 ++++++-
+ arch/powerpc/kernel/pci_of_scan.c            |   2 +-
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   3 +-
+ arch/powerpc/platforms/pseries/eeh_pseries.c | 192 ++++++++++++++++++++++++++-
+ arch/powerpc/platforms/pseries/pci.c         | 156 +++++++++++++++++++++-
+ arch/powerpc/platforms/pseries/setup.c       | 183 +++++++++++++++++++++++++
+ 10 files changed, 589 insertions(+), 10 deletions(-)
+
+-- 
+2.14.3 (Apple Git-98)
