@@ -1,54 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 9 Dec 2017 09:00:08 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Rafael Wysocki <rjw@rjwysocki.net>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: [PATCH 0/9] remove some of unneeded kallsyms includes
-Message-ID: <20171209000008.GF489@tigerII.localdomain>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
- <20171208142442.7c09406d7f0bc3d2c1bfe411@linux-foundation.org>
+Return-Path: <SRS0=Tqmx=DO=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=Tqmx=DO=ozlabs.ru=aik@kernel.org>
+Subject: Re: [PATCH v1 2/7] powerpc/kernel: Add uevents in EEH error/resume
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
+ paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+ alex.williamson@redhat.com, helgaas@kernel.org, ruscur@russell.cc,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+ <20171213153242.98015-3-bryantly@linux.vnet.ibm.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <79cea2a4-510d-37b5-0892-c87ffd0221b4@ozlabs.ru>
+Date: Mon, 18 Dec 2017 14:54:35 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171208142442.7c09406d7f0bc3d2c1bfe411@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171213153242.98015-3-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On (12/08/17 14:24), Andrew Morton wrote:
-> On Fri,  8 Dec 2017 11:56:07 +0900 Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com> wrote:
+On 14/12/17 02:32, Bryant G. Ly wrote:
+> Devices can go offline when EEH is reported. This patch adds
+> a change to the kernel object and lets udev know of error.
+> When device resumes a change is also set reporting device as
+> online. Therefore, EEH events are better propagated to user
+> space for devices in powerpc arch.
 > 
-> > 	A small patch set that removes some kallsyms includes
-> > here and there. Mostly those kallsyms includes are leftovers:
-> > printk() gained %pS/%pF modifiers support some time ago, so
-> > print_symbol() and friends became sort of unneeded [along with
-> > print_fn_descriptor_symbol() deprecation], thus some of the
-> > users were converted to pS/pF. This patch set just cleans up
-> > that convertion.
-> > 
-> > 	We still have a number of print_symbol() users [which
-> > must be converted to ps/pf, print_symbol() uses a stack buffer
-> > KSYM_SYMBOL_LEN to do what printk(ps/pf) can do], but this is
-> > out of scope.
-> > 
-> > 	I compile tested the patch set; but, as always and
-> > usual, would be great if 0day build robot double check it.
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/kernel/eeh_driver.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 > 
-> I grabbed everything and shall drop any patches which later turn up in
-> the various subsystem trees.
+> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+> index 3c0fa99c5533..c61bf770282b 100644
+> --- a/arch/powerpc/kernel/eeh_driver.c
+> +++ b/arch/powerpc/kernel/eeh_driver.c
+> @@ -204,6 +204,7 @@ static void *eeh_report_error(void *data, void *userdata)
+>  	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+>  	enum pci_ers_result rc, *res = userdata;
+>  	struct pci_driver *driver;
+> +	char *envp[] = {"EVENT=EEH_ERROR", "ONLINE=0", NULL};
 
-thank you!
+scripts/checkpatch.pl:
 
-	-ss
+WARNING: char * array declaration might be better as static const
+#27: FILE: arch/powerpc/kernel/eeh_driver.c:207:
++       char *envp[] = {"EVENT=EEH_ERROR", "ONLINE=0", NULL};
+
+
+
+>  
+>  	if (!dev || eeh_dev_removed(edev) || eeh_pe_passed(edev->pe))
+>  		return NULL;
+> @@ -228,6 +229,7 @@ static void *eeh_report_error(void *data, void *userdata)
+>  
+>  	edev->in_error = true;
+>  	eeh_pcid_put(dev);
+> +	kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
+>  	return NULL;
+>  }
+>  
+> @@ -358,6 +360,7 @@ static void *eeh_report_resume(void *data, void *userdata)
+>  	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+>  	bool was_in_error;
+>  	struct pci_driver *driver;
+> +	char *envp[] = {"EVENT=EEH_RESUME", "ONLINE=1", NULL};
+
+
+WARNING: char * array declaration might be better as static const
+#43: FILE: arch/powerpc/kernel/eeh_driver.c:363:
++       char *envp[] = {"EVENT=EEH_RESUME", "ONLINE=1", NULL};
+
+
+>  
+>  	if (!dev || eeh_dev_removed(edev) || eeh_pe_passed(edev->pe))
+>  		return NULL;
+> @@ -379,8 +382,8 @@ static void *eeh_report_resume(void *data, void *userdata)
+>  	}
+>  
+>  	driver->err_handler->resume(dev);
+> -
+
+Unnecessary change.
+
+
+>  	eeh_pcid_put(dev);
+> +	kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
+>  	return NULL;
+>  }
+>  
+> 
+
+
+-- 
+Alexey
