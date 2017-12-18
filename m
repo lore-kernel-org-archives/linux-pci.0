@@ -1,48 +1,95 @@
-Return-Path: <SRS0=QnIk=DJ=verge.net.au=horms@kernel.org>
-Return-Path: <SRS0=QnIk=DJ=verge.net.au=horms@kernel.org>
-Date: Wed, 13 Dec 2017 09:29:34 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: rcar: Fix use-after-free in probe error path
-Message-ID: <20171213082933.dpswh3x234bu4dhu@verge.net.au>
-References: <1512641720-4715-1-git-send-email-geert+renesas@glider.be>
- <1512641720-4715-2-git-send-email-geert+renesas@glider.be>
- <20171212192942.GE53955@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171212192942.GE53955@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=gj+u=DO=russell.cc=ruscur@kernel.org>
+Return-Path: <SRS0=gj+u=DO=russell.cc=ruscur@kernel.org>
+Message-ID: <1513571493.2133.11.camel@russell.cc>
+Subject: Re: [PATCH v1 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
+From: Russell Currey <ruscur@russell.cc>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+ alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
+ linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ bodong@mellanox.com,  eli@mellanox.com, saeedm@mellanox.com
+Date: Mon, 18 Dec 2017 15:31:33 +1100
+In-Reply-To: <20171213153242.98015-4-bryantly@linux.vnet.ibm.com>
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+	 <20171213153242.98015-4-bryantly@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 12, 2017 at 01:29:42PM -0600, Bjorn Helgaas wrote:
-> On Thu, Dec 07, 2017 at 11:15:19AM +0100, Geert Uytterhoeven wrote:
-> > If CONFIG_DEBUG_SLAB=y, and no PCIe card is inserted, the kernel crashes
-> > during probe on r8a7791/koelsch:
-> > 
-> >     rcar-pcie fe000000.pcie: PCIe link down
-> >     Unable to handle kernel paging request at virtual address 6b6b6b6b
-> > 
-> > (seeing this message requires earlycon and keep_bootcon).
-> > 
-> > Indeed, pci_free_host_bridge() frees the PCI host bridge, including the
-> > embedded rcar_pcie object, so pci_free_resource_list() must not be
-> > called afterwards.
-> > 
-> > To fix this, move the call to pci_free_resource_list() up, and update the
-> > label name accordingly.
-> > 
-> > Fixes: ddd535f1ea3eb27e ("PCI: rcar: Fix memory leak when no PCIe card is inserted")
-> > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+On Wed, 2017-12-13 at 09:32 -0600, Bryant G. Ly wrote:
+> To correctly use EEH code one has to make
+> sure that the EEH_PE_VF is set for dynamic created
+> VFs. Therefore this patch allocates an eeh_pe of
+> eeh type EEH_PE_VF and associates PE with parent.
 > 
-> Applied with Simon's and Lorenzo's acks to for-linus for v4.15, thanks!
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h        | 5 ++++-
+>  arch/powerpc/platforms/pseries/eeh_pseries.c | 9 ++++++++-
+>  2 files changed, 12 insertions(+), 2 deletions(-)
 > 
-> I'll leave the second patch up to Lorenzo for v4.16, since it doesn't seem
-> as critical.
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h
+> b/arch/powerpc/include/asm/pci-bridge.h
+> index 9f66ddebb799..c30c7cba4c30 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -211,7 +211,10 @@ struct pci_dn {
+>  	unsigned int *pe_num_map;	/* PE# for the first VF PE
+> or array */
+>  	bool    m64_single_mode;	/* Use M64 BAR in Single
+> Mode */
+>  #define IODA_INVALID_M64        (-1)
+> -	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+> +	union {
+> +		int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+> +		int     last_allow_rc;
+> +	};
 
-Thanks Bjorn, that's fine by me.
+A comment would be useful here.  Why are these mutually exclusive,
+last_allow_rc isn't amazingly self-documenting.
+
+>  #endif /* CONFIG_PCI_IOV */
+>  	int	mps;			/* Maximum Payload
+> Size */
+>  	struct list_head child_list;
+> diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c
+> b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> index 1a9a6fa91151..5bdd1678a9ff 100644
+> --- a/arch/powerpc/platforms/pseries/eeh_pseries.c
+> +++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
+> @@ -58,6 +58,8 @@ static int ibm_configure_pe;
+>  void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
+>  {
+>  	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +	struct pci_dn *physfn_pdn;
+> +	struct eeh_dev *edev;
+>  
+>  	if (!pdev->is_virtfn)
+>  		return;
+> @@ -65,6 +67,10 @@ void pseries_pcibios_bus_add_device(struct pci_dev
+> *pdev)
+>  	pdn->device_id  =  pdev->device;
+>  	pdn->vendor_id  =  pdev->vendor;
+>  	pdn->class_code =  pdev->class;
+> +	pdn->last_allow_rc =  0;
+> +	physfn_pdn      =  pci_get_pdn(pdev->physfn);
+> +	pdn->pe_number  =  physfn_pdn->pe_num_map[pdn->vf_index];
+> +	edev = pdn_to_eeh_dev(pdn);
+>  
+>  	/*
+>  	 * The following operations will fail if VF's sysfs files
+> @@ -72,8 +78,9 @@ void pseries_pcibios_bus_add_device(struct pci_dev
+> *pdev)
+>  	 */
+>  	eeh_add_device_early(pdn);
+>  	eeh_add_device_late(pdev);
+> +	edev->pe_config_addr =  (pdn->busno << 16) | (pdn->devfn <<
+> 8);
+> +	eeh_add_to_parent_pe(edev);
+>  	eeh_sysfs_add_device(pdev);
+> -
+>  }
+>  
+>  /*
