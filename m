@@ -1,56 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 21 Dec 2017 07:13:58 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 0/7] ARM: dts: dra7: Enable x2 lane mode support
-Message-ID: <20171221151358.GQ3875@atomide.com>
-References: <20171219093133.16565-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 17 Dec 2017 20:23:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andreas Noever <andreas.noever@gmail.com>,
+        Michael Jamet <michael.jamet@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Yehezkel Bernat <yehezkel.bernat@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [bugzilla-daemon@bugzilla.kernel.org: [Bug 198181] New: BUG at
+ drivers/pci/msi.c:352 when unplugging a sysfs authorized thunderbolt 3 dock]
+Message-ID: <20171218022357.GA14941@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20171219093133.16565-1-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com,
- Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
- Rob Herring <robh+dt@kernel.org>, bcousson@baylibre.com,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Kishon Vijay Abraham I <kishon@ti.com> [171219 01:34]:
-> Add properties to enable PCIe x2 lane mode since all dra7
-> based SoCs support x2 lane mode.
-> 
-> However only dra76-evm has a slot which can support x2 lane
-> cards. Hence only enable x2 lane mode in dra76-evm.
-> (am571x-idk can support x2 lane mode but that makes usb port
-> not functional so not including the patch to enable
-> x2 mode in am571x-idk)
-> 
-> Also included in this series is patch to enable PCIe configs
-> (both host and device) in omap2plus_defconfig and
-> multi_v7_defconfig
-> 
-> In order to get x2 mode working [1] is required.
-> 
-> However by keeping the older compatible, this series won't
-> break functionality if this series is merged before [1]
+----- Forwarded message from bugzilla-daemon@bugzilla.kernel.org -----
 
-OK applying into omap-for-v4.16/dt and omap-for-v4.16/defconfig.
+Date: Sun, 17 Dec 2017 15:04:51 +0000
+From: bugzilla-daemon@bugzilla.kernel.org
+To: bugzilla.pci@gmail.com
+Subject: [Bug 198181] New: BUG at drivers/pci/msi.c:352 when unplugging a sysfs
+	authorized thunderbolt 3 dock
 
-Thanks,
+https://bugzilla.kernel.org/show_bug.cgi?id=198181
 
-Tony
+            Bug ID: 198181
+           Summary: BUG at drivers/pci/msi.c:352 when unplugging a sysfs
+                    authorized thunderbolt 3 dock
+           Product: Drivers
+           Version: 2.5
+    Kernel Version: 4.14.4
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: PCI
+          Assignee: drivers_pci@kernel-bugs.osdl.org
+          Reporter: nheart@gmail.com
+                CC: bhelgaas@google.com
+        Regression: No
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Created attachment 261219
+  --> https://bugzilla.kernel.org/attachment.cgi?id=261219&action=edit
+dmesg output
+
+Hey,
+
+I have a CalDigit TS3 Lite Thunderbolt 3 Dock that I use with a Dell Alienware
+13.
+
+When plugged in, the dock works fine, except no USB devices are recognized.
+After some googling I found that I need to authorize it access to the dock via
+sysfs https://lkml.org/lkml/2017/5/18/848
+
+After I run echo 1 > /sys/bus/thunderbolt/devices/0-1/authorized
+
+I can take full use of the dock, however if I unplug it, I face a kernel bug
+at:
+
+drivers/pci/msi.c:352 (dmesg attached). 
+
+This is the free_msi_irqs function, but I don't understand the code. Any
+explanation/help suggestions?
+
+Cheers,
+
+Nick
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
+
+----- End forwarded message -----
