@@ -1,142 +1,43 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: exynos: remove redundant code in
- exynos_pcie_establish_link
-To: Jingoo Han <jingoohan1@gmail.com>, 'Krzysztof Kozlowski' <krzk@kernel.org>
-From: Pankaj Dubey <pankaj.dubey@samsung.com>
-Message-ID: <cd0c5923-899c-0652-20ce-7f08f4bf32e1@samsung.com>
-Date: Thu, 28 Dec 2017 15:20:53 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:18110 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030236AbdLSJp5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 04:45:57 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, <kishon@ti.com>
+CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
+Subject: [PATCH 1/2] dt-bindings: phy: ti-pipe3: Add dt binding to use USB3 PHY for PCIe
+Date: Tue, 19 Dec 2017 15:15:39 +0530
+Message-ID: <20171219094540.18432-2-kishon@ti.com>
+In-Reply-To: <20171219094540.18432-1-kishon@ti.com>
+References: <20171219094540.18432-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <000101d37a79$2bdb4c20$8391e460$@gmail.com>
-References: <CGME20171009141438epcas2p4ead7e2f2d1af7e0950f2c026e3a9943b@epcas2p4.samsung.com>
- <1507558478-3218-1-git-send-email-pankaj.dubey@samsung.com>
- <CAJKOXPeC=cS2cvAXHrKuK5F4tEqH6PppwYkxC+Z8+5D--48CAg@mail.gmail.com>
- <000a01d3411a$82eea770$88cbf650$@gmail.com>
- <b81a09be-1873-ab81-dcb2-c3b29ff7e430@samsung.com>
- <000101d37a79$2bdb4c20$8391e460$@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
- 'linux-pci' <linux-pci@vger.kernel.org>, linux-samsung-soc@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, 'Anvesh Salveru' <anvesh.s@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo,
+DRA72 uses USB3 PHY for the 2nd lane of PCIE. Add dt bindings property
+to indicate if the USB3 PHY should be used for 2nd lane of PCIe.
 
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/phy/ti-phy.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-On 12/21/2017 10:01 PM, Jingoo Han wrote:
-> On Tuesday, October 10, 2017 9:46 AM, Pankaj Dubey wrote:
->> Hi Jingoo,
->>
->>
->> On 10/09/2017 09:50 PM, Jingoo Han wrote:
->>> On Monday, October 9, 2017 10:44 AM, Krzysztof Kozlowski wrote:
->>>> On Mon, Oct 9, 2017 at 4:14 PM, Pankaj Dubey <pankaj.dubey@samsung.com>
->>>> wrote:
->>>>> From: Anvesh Salveru <anvesh.s@samsung.com>
->>>>>
->>>>> In exynos_pcie_establish_link if driver is not using generic phy,
->>>>> we are resetting PHY twice, which is redundant, so this patch removes
->>>> Hi Pankaj,
->>>>
->>>> This lacks the information why it is redundant.
->>> (I resend this mail, because email address of pci list was corrupted.)
->> Thanks, somehow I typed wrong email id.
->>> I think so, too.
->>>
->>> Did you test this code on some boards with Exynos PCIe?
->>> Or did hardware engineers confirm this?
->>> Please add more information on this patch.
->> I have replied reason behind this patch in reply to Krzysztof, hope I am
->> able to
->> explain logic behind this change.
->>
->> I do not have access to Exynos5440 PCIe, and this PHY_COMMON_RESET is not
->> applicable to other Exynos SoC which I have with me, so I can't test
->> this change,
->> but if you see the change it is an obvious change, before introducing
->> generic phy
->> support to this driver PHY_COMMON_RESET was programmed only once, then
->> in case platform is not using PHY it suppose to be done only once during
->> linkup.
->> I am not sure when Jaehoon introduced this patch, he verified this on
->> Exynos5440 or
->> not. We are just trying to make the logic as it was before without
->> affecting anything.
->>
->> Thanks,
->> Pankaj Dubey
->>> Best regards,
->>> Jingoo Han
->>>
->>>>> repeated lines of code for PHY reset.
->>>>>
->>>>> Signed-off-by: Anvesh Salveru <anvesh.s@samsung.com>
->>>> Your Signed-off-by is needed here.
-> Sorry for being late.
-> I checked that this patch is right.
->
-> Can you send this patch again with your Signed-off-by?
-> Also, you can add my Acked-by to your new patch.
->
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Thanks for review and ack.
-Will resubmit the patch along with my Signed-off-by and your Acked-by.
-
-Thanks,
-Pankaj Dubey
-> Best regards,
-> Jingoo Han
->
->>>> Best regards,
->>>> Krzysztof
->>>>
->>>>> ---
->>>>>    drivers/pci/dwc/pci-exynos.c | 7 -------
->>>>>    1 file changed, 7 deletions(-)
->>>>>
->>>>> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-
->> exynos.c
->>>>> index 5596fde..85d2f4b 100644
->>>>> --- a/drivers/pci/dwc/pci-exynos.c
->>>>> +++ b/drivers/pci/dwc/pci-exynos.c
->>>>> @@ -423,13 +423,6 @@ static int exynos_pcie_establish_link(struct
->>>> exynos_pcie *ep)
->>>>>                   exynos_pcie_deassert_phy_reset(ep);
->>>>>                   exynos_pcie_power_on_phy(ep);
->>>>>                   exynos_pcie_init_phy(ep);
->>>>> -
->>>>> -               /* pulse for common reset */
->>>>> -               exynos_pcie_writel(ep->mem_res->block_base, 1,
->>>>> -                                       PCIE_PHY_COMMON_RESET);
->>>>> -               udelay(500);
->>>>> -               exynos_pcie_writel(ep->mem_res->block_base, 0,
->>>>> -                                       PCIE_PHY_COMMON_RESET);
->>>>>           }
->>>>>
->>>>>           /* pulse for common reset */
->>>>> --
->>>>> 2.7.4
->>>>>
->>>
->>>
->>>
->
->
->
->
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+index cd13e6157088..907a046e794b 100644
+--- a/Documentation/devicetree/bindings/phy/ti-phy.txt
++++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+@@ -93,6 +93,8 @@ Optional properties:
+    register that contains the SATA_PLL_SOFT_RESET bit. Only valid for sata_phy.
+  - syscon-pcs : phandle/offset pair. Phandle to the system control module and the
+    register offset to write the PCS delay value.
++ - "ti,configure-as-pcie" : property to indicate if the PHY should be
++   configured as PCIE PHY.
+ 
+ Deprecated properties:
+  - ctrl-module : phandle of the control module used by PHY driver to power on
+-- 
+2.11.0
