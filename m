@@ -1,62 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43062 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751963AbdL0XZn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Dec 2017 18:25:43 -0500
-From: Stephen Boyd <sboyd@codeaurora.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v2] PCI: dwc: Use {upper,lower}_32_bits() macros for clarity
-Date: Wed, 27 Dec 2017 15:25:40 -0800
-Message-Id: <20171227232540.22341-1-sboyd@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 17/26] PCI/quirks: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:53 -0500
+Message-Id: <1513661883-28662-18-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have macros for getting the upper or lower 32 bits of a
-number. Use them here to shave a couple lines off the code
-and provide clarity.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
+
+Extract the domain number from pdev while calling into
+pci_get_domain_bus_and_slot() function.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
+ drivers/pci/quirks.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Changes from v1:
- * Update dw_msi_setup_msg() too
- * Reword commit text slightly
-
- drivers/pci/dwc/pcie-designware-host.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 81e2157a7cfb..454b8d244071 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -89,10 +89,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	msi_target = virt_to_phys((void *)pp->msi_data);
- 
- 	/* program the msi_data */
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
--			    (u32)(msi_target & 0xffffffff));
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
--			    (u32)(msi_target >> 32 & 0xffffffff));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4, lower_32_bits(msi_target));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, upper_32_bits(msi_target));
- }
- 
- static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-@@ -189,8 +187,8 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
- 	else
- 		msi_target = virt_to_phys((void *)pp->msi_data);
- 
--	msg.address_lo = (u32)(msi_target & 0xffffffff);
--	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
-+	msg.address_lo = lower_32_bits(msi_target);
-+	msg.address_hi = upper_32_bits(msi_target);
- 
- 	if (pp->ops->get_msi_data)
- 		msg.data = pp->ops->get_msi_data(pp, pos);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index fd49b97..d7aa31f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2698,7 +2698,8 @@ static void __nv_msi_ht_cap_quirk(struct pci_dev *dev, int all)
+ 	 * HT MSI mapping should be disabled on devices that are below
+ 	 * a non-Hypertransport host bridge. Locate the host bridge...
+ 	 */
+-	host_bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
++	host_bridge = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus), 0,
++						  PCI_DEVFN(0, 0));
+ 	if (host_bridge == NULL) {
+ 		dev_warn(&dev->dev, "nv_msi_ht_cap_quirk didn't locate host bridge\n");
+ 		return;
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
