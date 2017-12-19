@@ -1,148 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57976 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750916AbdLMQz3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Dec 2017 11:55:29 -0500
-Date: Wed, 13 Dec 2017 10:55:25 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: rjw@sisk.pl, linux-pci@vger.kernel.org, stable@vger.kernel.org,
-        linuxarm@huawei.com
-Subject: Re: [PATCH V2 2/2] PCI/AER: Fix AER device configuration
-Message-ID: <20171213165525.GE30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
- <1512467438-42850-3-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 19 Dec 2017 10:48:47 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
+Subject: Re: [PATCH v5 15/18] PCI: dwc: Make cpu_addr_fixup take struct
+ dw_pcie as argument
+Message-ID: <20171219104847.GB18921@red-moon>
+References: <20171120133222.27771-1-niklas.cassel@axis.com>
+ <20171120133222.27771-16-niklas.cassel@axis.com>
+ <20171218181058.GC8157@red-moon>
+ <20171218211542.GA17166@axis.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1512467438-42850-3-git-send-email-liudongdong3@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171218211542.GA17166@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 05, 2017 at 05:50:38PM +0800, Dongdong Liu wrote:
-> AER driver only binds to root ports. It binds to one device and it also
-> configures other downstream devices.  That opens the door to concurrency
-> issues and makes it really hard to ensure that hotplug works correctly.
-> The aer_probe() path should only touch the device it is binding, it
-> should not use pci_walk_bus().  If we need to configure another device,
-> that should be done in the enumeration path for *that device*.
-> We can use  _HPX to set PCI_EXP_DEVCTL to enable error report and ensure
-> that hotplug works correctly.  For more_HPX details information,
-> we can see ACPI 6.1 section 6.2.9 _HPX (Hot Plug Parameter Extensions).
-
-_HPX is for platform-dependent things.  If Linux has generic AER
-support, i.e., if CONFIG_PCIEAER=y, we should not rely on _HPX to
-enable AER for hot-added devices.
-
-We need some mechanism in Linux for enabling AER on them.  I don't
-*like* the pci_walk_bus(), but we might need it for now because we
-have this ordering:
-
-  1) Enumerate hierarchy, disabling AER on all devices.  Currently I
-  think we only disable AER for Ports, but I propose doing it for all
-  devices.
-
-  2) Install AER driver on Root Ports.  Enable AER on Root Port.  We
-  also need to enable AER on the hierarchy below the Root Port, and
-  pci_walk_bus() seems like the logical way to do it for now.
-
-  3) Hot-add a device.  Currently I think AER will remain disabled on
-  the new device *unless* _HPX enables it.  I think this is wrong --
-  Linux should not rely on the platform for this.  We could enable AER
-  via a device-add notifier, but that seems overly complicated.
-
-  I'd rather add a bit in pci_dev like "aer_hierarchy" that is set
-  whenever we turn on AER for the device.  Then pci_aer_init() could
-  enable AER if it is enabled in the upstream device.
-
-Since the AER driver is installed after the whole hierarchy is
-enumerated, we can't use the "aer_hierarchy" bit (or whatever we call
-it) to enable AER on the devices present at boot.
-
-I would ultimately like to enable AER on the Root Ports in
-pci_aer_init() during enumeration instead of installing it as a driver
-after enumeration.  If we could ever do that, then the aer_hierarchy
-bit would work the same way for boot-time and hot-added devices, and
-we wouldn't need to do the pci_walk_bus() thing.
-
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv.c | 49 ++++---------------------------------------
->  1 file changed, 4 insertions(+), 45 deletions(-)
+On Mon, Dec 18, 2017 at 10:15:43PM +0100, Niklas Cassel wrote:
+> On Mon, Dec 18, 2017 at 06:10:58PM +0000, Lorenzo Pieralisi wrote:
+> > On Mon, Nov 20, 2017 at 02:32:18PM +0100, Niklas Cassel wrote:
+> > > There is no need to hard code the cpu to bus address fixup mask.
+> > 
+> > There is no need or hardcoding it is broken ? There is a difference
+> > between those two.
 > 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index 6ff5f5b..cd63025 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -58,41 +58,6 @@ bool pci_aer_available(void)
->  	return !pcie_aer_disable && pci_msi_enabled();
->  }
->  
-> -static int set_device_error_reporting(struct pci_dev *dev, void *data)
-> -{
-> -	bool enable = *((bool *)data);
-> -	int type = pci_pcie_type(dev);
-> -
-> -	if ((type == PCI_EXP_TYPE_ROOT_PORT) ||
-> -	    (type == PCI_EXP_TYPE_UPSTREAM) ||
-> -	    (type == PCI_EXP_TYPE_DOWNSTREAM)) {
-> -		if (enable)
-> -			pci_enable_pcie_error_reporting(dev);
-> -		else
-> -			pci_disable_pcie_error_reporting(dev);
-> -	}
-> -
-> -	if (enable)
-> -		pcie_set_ecrc_checking(dev);
-> -
-> -	return 0;
-> -}
-> -
-> -/**
-> - * set_downstream_devices_error_reporting - enable/disable the error reporting  bits on the root port and its downstream ports.
-> - * @dev: pointer to root port's pci_dev data structure
-> - * @enable: true = enable error reporting, false = disable error reporting.
-> - */
-> -static void set_downstream_devices_error_reporting(struct pci_dev *dev,
-> -						   bool enable)
-> -{
-> -	set_device_error_reporting(dev, &enable);
-> -
-> -	if (!dev->subordinate)
-> -		return;
-> -	pci_walk_bus(dev->subordinate, set_device_error_reporting, &enable);
-> -}
-> -
->  /**
->   * aer_enable_rootport - enable Root Port's interrupts when receiving messages
->   * @rpc: pointer to a Root Port data structure
-> @@ -123,11 +88,8 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
->  	pci_read_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, &reg32);
->  	pci_write_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, reg32);
->  
-> -	/*
-> -	 * Enable error reporting for the root port device and downstream port
-> -	 * devices.
-> -	 */
-> -	set_downstream_devices_error_reporting(pdev, true);
-> +	/* Enable error reporting for the root port device */
-> +	pci_enable_pcie_error_reporting(pdev);
->  
->  	/* Enable Root Port's interrupt in response to error messages */
->  	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, &reg32);
-> @@ -147,11 +109,8 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
->  	u32 reg32;
->  	int pos;
->  
-> -	/*
-> -	 * Disable error reporting for the root port device and downstream port
-> -	 * devices.
-> -	 */
-> -	set_downstream_devices_error_reporting(pdev, false);
-> +	/* Disable error reporting for the root port device */
-> +	pci_disable_pcie_error_reporting(pdev);
->  
->  	pos = pdev->aer_cap;
->  	/* Disable Root's interrupt in response to error messages */
-> -- 
-> 1.9.1
+> Well, both :P
 > 
+> The current hardcoding for ARTPEC-6: GENMASK(27, 0), is wrong.
+> Hardcoding the correct mask GENMASK(28, 0) would be sufficient
+> for ARTPEC-6.
+> 
+> However, the ARTPEC-7 is a 32-bit CPU (without LPAE), but has
+> a 64-bit bus. So the ARTPEC-7 can have more devices than fits
+> in the 32-bit range, therefore a lookup table is placed between
+> the bus and the CPU, so you can choose what devices to map.
+> This mapping, which decides what devices to map, is currently
+> done at boot via devicetree.
+> So, on ARTPEC-7, it is not possible to hardcode a CPU_TO_BUS
+> mask, since the PCIe controller's address is only known via DT.
+> 
+> Having a hardcoded value is arguably wrong. It should probably
+> have been a DT property called something like "cpu-bus-fixup-mask".
+> However, this property is not needed since we already have
+> pp->cfg0_base and ep->phys_base, which is derived from already
+> existing DT properties.
+> 
+> By using pp->cfg0_base and ep->phys_base, we avoid hardcoding a mask
+> in the driver. This should work for ARTPEC-6, DRA7xx and ARTPEC-7.
+> I have not changed the code in DRA7xx though, since their existing
+> code works, but if they want, they could use the same logic as
+> artpec6_pcie_cpu_addr_fixup, and thus remove their hardcoded mask.
+> 
+> > 
+> > > The PCIe controller has a global address on the AXI bus, however,
+> > > from the perspective of the PCIe controller, its base starts at 0x0,
+> > > so the local address is 0x0. To get the bus address, simply subtract
+> > > the global address from the cpu address. The global address is taken
+> > > from device tree.
+> > 
+> > I do not understand this paragraph, I would kindly ask you and Kishon to
+> > explain please this patch and
+> > 
+> > commit a660083eb06c ("PCI: dwc: designware: Add new *ops* for CPU addr
+> > fixup")
+> > 
+> > What the cpu_addr_fixup() hook is supposed to do ? And what does the
+> > "addr_space" property represent ?
+> 
+> The ARTPEC-6 and DRA7xx SoCs both has an interconnect configured is a way
+> where the local address of the PCIe controller is 0x0.
+> 
+> For ARTPEC-6 the global address of the PCIe controller is 0xf8050000,
+> so if the CPU writes to address 0xf8050008, from the perspective of the
+> PCIe controller, it will see a write to address 0x8.
+> 
+> This is normally not a problem, but when reading/writing from an endpoint,
+> we go via the outbound iATU. The outbound iATU has to be programmed with
+> a base address (reads/writes in the range [base address + limit] will be
+> subject to translation).
+> 
+> However, since the address the PCIe controller sees, in reality is
+> "0xf8050000 + the address the PCIe controller sees", we need to subtract
+> the global address before programming the base address in the outbound
+> iATU.
+> 
+> Kishon explains the same thing in commit f4c55c5a3f7f68c0.
+> 
+> For this patch, I tried make the commit message understandable,
+> without going into too much detail, but there is probably still
+> room for improvement.
+> 
+> > 
+> > > Also for ARTPEC-7, hard coding the cpu to bus address fixup mask is
+> > > not possible, since it uses a High Address Bits Look Up Table, which
+> > > means that it can, at runtime, map the PCIe window to an arbitrary
+> > > address in the 32-bit address space.
+> > 
+> > But you are not changing the ARTPEC-7 mechanism, are you ? I do not
+> > understand this paragraph - I see no change for ARTPEC-7 in this patch.
+> 
+> Hopefully this is clarified by the comments above.
+> 
+> > 
+> > > This also fixes a bug for ARTPEC-6, where the cpu to bus address
+> > > fixup mask previously was off by one (GENMASK(27, 0), rather than
+> > > GENMASK(28, 0)). This is another reason to calculate the mask by
+> > > using values from device tree.
+> > 
+> > What this patch does (and how the cpu_addr_fixup() mechanism works)
+> > is not clear to me, please explain, we can rewrite the commit log
+> > with a clear explanation then.
+> 
+> Hopefully this is clarified by the comments above.
+
+It is, thank you - it would be good to convert this thread into commit
+log format, you can send it as an update to this patch.
+
+Thanks,
+Lorenzo
