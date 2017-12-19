@@ -1,52 +1,143 @@
-Return-Path: <SRS0=mj6X=DZ=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=mj6X=DZ=kernel.crashing.org=benh@kernel.org>
-Message-ID: <1514505758.2743.101.camel@kernel.crashing.org>
-Subject: Re: [PATCH v2 2/7] powerpc/kernel: Add uevents in EEH error/resume
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Juan Alvarez
-	 <jjalvare@linux.vnet.ibm.com>
-Cc: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, paulus@samba.org,
-        mpe@ellerman.id.au, seroyer@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, aik@ozlabs.ru, ruscur@russell.cc,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com,
-        Keith Busch <keith.busch@intel.com>,
-        Gabriele Paoloni
- <gabriele.paoloni@huawei.com>,
-        Dongdong Liu <liudongdong3@huawei.com>
-Date: Fri, 29 Dec 2017 11:02:38 +1100
-In-Reply-To: <20171228232253.GC19819@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-	 <20171218223808.83928-3-bryantly@linux.vnet.ibm.com>
-	 <20171219045009.GC14941@bhelgaas-glaptop.roam.corp.google.com>
-	 <1513664878.2743.8.camel@kernel.crashing.org>
-	 <952dac4e-cf22-ed68-1a29-58ac7ed3515a@linux.vnet.ibm.com>
-	 <20171228232253.GC19819@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 09/26] drm/nouveau: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:45 -0500
+Message-Id: <1513661883-28662-10-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-kernel@lists.infradead.org, David Airlie <airlied@linux.ie>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS"
+ <dri-devel@lists.freedesktop.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Ben Skeggs <bskeggs@redhat.com>,
+ "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS"
+ <nouveau@lists.freedesktop.org>, Ilia Mirkin <imirkin@alum.mit.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-12-28 at 17:22 -0600, Bjorn Helgaas wrote:
-> Both paths end up calling the pci_error_handlers.error_detected()
-> hook.
-> 
-> Drivers are not supposed to care what arch they're running on.  If the
-> driver supplies an .error_detected() entry point, it's up to the PCI
-> core and powerpc code to use it consistently across arches.  That
-> means the same uevents (if any) should be emitted from both paths.
-> 
-> The best way would be to unify the call of .error_detected() so the
-> AER path and the powerpc path do it via the same function.  The AER
-> report_error_detected() and the powerpc eeh_report_error() do look
-> fairly similar, so this seems possible in principle, but I'm not
-> holding my breath.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Factoring these callers into a common function that can then do the
-uevent for errors makes a lot of sense.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-The "resume" path might be trickier, but even then, rather than calling
-directly the driver op, it would be easy to have a little wrapper that
-does it, which can then also do the uevent.
+Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
+and extract the domain number from
+1. struct pci_dev
+2. struct pci_dev through drm_device->pdev
+3. struct pci_dev through fb->subdev->drm_device->pdev
 
-Ben.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/gpu/drm/nouveau/dispnv04/arb.c           |  4 +++-
+ drivers/gpu/drm/nouveau/dispnv04/hw.c            | 10 +++++++---
+ drivers/gpu/drm/nouveau/nouveau_drm.c            |  3 ++-
+ drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c | 10 +++++++++-
+ 4 files changed, 21 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/nouveau/dispnv04/arb.c b/drivers/gpu/drm/nouveau/dispnv04/arb.c
+index 90075b6..c79160c 100644
+--- a/drivers/gpu/drm/nouveau/dispnv04/arb.c
++++ b/drivers/gpu/drm/nouveau/dispnv04/arb.c
+@@ -213,8 +213,10 @@ struct nv_sim_state {
+ 	if ((dev->pdev->device & 0xffff) == 0x01a0 /*CHIPSET_NFORCE*/ ||
+ 	    (dev->pdev->device & 0xffff) == 0x01f0 /*CHIPSET_NFORCE2*/) {
+ 		uint32_t type;
++		int domain = pci_domain_nr(dev->pdev->bus);
+ 
+-		pci_read_config_dword(pci_get_bus_and_slot(0, 1), 0x7c, &type);
++		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 1),
++				      0x7c, &type);
+ 
+ 		sim_data.memory_type = (type >> 12) & 1;
+ 		sim_data.memory_width = 64;
+diff --git a/drivers/gpu/drm/nouveau/dispnv04/hw.c b/drivers/gpu/drm/nouveau/dispnv04/hw.c
+index b985990..0c9bdf0 100644
+--- a/drivers/gpu/drm/nouveau/dispnv04/hw.c
++++ b/drivers/gpu/drm/nouveau/dispnv04/hw.c
+@@ -216,12 +216,15 @@
+ {
+ 	struct nvkm_pll_vals pllvals;
+ 	int ret;
++	int domain;
++
++	domain = pci_domain_nr(dev->pdev->bus);
+ 
+ 	if (plltype == PLL_MEMORY &&
+ 	    (dev->pdev->device & 0x0ff0) == CHIPSET_NFORCE) {
+ 		uint32_t mpllP;
+-
+-		pci_read_config_dword(pci_get_bus_and_slot(0, 3), 0x6c, &mpllP);
++		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 3),
++				      0x6c, &mpllP);
+ 		mpllP = (mpllP >> 8) & 0xf;
+ 		if (!mpllP)
+ 			mpllP = 4;
+@@ -232,7 +235,8 @@
+ 	    (dev->pdev->device & 0xff0) == CHIPSET_NFORCE2) {
+ 		uint32_t clock;
+ 
+-		pci_read_config_dword(pci_get_bus_and_slot(0, 5), 0x4c, &clock);
++		pci_read_config_dword(pci_get_domain_bus_and_slot(domain, 0, 5),
++				      0x4c, &clock);
+ 		return clock / 1000;
+ 	}
+ 
+diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c b/drivers/gpu/drm/nouveau/nouveau_drm.c
+index 8d4a5be..33b6139 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_drm.c
++++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
+@@ -524,7 +524,8 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* subfunction one is a hdmi audio device? */
+-	drm->hdmi_device = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
++	drm->hdmi_device = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++						(unsigned int)pdev->bus->number,
+ 						PCI_DEVFN(PCI_SLOT(pdev->devfn), 1));
+ 
+ 	if (!drm->hdmi_device) {
+diff --git a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
+index 4c07d10..18241c6 100644
+--- a/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
++++ b/drivers/gpu/drm/nouveau/nvkm/subdev/fb/ramnv1a.c
+@@ -28,8 +28,16 @@
+ {
+ 	struct pci_dev *bridge;
+ 	u32 mem, mib;
++	int domain = 0;
++	struct pci_dev *pdev = NULL;
+ 
+-	bridge = pci_get_bus_and_slot(0, PCI_DEVFN(0, 1));
++	if (dev_is_pci(fb->subdev.device->dev))
++		pdev = to_pci_dev(fb->subdev.device->dev);
++
++	if (pdev)
++		domain = pci_domain_nr(pdev->bus);
++
++	bridge = pci_get_domain_bus_and_slot(domain, 0, PCI_DEVFN(0, 1));
+ 	if (!bridge) {
+ 		nvkm_error(&fb->subdev, "no bridge device\n");
+ 		return -ENODEV;
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
