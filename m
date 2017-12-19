@@ -1,55 +1,110 @@
-Return-Path: <SRS0=SB5a=DJ=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=SB5a=DJ=linutronix.de=tglx@kernel.org>
-Date: Wed, 13 Dec 2017 21:52:34 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
-    Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-    Andy Lutomirski <luto@kernel.org>,
-    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-    the arch/x86 maintainers <x86@kernel.org>,
-    Daniel Vetter <daniel.vetter@intel.com>,
-    Bjorn Helgaas <bhelgaas@google.com>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-In-Reply-To: <alpine.DEB.2.20.1712131856130.1885@nanos>
-Message-ID: <alpine.DEB.2.20.1712132149420.1885@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com> <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl> <alpine.DEB.2.20.1712061344560.1724@nanos>
- <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl> <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl> <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
- <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:14790 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759093AbdLSIgx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 03:36:53 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <nsekhar@ti.com>, <kishon@ti.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Rob Herring <robh@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v2] PCI: endpoint: Use EPC's device in dma_alloc_coherent/dma_free_coherent
+Date: Tue, 19 Dec 2017 14:06:27 +0530
+Message-ID: <20171219083627.7904-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 13 Dec 2017, Thomas Gleixner wrote:
-> On Wed, 13 Dec 2017, Linus Torvalds wrote:
-> 
-> > On Wed, Dec 13, 2017 at 8:41 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> > >
-> > > Definitely. That was fragile forever but puzzles me is that I can't figure
-> > > out what now causes that spurious interrupt to surface out of the blue.
-> > 
-> > Perhaps just timing?
-> 
-> That's what I'm trying to figure out right now, because that is the only
-> sensible explanation left. The whole machinery of suspend is exactly the
-> same with and without the vector changes. I instrumented all functions
-> involved and the picture is the same. I even do not see any fundamental
-> timing differences where one would say: That's it.
-> 
-> What puzzles me even more is that in the range of commits I'm fiddling with
-> there is no other change than the vector management stuff and the point
-> where it breaks makes no sense at all. The point Maarten bisected it to
-> works nicely here, so that might just point to a very subtle timing issue.
+After commit 723288836628bc1c08 ("of: restrict DMA configuration"),
+of_dma_configure doesn't configure the coherent_dma_mask/dma_mask
+of endpoint function device (since it doesn't have a dt node associated
+with and hence no dma-ranges property), resulting in dma_alloc_coherent
+(used in pci_epf_alloc_space) to fail.
 
-After doing more debugging on this it turns out that this looks like a
-legacy interrupt coming in. The vector number is always 55, which is legacy
-IRQ 7 as seen from the PIC. The corresponding IOAPIC interrupt pin is
-masked and vector 55 is completely unused.
+Fix it by making dma_alloc_coherent use EPC's device for allocating
+memory address as per discussion in [1]
 
-More questions than answers. Still investigating.
+[1] https://lkml.org/lkml/2017/10/24/26
 
-Thanks,
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Tested-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+---
+No change in patch. Only added "Tested-by" of Cyrille Pitchen.
 
-	tglx
+ drivers/pci/endpoint/pci-epc-core.c | 10 ----------
+ drivers/pci/endpoint/pci-epf-core.c |  4 ++--
+ 2 files changed, 2 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 42c2a1156325..cd7d4788b94d 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -18,7 +18,6 @@
+  */
+ 
+ #include <linux/device.h>
+-#include <linux/dma-mapping.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/of_device.h>
+@@ -371,7 +370,6 @@ EXPORT_SYMBOL_GPL(pci_epc_write_header);
+ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+ {
+ 	unsigned long flags;
+-	struct device *dev = epc->dev.parent;
+ 
+ 	if (epf->epc)
+ 		return -EBUSY;
+@@ -383,12 +381,6 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+ 		return -EINVAL;
+ 
+ 	epf->epc = epc;
+-	if (dev->of_node) {
+-		of_dma_configure(&epf->dev, dev->of_node);
+-	} else {
+-		dma_set_coherent_mask(&epf->dev, epc->dev.coherent_dma_mask);
+-		epf->dev.dma_mask = epc->dev.dma_mask;
+-	}
+ 
+ 	spin_lock_irqsave(&epc->lock, flags);
+ 	list_add_tail(&epf->list, &epc->pci_epf);
+@@ -503,9 +495,7 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
+ 	INIT_LIST_HEAD(&epc->pci_epf);
+ 
+ 	device_initialize(&epc->dev);
+-	dma_set_coherent_mask(&epc->dev, dev->coherent_dma_mask);
+ 	epc->dev.class = pci_epc_class;
+-	epc->dev.dma_mask = dev->dma_mask;
+ 	epc->dev.parent = dev;
+ 	epc->ops = ops;
+ 
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index ae1611a62808..95ccc4b8a0a2 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -99,7 +99,7 @@ EXPORT_SYMBOL_GPL(pci_epf_bind);
+  */
+ void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar)
+ {
+-	struct device *dev = &epf->dev;
++	struct device *dev = epf->epc->dev.parent;
+ 
+ 	if (!addr)
+ 		return;
+@@ -122,7 +122,7 @@ EXPORT_SYMBOL_GPL(pci_epf_free_space);
+ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
+ {
+ 	void *space;
+-	struct device *dev = &epf->dev;
++	struct device *dev = epf->epc->dev.parent;
+ 	dma_addr_t phys_addr;
+ 
+ 	if (size < 128)
+-- 
+2.11.0
