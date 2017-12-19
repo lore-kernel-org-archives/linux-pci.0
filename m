@@ -1,197 +1,225 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:40632 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753209AbdLMQnM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 11:43:12 -0500
-Subject: Re: [PATCH 3/5] PCI: cadence: Add host driver for Cadence PCIe
- controller
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, kishon@ti.com,
-        linux-pci <linux-pci@vger.kernel.org>, adouglas@cadence.com,
-        Scott Telford <stelford@cadence.com>, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        sureshp@cadence.com, nsekhar@ti.com,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <2670f7ddf59e708beb9d32bef1353e15bd4e1ecf.1511439189.git.cyrille.pitchen@free-electrons.com>
- <20171129173426.GB31205@red-moon>
- <f870ad14-0bd5-9d7b-78f2-1e7f663d1127@free-electrons.com>
- <20171204182013.GA7343@red-moon>
- <CAKv+Gu_1XZmsKJ_7ay7D74xSAhDW0y++7-CC3YfG7LOUcNZSqA@mail.gmail.com>
- <20171206113214.GA27582@red-moon>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Message-ID: <12e8cff4-3e4f-866b-6dac-27316ff4f1bc@free-electrons.com>
-Date: Wed, 13 Dec 2017 17:42:59 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 24/26] video: fbdev: riva: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:38:00 -0500
+Message-Id: <1513661883-28662-25-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:NVIDIA rivafb and nvidiafb FRAMEBUFFER DRIVER"
+ <linux-fbdev@vger.kernel.org>, Antonino Daplas <adaplas@gmail.com>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ Sinan Kaya <okaya@codeaurora.org>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20171206113214.GA27582@red-moon>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Le 06/12/2017 à 12:32, Lorenzo Pieralisi a écrit :
-> On Mon, Dec 04, 2017 at 06:49:12PM +0000, Ard Biesheuvel wrote:
-> 
-> [...]
-> 
->>>>>> +static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
->>>>>> +{
->>>>>> +     const struct cdns_pcie_rc_data *data = rc->data;
->>>>>> +     struct cdns_pcie *pcie = &rc->pcie;
->>>>>> +     u8 pbn, sbn, subn;
->>>>>> +     u32 value, ctrl;
->>>>>> +
->>>>>> +     /*
->>>>>> +      * Set the root complex BAR configuration register:
->>>>>> +      * - disable both BAR0 and BAR1.
->>>>>> +      * - enable Prefetchable Memory Base and Limit registers in type 1
->>>>>> +      *   config space (64 bits).
->>>>>> +      * - enable IO Base and Limit registers in type 1 config
->>>>>> +      *   space (32 bits).
->>>>>> +      */
->>>>>> +     ctrl = CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED;
->>>>>> +     value = CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL(ctrl) |
->>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL(ctrl) |
->>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE |
->>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS |
->>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_IO_ENABLE |
->>>>>> +             CDNS_PCIE_LM_RC_BAR_CFG_IO_32BITS;
->>>>>> +     cdns_pcie_writel(pcie, CDNS_PCIE_LM_RC_BAR_CFG, value);
->>>>>> +
->>>>>> +     /* Set root port configuration space */
->>>>>> +     if (data->vendor_id != 0xffff)
->>>>>> +             cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, data->vendor_id);
->>>>>> +     if (data->device_id != 0xffff)
->>>>>> +             cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, data->device_id);
->>>>>> +
->>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_CLASS_REVISION, 0);
->>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_CLASS_PROG, 0);
->>>>>> +     cdns_pcie_rp_writew(pcie, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
->>>>>> +
->>>>>> +     pbn = rc->bus_range->start;
->>>>>> +     sbn = pbn + 1; /* Single root port. */
->>>>>> +     subn = rc->bus_range->end;
->>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_PRIMARY_BUS, pbn);
->>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_SECONDARY_BUS, sbn);
->>>>>> +     cdns_pcie_rp_writeb(pcie, PCI_SUBORDINATE_BUS, subn);
->>>>>
->>>>> Again - I do not have the datasheet for this device therefore I would
->>>>> kindly ask you how this works; it seems to me that what you are doing
->>>>> here is done through normal configuration cycles in an ECAM compliant
->>>>> system to program the RP PRIMARY/SECONDARY/SUBORDINATE bus - I would
->>>>> like to understand why this code is needed.
->>>>>
->>>>
->>>> I will test without those lines to test whether I can remove them.
->>>>
->>>> At first, the PCIe controller was tested by Cadence team: there was code
->>>> in their bootloader to initialize the hardware (building the AXI <-> PCIe
->>>> mappings, ...): the bootloader used to set the primary, secondary and
->>>> subordinate bus numbers in the root port PCI config space.
->>>>
->>>> Also there was a hardware trick to redirect accesses of the lowest
->>>> addresses in the AXI bus to the APB bus so the PCI configuration space of
->>>> the root port could have been accessed from the AXI bus too.
->>>>
->>>> The AXI <-> PCIe mapping being done by the bootloader and the root port
->>>> config space being accessible from the AXI bus, it was possible to use
->>>> the pci-host-generic driver.
->>>
->>> That's what I was getting at. Ard (CC'ed) implemented a firmware set-up
->>> (even though it was for a different IP but maybe it applies here) that
->>> allows the kernel to use the pci-host-generic driver to initialize the
->>> PCI controller:
->>>
->>> https://marc.info/?l=linux-pci&m=150360022626351&w=2
->>>
->>> I want to understand if there is an IP initialization sequence whereby
->>> this IP can be made to work in an ECAM compliant way and therefore
->>> reuse (most of) the pci-host-generic driver code.
->>>
->>
->> I think the Synopsys case is probably very similar. There are some
->> registers that look like the config space of a root port, but in
->> reality, every memory access that hits a live host bridge window is
->> forwarded onto the link, regardless of the values of the bridge BARs.
->> That is why in the quoted case, we can get away with ignoring the root
->> port altogether, rather than jumping through hoops to make the IP
->> block's PCI config space registers appear at B/D/F 0/0/0, while still
->> having to filter type 0 config TLPs going onto the link (which is
->> arguably the job of the root port to begin with)
->>
->> So if this IP does implement a proper root port (i.e., one where the
->> bridge BARs are actually taken into account, and where type 0 config
->> TLPs are in fact filtered), I strongly recommend mapping its config
->> space registers in an ECAM compliant matter, which implies no
->> accessors in the OS.
->>
->> However, given the observation above, this IP does not appear to
->> filter type 0 config TLPs to devfn > 0 downstream of the root port
->> either.
-> 
-> Unfortunately that matches my understanding too, let's wait for
-> Cyrille's reply on my query.
-> 
->>>> However, the hardware trick won't be included in the final design since
->>>> Cadence now wants to perform all PCI configuration space accesses through
->>>> a small 4KB window at a fixed address on the AXI bus.
->>>
->>> I would like to understand what the HW "trick" (if you can disclose it)
->>> was, because if there is a chance to reuse the pci-host-generic driver
->>> for this IP I want to take it (yes it may entail some firmware set-up in
->>> the bootloader) - was it a HW trick or a specific IP SW configuration ?
->>>
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-I will have to ask for details to Cadence designers if needed but when I
-asked them about it, they explained me that AXI bus accesses in a small
-window (I guess 4KB width) were redirected to the APB bus where lay the
-registers for the root port PCI configuration space.
+struct riva_par has a pointer to struct pci_dev. Use the pci_dev member
+to extract the domain information.
 
-I was some hardware trick which won't be included in the final design, so
-we can't enable or disable it by software.
+Change the function signature for CalcStateExt and RivaGetConfig to pass
+in struct pci_dev in addition to RIVA_HW_INST so that code inside the
+riva_hw.c can also calculate domain number and pass it to
+pci_get_domain_bus_and_slot().
 
-Actually, this is requirement from the Cadence's customer that the host
-driver can access the PCI config space of any device in sub ordinates
-buses through a small memory area on the AXI bus. For some reason, they
-don't want an ECAM compliant controller.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/video/fbdev/riva/fbdev.c     |  2 +-
+ drivers/video/fbdev/riva/nv_driver.c |  7 ++++---
+ drivers/video/fbdev/riva/riva_hw.c   | 20 +++++++++++++-------
+ drivers/video/fbdev/riva/riva_hw.h   |  3 ++-
+ 4 files changed, 20 insertions(+), 12 deletions(-)
 
-I don't know the reason but my guess is that they don't want to waste to
-much space allocated to the PCIe controller on the AXI bus, likely on a
-32-bit platform. As I said, this is such an assumption.
-
->>>> Also, we now want all initialisations to be done by the linux driver
->>>> instead of the bootloader.
->>>
->>> That's a choice, I do not necessarily agree with it and I think we
->>> should aim for more standardization on the PCI host bridge set-up
->>> at firmware->kernel handover on DT platforms.
->>>
-
-It was another requirement of Cadence's customer that the PCIe host
-controller initialization is done by the Linux driver rather than by
-some boot loader.
-
-Best regards,
-
-Cyrille
-
->>
->> Well, for one, it means this IP will never be supported by ACPI, which
->> seems like a huge downside to me.
-> 
-> Yes it is - that's exactly where my comments were heading.
-> 
-> Thanks,
-> Lorenzo
-> 
-
-
+diff --git a/drivers/video/fbdev/riva/fbdev.c b/drivers/video/fbdev/riva/fbdev.c
+index 1ea78bb..ff82823 100644
+--- a/drivers/video/fbdev/riva/fbdev.c
++++ b/drivers/video/fbdev/riva/fbdev.c
+@@ -780,7 +780,7 @@ static int riva_load_video_mode(struct fb_info *info)
+ 	else
+ 		newmode.misc_output |= 0x80;	
+ 
+-	rc = CalcStateExt(&par->riva, &newmode.ext, bpp, width,
++	rc = CalcStateExt(&par->riva, &newmode.ext, par->pdev, bpp, width,
+ 			  hDisplaySize, height, dotClock);
+ 	if (rc)
+ 		goto out;
+diff --git a/drivers/video/fbdev/riva/nv_driver.c b/drivers/video/fbdev/riva/nv_driver.c
+index f3694cf..a3d9c66 100644
+--- a/drivers/video/fbdev/riva/nv_driver.c
++++ b/drivers/video/fbdev/riva/nv_driver.c
+@@ -159,6 +159,7 @@ unsigned long riva_get_memlen(struct riva_par *par)
+ 	unsigned int chipset = par->Chipset;
+ 	struct pci_dev* dev;
+ 	u32 amt;
++	int domain = pci_domain_nr(par->pdev->bus);
+ 
+ 	switch (chip->Architecture) {
+ 	case NV_ARCH_03:
+@@ -226,12 +227,12 @@ unsigned long riva_get_memlen(struct riva_par *par)
+ 	case NV_ARCH_30:
+ 		if(chipset == NV_CHIP_IGEFORCE2) {
+ 
+-			dev = pci_get_bus_and_slot(0, 1);
++			dev = pci_get_domain_bus_and_slot(domain, 0, 1);
+ 			pci_read_config_dword(dev, 0x7C, &amt);
+ 			pci_dev_put(dev);
+ 			memlen = (((amt >> 6) & 31) + 1) * 1024;
+ 		} else if (chipset == NV_CHIP_0x01F0) {
+-			dev = pci_get_bus_and_slot(0, 1);
++			dev = pci_get_domain_bus_and_slot(domain, 0, 1);
+ 			pci_read_config_dword(dev, 0x84, &amt);
+ 			pci_dev_put(dev);
+ 			memlen = (((amt >> 4) & 127) + 1) * 1024;
+@@ -417,6 +418,6 @@ unsigned long riva_get_maxdclk(struct riva_par *par)
+ 	}
+ 	par->riva.flatPanel = (par->FlatPanel > 0) ? TRUE : FALSE;
+ 
+-	RivaGetConfig(&par->riva, par->Chipset);
++	RivaGetConfig(&par->riva, par->pdev, par->Chipset);
+ }
+ 
+diff --git a/drivers/video/fbdev/riva/riva_hw.c b/drivers/video/fbdev/riva/riva_hw.c
+index 8bdf37f..0601c13 100644
+--- a/drivers/video/fbdev/riva/riva_hw.c
++++ b/drivers/video/fbdev/riva/riva_hw.c
+@@ -1108,7 +1108,8 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+     unsigned      pixelDepth,
+     unsigned     *burst,
+     unsigned     *lwm,
+-    RIVA_HW_INST *chip
++    RIVA_HW_INST *chip,
++    struct pci_dev *pdev
+ )
+ {
+     nv10_fifo_info fifo_data;
+@@ -1116,8 +1117,9 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+     unsigned int M, N, P, pll, MClk, NVClk;
+     unsigned int uMClkPostDiv;
+     struct pci_dev *dev;
++    int domain = pci_domain_nr(pdev->bus);
+ 
+-    dev = pci_get_bus_and_slot(0, 3);
++    dev = pci_get_domain_bus_and_slot(domain, 0, 3);
+     pci_read_config_dword(dev, 0x6C, &uMClkPostDiv);
+     pci_dev_put(dev);
+     uMClkPostDiv = (uMClkPostDiv >> 8) & 0xf;
+@@ -1132,7 +1134,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+     sim_data.enable_video   = 0;
+     sim_data.enable_mp      = 0;
+ 
+-    dev = pci_get_bus_and_slot(0, 1);
++    dev = pci_get_domain_bus_and_slot(domain, 0, 1);
+     pci_read_config_dword(dev, 0x7C, &sim_data.memory_type);
+     pci_dev_put(dev);
+     sim_data.memory_type    = (sim_data.memory_type >> 12) & 1;
+@@ -1234,6 +1236,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+ (
+     RIVA_HW_INST  *chip,
+     RIVA_HW_STATE *state,
++    struct pci_dev *pdev,
+     int            bpp,
+     int            width,
+     int            hDisplaySize,
+@@ -1300,7 +1303,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+                                           pixelDepth * 8,
+                                          &(state->arbitration0),
+                                          &(state->arbitration1),
+-                                          chip);
++                                          chip, pdev);
+             } else {
+                 nv10UpdateArbitrationSettings(VClk, 
+                                           pixelDepth * 8, 
+@@ -2102,10 +2105,12 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+ static void nv10GetConfig
+ (
+     RIVA_HW_INST *chip,
++    struct pci_dev *pdev,
+     unsigned int chipset
+ )
+ {
+     struct pci_dev* dev;
++    int domain = pci_domain_nr(pdev->bus);
+     u32 amt;
+ 
+ #ifdef __BIG_ENDIAN
+@@ -2118,12 +2123,12 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+      * Fill in chip configuration.
+      */
+     if(chipset == NV_CHIP_IGEFORCE2) {
+-        dev = pci_get_bus_and_slot(0, 1);
++        dev = pci_get_domain_bus_and_slot(domain, 0, 1);
+         pci_read_config_dword(dev, 0x7C, &amt);
+         pci_dev_put(dev);
+         chip->RamAmountKBytes = (((amt >> 6) & 31) + 1) * 1024;
+     } else if(chipset == NV_CHIP_0x01F0) {
+-        dev = pci_get_bus_and_slot(0, 1);
++        dev = pci_get_domain_bus_and_slot(domain, 0, 1);
+         pci_read_config_dword(dev, 0x84, &amt);
+         pci_dev_put(dev);
+         chip->RamAmountKBytes = (((amt >> 4) & 127) + 1) * 1024;
+@@ -2224,6 +2229,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+ int RivaGetConfig
+ (
+     RIVA_HW_INST *chip,
++    struct pci_dev *pdev,
+     unsigned int chipset
+ )
+ {
+@@ -2245,7 +2251,7 @@ static char nv3_get_param(nv3_fifo_info *res_info, nv3_sim_state * state, nv3_ar
+         case NV_ARCH_10:
+         case NV_ARCH_20:
+         case NV_ARCH_30:
+-            nv10GetConfig(chip, chipset);
++            nv10GetConfig(chip, pdev, chipset);
+             break;
+         default:
+             return (-1);
+diff --git a/drivers/video/fbdev/riva/riva_hw.h b/drivers/video/fbdev/riva/riva_hw.h
+index c2769f7..5e7b354 100644
+--- a/drivers/video/fbdev/riva/riva_hw.h
++++ b/drivers/video/fbdev/riva/riva_hw.h
+@@ -536,6 +536,7 @@
+ (
+     RIVA_HW_INST  *chip,
+     RIVA_HW_STATE *state,
++    struct pci_dev *pdev,
+     int            bpp,
+     int            width,
+     int            hDisplaySize,
+@@ -546,7 +547,7 @@
+ /*
+  * External routines.
+  */
+-int RivaGetConfig(RIVA_HW_INST *, unsigned int);
++int RivaGetConfig(RIVA_HW_INST *chip, struct pci_dev *pdev, unsigned int c);
+ /*
+  * FIFO Free Count. Should attempt to yield processor if RIVA is busy.
+  */
 -- 
-Cyrille Pitchen, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
