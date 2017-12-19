@@ -1,45 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:34414 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759542AbdLSBQW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Dec 2017 20:16:22 -0500
-Received: by mail-io0-f195.google.com with SMTP id f18so6778349ioh.1
-        for <linux-pci@vger.kernel.org>; Mon, 18 Dec 2017 17:16:22 -0800 (PST)
-From: Frederick Lawler <fred@fredlawl.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Frederick Lawler <fred@fredlawl.com>
-Subject: [PATCH 0/2] PCI: Add and use pci_<level>: dev_<level> equivalents
-Date: Mon, 18 Dec 2017 19:16:12 -0600
-Message-Id: <1513646174-2269-1-git-send-email-fred@fredlawl.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 19/26] xen: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:55 -0500
+Message-Id: <1513661883-28662-20-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Juergen Gross <jgross@suse.com>,
+ Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "moderated list:XEN HYPERVISOR INTERFACE" <xen-devel@lists.xenproject.org>,
+ Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace current uses of dev_<level> with pci_<level> by adding and using
-PCI specific fuctions. 
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Frederick Lawler (2):
-  PCI: Create  minor pci_dev log wrapper functions
-  PCI: Replace calls from dev_<level> to pci_<level>
+Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
+extract the domain number. Other places, use the actual domain number from
+the device.
 
- drivers/pci/access.c       |   6 +-
- drivers/pci/bus.c          |   4 +-
- drivers/pci/iov.c          |  10 +--
- drivers/pci/irq.c          |   6 +-
- drivers/pci/msi.c          |   6 +-
- drivers/pci/pci-acpi.c     |   2 +-
- drivers/pci/pci-stub.c     |   2 +-
- drivers/pci/pci-sysfs.c    |  10 +--
- drivers/pci/pci.c          |  76 ++++++++---------
- drivers/pci/probe.c        |  74 ++++++++---------
- drivers/pci/quirks.c       | 198 ++++++++++++++++++++++-----------------------
- drivers/pci/rom.c          |   4 +-
- drivers/pci/setup-bus.c    |  44 +++++-----
- drivers/pci/setup-irq.c    |   4 +-
- drivers/pci/setup-res.c    |  38 ++++-----
- drivers/pci/vc.c           |  16 ++--
- drivers/pci/xen-pcifront.c |  16 ++--
- include/linux/pci.h        |  91 +++++++++++++++++++++
- 18 files changed, 349 insertions(+), 258 deletions(-)
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Reviewed-by: Juergen Gross <jgross@suse.com>
+---
+ drivers/pci/xen-pcifront.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 8fc2e95..94b25b5 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -595,6 +595,7 @@ static pci_ers_result_t pcifront_common_process(int cmd,
+ 	struct pci_driver *pdrv;
+ 	int bus = pdev->sh_info->aer_op.bus;
+ 	int devfn = pdev->sh_info->aer_op.devfn;
++	int domain = pdev->sh_info->aer_op.domain;
+ 	struct pci_dev *pcidev;
+ 	int flag = 0;
+ 
+@@ -603,7 +604,7 @@ static pci_ers_result_t pcifront_common_process(int cmd,
+ 		cmd, bus, devfn);
+ 	result = PCI_ERS_RESULT_NONE;
+ 
+-	pcidev = pci_get_bus_and_slot(bus, devfn);
++	pcidev = pci_get_domain_bus_and_slot(domain, bus, devfn);
+ 	if (!pcidev || !pcidev->driver) {
+ 		dev_err(&pdev->xdev->dev, "device or AER driver is NULL\n");
+ 		pci_dev_put(pcidev);
 -- 
-2.7.4
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
