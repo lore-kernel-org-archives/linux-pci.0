@@ -1,39 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ot0-f196.google.com ([74.125.82.196]:44340 "EHLO
-        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752373AbdLLUR4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Dec 2017 15:17:56 -0500
-Date: Tue, 12 Dec 2017 14:17:54 -0600
-From: Rob Herring <robh@kernel.org>
-To: srinivas.kandagatla@linaro.org
-Cc: stanimir.varbanov@linaro.org,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: add missing supplies required for msm8996
-Message-ID: <20171212201754.lv7hsb3e5fx4eap5@rob-hp-laptop>
-References: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>
+To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
+ lorenzo.pieralisi@arm.com, bhelgaas@google.com
+Subject: [PATCH V1 0/1] Fix kernel panic caused by device ID duplication
+ presented to the IOMMU
+Date: Tue, 19 Dec 2017 16:13:55 +0100
+Message-Id: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171208092053.4417-1-srinivas.kandagatla@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jayachandran.Nair@cavium.com,
+ Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Ganapatrao.Kulkarni@cavium.com, mw@semihalf.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 08, 2017 at 09:20:53AM +0000, srinivas.kandagatla@linaro.org wrote:
-> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> 
-> This patch adds supplies that are required for msm8996. Two of them vdda
-> and vdda-1p8 are analog supplies that go in to controller, and the rest
-> of the two vddpe's are supplies to PCIe endpoints.
-> 
-> Without these supplies PCIe endpoints which require power supplies are
-> not enumerated at all, as there is no one to power it up.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie.txt          | 16 +++++++++++++
->  drivers/pci/dwc/pcie-qcom.c                        | 28 ++++++++++++++++++++--
->  2 files changed, 42 insertions(+), 2 deletions(-)
+Here is my lspci output of ThunderX2 for which I am observing kernel panic coming from
+SMMUv3 driver -> arm_smmu_write_strtab_ent() -> BUG_ON(ste_live):
 
-Reviewed-by: Rob Herring <robh@kernel.org>                  
+# lspci -vt
+-[0000:00]-+-00.0-[01-1f]--+ [...]
+                           + [...]
+                           \-00.0-[1e-1f]----00.0-[1f]----00.0  ASPEED Technology, Inc. ASPEED Graphics Family
+
+ASP device -> 1f:00.0 VGA compatible controller: ASPEED Technology, Inc. ASPEED Graphics Family
+PCI-Express to PCI/PCI-X Bridge -> 1e:00.0 PCI bridge: ASPEED Technology, Inc. AST1150 PCI-to-PCI Bridge
+                           
+While setting up ASP device SID in IORT dirver:
+iort_iommu_configure() -> pci_for_each_dma_alias()
+we need to walk up and iterate over each device which alias transaction from
+downstream devices.
+
+AST device (1f:00.0) gets BDF=0x1f00 and corresponding SID=0x1f00 from IORT.
+Bridge (1e:00.0) is the first alias. Following PCI Express to PCI/PCI-X Bridge
+spec: PCIe-to-PCI/X bridges alias transactions from downstream devices using
+the subordinate bus number. For bridge (1e:00.0), the subordinate is equal
+to 0x1f. This gives BDF=0x1f00 and SID=1f00 which is the same as downstream
+device. So it is possible to have two identical SIDs. The question is what we
+should do about such case. Presented patch prevents from registering the same
+ID so that SMMUv3 is not complaining later on.
+
+Tomasz Nowicki (1):
+  iommu: Make sure device's ID array elements are unique
+
+ drivers/iommu/iommu.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+-- 
+2.7.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
