@@ -1,54 +1,163 @@
-Return-Path: <SRS0=7lL6=DE=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=7lL6=DE=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christian Zigotzky <chzigotzky@xenosoft.de>, Olof Johansson <olof@lixom.net>, Bjorn Helgaas <bhelgaas@google.com>, "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>, Darren Stevens <darren@stevens-zone.net>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
-In-Reply-To: <20171206210637.GO23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com> <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de> <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com> <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de> <20171202230052.34y2ivxgpgr3osct@localhost> <CAOesGMhfMpt+xG1vhVHU+O5o4W5y2S5mZyn9tp+CPn9G6XrNVA@mail.gmail.com> <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de> <1d5276c3-1d29-114a-c868-6f022eee58e7@xenosoft.de> <99f78122-cd53-100f-4f58-be5bf7927d4e@xenosoft.de> <87fu8odnfk.fsf@concordia.ellerman.id.au> <20171206210637.GO23510@bhelgaas-glaptop.roam.corp.google.com>
-Date: Fri, 08 Dec 2017 22:59:40 +1100
-Message-ID: <877etxh1lf.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:37746 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1763309AbdLSOJT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Dec 2017 09:09:19 -0500
+Date: Tue, 19 Dec 2017 14:10:04 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "kishon@ti.com" <kishon@ti.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v5 01/18] PCI: dwc: Use the DMA-API to get the MSI address
+Message-ID: <20171219141004.GE19911@red-moon>
+References: <20171120133222.27771-2-niklas.cassel@axis.com>
+ <20171130152843.GC12096@red-moon>
+ <20171213135953.GA30833@axis.com>
+ <ff784f40-a629-b9cb-0d85-d1356eb69a38@synopsys.com>
+ <ac5ceb21-b547-427c-f5fc-a3deb6398c99@synopsys.com>
+ <20171214122229.GB27348@e107981-ln.cambridge.arm.com>
+ <816956be-90ff-be0e-748f-39c64e4e7833@synopsys.com>
+ <20171218155726.GB8157@red-moon>
+ <6ef8e160-1bf6-7fb2-d9c8-c9d27c04541d@synopsys.com>
+ <95866c7e-5177-69d6-ac64-1ba7f8b3e36d@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <95866c7e-5177-69d6-ac64-1ba7f8b3e36d@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+On Tue, Dec 19, 2017 at 12:45:30PM +0000, Gustavo Pimentel wrote:
+>    Tested-By: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>    Using an arc board with USB and SATA end points with a root complex PCIe
+>    IP core version 5.00, I ran the the following tests:
+>     - I checked that all end points were listed correctly;
+>     - I checked that no PCI related errors was present in dmesg;
+>     - I copied a file from arc to the USB flash drive and checked the
+>    checksum;
+>     - I copied a file from USB flash drive to the ARC and checked the
+>    checksum;
+>     - I copied a file from arc to the SATA disk and checked the checksum;
+>     - I copied a file from SATA disk to the arc and checked the checksum;
+>     - I copied a file from USB flash drive to the SATA disk and checked the
+>    checksum;
+>     - I copied a file from SATA disk to the USB flash drive and checked the
+>    checksum;
+>     - I checked that no PCI related errors was present in dmesg;
+> 
+>    Everything seemed normal to me.
 
-> On Wed, Dec 06, 2017 at 11:57:03PM +1100, Michael Ellerman wrote:
->> Christian Zigotzky <chzigotzky@xenosoft.de> writes:
->> ...
->> >
->> > Hi Olof,
->> >
->> > Many thanks for your patch! :-) The RC2 of kernel 4.15 boots without a=
-ny=20
->> > problems on my P.A. Semi Nemo board (A-EON AmigaOne X1000). I don=E2=
-=80=99t need=20
->> > the additional boot argument 'pci=3Dpcie_scan_all' anymore.
->> >
->> > Is it possible to merge it via the powerpc tree?
->>=20
->> Yes.
->>=20
->> It would be good to confirm that the change is harmless on other pasemi
->> boards. I'll try and get mine booted tomorrow, unless someone beats me
->> to it.
->
-> Theoretically, it should not do any harm since it only turns off an
-> enumeration optimization.  Boot will be slightly slower but should
-> still work fine.
+Thank you very much. I would still need ACKs from the respective
+maintainers (Joao/Jingoo/Kishon) in order to push this upstream please.
 
-Yep OK.
+Thanks,
+Lorenzo
 
-> Darren's idea of doing it at the same time you tweak the SB600 "relax
-> pci-e" bit is ideal because then the two pieces are obviously
-> connected and it wouldn't affect any other systems at all.
-
-Yes that would be ideal. That patch is currently out-of-tree I gather,
-but I guess everyone who's using these machines must have that patch
-anyway.
-
-Darren what does that code look like? Can we get it upstream and close
-the loop on this?
-
-cheers
+>    On 18/12/2017 16:11, Gustavo Pimentel wrote:
+> 
+>  Hi Lorenzo,
+> 
+>  Yes, I have retrieve patches and performed some basic tests without having any
+>  problems till now.
+> 
+>  However, I'm still trying to test the changes with our automated system. It's
+>  being very difficult to find a time slot available for running this tests.
+> 
+>  I hope in this week I could give you go/not go flag. Sorry the delay...
+> 
+>  Regards,
+> 
+>  Gustavo
+> 
+> 
+>  On 18/12/2017 15:57, Lorenzo Pieralisi wrote:
+> 
+>  Hi Gustavo,
+> 
+>  On Thu, Dec 14, 2017 at 12:38:04PM +0000, Gustavo Pimentel wrote:
+> 
+>  Ok. I will compile and test it now.
+> 
+>  Have you managed to retrieve the patches and test them ?
+> 
+>  Thank you,
+>  Lorenzo
+> 
+> 
+>  Thanks.
+> 
+> 
+>  On 14/12/2017 12:22, Lorenzo Pieralisi wrote:
+> 
+>  On Thu, Dec 14, 2017 at 12:16:38PM +0000, Gustavo Pimentel wrote:
+> 
+>  Hi Niklas and Lorenzo,
+> 
+>  I'm going to work on PCI software development now as told by Joao and I will
+>  test your code now.
+> 
+>  I was retrieving the patches through the patchwork
+>  https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_project_linux-2Dpci_list_-3Fsubmitter-3D65580&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=paO6WYeoTil-HWIJVBhwaWcIZP7r95MZNRzKMN6kprU&s=yjtNhJKPJdsHD_A52xWSD2g_YNHuLhO1YADKsPaPsio&e= and I
+>  notice that its missing the patch 13 and 17, is this right?
+> 
+>  No, you just have to refine the filter, I marked the DT bindings as
+>  ready to be applied that's why they do not show up (and by the way
+>  you can test the series even without those two patches - that are just
+>  DT bindings).
+> 
+>  Thanks,
+>  Lorenzo
+> 
+> 
+>  If not, can you give me both patches location?
+> 
+>  Thanks.
+> 
+> 
+>  On 13/12/2017 17:21, Joao Pinto wrote:
+> 
+>  Hi Niklas,
+> 
+>  ??s 1:59 PM de 12/13/2017, Niklas Cassel escreveu:
+> 
+>  On Thu, Nov 30, 2017 at 03:28:43PM +0000, Lorenzo Pieralisi wrote:
+> 
+>  Jingoo, Joao,
+> 
+>  I am expecting your testing on the series and ACKs on the dwc related
+>  patches please, according to v4 review - I will mark them as needs
+>  review/ACK waiting for you to chime in.
+> 
+>  v4 thread:
+> 
+>  https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_833882_&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=mqyDi45qm4qE0jcm0KviYAoLHmMXMMIWEW-gAR0RKOw&e=
+> 
+> 
+>  Hello Lorenzo, Jingoo, Joao,
+> 
+>  Tomorrow another 2 weeks has passed.
+>  V1 of this patch series was posted on 2017-10-13.
+> 
+>  Sorry, I have been tight up with a debug session and not able to check this out.
+>  Adding Gustavo in CC that is now also working in PCI software development.
+>  I am going to check the code ASAP and we will test it as soon as the debug is
+>  finished.
+> 
+>  Thanks.
+> 
+> 
+>  I'm a bit worried that this patch series will not make it to linux-next
+>  in time for this patch series to be included in the 4.16 pull request.
+> 
+>  Here is the V5 patch series:
+>  https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_project_linux-2Dpci_list_-3Fseries-3D14364&d=DwIBAg&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=CQAV8rCgm2jd7m3iSWL5vBbGTqSc7yN3N7zeQDz-ZUY&s=qXtUHFXK7_nCndQob0I0qDByBdJsL7rRjZ9cx7c847U&e=
+> 
+>  Perhaps any maintainer of a designware based PCIe driver could
+>  help out and test this patch series?
+> 
+>  Regards,
+>  Niklas
