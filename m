@@ -1,112 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47188 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752283AbdLEROn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Dec 2017 12:14:43 -0500
-Date: Tue, 5 Dec 2017 11:14:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc: mathias.nyman@intel.com, bhelgaas@google.com,
-        gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Joe Lee <asmt.swfae@gmail.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
-Subject: Re: [PATCH] xhci: Fix front USB ports on ASUS PRIME B350M-A
-Message-ID: <20171205171440.GA23510@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171205162242.4057-1-kai.heng.feng@canonical.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 16/26] PCI: ibmphp: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:52 -0500
+Message-Id: <1513661883-28662-17-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Arvind Yadav <arvind.yadav.cs@gmail.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171205162242.4057-1-kai.heng.feng@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-pm]
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-On Wed, Dec 06, 2017 at 12:22:42AM +0800, Kai-Heng Feng wrote:
-> The board in question has three XHCI HCs:
-> 02:00.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] USB 3.1 XHCI Controller [1022:43bb] (rev 02)
-> 04:00.0 USB controller [0c03]: ASMedia Technology Inc. Device [1b21:1343]
-> 0a:00.3 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD] USB3 Host Controller [1022:145c]
-> 
-> The front ports are connected to HC [1022:43bb] (02:00.0).
-> 
-> After plugging high speed devices into front ports several times, it
-> stops responding to high speed devices. Super speed devices can still
-> get detected though.
-> 
-> When I plugged a high speed device, [1b21:1343] (04:00.0) also got woke
-> up:
-> [  140.834823] xhci_hcd 0000:02:00.0: // Setting command ring address to 0xff73b001
-> [  140.838220] xhci_hcd 0000:02:00.0: xhci_resume: starting port polling.
-> [  140.838226] xhci_hcd 0000:02:00.0: xhci_hub_status_data: stopping port polling.
-> [  140.838266] xhci_hcd 0000:02:00.0: xhci_suspend: stopping port polling.
-> [  140.838362] xhci_hcd 0000:02:00.0: // Setting command ring address to 0xff73b001
-> [  140.858908] xhci_hcd 0000:04:00.0: // Setting command ring address to 0xfffd9001
-> [  140.862745] xhci_hcd 0000:04:00.0: xhci_resume: starting port polling.
-> [  140.862754] xhci_hcd 0000:04:00.0: xhci_hub_status_data: stopping port polling.
-> [  140.862760] xhci_hcd 0000:04:00.0: xhci_hub_status_data: stopping port polling.
-> [  140.862787] xhci_hcd 0000:04:00.0: xhci_suspend: stopping port polling.
-> [  140.862811] xhci_hcd 0000:04:00.0: // Setting command ring address to 0xfffd9001
-> 
-> Seems like [1022:43bb] is wired to [1b21:1343] internally.
-> 
-> Both HCs support D3hot PME, so I tried to disable D3cold on them.
-> Turns out disable D3cold on [1b21:1343] (04:00.0) can workaround the
-> issue for [1022:43bb] (02:00.0).
-> 
-> Also, [1022:43bb] (02:00.0) sometimes failed to suspend:
-> [  549.114587] xhci_hcd 0000:02:00.0: WARN: xHC CMD_RUN timeout
-> [  549.114608] suspend_common(): xhci_pci_suspend+0x0/0xc0 returns -110
-> [  549.114638] xhci_hcd 0000:02:00.0: can't suspend (hcd_pci_runtime_suspend returned -110)
-> [  549.116744] usb usb3: root hub lost power or was reset
-> [  549.116746] usb usb4: root hub lost power or was reset
-> 
-> Based on previous guesswork, the issue can be workaround by doing PCI
-> reset on [1b21:1343] (04:00.0).
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-Naive questions: Does this indicate that xhci_hcd is lacking something
-in the "resume from D3cold" path?  Is there a bugzilla for this?  If
-not, can you open one and attach the complete dmesg log and complete
-"lspci -vv" output (as root)?  Google found some possibly related
-issues but I can't quite tie them together yet.
+Hard-coding the domain parameter as 0 since the code doesn't seem to be
+ready for multiple domains.
 
-I don't have an issue with the quirk per se, but in general I think
-it's better to debug an issue than simply avoid it.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/hotplug/ibmphp_core.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-> Cc: Joe Lee <asmt.swfae@gmail.com>
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
->  drivers/pci/quirks.c          | 2 ++
->  drivers/usb/host/pci-quirks.c | 3 +++
->  2 files changed, 5 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 10684b17d0bd..380061dae51d 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -1699,6 +1699,8 @@ static void quirk_radeon_pm(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6741, quirk_radeon_pm);
->  
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ASMEDIA, 0x1343, pci_d3cold_disable);
-> +
->  #ifdef CONFIG_X86_IO_APIC
->  static int dmi_disable_ioapicreroute(const struct dmi_system_id *d)
->  {
-> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
-> index 161536717025..8c4318671e37 100644
-> --- a/drivers/usb/host/pci-quirks.c
-> +++ b/drivers/usb/host/pci-quirks.c
-> @@ -1176,6 +1176,9 @@ bool usb_xhci_needs_pci_reset(struct pci_dev *pdev)
->  	    (pdev->device == 0x0014 || pdev->device == 0x0015))
->  		return true;
->  
-> +	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA && pdev->device == 0x1343)
-> +		return true;
-> +
->  	return false;
->  }
->  EXPORT_SYMBOL_GPL(usb_xhci_needs_pci_reset);
-> -- 
-> 2.14.1
-> 
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 73cf846..92dd882 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -707,7 +707,8 @@ static void ibm_unconfigure_device(struct pci_func *func)
+ 	pci_lock_rescan_remove();
+ 
+ 	for (j = 0; j < 0x08; j++) {
+-		temp = pci_get_bus_and_slot(func->busno, (func->device << 3) | j);
++		temp = pci_get_domain_bus_and_slot(0, func->busno,
++						   (func->device << 3) | j);
+ 		if (temp) {
+ 			pci_stop_and_remove_bus_device(temp);
+ 			pci_dev_put(temp);
+@@ -780,7 +781,7 @@ static int ibm_configure_device(struct pci_func *func)
+ 	if (!(bus_structure_fixup(func->busno)))
+ 		flag = 1;
+ 	if (func->dev == NULL)
+-		func->dev = pci_get_bus_and_slot(func->busno,
++		func->dev = pci_get_domain_bus_and_slot(0, func->busno,
+ 				PCI_DEVFN(func->device, func->function));
+ 
+ 	if (func->dev == NULL) {
+@@ -793,7 +794,7 @@ static int ibm_configure_device(struct pci_func *func)
+ 		if (num)
+ 			pci_bus_add_devices(bus);
+ 
+-		func->dev = pci_get_bus_and_slot(func->busno,
++		func->dev = pci_get_domain_bus_and_slot(0, func->busno,
+ 				PCI_DEVFN(func->device, func->function));
+ 		if (func->dev == NULL) {
+ 			err("ERROR... : pci_dev still NULL\n");
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
