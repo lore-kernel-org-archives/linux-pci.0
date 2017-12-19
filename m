@@ -1,75 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v6 11/18] PCI: dwc: artpec6: Use BIT and GENMASK macros
-Date: Wed, 20 Dec 2017 00:29:32 +0100
-Message-Id: <20171219232940.659-12-niklas.cassel@axis.com>
-In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+ timur@codeaurora.org
+Subject: Re: [PATCH V4 02/26] powerpc/PCI: deprecate pci_get_bus_and_slot()
+In-Reply-To: <1513661883-28662-3-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <1513661883-28662-3-git-send-email-okaya@codeaurora.org>
+Date: Tue, 19 Dec 2017 21:29:01 +1100
+Message-ID: <87fu879fki.fsf@concordia.ellerman.id.au>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Bhumika Goyal <bhumirks@gmail.com>, Paul Mackerras <paulus@samba.org>,
+ Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ "open list:LINUX FOR POWERPC \(32-BIT AND 64-BIT\)"
+ <linuxppc-dev@lists.ozlabs.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use BIT and GENMASK macros to improve readability.
+Sinan Kaya <okaya@codeaurora.org> writes:
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-artpec6.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
+>
+> Getting ready to remove pci_get_bus_and_slot() function in favor of
+> pci_get_domain_bus_and_slot().
+>
+> Use pci_get_domain_bus_and_slot() with a domain number of 0 as the code
+> is not ready to consume multiple domains and existing code used domain
+> number 0.
+>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  arch/powerpc/kernel/pci_32.c              | 3 ++-
+>  arch/powerpc/platforms/powermac/feature.c | 2 +-
+>  arch/powerpc/sysdev/mv64x60_pci.c         | 4 ++--
+>  3 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 4b8ef266dc2f..18075e0fab80 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -39,28 +39,28 @@ struct artpec6_pcie {
- 
- /* ARTPEC-6 specific registers */
- #define PCIECFG				0x18
--#define  PCIECFG_DBG_OEN		(1 << 24)
--#define  PCIECFG_CORE_RESET_REQ		(1 << 21)
--#define  PCIECFG_LTSSM_ENABLE		(1 << 20)
--#define  PCIECFG_CLKREQ_B		(1 << 11)
--#define  PCIECFG_REFCLK_ENABLE		(1 << 10)
--#define  PCIECFG_PLL_ENABLE		(1 << 9)
--#define  PCIECFG_PCLK_ENABLE		(1 << 8)
--#define  PCIECFG_RISRCREN		(1 << 4)
--#define  PCIECFG_MODE_TX_DRV_EN		(1 << 3)
--#define  PCIECFG_CISRREN		(1 << 2)
--#define  PCIECFG_MACRO_ENABLE		(1 << 0)
-+#define  PCIECFG_DBG_OEN		BIT(24)
-+#define  PCIECFG_CORE_RESET_REQ		BIT(21)
-+#define  PCIECFG_LTSSM_ENABLE		BIT(20)
-+#define  PCIECFG_CLKREQ_B		BIT(11)
-+#define  PCIECFG_REFCLK_ENABLE		BIT(10)
-+#define  PCIECFG_PLL_ENABLE		BIT(9)
-+#define  PCIECFG_PCLK_ENABLE		BIT(8)
-+#define  PCIECFG_RISRCREN		BIT(4)
-+#define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
-+#define  PCIECFG_CISRREN		BIT(2)
-+#define  PCIECFG_MACRO_ENABLE		BIT(0)
- 
- #define NOCCFG				0x40
--#define NOCCFG_ENABLE_CLK_PCIE		(1 << 4)
--#define NOCCFG_POWER_PCIE_IDLEACK	(1 << 3)
--#define NOCCFG_POWER_PCIE_IDLE		(1 << 2)
--#define NOCCFG_POWER_PCIE_IDLEREQ	(1 << 1)
-+#define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
-+#define  NOCCFG_POWER_PCIE_IDLEACK	BIT(3)
-+#define  NOCCFG_POWER_PCIE_IDLE		BIT(2)
-+#define  NOCCFG_POWER_PCIE_IDLEREQ	BIT(1)
- 
- #define PHY_STATUS			0x118
--#define PHY_COSPLLLOCK			(1 << 0)
-+#define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		0x0fffffff
-+#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
- 
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
--- 
-2.14.2
+Looks to do what it says. I don't know if any of these call sites could
+be improved to provide the domain, but that's not really your problem.
+
+Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
+
+cheers
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
