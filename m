@@ -1,13 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V4 02/26] powerpc/PCI: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 00:37:38 -0500
-Message-Id: <1513661883-28662-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+Subject: Re: [PATCH V1 0/1] Fix kernel panic caused by device ID duplication
+ presented to the IOMMU
+To: Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>, joro@8bytes.org,
+ will.deacon@arm.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com
+References: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <7f7fca76-88f8-6ee7-c402-fe4300c62253@arm.com>
+Date: Tue, 19 Dec 2017 16:34:46 +0000
+MIME-Version: 1.0
+In-Reply-To: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,90 +17,87 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
- Sinan Kaya <okaya@codeaurora.org>, Bhumika Goyal <bhumirks@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>,
- "open list:LINUX FOR POWERPC 32-BIT AND 64-BIT"
- <linuxppc-dev@lists.ozlabs.org>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Cc: Jayachandran.Nair@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Ganapatrao.Kulkarni@cavium.com, mw@semihalf.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
+Hi Tomasz,
 
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
+On 19/12/17 15:13, Tomasz Nowicki wrote:
+> Here is my lspci output of ThunderX2 for which I am observing kernel panic coming from
+> SMMUv3 driver -> arm_smmu_write_strtab_ent() -> BUG_ON(ste_live):
+> 
+> # lspci -vt
+> -[0000:00]-+-00.0-[01-1f]--+ [...]
+>                             + [...]
+>                             \-00.0-[1e-1f]----00.0-[1f]----00.0  ASPEED Technology, Inc. ASPEED Graphics Family
+> 
+> ASP device -> 1f:00.0 VGA compatible controller: ASPEED Technology, Inc. ASPEED Graphics Family
+> PCI-Express to PCI/PCI-X Bridge -> 1e:00.0 PCI bridge: ASPEED Technology, Inc. AST1150 PCI-to-PCI Bridge
+>                             
+> While setting up ASP device SID in IORT dirver:
+> iort_iommu_configure() -> pci_for_each_dma_alias()
+> we need to walk up and iterate over each device which alias transaction from
+> downstream devices.
+> 
+> AST device (1f:00.0) gets BDF=0x1f00 and corresponding SID=0x1f00 from IORT.
+> Bridge (1e:00.0) is the first alias. Following PCI Express to PCI/PCI-X Bridge
+> spec: PCIe-to-PCI/X bridges alias transactions from downstream devices using
+> the subordinate bus number. For bridge (1e:00.0), the subordinate is equal
+> to 0x1f. This gives BDF=0x1f00 and SID=1f00 which is the same as downstream
+> device. So it is possible to have two identical SIDs. The question is what we
+> should do about such case. Presented patch prevents from registering the same
+> ID so that SMMUv3 is not complaining later on.
 
-Use pci_get_domain_bus_and_slot() with a domain number of 0 as the code
-is not ready to consume multiple domains and existing code used domain
-number 0.
+Ooh, subtle :( There is logic in arm_smmu_attach_device() to tolerate
+grouped devices aliasing to the same ID, but I guess I overlooked the
+distinction of a device sharing an alias ID with itself. I'm not sure
+I really like trying to work around this in generic code, since
+fwspec->ids is essentially opaque data in a driver-specific format - in
+theory a driver is free to encode a single logical ID into multiple
+fwspec elements (I think I did that in an early draft of SMMUv2 SMR
+support), at which point this approach might corrupt things massively.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/powerpc/kernel/pci_32.c              | 3 ++-
- arch/powerpc/platforms/powermac/feature.c | 2 +-
- arch/powerpc/sysdev/mv64x60_pci.c         | 4 ++--
- 3 files changed, 5 insertions(+), 4 deletions(-)
+Does the (untested) diff below suffice?
 
-diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
-index 1d817f4..85ad2f7 100644
---- a/arch/powerpc/kernel/pci_32.c
-+++ b/arch/powerpc/kernel/pci_32.c
-@@ -96,7 +96,8 @@
- 		reg = of_get_property(node, "reg", NULL);
- 		if (!reg)
- 			continue;
--		dev = pci_get_bus_and_slot(pci_bus, ((reg[0] >> 8) & 0xff));
-+		dev = pci_get_domain_bus_and_slot(0, pci_bus,
-+						  ((reg[0] >> 8) & 0xff));
- 		if (!dev || !dev->subordinate) {
- 			pci_dev_put(dev);
- 			continue;
-diff --git a/arch/powerpc/platforms/powermac/feature.c b/arch/powerpc/platforms/powermac/feature.c
-index 466b842..3f82cb2 100644
---- a/arch/powerpc/platforms/powermac/feature.c
-+++ b/arch/powerpc/platforms/powermac/feature.c
-@@ -829,7 +829,7 @@ static long core99_scc_enable(struct device_node *node, long param, long value)
- 
- 	if (value) {
- 		if (pci_device_from_OF_node(node, &pbus, &pid) == 0)
--			pdev = pci_get_bus_and_slot(pbus, pid);
-+			pdev = pci_get_domain_bus_and_slot(0, pbus, pid);
- 		if (pdev == NULL)
- 			return 0;
- 		rc = pci_enable_device(pdev);
-diff --git a/arch/powerpc/sysdev/mv64x60_pci.c b/arch/powerpc/sysdev/mv64x60_pci.c
-index d52b3b8..6fe9104 100644
---- a/arch/powerpc/sysdev/mv64x60_pci.c
-+++ b/arch/powerpc/sysdev/mv64x60_pci.c
-@@ -37,7 +37,7 @@ static ssize_t mv64x60_hs_reg_read(struct file *filp, struct kobject *kobj,
- 	if (count < MV64X60_VAL_LEN_MAX)
- 		return -EINVAL;
- 
--	phb = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-+	phb = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
- 	if (!phb)
- 		return -ENODEV;
- 	pci_read_config_dword(phb, MV64X60_PCICFG_CPCI_HOTSWAP, &v);
-@@ -61,7 +61,7 @@ static ssize_t mv64x60_hs_reg_write(struct file *filp, struct kobject *kobj,
- 	if (sscanf(buf, "%i", &v) != 1)
- 		return -EINVAL;
- 
--	phb = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0));
-+	phb = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
- 	if (!phb)
- 		return -ENODEV;
- 	pci_write_config_dword(phb, MV64X60_PCICFG_CPCI_HOTSWAP, v);
--- 
-1.9.1
+Robin.
 
+----->8-----diff --git a/drivers/iommu/arm-smmu-v3.c 
+b/drivers/iommu/arm-smmu-v3.c
+index f122071688fd..d8a730d83401 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -1731,7 +1731,7 @@ static __le64 *arm_smmu_get_step_for_sid(struct 
+arm_smmu_device *smmu, u32 sid)
+
+  static void arm_smmu_install_ste_for_dev(struct iommu_fwspec *fwspec)
+  {
+-	int i;
++	int i, j;
+  	struct arm_smmu_master_data *master = fwspec->iommu_priv;
+  	struct arm_smmu_device *smmu = master->smmu;
+
+@@ -1739,6 +1739,13 @@ static void arm_smmu_install_ste_for_dev(struct 
+iommu_fwspec *fwspec)
+  		u32 sid = fwspec->ids[i];
+  		__le64 *step = arm_smmu_get_step_for_sid(smmu, sid);
+
++		/* Bridged PCI devices may end up with duplicated IDs */
++		for (j = 0; j < i; j++)
++			if (fwspec->ids[j] == sid)
++				break;
++		if (j < i)
++			continue;
++
+  		arm_smmu_write_strtab_ent(smmu, sid, step, &master->ste);
+  	}
+  }
 
 _______________________________________________
 linux-arm-kernel mailing list
