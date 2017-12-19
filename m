@@ -1,71 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49866 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751356AbdL2HYc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Dec 2017 02:24:32 -0500
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v2 0/4] Address error and recovery for AER and DPC
-Date: Fri, 29 Dec 2017 12:54:15 +0530
-Message-Id: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 12/18] PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller functions
+Date: Wed, 20 Dec 2017 00:29:33 +0100
+Message-Id: <20171219232940.659-13-niklas.cassel@axis.com>
+In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set brings in support for DPC and AER to co-exist and not to
-race for recovery.
+Split artpec6_pcie_establish_link() into smaller functions
+to better match other drivers such as dra7xx and imx6.
+This is also done to prepare for endpoint mode support.
 
-The current implementation of AER and error message broadcasting to the
-EP driver is tightly coupled and limited to AER service driver.
-It is important to factor out broadcasting and other link handling
-callbacks. So that not only when AER gets triggered, but also when DPC get
-triggered, or both get triggered simultaneously (for e.g. ERR_FATAL),
-callbacks are handled appropriately.
-having modularized the code, the race between AER and DPC is handled
-gracefully.
-for e.g. when DPC is active and kicked in, AER should not attempt to do
-recovery, because DPC takes care of it.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 55 ++++++++++++++++++++++--------------------
+ 1 file changed, 29 insertions(+), 26 deletions(-)
 
-DPC should enumerate the devices after recovering the link, which is
-achieved by implementing error_resume callback.
-
-Changes since v1:
-	Kbuild errors fixed:
-		> pci_find_dpc_dev made static
-		> ras_event.h updated
-		> pci_find_aer_service call with CONFIG check
-		> pci_find_dpc_service call with CONFIG check
-
-Oza Pawandeep (4):
-  PCI/AER: factor out error reporting from AER
-  PCI/DPC/AER: Address Concurrency between AER and DPC
-  PCI/ERR: Do not do recovery if DPC service is active
-  PCI/DPC: Enumerate the devices after DPC trigger event
-
- drivers/acpi/apei/ghes.c               |   2 +-
- drivers/pci/pcie/Makefile              |   2 +-
- drivers/pci/pcie/aer/aerdrv.h          |  30 ---
- drivers/pci/pcie/aer/aerdrv_core.c     | 306 +------------------------
- drivers/pci/pcie/aer/aerdrv_errprint.c |  27 ++-
- drivers/pci/pcie/pcie-dpc.c            | 127 ++++++++++-
- drivers/pci/pcie/pcie-err.c            | 399 +++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h             |   2 +
- include/linux/aer.h                    |   4 -
- include/linux/pci.h                    |  23 ++
- include/ras/ras_event.h                |   6 +-
- 11 files changed, 579 insertions(+), 349 deletions(-)
- create mode 100644 drivers/pci/pcie/pcie-err.c
-
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 18075e0fab80..b2783b475c2a 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -34,8 +34,6 @@ struct artpec6_pcie {
+ 
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET			0x700
+-#define PCIE_PHY_DEBUG_R0		(PL_OFFSET + 0x28)
+-#define PCIE_PHY_DEBUG_R1		(PL_OFFSET + 0x2c)
+ 
+ /* ARTPEC-6 specific registers */
+ #define PCIECFG				0x18
+@@ -80,18 +78,23 @@ static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
+ 	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
+ }
+ 
+-static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
++static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ {
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 	u32 val;
+-	unsigned int retries;
+ 
+-	/* Hold DW core in reset */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_CORE_RESET_REQ;
++	val |= PCIECFG_LTSSM_ENABLE;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ 
++	return 0;
++}
++
++static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
++	unsigned int retries;
++
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
+ 		PCIECFG_MODE_TX_DRV_EN |
+@@ -131,30 +134,25 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
+ 		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
+ 		retries--;
+ 	} while (retries && !(val & PHY_COSPLLLOCK));
++}
++
++static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
+ 
+-	/* Take DW core out of reset */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val &= ~PCIECFG_CORE_RESET_REQ;
++	val |= PCIECFG_CORE_RESET_REQ;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-	usleep_range(100, 200);
++}
+ 
+-	/* setup root complex */
+-	dw_pcie_setup_rc(pp);
++static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
+ 
+-	/* assert LTSSM enable */
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_LTSSM_ENABLE;
++	val &= ~PCIECFG_CORE_RESET_REQ;
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+-
+-	/* check if the link is up or not */
+-	if (!dw_pcie_wait_for_link(pci))
+-		return 0;
+-
+-	dev_dbg(pci->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
+-		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
+-
+-	return -ETIMEDOUT;
++	usleep_range(100, 200);
+ }
+ 
+ static void artpec6_pcie_enable_interrupts(struct artpec6_pcie *artpec6_pcie)
+@@ -171,7 +169,12 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
+ 
+-	artpec6_pcie_establish_link(artpec6_pcie);
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	dw_pcie_setup_rc(pp);
++	artpec6_pcie_establish_link(pci);
++	dw_pcie_wait_for_link(pci);
+ 	artpec6_pcie_enable_interrupts(artpec6_pcie);
+ 
+ 	return 0;
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.14.2
