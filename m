@@ -1,70 +1,67 @@
-Return-Path: <SRS0=X9zb=DB=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=X9zb=DB=linux.vnet.ibm.com=bryantly@kernel.org>
-Subject: Re: [PATCH v5 0/3] Prepartion for SR-IOV PowerVM Enablement
-To: Alexey Kardashevskiy <aik@ozlabs.ru>, helgaas@kernel.org,
-        bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
-        mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com
-References: <20171109140035.64975-1-bryantly@linux.vnet.ibm.com>
- <520bad85-e4a5-a8a8-c893-e53e7b46c65c@ozlabs.ru>
- <3a49b44e-833a-8440-aa3c-a4984ac47147@linux.vnet.ibm.com>
- <466ac4c0-6503-a2eb-e352-d2bdfca10cb5@ozlabs.ru>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Date: Tue, 5 Dec 2017 09:13:04 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 06/26] edd: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:42 -0500
+Message-Id: <1513661883-28662-7-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <466ac4c0-6503-a2eb-e352-d2bdfca10cb5@ozlabs.ru>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <9777301b-3807-2b1d-fbd5-ffa62b78d8f5@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
+
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
+
+Domain number is not available in struct edd_info. Hard-coding the domain
+number as 0.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/firmware/edd.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/firmware/edd.c b/drivers/firmware/edd.c
+index e229576..60a8f13 100644
+--- a/drivers/firmware/edd.c
++++ b/drivers/firmware/edd.c
+@@ -669,10 +669,10 @@ static void edd_release(struct kobject * kobj)
+ 	struct edd_info *info = edd_dev_get_info(edev);
+ 
+ 	if (edd_dev_is_type(edev, "PCI") || edd_dev_is_type(edev, "XPRS")) {
+-		return pci_get_bus_and_slot(info->params.interface_path.pci.bus,
+-				     PCI_DEVFN(info->params.interface_path.pci.slot,
+-					       info->params.interface_path.pci.
+-					       function));
++		return pci_get_domain_bus_and_slot(0,
++				info->params.interface_path.pci.bus,
++				PCI_DEVFN(info->params.interface_path.pci.slot,
++				info->params.interface_path.pci.function));
+ 	}
+ 	return NULL;
+ }
+-- 
+1.9.1
 
 
-On 12/4/17 7:24 PM, Alexey Kardashevskiy wrote:
-> On 05/12/17 02:08, Bryant G. Ly wrote:
->>
->> On 12/2/17 7:45 PM, Alexey Kardashevskiy wrote:
->>> On 10/11/17 01:00, Bryant G. Ly wrote:
->>>> v1 - Initial patch
->>>> v2 - Addressed Bjorn's comment on creating a highly platform
->>>>      dependent global exported symbol.
->>>> v3 - Based patch off linux-ppc/master
->>>> v4 - Using the sriov-drivers_autoprobe mechanism per Bjorn's request
->>>> v5 - Fixed comments and commit message
->>> What is this made against of? I'd like to give it a try but it does not
->>> apply to Linus'es tree or powerpc/next. Thanks.
->>>
->> This was made against powerpc/next back when it was still under 4.14-rc6.
->> It has been in review for awhile... 
-> Sure, sha1 or github tree would be enough though to try.
-
-6cff0a118f23b98c604a3604ea9de11338e24fbe
-
-or if you want to just use the github tree its:
-
-https://github.com/powervm/sriov-ppc/tree/upstream
-
->
->> -Bryant
->>
->>>> Bryant G. Ly (3):
->>>>   powerpc/kernel: Separate SR-IOV Calls
->>>>   pseries: Add PSeries SR-IOV Machine dependent calls
->>>>   PCI/IOV: Add pci_vf_drivers_autoprobe() interface
->>>>
->>>>  arch/powerpc/include/asm/machdep.h           |  7 ++++++
->>>>  arch/powerpc/include/asm/pci-bridge.h        |  4 +---
->>>>  arch/powerpc/kernel/eeh_driver.c             |  4 ++--
->>>>  arch/powerpc/kernel/pci-common.c             | 23 +++++++++++++++++++
->>>>  arch/powerpc/kernel/pci_dn.c                 |  6 -----
->>>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 33 ++++++++++++++--------------
->>>>  arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++--
->>>>  arch/powerpc/platforms/pseries/eeh_pseries.c | 24 ++++++++++++++++++++
->>>>  arch/powerpc/platforms/pseries/pci.c         | 31 ++++++++++++++++++++++----
->>>>  drivers/pci/iov.c                            | 11 ++++++++++
->>>>  include/linux/pci.h                          |  2 ++
->>>>  11 files changed, 118 insertions(+), 33 deletions(-)
->>>>
->
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
