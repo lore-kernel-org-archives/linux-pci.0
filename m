@@ -1,84 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:35685 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751488AbdLSVDj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Dec 2017 16:03:39 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Maik Broemme <mbroemme@libmpq.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 3/4] PCI/DPC: Enable DPC in conjuction with AER
-Date: Tue, 19 Dec 2017 14:06:42 -0700
-Message-Id: <20171219210643.24615-3-keith.busch@intel.com>
-In-Reply-To: <20171219210643.24615-1-keith.busch@intel.com>
-References: <20171219210643.24615-1-keith.busch@intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33860 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751072AbdLSUQU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 15:16:20 -0500
+Date: Tue, 19 Dec 2017 12:16:18 -0800
+From: Stephen Boyd <sboyd@codeaurora.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: Use {upper,lower}_32_bits() macros for clarity
+Message-ID: <20171219201618.GA31009@codeaurora.org>
+References: <20171129005334.16425-1-sboyd@codeaurora.org>
+ <20171211101947.GA3225@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171211101947.GA3225@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI Express Base Specification's implementation note on "Determination
-of DPC Control" recommends the operating system always link DPC control to
-the control of AER, as the two functionalities are strongly connected. To
-avoid conflicts over whether platform firmware or the OS control DPC,
-this patch enables DPC only if AER is enabled in the OS, and the device's
-error handling does not have a firmware-first AER handling.
+On 12/11, Lorenzo Pieralisi wrote:
+> On Tue, Nov 28, 2017 at 04:53:34PM -0800, Stephen Boyd wrote:
+> > We have macros for getting the upper or lower 32 bits of a
+> > number. Use them here to shave a couple lines off the code.
+> > 
+> > Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+> > ---
+> >  drivers/pci/dwc/pcie-designware-host.c | 6 ++----
+> >  1 file changed, 2 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> > index 157621175147..ae5abfddf8de 100644
+> > --- a/drivers/pci/dwc/pcie-designware-host.c
+> > +++ b/drivers/pci/dwc/pcie-designware-host.c
+> > @@ -89,10 +89,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+> >  	msi_target = virt_to_phys((void *)pp->msi_data);
+> >  
+> >  	/* program the msi_data */
+> > -	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> > -			    (u32)(msi_target & 0xffffffff));
+> > -	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+> > -			    (u32)(msi_target >> 32 & 0xffffffff));
+> > +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4, lower_32_bits(msi_target));
+> > +	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, upper_32_bits(msi_target));
+> >  }
+> 
+> Hi Stephen,
+> 
+> I was about to apply it but I think that for consistency it would be
+> better to convert to {lower,upper}_32_bits() also code in
+> dw_msi_setup_msg() and slightly reword the log accordingly; if you do
+> not mind sending a v2 with those changes I will apply then.
+> 
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/Kconfig        | 2 +-
- drivers/pci/pcie/pcie-dpc.c     | 4 ++++
- drivers/pci/pcie/portdrv_core.c | 4 ++--
- 3 files changed, 7 insertions(+), 3 deletions(-)
+Ok. v2 coming shortly.
 
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index ac53edbc9613..d658dfa53b87 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -92,7 +92,7 @@ config PCIE_PME
- 
- config PCIE_DPC
- 	bool "PCIe Downstream Port Containment support"
--	depends on PCIEPORTBUS
-+	depends on PCIEPORTBUS && PCIEAER
- 	default n
- 	help
- 	  This enables PCI Express Downstream Port Containment (DPC)
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 2d976a623ddc..ef71a472592c 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -15,6 +15,7 @@
- #include <linux/pci.h>
- #include <linux/pcieport_if.h>
- #include "../pci.h"
-+#include "aer/aerdrv.h"
- 
- struct rp_pio_header_log_regs {
- 	u32 dw0;
-@@ -289,6 +290,9 @@ static int dpc_probe(struct pcie_device *dev)
- 	int status;
- 	u16 ctl, cap;
- 
-+	if (pcie_aer_get_firmware_first(pdev))
-+		return -ENOTSUPP;
-+
- 	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
- 	if (!dpc)
- 		return -ENOMEM;
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index a59210350c44..ef3bad4ad010 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -216,9 +216,9 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		return 0;
- 
- 	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
--			| PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_DPC;
-+			| PCIE_PORT_SERVICE_VC;
- 	if (pci_aer_available())
--		cap_mask |= PCIE_PORT_SERVICE_AER;
-+		cap_mask |= PCIE_PORT_SERVICE_AER | PCIE_PORT_SERVICE_DPC;
- 
- 	if (pcie_ports_auto)
- 		pcie_port_platform_notify(dev, &cap_mask);
 -- 
-2.13.6
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
