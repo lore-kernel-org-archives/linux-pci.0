@@ -1,140 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:56336 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752015AbdL1KXv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Dec 2017 05:23:51 -0500
-Subject: Re: PROBLEM: 4.15.0-rc3 APIC causes lockups on Core 2 Duo laptop
-To: Alexandru Chirvasitu <achirvasub@gmail.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-        Dexuan Cui <decui@microsoft.com>, Pavel Machek <pavel@ucw.cz>,
-        kernel list <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        "Maciej W. Rozycki" <macro@linux-mips.org>,
-        Mikael Pettersson <mikpelinux@gmail.com>,
-        Josh Poulson <jopoulso@microsoft.com>,
-        "Mihai Costache (Cloudbase Solutions SRL)" <v-micos@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Simon Xiao <sixiao@microsoft.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Jork Loeser <Jork.Loeser@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        KY Srinivasan <kys@microsoft.com>
-References: <1bd74ca3-afca-9d61-6911-61250f459891@cn.fujitsu.com>
- <20171222142053.3cbhi2nhh24w7yoo@D-69-91-141-110.dhcp4.washington.edu>
- <KL1P15301MB000676F3F8C9A5AC8C489E75BF020@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <20171222222917.GA1138@arch-chirva.localdomain>
- <KL1P15301MB00064E9E767F9395744F42A3BF030@KL1P15301MB0006.APCP153.PROD.OUTLOOK.COM>
- <alpine.DEB.2.20.1712231432210.1853@nanos>
- <20171223200112.GC1138@arch-chirva.localdomain>
- <548c814c-7e24-00c0-3436-26f2704cb427@cn.fujitsu.com>
- <20171227161801.GE1410@arch-chirva.localdomain>
- <308183d9-d8d6-0100-159b-8c8be8636b31@cn.fujitsu.com>
- <20171228025114.wdydzgppfikuo65z@D-69-91-141-110.dhcp4.washington.edu>
-From: Dou Liyang <douly.fnst@cn.fujitsu.com>
-Message-ID: <0b98e96f-e176-9288-b54c-8ea908954c01@cn.fujitsu.com>
-Date: Thu, 28 Dec 2017 18:23:39 +0800
-MIME-Version: 1.0
-In-Reply-To: <20171228025114.wdydzgppfikuo65z@D-69-91-141-110.dhcp4.washington.edu>
-Content-Type: multipart/mixed;
-        boundary="------------BFAF4E4E7F82FA873D423A56"
+Received: from bastet.se.axis.com ([195.60.68.11]:51612 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754112AbdLSXbm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 18:31:42 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 16/18] PCI: dwc: artpec6: Deassert the core before waiting for PHY
+Date: Wed, 20 Dec 2017 00:29:37 +0100
+Message-Id: <20171219232940.659-17-niklas.cassel@axis.com>
+In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---------------BFAF4E4E7F82FA873D423A56
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Waiting for the PHY while the core was held in reset worked for artpec6,
+but for artpec7, in order to read the required registers, the core has to
+be out of reset.
+Refactor the code so we always wait for the PHY after the core has been
+deasserted, since this works for both artpec6 and artpec7.
 
-Hi Alexandru,
-
-At 12/28/2017 10:51 AM, Alexandru Chirvasitu wrote:
-> Ah, of course. Attached is the output of `journalctl --boot=-1` after
-> booting, getting locked up, and then rebooting a good kernel.
-> 
-For the Hard lockups on both CPUs after login:
-
-Please try the patch in the attachment by
-
-git am ./0001-x86-vector-Replace-the-raw_spin_lock-with-raw_spin_l.patch
-
-or
-
-patch -p1 < 
-./0001-x86-vector-Replace-the-raw_spin_lock-with-raw_spin_l.patch
-
-> Slightly different version of 4.15-rc5; this one has both patches
-> applied, yours and Linus' for kexec, but the latter shouldn't make a
-> difference.
-> 
-> ---
-> 
-> You'll see another trace in there that's been bugging me, about W=X
-> checking. I'm not qualified to judge how related they are, but during
-> these past few days I've compiled and tested many kernels, and many of
-> them have exhibited the W+X thing but*not*  the lockups.
-> 
-
-Yes, I found it, but I am not familiar with it and have no idea.
-
-Thanks,
-	dou.
-
----------------------8<--------------------------------------------
-
-
-
---------------BFAF4E4E7F82FA873D423A56
-Content-Type: text/x-patch;
-	name="0001-x86-vector-Replace-the-raw_spin_lock-with-raw_spin_l.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename*0="0001-x86-vector-Replace-the-raw_spin_lock-with-raw_spin_l.pa";
-	filename*1="tch"
-
->From 57d8543ea4dcf2a53b1c37757da12866a52aaf57 Mon Sep 17 00:00:00 2001
-From: Dou Liyang <douly.fnst@cn.fujitsu.com>
-Date: Thu, 28 Dec 2017 16:20:48 +0800
-Subject: [PATCH] x86/vector: Replace the raw_spin_lock() with
- raw_spin_lock_irqsave()
-
-Signed-off-by: Dou Liyang <douly.fnst@cn.fujitsu.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- arch/x86/kernel/apic/vector.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/dwc/pcie-artpec6.c | 45 +++++++++++++++++++++++++++---------------
+ 1 file changed, 29 insertions(+), 16 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 750449152b04..a43ca26d5dfd 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -726,6 +726,7 @@ static int apic_set_affinity(struct irq_data *irqd,
- 			     const struct cpumask *dest, bool force)
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 318a2bd0d97e..064c5a93ea80 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -125,11 +125,37 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.stop_link = artpec6_pcie_stop_link,
+ };
+ 
+-static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
  {
- 	struct apic_chip_data *apicd = apic_chip_data(irqd);
-+	unsigned long flags;
- 	int err;
++	struct dw_pcie *pci = artpec6_pcie->pci;
++	struct device *dev = pci->dev;
+ 	u32 val;
+ 	unsigned int retries;
  
- 	/*
-@@ -740,13 +741,13 @@ static int apic_set_affinity(struct irq_data *irqd,
- 	    (apicd->is_managed || apicd->can_reserve))
- 		return IRQ_SET_MASK_OK;
- 
--	raw_spin_lock(&vector_lock);
-+	raw_spin_lock_irqsave(&vector_lock, flags);
- 	cpumask_and(vector_searchmask, dest, cpu_online_mask);
- 	if (irqd_affinity_is_managed(irqd))
- 		err = assign_managed_vector(irqd, vector_searchmask);
- 	else
- 		err = assign_vector_locked(irqd, vector_searchmask);
--	raw_spin_unlock(&vector_lock);
-+	raw_spin_unlock_irqrestore(&vector_lock, flags);
- 	return err ? err : IRQ_SET_MASK_OK;
++	retries = 50;
++	do {
++		usleep_range(1000, 2000);
++		val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
++		retries--;
++	} while (retries &&
++		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
++	if (!retries)
++		dev_err(dev, "PCIe clock manager did not leave idle state\n");
++
++	retries = 50;
++	do {
++		usleep_range(1000, 2000);
++		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
++		retries--;
++	} while (retries && !(val & PHY_COSPLLLOCK));
++	if (!retries)
++		dev_err(dev, "PHY PLL did not lock\n");
++}
++
++static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++{
++	u32 val;
++
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+ 	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
+ 		PCIECFG_MODE_TX_DRV_EN |
+@@ -154,21 +180,6 @@ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+ 	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
+ 	val &= ~NOCCFG_POWER_PCIE_IDLEREQ;
+ 	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
+-
+-	retries = 50;
+-	do {
+-		usleep_range(1000, 2000);
+-		val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
+-		retries--;
+-	} while (retries &&
+-		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
+-
+-	retries = 50;
+-	do {
+-		usleep_range(1000, 2000);
+-		val = readl(artpec6_pcie->phy_base + PHY_STATUS);
+-		retries--;
+-	} while (retries && !(val & PHY_COSPLLLOCK));
  }
  
+ static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
+@@ -207,6 +218,7 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ 	artpec6_pcie_assert_core_reset(artpec6_pcie);
+ 	artpec6_pcie_init_phy(artpec6_pcie);
+ 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	artpec6_pcie_wait_for_phy(artpec6_pcie);
+ 	dw_pcie_setup_rc(pp);
+ 	artpec6_pcie_establish_link(pci);
+ 	dw_pcie_wait_for_link(pci);
+@@ -274,6 +286,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	artpec6_pcie_assert_core_reset(artpec6_pcie);
+ 	artpec6_pcie_init_phy(artpec6_pcie);
+ 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++	artpec6_pcie_wait_for_phy(artpec6_pcie);
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++)
+ 		dw_pcie_ep_reset_bar(pci, bar);
 -- 
-2.14.3
-
-
---------------BFAF4E4E7F82FA873D423A56--
+2.14.2
