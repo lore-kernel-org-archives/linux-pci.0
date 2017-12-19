@@ -1,110 +1,98 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] PM / sleep: Avoid excess pm_runtime_enable() calls in device_resume()
-Date: Thu, 07 Dec 2017 03:26:14 +0100
-Message-ID: <3600031.yTsliOITBg@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>
+To: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
+ lorenzo.pieralisi@arm.com, bhelgaas@google.com
+Subject: [PATCH V1 1/1] iommu: Make sure device's ID array elements are unique
+Date: Tue, 19 Dec 2017 16:20:21 +0100
+Message-Id: <1513696821-32291-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
+In-Reply-To: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
+References: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jayachandran.Nair@cavium.com,
+ Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+ linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Ganapatrao.Kulkarni@cavium.com, mw@semihalf.com,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+While iterating over DMA aliases for a PCI device, for some rare cases
+(i.e. PCIe-to-PCI/X bridges) we may get exactly the same ID as initial child
+device. In turn, the same ID may get registered for a device multiple times.
+Eventually IOMMU  driver may try to configure the same ID within domain
+multiple times too which for some IOMMU drivers is illegal and causes kernel
+panic.
 
-Middle-layer code doing suspend-time optimizations for devices with
-the DPM_FLAG_SMART_SUSPEND flag set (currently, the PCI bus type and
-the ACPI PM domain) needs to make the core skip ->thaw_early and
-->thaw callbacks for those devices in some cases and it sets the
-power.direct_complete flag for them for this purpose.
+Rule out ID duplication prior to device ID array registration.
 
-However, it turns out that setting power.direct_complete outside of
-the PM core is a bad idea as it triggers an excessive invocation of
-pm_runtime_enable() in device_resume().
-
-For this reason, provide a helper to clear power.is_late_suspended
-and power.is_suspended to be invoked by the middle-layer code in
-question instead of setting power.direct_complete and make that code
-call the new helper.
-
-Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
-Fixes: 05087360fd7a (ACPI / PM: Take SMART_SUSPEND driver flag into account)
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+CC: stable@vger.kernel.org	# v4.14+
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>
 ---
- drivers/acpi/device_pm.c  |    2 +-
- drivers/base/power/main.c |   15 +++++++++++++++
- drivers/pci/pci-driver.c  |    2 +-
- include/linux/pm.h        |    1 +
- 4 files changed, 18 insertions(+), 2 deletions(-)
+ drivers/iommu/iommu.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-Index: linux-pm/include/linux/pm.h
-===================================================================
---- linux-pm.orig/include/linux/pm.h
-+++ linux-pm/include/linux/pm.h
-@@ -765,6 +765,7 @@ extern int pm_generic_poweroff_late(stru
- extern int pm_generic_poweroff(struct device *dev);
- extern void pm_generic_complete(struct device *dev);
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 3de5c0b..9b2c138 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -1945,6 +1945,31 @@ void iommu_fwspec_free(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(iommu_fwspec_free);
  
-+extern void dev_pm_skip_next_resume_phases(struct device *dev);
- extern bool dev_pm_smart_suspend_and_suspended(struct device *dev);
- 
- #else /* !CONFIG_PM_SLEEP */
-Index: linux-pm/drivers/base/power/main.c
-===================================================================
---- linux-pm.orig/drivers/base/power/main.c
-+++ linux-pm/drivers/base/power/main.c
-@@ -526,6 +526,21 @@ static void dpm_watchdog_clear(struct dp
- /*------------------------- Resume routines -------------------------*/
- 
- /**
-+ * dev_pm_skip_next_resume_phases - Skip next system resume phases for device.
-+ * @dev: Target device.
-+ *
-+ * Make the core skip the "early resume" and "resume" phases for @dev.
-+ *
-+ * This function can be called by middle-layer code during the "noirq" phase of
-+ * system resume if necessary, but not by device drivers.
-+ */
-+void dev_pm_skip_next_resume_phases(struct device *dev)
++static void iommu_fwspec_remove_ids_dup(struct device *dev, u32 *ids,
++					int *num_ids)
 +{
-+	dev->power.is_late_suspended = false;
-+	dev->power.is_suspended = false;
++	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
++	int i, j, k, valid_ids = *num_ids;
++
++	for (i = 0; i < valid_ids; i++) {
++		for (j = 0; j < fwspec->num_ids; j++) {
++			if (ids[i] != fwspec->ids[j])
++				continue;
++
++			dev_info(dev, "found 0x%x ID duplication, skipped\n",
++				 ids[i]);
++
++			for (k = i + 1; k < valid_ids; k++)
++				ids[k - 1] = ids[k];
++
++			valid_ids--;
++			break;
++		}
++	}
++
++	*num_ids = valid_ids;
 +}
 +
-+/**
-  * device_resume_noirq - Execute a "noirq resume" callback for given device.
-  * @dev: Device to handle.
-  * @state: PM transition of the system being carried out.
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -999,7 +999,7 @@ static int pci_pm_thaw_noirq(struct devi
- 	 * the subsequent "thaw" callbacks for the device.
- 	 */
- 	if (dev_pm_smart_suspend_and_suspended(dev)) {
--		dev->power.direct_complete = true;
-+		dev_pm_skip_next_resume_phases(dev);
- 		return 0;
- 	}
+ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
+ {
+ 	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
+@@ -1954,6 +1979,9 @@ int iommu_fwspec_add_ids(struct device *dev, u32 *ids, int num_ids)
+ 	if (!fwspec)
+ 		return -EINVAL;
  
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -1138,7 +1138,7 @@ int acpi_subsys_thaw_noirq(struct device
- 	 * skip all of the subsequent "thaw" callbacks for the device.
- 	 */
- 	if (dev_pm_smart_suspend_and_suspended(dev)) {
--		dev->power.direct_complete = true;
-+		dev_pm_skip_next_resume_phases(dev);
- 		return 0;
- 	}
- 
++	/* Rule out IDs already registered */
++	iommu_fwspec_remove_ids_dup(dev, ids, &num_ids);
++
+ 	size = offsetof(struct iommu_fwspec, ids[fwspec->num_ids + num_ids]);
+ 	if (size > sizeof(*fwspec)) {
+ 		fwspec = krealloc(dev->iommu_fwspec, size, GFP_KERNEL);
+-- 
+2.7.4
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
