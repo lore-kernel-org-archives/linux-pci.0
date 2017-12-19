@@ -1,56 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0062.outbound.protection.outlook.com ([104.47.37.62]:11136
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751465AbdLVNCc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Dec 2017 08:02:32 -0500
-From: Bharat Kumar Gogada <bharatku@xilinx.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "joao.pinto@synopsys.com" <joao.pinto@synopsys.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Michal Simek <michal.simek@xilinx.com>
-CC: Jim Quinlan <jim2101024@gmail.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "rfi@lists.rocketboards.org" <rfi@lists.rocketboards.org>,
-        "linux-rockchip@lists.infradead.org"
-        <linux-rockchip@lists.infradead.org>
-Subject: RE: Why do we check for "link-up" in *_pcie_valid_device()?
-Date: Fri, 22 Dec 2017 13:02:28 +0000
-Message-ID: <BLUPR0201MB1505F95E1BE417834E847EE6A5020@BLUPR0201MB1505.namprd02.prod.outlook.com>
-References: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171214225821.GN30595@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 22/26] video: fbdev: intelfb: deprecate
+ pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:58 -0500
+Message-Id: <1513661883-28662-23-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "open list:INTEL FRAMEBUFFER DRIVER excluding 810 and 815"
+ <linux-fbdev@vger.kernel.org>,
+ Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-arm-msm@vger.kernel.org, Maik Broemme <mbroemme@libmpq.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ "open list:FRAMEBUFFER LAYER" <dri-devel@lists.freedesktop.org>,
+ Sinan Kaya <okaya@codeaurora.org>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-In the PCI config access path, the *_pcie_valid_device() functions in the d=
-wc, altera, rockchip, and xilinx drivers all check whether the link is up.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-I think this is racy because the link may go down after we check but before=
- we perform the config access.
+Find the domain number from pdev.
 
-What would blow up if we removed the *_pcie_link_up() checks?
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/video/fbdev/intelfb/intelfbhw.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-I'd like to either remove the checks or add comments about why the race is =
-acceptable.  If we've covered this before, I apologize.
-Adding a comment will keep me from pestering you about this again in the fu=
-ture.
+diff --git a/drivers/video/fbdev/intelfb/intelfbhw.c b/drivers/video/fbdev/intelfb/intelfbhw.c
+index 83fec57..57aff74 100644
+--- a/drivers/video/fbdev/intelfb/intelfbhw.c
++++ b/drivers/video/fbdev/intelfb/intelfbhw.c
+@@ -181,7 +181,9 @@ int intelfbhw_get_memory(struct pci_dev *pdev, int *aperture_size,
+ 		return 1;
+ 
+ 	/* Find the bridge device.  It is always 0:0.0 */
+-	if (!(bridge_dev = pci_get_bus_and_slot(0, PCI_DEVFN(0, 0)))) {
++	bridge_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus), 0,
++						 PCI_DEVFN(0, 0));
++	if (!bridge_dev) {
+ 		ERR_MSG("cannot find bridge device\n");
+ 		return 1;
+ 	}
+-- 
+1.9.1
 
-Hi Bjorn,
 
-In both Xilinx driver cases when link is down, hardware responds by AXI DEC=
-ERR/SLVERR status which=20
-causes an exception, synchronous external abort to CPU.=20
-This causes system to hang, so we need this check for both of our drivers.
-We will add comments.=20
-
-We have shutdown, Please expect delay in response till 1st Jan, 2018.
-
-Regards,
-Bharat
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
