@@ -1,63 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31615 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750750AbdLUFJd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Dec 2017 00:09:33 -0500
-Date: Wed, 20 Dec 2017 22:12:56 -0700
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Maik Broemme <mbroemme@libmpq.org>,
-        Pawandeep Oza <poza@codeaurora.org>
-Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
-Message-ID: <20171221051256.GA15276@localhost.localdomain>
-References: <20171219210643.24615-1-keith.busch@intel.com>
- <20171219210643.24615-4-keith.busch@intel.com>
- <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 18/26] PCI/syscall: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:54 -0500
+Message-Id: <1513661883-28662-19-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 20, 2017 at 11:43:07PM -0500, Sinan Kaya wrote:
-> +Oza
-> 
-> On 12/19/2017 4:06 PM, Keith Busch wrote:
-> > A DPC enabled device will suppress sending ERR_FATAL and ERR_NONFATAL,
-> > which prevents the AER handler from reporting the details of the
-> > error. This patch will have the DPC driver get the AER status registers
-> > from the downstream port that detected the uncorrectable error, and
-> > print out additional information.
-> > 
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> > ---
-> 
-> Oza is doing some restructuring to unify DPC and AER error handling path per
-> feedback from Bjorn. It is almost done. He is testing it. 
-> 
-> Can this patch wait until you review his version? I'm thinking this could
-> be something that can be added to his series instead.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-No problem.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
+
+Hard-coding the domain value as 0 because the domain information is not
+coming from the userspace.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/syscall.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
+index 83efa00..e725f99 100644
+--- a/drivers/pci/syscall.c
++++ b/drivers/pci/syscall.c
+@@ -28,7 +28,7 @@
+ 		return -EPERM;
  
-> Coming back to this patch. The interrupt number for DPC and AER could be the
-> same or different. 
+ 	err = -ENODEV;
+-	dev = pci_get_bus_and_slot(bus, dfn);
++	dev = pci_get_domain_bus_and_slot(0, bus, dfn);
+ 	if (!dev)
+ 		goto error;
+ 
+@@ -96,7 +96,7 @@
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EPERM;
+ 
+-	dev = pci_get_bus_and_slot(bus, dfn);
++	dev = pci_get_domain_bus_and_slot(0, bus, dfn);
+ 	if (!dev)
+ 		return -ENODEV;
+ 
+-- 
+1.9.1
 
-Only if you're talking about root ports. DPC is also a feature of
-switch downstream ports, which don't generate interrupts on AER events
-(they don't have a Root Error Command register).
 
-> According to the spec, AER errors are always reported
-> regardless of DPC driver presence (see the famous flow chart).
-
-> If the interrupt IDs are the same for AER and DPC, your patch would introduce
-> double printing for AER errors.
-
-The AER Uncorrectable Status Register of the detecting port would
-indeed be set with the appropriate status if that's the type of error
-that occured, but when DPC is enabled, the root port never observes an
-ERR_FATAL/ERR_NONFATAL message required for it to get set the Root Error
-Status Register. The Linux AER handler requires the Root Error Status
-be set in order for it to print anything, so I don't think we're at risk
-of double printing with this patch even if the root port is DPC capable.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
