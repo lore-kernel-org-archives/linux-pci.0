@@ -1,84 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36978 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753667AbdLHLBt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Dec 2017 06:01:49 -0500
-Date: Fri, 8 Dec 2017 11:02:25 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Gustavo.Pimentel@synopsys.com,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Re-activate task to add MSI-X to pcie-designware
-Message-ID: <20171208110225.GC26816@red-moon>
-References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 11/26] iommu/amd: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:47 -0500
+Message-Id: <1513661883-28662-12-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ "open list:AMD IOMMU AMD-VI" <iommu@lists.linux-foundation.org>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 07, 2017 at 03:14:22PM +0000, Joao Pinto wrote:
-> Hello to all,
-> 
-> I am sending this e-mail to request your opinion about the tasks needed to add
-> support for MSI-X for pcie-designware based solutions.
-> 
-> A few months ago I submited a patch-set that added support for MSI-X:
-> 
-> [v2,9/9] pci: remove limitation of the number of the available IRQs
-> https://patchwork.ozlabs.org/patch/771320/
-> [v2,8/9] pci: removing old irq api from pcie-designware
-> https://patchwork.ozlabs.org/patch/771360/
-> [v2,7/9] pci: keystone SoC driver adapted to new irq API
-> https://patchwork.ozlabs.org/patch/771361/
-> [v2,6/9] pci: qcom SoC driver adapted to new irq API
-> https://patchwork.ozlabs.org/patch/771362/
-> [v2,5/9] pci: generic PCIe DW driver adapted to new irq API
-> https://patchwork.ozlabs.org/patch/771365/
-> [v2,4/9] pci: artpec6 SoC driver adapted to new irq API
-> https://patchwork.ozlabs.org/patch/771364/
-> [v2,3/9] pci: imx6 SoC driver adapted to new irq API
-> https://patchwork.ozlabs.org/patch/771363/
-> [v2,2/9] pci: exynos SoC driver adapted to new irq API
-> https://patchwork.ozlabs.org/patch/771359/
-> [v2,1/9] pci: adding new irq api to pci-designware
-> https://patchwork.ozlabs.org/patch/771366/
-> 
-> The patch-set was globally accepted, but it broke the MSI mechanism for
-> Keystone, due to its specificity.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Hi Joao,
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-would you mind pointing me at the discussion where the breakage was
-explained please ? It is to understand what are the TI specific bits
-we are talking about here.
+Hard-code the domain number as 0 for the AMD IOMMU driver.
 
-> We are now going to resume this task and we would like to have your feedback
-> about our plan:
-> 
-> Task 1: Help TI to create a keystone_msi driver to isolate its custom msi mechanism
-> Task 2: Port the existing patches to the new kernel version (except the keystone
-> one)
-> 
-> If TI can do the keystone_msi implementation it would be easier. If it's not
-> possible, we volunteer to do it, but we will need testing & debug assistance.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/iommu/amd_iommu.c      | 3 ++-
+ drivers/iommu/amd_iommu_init.c | 9 +++++----
+ drivers/iommu/amd_iommu_v2.c   | 3 ++-
+ 3 files changed, 9 insertions(+), 6 deletions(-)
 
-I would ask Murali to chime in please to understand the direction to
-take - at least I expect him to be able to test the changes.
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 7d5eb00..821547b 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -527,7 +527,8 @@ static void amd_iommu_report_page_fault(u16 devid, u16 domain_id,
+ 	struct iommu_dev_data *dev_data = NULL;
+ 	struct pci_dev *pdev;
+ 
+-	pdev = pci_get_bus_and_slot(PCI_BUS_NUM(devid), devid & 0xff);
++	pdev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(devid),
++					   devid & 0xff);
+ 	if (pdev)
+ 		dev_data = get_dev_data(&pdev->dev);
+ 
+diff --git a/drivers/iommu/amd_iommu_init.c b/drivers/iommu/amd_iommu_init.c
+index 6fe2d03..4e4a615 100644
+--- a/drivers/iommu/amd_iommu_init.c
++++ b/drivers/iommu/amd_iommu_init.c
+@@ -1697,8 +1697,8 @@ static int iommu_init_pci(struct amd_iommu *iommu)
+ 	u32 range, misc, low, high;
+ 	int ret;
+ 
+-	iommu->dev = pci_get_bus_and_slot(PCI_BUS_NUM(iommu->devid),
+-					  iommu->devid & 0xff);
++	iommu->dev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(iommu->devid),
++						 iommu->devid & 0xff);
+ 	if (!iommu->dev)
+ 		return -ENODEV;
+ 
+@@ -1764,8 +1764,9 @@ static int iommu_init_pci(struct amd_iommu *iommu)
+ 	if (is_rd890_iommu(iommu->dev)) {
+ 		int i, j;
+ 
+-		iommu->root_pdev = pci_get_bus_and_slot(iommu->dev->bus->number,
+-				PCI_DEVFN(0, 0));
++		iommu->root_pdev =
++			pci_get_domain_bus_and_slot(0, iommu->dev->bus->number,
++						    PCI_DEVFN(0, 0));
+ 
+ 		/*
+ 		 * Some rd890 systems may not be fully reconfigured by the
+diff --git a/drivers/iommu/amd_iommu_v2.c b/drivers/iommu/amd_iommu_v2.c
+index 7d94e1d..8696382 100644
+--- a/drivers/iommu/amd_iommu_v2.c
++++ b/drivers/iommu/amd_iommu_v2.c
+@@ -564,7 +564,8 @@ static int ppr_notifier(struct notifier_block *nb, unsigned long e, void *data)
+ 	finish      = (iommu_fault->tag >> 9) & 1;
+ 
+ 	devid = iommu_fault->device_id;
+-	pdev = pci_get_bus_and_slot(PCI_BUS_NUM(devid), devid & 0xff);
++	pdev = pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(devid),
++					   devid & 0xff);
+ 	if (!pdev)
+ 		return -ENODEV;
+ 	dev_data = get_dev_data(&pdev->dev);
+-- 
+1.9.1
 
-Thanks,
-Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
