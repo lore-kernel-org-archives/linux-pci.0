@@ -1,52 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50606 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756538AbdLUEnN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 23:43:13 -0500
-Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
-To: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Maik Broemme <mbroemme@libmpq.org>,
-        Pawandeep Oza <poza@codeaurora.org>
-References: <20171219210643.24615-1-keith.busch@intel.com>
- <20171219210643.24615-4-keith.busch@intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
-Date: Wed, 20 Dec 2017 23:43:07 -0500
-MIME-Version: 1.0
-In-Reply-To: <20171219210643.24615-4-keith.busch@intel.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 19 Dec 2017 09:13:47 -0500 (EST)
+Message-Id: <20171219.091347.2290443745330245044.davem@davemloft.net>
+To: okaya@codeaurora.org
+Subject: Re: [PATCH V4 10/26] Drivers: ide: deprecate pci_get_bus_and_slot()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1513661883-28662-11-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <1513661883-28662-11-git-send-email-okaya@codeaurora.org>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+Oza
+From: Sinan Kaya <okaya@codeaurora.org>
+Date: Tue, 19 Dec 2017 00:37:46 -0500
 
-On 12/19/2017 4:06 PM, Keith Busch wrote:
-> A DPC enabled device will suppress sending ERR_FATAL and ERR_NONFATAL,
-> which prevents the AER handler from reporting the details of the
-> error. This patch will have the DPC driver get the AER status registers
-> from the downstream port that detected the uncorrectable error, and
-> print out additional information.
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
 > 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
+> Getting ready to remove pci_get_bus_and_slot() function in favor of
+> pci_get_domain_bus_and_slot().
+> 
+> Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
+> and extract the domain number from struct pci_dev.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-Oza is doing some restructuring to unify DPC and AER error handling path per
-feedback from Bjorn. It is almost done. He is testing it. 
+Acked-by: David S. Miller <davem@davemloft.net>
 
-Can this patch wait until you review his version? I'm thinking this could
-be something that can be added to his series instead.
-
-Coming back to this patch. The interrupt number for DPC and AER could be the
-same or different. According to the spec, AER errors are always reported
-regardless of DPC driver presence (see the famous flow chart).
-
-If the interrupt IDs are the same for AER and DPC, your patch would introduce
-double printing for AER errors.
-
-Sinan
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
