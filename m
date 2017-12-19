@@ -1,85 +1,91 @@
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=OVvK=DO=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v2 3/7] platforms/pseries: Set eeh_pe of EEH_PE_VF type
-Date: Mon, 18 Dec 2017 16:38:04 -0600
-In-Reply-To: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
-Message-Id: <20171218223808.83928-4-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 05/26] agp: nvidia: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:41 -0500
+Message-Id: <1513661883-28662-6-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Arnd Bergmann <arnd@arndb.de>, David Airlie <airlied@linux.ie>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To correctly use EEH code one has to make
-sure that the EEH_PE_VF is set for dynamic created
-VFs. Therefore this patch allocates an eeh_pe of
-eeh type EEH_PE_VF and associates PE with parent.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
-Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
+
+Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
+and extract the domain number from struct pci_dev.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- arch/powerpc/include/asm/pci-bridge.h        |  5 ++++-
- arch/powerpc/platforms/pseries/eeh_pseries.c | 13 ++++++++++++-
- 2 files changed, 16 insertions(+), 2 deletions(-)
+ drivers/char/agp/nvidia-agp.c | 12 +++++++++---
+ drivers/char/agp/sworks-agp.c |  3 ++-
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 9f66ddebb799..16d70740a76f 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -211,7 +211,10 @@ struct pci_dn {
- 	unsigned int *pe_num_map;	/* PE# for the first VF PE or array */
- 	bool    m64_single_mode;	/* Use M64 BAR in Single Mode */
- #define IODA_INVALID_M64        (-1)
--	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
-+	union {
-+		int     (*m64_map)[PCI_SRIOV_NUM_BARS]; /*Only used in powernv */
-+		int     last_allow_rc;	/* Only used in pSeries */
-+	};
- #endif /* CONFIG_PCI_IOV */
- 	int	mps;			/* Maximum Payload Size */
- 	struct list_head child_list;
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index a671ef4f57f5..c4bc5dd0c6ec 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -58,6 +58,8 @@ static int ibm_configure_pe;
- void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
- {
- 	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	struct pci_dn *physfn_pdn;
-+	struct eeh_dev *edev;
+diff --git a/drivers/char/agp/nvidia-agp.c b/drivers/char/agp/nvidia-agp.c
+index 828b344..623205b 100644
+--- a/drivers/char/agp/nvidia-agp.c
++++ b/drivers/char/agp/nvidia-agp.c
+@@ -340,11 +340,17 @@ static int agp_nvidia_probe(struct pci_dev *pdev,
+ 	u8 cap_ptr;
  
- 	if (!pdev->is_virtfn)
- 		return;
-@@ -65,6 +67,14 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
- 	pdn->device_id  =  pdev->device;
- 	pdn->vendor_id  =  pdev->vendor;
- 	pdn->class_code =  pdev->class;
-+	/* Last allow unfreeze return code used for retrieval
-+	 * by user space in eeh-sysfs to show the last command
-+	 * completion from platform
-+	 */
-+	pdn->last_allow_rc =  0;
-+	physfn_pdn      =  pci_get_pdn(pdev->physfn);
-+	pdn->pe_number  =  physfn_pdn->pe_num_map[pdn->vf_index];
-+	edev = pdn_to_eeh_dev(pdn);
+ 	nvidia_private.dev_1 =
+-		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 1));
++		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++					    (unsigned int)pdev->bus->number,
++					    PCI_DEVFN(0, 1));
+ 	nvidia_private.dev_2 =
+-		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(0, 2));
++		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++					    (unsigned int)pdev->bus->number,
++					    PCI_DEVFN(0, 2));
+ 	nvidia_private.dev_3 =
+-		pci_get_bus_and_slot((unsigned int)pdev->bus->number, PCI_DEVFN(30, 0));
++		pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++					    (unsigned int)pdev->bus->number,
++					    PCI_DEVFN(30, 0));
  
- 	/*
- 	 * The following operations will fail if VF's sysfs files
-@@ -72,8 +82,9 @@ void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
- 	 */
- 	eeh_add_device_early(pdn);
- 	eeh_add_device_late(pdev);
-+	edev->pe_config_addr =  (pdn->busno << 16) | (pdn->devfn << 8);
-+	eeh_add_to_parent_pe(edev);
- 	eeh_sysfs_add_device(pdev);
--
- }
+ 	if (!nvidia_private.dev_1 || !nvidia_private.dev_2 || !nvidia_private.dev_3) {
+ 		printk(KERN_INFO PFX "Detected an NVIDIA nForce/nForce2 "
+diff --git a/drivers/char/agp/sworks-agp.c b/drivers/char/agp/sworks-agp.c
+index 03be4ac..4dbdd3b 100644
+--- a/drivers/char/agp/sworks-agp.c
++++ b/drivers/char/agp/sworks-agp.c
+@@ -474,7 +474,8 @@ static int agp_serverworks_probe(struct pci_dev *pdev,
+ 	}
  
- /*
+ 	/* Everything is on func 1 here so we are hardcoding function one */
+-	bridge_dev = pci_get_bus_and_slot((unsigned int)pdev->bus->number,
++	bridge_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++			(unsigned int)pdev->bus->number,
+ 			PCI_DEVFN(0, 1));
+ 	if (!bridge_dev) {
+ 		dev_info(&pdev->dev, "can't find secondary device\n");
 -- 
-2.14.3 (Apple Git-98)
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
