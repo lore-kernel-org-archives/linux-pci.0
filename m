@@ -1,122 +1,120 @@
-Return-Path: <SRS0=0Kn/=DS=mediatek.com=honghui.zhang@kernel.org>
-Return-Path: <SRS0=0Kn/=DS=mediatek.com=honghui.zhang@kernel.org>
-Message-ID: <1513904194.25872.23.camel@mhfsdcap03>
-Subject: Re: [PATCH v2 2/2] PCI: mediatek: Fixup class type for MT7622
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Yong Wu <yong.wu@mediatek.com>, <youlin.pei@mediatek.com>,
-	<devicetree@vger.kernel.org>, <hongkun.cao@mediatek.com>,
-	<ryder.lee@mediatek.com>, <yu.yu@mediatek.com>, <linux-pci@vger.kernel.org>,
-	<sean.wang@mediatek.com>, <linux-kernel@vger.kernel.org>,
-	<yt.shen@mediatek.com>, <matthias.bgg@gmail.com>,
-	<lorenzo.pieralisi@arm.com>, <linux-mediatek@lists.infradead.org>,
-	<xinping.qian@mediatek.com>, <bhelgaas@google.com>,
-	<yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Date: Fri, 22 Dec 2017 08:56:34 +0800
-In-Reply-To: <20171222002712.GE30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <1513822277-18329-1-git-send-email-honghui.zhang@mediatek.com>
-	 <1513822277-18329-3-git-send-email-honghui.zhang@mediatek.com>
-	 <1513838476.23174.3.camel@mhfsdcap03>
-	 <1513839672.25872.13.camel@mhfsdcap03>
-	 <20171222002712.GE30595@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 18 Dec 2017 16:48:13 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: jeffy <jeffy.chen@rock-chips.com>
+Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20171219004811.GA216620@google.com>
+References: <20170817120431.12398-1-jeffy.chen@rock-chips.com>
+ <20170817120431.12398-2-jeffy.chen@rock-chips.com>
+ <20170818170107.GA119461@google.com>
+ <20170818181416.GF6008@atomide.com>
+ <5997486D.4040803@rock-chips.com>
+ <20170822172653.GJ6008@atomide.com>
+ <599CDB37.3070307@rock-chips.com>
 MIME-Version: 1.0
+In-Reply-To: <599CDB37.3070307@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Heiko Stuebner <heiko@sntech.de>, Tony Lindgren <tony@atomide.com>,
+ linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
+ linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-12-21 at 18:27 -0600, Bjorn Helgaas wrote:
-> On Thu, Dec 21, 2017 at 03:01:12PM +0800, Honghui Zhang wrote:
-> > On Thu, 2017-12-21 at 14:41 +0800, Yong Wu wrote:
-> > > On Thu, 2017-12-21 at 10:11 +0800, honghui.zhang@mediatek.com wrote:
-> > > > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > > > 
-> > > > The host bridge of MT7622 has hardware code the class code to an
-> > > > arbitrary, meaningless value, fix that.
-> > > > 
-> > > > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > > > ---
-> > > >  drivers/pci/host/pcie-mediatek.c | 12 ++++++++++++
-> > > >  1 file changed, 12 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> > > > index 3248771..ae8d367 100644
-> > > > --- a/drivers/pci/host/pcie-mediatek.c
-> > > > +++ b/drivers/pci/host/pcie-mediatek.c
-> > > > @@ -1174,3 +1174,15 @@ static struct platform_driver mtk_pcie_driver = {
-> > > >  	},
-> > > >  };
-> > > >  builtin_platform_driver(mtk_pcie_driver);
-> > > > +
-> > > > +/* The host bridge of MT7622 advertises the wrong device class. */
-> > > > +static void mtk_fixup_class(struct pci_dev *dev)
-> > > > +{
-> > > > +	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> > > > +}
-> > > > +
-> > > > +/*
-> > > > + * The HW default value of vendor id and device id for mt7622 are 0x0e8d,
-> > > > + * 0x3258, which are arbitrary, meaningless values.
-> 
-> They may be arbitrary but they are certainly not meaningless.
-> 
-> > > What's the right vendor id and device id? is it possible to fix them
-> > > too?
-> > 
-> > Vendor ID is managed by PCI-SIG, you may get the assigned vendor ID
-> > from:
-> > https://pci-ids.ucw.cz/read/PC?restrict=
-> 
-> It's true that Vendor IDs are managed by the PCI-SIG.  The link above
-> is not managed by the PCI-SIG and is not the official list of assigned
-> Vendor IDs.
-> 
-> > The vendor ID for Mediatek Corp. should be 14c3.
-> > Device ID is something like vendor-defined.
-> > Those values are in the configuration space and are read-only defined by
-> > spec, it's been stored at the pci_dev, we may change the vendor and
-> > device values in pci_dev, but I don't think it's necessary to change
-> > that.
-> > BTW, Does anyone really cares about the vendor ID and device ID except
-> > the device's driver?
-> 
-> Yes.  This is a fundamental misunderstanding of how Vendor and Device
-> IDs work.  The *driver* really doesn't care about the IDs.  The PCI
-> *core* cares about them because it uses the IDs to select the
-> appropriate driver to bind to the device.
-> 
-Thanks, I was wrong about this, I had not seen that the Vendor IDs may
-be assigned to another company in the future. I should try another way
-to fix this.
+Hi Jeffy, Tony,
 
-> > > > +DECLARE_PCI_FIXUP_EARLY(0x0e8d, 0x3258, mtk_fixup_class);
+On Wed, Aug 23, 2017 at 09:32:39AM +0800, Jeffy Chen wrote:
+> Hi Tony,
 > 
-> This is absolutely not OK.  You cannot take over Vendor ID 0x0e8d
-> unless it has been assigned to you by the PCI-SIG.
+> On 08/23/2017 01:26 AM, Tony Lindgren wrote:
+> >OK, let's fix any wakeriq ordering issues to make it more
+> >usable. Sounds like in your case the wakeirq needs to be enabled
+> >late and disabled early, while in my test cases I can keep it
+> >enabled basically any time.
 > 
-> To my knowledge, 0x0e8d has not been assigned to any company yet, but
-> the PCI-SIG could assign it to some new company X tomorrow.  Company X
-> may then build a device with Device ID 0x3258.  Now we cannot tell the
-> difference between the Company X device that is correctly designed and
-> this Mediatek device that is broken.
+> yes, in my case it's a level triggered irq, which needs to be
+> disabled when receive it(by irq_pm_check_wakeup(my hack) or inside
+> of the custom irq handler)
 > 
-> This quirk would improperly overwrite dev->class for the Company X
-> device, and we would not be able to bind the correct driver to either
-> device.
 > 
+> and for eage irq, maybe we should enable it right after(or before)
+> the driver activate wake function(for example activate WOWLAN or
+> WOLAN), otherwise would it be possible to miss some irqs(triggered
+> before we actually enable the wake irq)?
 
-I will try another way to fix this, thanks very much for your explain.
+Did this problem ever get resolved? To be clear, I believe the problem
+at hand is:
 
-> I am amazed that somebody could build a device that claims to be a PCI
-> device and get the Vendor ID wrong.  That should be literally the
-> first thing the hardware designer does.  If you have hardware in the
-> field that uses the wrong Vendor ID, it is definitely not
-> PCI-compliant.
+(a) in suspend/resume (not runtime PM; we may not even have runtime PM
+support for most PCI devices)
+(b) using a level-triggered signal (PCI WAKE# is active low, and it's
+nice to avoid certain races by treating it as level-triggered)
 
-There's an internal control register that control the Vendor ID and
-device ID values, our designer leave the default value un-touched. I
-will set these values in that way for the next version of fix.
+And with the current wakeirq code (and the latest version of Jeffy's
+patch series, IIUC), I believe the above case can still trigger an
+interrupt storm of sorts (it's not usually unrecoverably-stormy, since
+it's a threaded IRQ, and we make "enough" progress).
 
-Thanks.
+I don't see how "ordering" can really resolve this problem, unless the
+ordering is configured such that the interrupt handler never runs (e.g.,
+we disable the IRQ before we get out of any "noirq" phase).
 
-> 
-> Bjorn
+Options I can think of:
+(1) implement runtime PM callbacks for all PCI devices, where we clear
+any PME status and ensure WAKE# stops asserting [1]
+(2) synchronize a device's resume() with the dedicated wake IRQ
+(3) skip using the dedicated wake IRQ infrastructure and write our own
+interrupt handler for this PCI/PM function
+
+Option (1) seems pretty strange; we don't actually want to manage these
+devices with runtime PM.
+
+Option (2) could work, but it would probably require sharing more of the
+core suspend/resume internals between
+drivers/base/power/{wakeirq,main}.c, which may not be desirable. Among
+other problems, that seems more fragile.
+
+Option (3) is easy enough, and we already did that once for the first
+pass at poorly implementing this WAKE# logic within the mwifiex driver
+:)
+
+> >If this is for suspend/resume, You could just register the
+> >wakeirq on suspend and then remove it on resume. We do have at
+> >least network drivers doing device_init_wakeup(dev, true) and
+> >device_init_wakeup(dev, false) as needed for WOL, see for example
+> >bfin_mac_ethtool_setwol().
+
+I don't see how that would be good enough. You still have a window of
+time while the driver hasn't finished resuming, in which the interrupt
+handler might trigger many times.
+
+Brian
+
+[1] Then we also need to fixup handle_threaded_wake_irq(). Currently it
+will not even try to resume the device:
+
+	/* Maybe abort suspend? */
+	if (irqd_is_wakeup_set(irq_get_irq_data(irq))) {
+		pm_wakeup_event(wirq->dev, 0);
+
+		return IRQ_HANDLED; <--- we exit here
+	}
+
+	/* We don't want RPM_ASYNC or RPM_NOWAIT here */
+	res = pm_runtime_resume(wirq->dev);
+	...
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
