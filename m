@@ -1,79 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Tony Lindgren <tony@atomide.com>, <bcousson@baylibre.com>
-Subject: [PATCH 2/7] ARM: dts: DRA74x: Use PCIe compatible specific to dra74
-Date: Tue, 19 Dec 2017 15:01:28 +0530
-Message-ID: <20171219093133.16565-3-kishon@ti.com>
-In-Reply-To: <20171219093133.16565-1-kishon@ti.com>
-References: <20171219093133.16565-1-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- kishon@ti.com, linux-pci@vger.kernel.org, nsekhar@ti.com,
- Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
- Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 01/18] PCI: dwc: Use the DMA-API to get the MSI address
+Date: Wed, 20 Dec 2017 00:29:22 +0100
+Message-Id: <20171219232940.659-2-niklas.cassel@axis.com>
+In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use dra74 specific compatible string for PCIe while preserving
-the older compatible. While at that add a new label for the
-2nd instance of pcie.
+Use the DMA-API to get the MSI address. This address will be written to
+our PCI config space and to the register which determines which AXI
+address the DWC IP will spoof for incoming MSI irqs.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+to write to the MSI address, the proper way to get the MSI address is by
+using the DMA API, not by using virt_to_phys().
+
+Using virt_to_phys() might work on some systems, but using the DMA API
+should work on all systems.
+
+This is essentially the same thing as allocating a buffer in a driver
+to which the endpoint will write to. To do this, we use the DMA API.
+
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- arch/arm/boot/dts/dra7.dtsi   |  2 +-
- arch/arm/boot/dts/dra74x.dtsi | 12 ++++++++++++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
+ drivers/pci/dwc/pcie-designware.h      |  3 ++-
+ 2 files changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index 9966d82dbd7c..333f6a634ff9 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -349,7 +349,7 @@
- 			ranges = <0x51800000 0x51800000 0x3000
- 				  0x0	     0x30000000 0x10000000>;
- 			status = "disabled";
--			pcie@51800000 {
-+			pcie2_rc: pcie@51800000 {
- 				compatible = "ti,dra7-pcie";
- 				reg = <0x51800000 0x2000>, <0x51802000 0x14c>, <0x1000 0x2000>;
- 				reg-names = "rc_dbics", "ti_conf", "config";
-diff --git a/arch/arm/boot/dts/dra74x.dtsi b/arch/arm/boot/dts/dra74x.dtsi
-index 24e6746c5b26..a001eecf3b14 100644
---- a/arch/arm/boot/dts/dra74x.dtsi
-+++ b/arch/arm/boot/dts/dra74x.dtsi
-@@ -124,3 +124,15 @@
- 		status = "disabled";
- 	};
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 81e2157a7cfb..bf558df5b7b3 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -83,10 +83,19 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 
+ void dw_pcie_msi_init(struct pcie_port *pp)
+ {
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct device *dev = pci->dev;
++	struct page *page;
+ 	u64 msi_target;
+ 
+-	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+-	msi_target = virt_to_phys((void *)pp->msi_data);
++	page = alloc_page(GFP_KERNEL);
++	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
++	if (dma_mapping_error(dev, pp->msi_data)) {
++		dev_err(dev, "failed to map MSI data\n");
++		__free_page(page);
++		return;
++	}
++	msi_target = (u64)pp->msi_data;
+ 
+ 	/* program the msi_data */
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+@@ -187,7 +196,7 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ 	if (pp->ops->get_msi_addr)
+ 		msi_target = pp->ops->get_msi_addr(pp);
+ 	else
+-		msi_target = virt_to_phys((void *)pp->msi_data);
++		msi_target = (u64)pp->msi_data;
+ 
+ 	msg.address_lo = (u32)(msi_target & 0xffffffff);
+ 	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index e5d9d77b778e..ecdede68522a 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -14,6 +14,7 @@
+ #ifndef _PCIE_DESIGNWARE_H
+ #define _PCIE_DESIGNWARE_H
+ 
++#include <linux/dma-mapping.h>
+ #include <linux/irq.h>
+ #include <linux/msi.h>
+ #include <linux/pci.h>
+@@ -168,7 +169,7 @@ struct pcie_port {
+ 	const struct dw_pcie_host_ops *ops;
+ 	int			msi_irq;
+ 	struct irq_domain	*irq_domain;
+-	unsigned long		msi_data;
++	dma_addr_t		msi_data;
+ 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
  };
-+
-+&pcie1_rc {
-+	compatible = "ti,dra746-pcie-rc", "ti,dra7-pcie";
-+};
-+
-+&pcie1_ep {
-+	compatible = "ti,dra746-pcie-ep", "ti,dra7-pcie-ep";
-+};
-+
-+&pcie2_rc {
-+	compatible = "ti,dra746-pcie-rc", "ti,dra7-pcie";
-+};
+ 
 -- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.14.2
