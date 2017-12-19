@@ -1,433 +1,341 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:46395 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752426AbdLUQMs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Dec 2017 11:12:48 -0500
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Jaehoon Chung'" <jh80.chung@samsung.com>,
-        <linux-pci@vger.kernel.org>
-Cc: <linux-samsung-soc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <robh+dt@kernel.org>,
-        <krzk@kernel.org>, <kgene@kernel.org>, <lorenzo.pieralisi@arm.com>
-References: <20171221121408.22636-1-jh80.chung@samsung.com>     <CGME20171221121409epcas1p1a12d0f3b0b5d5e732da865ee78f6bb47@epcas1p1.samsung.com> <20171221121408.22636-2-jh80.chung@samsung.com>
-In-Reply-To: <20171221121408.22636-2-jh80.chung@samsung.com>
-Subject: Re: [RFC 2/2] pci: dwc: pci-exynos: add the codes to support the exynos5433
-Date: Thu, 21 Dec 2017 11:12:44 -0500
-Message-ID: <000401d37a76$899613c0$9cc23b40$@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 18/18] PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
+Date: Wed, 20 Dec 2017 00:29:39 +0100
+Message-Id: <20171219232940.659-19-niklas.cassel@axis.com>
+In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 21, 2017 7:14 AM, Jaehoon Chung wrote:
-> 
-> Exynos5433 has the PCIe for WiFi.
-> Added the codes relevant to PCIe for supporting the exynos5433.
-> Also changed the binding documentation name to
-> 'samsung,exynos-pcie.txt'.
-> (It's not only exynos5440 anymore.)
-> 
+Add support for	the ARTPEC-7 SoC in the	artpec6	driver.
+The ARTPEC-6 SoC and the ARTPEC-7 SoC are very similar.
+Unfortunately, some fields in the PCIECFG and PCIESTAT
+register have changed.
 
-I have no objection.
-However, I added some comments about Exynos5440.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 187 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 183 insertions(+), 4 deletions(-)
 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-> ---
->  ...exynos5440-pcie.txt => samsung,exynos-pcie.txt} |   2 +-
->  drivers/pci/dwc/pci-exynos.c                       | 183
-++++++++++++++++-----
->  2 files changed, 144 insertions(+), 41 deletions(-)
->  rename Documentation/devicetree/bindings/pci/{samsung,exynos5440-pcie.txt
-> => samsung,exynos-pcie.txt} (97%)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-
-> pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
-> similarity index 97%
-> rename from Documentation/devicetree/bindings/pci/samsung,exynos5440-
-> pcie.txt
-> rename to Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
-> index 34a11bfbfb60..958dcc150505 100644
-> --- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/samsung,exynos-pcie.txt
-> @@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsys
-> DesignWare PCIe IP
->  and thus inherits all the common properties defined in designware-
-> pcie.txt.
-> 
->  Required properties:
-> -- compatible: "samsung,exynos5440-pcie"
-> +- compatible: "samsung,exynos5440-pcie" or "samsung,exynos5433-pcie"
->  - reg: base addresses and lengths of the PCIe controller,
->  	the PHY controller, additional register for the PHY controller.
->  	(Registers for the PHY controller are DEPRECATED.
-> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> index 5596fdedbb94..8dee2e90347e 100644
-> --- a/drivers/pci/dwc/pci-exynos.c
-> +++ b/drivers/pci/dwc/pci-exynos.c
-> @@ -40,6 +40,8 @@
->  #define PCIE_IRQ_SPECIAL		0x008
->  #define PCIE_IRQ_EN_PULSE		0x00c
->  #define PCIE_IRQ_EN_LEVEL		0x010
-> +#define PCIE_SW_WAKE			0x018
-> +#define PCIE_BUS_EN			BIT(1)
->  #define IRQ_MSI_ENABLE			BIT(2)
->  #define PCIE_IRQ_EN_SPECIAL		0x014
->  #define PCIE_PWR_RESET			0x018
-> @@ -49,7 +51,8 @@
->  #define PCIE_NONSTICKY_RESET		0x024
->  #define PCIE_APP_INIT_RESET		0x028
->  #define PCIE_APP_LTSSM_ENABLE		0x02c
-> -#define PCIE_ELBI_RDLH_LINKUP		0x064
-> +#define PCIE_ELBI_RDLH_LINKUP		0x074
-
-The address of this register should be 0x064 for exynos5440.
-Howe about the following?
-
-+#define EXYNOS5440_PCIE_ELBI_RDLH_LINKUP	0x064
-+#define PCIE_ELBI_RDLH_LINKUP		0x074
-
-Or you can add the following.
-
-/* Exynos5440 PCIe ELBI registers */
-#define EXYNOS5440_PCIE_ELBI_RDLH_LINKUP	0x064
-
-> +#define PCIE_ELBI_XMLH_LINKUP		BIT(4)
->  #define PCIE_ELBI_LTSSM_ENABLE		0x1
->  #define PCIE_ELBI_SLV_AWMISC		0x11c
->  #define PCIE_ELBI_SLV_ARMISC		0x120
-> @@ -94,6 +97,10 @@
->  #define PCIE_PHY_TRSV3_PD_TSV		BIT(7)
->  #define PCIE_PHY_TRSV3_LVCC		0x31c
-> 
-> +/* DBI register */
-> +#define PCIE_MISC_CONTROL_1_OFF		0x8BC
-> +#define DBI_RO_WR_EN			BIT(0)
-> +
->  struct exynos_pcie_mem_res {
->  	void __iomem *elbi_base;   /* DT 0th resource: PCIe CTRL */
->  	void __iomem *phy_base;    /* DT 1st resource: PHY CTRL */
-> @@ -221,6 +228,96 @@ static const struct exynos_pcie_ops
-> exynos5440_pcie_ops = {
->  	.deinit_clk_resources	= exynos5440_pcie_deinit_clk_resources,
->  };
-> 
-> +static int exynos5433_pcie_get_mem_resources(struct platform_device
-*pdev,
-> +					     struct exynos_pcie *ep)
-> +{
-> +	struct dw_pcie *pci = ep->pci;
-> +	struct device *dev = pci->dev;
-> +	struct resource *res;
-> +
-> +	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
-> +	if (!ep->mem_res)
-> +		return -ENOMEM;
-> +
-> +	/* External Local Bus interface(ELBI) Register */
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "elbi");
-> +	ep->mem_res->elbi_base = devm_ioremap_resource(&pdev->dev, res);
-> +	if (IS_ERR(ep->mem_res->elbi_base))
-> +		return PTR_ERR(ep->mem_res->elbi_base);
-> +
-> +	/* Data Bus Interface(DBI) Register */
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-> +	pci->dbi_base = devm_ioremap_resource(&pdev->dev, res);
-> +	if (IS_ERR(pci->dbi_base))
-> +		return PTR_ERR(pci->dbi_base);
-> +
-> +	return 0;
-> +}
-> +
-> +static int exynos5433_pcie_get_clk_resources(struct exynos_pcie *ep)
-> +{
-> +	struct dw_pcie *pci = ep->pci;
-> +	struct device *dev = pci->dev;
-> +
-> +	ep->clk_res = devm_kzalloc(dev, sizeof(*ep->clk_res), GFP_KERNEL);
-> +	if (!ep->clk_res)
-> +		return -ENOMEM;
-> +
-> +	ep->clk_res->clk = devm_clk_get(dev, "pcie");
-> +	if (IS_ERR(ep->clk_res->clk)) {
-> +		dev_err(dev, "Failed to get pcie rc clock\n");
-> +		return PTR_ERR(ep->clk_res->clk);
-> +	}
-> +
-> +	ep->clk_res->bus_clk = devm_clk_get(dev, "pcie_bus");
-> +	if (IS_ERR(ep->clk_res->bus_clk)) {
-> +		dev_err(dev, "Failed to get pcie bus clock\n");
-> +		return PTR_ERR(ep->clk_res->bus_clk);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void exynos5433_pcie_deinit_clk_resources(struct exynos_pcie *ep)
-> +{
-> +	clk_disable_unprepare(ep->clk_res->bus_clk);
-> +	clk_disable_unprepare(ep->clk_res->clk);
-> +}
-> +
-> +
-> +static int exynos5433_pcie_init_clk_resources(struct exynos_pcie *ep)
-> +{
-> +	struct dw_pcie *pci = ep->pci;
-> +	struct device *dev = pci->dev;
-> +	int ret;
-> +
-> +	ret = clk_prepare_enable(ep->clk_res->clk);
-> +	if (ret) {
-> +		dev_err(dev, "cannot enable pcie rc clock");
-> +		return ret;
-> +	}
-> +
-> +	ret = clk_prepare_enable(ep->clk_res->bus_clk);
-> +	if (ret) {
-> +		dev_err(dev, "cannot enable pcie bus clock");
-> +		goto err_bus_clk;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_bus_clk:
-> +	clk_disable_unprepare(ep->clk_res->clk);
-> +
-> +	return ret;
-> +}
-> +
-> +static const struct exynos_pcie_ops exynos5433_pcie_ops = {
-> +	.get_mem_resources	= exynos5433_pcie_get_mem_resources,
-> +	.get_clk_resources	= exynos5433_pcie_get_clk_resources,
-> +	.init_clk_resources	= exynos5433_pcie_init_clk_resources,
-> +	.deinit_clk_resources	= exynos5433_pcie_deinit_clk_resources,
-> +};
-> +
->  static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
->  {
->  	writel(val, base + reg);
-> @@ -279,7 +376,9 @@ static void exynos_pcie_deassert_core_reset(struct
-> exynos_pcie *ep)
->  	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_NONSTICKY_RESET);
->  	exynos_pcie_writel(ep->mem_res->elbi_base, 1, PCIE_APP_INIT_RESET);
->  	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_APP_INIT_RESET);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 1, PCIE_PHY_MAC_RESET);
-> +	if (ep->mem_res->block_base)
-> +		exynos_pcie_writel(ep->mem_res->block_base, 1,
-> +				PCIE_PHY_MAC_RESET);
-
-Good.
-
->  }
-> 
->  static void exynos_pcie_assert_phy_reset(struct exynos_pcie *ep)
-> @@ -413,9 +512,6 @@ static int exynos_pcie_establish_link(struct
-> exynos_pcie *ep)
->  	if (ep->using_phy) {
->  		phy_reset(ep->phy);
-> 
-> -		exynos_pcie_writel(ep->mem_res->elbi_base, 1,
-> -				PCIE_PWR_RESET);
-> -
->  		phy_power_on(ep->phy);
->  		phy_init(ep->phy);
->  	} else {
-> @@ -430,14 +526,16 @@ static int exynos_pcie_establish_link(struct
-> exynos_pcie *ep)
->  		udelay(500);
->  		exynos_pcie_writel(ep->mem_res->block_base, 0,
->  					PCIE_PHY_COMMON_RESET);
-> +		exynos_pcie_deassert_core_reset(ep);
->  	}
-> 
-> -	/* pulse for common reset */
-> -	exynos_pcie_writel(ep->mem_res->block_base, 1,
-> PCIE_PHY_COMMON_RESET);
-> -	udelay(500);
-> -	exynos_pcie_writel(ep->mem_res->block_base, 0,
-> PCIE_PHY_COMMON_RESET);
-
-These codes are also necessary for Exyno5440.
-How about moving these codes instead of removing them?
-
-@@ -430,14 +526,16 @@ static int exynos_pcie_establish_link(struct
-exynos_pcie *ep)
- 		udelay(500);
- 		exynos_pcie_writel(ep->mem_res->block_base, 0,
- 					PCIE_PHY_COMMON_RESET);
-+		/* pulse for common reset */
-+		exynos_pcie_writel(ep->mem_res->block_base, 1,
-+					PCIE_PHY_COMMON_RESET);
-+		udelay(500);
-+		exynos_pcie_writel(ep->mem_res->block_base, 0,
-+					PCIE_PHY_COMMON_RESET);
-+		exynos_pcie_deassert_core_reset(ep);
- 	}
-
-
-> +	/*
-> +	 * Enable DBI_RO_WR_EN bit.
-> +	 * - When set to 1, some RO and HWinit bits are wriatble from
-> +	 *   the local application through the DBI.
-> +	 */
-> +	dw_pcie_writel_dbi(pci, PCIE_MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
-> 
-> -	exynos_pcie_deassert_core_reset(ep);
->  	dw_pcie_setup_rc(pp);
->  	exynos_pcie_assert_reset(ep);
-> 
-> @@ -472,16 +570,6 @@ static void exynos_pcie_clear_irq_pulse(struct
-> exynos_pcie *ep)
->  	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_PULSE);
->  }
-> 
-> -static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *ep)
-> -{
-> -	u32 val;
-> -
-> -	/* enable INTX interrupt */
-> -	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
-> -		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
-> -	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_EN_PULSE);
-> -}
-> -
->  static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
->  {
->  	struct exynos_pcie *ep = arg;
-> @@ -513,9 +601,16 @@ static void exynos_pcie_msi_init(struct exynos_pcie
-> *ep)
->  	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_EN_LEVEL);
->  }
-> 
-> -static void exynos_pcie_enable_interrupts(struct exynos_pcie *ep)
-> +static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *ep)
->  {
-> -	exynos_pcie_enable_irq_pulse(ep);
-> +	u32 val;
-> +
-> +	val = IRQ_INTA_ASSERT | IRQ_INTB_ASSERT |
-> +		IRQ_INTC_ASSERT | IRQ_INTD_ASSERT;
-> +	exynos_pcie_writel(ep->mem_res->elbi_base, val, PCIE_IRQ_EN_PULSE);
-> +
-> +	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_IRQ_EN_LEVEL);
-> +	exynos_pcie_writel(ep->mem_res->elbi_base, 0, PCIE_IRQ_EN_SPECIAL);
-
-Good.
-
-> 
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		exynos_pcie_msi_init(ep);
-> @@ -575,10 +670,8 @@ static int exynos_pcie_link_up(struct dw_pcie *pci)
->  	u32 val;
-> 
->  	val = exynos_pcie_readl(ep->mem_res->elbi_base,
-> PCIE_ELBI_RDLH_LINKUP);
-> -	if (val == PCIE_ELBI_LTSSM_ENABLE)
-> -		return 1;
-
-Exynos5440 uses 'PCIE_ELBI_LTSSM_ENABLE'.
-Can you keep this code for Exyno5440?
-
-This register can be added as below.
-
-/* Exynos5440 PCIe ELBI registers */
-#define EXYNOS5440_PCIE_ELBI_RDLH_LINKUP	0x064
-#define EXYNOS5440_PCIE_ELBI_LTSSM_ENABLE	BIT(0)
-
-Best regards,
-Jingoo Han
-
-> 
-> -	return 0;
-> +	return (val & PCIE_ELBI_XMLH_LINKUP);
->  }
-> 
->  static int exynos_pcie_host_init(struct pcie_port *pp)
-> @@ -587,7 +680,7 @@ static int exynos_pcie_host_init(struct pcie_port *pp)
->  	struct exynos_pcie *ep = to_exynos_pcie(pci);
-> 
->  	exynos_pcie_establish_link(ep);
-> -	exynos_pcie_enable_interrupts(ep);
-> +	exynos_pcie_enable_irq_pulse(ep);
-> 
->  	return 0;
->  }
-> @@ -608,8 +701,11 @@ static int __init exynos_add_pcie_port(struct
-> exynos_pcie *ep,
-> 
->  	pp->irq = platform_get_irq(pdev, 1);
->  	if (pp->irq < 0) {
-> -		dev_err(dev, "failed to get irq\n");
-> -		return pp->irq;
-> +		pp->irq = platform_get_irq_byname(pdev, "intr");
-> +		if (pp->irq < 0) {
-> +			dev_err(dev, "failed to get irq\n");
-> +			return pp->irq;
-> +		}
->  	}
->  	ret = devm_request_irq(dev, pp->irq, exynos_pcie_irq_handler,
->  				IRQF_SHARED, "exynos-pcie", ep);
-> @@ -678,13 +774,23 @@ static int __init exynos_pcie_probe(struct
-> platform_device *pdev)
-> 
->  	ep->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> 
-> -	/* Assume that controller doesn't use the PHY framework */
-> -	ep->using_phy = false;
-> +	/*
-> +	 * In case of Exynos5440,
-> +	 * Assume that controller doesn't use the PHY frameork.
-> +	 * Other SoCs might be used the PHY framework.
-> +	 */
-> +
-> +	if (of_device_is_compatible(np, "samsung,exynos5440-pcie"))
-> +		ep->using_phy = false;
-> 
-> -	ep->phy = devm_of_phy_get(dev, np, NULL);
-> +	ep->phy = devm_of_phy_get(dev, np, "pcie-phy");
->  	if (IS_ERR(ep->phy)) {
->  		if (PTR_ERR(ep->phy) == -EPROBE_DEFER)
->  			return PTR_ERR(ep->phy);
-> +		if (!of_device_is_compatible(np, "samsung,exynos5440-pcie"))
-> {
-> +			dev_err(dev, "Can't find the pcie-phy\n");
-> +			return PTR_ERR(ep->phy);
-> +		}
->  		dev_warn(dev, "Use the 'phy' property. Current DT of pci-
-> exynos was deprecated!!\n");
->  	} else
->  		ep->using_phy = true;
-> @@ -734,23 +840,20 @@ static int __exit exynos_pcie_remove(struct
-> platform_device *pdev)
->  static const struct of_device_id exynos_pcie_of_match[] = {
->  	{
->  		.compatible = "samsung,exynos5440-pcie",
-> -		.data = &exynos5440_pcie_ops
-> +		.data = &exynos5440_pcie_ops,
-> +	}, {
-> +		.compatible = "samsung,exynos5433-pcie",
-> +		.data = &exynos5433_pcie_ops,
->  	},
->  	{},
->  };
-> 
->  static struct platform_driver exynos_pcie_driver = {
-> +	.probe		= exynos_pcie_probe,
->  	.remove		= __exit_p(exynos_pcie_remove),
->  	.driver = {
->  		.name	= "exynos-pcie",
->  		.of_match_table = exynos_pcie_of_match,
->  	},
->  };
-> -
-> -/* Exynos PCIe driver does not allow module unload */
-> -
-> -static int __init exynos_pcie_init(void)
-> -{
-> -	return platform_driver_probe(&exynos_pcie_driver,
-> exynos_pcie_probe);
-> -}
-> -subsys_initcall(exynos_pcie_init);
-> +builtin_platform_driver(exynos_pcie_driver);
-> --
-> 2.15.1
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 064c5a93ea80..312f21b6e013 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -27,14 +27,21 @@
+ 
+ #define to_artpec6_pcie(x)	dev_get_drvdata((x)->dev)
+ 
++enum artpec_pcie_variants {
++	ARTPEC6,
++	ARTPEC7,
++};
++
+ struct artpec6_pcie {
+ 	struct dw_pcie		*pci;
+ 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
+ 	void __iomem		*phy_base;	/* DT phy */
++	enum artpec_pcie_variants variant;
+ 	enum dw_pcie_device_mode mode;
+ };
+ 
+ struct artpec_pcie_of_data {
++	enum artpec_pcie_variants variant;
+ 	enum dw_pcie_device_mode mode;
+ };
+ 
+@@ -43,6 +50,13 @@ static const struct of_device_id artpec6_pcie_of_match[];
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET			0x700
+ 
++#define ACK_F_ASPM_CTRL_OFF		(PL_OFFSET + 0xc)
++#define ACK_N_FTS_MASK			GENMASK(15, 8)
++#define ACK_N_FTS(x)			(((x) << 8) & ACK_N_FTS_MASK)
++
++#define FAST_TRAINING_SEQ_MASK		GENMASK(7, 0)
++#define FAST_TRAINING_SEQ(x)		(((x) << 0) & FAST_TRAINING_SEQ_MASK)
++
+ /* ARTPEC-6 specific registers */
+ #define PCIECFG				0x18
+ #define  PCIECFG_DBG_OEN		BIT(24)
+@@ -57,6 +71,13 @@ static const struct of_device_id artpec6_pcie_of_match[];
+ #define  PCIECFG_MODE_TX_DRV_EN		BIT(3)
+ #define  PCIECFG_CISRREN		BIT(2)
+ #define  PCIECFG_MACRO_ENABLE		BIT(0)
++/* ARTPEC-7 specific fields */
++#define  PCIECFG_REFCLKSEL		BIT(23)
++#define  PCIECFG_NOC_RESET		BIT(3)
++
++#define PCIESTAT			0x1c
++/* ARTPEC-7 specific fields */
++#define  PCIESTAT_EXTREFCLK		BIT(3)
+ 
+ #define NOCCFG				0x40
+ #define  NOCCFG_ENABLE_CLK_PCIE		BIT(4)
+@@ -67,6 +88,12 @@ static const struct of_device_id artpec6_pcie_of_match[];
+ #define PHY_STATUS			0x118
+ #define  PHY_COSPLLLOCK			BIT(0)
+ 
++#define PHY_TX_ASIC_OUT			0x4040
++#define  PHY_TX_ASIC_OUT_TX_ACK		BIT(0)
++
++#define PHY_RX_ASIC_OUT			0x405c
++#define  PHY_RX_ASIC_OUT_ACK		BIT(0)
++
+ static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+ {
+ 	u32 val;
+@@ -125,7 +152,7 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.stop_link = artpec6_pcie_stop_link,
+ };
+ 
+-static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
++static void artpec6_pcie_wait_for_phy_a6(struct artpec6_pcie *artpec6_pcie)
+ {
+ 	struct dw_pcie *pci = artpec6_pcie->pci;
+ 	struct device *dev = pci->dev;
+@@ -152,7 +179,49 @@ static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
+ 		dev_err(dev, "PHY PLL did not lock\n");
+ }
+ 
+-static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++static void artpec6_pcie_wait_for_phy_a7(struct artpec6_pcie *artpec6_pcie)
++{
++	struct dw_pcie *pci = artpec6_pcie->pci;
++	struct device *dev = pci->dev;
++	u32 val;
++	u16 phy_status_tx, phy_status_rx;
++	unsigned int retries;
++
++	retries = 50;
++	do {
++		usleep_range(1000, 2000);
++		val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
++		retries--;
++	} while (retries &&
++		(val & (NOCCFG_POWER_PCIE_IDLEACK | NOCCFG_POWER_PCIE_IDLE)));
++	if (!retries)
++		dev_err(dev, "PCIe clock manager did not leave idle state\n");
++
++	retries = 50;
++	do {
++		usleep_range(1000, 2000);
++		phy_status_tx = readw(artpec6_pcie->phy_base + PHY_TX_ASIC_OUT);
++		phy_status_rx = readw(artpec6_pcie->phy_base + PHY_RX_ASIC_OUT);
++		retries--;
++	} while (retries && ((phy_status_tx & PHY_TX_ASIC_OUT_TX_ACK) ||
++				(phy_status_rx & PHY_RX_ASIC_OUT_ACK)));
++	if (!retries)
++		dev_err(dev, "PHY did not enter Pn state\n");
++}
++
++static void artpec6_pcie_wait_for_phy(struct artpec6_pcie *artpec6_pcie)
++{
++	switch (artpec6_pcie->variant) {
++	case ARTPEC6:
++		artpec6_pcie_wait_for_phy_a6(artpec6_pcie);
++		break;
++	case ARTPEC7:
++		artpec6_pcie_wait_for_phy_a7(artpec6_pcie);
++		break;
++	}
++}
++
++static void artpec6_pcie_init_phy_a6(struct artpec6_pcie *artpec6_pcie)
+ {
+ 	u32 val;
+ 
+@@ -182,12 +251,90 @@ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
+ 	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
+ }
+ 
++static void artpec6_pcie_init_phy_a7(struct artpec6_pcie *artpec6_pcie)
++{
++	struct dw_pcie *pci = artpec6_pcie->pci;
++	u32 val;
++	bool extrefclk;
++
++	/* Check if external reference clock is connected */
++	val = artpec6_pcie_readl(artpec6_pcie, PCIESTAT);
++	extrefclk = !!(val & PCIESTAT_EXTREFCLK);
++	dev_dbg(pci->dev, "Using reference clock: %s\n",
++		extrefclk ? "external" : "internal");
++
++	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++	val |=  PCIECFG_RISRCREN |	/* Receiver term. 50 Ohm */
++		PCIECFG_PCLK_ENABLE;
++	if (extrefclk)
++		val |= PCIECFG_REFCLKSEL;
++	else
++		val &= ~PCIECFG_REFCLKSEL;
++	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++	usleep_range(10, 20);
++
++	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
++	val |= NOCCFG_ENABLE_CLK_PCIE;
++	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
++	usleep_range(20, 30);
++
++	val = artpec6_pcie_readl(artpec6_pcie, NOCCFG);
++	val &= ~NOCCFG_POWER_PCIE_IDLEREQ;
++	artpec6_pcie_writel(artpec6_pcie, NOCCFG, val);
++}
++
++static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
++{
++	switch (artpec6_pcie->variant) {
++	case ARTPEC6:
++		artpec6_pcie_init_phy_a6(artpec6_pcie);
++		break;
++	case ARTPEC7:
++		artpec6_pcie_init_phy_a7(artpec6_pcie);
++		break;
++	}
++}
++
++static void artpec6_pcie_set_nfts(struct artpec6_pcie *artpec6_pcie)
++{
++	struct dw_pcie *pci = artpec6_pcie->pci;
++	u32 val;
++
++	if (artpec6_pcie->variant != ARTPEC7)
++		return;
++
++	/*
++	 * Increase the N_FTS (Number of Fast Training Sequences)
++	 * to be transmitted when transitioning from L0s to L0.
++	 */
++	val = dw_pcie_readl_dbi(pci, ACK_F_ASPM_CTRL_OFF);
++	val &= ~ACK_N_FTS_MASK;
++	val |= ACK_N_FTS(180);
++	dw_pcie_writel_dbi(pci, ACK_F_ASPM_CTRL_OFF, val);
++
++	/*
++	 * Set the Number of Fast Training Sequences that the core
++	 * advertises as its N_FTS during Gen2 or Gen3 link training.
++	 */
++	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	val &= ~FAST_TRAINING_SEQ_MASK;
++	val |= FAST_TRAINING_SEQ(180);
++	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++}
++
+ static void artpec6_pcie_assert_core_reset(struct artpec6_pcie *artpec6_pcie)
+ {
+ 	u32 val;
+ 
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val |= PCIECFG_CORE_RESET_REQ;
++	switch (artpec6_pcie->variant) {
++	case ARTPEC6:
++		val |= PCIECFG_CORE_RESET_REQ;
++		break;
++	case ARTPEC7:
++		val &= ~PCIECFG_NOC_RESET;
++		break;
++	}
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ }
+ 
+@@ -196,7 +343,14 @@ static void artpec6_pcie_deassert_core_reset(struct artpec6_pcie *artpec6_pcie)
+ 	u32 val;
+ 
+ 	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
+-	val &= ~PCIECFG_CORE_RESET_REQ;
++	switch (artpec6_pcie->variant) {
++	case ARTPEC6:
++		val &= ~PCIECFG_CORE_RESET_REQ;
++		break;
++	case ARTPEC7:
++		val |= PCIECFG_NOC_RESET;
++		break;
++	}
+ 	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
+ 	usleep_range(100, 200);
+ }
+@@ -219,6 +373,7 @@ static int artpec6_pcie_host_init(struct pcie_port *pp)
+ 	artpec6_pcie_init_phy(artpec6_pcie);
+ 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
+ 	artpec6_pcie_wait_for_phy(artpec6_pcie);
++	artpec6_pcie_set_nfts(artpec6_pcie);
+ 	dw_pcie_setup_rc(pp);
+ 	artpec6_pcie_establish_link(pci);
+ 	dw_pcie_wait_for_link(pci);
+@@ -287,6 +442,7 @@ static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	artpec6_pcie_init_phy(artpec6_pcie);
+ 	artpec6_pcie_deassert_core_reset(artpec6_pcie);
+ 	artpec6_pcie_wait_for_phy(artpec6_pcie);
++	artpec6_pcie_set_nfts(artpec6_pcie);
+ 
+ 	for (bar = BAR_0; bar <= BAR_5; bar++)
+ 		dw_pcie_ep_reset_bar(pci, bar);
+@@ -358,6 +514,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	int ret;
+ 	const struct of_device_id *match;
+ 	const struct artpec_pcie_of_data *data;
++	enum artpec_pcie_variants variant;
+ 	enum dw_pcie_device_mode mode;
+ 
+ 	match = of_match_device(artpec6_pcie_of_match, dev);
+@@ -365,6 +522,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 
+ 	data = (struct artpec_pcie_of_data *)match->data;
++	variant = (enum artpec_pcie_variants)data->variant;
+ 	mode = (enum dw_pcie_device_mode)data->mode;
+ 
+ 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
+@@ -379,6 +537,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	pci->ops = &dw_pcie_ops;
+ 
+ 	artpec6_pcie->pci = pci;
++	artpec6_pcie->variant = variant;
+ 	artpec6_pcie->mode = mode;
+ 
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+@@ -430,10 +589,22 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ }
+ 
+ static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
++	.variant = ARTPEC6,
+ 	.mode = DW_PCIE_RC_TYPE,
+ };
+ 
+ static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
++	.variant = ARTPEC6,
++	.mode = DW_PCIE_EP_TYPE,
++};
++
++static const struct artpec_pcie_of_data artpec7_pcie_rc_of_data = {
++	.variant = ARTPEC7,
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static const struct artpec_pcie_of_data artpec7_pcie_ep_of_data = {
++	.variant = ARTPEC7,
+ 	.mode = DW_PCIE_EP_TYPE,
+ };
+ 
+@@ -446,6 +617,14 @@ static const struct of_device_id artpec6_pcie_of_match[] = {
+ 		.compatible = "axis,artpec6-pcie-ep",
+ 		.data = &artpec6_pcie_ep_of_data,
+ 	},
++	{
++		.compatible = "axis,artpec7-pcie",
++		.data = &artpec7_pcie_rc_of_data,
++	},
++	{
++		.compatible = "axis,artpec7-pcie-ep",
++		.data = &artpec7_pcie_ep_of_data,
++	},
+ 	{},
+ };
+ 
+-- 
+2.14.2
