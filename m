@@ -1,42 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34382 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754403AbdLNXj1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Dec 2017 18:39:27 -0500
-Date: Thu, 14 Dec 2017 17:39:23 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vidya Sagar <vidyas@nvidia.com>
-Cc: treding@nvidia.com, bhelgaas@google.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, swarren@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH V3 1/3] PCI: tegra: Apply sw fixups to support ASPM-L1
- Sub-States
-Message-ID: <20171214233923.GP30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <1510492674-12786-1-git-send-email-vidyas@nvidia.com>
- <1510492674-12786-2-git-send-email-vidyas@nvidia.com>
- <20171120212151.GC16362@bhelgaas-glaptop.roam.corp.google.com>
- <42e1cd97-c886-4e21-c13d-8861238b9644@nvidia.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>, <bcousson@baylibre.com>
+Subject: [PATCH 5/7] ARM: dts: dra7: Remove deprecated PCI compatible string
+Date: Tue, 19 Dec 2017 15:01:31 +0530
+Message-ID: <20171219093133.16565-6-kishon@ti.com>
+In-Reply-To: <20171219093133.16565-1-kishon@ti.com>
+References: <20171219093133.16565-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <42e1cd97-c886-4e21-c13d-8861238b9644@nvidia.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ kishon@ti.com, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
+ Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 14, 2017 at 10:02:15PM +0530, Vidya Sagar wrote:
-> On Tuesday 21 November 2017 02:51 AM, Bjorn Helgaas wrote:
-> >On Sun, Nov 12, 2017 at 06:47:52PM +0530, Vidya Sagar wrote:
-> >>Programs T_cmrt (Commmon Mode Restore Time) and T_pwr_on (Power On)
-> >Please use the exact names used in the spec.  In this case, I think
-> >that would be "Port Common_Mode_Restore_Time" and "Port T_POWER_ON"
-> >(from the L1 PM Substates Capabilities Register, sec 7.33.2).
-> >Searching the spec for "T_cmrt" isn't going to find anything useful.
-> I'll take care of this in next patch
-> >These look like things that maybe should be in the DT because they
-> >depend on external component values, so you might need different
-> >values depending on what board the Tegra is on?  Same for clk_m?
-> I'm afraid not. These are fixed for Tegra including clk_m.
+Since SoC specific compatible strings are used for PCIe in
+dra74x.dtsi and dra72x.dtsi, remove the compatible property
+from dra7.dtsi which uses the deprecated compatible string.
 
-That's actually a *good* thing :)  If they're fixed and can be
-embedded in the driver, that's better than having to extend the DT.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+---
+ arch/arm/boot/dts/dra7.dtsi | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Bjorn
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index 333f6a634ff9..1efa908c7bce 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -293,7 +293,6 @@
+ 			 * node and enable pcie1_ep mode.
+ 			 */
+ 			pcie1_rc: pcie@51000000 {
+-				compatible = "ti,dra7-pcie";
+ 				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
+ 				reg-names = "rc_dbics", "ti_conf", "config";
+ 				interrupts = <0 232 0x4>, <0 233 0x4>;
+@@ -325,7 +324,6 @@
+ 			};
+ 
+ 			pcie1_ep: pcie_ep@51000000 {
+-				compatible = "ti,dra7-pcie-ep";
+ 				reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>, <0x1000 0x10000000>;
+ 				reg-names = "ep_dbics", "ti_conf", "ep_dbics2", "addr_space";
+ 				interrupts = <0 232 0x4>;
+@@ -350,7 +348,6 @@
+ 				  0x0	     0x30000000 0x10000000>;
+ 			status = "disabled";
+ 			pcie2_rc: pcie@51800000 {
+-				compatible = "ti,dra7-pcie";
+ 				reg = <0x51800000 0x2000>, <0x51802000 0x14c>, <0x1000 0x2000>;
+ 				reg-names = "rc_dbics", "ti_conf", "config";
+ 				interrupts = <0 355 0x4>, <0 356 0x4>;
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
