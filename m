@@ -1,48 +1,290 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56968 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755530AbdLOU3j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 15:29:39 -0500
-Subject: [PATCH] PCI: rockchip: Remove redundant "valid device" check
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
-        linux-rockchip@lists.infradead.org
-Date: Fri, 15 Dec 2017 14:29:35 -0600
-Message-ID: <20171215202935.157396.74423.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from bastet.se.axis.com ([195.60.68.11]:51582 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752680AbdLSXb0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 18:31:26 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@axis.com
+Subject: [PATCH v6 14/18] PCI: dwc: artpec6: Add support for endpoint mode
+Date: Wed, 20 Dec 2017 00:29:35 +0100
+Message-Id: <20171219232940.659-15-niklas.cassel@axis.com>
+In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+The PCIe controller integrated in ARTPEC-6 SoCs is capable of operating in
+endpoint mode. Add endpoint mode support to the artpec6 driver.
 
-In rockchip_pcie_valid_device(), we do the exact same test twice:
-
-  if (bus->number == rockchip->root_bus_nr && dev > 0)
-    return 0;
-  if (bus->number == rockchip->root_bus_nr && dev > 0)
-    return 0;
-
-We only need to do it once, so remove one of them.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 ---
- drivers/pci/host/pcie-rockchip.c |    4 ----
- 1 file changed, 4 deletions(-)
+ drivers/pci/dwc/Kconfig        |  23 +++++--
+ drivers/pci/dwc/pcie-artpec6.c | 152 +++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 164 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 9051c6c8fea4..dd9c7ea69e0b 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -293,10 +293,6 @@ static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
- static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 				      struct pci_bus *bus, int dev)
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 3954353e3e2e..0fb96c7754de 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -148,15 +148,28 @@ config PCIE_ARMADA_8K
+ 	  DesignWare core functions to implement the driver.
+ 
+ config PCIE_ARTPEC6
+-	bool "Axis ARTPEC-6 PCIe controller"
+-	depends on PCI
++	bool
++
++config PCIE_ARTPEC6_HOST
++	bool "Axis ARTPEC-6 PCIe controller Host Mode"
+ 	depends on MACH_ARTPEC6
+-	depends on PCI_MSI_IRQ_DOMAIN
++	depends on PCI && PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+ 	select PCIE_DW_HOST
++	select PCIE_ARTPEC6
++	help
++	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
++	  host mode. This uses the DesignWare core.
++
++config PCIE_ARTPEC6_EP
++	bool "Axis ARTPEC-6 PCIe controller Endpoint Mode"
++	depends on MACH_ARTPEC6
++	depends on PCI_ENDPOINT
++	select PCIE_DW_EP
++	select PCIE_ARTPEC6
+ 	help
+-	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+-	  SoCs.  This PCIe controller uses the DesignWare core.
++	  Enables support for the PCIe controller in the ARTPEC-6 SoC to work in
++	  endpoint mode. This uses the DesignWare core.
+ 
+ config PCIE_KIRIN
+ 	depends on OF && ARM64
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index b2783b475c2a..e7de4e4649eb 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -13,6 +13,7 @@
+ #include <linux/delay.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/of_device.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/resource.h>
+@@ -30,8 +31,15 @@ struct artpec6_pcie {
+ 	struct dw_pcie		*pci;
+ 	struct regmap		*regmap;	/* DT axis,syscon-pcie */
+ 	void __iomem		*phy_base;	/* DT phy */
++	enum dw_pcie_device_mode mode;
+ };
+ 
++struct artpec_pcie_of_data {
++	enum dw_pcie_device_mode mode;
++};
++
++static const struct of_device_id artpec6_pcie_of_match[];
++
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET			0x700
+ 
+@@ -40,6 +48,7 @@ struct artpec6_pcie {
+ #define  PCIECFG_DBG_OEN		BIT(24)
+ #define  PCIECFG_CORE_RESET_REQ		BIT(21)
+ #define  PCIECFG_LTSSM_ENABLE		BIT(20)
++#define  PCIECFG_DEVICE_TYPE_MASK	GENMASK(19, 16)
+ #define  PCIECFG_CLKREQ_B		BIT(11)
+ #define  PCIECFG_REFCLK_ENABLE		BIT(10)
+ #define  PCIECFG_PLL_ENABLE		BIT(9)
+@@ -90,6 +99,22 @@ static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+ 	return 0;
+ }
+ 
++static void artpec6_pcie_stop_link(struct dw_pcie *pci)
++{
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	u32 val;
++
++	val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++	val &= ~PCIECFG_LTSSM_ENABLE;
++	artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++}
++
++static const struct dw_pcie_ops dw_pcie_ops = {
++	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++	.start_link = artpec6_pcie_establish_link,
++	.stop_link = artpec6_pcie_stop_link,
++};
++
+ static void artpec6_pcie_init_phy(struct artpec6_pcie *artpec6_pcie)
  {
--	/* access only one slot on each root port */
--	if (bus->number == rockchip->root_bus_nr && dev > 0)
--		return 0;
--
- 	/*
- 	 * do not read more than one device on the bus directly attached
- 	 * to RC's downstream side.
+ 	u32 val;
+@@ -230,10 +255,76 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 	return 0;
+ }
+ 
+-static const struct dw_pcie_ops dw_pcie_ops = {
+-	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++static void artpec6_pcie_ep_init(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	enum pci_barno bar;
++
++	artpec6_pcie_assert_core_reset(artpec6_pcie);
++	artpec6_pcie_init_phy(artpec6_pcie);
++	artpec6_pcie_deassert_core_reset(artpec6_pcie);
++
++	for (bar = BAR_0; bar <= BAR_5; bar++)
++		dw_pcie_ep_reset_bar(pci, bar);
++}
++
++static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep,
++				  enum pci_epc_irq_type type, u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++
++	switch (type) {
++	case PCI_EPC_IRQ_LEGACY:
++		dev_err(pci->dev, "EP cannot trigger legacy IRQs\n");
++		return -EINVAL;
++	case PCI_EPC_IRQ_MSI:
++		return dw_pcie_ep_raise_msi_irq(ep, interrupt_num);
++	default:
++		dev_err(pci->dev, "UNKNOWN IRQ type\n");
++	}
++
++	return 0;
++}
++
++static struct dw_pcie_ep_ops pcie_ep_ops = {
++	.ep_init = artpec6_pcie_ep_init,
++	.raise_irq = artpec6_pcie_raise_irq,
+ };
+ 
++static int artpec6_add_pcie_ep(struct artpec6_pcie *artpec6_pcie,
++			       struct platform_device *pdev)
++{
++	int ret;
++	struct dw_pcie_ep *ep;
++	struct resource *res;
++	struct device *dev = &pdev->dev;
++	struct dw_pcie *pci = artpec6_pcie->pci;
++
++	ep = &pci->ep;
++	ep->ops = &pcie_ep_ops;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
++	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
++	if (IS_ERR(pci->dbi_base2))
++		return PTR_ERR(pci->dbi_base2);
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
++	if (!res)
++		return -EINVAL;
++
++	ep->phys_base = res->start;
++	ep->addr_size = resource_size(res);
++
++	ret = dw_pcie_ep_init(ep);
++	if (ret) {
++		dev_err(dev, "failed to initialize endpoint\n");
++		return ret;
++	}
++
++	return 0;
++}
++
+ static int artpec6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -242,6 +333,16 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	struct resource *dbi_base;
+ 	struct resource *phy_base;
+ 	int ret;
++	const struct of_device_id *match;
++	const struct artpec_pcie_of_data *data;
++	enum dw_pcie_device_mode mode;
++
++	match = of_match_device(artpec6_pcie_of_match, dev);
++	if (!match)
++		return -EINVAL;
++
++	data = (struct artpec_pcie_of_data *)match->data;
++	mode = (enum dw_pcie_device_mode)data->mode;
+ 
+ 	artpec6_pcie = devm_kzalloc(dev, sizeof(*artpec6_pcie), GFP_KERNEL);
+ 	if (!artpec6_pcie)
+@@ -255,6 +356,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	pci->ops = &dw_pcie_ops;
+ 
+ 	artpec6_pcie->pci = pci;
++	artpec6_pcie->mode = mode;
+ 
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+ 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
+@@ -274,15 +376,53 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, artpec6_pcie);
+ 
+-	ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
+-	if (ret < 0)
+-		return ret;
++	switch (artpec6_pcie->mode) {
++	case DW_PCIE_RC_TYPE:
++		if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_HOST))
++			return -ENODEV;
++
++		ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
++		if (ret < 0)
++			return ret;
++		break;
++	case DW_PCIE_EP_TYPE: {
++		u32 val;
++
++		if (!IS_ENABLED(CONFIG_PCIE_ARTPEC6_EP))
++			return -ENODEV;
++
++		val = artpec6_pcie_readl(artpec6_pcie, PCIECFG);
++		val &= ~PCIECFG_DEVICE_TYPE_MASK;
++		artpec6_pcie_writel(artpec6_pcie, PCIECFG, val);
++		ret = artpec6_add_pcie_ep(artpec6_pcie, pdev);
++		if (ret < 0)
++			return ret;
++		break;
++	}
++	default:
++		dev_err(dev, "INVALID device type %d\n", artpec6_pcie->mode);
++	}
+ 
+ 	return 0;
+ }
+ 
++static const struct artpec_pcie_of_data artpec6_pcie_rc_of_data = {
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static const struct artpec_pcie_of_data artpec6_pcie_ep_of_data = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
+ static const struct of_device_id artpec6_pcie_of_match[] = {
+-	{ .compatible = "axis,artpec6-pcie", },
++	{
++		.compatible = "axis,artpec6-pcie",
++		.data = &artpec6_pcie_rc_of_data,
++	},
++	{
++		.compatible = "axis,artpec6-pcie-ep",
++		.data = &artpec6_pcie_ep_of_data,
++	},
+ 	{},
+ };
+ 
+-- 
+2.14.2
