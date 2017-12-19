@@ -1,96 +1,63 @@
-Return-Path: <SRS0=Jvse=DK=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=Jvse=DK=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>, Michal Hocko <mhocko@kernel.org>, Andy Lutomirski <luto@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, the arch/x86 maintainers <x86@kernel.org>, Daniel Vetter <daniel.vetter@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-Date: Thu, 14 Dec 2017 16:30:39 +0100
-Message-ID: <5115041.vUGA3IjvdM@aspire.rjw.lan>
-In-Reply-To: <alpine.DEB.2.20.1712141329040.4998@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <3265333.8krWOQvcRi@aspire.rjw.lan> <alpine.DEB.2.20.1712141329040.4998@nanos>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 12/26] powerpc/powermac: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:48 -0500
+Message-Id: <1513661883-28662-13-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ "open list:LINUX FOR POWER MACINTOSH" <linuxppc-dev@lists.ozlabs.org>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 14, 2017 1:30:37 PM CET Thomas Gleixner wrote:
-> On Thu, 14 Dec 2017, Rafael J. Wysocki wrote:
-> > On Thursday, December 14, 2017 12:54:05 PM CET Thomas Gleixner wrote:
-> > > Now the graphics issue is a different story. That only happens on
-> > > hibernation after doing the snapshot. There all non boot cpus are onlined
-> > > again and after that the devices are 'thawed'. The following reenable of
-> > > interrupts fails because i915 is not in PCI_D0 state.
-> > > 
-> > > Suspend:
-> > > 
-> > >    irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
-> > >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-> > >    __pci_write_msi_msg: Not written <- Device not in PCI_D0
-> > >    ....
-> > >    device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [resume]
-> > >    pci_pm_resume_noirq <-dpm_run_callback
-> > >    pci_pm_resume_noirq <-dpm_run_callback
-> > >    pci_pm_default_resume_early <-pci_pm_resume_noirq
-> > >    pci_pm_default_resume_early <-pci_pm_resume_noirq
-> > >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a  <-- Set the new affinity
-> > >    device_pm_callback_end: i915 0000:00:02.0, err=0
-> > 
-> > So this works, because we power up the device during resume even if it
-> > had been suspended (via runtime PM) before the suspend started.
-> > 
-> > > Hibernate:
-> > > 
-> > >    irq_migrate_all_off_this_cpu: Mask 125 pci_msi_mask_irq+0x0/0x10
-> > >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-> > >    __pci_write_msi_msg: Not written <- Device not in PCI_D0
-> > >    ....
-> > >    device_pm_callback_start: i915 0000:00:02.0, parent: pci0000:00, noirq bus [thaw]
-> > >    pci_pm_thaw_noirq <-dpm_run_callback
-> > >    __pci_write_msi_msg: 0000:00:02.0 00000000fee0100c 0000412a
-> > >    __pci_write_msi_msg: Not written  <--- Device is not in PCI_D0
-> > >    device_pm_callback_end: i915 0000:00:02.0, err=0
-> > 
-> > And here we try to leave the device alone which is OK for devices in D0,
-> > but not for suspended ones.
-> > 
-> > It looks like we need to power up them at the "thaw" time too or at least
-> > I don't see how to address that differently.
-> 
-> The question is whether the code which brings the device out of D0 should
-> write the message unconditionally. That would be sufficient I think.
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-It doesn't have to do that.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-The problem here is that pci_pm_thaw_noirq() calls pci_restore_state() which
-in fact requires the device to be in D0, so the caller should put it into
-D0 instead of trying to "update" its power state.
+Hard-code the domain number as 0 to match the previous behavior.
 
-[Note that the PCI layer doesn't put devices into low-power states during the
-hibernation's "freeze" transition, but drivers can legitimately do that in
-their "freeze" callbacks which was overlooked in that code and that's what
-i915 does.]
-
-So IMO what we need is the change below.  I'm going to test it shortly,
-but please give it a go too.
-
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/pci-driver.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/macintosh/via-pmu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1027,7 +1027,12 @@ static int pci_pm_thaw_noirq(struct devi
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume_early(dev);
+diff --git a/drivers/macintosh/via-pmu.c b/drivers/macintosh/via-pmu.c
+index e8b29fc..08849e3 100644
+--- a/drivers/macintosh/via-pmu.c
++++ b/drivers/macintosh/via-pmu.c
+@@ -1799,7 +1799,7 @@ static int powerbook_sleep_grackle(void)
+ 	struct adb_request req;
+ 	struct pci_dev *grackle;
  
--	pci_update_current_state(pci_dev, PCI_D0);
-+	/*
-+	 * pci_restore_state() requires the device to be in D0 (because of MSI
-+	 * restoration among other things), so force it into D0 in case the
-+	 * driver's "freeze" callbacks put it into a low-power state directly.
-+	 */
-+	pci_set_power_state(pci_dev, PCI_D0);
- 	pci_restore_state(pci_dev);
+-	grackle = pci_get_bus_and_slot(0, 0);
++	grackle = pci_get_domain_bus_and_slot(0, 0, 0);
+ 	if (!grackle)
+ 		return -ENODEV;
  
- 	if (drv && drv->pm && drv->pm->thaw_noirq)
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
