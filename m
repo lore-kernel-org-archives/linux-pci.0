@@ -1,130 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Niklas Cassel <niklass@axis.com>,
-        Jesper Nilsson <jespern@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
-Subject: [PATCH v6 15/18] PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
-Date: Wed, 20 Dec 2017 00:29:36 +0100
-Message-Id: <20171219232940.659-16-niklas.cassel@axis.com>
-In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
-References: <20171219232940.659-1-niklas.cassel@axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 26/26] PCI: Remove pci_get_bus_and_slot() function
+Date: Tue, 19 Dec 2017 00:38:02 -0500
+Message-Id: <1513661883-28662-27-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current cpu addr fixup mask for ARTPEC-6, GENMASK(27, 0), is wrong.
-The correct cpu addr fixup mask for ARTPEC-6 is GENMASK(28, 0).
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-However, having a hardcoded cpu addr fixup mask in each driver is
-arguably wrong.
-A device tree property called something like "cpu-addr-fixup-mask"
-would have been a better solution.
-Introducing such a property is not needed though, since we already have
-pp->cfg0_base and ep->phys_base, which is derived from already existing
-device tree properties.
+Now that all users of pci_get_bus_and_slot() switched to
+pci_get_domain_bus_and_slot(), it is now safe to remove this function.
 
-It is also worth noting that for ARTPEC-7, hardcoding the cpu addr fixup
-mask is not possible, since it uses a High Address Bits Look Up Table,
-which means that it can, at runtime, map the PCIe window to an arbitrary
-address in the 32-bit address space.
-
-By using pp->cfg0_base and ep->phys_base, we avoid hardcoding a mask
-in each driver. This should work for ARTPEC-6, DRA7xx, and ARTPEC-7.
-I have not changed the code in DRA7xx though, since their existing
-code works, but if they want, they could use the same logic as
-artpec6_pcie_cpu_addr_fixup, and thus remove their hardcoded mask.
-
-The reason why the fixup mask is needed is explained in commit f4c55c5a3f7f
-("PCI: designware: Program ATU with untranslated address").
-
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/dwc/pci-dra7xx.c      |  2 +-
- drivers/pci/dwc/pcie-artpec6.c    | 18 ++++++++++++++----
- drivers/pci/dwc/pcie-designware.c |  2 +-
- drivers/pci/dwc/pcie-designware.h |  2 +-
- 4 files changed, 17 insertions(+), 7 deletions(-)
+ include/linux/pci.h | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 224ff8affdce..89d87844abb3 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -110,7 +110,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 66cca1c..04cecbe 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -948,11 +948,6 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn);
+ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
+ 					    unsigned int devfn);
+-static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+-						   unsigned int devfn)
+-{
+-	return pci_get_domain_bus_and_slot(0, bus, devfn);
+-}
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
+ int pci_dev_present(const struct pci_device_id *ids);
  
--static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-+static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
- {
- 	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
- }
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index e7de4e4649eb..318a2bd0d97e 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -67,8 +67,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
- #define PHY_STATUS			0x118
- #define  PHY_COSPLLLOCK			BIT(0)
- 
--#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
--
- static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
- {
- 	u32 val;
-@@ -82,9 +80,21 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
- 	regmap_write(artpec6_pcie->regmap, offset, val);
- }
- 
--static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
-+static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
- {
--	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
-+	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
-+	struct pcie_port *pp = &pci->pp;
-+	struct dw_pcie_ep *ep = &pci->ep;
-+
-+	switch (artpec6_pcie->mode) {
-+	case DW_PCIE_RC_TYPE:
-+		return pci_addr - pp->cfg0_base;
-+	case DW_PCIE_EP_TYPE:
-+		return pci_addr - ep->phys_base;
-+	default:
-+		dev_err(pci->dev, "UNKNOWN device type\n");
-+	}
-+	return pci_addr;
- }
- 
- static int artpec6_pcie_establish_link(struct dw_pcie *pci)
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 88abdddee2ad..800be7a4f087 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 	u32 retries, val;
- 
- 	if (pci->ops->cpu_addr_fixup)
--		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
-+		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
- 
- 	if (pci->iatu_unroll_enabled) {
- 		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 24edac035160..cca5a81c1c74 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -205,7 +205,7 @@ struct dw_pcie_ep {
- };
- 
- struct dw_pcie_ops {
--	u64	(*cpu_addr_fixup)(u64 cpu_addr);
-+	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
- 	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
- 			    size_t size);
- 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+@@ -1660,9 +1655,6 @@ static inline struct pci_bus *pci_find_next_bus(const struct pci_bus *from)
+ static inline struct pci_dev *pci_get_slot(struct pci_bus *bus,
+ 						unsigned int devfn)
+ { return NULL; }
+-static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+-						unsigned int devfn)
+-{ return NULL; }
+ static inline struct pci_dev *pci_get_domain_bus_and_slot(int domain,
+ 					unsigned int bus, unsigned int devfn)
+ { return NULL; }
 -- 
-2.14.2
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
