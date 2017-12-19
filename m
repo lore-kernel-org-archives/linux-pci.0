@@ -1,150 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56582 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755419AbdLOSSK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 15 Dec 2017 13:18:10 -0500
-Date: Fri, 15 Dec 2017 12:18:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Govinda Tatti <Govinda.Tatti@Oracle.COM>
-Cc: Christoph Hellwig <hch@infradead.org>, jgross@suse.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        JBeulich@suse.com, bhelgaas@google.com,
-        xen-devel@lists.xenproject.org, boris.ostrovsky@Oracle.COM,
-        roger.pau@citrix.com, Russell Currey <ruscur@russell.cc>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Srikanth Jampala <Jampala.Srikanth@cavium.com>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>
-Subject: Re: [Xen-devel] [PATCH V3 1/2] Drivers/PCI: Export pcie_has_flr()
- interface
-Message-ID: <20171215181801.GU30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171207222145.9769-1-Govinda.Tatti@Oracle.COM>
- <20171207222145.9769-2-Govinda.Tatti@Oracle.COM>
- <20171208202424.GC12367@bhelgaas-glaptop.roam.corp.google.com>
- <426eeeab-0dcd-8de3-9c5f-a166acf2c130@Oracle.COM>
- <20171212005919.GB30595@bhelgaas-glaptop.roam.corp.google.com>
- <49956aaf-5fd5-939d-5fc7-231ffdb98b70@Oracle.COM>
- <20171213212420.GH30595@bhelgaas-glaptop.roam.corp.google.com>
- <fea075cf-fe6f-0d0b-11e4-4279fbfc280a@Oracle.COM>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 25/26] i7300_idle: remove unused file
+Date: Tue, 19 Dec 2017 00:38:01 -0500
+Message-Id: <1513661883-28662-26-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kate Stewart <kstewart@linuxfoundation.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Philippe Ombredanne <pombredanne@nexb.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <fea075cf-fe6f-0d0b-11e4-4279fbfc280a@Oracle.COM>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Russell, Sinan, Herbert, Srikanth, Derek, Satanand, Felix, Raghu]
+i7300_idle.h is not being called by any source file and contains calls to
+pci_get_bus_and_slot() that we are trying to deprecate. Remove unused file.
 
-On Fri, Dec 15, 2017 at 09:48:02AM -0600, Govinda Tatti wrote:
-> On 12/13/2017 3:24 PM, Bjorn Helgaas wrote:
-> >On Wed, Dec 13, 2017 at 02:46:57PM -0600, Govinda Tatti wrote:
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ include/linux/i7300_idle.h | 84 ----------------------------------------------
+ 1 file changed, 84 deletions(-)
+ delete mode 100644 include/linux/i7300_idle.h
 
-> >>>>>>-static bool pcie_has_flr(struct pci_dev *dev)
-> >>>>>>+bool pcie_has_flr(struct pci_dev *dev)
-> >>>>>>  {
-> >>>>>>  	u32 cap;
-> >>>>>>@@ -3882,6 +3882,7 @@ static bool pcie_has_flr(struct pci_dev *dev)
-> >>>>>>  	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
-> >>>>>>  	return cap & PCI_EXP_DEVCAP_FLR;
-> >>>>>>  }
-> >>>>>>+EXPORT_SYMBOL_GPL(pcie_has_flr);
+diff --git a/include/linux/i7300_idle.h b/include/linux/i7300_idle.h
+deleted file mode 100644
+index 4dbe651..0000000
+--- a/include/linux/i7300_idle.h
++++ /dev/null
+@@ -1,84 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-
+-#ifndef I7300_IDLE_H
+-#define I7300_IDLE_H
+-
+-#include <linux/pci.h>
+-
+-/*
+- * I/O AT controls (PCI bus 0 device 8 function 0)
+- * DIMM controls (PCI bus 0 device 16 function 1)
+- */
+-#define IOAT_BUS 0
+-#define IOAT_DEVFN PCI_DEVFN(8, 0)
+-#define MEMCTL_BUS 0
+-#define MEMCTL_DEVFN PCI_DEVFN(16, 1)
+-
+-struct fbd_ioat {
+-	unsigned int vendor;
+-	unsigned int ioat_dev;
+-	unsigned int enabled;
+-};
+-
+-/*
+- * The i5000 chip-set has the same hooks as the i7300
+- * but it is not enabled by default and must be manually
+- * manually enabled with "forceload=1" because it is
+- * only lightly validated.
+- */
+-
+-static const struct fbd_ioat fbd_ioat_list[] = {
+-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT_CNB, 1},
+-	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IOAT, 0},
+-	{0, 0}
+-};
+-
+-/* table of devices that work with this driver */
+-static const struct pci_device_id pci_tbl[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_FBD_CNB) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_5000_ERR) },
+-	{ } /* Terminating entry */
+-};
+-
+-/* Check for known platforms with I/O-AT */
+-static inline int i7300_idle_platform_probe(struct pci_dev **fbd_dev,
+-						struct pci_dev **ioat_dev,
+-						int enable_all)
+-{
+-	int i;
+-	struct pci_dev *memdev, *dmadev;
+-
+-	memdev = pci_get_bus_and_slot(MEMCTL_BUS, MEMCTL_DEVFN);
+-	if (!memdev)
+-		return -ENODEV;
+-
+-	for (i = 0; pci_tbl[i].vendor != 0; i++) {
+-		if (memdev->vendor == pci_tbl[i].vendor &&
+-		    memdev->device == pci_tbl[i].device) {
+-			break;
+-		}
+-	}
+-	if (pci_tbl[i].vendor == 0)
+-		return -ENODEV;
+-
+-	dmadev = pci_get_bus_and_slot(IOAT_BUS, IOAT_DEVFN);
+-	if (!dmadev)
+-		return -ENODEV;
+-
+-	for (i = 0; fbd_ioat_list[i].vendor != 0; i++) {
+-		if (dmadev->vendor == fbd_ioat_list[i].vendor &&
+-		    dmadev->device == fbd_ioat_list[i].ioat_dev) {
+-			if (!(fbd_ioat_list[i].enabled || enable_all))
+-				continue;
+-			if (fbd_dev)
+-				*fbd_dev = memdev;
+-			if (ioat_dev)
+-				*ioat_dev = dmadev;
+-
+-			return 0;
+-		}
+-	}
+-	return -ENODEV;
+-}
+-
+-#endif
+-- 
+1.9.1
 
-> >>>>>I'd rather change pcie_flr() so you could *always* call it, and
-> >>>>>it would return 0, -ENOTTY, or whatever, based on whether FLR
-> >>>>>is supported.  Is that feasible?
 
-> >>>>Sure, I will add pcie_has_flr() logic inside pcie_flr() and
-> >>>>return appropriate values as suggested by you. Do we still want
-> >>>>to retain pcie_has_flr() and its usage inside pci.c?.Otherwise,
-> >>>>I will remove it and do required cleanup.
-
-> >>>If you can restructure the code and remove pcie_has_flr() while
-> >>>retaining the existing behavior of its callers, that would be
-> >>>great.
-
-> >>I checked the current usage of pcie_has_flr() and pcie_flr(). I
-> >>have a couple of questions or need some clarification.
-> >>
-> >>1. pcie_has_flr() usage inside pci_probe_reset_function().
-> >>
-> >>    This function is only calling pcie_has_flr() but not pcie_flr().
-> >>    Rest of the code is trying to do specific type of reset except
-> >>    pcie_flr().
-> >>
-> >>         rc = pci_dev_specific_reset(dev, 1);
-> >>         if (rc != -ENOTTY)
-> >>                 return rc;
-> >>         if (pcie_has_flr(dev))
-> >>                 return 0;
-> >>         rc = pci_af_flr(dev, 1);
-> >>         if (rc != -ENOTTY)
-> >>                 return rc;
-> >>
-> >>    In other-words, I can remove usage of pcie_has_flr() in all
-> >>    other places in pci.c except in above function.
-
-> >I think we should keep the EXPORT_SYMBOL_GPL() part of a60a2b73ba69
-> >("PCI: Export pcie_flr()"), but revert the restructuring part.
-> >
-> >Prior to a60a2b73ba69, we had
-> >
-> >   int pcie_flr(struct pci_dev *dev, int probe);
-> >
-> >like all the other reset methods.  AFAICT, the addition of
-> >pcie_has_flr() was to optimize the path slightly because when
-> >drivers call pcie_flr(), they should already know that their
-> >hardware supports FLR.  But I don't think that optimization is
-> >worth the extra code complexity.  If we do need to optimize it, we
-> >can check this in the core during enumeration and set
-> >PCI_DEV_FLAGS_NO_FLR_RESET accordingly.
-
-> Not all code paths are aware of FLR capability and also, not
-> using pcie_flr().  For example,
-> 
-> arch/powerpc/platforms/powernv/eeh-powernv.c
-
-I assume you're referring to pnv_eeh_do_flr() (which contains code similar
-to pcie_flr()) and pnv_eeh_do_af_flr() (which has code similar to
-pci_af_flr()).  I agree that those are problematic and would ideally be
-unified with the PCI core implementations.
-
-Powerpc has quite a bit of this sort of special-case code for several
-reasons, some just historical and some more concrete, so I don't know how
-feasible this is.
-
-> drivers/crypto/cavium/nitrox/nitrox_main.c
-
-This has nitrox_reset_device(), which should definitely be replaced with a
-core interface.
-
-> drivers/net/ethernet/cavium/liquidio/octeon_mailbox.c
-
-And this has octeon_mbox_process_cmd() which also does a home-grown
-PCI_EXP_DEVCTL_BCR_FLR request and also should definitely use a core
-interface.
-
-> So, we should consider one of these options.
-> 
-> - set PCI_DEV_FLAGS_NO_FLR_RESET if it is not supported.
-> - pcie_flr() should return if it is not supported
-> 
-> If we modify pcie_flr() to return error codes, then we need to modify
-> all existing modules that are calling this function.
-
-Yes, of course.
-
-> Please let me know your preference, so that I can move accordingly. Thanks.
-
-I think Christoph volunteered to do some restructuring, but I don't
-know his timeframe.  If you can, I would probably wait for that
-because there's so much overlap here.
-
-The other paths that use PCI_EXP_DEVCTL_BCR_FLR are definitely issues
-and should be fixed, but again should wait for the revised pcie_flr()
-interface.  And if they're not actually required for your Xen issue,
-they sound like "nice to have" cleanups that will not gate your Xen
-fixes.  I added this to my ever-growing list of cleanups to do.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
