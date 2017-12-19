@@ -1,41 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:33752 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753740AbdLTAik (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 19:38:40 -0500
-Received: by mail-qk0-f194.google.com with SMTP id x7so7403399qkb.0
-        for <linux-pci@vger.kernel.org>; Tue, 19 Dec 2017 16:38:39 -0800 (PST)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: dhdang@apm.com, linux-pci@vger.kernel.org,
-        Fabio Estevam <festevam@gmail.com>
-Subject: [PATCH] PCI: xgene: Fix the error return code
-Date: Tue, 19 Dec 2017 22:38:29 -0200
-Message-Id: <1513730309-18831-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=afi7=DP=ozlabs.ru=aik@kernel.org>
+Return-Path: <SRS0=afi7=DP=ozlabs.ru=aik@kernel.org>
+Subject: Re: [PATCH v1 7/7] pseries/setup: Add Initialization of VF Bars
+To: Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
+ "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
+ paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, alex.williamson@redhat.com,
+ helgaas@kernel.org, ruscur@russell.cc, linux-pci@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+ saeedm@mellanox.com
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+ <20171213153242.98015-8-bryantly@linux.vnet.ibm.com>
+ <4ea33f2e-d98c-85ef-eedf-2e8ca49aa839@ozlabs.ru>
+ <8bdf7127-a3ec-1c75-2593-e39a8bd31e34@linux.vnet.ibm.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <fd876ee1-4c12-587b-a8a0-56233fea3401@ozlabs.ru>
+Date: Tue, 19 Dec 2017 17:38:10 +1100
+MIME-Version: 1.0
+In-Reply-To: <8bdf7127-a3ec-1c75-2593-e39a8bd31e34@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-In the case of IS_ERR() error, we should return PTR_ERR().
+On 19/12/17 06:29, Juan Alvarez wrote:
+> This is PF only path. Yes either we have a root returned otherwise
+> will fall back to iomem_resource.
 
-Fix the error return code.
+You have removed context from my response, do not do that please.
 
-Signed-off-by: Fabio Estevam <festevam@gmail.com>
----
- drivers/pci/host/pci-xgene-msi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+When will you have root and when you won't? imho it should always be either
+one or another.
 
-diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-index 1f42a20..4a1fb01 100644
---- a/drivers/pci/host/pci-xgene-msi.c
-+++ b/drivers/pci/host/pci-xgene-msi.c
-@@ -465,7 +465,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 	xgene_msi->msi_regs = devm_ioremap_resource(&pdev->dev, res);
- 	if (IS_ERR(xgene_msi->msi_regs)) {
- 		dev_err(&pdev->dev, "no reg space\n");
--		rc = -EINVAL;
-+		rc = PTR_ERR(xgene_msi->msi_regs);
- 		goto error;
- 	}
- 	xgene_msi->msi_addr = res->start;
+
+> 
+> On 12/18/17 1:21 AM, Alexey Kardashevskiy wrote:
+>> @dev here is a VF, right? I am not familiar with powervn much but from what
+>> I see - the devices are sitting on a root bus of their own PHB and they all
+>> either have a root returned from pci_find_parent_resource() or none of them
+>> has a root and will fall back to &iomem_resource, or both cases are possible?
+> 
+
+
 -- 
-2.7.4
+Alexey
