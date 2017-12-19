@@ -1,211 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:65096 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750820AbdLWKRB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Dec 2017 05:17:01 -0500
-Subject: Re: Re-activate task to add MSI-X to pcie-designware
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
- <20171208110225.GC26816@red-moon>
- <9ede58a6-7c0d-ae66-4e15-147234cbad6d@ti.com>
- <69f78abd-f83e-b3a6-0daf-638f89d07f99@synopsys.com>
- <8771860f-babd-afcb-ed07-2642d2a4d6a8@ti.com>
- <0531c3e9-57e7-d531-1bee-a5a5bbff2a8c@synopsys.com>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <2e04befd-9434-b3ec-0c18-96a80744e327@ti.com>
-Date: Sat, 23 Dec 2017 15:46:20 +0530
-MIME-Version: 1.0
-In-Reply-To: <0531c3e9-57e7-d531-1bee-a5a5bbff2a8c@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+        Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com
+Subject: [PATCH v6 15/18] PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
+Date: Wed, 20 Dec 2017 00:29:36 +0100
+Message-Id: <20171219232940.659-16-niklas.cassel@axis.com>
+In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gustavo,
+The current cpu addr fixup mask for ARTPEC-6, GENMASK(27, 0), is wrong.
+The correct cpu addr fixup mask for ARTPEC-6 is GENMASK(28, 0).
 
-On Thursday 21 December 2017 07:38 PM, Gustavo Pimentel wrote:
-> On 20/12/2017 13:03, Kishon Vijay Abraham I wrote:This is our most recent
-> version of the patches that are running on our equipment, please check with yours
->> Hi,
->>
->> On Monday 18 December 2017 09:31 PM, Gustavo Pimentel wrote:
->>> Hi Kishon,
->>>
->>> I would like to collaborate with you on this subject, I have on my side João's
->>> patches updated to the Bjorn's latest kernel version.
->>
->> cool, do you have a branch so that I can check what breaks in keystone and debug?
->>
-> Unfortunately not, however I'll mailed you the patches immediately.
-> Once again, thanks.
+However, having a hardcoded cpu addr fixup mask in each driver is
+arguably wrong.
+A device tree property called something like "cpu-addr-fixup-mask"
+would have been a better solution.
+Introducing such a property is not needed though, since we already have
+pp->cfg0_base and ep->phys_base, which is derived from already existing
+device tree properties.
 
-Thanks.
+It is also worth noting that for ARTPEC-7, hardcoding the cpu addr fixup
+mask is not possible, since it uses a High Address Bits Look Up Table,
+which means that it can, at runtime, map the PCIe window to an arbitrary
+address in the 32-bit address space.
 
-I tried raising MSI with pci_endpoint_test EP device (16 MSI interrupts). Here
-are some of my observations after applying your patch series.
+By using pp->cfg0_base and ep->phys_base, we avoid hardcoding a mask
+in each driver. This should work for ARTPEC-6, DRA7xx, and ARTPEC-7.
+I have not changed the code in DRA7xx though, since their existing
+code works, but if they want, they could use the same logic as
+artpec6_pcie_cpu_addr_fixup, and thus remove their hardcoded mask.
 
-root@k2g-evm:~# cat /proc/interrupts
-           CPU0
- 17:          0     GICv2  29 Level     arch_timer
- 18:       1816     GICv2  30 Level     arch_timer
- 21:          0     GICv2  36 Edge      arm-pmu
- 22:        792     GICv2 196 Edge      ttyS0
- 23:          5     GICv2 120 Edge      2530000.i2c
- 24:          0     GICv2  33 Edge      soc:keystone_irq@26202a0
- 25:        901     GICv2 356 Level     2a00000.msgmgr rx_005_002
- 41:          0     GICv2 232 Edge      2700000.edma_ccint
- 43:          0     GICv2 249 Edge      2700000.edma_ccerrint
- 44:       2497     GICv2 240 Edge      2728000.edma_ccint
- 46:          0     GICv2 252 Edge      2728000.edma_ccerrint
- 47:       7551     GICv2 128 Edge      mmc0
- 48:          0     GICv2 160 Edge      2680000.keystone-dwc3, xhci-hcd:usb1
- 49:          0     GICv2 176 Edge      2580000.keystone-dwc3, xhci-hcd:usb3
- 50:          0     GICv2  96 Edge      21805400.spi
- 52:          0     GICv2 100 Edge      21805c00.spi
- 53:          0     GICv2 102 Edge      21806000.spi
- 54:          0     GICv2  92 Edge      pcie-error-irq
-211:          0      GPIO  12 Edge    -davinci_gpio  23000000.mmc cd
-280:          0   PCI-MSI   0 Edge      PCIe PME, aerdrv
-281:          0   PCI-MSI 524288 Edge      pci-endpoint-test
-282:          0   PCI-MSI 524289 Edge      pci-endpoint-test
-283:          0   PCI-MSI 524290 Edge      pci-endpoint-test
-284:          0   PCI-MSI 524291 Edge      pci-endpoint-test
-285:          0   PCI-MSI 524292 Edge      pci-endpoint-test
-286:          0   PCI-MSI 524293 Edge      pci-endpoint-test
-287:          0   PCI-MSI 524294 Edge      pci-endpoint-test
-288:          0   PCI-MSI 524295 Edge      pci-endpoint-test
-289:          0   PCI-MSI 524296 Edge      pci-endpoint-test
-290:          0   PCI-MSI 524297 Edge      pci-endpoint-test
-291:          0   PCI-MSI 524298 Edge      pci-endpoint-test
-292:          0   PCI-MSI 524299 Edge      pci-endpoint-test
-293:          0   PCI-MSI 524300 Edge      pci-endpoint-test
-294:          0   PCI-MSI 524301 Edge      pci-endpoint-test
-295:          0   PCI-MSI 524302 Edge      pci-endpoint-test
-296:          0   PCI-MSI 524303 Edge      pci-endpoint-test
-IPI0:          0  CPU wakeup interrupts
-IPI1:          0  Timer broadcast interrupts
-IPI2:          0  Rescheduling interrupts
-IPI3:          0  Function call interrupts
-IPI4:          0  CPU stop interrupts
-IPI5:          0  IRQ work interrupts
-IPI6:          0  completion interrupts
-Err:          0
+The reason why the fixup mask is needed is explained in commit f4c55c5a3f7f
+("PCI: designware: Program ATU with untranslated address").
 
-root@k2g-evm:~# pcitest -m 1
-[   45.966437] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 271
-[   45.973544] keystone-pcie 21801000.pcie: irq: bit 0, vector 0, virq 280
-MSI1:           NOT OKAY
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c      |  2 +-
+ drivers/pci/dwc/pcie-artpec6.c    | 18 ++++++++++++++----
+ drivers/pci/dwc/pcie-designware.c |  2 +-
+ drivers/pci/dwc/pcie-designware.h |  2 +-
+ 4 files changed, 17 insertions(+), 7 deletions(-)
 
-Here there is an off by one error. "pcitest -m 1" should ideally have raised an
-interrupt in 281 but from the above debug print it looks like it's raising an
-interrupt in 280.
-
-So I tried disabling the pcieportbus driver. These are my observations once I
-disable pcieportbus driver
-
-root@k2g-evm:~# cat /proc/interrupts
-           CPU0
- 17:          0     GICv2  29 Level     arch_timer
- 18:       2222     GICv2  30 Level     arch_timer
- 21:          0     GICv2  36 Edge      arm-pmu
- 22:        821     GICv2 196 Edge      ttyS0
- 23:          5     GICv2 120 Edge      2530000.i2c
- 24:          0     GICv2  33 Edge      soc:keystone_irq@26202a0
- 25:        909     GICv2 356 Level     2a00000.msgmgr rx_005_002
- 41:          0     GICv2 232 Edge      2700000.edma_ccint
- 43:          0     GICv2 249 Edge      2700000.edma_ccerrint
- 44:       2442     GICv2 240 Edge      2728000.edma_ccint
- 46:          0     GICv2 252 Edge      2728000.edma_ccerrint
- 47:       7297     GICv2 128 Edge      mmc0
- 48:          0     GICv2 160 Edge      2680000.keystone-dwc3, xhci-hcd:usb1
- 49:          0     GICv2 176 Edge      2580000.keystone-dwc3, xhci-hcd:usb3
- 50:          0     GICv2  96 Edge      21805400.spi
- 52:          0     GICv2 100 Edge      21805c00.spi
- 53:          0     GICv2 102 Edge      21806000.spi
- 54:          0     GICv2  92 Edge      pcie-error-irq
-211:          0      GPIO  12 Edge    -davinci_gpio  23000000.mmc cd
-280:          0   PCI-MSI 524288 Edge      pci-endpoint-test
-281:          0   PCI-MSI 524289 Edge      pci-endpoint-test
-282:          0   PCI-MSI 524290 Edge      pci-endpoint-test
-283:          0   PCI-MSI 524291 Edge      pci-endpoint-test
-284:          0   PCI-MSI 524292 Edge      pci-endpoint-test
-285:          0   PCI-MSI 524293 Edge      pci-endpoint-test
-286:          0   PCI-MSI 524294 Edge      pci-endpoint-test
-287:          0   PCI-MSI 524295 Edge      pci-endpoint-test
-288:          0   PCI-MSI 524296 Edge      pci-endpoint-test
-289:          0   PCI-MSI 524297 Edge      pci-endpoint-test
-290:          0   PCI-MSI 524298 Edge      pci-endpoint-test
-291:          0   PCI-MSI 524299 Edge      pci-endpoint-test
-292:          0   PCI-MSI 524300 Edge      pci-endpoint-test
-293:          0   PCI-MSI 524301 Edge      pci-endpoint-test
-294:          0   PCI-MSI 524302 Edge      pci-endpoint-test
-295:          0   PCI-MSI 524303 Edge      pci-endpoint-test
-IPI0:          0  CPU wakeup interrupts
-IPI1:          0  Timer broadcast interrupts
-IPI2:          0  Rescheduling interrupts
-IPI3:          0  Function call interrupts
-IPI4:          0  CPU stop interrupts
-IPI5:          0  IRQ work interrupts
-IPI6:          0  completion interrupts
-Err:          0
-
-root@k2g-evm:~# pcitest -m 1
-[   57.791535] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 271
-[   57.798643] keystone-pcie 21801000.pcie: irq: bit 0, vector 0, virq 280
-MSI1:           OKAY
-root@k2g-evm:~# pcitest -m 2
-[   59.791509] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 272
-[   59.798614] keystone-pcie 21801000.pcie: irq: bit 0, vector 1, virq 281
-MSI2:           OKAY
-root@k2g-evm:~# pcitest -m 3
-[   61.271509] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 273
-[   61.278616] keystone-pcie 21801000.pcie: irq: bit 0, vector 2, virq 282
-MSI3:           OKAY
-root@k2g-evm:~# pcitest -m 4
-[   62.791514] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 274
-[   62.798619] keystone-pcie 21801000.pcie: irq: bit 0, vector 3, virq 283
-MSI4:           OKAY
-root@k2g-evm:~# pcitest -m 5
-[   64.311513] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 275
-[   64.318620] keystone-pcie 21801000.pcie: irq: bit 0, vector 4, virq 284
-MSI5:           OKAY
-root@k2g-evm:~# pcitest -m 6
-[   66.351518] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 276
-[   66.358624] keystone-pcie 21801000.pcie: irq: bit 0, vector 5, virq 285
-MSI6:           OKAY
-root@k2g-evm:~# pcitest -m 7
-[   67.811516] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 277
-[   67.818623] keystone-pcie 21801000.pcie: irq: bit 0, vector 6, virq 286
-MSI7:           OKAY
-root@k2g-evm:~# pcitest -m 8
-[   69.291518] keystone-pcie 21801000.pcie: ks_pcie_msi_irq_handler, irq 278
-[   69.298625] keystone-pcie 21801000.pcie: irq: bit 0, vector 7, virq 287
-MSI8:           OKAY
-root@k2g-evm:~# pcitest -m 9
-MSI9:           NOT OKAY
-root@k2g-evm:~# pcitest -m 10
-MSI10:          NOT OKAY
-
-So once I disable pcieportbus, I could get the first 8 interrupts correctly.
-But after that there are no interrupts at all.
-
-Let me know if you have some clues for me to try.
-
-Thanks
-Kishon
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 224ff8affdce..89d87844abb3 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -110,7 +110,7 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
+ 	writel(value, pcie->base + offset);
+ }
+ 
+-static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
++static u64 dra7xx_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
+ {
+ 	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
+ }
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index e7de4e4649eb..318a2bd0d97e 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -67,8 +67,6 @@ static const struct of_device_id artpec6_pcie_of_match[];
+ #define PHY_STATUS			0x118
+ #define  PHY_COSPLLLOCK			BIT(0)
+ 
+-#define ARTPEC6_CPU_TO_BUS_ADDR		GENMASK(27, 0)
+-
+ static u32 artpec6_pcie_readl(struct artpec6_pcie *artpec6_pcie, u32 offset)
+ {
+ 	u32 val;
+@@ -82,9 +80,21 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
+ 	regmap_write(artpec6_pcie->regmap, offset, val);
+ }
+ 
+-static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
++static u64 artpec6_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 pci_addr)
+ {
+-	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
++	struct artpec6_pcie *artpec6_pcie = to_artpec6_pcie(pci);
++	struct pcie_port *pp = &pci->pp;
++	struct dw_pcie_ep *ep = &pci->ep;
++
++	switch (artpec6_pcie->mode) {
++	case DW_PCIE_RC_TYPE:
++		return pci_addr - pp->cfg0_base;
++	case DW_PCIE_EP_TYPE:
++		return pci_addr - ep->phys_base;
++	default:
++		dev_err(pci->dev, "UNKNOWN device type\n");
++	}
++	return pci_addr;
+ }
+ 
+ static int artpec6_pcie_establish_link(struct dw_pcie *pci)
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 88abdddee2ad..800be7a4f087 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -149,7 +149,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+ 	u32 retries, val;
+ 
+ 	if (pci->ops->cpu_addr_fixup)
+-		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
++		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
+ 
+ 	if (pci->iatu_unroll_enabled) {
+ 		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 24edac035160..cca5a81c1c74 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -205,7 +205,7 @@ struct dw_pcie_ep {
+ };
+ 
+ struct dw_pcie_ops {
+-	u64	(*cpu_addr_fixup)(u64 cpu_addr);
++	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
+ 	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+ 			    size_t size);
+ 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+-- 
+2.14.2
