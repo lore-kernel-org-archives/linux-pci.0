@@ -1,51 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V4 14/26] pch_gbe: deprecate pci_get_bus_and_slot()
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+ <1513661883-28662-15-git-send-email-okaya@codeaurora.org>
+ <1513680330.7000.167.camel@linux.intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <ef7d09ce-06af-ad3e-1048-3b413cc32e9b@codeaurora.org>
+Date: Tue, 19 Dec 2017 07:17:41 -0500
 MIME-Version: 1.0
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 15 Dec 2017 02:55:29 +0100
-Message-ID: <CAJZ5v0gH4q9QygVhgh=etcdsQeGGSUDiY7PJ6k7BBZ6GRciQsQ@mail.gmail.com>
-Subject: [GIT PULL] Power management fix for v4.15-rc4
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1513680330.7000.167.camel@linux.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Kees Cook <keescook@chromium.org>, linux-arm-msm@vger.kernel.org,
+ open list <linux-kernel@vger.kernel.org>, Eric Dumazet <edumazet@google.com>,
+ "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+ Tobias Klauser <tklauser@distanz.ch>, "David S. Miller" <davem@davemloft.net>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 12/19/2017 5:45 AM, Andy Shevchenko wrote:
+> On Tue, 2017-12-19 at 00:37 -0500, Sinan Kaya wrote:
+>> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+>> where a PCI device is present. This restricts the device drivers to be
+>> reused for other domain numbers.
+>>
+>> Getting ready to remove pci_get_bus_and_slot() function in favor of
+>> pci_get_domain_bus_and_slot().
+>>
+> 
+> Where this idea come from?
 
-Please pull from the tag
+There are systems out (mostly ARM) there with non-zero segment numbers. The
+pci_get_bus_and_slot() API is restrictive and unnecessarily forces 0 segment
+numbers for some generic device drivers. Obtaining the segment number is as
+easy as calling pci_domain_nr().
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- pm-4.15-rc4
+The problems with pci_get_bus_and_slot() are:
 
-with top-most commit 3487972d7fa6c5143951436ada5933dcf0ec659d
+1. we don't know if the device driver intentionally called pci_get_bus_and_slot()
+to limit 0 segment number.
+2. we don't know if the driver developer just copied an example from another
+system and it just happened to work on x86 architecture while broken on other
+architectures.
 
- PM / sleep: Avoid excess pm_runtime_enable() calls in device_resume()
+Some device drivers may want to limit the segment number. Than specifying 0
+while calling pci_get_domain_bus_and_slot() is a better way to express this.
 
-on top of commit 50c4c4e268a2d7a3e58ebb698ac74da0de40ae36
+pci_get_bus_and_slot() is unnecessarily restricting some device drivers. Nvidia
+as an example. I remember that somebody came up with a very ugly patch to force
+segment 0 into Microsoft hypervisor layer. 
 
- Linux 4.15-rc3
+This was rejected out right and told to fix the Nvidia driver instead. This patch
+essentially fixes some of these flaws while removing the limiting API from the
+kernel altogether so that same mistakes are not made.
 
-to receive a power management fix for 4.15-rc4.
+> 
+> pci_get_bus_and_slot() still might be useful for the wired devices in
+> SoC where we know for sure that domain == 0.
+> 
 
-This fixes an issue in two recent commits that may cause
-pm_runtime_enable() to be called for too many times for some
-devices during the "thaw" transition belonging to hibernation.
+Then hard code the domain number as 0 while calling pci_get_domain_bus_and_slot()
+if you know for sure that this device will never work on a non-zero domain.
 
-Thanks!
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-
----------------
-
-Rafael J. Wysocki (1):
-      PM / sleep: Avoid excess pm_runtime_enable() calls in device_resume()
-
----------------
-
- drivers/acpi/device_pm.c  |  2 +-
- drivers/base/power/main.c | 15 +++++++++++++++
- drivers/pci/pci-driver.c  |  2 +-
- include/linux/pm.h        |  1 +
- 4 files changed, 18 insertions(+), 2 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
