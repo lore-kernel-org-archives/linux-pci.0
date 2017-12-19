@@ -1,63 +1,108 @@
-Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
-Date: Thu, 14 Dec 2017 23:36:18 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
-    Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-    Andy Lutomirski <luto@kernel.org>,
-    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-    the arch/x86 maintainers <x86@kernel.org>,
-    Daniel Vetter <daniel.vetter@intel.com>,
-    Bjorn Helgaas <bhelgaas@google.com>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-In-Reply-To: <CA+55aFwQBV9J1zxbBPLC5dOK-ebd1zcN6BaoB897AaKhc_tDtA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.20.1712142331030.2257@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com> <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl> <alpine.DEB.2.20.1712061344560.1724@nanos>
- <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl> <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl> <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
- <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos>
- <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos> <CA+55aFwQBV9J1zxbBPLC5dOK-ebd1zcN6BaoB897AaKhc_tDtA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:46696 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934563AbdLSEuM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 18 Dec 2017 23:50:12 -0500
+Date: Mon, 18 Dec 2017 22:50:09 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+        seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
+        alex.williamson@redhat.com, aik@ozlabs.ru, ruscur@russell.cc,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Subject: Re: [PATCH v2 2/7] powerpc/kernel: Add uevents in EEH error/resume
+Message-ID: <20171219045009.GC14941@bhelgaas-glaptop.roam.corp.google.com>
+References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+ <20171218223808.83928-3-bryantly@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171218223808.83928-3-bryantly@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 14 Dec 2017, Linus Torvalds wrote:
-> On Thu, Dec 14, 2017 at 3:54 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
-> I just wanted to pipe up about that "irq7", because judging from your
-> email it seems like you think it's a real irq:
-> 
-> >        Now there is a race
-> > whether the kernel resume path manages to mask the PIC again early enough
-> > before something triggers IRQ7 or not.
-> 
-> ..and that's not how the PIC works.
-> 
-> In fact, "legacy irq 7" is the _normal_ and very traditional spurious
-> interrupt, and it's documented. If the PIC gets an interrupt from
-> _any_ source, but the interrupt goes away before the PIC gets an
-> acknowledge from the CPU (and by "acknowledge", I'm not talking about
-> the explicit software IRQ ACK, I'm talking about the hardware
-> protocol, between the PIC and the CPU), the PIC will then report irq 7
-> as the interrupt - regardless of what the original was.
-> 
-> The reason is almost always something like
-> 
->  - CPU interrupts are disabled or masked
-> 
->  - driver does a write to the external hardware that causes an
-> interrupt to be raised
+[+cc Keith, Gabriele, Dongdong]
 
-Which should be a non issue because _ALL_ PIC irq lines are masked at the
-PIC itself. All interrupts are routed through IOAPIC. So unless the IOAPIC
-sports similar behaviour the PIC should not ever observe that scenario.
+On Mon, Dec 18, 2017 at 04:38:03PM -0600, Bryant G. Ly wrote:
+> Devices can go offline when EEH is reported. This patch adds
+> a change to the kernel object and lets udev know of error.
+> When device resumes a change is also set reporting device as
+> online. Therefore, EEH events are better propagated to user
+> space for devices in powerpc arch.
 
-But, because the silly firmware comes out of suspend with all PIC lines
-unmasked for whatever reason, the PIC can observe that IRQ being raised and
-the CPU not handling it. So yes, I forgot about 7 being magic, but I still
-think it's the firmware which causes it by unmasking the PIC irqs.
+I'm on vacation and can't review this in detail, but I wonder if you
+can compare this with the uevents we emit for DPC, AER, and hotplug
+events (if any).  I hope we don't end up with userspace having to be
+aware of the differences between EEH, DPC, AER, etc.
 
-Thanks,
+>From a very quick look, I only see a few uevents even mentioned in
+drivers/pci: KOBJ_ADD in __pci_hp_register() and KOBJ_CHANGE in the
+SR-IOV code.  I'm worried that we're missing some important uevents in
+the PCI core.  That's not an argument against what you're doing here;
+it just would be nice to fill in any missing pieces in the core also,
+and hopefully make them consistent with these EEH events.
 
-	tglx
+> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+> Signed-off-by: Juan J. Alvarez <jjalvare@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/kernel/eeh_driver.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+> index 3c0fa99c5533..9d4e8177c2e0 100644
+> --- a/arch/powerpc/kernel/eeh_driver.c
+> +++ b/arch/powerpc/kernel/eeh_driver.c
+> @@ -204,6 +204,7 @@ static void *eeh_report_error(void *data, void *userdata)
+>  	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+>  	enum pci_ers_result rc, *res = userdata;
+>  	struct pci_driver *driver;
+> +	char *envp[] = {"EVENT=EEH_ERROR", "ONLINE=0", NULL};
+>  
+>  	if (!dev || eeh_dev_removed(edev) || eeh_pe_passed(edev->pe))
+>  		return NULL;
+> @@ -228,6 +229,7 @@ static void *eeh_report_error(void *data, void *userdata)
+>  
+>  	edev->in_error = true;
+>  	eeh_pcid_put(dev);
+> +	kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
+>  	return NULL;
+>  }
+>  
+> @@ -358,6 +360,7 @@ static void *eeh_report_resume(void *data, void *userdata)
+>  	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+>  	bool was_in_error;
+>  	struct pci_driver *driver;
+> +	char *envp[] = {"EVENT=EEH_RESUME", "ONLINE=1", NULL};
+>  
+>  	if (!dev || eeh_dev_removed(edev) || eeh_pe_passed(edev->pe))
+>  		return NULL;
+> @@ -381,6 +384,7 @@ static void *eeh_report_resume(void *data, void *userdata)
+>  	driver->err_handler->resume(dev);
+>  
+>  	eeh_pcid_put(dev);
+> +	kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
+>  	return NULL;
+>  }
+>  
+> @@ -397,6 +401,7 @@ static void *eeh_report_failure(void *data, void *userdata)
+>  	struct eeh_dev *edev = (struct eeh_dev *)data;
+>  	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+>  	struct pci_driver *driver;
+> +	char * envp[] = {"EVENT=EEH_PERMANENT_FAILURE", "ONLINE=0", NULL};
+>  
+>  	if (!dev || eeh_dev_removed(edev) || eeh_pe_passed(edev->pe))
+>  		return NULL;
+> @@ -415,6 +420,7 @@ static void *eeh_report_failure(void *data, void *userdata)
+>  
+>  	driver->err_handler->error_detected(dev, pci_channel_io_perm_failure);
+>  
+> +	kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, envp);
+>  	eeh_pcid_put(dev);
+>  	return NULL;
+>  }
+> -- 
+> 2.14.3 (Apple Git-98)
+> 
