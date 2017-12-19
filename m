@@ -1,50 +1,68 @@
-Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
-Return-Path: <SRS0=3ogL=DJ=linux.vnet.ibm.com=bryantly@kernel.org>
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-To: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au
-Cc: seroyer@linux.vnet.ibm.com, jjalvare@linux.vnet.ibm.com,
-        alex.williamson@redhat.com, helgaas@kernel.org, aik@ozlabs.ru,
-        ruscur@russell.cc, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
-        saeedm@mellanox.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v1 0/7] SR-IOV Enablement on PowerVM
-Date: Wed, 13 Dec 2017 09:32:35 -0600
-Message-Id: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>, <bcousson@baylibre.com>
+Subject: [PATCH 4/7] ARM: dts: dra76-evm: Enable x2 PCIe lanes
+Date: Tue, 19 Dec 2017 15:01:30 +0530
+Message-ID: <20171219093133.16565-5-kishon@ti.com>
+In-Reply-To: <20171219093133.16565-1-kishon@ti.com>
+References: <20171219093133.16565-1-kishon@ti.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ kishon@ti.com, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ Russell King <linux@armlinux.org.uk>, linux-kernel@vger.kernel.org,
+ Rob Herring <robh+dt@kernel.org>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series will enable SR-IOV on PowerVM. A specific set of
-lids for PFW/PHYP is required. They are planned to release with
-920 at the moment.
+DRA76 EVM has a 4-lane PCIe connector and DRA76 can support x2 lanes.
+Enable both the PCIe lanes here.
 
-For IBM internal testers let me know of a system you want to test on
-and we can put on the lids required or we can provide a system to run
-the tests.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+---
+ arch/arm/boot/dts/dra76-evm.dts | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-This patch depends on the three patches:
-988fc3ba5653278a8c14d6ccf687371775930d2b
-dae7253f9f78a731755ca20c66b2d2c40b86baea
-608c0d8804ef3ca4cda8ec6ad914e47deb283d7b
-
-Bryant G. Ly (7):
-  platform/pseries: Update VF config space after EEH
-  powerpc/kernel: Add uevents in EEH error/resume
-  platforms/pseries: Set eeh_pe of EEH_PE_VF type
-  powerpc/kernel Add EEH operations to notify resume
-  powerpc/kernel: Add EEH notify resume sysfs
-  pseries/pci: Associate PEs to VFs in configure SR-IOV
-  pseries/setup: Add Initialization of VF Bars
-
- arch/powerpc/include/asm/eeh.h               |   1 +
- arch/powerpc/include/asm/pci-bridge.h        |   5 +-
- arch/powerpc/include/asm/pci.h               |   2 +
- arch/powerpc/kernel/eeh_driver.c             |   9 +-
- arch/powerpc/kernel/eeh_sysfs.c              |  46 ++++++-
- arch/powerpc/kernel/pci_of_scan.c            |   2 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c |   3 +-
- arch/powerpc/platforms/pseries/eeh_pseries.c | 192 ++++++++++++++++++++++++++-
- arch/powerpc/platforms/pseries/pci.c         | 156 +++++++++++++++++++++-
- arch/powerpc/platforms/pseries/setup.c       | 183 +++++++++++++++++++++++++
- 10 files changed, 589 insertions(+), 10 deletions(-)
-
+diff --git a/arch/arm/boot/dts/dra76-evm.dts b/arch/arm/boot/dts/dra76-evm.dts
+index b024a65c6e27..244e553f2247 100644
+--- a/arch/arm/boot/dts/dra76-evm.dts
++++ b/arch/arm/boot/dts/dra76-evm.dts
+@@ -421,3 +421,19 @@
+ 		spi-max-frequency = <96000000>;
+ 	};
+ };
++
++&pcie2_phy {
++	status = "okay";
++};
++
++&pcie1_rc {
++	num-lanes = <2>;
++	phys = <&pcie1_phy>, <&pcie2_phy>;
++	phy-names = "pcie-phy0", "pcie-phy1";
++};
++
++&pcie1_ep {
++	num-lanes = <2>;
++	phys = <&pcie1_phy>, <&pcie2_phy>;
++	phy-names = "pcie-phy0", "pcie-phy1";
++};
 -- 
-2.14.3 (Apple Git-98)
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
