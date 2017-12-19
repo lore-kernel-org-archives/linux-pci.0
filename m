@@ -1,89 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <poza@codeaurora.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Philippe Ombredanne <pombredanne@nexb.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>
-Cc: Oza Pawandeep <poza@codeaurora.org>
-Subject: [PATCH v2 3/4] PCI/ERR: Do not do recovery if DPC service is active
-Date: Fri, 29 Dec 2017 12:54:18 +0530
-Message-Id: <1514532259-19383-4-git-send-email-poza@codeaurora.org>
-In-Reply-To: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
-References: <1514532259-19383-1-git-send-email-poza@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 15/26] PCI: cpqhp: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:51 -0500
+Message-Id: <1513661883-28662-16-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, open list <linux-kernel@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If AER attempts to do recovery for any device, and DPC is active on
-any upstream port, AER should not do recovery, since it will be handled
-by DPC
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Change-Id: Ida507ce9145f420e35302db34e967f1b421e15c9
-Signed-off-by: Oza Pawandeep <poza@codeaurora.org>
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-diff --git a/drivers/pci/pcie/pcie-err.c b/drivers/pci/pcie/pcie-err.c
-index 858c94c..1991cc8 100644
---- a/drivers/pci/pcie/pcie-err.c
-+++ b/drivers/pci/pcie/pcie-err.c
-@@ -274,6 +274,22 @@ pci_ers_result_t pci_broadcast_error_message(struct pci_dev *dev,
- 	return result_data.result;
- }
+Hard-coding the domain number as 0. The code doesn't seem to be ready
+for multiple domains.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/hotplug/cpqphp_pci.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/hotplug/cpqphp_pci.c b/drivers/pci/hotplug/cpqphp_pci.c
+index e220d49..8897a77 100644
+--- a/drivers/pci/hotplug/cpqphp_pci.c
++++ b/drivers/pci/hotplug/cpqphp_pci.c
+@@ -89,7 +89,9 @@ int cpqhp_configure_device(struct controller *ctrl, struct pci_func *func)
+ 	pci_lock_rescan_remove();
  
-+/*
-+ * pcie_port_upstream_bridge - returns immediate upstream bridge.
-+ * dev: pcie device
-+ */
-+static struct pci_dev *pcie_port_upstream_bridge(struct pci_dev *dev)
-+{
-+	struct pci_dev *parent;
-+
-+	parent = pci_upstream_bridge(dev);
-+
-+	if (parent && pci_is_pcie(parent))
-+		return parent;
-+
-+	return NULL;
-+}
-+
- /**
-  * pci_do_recovery - handle nonfatal/fatal error recovery process
-  * @dev: pointer to a pci_dev data structure of agent detecting an error
-@@ -287,9 +303,29 @@ void pci_do_recovery(struct pci_dev *dev, int severity)
- {
- 	pci_ers_result_t status, result = PCI_ERS_RESULT_RECOVERED;
- 	enum pci_channel_state state;
-+	struct pcie_port_service_driver *driver;
-+	struct pci_dev *pdev = dev;
+ 	if (func->pci_dev == NULL)
+-		func->pci_dev = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, func->function));
++		func->pci_dev = pci_get_domain_bus_and_slot(0, func->bus,
++							PCI_DEVFN(func->device,
++							func->function));
  
- 	mutex_lock(&pci_err_recovery_lock);
+ 	/* No pci device, we need to create it then */
+ 	if (func->pci_dev == NULL) {
+@@ -99,7 +101,9 @@ int cpqhp_configure_device(struct controller *ctrl, struct pci_func *func)
+ 		if (num)
+ 			pci_bus_add_devices(ctrl->pci_dev->bus);
  
-+	if (severity != PCI_ERR_DPC_FATAL) {
-+		/*
-+		 * DPC service could be running in RP
-+		 * or any upstream switch.
-+		 */
-+		do {
-+			driver = pci_find_dpc_service(pdev);
-+			if (driver) {
-+				dev_printk(KERN_NOTICE, &dev->dev,
-+				"AER: Recovery to be done by DPC %s\n",
-+				pci_name(dev));
-+				mutex_unlock(&pci_err_recovery_lock);
-+				return;
-+			}
-+		pdev = pcie_port_upstream_bridge(dev);
-+		} while (pdev);
-+	}
-+
- 	if ((severity == PCI_ERR_AER_FATAL) ||
- 	    (severity == PCI_ERR_DPC_FATAL))
- 		state = pci_channel_io_frozen;
+-		func->pci_dev = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, func->function));
++		func->pci_dev = pci_get_domain_bus_and_slot(0, func->bus,
++							PCI_DEVFN(func->device,
++							func->function));
+ 		if (func->pci_dev == NULL) {
+ 			dbg("ERROR: pci_dev still null\n");
+ 			goto out;
+@@ -129,7 +133,10 @@ int cpqhp_unconfigure_device(struct pci_func *func)
+ 
+ 	pci_lock_rescan_remove();
+ 	for (j = 0; j < 8 ; j++) {
+-		struct pci_dev *temp = pci_get_bus_and_slot(func->bus, PCI_DEVFN(func->device, j));
++		struct pci_dev *temp = pci_get_domain_bus_and_slot(0,
++							func->bus,
++							PCI_DEVFN(func->device,
++							j));
+ 		if (temp) {
+ 			pci_dev_put(temp);
+ 			pci_stop_and_remove_bus_device(temp);
+@@ -319,6 +326,7 @@ int cpqhp_save_config(struct controller *ctrl, int busnumber, int is_hot_plug)
+ 	int cloop = 0;
+ 	int stop_it;
+ 	int index;
++	u16 devfn;
+ 
+ 	/* Decide which slots are supported */
+ 
+@@ -416,7 +424,9 @@ int cpqhp_save_config(struct controller *ctrl, int busnumber, int is_hot_plug)
+ 			new_slot->switch_save = 0x10;
+ 			/* In case of unsupported board */
+ 			new_slot->status = DevError;
+-			new_slot->pci_dev = pci_get_bus_and_slot(new_slot->bus, (new_slot->device << 3) | new_slot->function);
++			devfn = (new_slot->device << 3) | new_slot->function;
++			new_slot->pci_dev = pci_get_domain_bus_and_slot(0,
++							new_slot->bus, devfn);
+ 
+ 			for (cloop = 0; cloop < 0x20; cloop++) {
+ 				rc = pci_bus_read_config_dword(ctrl->pci_bus, PCI_DEVFN(device, function), cloop << 2, (u32 *) &(new_slot->config_space[cloop]));
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.,
-a Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
