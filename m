@@ -1,103 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 2/2] PCI/ASPM: Enable Latency Tolerance Reporting when
- supported
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Kenji Chen <kenji.chen@intel.com>,
-        Thierry Reding <treding@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        David Daney <david.daney@cavium.com>,
-        Krishna Kishore <kthota@nvidia.com>,
-        linux-kernel@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        linux-tegra@vger.kernel.org, Patrick Georgi <pgeorgi@chromium.org>,
-        Rajat Jain <rajatja@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Stefan Reinauer <stefan.reinauer@coreboot.org>,
-        Duncan Laurie <dlaurie@chromium.org>
-Date: Sat, 02 Dec 2017 15:45:54 -0600
-Message-ID: <20171202214554.23146.44994.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 04/26] ata: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:40 -0500
+Message-Id: <1513661883-28662-5-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+ linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>,
+ Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Enable Latency Tolerance Reporting (LTR).  Note that LTR must be enabled in
-the Root Port first, and must not be enabled in any downstream device
-unless the Root Port and all intermediate Switches also support LTR.
-See PCIe r3.1, sec 6.18.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Use pci_get_domain_bus_and_slot() and extract the actual domain number
+from the pdev passed in.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/pci/probe.c |   33 +++++++++++++++++++++++++++++++++
- include/linux/pci.h |    2 ++
- 2 files changed, 35 insertions(+)
+ drivers/ata/pata_ali.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 14e0ea1ff38b..3761b1303529 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1875,6 +1875,38 @@ static void pci_configure_relaxed_ordering(struct pci_dev *dev)
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index d19cd88..0b122f9 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -466,7 +466,8 @@ static void ali_init_chipset(struct pci_dev *pdev)
+ 			tmp |= 0x01;	/* CD_ROM enable for DMA */
+ 		pci_write_config_byte(pdev, 0x53, tmp);
  	}
- }
- 
-+static void pci_configure_ltr(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_PCIEASPM
-+	u32 cap;
-+	struct pci_dev *bridge;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP2, &cap);
-+	if (!(cap & PCI_EXP_DEVCAP2_LTR))
-+		return;
-+
-+	/*
-+	 * Software must not enable LTR in an Endpoint unless the Root
-+	 * Complex and all intermediate Switches indicate support for LTR.
-+	 * PCIe r3.1, sec 6.18.
-+	 */
-+	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
-+		dev->ltr_path = 1;
-+	else {
-+		bridge = pci_upstream_bridge(dev);
-+		if (bridge && bridge->ltr_path)
-+			dev->ltr_path = 1;
-+	}
-+
-+	if (dev->ltr_path)
-+		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+					 PCI_EXP_DEVCTL2_LTR_EN);
-+#endif
-+}
-+
- static void pci_configure_device(struct pci_dev *dev)
- {
- 	struct hotplug_params hpp;
-@@ -1883,6 +1915,7 @@ static void pci_configure_device(struct pci_dev *dev)
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev, NULL);
- 	pci_configure_relaxed_ordering(dev);
-+	pci_configure_ltr(dev);
- 
- 	memset(&hpp, 0, sizeof(hpp));
- 	ret = pci_get_hp_params(dev, &hpp);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0403894147a3..d4e176701b48 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -350,6 +350,8 @@ struct pci_dev {
- 
- #ifdef CONFIG_PCIEASPM
- 	struct pcie_link_state	*link_state;	/* ASPM link state */
-+	unsigned int	ltr_path:1;	/* Latency Tolerance Reporting
-+					   supported from root to here */
- #endif
- 
- 	pci_channel_state_t error_state;	/* current connectivity state */
+-	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
++	north = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus), 0,
++					    PCI_DEVFN(0, 0));
+ 	if (north && north->vendor == PCI_VENDOR_ID_AL && ali_isa_bridge) {
+ 		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
+ 		   Set the south bridge enable bit */
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
