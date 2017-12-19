@@ -1,125 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 8 Dec 2017 14:25:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH] PM / sleep: Avoid excess pm_runtime_enable() calls in
- device_resume()
-Message-ID: <20171208202556.GD12367@bhelgaas-glaptop.roam.corp.google.com>
-References: <3600031.yTsliOITBg@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:35592 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751520AbdLSLiO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Dec 2017 06:38:14 -0500
+Date: Tue, 19 Dec 2017 11:38:56 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, nsekhar@ti.com
+Subject: Re: [PATCH v2] PCI: designware-ep: Fix ->get_msi() to check MSI_EN
+ bit
+Message-ID: <20171219113856.GA19911@red-moon>
+References: <20171219095541.18838-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3600031.yTsliOITBg@aspire.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20171219095541.18838-1-kishon@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 07, 2017 at 03:26:14AM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Dec 19, 2017 at 03:25:41PM +0530, Kishon Vijay Abraham I wrote:
+> ->get_msi() now checks MSI_EN bit in the MSI CAPABILITY register to
+> find whether the host supports MSI instead of using the
+> MSI ADDRESS in the MSI CAPABILITY register.
 > 
-> Middle-layer code doing suspend-time optimizations for devices with
-> the DPM_FLAG_SMART_SUSPEND flag set (currently, the PCI bus type and
-> the ACPI PM domain) needs to make the core skip ->thaw_early and
-> ->thaw callbacks for those devices in some cases and it sets the
-> power.direct_complete flag for them for this purpose.
+> This fixes the issue with the following sequence
+>   'modprobe pci_endpoint_test' enables MSI
+>   'rmmod pci_endpoint_test' disables MSI but MSI address (in EP's
+> 	capability register) has a valid value
+>   'modprobe pci_endpoint_test no_msi=1' - Since MSI address (in EP's
+> 	capability register) has a valid value (set during the previous
+> 	insertion of the module), EP thinks host supports MSI.
 > 
-> However, it turns out that setting power.direct_complete outside of
-> the PM core is a bad idea as it triggers an excessive invocation of
-> pm_runtime_enable() in device_resume().
-> 
-> For this reason, provide a helper to clear power.is_late_suspended
-> and power.is_suspended to be invoked by the middle-layer code in
-> question instead of setting power.direct_complete and make that code
-> call the new helper.
-> 
-> Fixes: c4b65157aeef (PCI / PM: Take SMART_SUSPEND driver flag into account)
-> Fixes: 05087360fd7a (ACPI / PM: Take SMART_SUSPEND driver flag into account)
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I don't pretend to understand this (and I don't need to, so don't
-waste your time explaining), but I trust you :)
-
+> Fixes: f8aed6ec624fb436 ("PCI: dwc: designware: Add EP mode support")
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
->  drivers/acpi/device_pm.c  |    2 +-
->  drivers/base/power/main.c |   15 +++++++++++++++
->  drivers/pci/pci-driver.c  |    2 +-
->  include/linux/pm.h        |    1 +
->  4 files changed, 18 insertions(+), 2 deletions(-)
+> changes from v1:
+> Added a Fixes tag and mentioned MSI address to be set in EP's capability
+> register in the commit log.
 > 
-> Index: linux-pm/include/linux/pm.h
-> ===================================================================
-> --- linux-pm.orig/include/linux/pm.h
-> +++ linux-pm/include/linux/pm.h
-> @@ -765,6 +765,7 @@ extern int pm_generic_poweroff_late(stru
->  extern int pm_generic_poweroff(struct device *dev);
->  extern void pm_generic_complete(struct device *dev);
+>  drivers/pci/dwc/pcie-designware-ep.c | 12 +++---------
+>  drivers/pci/dwc/pcie-designware.h    |  1 +
+>  2 files changed, 4 insertions(+), 9 deletions(-)
+
+Applied to pci/endpoint for v4.16.
+
+Thanks,
+Lorenzo
+
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index d53d5f168363..7c621877a939 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -197,20 +197,14 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
+>  static int dw_pcie_ep_get_msi(struct pci_epc *epc)
+>  {
+>  	int val;
+> -	u32 lower_addr;
+> -	u32 upper_addr;
+>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
 >  
-> +extern void dev_pm_skip_next_resume_phases(struct device *dev);
->  extern bool dev_pm_smart_suspend_and_suspended(struct device *dev);
+> -	val = dw_pcie_readb_dbi(pci, MSI_MESSAGE_CONTROL);
+> -	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
+> -
+> -	lower_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
+> -	upper_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
+> -
+> -	if (!(lower_addr || upper_addr))
+> +	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+> +	if (!(val & MSI_CAP_MSI_EN_MASK))
+>  		return -EINVAL;
 >  
->  #else /* !CONFIG_PM_SLEEP */
-> Index: linux-pm/drivers/base/power/main.c
-> ===================================================================
-> --- linux-pm.orig/drivers/base/power/main.c
-> +++ linux-pm/drivers/base/power/main.c
-> @@ -526,6 +526,21 @@ static void dpm_watchdog_clear(struct dp
->  /*------------------------- Resume routines -------------------------*/
+> +	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
+>  	return val;
+>  }
 >  
->  /**
-> + * dev_pm_skip_next_resume_phases - Skip next system resume phases for device.
-> + * @dev: Target device.
-> + *
-> + * Make the core skip the "early resume" and "resume" phases for @dev.
-> + *
-> + * This function can be called by middle-layer code during the "noirq" phase of
-> + * system resume if necessary, but not by device drivers.
-> + */
-> +void dev_pm_skip_next_resume_phases(struct device *dev)
-> +{
-> +	dev->power.is_late_suspended = false;
-> +	dev->power.is_suspended = false;
-> +}
-> +
-> +/**
->   * device_resume_noirq - Execute a "noirq resume" callback for given device.
->   * @dev: Device to handle.
->   * @state: PM transition of the system being carried out.
-> Index: linux-pm/drivers/pci/pci-driver.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-driver.c
-> +++ linux-pm/drivers/pci/pci-driver.c
-> @@ -999,7 +999,7 @@ static int pci_pm_thaw_noirq(struct devi
->  	 * the subsequent "thaw" callbacks for the device.
->  	 */
->  	if (dev_pm_smart_suspend_and_suspended(dev)) {
-> -		dev->power.direct_complete = true;
-> +		dev_pm_skip_next_resume_phases(dev);
->  		return 0;
->  	}
->  
-> Index: linux-pm/drivers/acpi/device_pm.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/device_pm.c
-> +++ linux-pm/drivers/acpi/device_pm.c
-> @@ -1138,7 +1138,7 @@ int acpi_subsys_thaw_noirq(struct device
->  	 * skip all of the subsequent "thaw" callbacks for the device.
->  	 */
->  	if (dev_pm_smart_suspend_and_suspended(dev)) {
-> -		dev->power.direct_complete = true;
-> +		dev_pm_skip_next_resume_phases(dev);
->  		return 0;
->  	}
->  
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index e5d9d77b778e..cb493bcae8b4 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -101,6 +101,7 @@
+>  #define MSI_MESSAGE_CONTROL		0x52
+>  #define MSI_CAP_MMC_SHIFT		1
+>  #define MSI_CAP_MME_SHIFT		4
+> +#define MSI_CAP_MSI_EN_MASK		0x1
+>  #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+>  #define MSI_MESSAGE_ADDR_L32		0x54
+>  #define MSI_MESSAGE_ADDR_U32		0x58
+> -- 
+> 2.11.0
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
