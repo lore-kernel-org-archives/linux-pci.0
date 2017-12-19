@@ -1,38 +1,144 @@
-Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=wdMU=DK=linutronix.de=tglx@kernel.org>
-Date: Thu, 14 Dec 2017 14:24:22 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Maarten Lankhorst <dev@mblankhorst.nl>,
-    Michal Hocko <mhocko@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-    Andy Lutomirski <luto@kernel.org>,
-    Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-    the arch/x86 maintainers <x86@kernel.org>,
-    Daniel Vetter <daniel.vetter@intel.com>,
-    Bjorn Helgaas <bhelgaas@google.com>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-    linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: Linux 4.15-rc2: Regression in resume from ACPI S3
-In-Reply-To: <alpine.DEB.2.20.1712132211570.1885@nanos>
-Message-ID: <alpine.DEB.2.20.1712141423360.4998@nanos>
-References: <168050887.sZlTFXWCmO@aspire.rjw.lan> <CA+55aFwsMuHUBQz5kDNwRf17JnasXMWjvmLq5qXGH-694yeq1w@mail.gmail.com> <20171206121452.GA6320@dhcp22.suse.cz> <db81e89d-eee6-868c-dc10-c028f4c4be84@mblankhorst.nl> <alpine.DEB.2.20.1712061344560.1724@nanos>
- <0f1d3d63-fa10-5cef-8014-81753dc60243@mblankhorst.nl> <alpine.DEB.2.20.1712061514420.1724@nanos> <57c8679e-1b88-c9ad-2299-2bea7560b28f@mblankhorst.nl> <alpine.DEB.2.20.1712081129450.1840@nanos> <alpine.DEB.2.20.1712131507160.1885@nanos>
- <20171213162336.GG53955@bhelgaas-glaptop.roam.corp.google.com> <alpine.DEB.2.20.1712131738020.1885@nanos> <CA+55aFw-SZLey5FaQfSLSbDU1sYhoGDrWoOngswkHMFfHW3O6w@mail.gmail.com> <alpine.DEB.2.20.1712131856130.1885@nanos> <alpine.DEB.2.20.1712132149420.1885@nanos>
- <alpine.DEB.2.20.1712132201380.1885@nanos> <alpine.DEB.2.20.1712132211570.1885@nanos>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:35489 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965627AbdLSJqB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 04:46:01 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, <kishon@ti.com>
+CC: <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <nsekhar@ti.com>
+Subject: [PATCH 2/2] phy: ti-pipe3: configure usb3 phy to be used as pcie phy
+Date: Tue, 19 Dec 2017 15:15:40 +0530
+Message-ID: <20171219094540.18432-3-kishon@ti.com>
+In-Reply-To: <20171219094540.18432-1-kishon@ti.com>
+References: <20171219094540.18432-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 14 Dec 2017, Thomas Gleixner wrote:
-> Now, what's different vs. 4.14:
-> 
-> The 4.14 code accidentaly had the irq descriptor for this vector still
-> populated in the old CPU due to the convoluted way the vector allocation
-> worked. I have still to investigate if one of those cases is actually
-> leaking the descriptor, which would be a fatal bug.
+DRA72 uses USB3 PHY for the 2nd lane of PCIE. The configuration
+required to make USB3 PHY used for the 2nd lane of PCIe is done
+here.
 
-It doesn't leak. It repopulates it at the same place out of sheer luck.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/phy/ti/phy-ti-pipe3.c | 47 +++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 41 insertions(+), 6 deletions(-)
 
-Thanks,
-
-	tglx
+diff --git a/drivers/phy/ti/phy-ti-pipe3.c b/drivers/phy/ti/phy-ti-pipe3.c
+index 68ce4a082b9b..d5a7cc435fb7 100644
+--- a/drivers/phy/ti/phy-ti-pipe3.c
++++ b/drivers/phy/ti/phy-ti-pipe3.c
+@@ -56,6 +56,12 @@
+ 
+ #define SATA_PLL_SOFT_RESET	BIT(18)
+ 
++#define PHY_RX_ANA_PRGRAMMABILITY_REG	0xC
++#define MEM_EN_PLLBYP			BIT(7)
++
++#define PHY_TX_TEST_CONFIG		0x2C
++#define MEM_ENTESTCLK			BIT(31)
++
+ #define PIPE3_PHY_PWRCTL_CLK_CMD_MASK	0x003FC000
+ #define PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT	14
+ 
+@@ -110,6 +116,10 @@
+ #define PLL_IDLE_TIME	100	/* in milliseconds */
+ #define PLL_LOCK_TIME	100	/* in milliseconds */
+ 
++#define PIPE3_PHY_DISABLE_SYNC_POWER	BIT(4)
++
++#define CONFIGURE_AS_PCIE		BIT(0)
++
+ struct pipe3_dpll_params {
+ 	u16	m;
+ 	u8	n;
+@@ -141,6 +151,7 @@ struct ti_pipe3 {
+ 	unsigned int		power_reg; /* power reg. index within syscon */
+ 	unsigned int		pcie_pcs_reg; /* pcs reg. index in syscon */
+ 	bool			sata_refclk_enabled;
++	u32			flags;
+ };
+ 
+ static struct pipe3_dpll_map dpll_map_usb[] = {
+@@ -233,11 +244,22 @@ static int ti_pipe3_power_on(struct phy *x)
+ 	rate = rate / 1000000;
+ 	mask = OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_CMD_MASK |
+ 		  OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_FREQ_MASK;
+-	val = PIPE3_PHY_TX_RX_POWERON << PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
++	val = PIPE3_PHY_TX_RX_POWERON;
++	if (phy->flags & CONFIGURE_AS_PCIE)
++		val |= PIPE3_PHY_DISABLE_SYNC_POWER;
++	val <<= PIPE3_PHY_PWRCTL_CLK_CMD_SHIFT;
+ 	val |= rate << OMAP_CTRL_PIPE3_PHY_PWRCTL_CLK_FREQ_SHIFT;
+ 
+ 	ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
+ 				 mask, val);
++
++	if (phy->flags & CONFIGURE_AS_PCIE) {
++		ret = regmap_update_bits(phy->phy_power_syscon, phy->power_reg,
++					 mask, val);
++		if (ret < 0)
++			return ret;
++	}
++
+ 	return ret;
+ }
+ 
+@@ -335,6 +357,19 @@ static int ti_pipe3_init(struct phy *x)
+ 	int ret = 0;
+ 
+ 	ti_pipe3_enable_clocks(phy);
++
++	if (phy->flags & CONFIGURE_AS_PCIE) {
++		val = ti_pipe3_readl(phy->phy_rx,
++				     PHY_RX_ANA_PRGRAMMABILITY_REG);
++		val |= MEM_EN_PLLBYP;
++		ti_pipe3_writel(phy->phy_rx, PHY_RX_ANA_PRGRAMMABILITY_REG,
++				val);
++		val = ti_pipe3_readl(phy->phy_tx, PHY_TX_TEST_CONFIG);
++		val |= MEM_ENTESTCLK;
++		ti_pipe3_writel(phy->phy_tx, PHY_TX_TEST_CONFIG, val);
++		return 0;
++	}
++
+ 	/*
+ 	 * Set pcie_pcs register to 0x96 for proper functioning of phy
+ 	 * as recommended in AM572x TRM SPRUHZ6, section 18.5.2.2, table
+@@ -395,7 +430,8 @@ static int ti_pipe3_exit(struct phy *x)
+ 		return 0;
+ 
+ 	/* PCIe doesn't have internal DPLL */
+-	if (!of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie")) {
++	if (!of_device_is_compatible(phy->dev->of_node, "ti,phy-pipe3-pcie") &&
++	    !(phy->flags & CONFIGURE_AS_PCIE)) {
+ 		/* Put DPLL in IDLE mode */
+ 		val = ti_pipe3_readl(phy->pll_ctrl_base, PLL_CONFIGURATION2);
+ 		val |= PLL_IDLE;
+@@ -589,12 +625,8 @@ static int ti_pipe3_get_tx_rx_base(struct ti_pipe3 *phy)
+ {
+ 	struct resource *res;
+ 	struct device *dev = phy->dev;
+-	struct device_node *node = dev->of_node;
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 
+-	if (!of_device_is_compatible(node, "ti,phy-pipe3-pcie"))
+-		return 0;
+-
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+ 					   "phy_rx");
+ 	phy->phy_rx = devm_ioremap_resource(dev, res);
+@@ -666,6 +698,9 @@ static int ti_pipe3_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	if (of_property_read_bool(node, "ti,configure-as-pcie"))
++		phy->flags |= CONFIGURE_AS_PCIE;
++
+ 	platform_set_drvdata(pdev, phy);
+ 	pm_runtime_enable(dev);
+ 
+-- 
+2.11.0
