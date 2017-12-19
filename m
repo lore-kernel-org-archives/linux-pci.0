@@ -1,87 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 2/3] dt-bindings: PCI: dra7xx: Add properties to enable
- x2 lane in dra7
-To: Tony Lindgren <tony@atomide.com>, Rob Herring <robh@kernel.org>
-References: <20171219085823.8695-1-kishon@ti.com>
- <20171219085823.8695-3-kishon@ti.com>
- <20171220185715.j5h7dlricom6kuiz@rob-hp-laptop>
- <94336bfb-221d-95f7-72b2-09219b08099b@ti.com>
- <20171222182448.GZ3875@atomide.com>
- <CAL_Jsq+f3u0yvftvESKDiDF76bUiwr9hZED3ZZ75=qMMr6RL1g@mail.gmail.com>
- <20171226181009.GE3875@atomide.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:51609 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754106AbdLSXbl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Dec 2017 18:31:41 -0500
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Niklas Cassel <niklass@axis.com>,
+        Jesper Nilsson <jespern@axis.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sekhar Nori <nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <a041cce3-48b3-f63c-c161-91579d3af76f@ti.com>
-Date: Wed, 27 Dec 2017 12:10:32 +0530
-MIME-Version: 1.0
-In-Reply-To: <20171226181009.GE3875@atomide.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc: lorenzo.pieralisi@arm.com, linux-arm-kernel@axis.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v6 17/18] bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
+Date: Wed, 20 Dec 2017 00:29:38 +0100
+Message-Id: <20171219232940.659-18-niklas.cassel@axis.com>
+In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Add support for the ARTPEC-7 SoC in the artpec6 driver.
+The ARTPEC-6 SoC and the ARTPEC-7 SoC are very similar.
+Unfortunately, some fields in the PCIECFG and PCIESTAT
+register have changed.
 
-On Tuesday 26 December 2017 11:40 PM, Tony Lindgren wrote:
-> * Rob Herring <robh@kernel.org> [171226 17:49]:
->> On Fri, Dec 22, 2017 at 12:24 PM, Tony Lindgren <tony@atomide.com> wrote:
->>> * Kishon Vijay Abraham I <kishon@ti.com> [171222 06:06]:
->>>> Hi Rob,
->>>>
->>>> On Thursday 21 December 2017 12:27 AM, Rob Herring wrote:
->>>>> On Tue, Dec 19, 2017 at 02:28:22PM +0530, Kishon Vijay Abraham I wrote:
->>>>>> Add syscon properties required for configuring PCIe in x2 lane mode.
->>>>>>
->>>>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>>>>> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
->>>>>> ---
->>>>>>  Documentation/devicetree/bindings/pci/ti-pci.txt | 6 ++++++
->>>>>>  1 file changed, 6 insertions(+)
->>>>>>
->>>>>> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
->>>>>> index 82cb875e4cec..bfbc77ac7355 100644
->>>>>> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
->>>>>> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
->>>>>> @@ -13,6 +13,12 @@ PCIe DesignWare Controller
->>>>>>   - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
->>>>>>           where <X> is the instance number of the pcie from the HW spec.
->>>>>>   - num-lanes as specified in ../designware-pcie.txt
->>>>>> + - ti,syscon-lane-conf : phandle/offset pair. Phandle to the system control
->>>>>> +                   module and the register offset to specify 1 lane or
->>>>>> +                   2 lane.
->>>>>> + - ti,syscon-lane-sel : phandle/offset pair. Phandle to the system control
->>>>>> +                  module and the register offset to specify lane
->>>>>> +                  selection.
->>>>>
->>>>> Adding a property for every syscon register doesn't really scale and
->>>>> doesn't work if the register layout changes.
->>>>
->>>> The register layout doesn't really change between silicon revisions and for new
->>>> SoCs, the phandle and the register offset for that SoC will have to be
->>>> populated again.
->>
->> And what about SoCs that don't exist yet?
->>
->>>> Having said that, I'm not aware of any other alternative here.
->>
->> What would you do if you had 20 different syscon registers to
->> configure? Add 20 properties? No, you would have per SoC functions in
->> the driver to handle the different cases.
-> 
-> Ideally these syscon registers would be managed by some Linux
-> generic framework such as clock/regulator/mux/phy.
-> 
-> But yeah, if that does not work, then setting a SoC specific
-> configuration function based on the compatible value makes sense
-> to me.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-All right. I'll add a function for syscon configuration in pci-dra7xx.
-
-Thanks
-Kishon
+diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+index 33eef7ae5a23..979dc7b6cfe8 100644
+--- a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+@@ -6,6 +6,8 @@ and thus inherits all the common properties defined in designware-pcie.txt.
+ Required properties:
+ - compatible: "axis,artpec6-pcie", "snps,dw-pcie" for ARTPEC-6 in RC mode;
+ 	      "axis,artpec6-pcie-ep", "snps,dw-pcie" for ARTPEC-6 in EP mode;
++	      "axis,artpec7-pcie", "snps,dw-pcie" for ARTPEC-7 in RC mode;
++	      "axis,artpec7-pcie-ep", "snps,dw-pcie" for ARTPEC-7 in EP mode;
+ - reg: base addresses and lengths of the PCIe controller (DBI),
+ 	the PHY controller, and configuration address space.
+ - reg-names: Must include the following entries:
+-- 
+2.14.2
