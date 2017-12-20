@@ -1,132 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54382 "EHLO mail.kernel.org"
+Received: from muru.com ([72.249.23.125]:32800 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752908AbdLMVoC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Dec 2017 16:44:02 -0500
-Date: Wed, 13 Dec 2017 15:43:59 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <yehezkel.bernat@intel.com>,
-        Mario.Limonciello@dell.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5] PCI: hotplug: Drop checking of PCI_BRIDGE_CONTROL in
- *_unconfigure_device()
-Message-ID: <20171213214357.GI30595@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171109111508.47678-1-mika.westerberg@linux.intel.com>
+        id S1756377AbdLTTTR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Dec 2017 14:19:17 -0500
+Date: Wed, 20 Dec 2017 11:19:12 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: jeffy <jeffy.chen@rock-chips.com>, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, shawn.lin@rock-chips.com,
+        dianders@chromium.org, Heiko Stuebner <heiko@sntech.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20171220191912.GM3875@atomide.com>
+References: <20170817120431.12398-1-jeffy.chen@rock-chips.com>
+ <20170817120431.12398-2-jeffy.chen@rock-chips.com>
+ <20170818170107.GA119461@google.com>
+ <20170818181416.GF6008@atomide.com>
+ <5997486D.4040803@rock-chips.com>
+ <20170822172653.GJ6008@atomide.com>
+ <599CDB37.3070307@rock-chips.com>
+ <20171219004811.GA216620@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171109111508.47678-1-mika.westerberg@linux.intel.com>
+In-Reply-To: <20171219004811.GA216620@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Nov 09, 2017 at 02:15:08PM +0300, Mika Westerberg wrote:
-> During PCIe surprise hot-unplug the device is not accessible anymore and
-> register reads return 0xffffffff. When that happens pciehp_unconfigure_device()
-> may inadvertently think the device below the bridge may be a display
-> device of somesort as reading PCI_BRIDGE_CONTROL register also returns
-> 0xff. This results failure of the remove operation:
-> 
->   pciehp 0000:00:1c.0:pcie004: Slot(0): Link Down
->   pciehp 0000:00:1c.0:pcie004: Slot(0): Card present
->   pciehp 0000:00:1c.0:pcie004: Cannot remove display device 0000:01:00.0
-> 
-> Because of this the hierarchy is left untouched preventing further
-> hotplug operations.
-> 
-> Now, it is not clear why the check is there in the first place and why
-> we would like to prevent removing a bridge if it has PCI_BRIDGE_CTL_VGA
-> set. In case of PCIe surprise hot-unplug, it would not even be possible
-> to prevent the removal.
-> 
-> Given this and the issue described above, I think it makes sense to drop
-> the whole PCI_BRIDGE_CONTROL check from pciehp_unconfigure_device().
-> While there do the same for shpchp_configure_device() based on the same
-> reasoning and the fact that the same bug might trigger in standard PCI
-> hotplug as well.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Hi,
 
-Applied to pci/hotplug for v4.16, thanks!
+* Brian Norris <briannorris@chromium.org> [171219 00:50]:
+> On Wed, Aug 23, 2017 at 09:32:39AM +0800, Jeffy Chen wrote:
+> 
+> Did this problem ever get resolved? To be clear, I believe the problem
+> at hand is:
+> 
+> (a) in suspend/resume (not runtime PM; we may not even have runtime PM
+> support for most PCI devices)
 
-> ---
-> The previous version (v4) of the patch can be found here:
-> 
->   https://patchwork.kernel.org/patch/10026551/
-> 
-> Changes from v4:
-> 
->   - Drop the check from shpchp_configure_device() as well
-> 
->  drivers/pci/hotplug/pciehp_pci.c | 12 ------------
->  drivers/pci/hotplug/shpchp_pci.c | 12 ------------
->  2 files changed, 24 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index 2a1ca020cf5a..acc360d1a1fb 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -79,7 +79,6 @@ int pciehp_configure_device(struct slot *p_slot)
->  int pciehp_unconfigure_device(struct slot *p_slot)
->  {
->  	int rc = 0;
-> -	u8 bctl = 0;
->  	u8 presence = 0;
->  	struct pci_dev *dev, *temp;
->  	struct pci_bus *parent = p_slot->ctrl->pcie->port->subordinate;
-> @@ -101,17 +100,6 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
->  					 bus_list) {
->  		pci_dev_get(dev);
-> -		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE && presence) {
-> -			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
-> -			if (bctl & PCI_BRIDGE_CTL_VGA) {
-> -				ctrl_err(ctrl,
-> -					 "Cannot remove display device %s\n",
-> -					 pci_name(dev));
-> -				pci_dev_put(dev);
-> -				rc = -EINVAL;
-> -				break;
-> -			}
-> -		}
->  		if (!presence) {
->  			pci_dev_set_disconnected(dev, NULL);
->  			if (pci_has_subordinate(dev))
-> diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
-> index ea63db58b4b1..79f1682c858e 100644
-> --- a/drivers/pci/hotplug/shpchp_pci.c
-> +++ b/drivers/pci/hotplug/shpchp_pci.c
-> @@ -78,7 +78,6 @@ int shpchp_configure_device(struct slot *p_slot)
->  int shpchp_unconfigure_device(struct slot *p_slot)
->  {
->  	int rc = 0;
-> -	u8 bctl = 0;
->  	struct pci_bus *parent = p_slot->ctrl->pci_dev->subordinate;
->  	struct pci_dev *dev, *temp;
->  	struct controller *ctrl = p_slot->ctrl;
-> @@ -93,17 +92,6 @@ int shpchp_unconfigure_device(struct slot *p_slot)
->  			continue;
->  
->  		pci_dev_get(dev);
-> -		if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> -			pci_read_config_byte(dev, PCI_BRIDGE_CONTROL, &bctl);
-> -			if (bctl & PCI_BRIDGE_CTL_VGA) {
-> -				ctrl_err(ctrl,
-> -					 "Cannot remove display device %s\n",
-> -					 pci_name(dev));
-> -				pci_dev_put(dev);
-> -				rc = -EINVAL;
-> -				break;
-> -			}
-> -		}
->  		pci_stop_and_remove_bus_device(dev);
->  		pci_dev_put(dev);
->  	}
-> -- 
-> 2.14.2
-> 
+It seems it should be enough to implement runtime PM in the PCI
+controller. Isn't each PCI WAKE# line is wired from each PCI device
+to the PCI controller?
+
+Then the PCI controller can figure out from which PCI device the
+WAKE# came from.
+
+> Options I can think of:
+> (1) implement runtime PM callbacks for all PCI devices, where we clear
+> any PME status and ensure WAKE# stops asserting [1]
+
+I don't think this is needed, it should be enough to have just
+the PCI controller implement runtime PM :)
+
+Regards,
+
+Tony
