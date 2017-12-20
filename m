@@ -1,113 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:59413 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754572AbdLOLuE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Dec 2017 06:50:04 -0500
-Subject: Re: [PATCH 5/5] PCI: cadence: add EndPoint Controller driver for
- Cadence PCIe controller
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        adouglas@cadence.com, stelford@cadence.com, dgary@cadence.com,
-        kgopi@cadence.com, eandrews@cadence.com,
-        thomas.petazzoni@free-electrons.com, sureshp@cadence.com,
-        nsekhar@ti.com, linux-kernel@vger.kernel.org, robh@kernel.org,
-        devicetree@vger.kernel.org
-References: <cover.1511439189.git.cyrille.pitchen@free-electrons.com>
- <297fa17e12cf0f2fb223c05eeb18570707ff5bf1.1511439189.git.cyrille.pitchen@free-electrons.com>
- <20171201122048.GB25010@red-moon>
- <ed6d811e-608e-e6aa-7b07-2f2d2d68adbd@ti.com>
- <c2e9fd2b-e576-49bb-31e1-c65ff92cf9d3@free-electrons.com>
- <e43929c8-e283-f774-eca3-3b0ffcdfb49d@free-electrons.com>
- <4c1e8ba7-8084-7802-df4e-47c6f3ed7816@ti.com>
-From: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Message-ID: <6e8c5981-1a77-6a22-09ad-1b4d87a02565@free-electrons.com>
-Date: Fri, 15 Dec 2017 12:49:51 +0100
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:45428 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755838AbdLTTG2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 14:06:28 -0500
 MIME-Version: 1.0
-In-Reply-To: <4c1e8ba7-8084-7802-df4e-47c6f3ed7816@ti.com>
-Content-Type: text/plain; charset=windows-1252
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 20 Dec 2017 20:06:27 +0100
+Message-ID: <CAJZ5v0jGE6d+-3PGztvzWAdHvuB4=y4tDYeNSYnwmRyU7kCLwg@mail.gmail.com>
+Subject: [GIT PULL] Power management fixes for v4.15-rc5
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+Hi Linus,
 
-Le 15/12/2017 à 06:49, Kishon Vijay Abraham I a écrit :
-> Hi Cyrille,
-> 
-> On Thursday 14 December 2017 10:33 PM, Cyrille Pitchen wrote:
->> Le 13/12/2017 à 17:50, Cyrille Pitchen a écrit :
->>> Hi Kishon,
->>>
->>> Le 05/12/2017 à 10:19, Kishon Vijay Abraham I a écrit :
->>>> Hi,
->>>>
->>>> On Friday 01 December 2017 05:50 PM, Lorenzo Pieralisi wrote:
->>>>> On Thu, Nov 23, 2017 at 04:01:50PM +0100, Cyrille Pitchen wrote:
->>>>>> This patch adds support to the Cadence PCIe controller in endpoint mode.
->>>>>
->>>>> Please add a brief description to the log to describe the most salient
->>>>> features.
->>>>>
->>>>>> Signed-off-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
->>>>>> ---
->>>>>>  drivers/pci/cadence/Kconfig           |   9 +
->>>>>>  drivers/pci/cadence/Makefile          |   1 +
->>>>>>  drivers/pci/cadence/pcie-cadence-ep.c | 553 ++++++++++++++++++++++++++++++++++
->>>>>>  3 files changed, 563 insertions(+)
->>>>>>  create mode 100644 drivers/pci/cadence/pcie-cadence-ep.c
->> [...]
->>>>>> +static int cdns_pcie_ep_write_header(struct pci_epc *epc,
->>>>>> +				     struct pci_epf_header *hdr)
->>>>>> +{
->>>>>> +	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
->>>>>> +	struct cdns_pcie *pcie = &ep->pcie;
->>>>>> +	u8 fn = 0;
->>>>>> +
->>>>>> +	if (fn == 0) {
->>>>>
->>>>> I think there is some code to retrieve fn missing here.
->>>>
->>>> hmm.. the endpoint core has to send the function number which right now it's
->>>> not doing though it has the function number info in pci_epf.
->>>
->>> Would it be OK if I add a new patch in the next series adding a
->>> 'struct pcie_epf *epf' as a 2nd argument to all handlers in the
->>> 'struct pcie_epc_ops'? This way I could have access to epf->func_no as needed.
-> 
-> I prefer we just pass the func_no as the second argument. Do you see a problem
-> with that?
->>>
->>
->> Except for pci_epc_start() and pci_epc_stop(), both only called from
->> pci_epc_start_store(), I don't have trouble getting the epf value to be passed
->> as a 2nd argument to all other handlers in 'struct pcie_epc_ops'.
-> 
-> pci_epc_start()/pci_epc_stop() is used to start/stop the end point controller
-> as a whole and shouldn't need epf.
->>
->> Now my next question is: is it better to keep the 'struct pci_epc *epc' as
->> the 1st argument of all those handlers or do you prefer me to remove it as
->> the value can always be retrieved from epf->epc, since now we provide epf as
->> a new argument ?
-> 
-> Do we really need to pass epf when func_no is all we need?
->
+Please pull from the tag
 
-No, func_no alone is currently all I need so it's perfectly fine for me.
-I've just wanted to ask before to be sure I implement the expected solution
-before submitting :)
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm-4.15-rc5
+
+with top-most commit 63d15e8c2ac134b3fd5460d19043ffde6f6eeb61
+
+ Merge branch 'pm-pci'
+
+on top of commit 1291a0d5049dbc06baaaf66a9ff3f53db493b19b
+
+ Linux 4.15-rc4
+
+to receive power management fixes for 4.15-rc5.
+
+These fix a regression in the ondemand and conservative cpufreq
+governors that was introduced during the 4.13 cycle, a recent
+regression in the imx6q cpufreq driver and a regression in the PCI
+handling of hibernation from the 4.14 cycle.
+
+Specifics:
+
+ - Fix an issue in the PCI handling of the "thaw" transition during
+   hibernation (after creating an image), introduced by a bug fix
+   from the 4.13 cycle and exposed by recent changes in the IRQ
+   subsystem, that caused pci_restore_state() to be called for
+   devices in low-power states in some cases which is incorrect
+   and breaks MSI management on some systems (Rafael Wysocki).
+
+ - Fix a recent regression in the imx6q cpufreq driver that broke
+   speed grading on i.MX6 QuadPlus by omitting checks causing
+   invalid operating performance points (OPPs) to be disabled on
+   that SoC as appropriate (Lucas Stach).
+
+ - Fix a regression introduced during the 4.14 cycle in the ondemand
+   and conservative cpufreq governors that causes the sampling
+   interval used by them to be shorter than the tick period in some
+   cases which leads to incorrect decisions (Rafael Wysocki).
 
 Thanks!
 
-Cyrille
 
- 
-> Thanks
-> Kishon
-> 
+---------------
 
+Lucas Stach (1):
+      cpufreq: imx6q: fix speed grading regression on i.MX6 QuadPlus
 
--- 
-Cyrille Pitchen, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+Rafael J. Wysocki (2):
+      PCI / PM: Force devices to D0 in pci_pm_thaw_noirq()
+      cpufreq: governor: Ensure sufficiently large sampling intervals
+
+---------------
+
+ drivers/cpufreq/cpufreq_governor.c | 19 ++++++++++++++++---
+ drivers/cpufreq/imx6q-cpufreq.c    | 11 ++++++-----
+ drivers/pci/pci-driver.c           |  7 ++++++-
+ 3 files changed, 28 insertions(+), 9 deletions(-)
