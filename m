@@ -1,73 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:44548 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753676AbdLGPOb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 10:14:31 -0500
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: Murali Karicheri <m-karicheri2@ti.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        "Roy Zang" <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        <Gustavo.Pimentel@synopsys.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re-activate task to add MSI-X to pcie-designware
-Message-ID: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
-Date: Thu, 7 Dec 2017 15:14:22 +0000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V1 1/1] iommu: Make sure device's ID array elements are
+ unique
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>
+Cc: joro@8bytes.org, robin.murphy@arm.com, will.deacon@arm.com,
+        lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        Jayachandran.Nair@cavium.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+        Ganapatrao.Kulkarni@cavium.com, mw@semihalf.com,
+        linux-arm-kernel@lists.infradead.org
+References: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
+ <1513696821-32291-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
+ <20171219093726.432e16e7@t450s.home>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <668cc552-e37d-bdff-4d8e-e81516fb0ca0@semihalf.com>
+Date: Wed, 20 Dec 2017 11:28:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171219093726.432e16e7@t450s.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello to all,
+On 19.12.2017 17:37, Alex Williamson wrote:
+> On Tue, 19 Dec 2017 16:20:21 +0100
+> Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com> wrote:
+> 
+>> While iterating over DMA aliases for a PCI device, for some rare cases
+>> (i.e. PCIe-to-PCI/X bridges) we may get exactly the same ID as initial child
+>> device. In turn, the same ID may get registered for a device multiple times.
+>> Eventually IOMMU  driver may try to configure the same ID within domain
+>> multiple times too which for some IOMMU drivers is illegal and causes kernel
+>> panic.
+>>
+>> Rule out ID duplication prior to device ID array registration.
+>>
+>> CC: stable@vger.kernel.org	# v4.14+
+> 
+> You've identified a release, is there a specific commit this fixes?
 
-I am sending this e-mail to request your opinion about the tasks needed to add
-support for MSI-X for pcie-designware based solutions.
+Yes, it was triggered by converting drm_pci_init() to 
+pci_register_driver() in ast_drv.c
 
-A few months ago I submited a patch-set that added support for MSI-X:
+Fixes: 10631d724def ("drm/pci: Deprecate drm_pci_init/exit completely
+")
 
-[v2,9/9] pci: remove limitation of the number of the available IRQs
-https://patchwork.ozlabs.org/patch/771320/
-[v2,8/9] pci: removing old irq api from pcie-designware
-https://patchwork.ozlabs.org/patch/771360/
-[v2,7/9] pci: keystone SoC driver adapted to new irq API
-https://patchwork.ozlabs.org/patch/771361/
-[v2,6/9] pci: qcom SoC driver adapted to new irq API
-https://patchwork.ozlabs.org/patch/771362/
-[v2,5/9] pci: generic PCIe DW driver adapted to new irq API
-https://patchwork.ozlabs.org/patch/771365/
-[v2,4/9] pci: artpec6 SoC driver adapted to new irq API
-https://patchwork.ozlabs.org/patch/771364/
-[v2,3/9] pci: imx6 SoC driver adapted to new irq API
-https://patchwork.ozlabs.org/patch/771363/
-[v2,2/9] pci: exynos SoC driver adapted to new irq API
-https://patchwork.ozlabs.org/patch/771359/
-[v2,1/9] pci: adding new irq api to pci-designware
-https://patchwork.ozlabs.org/patch/771366/
+> 
+>> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>
+>> ---
+>>   drivers/iommu/iommu.c | 28 ++++++++++++++++++++++++++++
+>>   1 file changed, 28 insertions(+)
+>>
+>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+>> index 3de5c0b..9b2c138 100644
+>> --- a/drivers/iommu/iommu.c
+>> +++ b/drivers/iommu/iommu.c
+>> @@ -1945,6 +1945,31 @@ void iommu_fwspec_free(struct device *dev)
+>>   }
+>>   EXPORT_SYMBOL_GPL(iommu_fwspec_free);
+>>   
+>> +static void iommu_fwspec_remove_ids_dup(struct device *dev, u32 *ids,
+>> +					int *num_ids)
+>> +{
+>> +	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
+>> +	int i, j, k, valid_ids = *num_ids;
+>> +
+>> +	for (i = 0; i < valid_ids; i++) {
+>> +		for (j = 0; j < fwspec->num_ids; j++) {
+>> +			if (ids[i] != fwspec->ids[j])
+>> +				continue;
+>> +
+>> +			dev_info(dev, "found 0x%x ID duplication, skipped\n",
+>> +				 ids[i]);
+>> +
+>> +			for (k = i + 1; k < valid_ids; k++)
+>> +				ids[k - 1] = ids[k];
+> 
+> Use memmove()?
 
-The patch-set was globally accepted, but it broke the MSI mechanism for
-Keystone, due to its specificity.
+Right.
 
-We are now going to resume this task and we would like to have your feedback
-about our plan:
+> 
+>> +
+>> +			valid_ids--;
+>> +			break;
+> 
+> At this point ids[i] is not the ids[i] that we tested for dupes, it's
+> what was ids[i + 1], but we're going to i++ on the next iteration and
+> we therefore never test that entry.
 
-Task 1: Help TI to create a keystone_msi driver to isolate its custom msi mechanism
-Task 2: Port the existing patches to the new kernel version (except the keystone
-one)
+Good point.
 
-If TI can do the keystone_msi implementation it would be easier. If it's not
-possible, we volunteer to do it, but we will need testing & debug assistance.
+Now the fundamental question is where we should put the patch, here or 
+in SMMUv3 driver as per Robin suggestion.
 
-I appreciate very much your attention and feedback.
-
-Thanks and have a good day,
-Joao Pinto
+Thanks,
+Tomasz
