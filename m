@@ -1,164 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53800 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754196AbdLGPxo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Dec 2017 10:53:44 -0500
-Subject: Re: Re-activate task to add MSI-X to pcie-designware
-To: Lucas Stach <l.stach@pengutronix.de>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Gustavo.Pimentel@synopsys.com,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
- <1512661374.11506.19.camel@pengutronix.de>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <9cde45e7-78cd-9185-5840-495b27340eab@arm.com>
-Date: Thu, 7 Dec 2017 15:53:39 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 21 Dec 2017 00:22:51 +0100
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>, linux-arm-kernel@axis.com,
+        linux-pci@vger.kernel.org, linux-omap@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        gustavo.pimentel@synopsys.com, kishon@ti.com
+Subject: Re: [PATCH v6 00/18] dwc MSI fixes, ARTPEC-6 EP mode support,
+ ARTPEC-7 SoC support
+Message-ID: <20171220232251.GA27011@axis.com>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+ <20171220173416.GD1709@red-moon>
+ <32f6e02c-4230-9222-0ee1-54a045e78bd5@synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <1512661374.11506.19.camel@pengutronix.de>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <32f6e02c-4230-9222-0ee1-54a045e78bd5@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+ Lorenzo]
+On Wed, Dec 20, 2017 at 07:47:41PM +0000, Joao Pinto wrote:
+> 
+> Hello to all,
+> 
+> �s 5:34 PM de 12/20/2017, Lorenzo Pieralisi escreveu:
+> > On Wed, Dec 20, 2017 at 12:29:21AM +0100, Niklas Cassel wrote:
+> >> This is a series that adds:
+> >> - PCI endpoint mode support in the ARTPEC-6 driver.
+> >> - ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
+> >> - Small fixes for MSI in designware-ep and designware-host,
+> >>   needed to get endpoint mode support working for ARTPEC-6.
+> >> - Cleanups in pci-dra7xx to better prepare for endpoint mode in other
+> >>   DWC based PCIe drivers.
+> > 
+> > Joao, Jingoo,
+> > 
+> > Gustavo tested the series and Kishon ACK'ed the relevant patches,
+> > I need your ACKs on designware patches to queue this series for
+> > v4.16.
+> > 
+> > I am away from tomorrow (noon) till beginning of January which means
+> > that either I queue this series tomorrow or at -rc6, please do
+> > chime in if you can.
+> 
+> Sorry, I have been a bit tied up! Already checked each patch related to DWC.
+> Could anyone from artpec finish the revision, since there are some patches
+> related to that SoC?
 
-On 07/12/17 15:42, Lucas Stach wrote:
-> Hi Joao,
-> 
-> Am Donnerstag, den 07.12.2017, 15:14 +0000 schrieb Joao Pinto:
->> Hello to all,
->>
->> I am sending this e-mail to request your opinion about the tasks needed to add
->> support for MSI-X for pcie-designware based solutions.
->>
->> A few months ago I submited a patch-set that added support for MSI-X:
->>
->> [v2,9/9] pci: remove limitation of the number of the available IRQs
->> https://patchwork.ozlabs.org/patch/771320/
->> [v2,8/9] pci: removing old irq api from pcie-designware
->> https://patchwork.ozlabs.org/patch/771360/
->> [v2,7/9] pci: keystone SoC driver adapted to new irq API
->> https://patchwork.ozlabs.org/patch/771361/
->> [v2,6/9] pci: qcom SoC driver adapted to new irq API
->> https://patchwork.ozlabs.org/patch/771362/
->> [v2,5/9] pci: generic PCIe DW driver adapted to new irq API
->> https://patchwork.ozlabs.org/patch/771365/
->> [v2,4/9] pci: artpec6 SoC driver adapted to new irq API
->> https://patchwork.ozlabs.org/patch/771364/
->> [v2,3/9] pci: imx6 SoC driver adapted to new irq API
->> https://patchwork.ozlabs.org/patch/771363/
->> [v2,2/9] pci: exynos SoC driver adapted to new irq API
->> https://patchwork.ozlabs.org/patch/771359/
->> [v2,1/9] pci: adding new irq api to pci-designware
->> https://patchwork.ozlabs.org/patch/771366/
->>
->> The patch-set was globally accepted, but it broke the MSI mechanism for
->> Keystone, due to its specificity.
->>
->> We are now going to resume this task and we would like to have your feedback
->> about our plan:
->>
->> Task 1: Help TI to create a keystone_msi driver to isolate its custom msi mechanism
->> Task 2: Port the existing patches to the new kernel version (except the keystone
->> one)
->>
->> If TI can do the keystone_msi implementation it would be easier. If it's not
->> possible, we volunteer to do it, but we will need testing & debug assistance.
->>
->> I appreciate very much your attention and feedback.
->>
->> Thanks and have a good day,
->> Joao Pinto
->>
-> 
-> The trivial implementation I have for MSI-X support is below. This has
-> been tested on i.MX6, but I guess it also works on Keystone as it
-> doesn't change the way the IRQs are set up.
-> 
-> -------------------------------->8-------------------------------------
-> 
-> From 0d722f67e3995cf26795f6a5d66cca8e4997ed64 Mon Sep 17 00:00:00 2001
-> From: Lucas Stach <l.stach@pengutronix.de>
-> Date: Thu, 7 Dec 2017 12:54:04 +0100
-> Subject: [PATCH] PCI: dwc: implement MSI-X support
-> 
-> The DWC MSI controller does not support different MSI-X target addresses
-> and does not allow to route individual IRQs to different CPUs. Aside from
-> those shortcomings it is able to support MSI-X just fine.
-> 
-> Some devices like the Intel i210 network controller depend on MSI-X to
-> be available to enable all hardware features, so even a feature limited
-> implementation of MSI-X on the host side is useful.
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 19 +++++++++++++------
->  1 file changed, 13 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 81e2157a7cfb..a85101dd15c9 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -206,9 +206,6 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
->  	int irq, pos;
->  	struct pcie_port *pp = pdev->bus->sysdata;
->  
-> -	if (desc->msi_attrib.is_msix)
-> -		return -EINVAL;
-> -
->  	irq = assign_irq(1, desc, &pos);
->  	if (irq < 0)
->  		return irq;
-> @@ -226,9 +223,19 @@ static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
->  	struct msi_desc *desc;
->  	struct pcie_port *pp = pdev->bus->sysdata;
->  
-> -	/* MSI-X interrupts are not supported */
-> -	if (type == PCI_CAP_ID_MSIX)
-> -		return -EINVAL;
-> +	if (type == PCI_CAP_ID_MSIX) {
-> +		if ((MAX_MSI_IRQS - bitmap_weight(pp->msi_irq_in_use,
-> +						  MAX_MSI_IRQS)) < nvec)
-> +			return -ENOSPC;
-> +
-> +		for_each_pci_msi_entry(desc, pdev) {
-> +			int ret = dw_msi_setup_irq(chip, pdev, desc);
-> +			if (ret)
-> +				return ret;
-> +		}
-> +
-> +		return 0;
-> +	}
->  
->  	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
->  	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
-> -- 
-> 2.11.0
-> 
+Thanks for looking at the patches.
 
-Hi Lucas,
+Thanks to everyone that has helped in any way.
 
-This is exactly what we're trying hard to get rid off. The whole
-msi_setup_irqs and msi_controller stuff gets in the way of proper
-abstraction, and litters the PCI subsystem with legacy stuff.
+Since I am the maintainer for pcie-artpec6.c
+(at least according to MAINTAINERS ;)),
+I'm supposing that my sign-off will suffice.
 
-I'd rather see Joao's patches making it into mainline instead of keeping
-this DWC madness on life support.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Regards,
+Niklas
