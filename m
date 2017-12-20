@@ -1,107 +1,108 @@
-Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=iiy+=DB=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>, <rjw@sisk.pl>, <linux-pci@vger.kernel.org>
-CC: <stable@vger.kernel.org>, <linuxarm@huawei.com>,
-        Dongdong Liu
-	<liudongdong3@huawei.com>
-Subject: [PATCH V2 2/2] PCI/AER: Fix AER device configuration
-Date: Tue, 5 Dec 2017 17:50:38 +0800
-Message-ID: <1512467438-42850-3-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
-References: <1512467438-42850-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:55011 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756176AbdLTTKO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 14:10:14 -0500
+Subject: Re: [PATCH v6 01/18] PCI: dwc: Use the DMA-API to get the MSI address
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+ <20171219232940.659-2-niklas.cassel@axis.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <b7f66e90-1fc2-a957-831d-32881df98ba9@synopsys.com>
+Date: Wed, 20 Dec 2017 19:10:08 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171219232940.659-2-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-AER driver only binds to root ports. It binds to one device and it also
-configures other downstream devices.  That opens the door to concurrency
-issues and makes it really hard to ensure that hotplug works correctly.
-The aer_probe() path should only touch the device it is binding, it
-should not use pci_walk_bus().  If we need to configure another device,
-that should be done in the enumeration path for *that device*.
-We can use  _HPX to set PCI_EXP_DEVCTL to enable error report and ensure
-that hotplug works correctly.  For more_HPX details information,
-we can see ACPI 6.1 section 6.2.9 _HPX (Hot Plug Parameter Extensions).
+Hi Niklas,
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- drivers/pci/pcie/aer/aerdrv.c | 49 ++++---------------------------------------
- 1 file changed, 4 insertions(+), 45 deletions(-)
+Às 11:29 PM de 12/19/2017, Niklas Cassel escreveu:
+> Use the DMA-API to get the MSI address. This address will be written to
+> our PCI config space and to the register which determines which AXI
+> address the DWC IP will spoof for incoming MSI irqs.
+> 
+> Since it is a PCIe endpoint device, rather than the CPU, that is supposed
+> to write to the MSI address, the proper way to get the MSI address is by
+> using the DMA API, not by using virt_to_phys().
+> 
+> Using virt_to_phys() might work on some systems, but using the DMA API
+> should work on all systems.
+> 
+> This is essentially the same thing as allocating a buffer in a driver
+> to which the endpoint will write to. To do this, we use the DMA API.
+> 
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/dwc/pcie-designware-host.c | 15 ++++++++++++---
+>  drivers/pci/dwc/pcie-designware.h      |  3 ++-
+>  2 files changed, 14 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 81e2157a7cfb..bf558df5b7b3 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -83,10 +83,19 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>  
+>  void dw_pcie_msi_init(struct pcie_port *pp)
+>  {
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct device *dev = pci->dev;
+> +	struct page *page;
+>  	u64 msi_target;
+>  
+> -	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+> -	msi_target = virt_to_phys((void *)pp->msi_data);
+> +	page = alloc_page(GFP_KERNEL);
+> +	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
+> +	if (dma_mapping_error(dev, pp->msi_data)) {
+> +		dev_err(dev, "failed to map MSI data\n");
+> +		__free_page(page);
+> +		return;
+> +	}
+> +	msi_target = (u64)pp->msi_data;
+>  
+>  	/* program the msi_data */
+>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+> @@ -187,7 +196,7 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+>  	if (pp->ops->get_msi_addr)
+>  		msi_target = pp->ops->get_msi_addr(pp);
+>  	else
+> -		msi_target = virt_to_phys((void *)pp->msi_data);
+> +		msi_target = (u64)pp->msi_data;
+>  
+>  	msg.address_lo = (u32)(msi_target & 0xffffffff);
+>  	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index e5d9d77b778e..ecdede68522a 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -14,6 +14,7 @@
+>  #ifndef _PCIE_DESIGNWARE_H
+>  #define _PCIE_DESIGNWARE_H
+>  
+> +#include <linux/dma-mapping.h>
+>  #include <linux/irq.h>
+>  #include <linux/msi.h>
+>  #include <linux/pci.h>
+> @@ -168,7 +169,7 @@ struct pcie_port {
+>  	const struct dw_pcie_host_ops *ops;
+>  	int			msi_irq;
+>  	struct irq_domain	*irq_domain;
+> -	unsigned long		msi_data;
+> +	dma_addr_t		msi_data;
+>  	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+>  };
+>  
+> 
 
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index 6ff5f5b..cd63025 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -58,41 +58,6 @@ bool pci_aer_available(void)
- 	return !pcie_aer_disable && pci_msi_enabled();
- }
- 
--static int set_device_error_reporting(struct pci_dev *dev, void *data)
--{
--	bool enable = *((bool *)data);
--	int type = pci_pcie_type(dev);
--
--	if ((type == PCI_EXP_TYPE_ROOT_PORT) ||
--	    (type == PCI_EXP_TYPE_UPSTREAM) ||
--	    (type == PCI_EXP_TYPE_DOWNSTREAM)) {
--		if (enable)
--			pci_enable_pcie_error_reporting(dev);
--		else
--			pci_disable_pcie_error_reporting(dev);
--	}
--
--	if (enable)
--		pcie_set_ecrc_checking(dev);
--
--	return 0;
--}
--
--/**
-- * set_downstream_devices_error_reporting - enable/disable the error reporting  bits on the root port and its downstream ports.
-- * @dev: pointer to root port's pci_dev data structure
-- * @enable: true = enable error reporting, false = disable error reporting.
-- */
--static void set_downstream_devices_error_reporting(struct pci_dev *dev,
--						   bool enable)
--{
--	set_device_error_reporting(dev, &enable);
--
--	if (!dev->subordinate)
--		return;
--	pci_walk_bus(dev->subordinate, set_device_error_reporting, &enable);
--}
--
- /**
-  * aer_enable_rootport - enable Root Port's interrupts when receiving messages
-  * @rpc: pointer to a Root Port data structure
-@@ -123,11 +88,8 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
- 	pci_read_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, &reg32);
- 	pci_write_config_dword(pdev, aer_pos + PCI_ERR_UNCOR_STATUS, reg32);
- 
--	/*
--	 * Enable error reporting for the root port device and downstream port
--	 * devices.
--	 */
--	set_downstream_devices_error_reporting(pdev, true);
-+	/* Enable error reporting for the root port device */
-+	pci_enable_pcie_error_reporting(pdev);
- 
- 	/* Enable Root Port's interrupt in response to error messages */
- 	pci_read_config_dword(pdev, aer_pos + PCI_ERR_ROOT_COMMAND, &reg32);
-@@ -147,11 +109,8 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
- 	u32 reg32;
- 	int pos;
- 
--	/*
--	 * Disable error reporting for the root port device and downstream port
--	 * devices.
--	 */
--	set_downstream_devices_error_reporting(pdev, false);
-+	/* Disable error reporting for the root port device */
-+	pci_disable_pcie_error_reporting(pdev);
- 
- 	pos = pdev->aer_cap;
- 	/* Disable Root's interrupt in response to error messages */
--- 
-1.9.1
+Makes total sense! Thanks.
+
+Acked-by: Joao Pinto <jpinto@synopsys.com>
