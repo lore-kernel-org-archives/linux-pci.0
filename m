@@ -1,95 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:54415 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751631AbdLVFj5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Dec 2017 00:39:57 -0500
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v4 1/2] PCI: mediatek: Clear IRQ status after IRQ dispatched to avoid reentry
-Date: Fri, 22 Dec 2017 13:39:37 +0800
-Message-ID: <1513921178-16148-2-git-send-email-honghui.zhang@mediatek.com>
-In-Reply-To: <1513921178-16148-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1513921178-16148-1-git-send-email-honghui.zhang@mediatek.com>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:44612 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755929AbdLTTrs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 14:47:48 -0500
+Subject: Re: [PATCH v6 00/18] dwc MSI fixes, ARTPEC-6 EP mode support,
+ ARTPEC-7 SoC support
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, Niklas Cassel <niklass@axis.com>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+ <20171220173416.GD1709@red-moon>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <32f6e02c-4230-9222-0ee1-54a045e78bd5@synopsys.com>
+Date: Wed, 20 Dec 2017 19:47:41 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20171220173416.GD1709@red-moon>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-There maybe a same IRQ reentry scenario after IRQ received in current
-IRQ handle flow:
-	EP device		PCIe host driver	EP driver
-1. issue an IRQ
-			2. received IRQ
-			3. clear IRQ status
-			4. dispatch IRQ
-						5. clear IRQ source
-The IRQ status was not successfully cleared at step 2 since the IRQ
-source was not cleared yet. So the PCIe host driver may receive the
-same IRQ after step 5. Then there's an IRQ reentry occurred.
-Even worse, if the reentry IRQ was not an IRQ that EP driver expected,
-it may not handle the IRQ. Then we may run into the infinite loop from
-step 2 to step 4.
-Clear the IRQ status after IRQ have been dispatched to avoid the IRQ
-reentry.
-This patch also fix another INTx IRQ issue by initialize the iterate
-before the loop. If an INTx IRQ re-occurred while we are dispatching
-the INTx IRQ, then iterate may start from PCI_NUM_INTX + INTX_SHIFT
-instead of INTX_SHIFT for the second time entering the
-for_each_set_bit_from() loop.
+Hello to all,
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Acked-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Às 5:34 PM de 12/20/2017, Lorenzo Pieralisi escreveu:
+> On Wed, Dec 20, 2017 at 12:29:21AM +0100, Niklas Cassel wrote:
+>> This is a series that adds:
+>> - PCI endpoint mode support in the ARTPEC-6 driver.
+>> - ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
+>> - Small fixes for MSI in designware-ep and designware-host,
+>>   needed to get endpoint mode support working for ARTPEC-6.
+>> - Cleanups in pci-dra7xx to better prepare for endpoint mode in other
+>>   DWC based PCIe drivers.
+> 
+> Joao, Jingoo,
+> 
+> Gustavo tested the series and Kishon ACK'ed the relevant patches,
+> I need your ACKs on designware patches to queue this series for
+> v4.16.
+> 
+> I am away from tomorrow (noon) till beginning of January which means
+> that either I queue this series tomorrow or at -rc6, please do
+> chime in if you can.
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index db93efd..fc29a9a 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -601,15 +601,16 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
- 	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
- 	unsigned long status;
- 	u32 virq;
--	u32 bit = INTX_SHIFT;
-+	u32 bit;
- 
- 	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
-+		bit = INTX_SHIFT;
- 		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
--			/* Clear the INTx */
--			writel(1 << bit, port->base + PCIE_INT_STATUS);
- 			virq = irq_find_mapping(port->irq_domain,
- 						bit - INTX_SHIFT);
- 			generic_handle_irq(virq);
-+			/* Clear the INTx */
-+			writel(1 << bit, port->base + PCIE_INT_STATUS);
- 		}
- 	}
- 
-@@ -619,10 +620,10 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
- 
- 			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
- 				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
--					/* Clear the MSI */
--					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
- 					virq = irq_find_mapping(port->msi_domain, bit);
- 					generic_handle_irq(virq);
-+					/* Clear the MSI */
-+					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
- 				}
- 			}
- 			/* Clear MSI interrupt status */
--- 
-2.6.4
+Sorry, I have been a bit tied up! Already checked each patch related to DWC.
+Could anyone from artpec finish the revision, since there are some patches
+related to that SoC?
+
+Thanks,
+Joao
+
+> 
+> Thanks,
+> Lorenzo
+> 
+>> Changes since V5:
+>> -Dropped GFP_DMA32 from "PCI: dwc: Use the DMA-API to get the MSI address"
+>>  so that we use the exact same GFP flags as before.
+>> -Rewrote commit message for "PCI: dwc: Make cpu_addr_fixup take struct
+>> dw_pcie as argument" to be more detailed.
+>>
+>> Niklas Cassel (18):
+>>   PCI: dwc: Use the DMA-API to get the MSI address
+>>   PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
+>>   PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be
+>>     writable
+>>   PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
+>>   PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+>>   PCI: designware-ep: Add generic function for raising MSI irq
+>>   PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep
+>>     mode
+>>   PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than
+>>     in probe
+>>   PCI: dwc: dra7xx: Help compiler to remove unused code
+>>   PCI: dwc: artpec6: Remove unused defines
+>>   PCI: dwc: artpec6: Use BIT and GENMASK macros
+>>   PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller
+>>     functions
+>>   bindings: PCI: artpec: Add support for endpoint mode
+>>   PCI: dwc: artpec6: Add support for endpoint mode
+>>   PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
+>>   PCI: dwc: artpec6: Deassert the core before waiting for PHY
+>>   bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
+>>   PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
+>>
+>>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   5 +-
+>>  drivers/pci/dwc/Kconfig                            |  68 +--
+>>  drivers/pci/dwc/Makefile                           |   4 +-
+>>  drivers/pci/dwc/pci-dra7xx.c                       |  27 +-
+>>  drivers/pci/dwc/pcie-artpec6.c                     | 470 ++++++++++++++++++---
+>>  drivers/pci/dwc/pcie-designware-ep.c               |  59 ++-
+>>  drivers/pci/dwc/pcie-designware-host.c             |  15 +-
+>>  drivers/pci/dwc/pcie-designware.c                  |   2 +-
+>>  drivers/pci/dwc/pcie-designware.h                  |  22 +-
+>>  9 files changed, 554 insertions(+), 118 deletions(-)
+>>
+>> -- 
+>> 2.14.2
+>>
