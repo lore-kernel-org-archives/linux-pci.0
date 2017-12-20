@@ -1,172 +1,261 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:4596 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753721AbdLNR4a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Dec 2017 12:56:30 -0500
-Subject: Re: [PATCH v2] PCI: tegra: Do not allocate MSI target memory
-To: Thierry Reding <thierry.reding@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:42609 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754428AbdLTUgL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 15:36:11 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-CC: Jonathan Hunter <jonathanh@nvidia.com>,
+Cc: Jonathan Hunter <jonathanh@nvidia.com>,
+        Vidya Saga <vidyas@nvidia.com>,
         Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>
-References: <20171214135620.13564-1-thierry.reding@gmail.com>
-From: Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <2cc09bd5-63a4-6af8-245a-1f535bbe1ab1@nvidia.com>
-Date: Thu, 14 Dec 2017 23:26:21 +0530
-MIME-Version: 1.0
-In-Reply-To: <20171214135620.13564-1-thierry.reding@gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH v4] PCI: tegra: Refactor configuration space mapping code
+Date: Wed, 20 Dec 2017 21:36:07 +0100
+Message-Id: <20171220203607.18288-1-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Vidya Sagar <vidyas@nvidia.com>
 
+Use only 4 KiB space from the available 1 GiB PCIe aperture to access
+endpoint configuration space by dynamically moving the AFI_FPCI_BAR base
+address. This frees more space for mapping endpoint device BARs on some
+Tegra platforms.
 
-On Thursday 14 December 2017 07:26 PM, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
->
-> The PCI host bridge found on Tegra SoCs doesn't require the MSI target
-> address to be backed by physical system memory. Writes are intercepted
-> within the controller and never make it to the memory pointed to.
->
-> Since no actual system memory is required, remove the allocation of a
-> single page and hardcode the MSI target address with a special address
-> on a per-SoC basis. Ideally this would be an address to an MMIO memory
-> region (such as where the controller's register are located). However,
-> those addresses don't work reliably across all Tegra generations. The
-> only set of addresses that work consistently are those that point to
-> external memory.
->
-> This is not ideal, since those addresses could technically be used for
-> DMA and hence be confusing. However, the first page of external memory
-> is unlikely to be used and special enough to avoid confusion.
->
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
-> Changes in v2:
-> - use physical base address of system memory as MSI target address
->
-> Vidya, Manikanta,
->
-> I've tested this on all of Tegra20, Tegra30, Tegra124, Tegra210 and
-> Tegra186, so I'm confident that this is finally a good set of addresses.
-> However, it'd be good to get confirmation from you since we had
-> conflicting test results the last time around.
->
-> Thanks,
-> Thierry
->
->   drivers/pci/host/pci-tegra.c | 41 +++++++++++++++++++++++++++++++++++------
->   1 file changed, 35 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index ee193767f77b..f2214ca1ad17 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -236,7 +236,6 @@ struct tegra_msi {
->   	struct msi_controller chip;
->   	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
->   	struct irq_domain *domain;
-> -	unsigned long pages;
->   	struct mutex lock;
->   	u64 phys;
->   	int irq;
-> @@ -246,6 +245,7 @@ struct tegra_msi {
->   struct tegra_pcie_soc {
->   	unsigned int num_ports;
->   	unsigned int msi_base_shift;
-> +	u64 msi_target;
->   	u32 pads_pll_ctl;
->   	u32 tx_ref_sel;
->   	u32 pads_refclk_cfg0;
-> @@ -1576,9 +1576,35 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
->   		goto err;
->   	}
->   
-> -	/* setup AFI/FPCI range */
-> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
-> -	msi->phys = virt_to_phys((void *)msi->pages);
-> +	/*
-> +	 * The PCI host bridge on Tegra contains some logic that intercepts
-> +	 * MSI writes, which means that the MSI target address doesn't have
-> +	 * to point to actual physical memory. Rather than allocating one 4
-> +	 * KiB page of system memory that's never used, we can simply pick
-> +	 * an arbitrary address within a reserved area in the FPCI address
-> +	 * map.
-> +	 *
-> +	 * Note that MSI writes are never committed to memory, so it doesn't
-> +	 * really matter which address we pick. However, since the address
-> +	 * may show up at some point and potentially confuse users, the best
-> +	 * solution would be to pick an address that is obviously not within
-> +	 * system memory. The FPCI address map contains a range that cannot
-> +	 * be accessed by any Tegra CPU, but unfortunately that excludes the
-> +	 * usage for 32-bit MSI capable devices.
-> +	 *
-> +	 * A good choice that supports both 32-bit and 64-bit MSI would be to
-> +	 * pick a memory address within the PCI MMIO region that is currently
-> +	 * not used for configuration space, downstream I/O, prefetchable or
-> +	 * non prefetchable memory. However, it seems like not all chips will
-> +	 * be able to intercept MSI writes to those addresses.
-> +	 *
-> +	 * The only reliable addresses that seem to work point to external
-> +	 * memory. Pick the physical base address of system memory as the MSI
-> +	 * target address. This is slightly less than ideal because it could
-> +	 * technically, though unlikely, be used for DMA. However, since the
-> +	 * MSI writes will be intercepted, this should be of little concern.
-> +	 */
-> +	msi->phys = soc->msi_target;
->   
->   	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
->   	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
-> @@ -1630,8 +1656,6 @@ static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
->   	afi_writel(pcie, 0, AFI_MSI_EN_VEC6);
->   	afi_writel(pcie, 0, AFI_MSI_EN_VEC7);
->   
-> -	free_pages(msi->pages, 0);
-> -
->   	if (msi->irq > 0)
->   		free_irq(msi->irq, pcie);
->   
-> @@ -2140,6 +2164,7 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->   static const struct tegra_pcie_soc tegra20_pcie = {
->   	.num_ports = 2,
->   	.msi_base_shift = 0,
-> +	.msi_target = 0x00000000,
->   	.pads_pll_ctl = PADS_PLL_CTL_TEGRA20,
->   	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_DIV10,
->   	.pads_refclk_cfg0 = 0xfa5cfa5c,
-> @@ -2155,6 +2180,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
->   static const struct tegra_pcie_soc tegra30_pcie = {
->   	.num_ports = 3,
->   	.msi_base_shift = 8,
-> +	.msi_target = 0x80000000,
->   	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
->   	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
->   	.pads_refclk_cfg0 = 0xfa5cfa5c,
-> @@ -2171,6 +2197,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
->   static const struct tegra_pcie_soc tegra124_pcie = {
->   	.num_ports = 2,
->   	.msi_base_shift = 8,
-> +	.msi_target = 0x80000000,
->   	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
->   	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
->   	.pads_refclk_cfg0 = 0x44ac44ac,
-> @@ -2186,6 +2213,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
->   static const struct tegra_pcie_soc tegra210_pcie = {
->   	.num_ports = 2,
->   	.msi_base_shift = 8,
-> +	.msi_target = 0x80000000,
->   	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
->   	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
->   	.pads_refclk_cfg0 = 0x90b890b8,
-> @@ -2201,6 +2229,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
->   static const struct tegra_pcie_soc tegra186_pcie = {
->   	.num_ports = 3,
->   	.msi_base_shift = 8,
-> +	.msi_target = 0x80000000,
-When SMMU is enabled for PCIe, I think the IOVA region used is 
-0x8000_0000 ~ 0xFFF0_0000
-Wouldn't that be an issue then?
->   	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
->   	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
->   	.pads_refclk_cfg0 = 0x80b880b8,
+The ->add_bus() and ->remove_bus() callbacks are now no longer needed,
+so they can be removed.
+
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+[treding@nvidia.com: various cleanups, update commit message]
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 148 +++++++++----------------------------------
+ 1 file changed, 30 insertions(+), 118 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index f2214ca1ad17..56434aa44b60 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -269,11 +269,10 @@ struct tegra_pcie {
+ 
+ 	void __iomem *pads;
+ 	void __iomem *afi;
++	void __iomem *cfg;
+ 	int irq;
+ 
+-	struct list_head buses;
+-	struct resource *cs;
+-
++	struct resource cs;
+ 	struct resource io;
+ 	struct resource pio;
+ 	struct resource mem;
+@@ -322,7 +321,6 @@ struct tegra_pcie_port {
+ };
+ 
+ struct tegra_pcie_bus {
+-	struct vm_struct *area;
+ 	struct list_head list;
+ 	unsigned int nr;
+ };
+@@ -362,100 +360,19 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
+  *
+  * Mapping the whole extended configuration space would require 256 MiB of
+  * virtual address space, only a small part of which will actually be used.
+- * To work around this, a 1 MiB of virtual addresses are allocated per bus
+- * when the bus is first accessed. When the physical range is mapped, the
+- * the bus number bits are hidden so that the extended register number bits
+- * appear as bits [19:16]. Therefore the virtual mapping looks like this:
+- *
+- *    [19:16] extended register number
+- *    [15:11] device number
+- *    [10: 8] function number
+- *    [ 7: 0] register number
+  *
+- * This is achieved by stitching together 16 chunks of 64 KiB of physical
+- * address space via the MMU.
++ * To work around this, a 4 KiB region is used to generate the required
++ * configuration transaction with relevant B:D:F and register offset values.
++ * This is achieved by dynamically programming base address and size of
++ * AFI_AXI_BAR used for end point config space mapping to make sure that the
++ * address (access to which generates correct config transaction) falls in
++ * this 4 KiB region.
+  */
+-static unsigned long tegra_pcie_conf_offset(unsigned int devfn, int where)
+-{
+-	return ((where & 0xf00) << 8) | (PCI_SLOT(devfn) << 11) |
+-	       (PCI_FUNC(devfn) << 8) | (where & 0xfc);
+-}
+-
+-static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
+-						   unsigned int busnr)
++static unsigned int tegra_pcie_conf_offset(u8 bus, unsigned int devfn,
++					   unsigned int where)
+ {
+-	struct device *dev = pcie->dev;
+-	pgprot_t prot = pgprot_noncached(PAGE_KERNEL);
+-	phys_addr_t cs = pcie->cs->start;
+-	struct tegra_pcie_bus *bus;
+-	unsigned int i;
+-	int err;
+-
+-	bus = kzalloc(sizeof(*bus), GFP_KERNEL);
+-	if (!bus)
+-		return ERR_PTR(-ENOMEM);
+-
+-	INIT_LIST_HEAD(&bus->list);
+-	bus->nr = busnr;
+-
+-	/* allocate 1 MiB of virtual addresses */
+-	bus->area = get_vm_area(SZ_1M, VM_IOREMAP);
+-	if (!bus->area) {
+-		err = -ENOMEM;
+-		goto free;
+-	}
+-
+-	/* map each of the 16 chunks of 64 KiB each */
+-	for (i = 0; i < 16; i++) {
+-		unsigned long virt = (unsigned long)bus->area->addr +
+-				     i * SZ_64K;
+-		phys_addr_t phys = cs + i * SZ_16M + busnr * SZ_64K;
+-
+-		err = ioremap_page_range(virt, virt + SZ_64K, phys, prot);
+-		if (err < 0) {
+-			dev_err(dev, "ioremap_page_range() failed: %d\n", err);
+-			goto unmap;
+-		}
+-	}
+-
+-	return bus;
+-
+-unmap:
+-	vunmap(bus->area->addr);
+-free:
+-	kfree(bus);
+-	return ERR_PTR(err);
+-}
+-
+-static int tegra_pcie_add_bus(struct pci_bus *bus)
+-{
+-	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+-	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+-	struct tegra_pcie_bus *b;
+-
+-	b = tegra_pcie_bus_alloc(pcie, bus->number);
+-	if (IS_ERR(b))
+-		return PTR_ERR(b);
+-
+-	list_add_tail(&b->list, &pcie->buses);
+-
+-	return 0;
+-}
+-
+-static void tegra_pcie_remove_bus(struct pci_bus *child)
+-{
+-	struct pci_host_bridge *host = pci_find_host_bridge(child);
+-	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+-	struct tegra_pcie_bus *bus, *tmp;
+-
+-	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
+-		if (bus->nr == child->number) {
+-			vunmap(bus->area->addr);
+-			list_del(&bus->list);
+-			kfree(bus);
+-			break;
+-		}
+-	}
++	return ((where & 0xf00) << 16) | (bus << 16) | (PCI_SLOT(devfn) << 11) |
++	       (PCI_FUNC(devfn) << 8) | (where & 0xff);
+ }
+ 
+ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+@@ -464,7 +381,6 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+ {
+ 	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+ 	struct tegra_pcie *pcie = pci_host_bridge_priv(host);
+-	struct device *dev = pcie->dev;
+ 	void __iomem *addr = NULL;
+ 
+ 	if (bus->number == 0) {
+@@ -478,19 +394,17 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+ 			}
+ 		}
+ 	} else {
+-		struct tegra_pcie_bus *b;
++		unsigned int offset;
++		u32 base;
+ 
+-		list_for_each_entry(b, &pcie->buses, list)
+-			if (b->nr == bus->number)
+-				addr = (void __iomem *)b->area->addr;
++		offset = tegra_pcie_conf_offset(bus->number, devfn, where);
+ 
+-		if (!addr) {
+-			dev_err(dev, "failed to map cfg. space for bus %u\n",
+-				bus->number);
+-			return NULL;
+-		}
++		/* move 4 KiB window to offset within the FPCI region */
++		base = 0xfe100000 + ((offset & ~(SZ_4K - 1)) >> 8);
++		afi_writel(pcie, base, AFI_FPCI_BAR0);
+ 
+-		addr += tegra_pcie_conf_offset(devfn, where);
++		/* move to correct offset within the 4 KiB page */
++		addr = pcie->cfg + (offset & (SZ_4K - 1));
+ 	}
+ 
+ 	return addr;
+@@ -517,8 +431,6 @@ static int tegra_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
+ }
+ 
+ static struct pci_ops tegra_pcie_ops = {
+-	.add_bus = tegra_pcie_add_bus,
+-	.remove_bus = tegra_pcie_remove_bus,
+ 	.map_bus = tegra_pcie_map_bus,
+ 	.read = tegra_pcie_config_read,
+ 	.write = tegra_pcie_config_write,
+@@ -743,12 +655,9 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
+ 	u32 fpci_bar, size, axi_address;
+ 
+ 	/* Bar 0: type 1 extended configuration space */
+-	fpci_bar = 0xfe100000;
+-	size = resource_size(pcie->cs);
+-	axi_address = pcie->cs->start;
+-	afi_writel(pcie, axi_address, AFI_AXI_BAR0_START);
++	size = resource_size(&pcie->cs);
++	afi_writel(pcie, pcie->cs.start, AFI_AXI_BAR0_START);
+ 	afi_writel(pcie, size >> 12, AFI_AXI_BAR0_SZ);
+-	afi_writel(pcie, fpci_bar, AFI_FPCI_BAR0);
+ 
+ 	/* Bar 1: downstream IO bar */
+ 	fpci_bar = 0xfdfc0000;
+@@ -1353,10 +1262,14 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 		goto poweroff;
+ 	}
+ 
+-	pcie->cs = devm_request_mem_region(dev, res->start,
+-					   resource_size(res), res->name);
+-	if (!pcie->cs) {
+-		err = -EADDRNOTAVAIL;
++	pcie->cs = *res;
++
++	/* constrain configuration space to 4 KiB */
++	pcie->cs.end = pcie->cs.start + SZ_4K - 1;
++
++	pcie->cfg = devm_ioremap_resource(dev, &pcie->cs);
++	if (IS_ERR(pcie->cfg)) {
++		err = PTR_ERR(pcie->cfg);
+ 		goto poweroff;
+ 	}
+ 
+@@ -2376,7 +2289,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	pcie = pci_host_bridge_priv(host);
+ 
+ 	pcie->soc = of_device_get_match_data(dev);
+-	INIT_LIST_HEAD(&pcie->buses);
+ 	INIT_LIST_HEAD(&pcie->ports);
+ 	pcie->dev = dev;
+ 
+-- 
+2.15.1
