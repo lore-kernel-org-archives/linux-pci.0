@@ -1,46 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51968 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752564AbdLNOyp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Dec 2017 09:54:45 -0500
-Date: Thu, 14 Dec 2017 07:54:44 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        liudongdong3@huawei.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/DPC: Fix shared interrupt handling
-Message-ID: <20171214075444.6bfbf01e@w520.home>
-In-Reply-To: <20171214145030.GA25329@localhost.localdomain>
-References: <20171214000051.30999.6989.stgit@gimli.home>
-        <20171214145030.GA25329@localhost.localdomain>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:30806 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754708AbdLTL7w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 06:59:52 -0500
+Subject: Re: [PATCH] pci: dwc: pci-dra7xx: Make shutdown handler static
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Vignesh R <vigneshr@ti.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20171201050652.13998-1-vigneshr@ti.com>
+ <12f94b3d-5192-d53a-8390-812fe9b7b229@ti.com>
+ <20171201165314.GB29985@red-moon> <20171220102955.GA941@red-moon>
+From: Keerthy <j-keerthy@ti.com>
+Message-ID: <6d133940-26fd-6e62-77ed-d15c9b437aaa@ti.com>
+Date: Wed, 20 Dec 2017 17:29:44 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20171220102955.GA941@red-moon>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 14 Dec 2017 07:50:31 -0700
-Keith Busch <keith.busch@intel.com> wrote:
 
-> On Wed, Dec 13, 2017 at 05:01:58PM -0700, Alex Williamson wrote:
-> > @@ -109,6 +109,7 @@ static void interrupt_event_handler(struct work_struct *work)
-> >  	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
-> >  	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
-> >  	struct pci_bus *parent = pdev->subordinate;
-> > +	u16 ctl;
-> >  
-> >  	pci_lock_rescan_remove();
-> >  	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-> > @@ -135,6 +136,10 @@ static void interrupt_event_handler(struct work_struct *work)
-> >  
-> >  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
-> >  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
-> > +
-> > +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
-> > +	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
-> > +			      ctl & ~PCI_EXP_DPC_CTL_INT_EN);  
+
+On Wednesday 20 December 2017 03:59 PM, Lorenzo Pieralisi wrote:
+> On Fri, Dec 01, 2017 at 04:53:14PM +0000, Lorenzo Pieralisi wrote:
+>> On Fri, Dec 01, 2017 at 10:43:53AM +0530, Keerthy wrote:
+>>>
+>>>
+>>> On Friday 01 December 2017 10:36 AM, Vignesh R wrote:
+>>>> Declare dra7xx_pcie_shutdown() as a static function as its not used
+>>>> elsewhere.
+>>>
+>>> Seems like the below version that had static version was not taken:
+>>>
+>>> https://patchwork.kernel.org/patch/10052579/
+>>
+>> It looks like I can drop the patch above then - let me know if
+>> that's ok.
 > 
-> Did you mean to re-enable the interrupt here rather than mask it off?
+> I would appreciate some feedback; I assume that dropping the patch above
+> and applying the patch in $SUBJECT is what you expect, if there is a
+> problem with that please manifest yourselves.
 
-D'oh, yes.  v2 coming.  Thanks,
+Applying this patch is fine. Thanks.
 
-Alex
+> 
+> Lorenzo
+> 
+>> Thanks,
+>> Lorenzo
+>>
+>>> So for this patch:
+>>>
+>>> Reviewed-by: Keerthy <j-keerthy@ti.com>
+>>>
+>>>>
+>>>> Signed-off-by: Vignesh R <vigneshr@ti.com>
+>>>> ---
+>>>>  drivers/pci/dwc/pci-dra7xx.c | 2 +-
+>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>>>> index 59e8de34cec6..b9db442af793 100644
+>>>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>>>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>>>> @@ -815,7 +815,7 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+>>>>  }
+>>>>  #endif
+>>>>  
+>>>> -void dra7xx_pcie_shutdown(struct platform_device *pdev)
+>>>> +static void dra7xx_pcie_shutdown(struct platform_device *pdev)
+>>>>  {
+>>>>  	struct device *dev = &pdev->dev;
+>>>>  	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+>>>>
