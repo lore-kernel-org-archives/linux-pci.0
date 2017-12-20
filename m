@@ -1,77 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:36455 "EHLO huawei.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751097AbdLYBiO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 24 Dec 2017 20:38:14 -0500
-Subject: Re: [PATCH v3 08/27] PCI: replace devm_ioremap_nocache with
- devm_ioremap
-To: Fabio Estevam <festevam@gmail.com>
-References: <1514026724-32962-1-git-send-email-xieyisheng1@huawei.com>
- <CAOMZO5AyC5wMgowLfwdA7fc8UNV9YORjdS09aUhekk01KYge0g@mail.gmail.com>
-CC: linux-kernel <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <ysxie@foxmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>
-From: Yisheng Xie <xieyisheng1@huawei.com>
-Message-ID: <7b3aa58d-2da3-db85-d395-afdca6fd42e5@huawei.com>
-Date: Mon, 25 Dec 2017 09:38:05 +0800
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V1 0/1] Fix kernel panic caused by device ID duplication
+ presented to the IOMMU
+To: Robin Murphy <robin.murphy@arm.com>,
+        Tomasz Nowicki <tomasz.nowicki@caviumnetworks.com>,
+        joro@8bytes.org, will.deacon@arm.com, lorenzo.pieralisi@arm.com,
+        bhelgaas@google.com
+Cc: Jayachandran.Nair@cavium.com, Ganapatrao.Kulkarni@cavium.com,
+        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, mw@semihalf.com, stable@vger.kernel.org
+References: <1513696436-31834-1-git-send-email-tomasz.nowicki@caviumnetworks.com>
+ <7f7fca76-88f8-6ee7-c402-fe4300c62253@arm.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <68279889-a16d-3c8d-3a01-6b5f992c5744@semihalf.com>
+Date: Wed, 20 Dec 2017 11:27:52 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5AyC5wMgowLfwdA7fc8UNV9YORjdS09aUhekk01KYge0g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <7f7fca76-88f8-6ee7-c402-fe4300c62253@arm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Fabio,
+Hi Robin,
 
-Thanks for you reviewing and comment!
+On 19.12.2017 17:34, Robin Murphy wrote:
+> Hi Tomasz,
+> 
+> On 19/12/17 15:13, Tomasz Nowicki wrote:
+>> Here is my lspci output of ThunderX2 for which I am observing kernel 
+>> panic coming from
+>> SMMUv3 driver -> arm_smmu_write_strtab_ent() -> BUG_ON(ste_live):
+>>
+>> # lspci -vt
+>> -[0000:00]-+-00.0-[01-1f]--+ [...]
+>>                             + [...]
+>>                             \-00.0-[1e-1f]----00.0-[1f]----00.0  
+>> ASPEED Technology, Inc. ASPEED Graphics Family
+>>
+>> ASP device -> 1f:00.0 VGA compatible controller: ASPEED Technology, 
+>> Inc. ASPEED Graphics Family
+>> PCI-Express to PCI/PCI-X Bridge -> 1e:00.0 PCI bridge: ASPEED 
+>> Technology, Inc. AST1150 PCI-to-PCI Bridge
+>> While setting up ASP device SID in IORT dirver:
+>> iort_iommu_configure() -> pci_for_each_dma_alias()
+>> we need to walk up and iterate over each device which alias 
+>> transaction from
+>> downstream devices.
+>>
+>> AST device (1f:00.0) gets BDF=0x1f00 and corresponding SID=0x1f00 from 
+>> IORT.
+>> Bridge (1e:00.0) is the first alias. Following PCI Express to 
+>> PCI/PCI-X Bridge
+>> spec: PCIe-to-PCI/X bridges alias transactions from downstream devices 
+>> using
+>> the subordinate bus number. For bridge (1e:00.0), the subordinate is 
+>> equal
+>> to 0x1f. This gives BDF=0x1f00 and SID=1f00 which is the same as 
+>> downstream
+>> device. So it is possible to have two identical SIDs. The question is 
+>> what we
+>> should do about such case. Presented patch prevents from registering 
+>> the same
+>> ID so that SMMUv3 is not complaining later on.
+> 
+> Ooh, subtle :( There is logic in arm_smmu_attach_device() to tolerate
+> grouped devices aliasing to the same ID, but I guess I overlooked the
+> distinction of a device sharing an alias ID with itself. I'm not sure
+> I really like trying to work around this in generic code, since
+> fwspec->ids is essentially opaque data in a driver-specific format - in
+> theory a driver is free to encode a single logical ID into multiple
+> fwspec elements (I think I did that in an early draft of SMMUv2 SMR
+> support), at which point this approach might corrupt things massively.
 
-On 2017/12/23 20:23, Fabio Estevam wrote:
-> On Sat, Dec 23, 2017 at 8:58 AM, Yisheng Xie <xieyisheng1@huawei.com> wrote:
->> Default ioremap is ioremap_nocache, so devm_ioremap has the same
->> function with devm_ioremap_nocache, which can just be killed to
->> save the size of devres.o
->>
->> This patch is to use use devm_ioremap instead of devm_ioremap_nocache,
->> which should not have any function change but prepare for killing
->> devm_ioremap_nocache.
->>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: linux-pci@vger.kernel.org
->> Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
->> ---
->>  drivers/pci/dwc/pci-dra7xx.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
->> index e77a4cee..3f3712a 100644
->> --- a/drivers/pci/dwc/pci-dra7xx.c
->> +++ b/drivers/pci/dwc/pci-dra7xx.c
->> @@ -637,7 +637,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->>         }
->>
->>         res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
->> -       base = devm_ioremap_nocache(dev, res->start, resource_size(res));
->> +       base = devm_ioremap(dev, res->start, resource_size(res));
-> 
-> You could also consider using devm_ioremap_resource(), which checks
-> whether the resource is NULL and it is a bit shorter:
-> 
-> base = devm_ioremap_resource(dev, res);
-> if (IS_ERR(base))
->    return PTR_ERR(base);
-
-Yeah, I will check if all the archs have the same ioremap and ioremap_noache, first.
-If it is so, I will take your suggestion.
-
-Thanks
-Yisheng
+I don't have strong favourite here, the fix in SMMUv3 driver would work 
+too. Initially we can fix things for SMMUv3 only and if ever face the 
+same issue for other IOMMU driver, then we can move it to generic layer.
 
 > 
+> Does the (untested) diff below suffice?
 > 
->>
->> --
->> 1.8.3.1
->>
+> Robin.
 > 
-> .
+> ----->8-----diff --git a/drivers/iommu/arm-smmu-v3.c 
+> b/drivers/iommu/arm-smmu-v3.c
+> index f122071688fd..d8a730d83401 100644
+> --- a/drivers/iommu/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm-smmu-v3.c
+> @@ -1731,7 +1731,7 @@ static __le64 *arm_smmu_get_step_for_sid(struct 
+> arm_smmu_device *smmu, u32 sid)
 > 
+>   static void arm_smmu_install_ste_for_dev(struct iommu_fwspec *fwspec)
+>   {
+> -    int i;
+> +    int i, j;
+>       struct arm_smmu_master_data *master = fwspec->iommu_priv;
+>       struct arm_smmu_device *smmu = master->smmu;
+> 
+> @@ -1739,6 +1739,13 @@ static void arm_smmu_install_ste_for_dev(struct 
+> iommu_fwspec *fwspec)
+>           u32 sid = fwspec->ids[i];
+>           __le64 *step = arm_smmu_get_step_for_sid(smmu, sid);
+> 
+> +        /* Bridged PCI devices may end up with duplicated IDs */
+> +        for (j = 0; j < i; j++)
+> +            if (fwspec->ids[j] == sid)
+> +                break;
+> +        if (j < i)
+> +            continue;
+> +
+>           arm_smmu_write_strtab_ent(smmu, sid, step, &master->ste);
+>       }
+>   }
+
+Yes, worked for me.
+
+Thanks,
+Tomasz
