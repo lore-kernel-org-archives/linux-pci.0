@@ -1,58 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 11 Dec 2017 11:29:55 +0100
-From: Johan Hovold <johan@kernel.org>
-To: Murali Karicheri <m-karicheri2@ti.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2] PCI: keystone: fix interrupt-controller-node lookup
-Message-ID: <20171211102955.GK5672@localhost>
-References: <20171117133831.1300-1-johan@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:43982 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755931AbdLTTTB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 14:19:01 -0500
+Subject: Re: [PATCH v6 03/18] PCI: designware-ep: Read-only registers need
+ DBI_RO_WR_EN to be writable
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
+ <20171219232940.659-4-niklas.cassel@axis.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <dd13b24a-fb66-6c76-a61a-cacab6fbbd50@synopsys.com>
+Date: Wed, 20 Dec 2017 19:18:56 +0000
 MIME-Version: 1.0
-In-Reply-To: <20171117133831.1300-1-johan@kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, stable <stable@vger.kernel.org>,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- Johan Hovold <johan@kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20171219232940.659-4-niklas.cassel@axis.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Nov 17, 2017 at 02:38:31PM +0100, Johan Hovold wrote:
-> Fix child-node lookup during initialisation which was using the wrong
-> OF-helper and ended up searching the whole device tree depth-first
-> starting at the parent rather than just matching on its children.
+
+Hi,
+
+Às 11:29 PM de 12/19/2017, Niklas Cassel escreveu:
+> Certain registers that pcie-designware-ep tries to write to are read-only
+> registers. However, these registers can become read/write if we first
+> enable the DBI_RO_WR_EN bit. Set/unset the DBI_RO_WR_EN bit before/after
+> writing these registers.
 > 
-> To make things worse, the parent pci node could end up being prematurely
-> freed as of_find_node_by_name() drops a reference to its first argument.
-> Any matching child interrupt-controller node was also leaked.
-> 
-> Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
-> Cc: stable <stable@vger.kernel.org>     # 3.18
-> Acked-by: Murali Karicheri <m-karicheri2@ti.com>
-> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Johan Hovold <johan@kernel.org>
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 > ---
+>  drivers/pci/dwc/pcie-designware-ep.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
-> v2
->  - amend commit message and mention explicitly that of_find_node_by_name()
->    drops a reference to the start node
->  - add Murali's and Lorenzo's acks
+> diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
+> index c92ab87fd660..3fb34be99715 100644
+> --- a/drivers/pci/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> @@ -35,8 +35,10 @@ static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+>  	u32 reg;
+>  
+>  	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+> +	dw_pcie_dbi_ro_wr_en(pci);
+>  	dw_pcie_writel_dbi2(pci, reg, 0x0);
+>  	dw_pcie_writel_dbi(pci, reg, 0x0);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+>  }
+>  
+>  static int dw_pcie_ep_write_header(struct pci_epc *epc,
+> @@ -45,6 +47,7 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc,
+>  	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+>  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>  
+> +	dw_pcie_dbi_ro_wr_en(pci);
+>  	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, hdr->vendorid);
+>  	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, hdr->deviceid);
+>  	dw_pcie_writeb_dbi(pci, PCI_REVISION_ID, hdr->revid);
+> @@ -58,6 +61,7 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc,
+>  	dw_pcie_writew_dbi(pci, PCI_SUBSYSTEM_ID, hdr->subsys_id);
+>  	dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PIN,
+>  			   hdr->interrupt_pin);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+>  
+>  	return 0;
+>  }
+> @@ -142,8 +146,10 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
+>  	if (ret)
+>  		return ret;
+>  
+> +	dw_pcie_dbi_ro_wr_en(pci);
+>  	dw_pcie_writel_dbi2(pci, reg, size - 1);
+>  	dw_pcie_writel_dbi(pci, reg, flags);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+>  
+>  	return 0;
+>  }
+> @@ -223,7 +229,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
+>  	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
+>  	val &= ~MSI_CAP_MMC_MASK;
+>  	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
+> +	dw_pcie_dbi_ro_wr_en(pci);
+>  	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+>  
+>  	return 0;
+>  }
+> 
 
-This one hasn't shown up in linux-next, so sending a reminder to make
-sure it doesn't fall between the cracks.
-
-Thanks,
-Johan
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-by: Joao Pinto <jpinto@synopsys.com>
