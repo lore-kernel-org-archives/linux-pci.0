@@ -1,65 +1,85 @@
-Return-Path: <SRS0=zWEc=DI=gmail.com=geert.uytterhoeven@kernel.org>
-Return-Path: <SRS0=zWEc=DI=gmail.com=geert.uytterhoeven@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 20 Dec 2017 17:34:16 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+        linux-omap@vger.kernel.org, Niklas Cassel <niklass@axis.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 00/18] dwc MSI fixes, ARTPEC-6 EP mode support,
+ ARTPEC-7 SoC support
+Message-ID: <20171220173416.GD1709@red-moon>
+References: <20171219232940.659-1-niklas.cassel@axis.com>
 MIME-Version: 1.0
-Sender: geert.uytterhoeven@gmail.com
-In-Reply-To: <20171212171658.GA53955@bhelgaas-glaptop.roam.corp.google.com>
-References: <1512641720-4715-1-git-send-email-geert+renesas@glider.be> <20171212171658.GA53955@bhelgaas-glaptop.roam.corp.google.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 12 Dec 2017 19:07:21 +0100
-Message-ID: <CAMuHMdWSML1sC+03g8YUa5N9KUuj+R7sTSRDj26oAz=OTLMjeQ@mail.gmail.com>
-Subject: Re: [PATCH 0/2] PCI: rcar: Misc error path fixes
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>, Simon Horman <horms@verge.net.au>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>, linux-pci <linux-pci@vger.kernel.org>,
-	Linux-Renesas <linux-renesas-soc@vger.kernel.org>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20171219232940.659-1-niklas.cassel@axis.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Wed, Dec 20, 2017 at 12:29:21AM +0100, Niklas Cassel wrote:
+> This is a series that adds:
+> - PCI endpoint mode support in the ARTPEC-6 driver.
+> - ARTPEC-7 SoC support in the ARTPEC-6 driver (the SoCs are very similar).
+> - Small fixes for MSI in designware-ep and designware-host,
+>   needed to get endpoint mode support working for ARTPEC-6.
+> - Cleanups in pci-dra7xx to better prepare for endpoint mode in other
+>   DWC based PCIe drivers.
 
-On Tue, Dec 12, 2017 at 6:16 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Dec 07, 2017 at 11:15:18AM +0100, Geert Uytterhoeven wrote:
->> This patch series fixes two issues in the error path for the R-Car PCIe
->> host bridge driver.
->>
->> The first issue is triggered easily by not having a PCIe card inserted,
->> and may cause a crash.
->>
->> Thanks!
->>
->> Geert Uytterhoeven (2):
->>   PCI: rcar: Fix use-after-free in probe error path
->>   PCI: rcar: Handle rcar_pcie_parse_request_of_pci_ranges() failures
->>
->>  drivers/pci/host/pcie-rcar.c | 11 +++++++----
->>  1 file changed, 7 insertions(+), 4 deletions(-)
->
-> The first fixes ddd535f1ea3eb27e, which appeared in v4.14-rc1.  The
-> second fixes 5d2917d469faab72, which appeared in v4.5-rc1.
->
-> After the merge window I normally just pull in critical fixes and
-> fixes to things we merged during the window.
->
-> I think the first makes sense for v4.15 because it can cause a crash
-> with no obvious way to debug it.  The second one feels like v4.16
-> material to me.
->
-> Thoughts?  We're trying to sort out how to handle this sort of thing
-> between Lorenzo and myself, so I apologize for the confusion here.
+Joao, Jingoo,
 
-Sounds fine to me.
-The first one happens all the time if no PCIe card is present.
-The second one is non-critical.
+Gustavo tested the series and Kishon ACK'ed the relevant patches,
+I need your ACKs on designware patches to queue this series for
+v4.16.
 
-Gr{oetje,eeting}s,
+I am away from tomorrow (noon) till beginning of January which means
+that either I queue this series tomorrow or at -rc6, please do
+chime in if you can.
 
-                        Geert
+Thanks,
+Lorenzo
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+> Changes since V5:
+> -Dropped GFP_DMA32 from "PCI: dwc: Use the DMA-API to get the MSI address"
+>  so that we use the exact same GFP flags as before.
+> -Rewrote commit message for "PCI: dwc: Make cpu_addr_fixup take struct
+> dw_pcie as argument" to be more detailed.
+> 
+> Niklas Cassel (18):
+>   PCI: dwc: Use the DMA-API to get the MSI address
+>   PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
+>   PCI: designware-ep: Read-only registers need DBI_RO_WR_EN to be
+>     writable
+>   PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
+>   PCI: designware-ep: Remove static keyword from dw_pcie_ep_reset_bar()
+>   PCI: designware-ep: Add generic function for raising MSI irq
+>   PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep
+>     mode
+>   PCI: dwc: dra7xx: Assign pp->ops in dra7xx_add_pcie_port() rather than
+>     in probe
+>   PCI: dwc: dra7xx: Help compiler to remove unused code
+>   PCI: dwc: artpec6: Remove unused defines
+>   PCI: dwc: artpec6: Use BIT and GENMASK macros
+>   PCI: dwc: artpec6: Split artpec6_pcie_establish_link() into smaller
+>     functions
+>   bindings: PCI: artpec: Add support for endpoint mode
+>   PCI: dwc: artpec6: Add support for endpoint mode
+>   PCI: dwc: Make cpu_addr_fixup take struct dw_pcie as argument
+>   PCI: dwc: artpec6: Deassert the core before waiting for PHY
+>   bindings: PCI: artpec: Add support for the ARTPEC-7 SoC
+>   PCI: dwc: artpec6: Add support for the ARTPEC-7 SoC
+> 
+>  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  |   5 +-
+>  drivers/pci/dwc/Kconfig                            |  68 +--
+>  drivers/pci/dwc/Makefile                           |   4 +-
+>  drivers/pci/dwc/pci-dra7xx.c                       |  27 +-
+>  drivers/pci/dwc/pcie-artpec6.c                     | 470 ++++++++++++++++++---
+>  drivers/pci/dwc/pcie-designware-ep.c               |  59 ++-
+>  drivers/pci/dwc/pcie-designware-host.c             |  15 +-
+>  drivers/pci/dwc/pcie-designware.c                  |   2 +-
+>  drivers/pci/dwc/pcie-designware.h                  |  22 +-
+>  9 files changed, 554 insertions(+), 118 deletions(-)
+> 
+> -- 
+> 2.14.2
+> 
