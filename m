@@ -1,55 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:46198 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752078AbdLHC5G (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Dec 2017 21:57:06 -0500
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-To: Peter Zijlstra <peterz@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>,
-        Rafael Wysocki <rjw@rjwysocki.net>,
-        Len Brown <len.brown@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>, Tejun Heo <tj@kernel.org>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Fengguang Wu <fengguang.wu@intel.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>,
-        Petr Mladek <pmladek@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mm@kvack.org,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: [PATCH 4/9] pci: remove unneeded kallsyms include
-Date: Fri,  8 Dec 2017 11:56:11 +0900
-Message-Id: <20171208025616.16267-5-sergey.senozhatsky@gmail.com>
-In-Reply-To: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
-References: <20171208025616.16267-1-sergey.senozhatsky@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1513739295.18782.1.camel@mtkswgap22>
+Subject: Re: [PATCH] PCI: Mediatek: clear irq status after irq dispathed to
+ avoid reentry
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: <honghui.zhang@mediatek.com>
+Date: Wed, 20 Dec 2017 11:08:15 +0800
+In-Reply-To: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1513738334-26213-1-git-send-email-honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, yt.shen@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, matthias.bgg@gmail.com,
+ linux-mediatek@lists.infradead.org, yong.wu@mediatek.com, bhelgaas@google.com,
+ yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The file was converted from print_fn_descriptor_symbol()
-to %pF some time ago (c9bbb4abb658da "PCI: use %pF instead
-of print_fn_descriptor_symbol() in quirks.c"). kallsyms does
-not seem to be needed anymore.
+On Wed, 2017-12-20 at 10:52 +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> 
+> There maybe a same irq reentry scenario after irq received in current
+> irq handle flow:
+> 	EP device		PCIe host driver	EP driver
+> 1. issue an irq
+> 			2. received irq
+> 			3. clear irq status
+> 			4. dispatch irq
+> 						5. clear irq source
+> The irq status was not successfully cleared at step 2 since the irq
+> source was not cleared yet. So the PCIe host driver may receive the
+> same irq after step 5. Then there's an irq reentry occurred.
+> Even worse, if the reentry irq was not an irq that EP driver expected,
+> it may not handle the irq. Then we may run into the dead loop from
+> step 2 to step 4.
+> Clear the irq status after irq have been dispatched to avoid the irq
+> reentry.
+> 
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  drivers/pci/host/pcie-mediatek.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> index db93efd..3248771 100644
+> --- a/drivers/pci/host/pcie-mediatek.c
+> +++ b/drivers/pci/host/pcie-mediatek.c
+> @@ -605,11 +605,11 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+>  
+>  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
+>  		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+> -			/* Clear the INTx */
+> -			writel(1 << bit, port->base + PCIE_INT_STATUS);
+>  			virq = irq_find_mapping(port->irq_domain,
+>  						bit - INTX_SHIFT);
+>  			generic_handle_irq(virq);
+> +			/* Clear the INTx */
+> +			writel(1 << bit, port->base + PCIE_INT_STATUS);
+>  		}
+>  	}
+>  
+> @@ -619,10 +619,10 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+>  
+>  			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
+>  				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
+> -					/* Clear the MSI */
+> -					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+>  					virq = irq_find_mapping(port->msi_domain, bit);
+>  					generic_handle_irq(virq);
+> +					/* Clear the MSI */
+> +					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+>  				}
+>  			}
+>  			/* Clear MSI interrupt status */
 
-Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/quirks.c | 1 -
- 1 file changed, 1 deletion(-)
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 10684b17d0bd..fd49b976973f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -19,7 +19,6 @@
- #include <linux/init.h>
- #include <linux/delay.h>
- #include <linux/acpi.h>
--#include <linux/kallsyms.h>
- #include <linux/dmi.h>
- #include <linux/pci-aspm.h>
- #include <linux/ioport.h>
--- 
-2.15.1
+Thanks.
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
