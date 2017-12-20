@@ -1,72 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45408 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753911AbdLNRhG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Dec 2017 12:37:06 -0500
-Date: Thu, 14 Dec 2017 17:37:45 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 20 Dec 2017 10:29:55 +0000
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Vidya Saga <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 0/4] PCI: tegra: Configuration space mapping cleanups and
- fixes
-Message-ID: <20171214173745.GA17018@red-moon>
-References: <20171214134545.11143-1-thierry.reding@gmail.com>
+To: Keerthy <j-keerthy@ti.com>
+Cc: Vignesh R <vigneshr@ti.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: dwc: pci-dra7xx: Make shutdown handler static
+Message-ID: <20171220102955.GA941@red-moon>
+References: <20171201050652.13998-1-vigneshr@ti.com>
+ <12f94b3d-5192-d53a-8390-812fe9b7b229@ti.com>
+ <20171201165314.GB29985@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171214134545.11143-1-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171201165314.GB29985@red-moon>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thierry,
-
-On Thu, Dec 14, 2017 at 02:45:41PM +0100, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+On Fri, Dec 01, 2017 at 04:53:14PM +0000, Lorenzo Pieralisi wrote:
+> On Fri, Dec 01, 2017 at 10:43:53AM +0530, Keerthy wrote:
+> > 
+> > 
+> > On Friday 01 December 2017 10:36 AM, Vignesh R wrote:
+> > > Declare dra7xx_pcie_shutdown() as a static function as its not used
+> > > elsewhere.
+> > 
+> > Seems like the below version that had static version was not taken:
+> > 
+> > https://patchwork.kernel.org/patch/10052579/
 > 
-> Hi Lorenzo,
-> 
-> This cleans up a few oddities that I found while reviewing and testing
-> the patch
-> 
-> 	[PATCH V3 1/2] PCI: tegra: refactor config space mapping code
-> 
-> that Vidya Sagar sent out earlier. The first three patches are mostly
-> cleanup and admittedly somewhat bikeshedding in nature. They could've
-> been just review comments, but I thought I'd just submit them as a
-> series of patches since I had already typed them up anyway.
-> 
-> The last patch gets rid of an artificial restriction regarding the
-> mapping address and does a bit of simplification.
-> 
-> These are technically incremental on top of the original patch, but if
-> you prefer, feel free to squash them into that patch.
+> It looks like I can drop the patch above then - let me know if
+> that's ok.
 
-I took some time to have a look at all of them and actually I am happy
-with the end result, except that I would prefer if you squash them all
-in and rewrite the logs since I can easily miss something (eg I have no
-insights into the Tegra config space FPCI windowing mechanism) - I will
-merge the resulting patch(es).
+I would appreciate some feedback; I assume that dropping the patch above
+and applying the patch in $SUBJECT is what you expect, if there is a
+problem with that please manifest yourselves.
 
-I have a question: after merging both series, are
-
-tegra_pcie_{add/remove}_bus()
-
-(and struct tegra_pcie_bus)
-
-still needed ? I do not think so.
-
-> I've tested these on all of Tegra20, Tegra30, Tegra124, Tegra210 and
-> Tegra186.
-
-If the testing goes OK please send me unified series and will merge
-that one.
-
-This brings me to a question for you and Bjorn: how do you usually
-handle DT updates ? I assume we send them via the PCI tree but I am
-asking to prevent any issue upfront.
-
-Thanks,
 Lorenzo
+
+> Thanks,
+> Lorenzo
+> 
+> > So for this patch:
+> > 
+> > Reviewed-by: Keerthy <j-keerthy@ti.com>
+> > 
+> > > 
+> > > Signed-off-by: Vignesh R <vigneshr@ti.com>
+> > > ---
+> > >  drivers/pci/dwc/pci-dra7xx.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> > > index 59e8de34cec6..b9db442af793 100644
+> > > --- a/drivers/pci/dwc/pci-dra7xx.c
+> > > +++ b/drivers/pci/dwc/pci-dra7xx.c
+> > > @@ -815,7 +815,7 @@ static int dra7xx_pcie_resume_noirq(struct device *dev)
+> > >  }
+> > >  #endif
+> > >  
+> > > -void dra7xx_pcie_shutdown(struct platform_device *pdev)
+> > > +static void dra7xx_pcie_shutdown(struct platform_device *pdev)
+> > >  {
+> > >  	struct device *dev = &pdev->dev;
+> > >  	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+> > > 
