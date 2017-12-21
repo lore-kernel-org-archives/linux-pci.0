@@ -1,92 +1,75 @@
-Return-Path: <SRS0=UB9t=DS=xenosoft.de=chzigotzky@kernel.org>
-Return-Path: <SRS0=UB9t=DS=xenosoft.de=chzigotzky@kernel.org>
-Subject: [PATCH] SB600 for the Nemo board has non-zero devices on non-root bus
-From: Christian Zigotzky <chzigotzky@xenosoft.de>
-To: Bjorn Helgaas <helgaas@kernel.org>, Michael Ellerman
- <mpe@ellerman.id.au>, Darren Stevens <darren@stevens-zone.net>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Olof Johansson <olof@lixom.net>,
- linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-References: <20171202230052.34y2ivxgpgr3osct@localhost>
- <CAOesGMhfMpt+xG1vhVHU+O5o4W5y2S5mZyn9tp+CPn9G6XrNVA@mail.gmail.com>
- <4CEE49CE-68F3-457F-B302-54BA8550F36A@xenosoft.de>
- <1d5276c3-1d29-114a-c868-6f022eee58e7@xenosoft.de>
- <99f78122-cd53-100f-4f58-be5bf7927d4e@xenosoft.de>
- <87fu8odnfk.fsf@concordia.ellerman.id.au>
- <20171206210637.GO23510@bhelgaas-glaptop.roam.corp.google.com>
- <877etxh1lf.fsf@concordia.ellerman.id.au>
- <f5fe03d3-87f8-2a2d-2d83-fbefcd489a77@xenosoft.de>
- <98c7e034-b523-a703-e637-957e2857ab32@xenosoft.de>
- <20171215202509.GZ30595@bhelgaas-glaptop.roam.corp.google.com>
- <6326d79e-405b-2ae8-5295-97bf11219b81@xenosoft.de>
- <af18fb51-a0bc-68e2-7594-5583e3090f98@xenosoft.de>
-Message-ID: <37306c17-816c-23fe-d03b-fb8ee98c03b0@xenosoft.de>
-Date: Fri, 22 Dec 2017 11:22:01 +0100
+Return-Path: <SRS0=qZKk=DR=linux.vnet.ibm.com=jjalvare@kernel.org>
+Return-Path: <SRS0=qZKk=DR=linux.vnet.ibm.com=jjalvare@kernel.org>
+Subject: Re: [PATCH v2 2/7] powerpc/kernel: Add uevents in EEH error/resume
+To: Russell Currey <ruscur@russell.cc>, Bjorn Helgaas <helgaas@kernel.org>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+        seroyer@linux.vnet.ibm.com, alex.williamson@redhat.com, aik@ozlabs.ru,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        bodong@mellanox.com, eli@mellanox.com, saeedm@mellanox.com,
+        Keith Busch <keith.busch@intel.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Dongdong Liu <liudongdong3@huawei.com>
+References: <20171218223808.83928-1-bryantly@linux.vnet.ibm.com>
+ <20171218223808.83928-3-bryantly@linux.vnet.ibm.com>
+ <20171219045009.GC14941@bhelgaas-glaptop.roam.corp.google.com>
+ <1513659576.2151.6.camel@russell.cc>
+From: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
+Date: Wed, 20 Dec 2017 21:04:10 -0600
 MIME-Version: 1.0
-In-Reply-To: <af18fb51-a0bc-68e2-7594-5583e3090f98@xenosoft.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1513659576.2151.6.camel@russell.cc>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <cb6afad3-b0f9-f60c-eeaf-7f0aec88f7ef@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-I mean: I haven't gotten an answer from Darren yet. Sorry because of my 
-English. I am still learning.
+On 12/18/17 10:59 PM, Russell Currey wrote:
 
--- Christian
+> On Mon, 2017-12-18 at 22:50 -0600, Bjorn Helgaas wrote:
+>> [+cc Keith, Gabriele, Dongdong]
+>>
+>> On Mon, Dec 18, 2017 at 04:38:03PM -0600, Bryant G. Ly wrote:
+>>> Devices can go offline when EEH is reported. This patch adds
+>>> a change to the kernel object and lets udev know of error.
+>>> When device resumes a change is also set reporting device as
+>>> online. Therefore, EEH events are better propagated to user
+>>> space for devices in powerpc arch.
+>> I'm on vacation and can't review this in detail, but I wonder if you
+>> can compare this with the uevents we emit for DPC, AER, and hotplug
+>> events (if any).  I hope we don't end up with userspace having to be
+>> aware of the differences between EEH, DPC, AER, etc.
+>>
+>> From a very quick look, I only see a few uevents even mentioned in
+>> drivers/pci: KOBJ_ADD in __pci_hp_register() and KOBJ_CHANGE in the
+>> SR-IOV code.  I'm worried that we're missing some important uevents
+>> in
+>> the PCI core.  
 
+The only place where I see the KOBJ_REMOVE being used is when the device is 
+removed in pci_destroy_dev -> device_del whic will be called implicitly
+in permanent failure path of EEH code
 
-On 22 December 2017 at 10:57AM, Christian Zigotzky wrote:
- > Hi Bjorn,
- >
- > Sorry I'm bothering you again. Is this small out of tree init routine 
-in the Nemo patch? I haven't get an answer from Darren yet and I didn't 
-found the small out of tree init routine in the Nemo patch. Please find 
-attached the Nemo patch. Maybe you can find this small out of tree init 
-routine.
- >
- > What do you think of this following code?
- >
- > if (sb600_bus == -1)
- > +       {
- > +               busp = pci_find_bus(0, 0);
- > +               pa_pxp_read_config(busp, PCI_DEVFN(17,0), 
-PCI_SECONDARY_BUS, 1, &val);
- > +
- > +               sb600_bus = val;
- > +
- > +               printk(KERN_CRIT "NEMO SB600 on bus %d.\n",sb600_bus);
- > +       }
- >
- > Thanks,
- > Christian
- >
- >
- > On 04 December 2017 at 12:40PM, Darren Stevens wrote:
- > > Hello Bjorn
- > >
- > > Firstly sorry for not being able to join in this discussion, I have 
-been
- > > moving house and only got my X1000 set up again yesterday..
- > >
- > > On 30/11/2017, Bjorn Helgaas wrote:
- > >> I *think* something like the patch below should make this work if you
- > >> use the "pci=pcie_scan_all" parameter.  We have some x86 DMI quirks
- > >> that set PCI_SCAN_ALL_PCIE_DEVS automatically.  I don't know how to do
- > >> something similar on powerpc, but maybe you do?
- > >
- > > Actually the root ports on the Nemo's PA6T processor don't respond 
-to the
- > > SB600 unless we turn on a special 'relax pci-e' bit in one of its 
-control
- > > registers. We use a small out of tree init routine to do this, and 
-there
- > > would be the ideal place to put a call to
- > > pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS).
- > >
- > > This patch fixes the last major hurdle to getting the X1000 fully 
-supported in
- > > the linux kernel, so thanks very much for that.
- > >
- > > Regards
- > > Darren
- > >
- > >
- >
+>> That's not an argument against what you're doing here;
+>> it just would be nice to fill in any missing pieces in the core also,
+>> and hopefully make them consistent with these EEH events.
+> I don't think this needs to be particularly complex, could we get away
+> with events for when devices do the following?
+>
+> - begin recovery
+> - successfully recover
+> - fail recovery
+
+If there are no objections in the on going review of this patch 
+I can change them to these names:
+
+  - BEGIN_RECOVERY
+  - SUCCESSFUL_RECOVERY
+  - FAILED_RECOVERY
+
+>
+> It might be worthwhile sorting out some consistent, non-EEH-specific
+> naming, and then other device error recovery systems can do the same
+> later.
+>
+Do you have a more consistent naming in mind for these events? 
+
+- Juan
