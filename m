@@ -1,182 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f54.google.com ([209.85.213.54]:43272 "EHLO
-        mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753860AbdLMVr0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Dec 2017 16:47:26 -0500
-Received: by mail-vk0-f54.google.com with SMTP id u84so2350682vke.10
-        for <linux-pci@vger.kernel.org>; Wed, 13 Dec 2017 13:47:26 -0800 (PST)
+Received: from mga01.intel.com ([192.55.52.88]:31615 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750750AbdLUFJd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Dec 2017 00:09:33 -0500
+Date: Wed, 20 Dec 2017 22:12:56 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Maik Broemme <mbroemme@libmpq.org>,
+        Pawandeep Oza <poza@codeaurora.org>
+Subject: Re: [PATCH 4/4] PCI/DPC: Print AER status in DPC event handling
+Message-ID: <20171221051256.GA15276@localhost.localdomain>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171219210643.24615-4-keith.busch@intel.com>
+ <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <SN1PR12MB03524AF87997DFAC404CD514C8350@SN1PR12MB0352.namprd12.prod.outlook.com>
-References: <MWHPR12MB1600C4F1693E88236CA8F78EC84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20171017133702.1b0e35bc@t450s.home> <MWHPR12MB16008EEBF251F321E9B48D41C84C0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAB=NE6U-1ytEbL9A2FeVjcOfN3VSNAJUa9JbsQH9UfjRfANKxw@mail.gmail.com>
- <MWHPR12MB16006DB7914B111AD93FEC10C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAB=NE6Xwj20hwX3XzW_bYEby+24c=gY_nQtXPOu1J_c7uRHRjA@mail.gmail.com>
- <MWHPR12MB16004ED0D14F6531DDDD1692C84D0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <SN1PR12MB03524AF87997DFAC404CD514C8350@SN1PR12MB0352.namprd12.prod.outlook.com>
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Date: Wed, 13 Dec 2017 13:47:24 -0800
-Message-ID: <CAKdAkRRuX-NcWB_fwWr6XHV61t+L2MCjedfZgaiAD-xpVB-mMQ@mail.gmail.com>
-Subject: Re: 4.14.0-rc3 is auto-reloading PCIe SR-IOV Virtual Function device
- drivers when VFs are attached to VMs ...
-To: Casey Leedom <leedom@chelsio.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Juan Alvarez <jjalvare@linux.vnet.ibm.com>,
-        Komali Katari <komali@chelsio.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Eric Dumazet <edumazet@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <35445e86-e7b6-3fed-f26a-954a0f8d5e8a@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 13, 2017 at 1:33 PM, Casey Leedom <leedom@chelsio.com> wrote:
-> / From: Casey Leedom <leedom@chelsio.com>
-> | Date: Tuesday, October 17, 2017 11:36 AM
-> |
-> |   I hope this is the right Linux list for this issue.  One of our QA staff
-> | has noticed a new behavior starting about 4.14.0-rc3.  We instantiate PCIe
-> | SR-IOV Virtual Functions and the corresponding driver (cxgb4vf in this case)
-> | is automatically loaded.  That's fine and has been the case for some time.
-> | But, we remove the driver module (rmmod cxgb4vf) and then attach one of the
-> | VFs to a KVM Virtual Machine and the cxgb4vf driver module gets reloaded in
-> | the KVM Hypervisor.  This is new behavior.  I see that there was a pretty
-> | big change done by Luis R. Rodriguez in kernel.org commit revision 2355869
-> | but we haven't yet isolated the new behavior to that commit.  That'll be our
-> \ next test but I wanted to get this out there for comment.
->
-> ...
->
-> / From: Casey Leedom <leedom@chelsio.com>
-> | Date: Wednesday, October 18, 2017 10:09 AM
-> |
-> |   Ah, my bad.  Sorry, I had the impression that git commit IDs were
-> | preserved across repositories.  That's in Linus' main repository:
-> |
-> |   commit 235586939d7fe4833ada9e988f92af543ee6851f
-> |   Author: Luis R. Rodriguez <mcgrof@kernel.org>
-> |   Date:   Fri Sep 8 16:17:00 2017 -0700
-> |
-> |     kmod: split out umh code into its own file
-> |
-> |     Patch series "kmod: few code cleanups to split out umh code"
-> |
-> |     The usermode helper has a provenance from the old usb code which first
-> |     required a usermode helper.  Eventually this was shoved into kmod.c and
-> |     the kernel's modprobe calls was converted over eventually to share the
-> |     same code.  Over time the list of usermode helpers in the kernel has grown
-> |     -- so kmod is just but one user of the API.
-> |     ...
-> |
-> | But, that was just a random guess since it was the largest recent change in
-> | this area.  Komali tried to apply a reverse patch to see if that guess
-> | worked out but that didn't apply cleanly and trying to reset to 2355869^ led
-> | to other problems with systemd-udev.service running constantly reloading the
-> | driver with a RHEL7 installation ... which may be a hint about what's going
-> | on ...  I'm going to recommend that Komali do a bisect to see if she can
-> \ figure out where this new behavior started ...
->
->
-> / From:  Luis R. Rodriguez <mcgrof@kernel.org>
-> | Date: Wednesday, October 18, 2017 10:18 AM
-> |
-> | I'd recommend to do a full bisect, I *highly* doubt the above commit is the
-> | issue given it really should not have introduced any functional changes as
-> | its just a code shuffle, moving code from one file to another. Specially for
-> | the type of change you are describing, that requires significant changes. So
-> \ save your time and just focus on a proper bisect.
->
->
-> / From: Casey Leedom
-> | Date: Wednesday, October 18, 2017 10:23 AM
-> |
-> \   Okay, I'll have Komali do a full bisct and report back.
->
->
->   Sorry for the incredibly late response to this -- we've all been busy with
-> release schedules, etc.  I hope it's okay that I included a significant
-> amount of the previous message context -- I figured that it had been so long
-> that it would be better to bring everyone back up to speed.
->
->   In any case, Komali did the bisect and identified the commit which has
-> resulted in the new behavior which is causing problems:
->
->   commit 1455cf8dbfd06aa7651dcfccbadb7a093944ca65
->   Author: Dmitry Torokhov <dmitry.torokhov@gmail.com>
->   Date:   Wed Jul 19 17:24:30 2017 -0700
->
->     driver core: emit uevents when device is bound to a driver
->
->     There are certain touch controllers that may come up in either normal
->     (application) or boot mode, depending on whether firmware/configuration is
->     corrupted when they are powered on. In boot mode the kernel does not create
->     input device instance (because it does not necessarily know the
->     characteristics of the input device in question).
->
->     Another number of controllers does not store firmware in a non-volatile
->     memory, and they similarly need to have firmware loaded before input device
->     instance is created. There are also other types of devices with similar
->     behavior.
->
->     There is a desire to be able to trigger firmware loading via udev, but it
->     has to happen only when driver is bound to a physical device (i2c or spi).
->     These udev actions can not use ADD events, as those happen too early, so we
->     are introducing BIND and UNBIND events that are emitted at the right
->     moment.
->
->     Also, many drivers create additional driver-specific device attributes
->     when binding to the device, to provide userspace with additional controls.
->     The new events allow userspace to adjust these driver-specific attributes
->     without worrying that they are not there yet.
->
->     Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
->     Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
-> I've Cc'ed both Dmitry and Greg on this message to get their feedback on this.
->
+On Wed, Dec 20, 2017 at 11:43:07PM -0500, Sinan Kaya wrote:
+> +Oza
+> 
+> On 12/19/2017 4:06 PM, Keith Busch wrote:
+> > A DPC enabled device will suppress sending ERR_FATAL and ERR_NONFATAL,
+> > which prevents the AER handler from reporting the details of the
+> > error. This patch will have the DPC driver get the AER status registers
+> > from the downstream port that detected the uncorrectable error, and
+> > print out additional information.
+> > 
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > ---
+> 
+> Oza is doing some restructuring to unify DPC and AER error handling path per
+> feedback from Bjorn. It is almost done. He is testing it. 
+> 
+> Can this patch wait until you review his version? I'm thinking this could
+> be something that can be added to his series instead.
 
-This should have been fixed with:
+No problem.
+ 
+> Coming back to this patch. The interrupt number for DPC and AER could be the
+> same or different. 
 
-commit 6878e7de6af726de47f9f3bec649c3f49e786586
-Author: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Date:   Wed Sep 13 16:29:48 2017 -0700
+Only if you're talking about root ports. DPC is also a feature of
+switch downstream ports, which don't generate interrupts on AER events
+(they don't have a Root Error Command register).
 
-   driver core: suppress sending MODALIAS in UNBIND uevents
+> According to the spec, AER errors are always reported
+> regardless of DPC driver presence (see the famous flow chart).
 
-   The current udev rules cause modules to be loaded on all device events save
-   for "remove". With the introduction of KOBJ_BIND/KOBJ_UNBIND this causes
-   issues, as driver modules that have devices bound to their drivers get
-   immediately reloaded, and it appears to the user that module unloading doe
-   snot work.
+> If the interrupt IDs are the same for AER and DPC, your patch would introduce
+> double printing for AER errors.
 
-   The standard udev matching rule is foillowing:
-
-   ENV{MODALIAS}=="?*", RUN{builtin}+="kmod load $env{MODALIAS}"
-
-   Given that MODALIAS data is not terribly useful for UNBIND event, let's zap
-   it from the generated uevent environment until we get userspace updated
-   with the correct udev rule that only loads modules on "add" event.
-
-   Reported-by: Jakub Kicinski <kubakici@wp.pl>
-   Tested-by: Jakub Kicinski <kubakici@wp.pl>
-   Fixes: 1455cf8dbfd0 ("driver core: emit uevents when device is bound ...")
-   Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-   Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
-but may have been broken again with:
-
-commit 4a336a23d619e96aef37d4d054cfadcdd1b581ba
-Author: Eric Dumazet <edumazet@google.com>
-Date:   Tue Sep 19 16:27:04 2017 -0700
-
-   kobject: copy env blob in one go
-
-   No need to iterate over strings, just copy in one efficient memcpy() call.
-
-CCing Eric as well.
-
--- 
-Dmitry
+The AER Uncorrectable Status Register of the detecting port would
+indeed be set with the appropriate status if that's the type of error
+that occured, but when DPC is enabled, the root port never observes an
+ERR_FATAL/ERR_NONFATAL message required for it to get set the Root Error
+Status Register. The Linux AER handler requires the Root Error Status
+be set in order for it to print anything, so I don't think we're at risk
+of double printing with this patch even if the root port is DPC capable.
