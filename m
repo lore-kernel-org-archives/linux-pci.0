@@ -1,93 +1,95 @@
-Return-Path: <SRS0=a0HY=C6=lixom.net=olof@kernel.org>
-Return-Path: <SRS0=a0HY=C6=lixom.net=olof@kernel.org>
-Date: Sat, 2 Dec 2017 15:00:52 -0800
-From: Olof Johansson <olof@lixom.net>
-To: Christian Zigotzky <chzigotzky@xenosoft.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	Darren Stevens <darren@stevens-zone.net>
-Subject: Re: [PATCH] SB600 for the Nemo board has non-zero devices on
- non-root bus
-Message-ID: <20171202230052.34y2ivxgpgr3osct@localhost>
-References: <87tvxl15qx.fsf@concordia.ellerman.id.au>
- <4cfe3cc0-7fe3-9774-7d20-1b7fcb7aa910@xenosoft.de>
- <CAErSpo55Q8Q=5p6_+uu7ahnw+53ibVDNRXxrzRV9QnUr_9EUfw@mail.gmail.com>
- <28b43e1a-3643-9edb-7123-be1cb0dc846a@xenosoft.de>
- <CAErSpo7fup7+doD6A7RKh8kdE8HQaQrEh=gq35+nC-dBeOQ1uA@mail.gmail.com>
- <527175f7-8a13-37a1-9f0a-0b918aeebd64@xenosoft.de>
- <20171130224243.GB19640@bhelgaas-glaptop.roam.corp.google.com>
- <406ba7c4-7305-4069-227f-81afed202e47@xenosoft.de>
- <20171201232716.GA18780@bhelgaas-glaptop.roam.corp.google.com>
- <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>,
+ <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v2 1/2] PCI: mediatek: Clear IRQ status after IRQ dispatched
+ to avoid reentry
+Date: Thu, 21 Dec 2017 10:11:16 +0800
+Message-ID: <1513822277-18329-2-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1513822277-18329-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1513822277-18329-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <6d2505ab-a985-bdb0-ad3a-e7659cc2c54d@xenosoft.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Dec 02, 2017 at 01:54:41PM +0100, Christian Zigotzky wrote:
-> On 02 December 2017 at 00:27AM, Bjorn Helgaas wrote:
-> > 
-> > Thanks for testing that.  I'll merge a similar patch for v4.16.
-> > 
-> > I don't think using "pci=pcie_scan_all" is really an acceptable
-> > long-term answer for you, though.  Is there some way we can identify
-> > at run-time whether we're on a Nemo system?  If so, we can make this
-> > happen automatically.
-> > 
-> > Bjorn
-> > 
-> Hi Bjorn,
-> 
-> Many thanks for your effort! I appreciate it very much. :-)
-> 
-> We can identify the Nemo board at the boot time. See dmesg output: [   
-> 0.061592] NEMO SB600 IOB base e0000000
-> 
-> @linuxppc-dev
-> Any other ideas? Maybe the same as we can identify the other P.A. Semi
-> boards (Electra, Chitra, and Athena).
-> 
-> @Olof
-> Maybe you know how we can identify the P.A. Semi Nemo board at the run-time.
-> 
-> @Darren
-> Do you have an idea?
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
+There maybe a same IRQ reentry scenario after IRQ received in current
+IRQ handle flow:
+	EP device		PCIe host driver	EP driver
+1. issue an IRQ
+			2. received IRQ
+			3. clear IRQ status
+			4. dispatch IRQ
+						5. clear IRQ source
+The IRQ status was not successfully cleared at step 2 since the IRQ
+source was not cleared yet. So the PCIe host driver may receive the
+same IRQ after step 5. Then there's an IRQ reentry occurred.
+Even worse, if the reentry IRQ was not an IRQ that EP driver expected,
+it may not handle the IRQ. Then we may run into the infinite loop from
+step 2 to step 4.
+Clear the IRQ status after IRQ have been dispatched to avoid the IRQ
+reentry.
 
-The below patch, together with Bjorn's, should do it. Christian, can you test
-and report back?
-
-I'm guessing it won't do any harm to set this on non-X1000 platforms. My
-test system is currently powered down so I can't check.
-
-
->From a3b390277627b0342c8ccfc16e58679e0d8abdde Mon Sep 17 00:00:00 2001
-From: Olof Johansson <olof@lixom.net>
-Date: Sat, 2 Dec 2017 14:56:36 -0800
-Subject: [PATCH] powerpc/pasemi: set PCI_SCAN_ALL_PCI_DEVS
-
-Needed on Amiga X1000 with SB600.
-
-Reported-by: Christian Zigotzky <chzigotzky@xenosoft.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Olof Johansson <olof@lixom.net>
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- arch/powerpc/platforms/pasemi/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/host/pcie-mediatek.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
-index 5ff6108..ea54ed2 100644
---- a/arch/powerpc/platforms/pasemi/pci.c
-+++ b/arch/powerpc/platforms/pasemi/pci.c
-@@ -224,6 +224,8 @@ void __init pas_pci_init(void)
- 		return;
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index db93efd..3248771 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -605,11 +605,11 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+ 
+ 	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
+ 		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
+-			/* Clear the INTx */
+-			writel(1 << bit, port->base + PCIE_INT_STATUS);
+ 			virq = irq_find_mapping(port->irq_domain,
+ 						bit - INTX_SHIFT);
+ 			generic_handle_irq(virq);
++			/* Clear the INTx */
++			writel(1 << bit, port->base + PCIE_INT_STATUS);
+ 		}
  	}
  
-+	pci_set_flag(PCI_SCAN_ALL_PCIE_DEVS):
-+
- 	for (np = NULL; (np = of_get_next_child(root, np)) != NULL;)
- 		if (np->name && !strcmp(np->name, "pxp") && !pas_add_bridge(np))
- 			of_node_get(np);
+@@ -619,10 +619,10 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+ 
+ 			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
+ 				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
+-					/* Clear the MSI */
+-					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+ 					virq = irq_find_mapping(port->msi_domain, bit);
+ 					generic_handle_irq(virq);
++					/* Clear the MSI */
++					writel(1 << bit, port->base + PCIE_IMSI_STATUS);
+ 				}
+ 			}
+ 			/* Clear MSI interrupt status */
 -- 
-2.8.6
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
