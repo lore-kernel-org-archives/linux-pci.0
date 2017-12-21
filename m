@@ -1,190 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47020 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752431AbdLBVpt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 2 Dec 2017 16:45:49 -0500
-Subject: [PATCH v1 1/2] PCI/ASPM: Calculate LTR_L1.2_THRESHOLD from device
- characteristics
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Kenji Chen <kenji.chen@intel.com>,
-        Thierry Reding <treding@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        David Daney <david.daney@cavium.com>,
-        Krishna Kishore <kthota@nvidia.com>,
-        linux-kernel@vger.kernel.org, Vidya Sagar <vidyas@nvidia.com>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        linux-tegra@vger.kernel.org, Patrick Georgi <pgeorgi@chromium.org>,
-        Rajat Jain <rajatja@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Stefan Reinauer <stefan.reinauer@coreboot.org>,
-        Duncan Laurie <dlaurie@chromium.org>
-Date: Sat, 02 Dec 2017 15:45:46 -0600
-Message-ID: <20171202214546.23146.20327.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20171202211833.23146.5744.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33931 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752447AbdLUQqI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Dec 2017 11:46:08 -0500
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
+        "'Niklas Cassel'" <niklas.cassel@axis.com>,
+        "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>
+Cc: "'Niklas Cassel'" <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20171219232940.659-1-niklas.cassel@axis.com> <20171219232940.659-5-niklas.cassel@axis.com> <690a6c50-f5af-24bb-2f49-ba828022dcee@synopsys.com>
+In-Reply-To: <690a6c50-f5af-24bb-2f49-ba828022dcee@synopsys.com>
+Subject: Re: [PATCH v6 04/18] PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init
+Date: Thu, 21 Dec 2017 11:46:06 -0500
+Message-ID: <000301d37a7b$32926f60$97b74e20$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+        charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Wednesday, December 20, 2017 2:30 PM, Joao Pinto wrote:
+>=20
+> Hi,
+>=20
+> =C3=80s 11:29 PM de 12/19/2017, Niklas Cassel escreveu:
+> > Certain SoCs need to map the MSI address in raise_irq.
+> > To map an address, you first need to call pci_epc_mem_alloc_addr(),
+> > however, pci_epc_mem_alloc_addr() calls ioremap() (which can sleep).
+> >
+> > Since raise_irq is only called from atomic context, we can't call
+> > pci_epc_mem_alloc_addr() from raise_irq.
+> >
+> > Pre-allocate a page in dw_pcie_ep_init(), so that this page can =
+later
+> > be used to map/unmap the MSI address in raise_irq.
+> >
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > ---
+> >  drivers/pci/dwc/pcie-designware-ep.c | 10 ++++++++++
+> >  drivers/pci/dwc/pcie-designware.h    |  2 ++
+> >  2 files changed, 12 insertions(+)
+> >
+> > diff --git a/drivers/pci/dwc/pcie-designware-ep.c
+> b/drivers/pci/dwc/pcie-designware-ep.c
+> > index 3fb34be99715..8d8019cdff2a 100644
+> > --- a/drivers/pci/dwc/pcie-designware-ep.c
+> > +++ b/drivers/pci/dwc/pcie-designware-ep.c
+> > @@ -286,6 +286,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+> >  {
+> >  	struct pci_epc *epc =3D ep->epc;
+> >
+> > +	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
+> > +			      epc->mem->page_size);
+> > +
+> >  	pci_epc_mem_exit(epc);
+> >  }
+> >
+> > @@ -341,6 +344,13 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+> >  		return ret;
+> >  	}
+> >
+> > +	ep->msi_mem =3D pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
+> > +					     epc->mem->page_size);
+> > +	if (!ep->msi_mem) {
+> > +		dev_err(dev, "Failed to reserve memory for MSI\n");
+> > +		return -ENOMEM;
+> > +	}
+> > +
+> >  	ep->epc =3D epc;
+> >  	epc_set_drvdata(epc, ep);
+> >  	dw_pcie_setup(pci);
+> > diff --git a/drivers/pci/dwc/pcie-designware.h =
+b/drivers/pci/dwc/pcie-
+> designware.h
+> > index 9aaf0cd04dd6..5a1da459eda5 100644
+> > --- a/drivers/pci/dwc/pcie-designware.h
+> > +++ b/drivers/pci/dwc/pcie-designware.h
+> > @@ -198,6 +198,8 @@ struct dw_pcie_ep {
+> >  	unsigned long		ob_window_map;
+> >  	u32			num_ib_windows;
+> >  	u32			num_ob_windows;
+> > +	void __iomem		*msi_mem;
+> > +	phys_addr_t		msi_mem_phys;
+> >  };
+> >
+> >  struct dw_pcie_ops {
+> >
+>=20
+> Acked-by: Joao Pinto <jpinto@synopsys.com>
 
-Per PCIe r3.1, sec 5.5.1, LTR_L1.2_THRESHOLD determines whether we enter
-the L1.2 Link state: if L1.2 is enabled and downstream devices have
-reported that they can tolerate latency of at least LTR_L1.2_THRESHOLD, we
-must enter L1.2 when CLKREQ# is de-asserted.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-The implication is that LTR_L1.2_THRESHOLD is the time required to
-transition the Link from L0 to L1.2 and back to L0, and per sec 5.5.3.3.1,
-Figures 5-16 and 5-17, it appears that the absolute minimum time for those
-transitions would be T(POWER_OFF) + T(L1.2) + T(POWER_ON) + T(COMMONMODE).
-
-Therefore, compute LTR_L1.2_THRESHOLD as:
-
-    2us T(POWER_OFF)
-  + 4us T(L1.2)
-  + T(POWER_ON)
-  + T(COMMONMODE)
-  = LTR_L1.2_THRESHOLD
-
-Previously we set LTR_L1.2_THRESHOLD to a fixed value of 163840ns
-(163.84us):
-
-  #define LTR_L1_2_THRESHOLD_BITS     ((1 << 21) | (1 << 23) | (1 << 30))
-  ((1 << 21) | (1 << 23) | (1 << 30)) = 0x40a00000
-  LTR_L1.2_THRESHOLD_Value = (0x40a00000 & 0x03ff0000) >> 16 = 0xa0 = 160
-  LTR_L1.2_THRESHOLD_Scale = (0x40a00000 & 0xe0000000) >> 29 = 0x2 (* 1024ns)
-  LTR_L1.2_THRESHOLD = 160 * 1024ns = 163840ns
-
-Obviously this doesn't account for the circuit characteristics of different
-implementations.
-
-Note that while firmware may enable LTR, Linux itself currently does not
-enable LTR.  When L1.2 is enabled but LTR is not, LTR_L1.2_THRESHOLD is
-ignored and we always enter L1.2 when it is enabled and CLKREQ# is
-de-asserted.  So this patch should not have any effect unless firmware
-enables LTR.
-
-Fixes: f1f0366dd6be ("PCI/ASPM: Calculate and save the L1.2 timing parameters")
-Link: https://www.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.html
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kenji Chen <kenji.chen@intel.com>
-Cc: Patrick Georgi <pgeorgi@google.com>
-Cc: Rajat Jain <rajatja@google.com>
----
- drivers/pci/pcie/aspm.c |   71 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 47 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 9783e10da3a9..3b9b4d50cd98 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -43,18 +43,6 @@
- #define ASPM_STATE_ALL		(ASPM_STATE_L0S | ASPM_STATE_L1 |	\
- 				 ASPM_STATE_L1SS)
- 
--/*
-- * When L1 substates are enabled, the LTR L1.2 threshold is a timing parameter
-- * that decides whether L1.1 or L1.2 is entered (Refer PCIe spec for details).
-- * Not sure is there is a way to "calculate" this on the fly, but maybe we
-- * could turn it into a parameter in future.  This value has been taken from
-- * the following files from Intel's coreboot (which is the only code I found
-- * to have used this):
-- * https://www.coreboot.org/pipermail/coreboot-gerrit/2015-March/021134.html
-- * https://review.coreboot.org/#/c/8832/
-- */
--#define LTR_L1_2_THRESHOLD_BITS	((1 << 21) | (1 << 23) | (1 << 30))
--
- struct aspm_latency {
- 	u32 l0s;			/* L0s latency (nsec) */
- 	u32 l1;				/* L1 latency (nsec) */
-@@ -333,6 +321,32 @@ static u32 calc_l1ss_pwron(struct pci_dev *pdev, u32 scale, u32 val)
- 	return 0;
- }
- 
-+static void encode_l12_threshold(u32 threshold_us, u32 *scale, u32 *value)
-+{
-+	u64 threshold_ns = threshold_us * 1000;
-+
-+	/* See PCIe r3.1, sec 7.33.3 and sec 6.18 */
-+	if (threshold_ns < 32) {
-+		*scale = 0;
-+		*value = threshold_ns;
-+	} else if (threshold_ns < 1024) {
-+		*scale = 1;
-+		*value = threshold_ns >> 5;
-+	} else if (threshold_ns < 32768) {
-+		*scale = 2;
-+		*value = threshold_ns >> 10;
-+	} else if (threshold_ns < 1048576) {
-+		*scale = 3;
-+		*value = threshold_ns >> 15;
-+	} else if (threshold_ns < 33554432) {
-+		*scale = 4;
-+		*value = threshold_ns >> 20;
-+	} else {
-+		*scale = 5;
-+		*value = threshold_ns >> 25;
-+	}
-+}
-+
- struct aspm_register_info {
- 	u32 support:2;
- 	u32 enabled:2;
-@@ -443,6 +457,7 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 				struct aspm_register_info *dwreg)
- {
- 	u32 val1, val2, scale1, scale2;
-+	u32 t_common_mode, t_power_on, l1_2_threshold, scale, value;
- 
- 	link->l1ss.up_cap_ptr = upreg->l1ss_cap_ptr;
- 	link->l1ss.dw_cap_ptr = dwreg->l1ss_cap_ptr;
-@@ -454,16 +469,7 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 	/* Choose the greater of the two Port Common_Mode_Restore_Times */
- 	val1 = (upreg->l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
- 	val2 = (dwreg->l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
--	if (val1 > val2)
--		link->l1ss.ctl1 |= val1 << 8;
--	else
--		link->l1ss.ctl1 |= val2 << 8;
--
--	/*
--	 * We currently use LTR L1.2 threshold to be fixed constant picked from
--	 * Intel's coreboot.
--	 */
--	link->l1ss.ctl1 |= LTR_L1_2_THRESHOLD_BITS;
-+	t_common_mode = max(val1, val2);
- 
- 	/* Choose the greater of the two Port T_POWER_ON times */
- 	val1   = (upreg->l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_VALUE) >> 19;
-@@ -472,10 +478,27 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 	scale2 = (dwreg->l1ss_cap & PCI_L1SS_CAP_P_PWR_ON_SCALE) >> 16;
- 
- 	if (calc_l1ss_pwron(link->pdev, scale1, val1) >
--	    calc_l1ss_pwron(link->downstream, scale2, val2))
-+	    calc_l1ss_pwron(link->downstream, scale2, val2)) {
- 		link->l1ss.ctl2 |= scale1 | (val1 << 3);
--	else
-+		t_power_on = calc_l1ss_pwron(link->pdev, scale1, val1);
-+	} else {
- 		link->l1ss.ctl2 |= scale2 | (val2 << 3);
-+		t_power_on = calc_l1ss_pwron(link->downstream, scale2, val2);
-+	}
-+
-+	/*
-+	 * Set LTR_L1.2_THRESHOLD to the time required to transition the
-+	 * Link from L0 to L1.2 and back to L0 so we enter L1.2 only if
-+	 * downstream devices report (via LTR) that they can tolerate at
-+	 * least that much latency.
-+	 *
-+	 * Based on PCIe r3.1, sec 5.5.3.3.1, Figures 5-16 and 5-17, and
-+	 * Table 5-11.  T(POWER_OFF) is at most 2us and T(L1.2) is at
-+	 * least 4us.
-+	 */
-+	l1_2_threshold = 2 + 4 + t_common_mode + t_power_on;
-+	encode_l12_threshold(l1_2_threshold, &scale, &value);
-+	link->l1ss.ctl1 |= t_common_mode << 8 | scale << 29 | value << 16;
- }
- 
- static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+Best regards,
+Jingoo Han
