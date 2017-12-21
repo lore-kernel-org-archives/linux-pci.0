@@ -1,109 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:37103 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754310AbdLTNE3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Dec 2017 08:04:29 -0500
-Subject: Re: Re-activate task to add MSI-X to pcie-designware
-To: Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <647c9bb3-94f6-a138-fbde-e946c105d517@synopsys.com>
- <20171208110225.GC26816@red-moon>
- <9ede58a6-7c0d-ae66-4e15-147234cbad6d@ti.com>
- <69f78abd-f83e-b3a6-0daf-638f89d07f99@synopsys.com>
-CC: Murali Karicheri <m-karicheri2@ti.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <8771860f-babd-afcb-ed07-2642d2a4d6a8@ti.com>
-Date: Wed, 20 Dec 2017 18:33:41 +0530
+Return-Path: <SRS0=qZKk=DR=linux.vnet.ibm.com=jjalvare@kernel.org>
+Return-Path: <SRS0=qZKk=DR=linux.vnet.ibm.com=jjalvare@kernel.org>
+Subject: Re: [PATCH v1 7/7] pseries/setup: Add Initialization of VF Bars
+To: Alexey Kardashevskiy <aik@ozlabs.ru>,
+        "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, benh@kernel.crashing.org,
+        paulus@samba.org, mpe@ellerman.id.au
+Cc: seroyer@linux.vnet.ibm.com, alex.williamson@redhat.com, helgaas@kernel.org,
+        ruscur@russell.cc, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, bodong@mellanox.com, eli@mellanox.com,
+        saeedm@mellanox.com
+References: <20171213153242.98015-1-bryantly@linux.vnet.ibm.com>
+ <20171213153242.98015-8-bryantly@linux.vnet.ibm.com>
+ <4ea33f2e-d98c-85ef-eedf-2e8ca49aa839@ozlabs.ru>
+ <8bdf7127-a3ec-1c75-2593-e39a8bd31e34@linux.vnet.ibm.com>
+ <fd876ee1-4c12-587b-a8a0-56233fea3401@ozlabs.ru>
+From: Juan Alvarez <jjalvare@linux.vnet.ibm.com>
+Date: Wed, 20 Dec 2017 21:04:38 -0600
 MIME-Version: 1.0
-In-Reply-To: <69f78abd-f83e-b3a6-0daf-638f89d07f99@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <fd876ee1-4c12-587b-a8a0-56233fea3401@ozlabs.ru>
+Content-Type: text/plain; charset=utf-8
+Message-Id: <a9ef0e7f-c005-f52f-e707-92d9c7ba8d4c@linux.vnet.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 12/19/17 12:38 AM, Alexey Kardashevskiy wrote:
 
-On Monday 18 December 2017 09:31 PM, Gustavo Pimentel wrote:
-> Hi Kishon,
-> 
-> I would like to collaborate with you on this subject, I have on my side João's
-> patches updated to the Bjorn's latest kernel version.
+> On 19/12/17 06:29, Juan Alvarez wrote:
+>> This is PF only path. Yes either we have a root returned otherwise
+>> will fall back to iomem_resource.
+> You have removed context from my response, do not do that please.
 
-cool, do you have a branch so that I can check what breaks in keystone and debug?
+My apologies. I will not do that.
 
-Thanks
-Kishon
-> 
-> Regards,
-> 
-> Gustavo
-> 
-> 
-> On 11/12/2017 13:23, Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On Friday 08 December 2017 04:32 PM, Lorenzo Pieralisi wrote:
->>> On Thu, Dec 07, 2017 at 03:14:22PM +0000, Joao Pinto wrote:
->>>> Hello to all,
->>>>
->>>> I am sending this e-mail to request your opinion about the tasks needed to add
->>>> support for MSI-X for pcie-designware based solutions.
->>>>
->>>> A few months ago I submited a patch-set that added support for MSI-X:
->>>>
->>>> [v2,9/9] pci: remove limitation of the number of the available IRQs
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771320_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=p3N21H26OSEMkCxG6P0d-nO2j8dsNTPY3vyU1QDWjT0&e=
->>>> [v2,8/9] pci: removing old irq api from pcie-designware
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771360_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=qQWZngqGOJ1ILhY65f3YL6xrgp_5UXRR0NrDlSaHSTQ&e=
->>>> [v2,7/9] pci: keystone SoC driver adapted to new irq API
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771361_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=4J5yDyNZ0Hp9AD75kGoIjfyT-dr7gWoj5B3XO4cx7Q0&e=
->>>> [v2,6/9] pci: qcom SoC driver adapted to new irq API
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771362_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=KpC3k1Y_c4guyLRzb-w5H_Kglt6KWYb8Xk7iWsZqkzY&e=
->>>> [v2,5/9] pci: generic PCIe DW driver adapted to new irq API
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771365_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=TNoIYF7RaBl7jXnmFrFSIJD1a_vNJL2IKTYPbaJEpww&e=
->>>> [v2,4/9] pci: artpec6 SoC driver adapted to new irq API
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771364_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=p9aOuvgKv8e74QNe5XxXiI7gfvkPeCeanhs6i3FBwnc&e=
->>>> [v2,3/9] pci: imx6 SoC driver adapted to new irq API
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771363_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=ibzCdKoVbLHn-0vo9tzAlnirwgZZsDpILRkTEowHwWs&e=
->>>> [v2,2/9] pci: exynos SoC driver adapted to new irq API
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771359_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=D0dvpjeXB-BTo69WreBpia6vlml1pBysJU6ta-9cLOM&e=
->>>> [v2,1/9] pci: adding new irq api to pci-designware
->>>> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_patch_771366_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=bkWxpLoW-f-E3EdiDCCa0_h0PicsViasSlvIpzZvPxs&m=fBQ8uqCEYYa2ogSRPy8cR1jhWPLboPICkxUdpcYB6Yw&s=Wu_iKSHepvoDa3X5gU02AMMa9yzAgrT2jIfiu6jHgPs&e=
->>>>
->>>> The patch-set was globally accepted, but it broke the MSI mechanism for
->>>> Keystone, due to its specificity.
->>> Hi Joao,
->>>
->>> would you mind pointing me at the discussion where the breakage was
->>> explained please ? It is to understand what are the TI specific bits
->>> we are talking about here.
->>>
->>>> We are now going to resume this task and we would like to have your feedback
->>>> about our plan:
->>>>
->>>> Task 1: Help TI to create a keystone_msi driver to isolate its custom msi mechanism
->>>> Task 2: Port the existing patches to the new kernel version (except the keystone
->>>> one)
->>>>
->>>> If TI can do the keystone_msi implementation it would be easier. If it's not
->>>> possible, we volunteer to do it, but we will need testing & debug assistance.
->> sure, I should be able to help with at-least testing if not implementing.
->>
->> Thanks
->> Kishon
-> 
-> 
+>
+> When will you have root and when you won't? imho it should always be either
+> one or another.
+>
+Yes you are correct. The resource is carved out of a different mmio 
+space and will never be passed in the assigned-addresses property in 
+the device node of PF.
+
+We will remove that function call, conditional check and set root accordingly.
+
+>> On 12/18/17 1:21 AM, Alexey Kardashevskiy wrote:
+>>> @dev here is a VF, right? I am not familiar with powervn much but from what
+>>> I see - the devices are sitting on a root bus of their own PHB and they all
+>>> either have a root returned from pci_find_parent_resource() or none of them
+>>> has a root and will fall back to &iomem_resource, or both cases are possible?
+>
+- Juan 
