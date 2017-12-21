@@ -1,48 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39498 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751186AbdLNKvW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Dec 2017 05:51:22 -0500
-Date: Thu, 14 Dec 2017 10:51:16 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Niklas Cassel <niklas.cassel@axis.com>, kishon@ti.com
-Cc: linux-pci@vger.kernel.org, Niklas Cassel <niklass@axis.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 0/3] Fix find_first_zero_bit() usage
-Message-ID: <20171214105116.GA1442@e107981-ln.cambridge.arm.com>
-References: <20171212141634.5985-1-niklas.cassel@axis.com>
+Return-Path: <SRS0=XQ2r=DR=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=XQ2r=DR=intel.com=keith.busch@kernel.org>
+Date: Thu, 21 Dec 2017 07:59:43 -0700
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Maik Broemme <mbroemme@libmpq.org>
+Subject: Re: [PATCH 1/4] PCI/AER: Return approrpiate value when AER is not
+ supported
+Message-ID: <20171221145942.GC15276@localhost.localdomain>
+References: <20171219210643.24615-1-keith.busch@intel.com>
+ <20171221010452.GD30595@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20171212141634.5985-1-niklas.cassel@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20171221010452.GD30595@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+On Wed, Dec 20, 2017 at 05:04:52PM -0800, Bjorn Helgaas wrote:
+> On Tue, Dec 19, 2017 at 02:06:40PM -0700, Keith Busch wrote:
+> > Getting the AER information is documented to return 0 when it failed to
+> > get the information.
+> 
+> I think this case is either impossible (if we only call this function
+> for devices known to support AER), or it fixes an actual bug (the
+> caller would call aer_print_error() when it shouldn't, and potentially
+> print garbage).  Right?
+> 
+> If the former, I vote for removing the test.  If the latter, the
+> changelog should mention that it fixes a bug.
 
-On Tue, Dec 12, 2017 at 03:16:31PM +0100, Niklas Cassel wrote:
-> find_first_zero_bit()'s parameter 'size' is defined in bits,
-> not in bytes.
-> 
-> Calling find_first_zero_bit() with the wrong size unit
-> will lead to insidious bugs.
-> 
-> Fix all uses of find_first_zero_bit() called with
-> sizeof() as size argument in drivers/pci.
-> 
-> Also had to fix broken error handling in pci_epc_epf_link()
-> in order to do proper error handling for find_first_zero_bit().
-> 
-> Niklas Cassel (3):
->   PCI: designware-ep: Fix find_first_zero_bit() usage
->   PCI: endpoint: Fix error handling in pci_epc_epf_link()
->   PCI: endpoint: Fix find_first_zero_bit() usage
-> 
->  drivers/pci/dwc/pcie-designware-ep.c | 34 ++++++++++++++++++++++++++--------
->  drivers/pci/dwc/pcie-designware.h    |  8 ++++++--
->  drivers/pci/endpoint/pci-ep-cfs.c    | 13 ++++++++-----
->  3 files changed, 40 insertions(+), 15 deletions(-)
+I just spotted this mistake when I was changing the function to
+non-static. I've never observed bogus data printed in real life.
 
-I would need your ACK asap to queue this series.
+In the current AER handling, the only way we could incorrectly get there
+is if the root port's Error Source ID Register somehow contains the ID
+of a device that doesn't have AER capabilities, which would of course
+be broken.
 
-Thanks,
-Lorenzo
+So if we trust hardware, we should are safe to remove the check.
